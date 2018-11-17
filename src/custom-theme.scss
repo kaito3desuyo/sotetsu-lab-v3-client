@@ -45,7 +45,40 @@ $sotetsu-lab-v3-client-primary: mat-palette(
     )
   )
 );
-$sotetsu-lab-v3-client-accent: mat-palette($mat-pink, A200, A100, A400);
+$sotetsu-lab-v3-client-accent: mat-palette(
+  (
+    50: #fdefe7,
+    100: #fad7c2,
+    200: #f7bd9a,
+    300: #f3a372,
+    400: #f18f53,
+    500: #ee7b35,
+    600: #ec7330,
+    700: #e96828,
+    800: #e75e22,
+    900: #e24b16,
+    A100: #ffffff,
+    A200: #ffe7e0,
+    A400: #ffbfad,
+    A700: #ffac93,
+    contrast: (
+      50: $black-87-opacity,
+      100: $black-87-opacity,
+      200: $black-87-opacity,
+      300: $black-87-opacity,
+      400: $black-87-opacity,
+      500: $black-87-opacity,
+      600: $black-87-opacity,
+      700: $black-87-opacity,
+      800: $black-87-opacity,
+      900: white,
+      A100: $black-87-opacity,
+      A200: $black-87-opacity,
+      A400: $black-87-opacity,
+      A700: $black-87-opacity
+    )
+  )
+);
 
 // The warn palette is optional (defaults to red).
 $sotetsu-lab-v3-client-warn: mat-palette($mat-red);
