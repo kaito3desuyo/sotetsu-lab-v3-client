@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'sotetsu-lab-v3-client';
+  title = 'Sotetsu Lab.';
 }
