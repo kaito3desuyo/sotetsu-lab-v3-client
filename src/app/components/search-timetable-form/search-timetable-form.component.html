@@ -1,0 +1,34 @@
+<div
+  fxLayout="column"
+  fxLayoutGap="12px"
+  style="margin-top: 12px; margin-bottom:12px"
+>
+  <div>
+    <mat-radio-group>
+      <mat-label> 日付 </mat-label>
+      <mat-radio-button value="weekday"> 平日ダイヤ </mat-radio-button>
+      <mat-radio-button value="holiday"> 土休日ダイヤ </mat-radio-button>
+    </mat-radio-group>
+  </div>
+  <div>
+    <mat-radio-group>
+      <mat-label> 方向 </mat-label>
+      <mat-radio-button value="up"> 上り </mat-radio-button>
+      <mat-radio-button value="down"> 下り </mat-radio-button>
+    </mat-radio-group>
+  </div>
+  <div>
+    <mat-slide-toggle [(ngModel)]="selectStation">
+      駅を指定して検索する
+    </mat-slide-toggle>
+  </div>
+  <div>
+    <mat-form-field>
+      <mat-label>駅名</mat-label>
+      <mat-select [disabled]="!selectStation">
+        <mat-option>でも</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div><button mat-raised-button color="primary">検索</button></div>
+</div>
