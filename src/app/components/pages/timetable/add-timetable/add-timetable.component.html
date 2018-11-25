@@ -1,0 +1,72 @@
+<form [formGroup]="sendDataSet">
+  <mat-card>
+    <mat-card-title> 列車を追加する </mat-card-title
+    ><mat-card-content>
+      <table>
+        <tr>
+          <th>列車番号</th>
+          <td>
+            <mat-form-field>
+              <input matInput placeholder="列車番号" value="Sushi" />
+            </mat-form-field>
+          </td>
+          <th>運用番号</th>
+          <td>
+            <mat-form-field>
+              <input matInput placeholder="運用番号" value="Sushi" />
+            </mat-form-field>
+          </td>
+        </tr>
+        <ng-container
+          formArrayName="stations"
+          *ngFor="let station of stationsCtl.controls; let i = index"
+        >
+          <tr [formGroupName]="i">
+            <th>{{ this.stations[i].station_name }}</th>
+            <td>
+              <mat-slide-toggle
+                formControlName="isAllowArrivalTime"
+                (change)="onChangeAllowArrivalTime(i)"
+              >
+                着時刻
+              </mat-slide-toggle>
+              <mat-slide-toggle
+                formControlName="isAllowDepartureTime"
+                (change)="onChangeAllowDepartureTime(i)"
+              >
+                発時刻
+              </mat-slide-toggle>
+            </td>
+            <td>
+              <mat-form-field>
+                <input
+                  matInput
+                  type="time"
+                  formControlName="arrivalTime"
+                  placeholder="着時刻"
+                  value=""
+                />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field>
+                <input
+                  matInput
+                  type="time"
+                  formControlName="departureTime"
+                  placeholder="発時刻"
+                  value=""
+                  [attr.disabled]="
+                    station.value.isAllowDepartureTime ? null : true
+                  "
+                />
+              </mat-form-field>
+            </td>
+          </tr>
+        </ng-container>
+      </table>
+
+      <div><button mat-raised-button color="primary">送信する</button></div>
+    </mat-card-content>
+  </mat-card>
+</form>
