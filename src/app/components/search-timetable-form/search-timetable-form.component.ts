@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { ApiService } from 'src/app/services/api.service';
+import { Station } from 'src/app/interfaces/station';
 
 @Component({
   selector: 'app-search-timetable-form',
@@ -7,8 +9,18 @@ import { Component, OnInit } from '@angular/core';
 })
 export class SearchTimetableFormComponent implements OnInit {
   selectStation = false;
+  stations: Station[];
 
-  constructor() {}
+  constructor(private apiService: ApiService) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.getStations();
+  }
+
+  getStations(): void {
+    this.apiService.getStations('down').subscribe(stations => {
+      this.stations = stations;
+      console.log(this.stations);
+    });
+  }
 }
