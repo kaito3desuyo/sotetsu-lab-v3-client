@@ -1,9 +1,12 @@
 import { Component, OnInit, AfterContentChecked } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { Station } from 'src/app/interfaces/station';
-import { FormBuilder, FormArray } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { directiveDef } from '@angular/core/src/view';
+import { FormBuilder, FormArray, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import * as moment from 'moment';
+import { Operation } from 'src/app/interfaces/operation';
+import { Calender } from 'src/app/interfaces/calender';
+import { MatSnackBar } from '@angular/material';
 
 @Component({
   selector: 'app-add-timetable',
@@ -12,10 +15,12 @@ import { directiveDef } from '@angular/core/src/view';
 })
 export class AddTimetableComponent implements OnInit, AfterContentChecked {
   stations: Station[];
+  calender: Calender;
+  operations: Operation[];
 
   sendDataSet = this.fb.group({
-    tripNumber: [''],
-    operationNumber: [''],
+    tripNumber: ['', Validators.required],
+    operationId: ['', Validators.required],
     stations: this.fb.array([])
   });
 
@@ -28,17 +33,20 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
   constructor(
     private apiService: ApiService,
     private fb: FormBuilder,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
     this.getStations();
+    this.getCalender(this.route.snapshot.paramMap.get('dia'));
   }
 
   ngAfterContentChecked(): void {
     // Called after every check of the component's or directive's content.
     // Add 'implements AfterContentChecked' to the class.
-    // console.log(this.sendDataSet);
+    console.log(this.sendDataSet.valid);
   }
 
   getStations() {
@@ -69,6 +77,13 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
 
       this.checkIsAllowArrivalTime();
       this.checkIsAllowDepartureTime();
+    });
+  }
+
+  getCalender(id: string) {
+    this.apiService.getCalenderById(id).subscribe(calender => {
+      this.calender = calender;
+      this.operations = calender.operations;
     });
   }
 
@@ -165,5 +180,89 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
     }
 
     return true;
+  }
+
+  onSubmit() {
+    const times = [];
+
+    let sequence = 1;
+    this.sendDataSet.value.stations.forEach(station => {
+      let departureTime = null;
+      let arrivalTime = null;
+      let pickUpType = null;
+      let dropOffType = null;
+
+      departureTime = moment(station.departureTime, 'HH:mm');
+      arrivalTime = moment(station.arrivalTime, 'HH:mm');
+
+      if (!station.arrivalTime && station.departureTime) {
+        pickUpType = 0;
+        dropOffType = 0;
+        if (!departureTime.isValid()) {
+          return;
+        }
+      } else if (station.arrivalTime && !station.departureTime) {
+        pickUpType = 1;
+        dropOffType = 0;
+        if (!arrivalTime.isValid()) {
+          return;
+        }
+      } else if (station.arrivalTime && station.departureTime) {
+        pickUpType = 0;
+        dropOffType = 0;
+        if (!departureTime.isValid() && !arrivalTime.isValid()) {
+          return;
+        }
+      } else {
+        return;
+      }
+
+      times.push({
+        station_id: station.station_id,
+        stop_id: null,
+        stop_sequence: sequence,
+        pickup_type: pickUpType,
+        dropoff_type: dropOffType,
+        arrival_days:
+          arrivalTime.hour() <= 2 ? 2 : arrivalTime.hour() > 2 ? 1 : null,
+        arrival_time:
+          arrivalTime.format('HH:mm:ss') !== 'Invalid date'
+            ? arrivalTime.format('HH:mm:ss')
+            : null,
+        departure_days:
+          departureTime.hour() <= 2 ? 2 : departureTime.hour() > 2 ? 1 : null,
+        departure_time:
+          departureTime.format('HH:mm:ss') !== 'Invalid date'
+            ? departureTime.format('HH:mm:ss')
+            : null
+      });
+
+      sequence++;
+    });
+
+    const sendForApiData = {
+      service_id: this.calender.service_id,
+      operation_id: this.sendDataSet.value.operationId,
+      trip_number: this.sendDataSet.value.tripNumber,
+      trip_class_id: null,
+      trip_name: null,
+      trip_direction:
+        this.route.snapshot.paramMap.get('direction') === 'up'
+          ? 0
+          : this.route.snapshot.paramMap.get('direction') === 'down'
+          ? 1
+          : null,
+      block_id: this.sendDataSet.value.tripNumber,
+      calender_id: this.calender.id,
+      extra_calender_id: null,
+      times: times
+    };
+    this.apiService.addTrip(sendForApiData).subscribe(result => {
+      console.log(result);
+      this.snackBar.open('列車を追加しました。', 'OK', {
+        duration: 3000
+      });
+      this.router.navigate(['/']);
+    });
   }
 }

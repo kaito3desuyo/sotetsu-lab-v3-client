@@ -1,4 +1,4 @@
-<form [formGroup]="sendDataSet">
+<form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
   <mat-card>
     <mat-card-title> 列車を追加する </mat-card-title
     ><mat-card-content>
@@ -7,14 +7,23 @@
           <th>列車番号</th>
           <td>
             <mat-form-field>
-              <input matInput placeholder="列車番号" value="Sushi" />
+              <input
+                matInput
+                placeholder="列車番号"
+                formControlName="tripNumber"
+              />
             </mat-form-field>
           </td>
           <th>運用番号</th>
           <td>
-            <mat-form-field>
-              <input matInput placeholder="運用番号" value="Sushi" />
-            </mat-form-field>
+            <mat-select placeholder="運用番号" formControlName="operationId">
+              <mat-option
+                *ngFor="let operation of operations"
+                [value]="operation.id"
+              >
+                {{ operation.operation_number }}
+              </mat-option>
+            </mat-select>
           </td>
         </tr>
         <ng-container
@@ -66,7 +75,15 @@
         </ng-container>
       </table>
 
-      <div><button mat-raised-button color="primary">送信する</button></div>
+      <div>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!this.sendDataSet.valid"
+        >
+          送信する
+        </button>
+      </div>
     </mat-card-content>
   </mat-card>
 </form>
