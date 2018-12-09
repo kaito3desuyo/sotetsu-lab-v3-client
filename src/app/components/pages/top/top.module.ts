@@ -5,6 +5,7 @@ import { AngularMaterialModule } from 'src/app/modules/angular-material/angular-
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { SearchTimetableFormModule } from '../../search-timetable-form/search-timetable-form.module';
 import { AddTimetablePreFormModule } from '../../add-timetable-pre-form/add-timetable-pre-form.module';
+import { AddOperationSightingFormModule } from '../../add-operation-sighting-form/add-operation-sighting-form.module';
 
 const routes: Routes = [{ path: '', component: TopComponent }];
 
@@ -14,7 +15,8 @@ const routes: Routes = [{ path: '', component: TopComponent }];
     AngularMaterialModule,
     FlexLayoutModule,
     SearchTimetableFormModule,
-    AddTimetablePreFormModule
+    AddTimetablePreFormModule,
+    AddOperationSightingFormModule
   ],
   declarations: [TopComponent]
 })

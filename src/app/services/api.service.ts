@@ -11,7 +11,8 @@ export class ApiService {
   private apiUrl = {
     stations: 'http://localhost:3000/api/v1/stations',
     calenders: 'http://localhost:3000/api/v1/calenders',
-    trips: 'http://localhost:3000/api/v1/trips'
+    trips: 'http://localhost:3000/api/v1/trips',
+    vehicles: 'http://localhost:3000/api/v1/vehicles'
   };
 
   constructor(private http: HttpClient) {}
@@ -29,5 +30,9 @@ export class ApiService {
 
   addTrip(data: any): Observable<any> {
     return this.http.post<any>(this.apiUrl.trips, { trip: data });
+  }
+
+  getVehicleByNumber(number: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.vehicles + '/byNumber/' + number);
   }
 }
