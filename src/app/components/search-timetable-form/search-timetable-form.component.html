@@ -1,36 +1,46 @@
-<div
-  fxLayout="column"
-  fxLayoutGap="12px"
-  style="margin-top: 12px; margin-bottom:12px"
->
-  <div>
-    <mat-radio-group>
-      <mat-label> 日付 </mat-label>
-      <mat-radio-button value="weekday"> 平日ダイヤ </mat-radio-button>
-      <mat-radio-button value="holiday"> 土休日ダイヤ </mat-radio-button>
-    </mat-radio-group>
+<form [formGroup]="searchParam" (ngSubmit)="onSubmit()">
+  <div
+    fxLayout="column"
+    fxLayoutGap="12px"
+    style="margin-top: 12px; margin-bottom:12px"
+  >
+    <div>
+      <mat-form-field>
+        <mat-label>ダイヤ</mat-label>
+        <mat-select formControlName="dia">
+          <mat-option *ngFor="let calender of calenders" [value]="calender.id">
+            {{ calender.start_date | myDate: 'YYYY年MM月DD日' }} 改正
+            {{ calender.calender_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-radio-group formControlName="direction">
+        <mat-label> 方向 </mat-label>
+        <mat-radio-button value="up"> 上り </mat-radio-button>
+        <mat-radio-button value="down"> 下り </mat-radio-button>
+      </mat-radio-group>
+    </div>
+    <div>
+      <mat-slide-toggle (change)="changeSearchByStation($event)">
+        駅を指定して検索する
+      </mat-slide-toggle>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>駅名</mat-label>
+        <mat-select formControlName="station">
+          <mat-option *ngFor="let station of stations" [value]="station.id">{{
+            station.station_name
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <div>
+      <button mat-raised-button color="primary" [disabled]="!searchParam.valid">
+        検索
+      </button>
+    </div>
   </div>
-  <div>
-    <mat-radio-group>
-      <mat-label> 方向 </mat-label>
-      <mat-radio-button value="up"> 上り </mat-radio-button>
-      <mat-radio-button value="down"> 下り </mat-radio-button>
-    </mat-radio-group>
-  </div>
-  <div>
-    <mat-slide-toggle [(ngModel)]="selectStation">
-      駅を指定して検索する
-    </mat-slide-toggle>
-  </div>
-  <div>
-    <mat-form-field>
-      <mat-label>駅名</mat-label>
-      <mat-select [disabled]="!selectStation">
-        <mat-option *ngFor="let station of stations" [value]="station.id">{{
-          station.station_name
-        }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-  <div><button mat-raised-button color="primary">検索</button></div>
-</div>
+</form>
