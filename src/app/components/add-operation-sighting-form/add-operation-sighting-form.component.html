@@ -1,0 +1,21 @@
+<form [formGroup]="sendDataSet">
+  <div
+    fxLayout="column"
+    fxLayoutGap="12px"
+    style="margin-top: 12px; margin-bottom:12px"
+  >
+    <div>
+      <mat-form-field>
+        <mat-label>車両番号</mat-label>
+        <input matInput formControlName="vehicleNumber" />
+      </mat-form-field>
+    </div>
+    <div>
+      <mat-form-field>
+        <mat-label>運用番号</mat-label>
+        <input matInput formControlName="operationNumber" />
+      </mat-form-field>
+    </div>
+    <div><button mat-raised-button color="primary">送信</button></div>
+  </div>
+</form>
