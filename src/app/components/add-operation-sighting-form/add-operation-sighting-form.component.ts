@@ -54,7 +54,7 @@ export class AddOperationSightingFormComponent implements OnInit {
             )
             .subscribe(result => {
               console.log(result);
-              if (result.length !== 0) {
+              if (Array.isArray(result) && result.length !== 0) {
                 resolve({
                   formationId: result[0].vehicle_formations[0].formation.id
                 });
