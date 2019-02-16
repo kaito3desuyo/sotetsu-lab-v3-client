@@ -1,5 +1,5 @@
 <div fxLayout="column">
-  <div fxLayout="row" fxLayoutGap="24px">
+  <div fxLayout="row" fxLayoutGap="24px" fx>
     <mat-card fxFlex="100%">
       <mat-card-title>このサイトは？</mat-card-title>
       <mat-card-content>
@@ -9,38 +9,64 @@
       </mat-card-content>
     </mat-card>
   </div>
-  <div fxLayout="row wrap" fxLayoutAlign="space-between">
-    <mat-card fxFlex="360px">
-      <mat-card-title>時刻表</mat-card-title>
-      <mat-card-content>
-        相鉄線の時刻表を検索できます。
-        <app-search-timetable-form></app-search-timetable-form>
-      </mat-card-content>
-    </mat-card>
-    <mat-card fxFlex="360px">
-      <mat-card-title>運用情報</mat-card-title>
-      <mat-card-content>
-        相鉄線の運用情報を検索できます。
-        <mat-nav-list>
-          <a mat-list-item routerLink="/operation/realtime"
-            >リアルタイム運用情報</a
-          >
-        </mat-nav-list>
-      </mat-card-content>
-    </mat-card>
-    <mat-card fxFlex="360px">
-      <mat-card-title>列車を追加する</mat-card-title>
-      <mat-card-content>
-        列車データを追加できます。
-        <app-add-timetable-pre-form></app-add-timetable-pre-form>
-      </mat-card-content>
-    </mat-card>
-    <mat-card fxFlex="360px">
-      <mat-card-title>運用を投稿する</mat-card-title>
-      <mat-card-content>
-        運用情報を投稿できます。
-        <app-add-operation-sighting-form></app-add-operation-sighting-form>
-      </mat-card-content>
+  <div fxLayout.gt-md="row" fxLayout.lt-lg="column" fxLayoutGap="24px">
+    <div fxLayout="column" fxFlex="auto">
+      <div
+        fxLayout.gt-xs="row"
+        fxLayout.lt-sm="column"
+        fxLayoutAlign="space-between"
+        fxLayoutGap="24px"
+      >
+        <mat-card fxFlex="50%">
+          <mat-card-title>時刻表</mat-card-title>
+          <mat-card-content>
+            相鉄線の時刻表を検索できます。
+            <app-search-timetable-form></app-search-timetable-form>
+          </mat-card-content>
+        </mat-card>
+        <mat-card fxFlex="50%">
+          <mat-card-title>運用情報</mat-card-title>
+          <mat-card-content>
+            相鉄線の運用情報を検索できます。
+            <mat-nav-list>
+              <a mat-list-item routerLink="/operation/realtime"
+                >リアルタイム運用情報</a
+              >
+            </mat-nav-list>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div
+        fxLayout.gt-xs="row"
+        fxLayout.lt-sm="column"
+        fxLayoutAlign="space-between"
+        fxLayoutGap="24px"
+      >
+        <mat-card fxFlex="50%">
+          <mat-card-title>列車を追加する</mat-card-title>
+          <mat-card-content>
+            列車データを追加できます。
+            <app-add-timetable-pre-form></app-add-timetable-pre-form>
+          </mat-card-content>
+        </mat-card>
+        <mat-card fxFlex="50%">
+          <mat-card-title>運用を投稿する</mat-card-title>
+          <mat-card-content>
+            運用情報を投稿できます。
+            <app-add-operation-sighting-form></app-add-operation-sighting-form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+    <mat-card fxFlex="auto">
+      <div>
+        <a
+          class="twitter-timeline"
+          data-height="720px"
+          href="https://twitter.com/STKfanportal?ref_src=twsrc%5Etfw"
+          >Tweets by STKfanportal</a
+        >
+      </div>
     </mat-card>
   </div>
 </div>

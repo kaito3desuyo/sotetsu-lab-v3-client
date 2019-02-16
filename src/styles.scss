@@ -25,3 +25,7 @@ body {
 .mat-dialog-container {
   max-height: calc(100vh - 48px) !important;
 }
+
+.mat-card-header-text {
+  margin: 0 !important;
+}
