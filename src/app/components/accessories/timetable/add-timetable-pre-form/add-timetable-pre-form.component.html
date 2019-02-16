@@ -23,7 +23,13 @@
       </mat-radio-group>
     </div>
     <div>
-      <button mat-raised-button color="primary">列車情報入力へ移る</button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="addTimetablePreForm.invalid"
+      >
+        列車情報入力へ移る
+      </button>
     </div>
     {{ addTimetablePreForm.value.dia }}
   </div>

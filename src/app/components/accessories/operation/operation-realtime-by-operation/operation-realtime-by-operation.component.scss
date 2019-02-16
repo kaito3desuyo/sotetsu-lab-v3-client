@@ -1,0 +1,27 @@
+@import '~@angular/material/theming';
+@import '../../../../../custom-theme.scss';
+$foreground: map-get($sotetsu-lab-v3-client-theme, foreground);
+
+:host {
+  .operation-realtime-by-operation-container {
+    margin: 24px;
+    .mat-table {
+      width: 100%;
+      .mat-column-operationNumber {
+        max-width: 48px;
+      }
+      .mat-column-formationNumber {
+        max-width: 48px;
+      }
+      .mat-column-history {
+        width: 48px;
+        .mat-icon {
+          color: mat-color($foreground, secondary-text);
+        }
+      }
+      .duplicate {
+        color: mat-color($foreground, secondary-text);
+      }
+    }
+  }
+}

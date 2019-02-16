@@ -1,3 +1,12 @@
 <!-- The content below is only a placeholder and can be replaced. -->
-<app-header></app-header>
-<div class="page-container"><router-outlet></router-outlet></div>
+<app-header (toggleSidenav)="sidenav.toggle()"></app-header>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="push" [(opened)]="opened">
+    <app-sidenav></app-sidenav>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <div class="page-container">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
