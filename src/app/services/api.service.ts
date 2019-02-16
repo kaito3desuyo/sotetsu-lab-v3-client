@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { Station } from '../interfaces/station';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Calender } from '../interfaces/calender';
+import * as moment from 'moment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,9 @@ export class ApiService {
     stations: 'http://localhost:3000/api/v1/stations',
     calenders: 'http://localhost:3000/api/v1/calenders',
     trips: 'http://localhost:3000/api/v1/trips',
-    vehicles: 'http://localhost:3000/api/v1/vehicles'
+    formations: 'http://localhost:3000/api/v1/formations',
+    vehicles: 'http://localhost:3000/api/v1/vehicles',
+    operations: 'http://localhost:3000/api/v1/operations'
   };
 
   constructor(private http: HttpClient) {}
@@ -32,7 +35,15 @@ export class ApiService {
     return this.http.post<any>(this.apiUrl.trips, { trip: data });
   }
 
+  getFormation(): Observable<any> {
+    return this.http.get<any>(this.apiUrl.formations);
+  }
+
   getVehicleByNumber(number: string): Observable<any> {
     return this.http.get<any>(this.apiUrl.vehicles + '/byNumber/' + number);
+  }
+
+  getOperationByDate(date: string) {
+    return this.http.get<any>(this.apiUrl.operations + '/date/' + date);
   }
 }

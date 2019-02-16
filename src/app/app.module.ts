@@ -5,23 +5,24 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AngularMaterialModule } from './modules/angular-material/angular-material.module';
-import { HeaderModule } from './components/header/header.module';
 import { AppRoutingModule } from './modules/app-routing/app-routing.module';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
-import { ExceptionDialogComponent } from './components/exception-dialog/exception-dialog.component';
+import { AccessoriesModule } from './components/accessories/accessories.module';
+import { PagesModule } from './components/pages/pages.module';
 
 @NgModule({
-  declarations: [AppComponent, ExceptionDialogComponent],
+  declarations: [AppComponent],
   imports: [
     CommonModule,
     BrowserModule,
     BrowserAnimationsModule,
     FlexLayoutModule,
     AngularMaterialModule,
-    HeaderModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    PagesModule,
+    AccessoriesModule
   ],
   providers: [],
   bootstrap: [AppComponent]

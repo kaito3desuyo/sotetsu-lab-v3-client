@@ -90,7 +90,34 @@ $sotetsu-lab-v3-client-theme: mat-light-theme(
   $sotetsu-lab-v3-client-warn
 );
 
+@function my-mat-light-theme-foreground($color) {
+  @return (
+    base: $color,
+    divider: $black-12-opacity,
+    dividers: $black-12-opacity,
+    disabled: rgba($color, 0.38),
+    disabled-button: rgba($color, 0.38),
+    disabled-text: rgba($color, 0.38),
+    hint-text: rgba($color, 0.38),
+    secondary-text: rgba($color, 0.54),
+    icon: rgba($color, 0.54),
+    icons: rgba($color, 0.54),
+    text: rgba($color, 0.87),
+    slider-off: rgba($color, 0.26),
+    slider-off-active: rgba($color, 0.38),
+    slider-min: rgba($color, 0.38)
+  );
+}
+
+$white-foreground: my-mat-light-theme-foreground(black);
+$my-app-theme-custom: map-merge(
+  $sotetsu-lab-v3-client-theme,
+  (
+    foreground: $white-foreground
+  )
+);
+
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($sotetsu-lab-v3-client-theme);
+@include angular-material-theme($my-app-theme-custom);

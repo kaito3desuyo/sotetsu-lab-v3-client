@@ -53,7 +53,7 @@ export class SearchTimetableFormComponent implements OnInit {
 
   onSubmit() {
     this.router.navigate([
-      '/Timetable',
+      '/timetable',
       {
         dia: this.searchParam.get('dia').value,
         direction: this.searchParam.get('direction').value,

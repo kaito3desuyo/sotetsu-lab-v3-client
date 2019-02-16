@@ -4,12 +4,12 @@ import { MatRadioChange, MatDialog, MatSnackBar } from '@angular/material';
 import { HttpClient } from '@angular/common/http';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { ExceptionDialogComponent } from '../exception-dialog/exception-dialog.component';
+import { ExceptionDialogComponent } from '../../exception-dialog/exception-dialog.component';
 
 @Component({
   selector: 'app-add-operation-sighting-form',
   templateUrl: './add-operation-sighting-form.component.html',
-  styleUrls: ['./add-operation-sighting-form.component.css']
+  styleUrls: ['./add-operation-sighting-form.component.scss']
 })
 export class AddOperationSightingFormComponent implements OnInit {
   sendDataSet = this.fb.group({
@@ -54,7 +54,7 @@ export class AddOperationSightingFormComponent implements OnInit {
             )
             .subscribe(result => {
               console.log(result);
-              if (Array.isArray(result) && result.length !== 0) {
+              if (result['length'] !== 0) {
                 resolve({
                   formationId: result[0].vehicle_formations[0].formation.id
                 });
