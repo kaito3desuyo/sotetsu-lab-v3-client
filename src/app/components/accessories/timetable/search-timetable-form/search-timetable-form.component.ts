@@ -8,7 +8,7 @@ import { Calender } from 'src/app/interfaces/calender';
 @Component({
   selector: 'app-search-timetable-form',
   templateUrl: './search-timetable-form.component.html',
-  styleUrls: ['./search-timetable-form.component.css']
+  styleUrls: ['./search-timetable-form.component.scss']
 })
 export class SearchTimetableFormComponent implements OnInit {
   stations: Station[];
@@ -52,13 +52,23 @@ export class SearchTimetableFormComponent implements OnInit {
   }
 
   onSubmit() {
-    this.router.navigate([
-      '/timetable',
-      {
-        dia: this.searchParam.get('dia').value,
-        direction: this.searchParam.get('direction').value,
-        station: this.searchParam.get('station').value
-      }
-    ]);
+    if (!this.searchParam.get('station').value) {
+      this.router.navigate([
+        '/timetable/all-line',
+        {
+          dia: this.searchParam.get('dia').value,
+          direction: this.searchParam.get('direction').value
+        }
+      ]);
+    } else {
+      this.router.navigate([
+        '/timetable',
+        {
+          dia: this.searchParam.get('dia').value,
+          direction: this.searchParam.get('direction').value,
+          station: this.searchParam.get('station').value
+        }
+      ]);
+    }
   }
 }
