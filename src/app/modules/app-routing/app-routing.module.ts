@@ -4,6 +4,7 @@ import { TopComponent } from 'src/app/components/pages/top/top.component';
 import { TimetableComponent } from 'src/app/components/pages/timetable/timetable.component';
 import { AddTimetableComponent } from 'src/app/components/pages/timetable/add-timetable/add-timetable.component';
 import { RealTimeComponent } from 'src/app/components/pages/operation/real-time/real-time.component';
+import { TimetableAllLineComponent } from 'src/app/components/pages/timetable/timetable-all-line/timetable-all-line.component';
 
 const routes: Routes = [
   { path: '', component: TopComponent, data: { title: '' } },
@@ -11,6 +12,11 @@ const routes: Routes = [
     path: 'timetable',
     component: TimetableComponent,
     data: { title: '時刻表' }
+  },
+  {
+    path: 'timetable/all-line',
+    component: TimetableAllLineComponent,
+    data: { title: '全線時刻表' }
   },
   {
     path: 'timetable/add',

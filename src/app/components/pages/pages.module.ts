@@ -14,6 +14,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
+import { TimetableAllLineComponent } from './timetable/timetable-all-line/timetable-all-line.component';
 
 @NgModule({
   imports: [
@@ -32,6 +33,7 @@ import { RouterModule } from '@angular/router';
     OperationComponent,
     RealTimeComponent,
     TimetableComponent,
+    TimetableAllLineComponent,
     AddTimetableComponent
   ]
 })
