@@ -31,6 +31,14 @@ export class ApiService {
     return this.http.get<Calender>(this.apiUrl.calenders + '/' + id);
   }
 
+  getTrips(calenderId: string, direction: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.trips, {
+      params: {
+        calender_id: calenderId,
+        direction: direction
+      }
+    });
+  }
   addTrip(data: any): Observable<any> {
     return this.http.post<any>(this.apiUrl.trips, { trip: data });
   }

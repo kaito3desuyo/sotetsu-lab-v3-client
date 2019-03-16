@@ -57,6 +57,7 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
           isAllowArrivalTime: this.checkArrivalTime(station.station_name),
           isAllowDepartureTime: this.checkDepartureTime(station.station_name),
           station_id: station.id,
+          station_name: station.station_name,
           stop_id: [''],
           arrivalTime: [
             {
@@ -105,13 +106,20 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
   checkIsAllowArrivalTime() {
     this.stationsCtl.controls.forEach((element, index) => {
       if (this.direction === 'down') {
-        if (index === 0) {
-          element.get('isAllowArrivalTime').disable();
+        switch (element.get('station_name').value) {
+          case '川越':
+          case '横浜':
+            element.get('isAllowArrivalTime').disable();
+            break;
         }
       }
       if (this.direction === 'up') {
-        if (index === 0 || index === 1 || index === 9) {
-          element.get('isAllowArrivalTime').disable();
+        switch (element.get('station_name').value) {
+          case '厚木':
+          case '湘南台':
+          case '海老名':
+            element.get('isAllowArrivalTime').disable();
+            break;
         }
       }
     });
@@ -119,26 +127,25 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
 
   checkArrivalTime(index) {
     if (this.direction === 'down') {
-      if (index === '二俣川') {
-        return true;
-      }
-      if (index === '湘南台') {
-        return true;
-      }
-      if (index === '海老名') {
-        return true;
-      }
-      if (index === '厚木') {
-        return true;
+      switch (index) {
+        case '新宿':
+        case '大宮':
+        case '二俣川':
+        case '湘南台':
+        case '海老名':
+        case '厚木':
+          return true;
       }
     }
 
     if (this.direction === 'up') {
-      if (index === '二俣川') {
-        return true;
-      }
-      if (index === '横浜') {
-        return true;
+      switch (index) {
+        case '二俣川':
+        case '横浜':
+        case '新宿':
+        case '大宮':
+        case '川越':
+          return true;
       }
     }
 
@@ -148,13 +155,20 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
   checkIsAllowDepartureTime() {
     this.stationsCtl.controls.forEach((element, index) => {
       if (this.direction === 'down') {
-        if (index === 16 || index === 24 || index === 25) {
-          element.get('isAllowDepartureTime').disable();
+        switch (element.get('station_name').value) {
+          case '湘南台':
+          case '海老名':
+          case '厚木':
+            element.get('isAllowDepartureTime').disable();
+            break;
         }
       }
       if (this.direction === 'up') {
-        if (index === 25) {
-          element.get('isAllowDepartureTime').disable();
+        switch (element.get('station_name').value) {
+          case '横浜':
+          case '川越':
+            element.get('isAllowDepartureTime').disable();
+            break;
         }
       }
     });
@@ -162,20 +176,19 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
 
   checkDepartureTime(index) {
     if (this.direction === 'down') {
-      if (index === '湘南台') {
-        return false;
-      }
-      if (index === '海老名') {
-        return false;
-      }
-      if (index === '厚木') {
-        return false;
+      switch (index) {
+        case '湘南台':
+        case '海老名':
+        case '厚木':
+          return false;
       }
     }
 
     if (this.direction === 'up') {
-      if (index === '横浜') {
-        return false;
+      switch (index) {
+        case '横浜':
+        case '川越':
+          return false;
       }
     }
 
