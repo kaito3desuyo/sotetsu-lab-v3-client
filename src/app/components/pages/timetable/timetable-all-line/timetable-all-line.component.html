@@ -128,19 +128,19 @@
               <tr *ngIf="arrivalChecker(station.station_name)">
                 <td
                   class="dia border-bottom"
-                  *ngFor="let trip of trips"
+                  *ngFor="let trip of trips; let tripIndex = index"
                   [ngStyle]="{ color: trip.trip_class.trip_class_color }"
                 >
                   {{
                     getTime('arrival', station, trip) ||
-                      throughChecker('arrival', staIndex, trip)
+                      throughChecker('arrival', staIndex, trip, tripIndex)
                   }}
                 </td>
               </tr>
               <tr *ngIf="departureChecker(station.station_name)">
                 <td
                   class="dia"
-                  *ngFor="let trip of trips"
+                  *ngFor="let trip of trips; let tripIndex = index"
                   [ngStyle]="{ color: trip.trip_class.trip_class_color }"
                   [ngClass]="[
                     borderCheker(station.station_name) ? 'border-bottom' : ''
@@ -148,7 +148,7 @@
                 >
                   {{
                     getTime('departure', station, trip) ||
-                      throughChecker('departure', staIndex, trip)
+                      throughChecker('departure', staIndex, trip, tripIndex)
                   }}
                 </td>
               </tr>
