@@ -19,6 +19,8 @@ export class TimetableAllLineComponent implements OnInit {
   trips = [];
   calender = {};
 
+  stopStationsArray = [];
+
   calenderId: string = null;
   direction: string = null;
 
@@ -45,6 +47,10 @@ export class TimetableAllLineComponent implements OnInit {
 
         this.paginator.length = data.tripsCount;
         this.paginator.pageSize = 10;
+
+        this.generateStopStationsArray();
+        console.log('Stations', this.stations);
+        console.log('StopStationsArray', this.stopStationsArray);
       }
     );
     this.route.paramMap.subscribe(params => {
@@ -65,8 +71,25 @@ export class TimetableAllLineComponent implements OnInit {
       )
       .subscribe(result => {
         this.trips = result;
+        console.log(this.trips);
+        this.generateStopStationsArray();
         this.loading.close();
       });
+  }
+
+  generateStopStationsArray() {
+    this.stopStationsArray = this.trips.map(trip => {
+      const stopStationArray = [];
+      this.stations.forEach((station, index) => {
+        if (this.getTime('arrival', station, trip)) {
+          stopStationArray.push(index);
+        }
+        if (this.getTime('departure', station, trip)) {
+          stopStationArray.push(index);
+        }
+      });
+      return stopStationArray;
+    });
   }
 
   getTime(mode: string, station: any, trip: any) {
@@ -143,16 +166,13 @@ export class TimetableAllLineComponent implements OnInit {
     return timeString ? time : null;
   }
 
-  throughChecker(mode: string, stationIndex: number, trip: any) {
-    const stopStationArray = [];
-    this.stations.forEach((station, index) => {
-      if (this.getTime('arrival', station, trip)) {
-        stopStationArray.push(index);
-      }
-      if (this.getTime('departure', station, trip)) {
-        stopStationArray.push(index);
-      }
-    });
+  throughChecker(
+    mode: string,
+    stationIndex: number,
+    trip: any,
+    tripIndex: number
+  ) {
+    const stopStationArray = this.stopStationsArray[tripIndex];
 
     const start = stopStationArray[0];
     const end = stopStationArray[stopStationArray.length - 1];
@@ -223,6 +243,7 @@ export class TimetableAllLineComponent implements OnInit {
       }
     } else {
       if (
+        this.stations[stopStationArray[stopStationArray.length - 1] + 1] &&
         this.arrivalChecker(
           this.stations[stopStationArray[stopStationArray.length - 1] + 1]
             .station_name
