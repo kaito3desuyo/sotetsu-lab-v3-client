@@ -41,7 +41,7 @@ export class AppComponent implements OnInit {
         );
         if (this.opened) {
           console.log(this.sidenav);
-          this.sidenav.toggle();
+          this.sidenav.close();
         }
       });
   }

@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import { MatPaginator, PageEvent } from '@angular/material';
+import { ApiService } from 'src/app/services/api.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-timetable-all-line',
@@ -14,20 +17,56 @@ import * as moment from 'moment';
 export class TimetableAllLineComponent implements OnInit {
   stations = [];
   trips = [];
+  calender = {};
 
+  calenderId: string = null;
   direction: string = null;
 
-  constructor(private route: ActivatedRoute) {}
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+
+  constructor(
+    private route: ActivatedRoute,
+    private api: ApiService,
+    private loading: LoadingService
+  ) {}
 
   ngOnInit() {
-    this.route.data.subscribe((data: { stations: any; trips: any }) => {
-      console.log(data);
-      this.stations = data.stations;
-      this.trips = data.trips;
-    });
+    this.route.data.subscribe(
+      (data: {
+        stations: any
+        trips: any
+        tripsCount: number
+        calender: any
+      }) => {
+        console.log(data);
+        this.stations = data.stations;
+        this.trips = data.trips;
+        this.calender = data.calender;
+
+        this.paginator.length = data.tripsCount;
+        this.paginator.pageSize = 10;
+      }
+    );
     this.route.paramMap.subscribe(params => {
+      this.calenderId = params.get('dia');
       this.direction = params.get('direction');
     });
+  }
+
+  changePage(event: PageEvent) {
+    console.log(event);
+    this.loading.open();
+    this.api
+      .getTrips(
+        this.calenderId,
+        this.direction,
+        event.pageIndex,
+        event.pageSize
+      )
+      .subscribe(result => {
+        this.trips = result;
+        this.loading.close();
+      });
   }
 
   getTime(mode: string, station: any, trip: any) {
@@ -50,6 +89,16 @@ export class TimetableAllLineComponent implements OnInit {
 
   arrivalChecker(stationName: string) {
     if (this.direction === 'up') {
+      switch (stationName) {
+        case '大和':
+        case 'いずみ野':
+        case '二俣川':
+        case '横浜':
+        case '新宿':
+        case '大宮':
+        case '川越':
+          return true;
+      }
     }
     if (this.direction === 'down') {
       switch (stationName) {
@@ -69,6 +118,11 @@ export class TimetableAllLineComponent implements OnInit {
 
   departureChecker(stationName: string) {
     if (this.direction === 'up') {
+      switch (stationName) {
+        case '横浜':
+        case '川越':
+          return false;
+      }
     }
     if (this.direction === 'down') {
       switch (stationName) {
@@ -82,11 +136,14 @@ export class TimetableAllLineComponent implements OnInit {
   }
 
   formatTime(timeString: string) {
-    const time = moment(timeString, 'HH:mm:ss').format('HHmm');
+    let time = moment(timeString, 'HH:mm:ss').format('Hmm');
+    if (time.length === 3) {
+      time = '-' + time;
+    }
     return timeString ? time : null;
   }
 
-  throughChecker(stationIndex: number, trip: any) {
+  throughChecker(mode: string, stationIndex: number, trip: any) {
     const stopStationArray = [];
     this.stations.forEach((station, index) => {
       if (this.getTime('arrival', station, trip)) {
@@ -101,6 +158,28 @@ export class TimetableAllLineComponent implements OnInit {
     const end = stopStationArray[stopStationArray.length - 1];
 
     if (this.direction === 'up') {
+      switch (true) {
+        case start === 0 && 2 <= end && end <= 8:
+          if (stationIndex === 1) {
+            return '|';
+          }
+          break;
+        case start === 0 && 16 <= end && end <= 52:
+          if (stationIndex === 1 || (9 <= stationIndex && stationIndex <= 15)) {
+            return '|';
+          }
+          break;
+        case 0 <= start && start <= 8 && 16 <= end && end <= 52:
+          if (9 <= stationIndex && stationIndex <= 15) {
+            return '|';
+          }
+          break;
+        case 0 <= start && start <= 18 && 26 <= end && end <= 52:
+          if (19 <= stationIndex && stationIndex <= 25) {
+            return '|';
+          }
+          break;
+      }
     }
     if (this.direction === 'down') {
       switch (true) {
@@ -143,11 +222,54 @@ export class TimetableAllLineComponent implements OnInit {
         return '=';
       }
     } else {
-      if (stationIndex === stopStationArray[stopStationArray.length - 1] + 1) {
-        return '=';
+      if (
+        this.arrivalChecker(
+          this.stations[stopStationArray[stopStationArray.length - 1] + 1]
+            .station_name
+        ) &&
+        this.departureChecker(
+          this.stations[stopStationArray[stopStationArray.length - 1] + 1]
+            .station_name
+        )
+      ) {
+        if (
+          stationIndex === stopStationArray[stopStationArray.length - 1] + 1 &&
+          mode === 'arrival'
+        ) {
+          return '=';
+        }
+      } else {
+        if (
+          stationIndex ===
+          stopStationArray[stopStationArray.length - 1] + 1
+        ) {
+          return '=';
+        }
       }
     }
 
     return '‥';
+  }
+
+  borderCheker(stationName: string) {
+    if (this.direction === 'up') {
+      switch (stationName) {
+        case '厚木':
+        case '希望ヶ丘':
+        case '横浜':
+        case '川越':
+          return true;
+      }
+    }
+    if (this.direction === 'down') {
+      switch (stationName) {
+        case '羽沢横浜国大':
+        case '湘南台':
+        case '海老名':
+        case '厚木':
+          return true;
+      }
+    }
+    return false;
   }
 }

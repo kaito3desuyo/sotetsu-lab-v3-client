@@ -8,14 +8,35 @@
     >
       <mat-form-field>
         <mat-select placeholder="駅名" [formControl]="station">
-          <mat-option value="">
+          <mat-option [value]="">
             選択しない
+          </mat-option>
+          <mat-option *ngFor="let station of stations" [value]="station.id">
+            {{ station.station_name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </mat-list-item>
-    <a mat-list-item routerLink="/up">上り</a>
-    <a mat-list-item routerLink="/down">下り</a>
+    <a
+      mat-list-item
+      [routerLink]="[
+        station.value ? '/timetable/station' : '/timetable/all-line',
+        station.value
+          ? { dia: calender.id, direction: 'up', station: station.value }
+          : { dia: calender.id, direction: 'up' }
+      ]"
+      >上り</a
+    >
+    <a
+      mat-list-item
+      [routerLink]="[
+        station.value ? '/timetable/station' : '/timetable/all-line',
+        station.value
+          ? { dia: calender.id, direction: 'down', station: station.value }
+          : { dia: calender.id, direction: 'down' }
+      ]"
+      >下り</a
+    >
     <h3 mat-subheader>運用情報</h3>
     <a mat-list-item routerLink="/">リアルタイム</a>
     <a mat-list-item routerLink="/">過去の運用情報</a>

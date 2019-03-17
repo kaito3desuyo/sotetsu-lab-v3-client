@@ -17,8 +17,11 @@ import {
   MatSortModule,
   MatIconModule,
   MatSidenavModule,
-  MatDividerModule
+  MatDividerModule,
+  MatPaginatorModule,
+  MatProgressSpinnerModule
 } from '@angular/material';
+import { OverlayModule } from '@angular/cdk/overlay';
 
 @NgModule({
   declarations: [],
@@ -39,7 +42,10 @@ import {
     MatSortModule,
     MatIconModule,
     MatSidenavModule,
-    MatDividerModule
+    MatDividerModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    OverlayModule
   ],
   exports: [
     MatFormFieldModule,
@@ -58,7 +64,10 @@ import {
     MatSortModule,
     MatIconModule,
     MatSidenavModule,
-    MatDividerModule
+    MatDividerModule,
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    OverlayModule
   ]
 })
 export class AngularMaterialModule {}

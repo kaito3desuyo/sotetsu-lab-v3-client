@@ -3,10 +3,11 @@ import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 
+/*
 @Injectable({
   providedIn: 'root'
 })
-export class TripsResolverService implements Resolve<any> {
+export class CalendersResolverService implements Resolve<any> {
   constructor(private api: ApiService) {}
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
@@ -16,17 +17,15 @@ export class TripsResolverService implements Resolve<any> {
     );
   }
 }
+*/
 
 @Injectable({
   providedIn: 'root'
 })
-export class TripsCountResolverService implements Resolve<any> {
+export class CalenderByIdResolverService implements Resolve<any> {
   constructor(private api: ApiService) {}
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
-    return this.api.getTripsCount(
-      route.paramMap.get('dia'),
-      route.paramMap.get('direction')
-    );
+    return this.api.getCalenderById(route.paramMap.get('dia'));
   }
 }
