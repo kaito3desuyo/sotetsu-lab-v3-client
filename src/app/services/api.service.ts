@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { Station } from '../interfaces/station';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Calender } from '../interfaces/calender';
@@ -30,15 +30,35 @@ export class ApiService {
   getCalenderById(id: string): Observable<Calender> {
     return this.http.get<Calender>(this.apiUrl.calenders + '/' + id);
   }
+  getCalenderByToday(): Observable<Calender> {
+    return this.http.get<Calender>(this.apiUrl.calenders + '/today');
+  }
 
-  getTrips(calenderId: string, direction: string): Observable<any> {
+  getTrips(
+    calenderId: string,
+    direction: string,
+    offset?: number,
+    count?: number
+  ): Observable<any> {
     return this.http.get<any>(this.apiUrl.trips, {
+      params: {
+        calender_id: calenderId,
+        direction: direction,
+        offset: offset ? String(offset) : '0',
+        count: count ? String(count) : '10'
+      }
+    });
+  }
+
+  getTripsCount(calenderId: string, direction: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.trips + '/count', {
       params: {
         calender_id: calenderId,
         direction: direction
       }
     });
   }
+
   addTrip(data: any): Observable<any> {
     return this.http.post<any>(this.apiUrl.trips, { trip: data });
   }

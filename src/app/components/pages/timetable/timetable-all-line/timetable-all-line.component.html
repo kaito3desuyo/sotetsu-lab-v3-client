@@ -1,81 +1,161 @@
-<p>
-  timetable-all-line works!
-</p>
 <div class="timetable-all-line-container">
-  <table>
-    <thead>
-      <tr>
-        <th>Sta No.</th>
-        <th>駅名</th>
-        <th *ngFor="let trip of trips">{{ trip.trip_number }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let station of stations; let staIndex = index">
-        <tr *ngIf="arrivalChecker(station.station_name)">
-          <td
-            [rowSpan]="
-              arrivalChecker(station.station_name) &&
-              departureChecker(station.station_name)
-                ? 2
-                : 1
-            "
-          >
-            {{ staIndex }}
-          </td>
-          <td
-            [rowSpan]="
-              arrivalChecker(station.station_name) &&
-              departureChecker(station.station_name)
-                ? 2
-                : 1
-            "
-          >
-            {{ station.route_station_lists[0].station_numbering }}
-          </td>
-          <td
-            [rowSpan]="
-              arrivalChecker(station.station_name) &&
-              departureChecker(station.station_name)
-                ? 2
-                : 1
-            "
-          >
-            {{ station.station_name }}
-          </td>
-          <td
-            class="dia"
-            *ngFor="let trip of trips"
-            [ngStyle]="{ color: trip.trip_class.trip_class_color }"
-          >
-            {{
-              getTime('arrival', station, trip) ||
-                throughChecker(staIndex, trip)
-            }}
-          </td>
-        </tr>
-        <tr *ngIf="departureChecker(station.station_name)">
-          <td *ngIf="!arrivalChecker(station.station_name)">
-            {{ staIndex }}
-          </td>
-          <td *ngIf="!arrivalChecker(station.station_name)">
-            {{ station.route_station_lists[0].station_numbering }}
-          </td>
-          <td *ngIf="!arrivalChecker(station.station_name)">
-            {{ station.station_name }}
-          </td>
-          <td
-            class="dia"
-            *ngFor="let trip of trips"
-            [ngStyle]="{ color: trip.trip_class.trip_class_color }"
-          >
-            {{
-              getTime('departure', station, trip) ||
-                throughChecker(staIndex, trip)
-            }}
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
+  <h2 class="mat-h2">
+    {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
+    {{ direction === 'up' ? '上り' : direction === 'down' ? '下り' : null }}
+    全線時刻表
+  </h2>
+  <mat-card>
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 25, 100]"
+      (page)="changePage($event)"
+    >
+    </mat-paginator>
+
+    <div fxLayout="row">
+      <table class="table-station" fxFlex="0 0 200px">
+        <thead>
+          <tr>
+            <th rowspan="3">Sta No.</th>
+            <th colspan="2">列車番号</th>
+          </tr>
+          <tr>
+            <th colspan="2">運用番号</th>
+          </tr>
+          <tr>
+            <th colspan="2">種別</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let station of stations; let staIndex = index">
+            <tr *ngIf="arrivalChecker(station.station_name)">
+              <td
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+                [rowSpan]="
+                  arrivalChecker(station.station_name) &&
+                  departureChecker(station.station_name)
+                    ? 2
+                    : 1
+                "
+              >
+                {{ station.route_station_lists[0].station_numbering }}
+              </td>
+              <td
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+                style="text-align: right; border-right: 0;"
+                [rowSpan]="
+                  arrivalChecker(station.station_name) &&
+                  departureChecker(station.station_name)
+                    ? 2
+                    : 1
+                "
+                [ngStyle]="{
+                  height:
+                    arrivalChecker(station.station_name) &&
+                    departureChecker(station.station_name)
+                      ? '49px'
+                      : '24px'
+                }"
+              >
+                {{ station.station_name }}
+              </td>
+              <td
+                style="border-left: 0; border-bottom:1px solid #e0e0e0; text-align: center"
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+              >
+                着
+              </td>
+            </tr>
+            <tr *ngIf="departureChecker(station.station_name)">
+              <td
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+                *ngIf="!arrivalChecker(station.station_name)"
+              >
+                {{ station.route_station_lists[0].station_numbering }}
+              </td>
+              <td
+                style="text-align: right; border-right: 0;"
+                *ngIf="!arrivalChecker(station.station_name)"
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+              >
+                {{ station.station_name }}
+              </td>
+              <td
+                style="border-left: 0; text-align: center"
+                [ngClass]="[
+                  borderCheker(station.station_name) ? 'border-bottom' : ''
+                ]"
+              >
+                発
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+      <div style="overflow-x: scroll">
+        <table class="table-time" style="table-layout: fixed; min-width: 100%;">
+          <thead>
+            <tr>
+              <th *ngFor="let trip of trips">{{ trip.trip_number }}</th>
+            </tr>
+            <tr>
+              <th *ngFor="let trip of trips">
+                {{ trip.operation.operation_number }}
+              </th>
+            </tr>
+            <tr>
+              <th
+                *ngFor="let trip of trips"
+                [ngStyle]="{ color: trip.trip_class.trip_class_color }"
+              >
+                {{ trip.trip_class.trip_class_name }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container
+              *ngFor="let station of stations; let staIndex = index"
+            >
+              <tr *ngIf="arrivalChecker(station.station_name)">
+                <td
+                  class="dia border-bottom"
+                  *ngFor="let trip of trips"
+                  [ngStyle]="{ color: trip.trip_class.trip_class_color }"
+                >
+                  {{
+                    getTime('arrival', station, trip) ||
+                      throughChecker('arrival', staIndex, trip)
+                  }}
+                </td>
+              </tr>
+              <tr *ngIf="departureChecker(station.station_name)">
+                <td
+                  class="dia"
+                  *ngFor="let trip of trips"
+                  [ngStyle]="{ color: trip.trip_class.trip_class_color }"
+                  [ngClass]="[
+                    borderCheker(station.station_name) ? 'border-bottom' : ''
+                  ]"
+                >
+                  {{
+                    getTime('departure', station, trip) ||
+                      throughChecker('departure', staIndex, trip)
+                  }}
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </mat-card>
 </div>

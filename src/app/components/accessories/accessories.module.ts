@@ -14,6 +14,7 @@ import { AddTimetablePreFormComponent } from './timetable/add-timetable-pre-form
 import { HeaderComponent } from './header/header.component';
 import { SidenavComponent } from './sidenav/sidenav.component';
 import { RouterModule } from '@angular/router';
+import { LoadingComponent } from './loading/loading.component';
 
 @NgModule({
   imports: [
@@ -34,7 +35,8 @@ import { RouterModule } from '@angular/router';
     OperationHistoryDialogComponent,
     AddOperationSightingFormComponent,
     SearchTimetableFormComponent,
-    AddTimetablePreFormComponent
+    AddTimetablePreFormComponent,
+    LoadingComponent
   ],
   declarations: [
     HeaderComponent,
@@ -45,8 +47,9 @@ import { RouterModule } from '@angular/router';
     OperationHistoryDialogComponent,
     AddOperationSightingFormComponent,
     SearchTimetableFormComponent,
-    AddTimetablePreFormComponent
+    AddTimetablePreFormComponent,
+    LoadingComponent
   ],
-  entryComponents: [OperationHistoryDialogComponent]
+  entryComponents: [OperationHistoryDialogComponent, LoadingComponent]
 })
 export class AccessoriesModule {}

@@ -10,6 +10,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { AccessoriesModule } from './components/accessories/accessories.module';
 import { PagesModule } from './components/pages/pages.module';
+import { MatPaginatorIntl } from '@angular/material';
+import { CustomPagenator } from './classes/custom-pagenator';
 
 @NgModule({
   declarations: [AppComponent],
@@ -24,7 +26,12 @@ import { PagesModule } from './components/pages/pages.module';
     PagesModule,
     AccessoriesModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: MatPaginatorIntl,
+      useClass: CustomPagenator
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

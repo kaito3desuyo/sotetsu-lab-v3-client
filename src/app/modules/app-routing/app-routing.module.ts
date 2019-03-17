@@ -6,7 +6,11 @@ import { AddTimetableComponent } from 'src/app/components/pages/timetable/add-ti
 import { RealTimeComponent } from 'src/app/components/pages/operation/real-time/real-time.component';
 import { TimetableAllLineComponent } from 'src/app/components/pages/timetable/timetable-all-line/timetable-all-line.component';
 import { StationsResolverService } from 'src/app/services/stations-resolver.service';
-import { TripsResolverService } from 'src/app/services/trips-resolver.service';
+import {
+  TripsResolverService,
+  TripsCountResolverService
+} from 'src/app/services/trips-resolver.service';
+import { CalenderByIdResolverService } from 'src/app/services/calender-resolver.service';
 
 const routes: Routes = [
   { path: '', component: TopComponent, data: { title: '' } },
@@ -21,7 +25,9 @@ const routes: Routes = [
     data: { title: '全線時刻表' },
     resolve: {
       stations: StationsResolverService,
-      trips: TripsResolverService
+      trips: TripsResolverService,
+      tripsCount: TripsCountResolverService,
+      calender: CalenderByIdResolverService
     }
   },
   {
