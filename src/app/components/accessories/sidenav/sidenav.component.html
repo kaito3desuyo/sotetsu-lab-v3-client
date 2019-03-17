@@ -22,8 +22,8 @@
       [routerLink]="[
         station.value ? '/timetable/station' : '/timetable/all-line',
         station.value
-          ? { dia: calender.id, direction: 'up', station: station.value }
-          : { dia: calender.id, direction: 'up' }
+          ? { dia: calender['id'], direction: 'up', station: station.value }
+          : { dia: calender['id'], direction: 'up' }
       ]"
       >上り</a
     >
@@ -32,8 +32,8 @@
       [routerLink]="[
         station.value ? '/timetable/station' : '/timetable/all-line',
         station.value
-          ? { dia: calender.id, direction: 'down', station: station.value }
-          : { dia: calender.id, direction: 'down' }
+          ? { dia: calender['id'], direction: 'down', station: station.value }
+          : { dia: calender['id'], direction: 'down' }
       ]"
       >下り</a
     >
