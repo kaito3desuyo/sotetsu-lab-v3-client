@@ -15,6 +15,7 @@ import { HeaderComponent } from './header/header.component';
 import { SidenavComponent } from './sidenav/sidenav.component';
 import { RouterModule } from '@angular/router';
 import { LoadingComponent } from './loading/loading.component';
+import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 
 @NgModule({
   imports: [
@@ -24,7 +25,8 @@ import { LoadingComponent } from './loading/loading.component';
     FlexLayoutModule,
     FormsModule,
     ReactiveFormsModule,
-    PipesModule.forRoot()
+    PipesModule.forRoot(),
+    PerfectScrollbarModule
   ],
   exports: [
     HeaderComponent,
@@ -50,6 +52,10 @@ import { LoadingComponent } from './loading/loading.component';
     AddTimetablePreFormComponent,
     LoadingComponent
   ],
-  entryComponents: [OperationHistoryDialogComponent, LoadingComponent]
+  entryComponents: [
+    OperationHistoryDialogComponent,
+    LoadingComponent,
+    ExceptionDialogComponent
+  ]
 })
 export class AccessoriesModule {}

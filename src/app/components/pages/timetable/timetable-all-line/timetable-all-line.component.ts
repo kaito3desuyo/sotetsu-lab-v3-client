@@ -36,16 +36,16 @@ export class TimetableAllLineComponent implements OnInit {
     this.route.data.subscribe(
       (data: {
         stations: any
-        trips: any
+        trips: any | any[]
         tripsCount: number
         calender: any
       }) => {
         console.log(data);
         this.stations = data.stations;
-        this.trips = data.trips;
+        this.trips = _.isArray(data.trips) ? data.trips : [data.trips];
         this.calender = data.calender;
 
-        this.paginator.length = data.tripsCount;
+        this.paginator.length = _.isArray(data.trips) ? data.tripsCount : 1;
         this.paginator.pageSize = 10;
 
         this.generateStopStationsArray();

@@ -1,6 +1,6 @@
 <div class="add-timetable-container">
   <form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
-    <h2 class="mat-h2">列車を追加する</h2>
+    <h2 class="mat-h2">{{ title }}</h2>
     <mat-card>
       <mat-card-content>
         <div fxLayout="row" fxLayoutGap="24px">
@@ -63,7 +63,6 @@
                     type="time"
                     formControlName="arrivalTime"
                     placeholder="着時刻"
-                    value=""
                   />
                 </mat-form-field>
               </td>
@@ -74,7 +73,6 @@
                     type="time"
                     formControlName="departureTime"
                     placeholder="発時刻"
-                    value=""
                     [attr.disabled]="
                       station.value.isAllowDepartureTime ? null : true
                     "

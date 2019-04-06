@@ -15,6 +15,9 @@ import { CommonModule } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { TimetableAllLineComponent } from './timetable/timetable-all-line/timetable-all-line.component';
+import { TimetableStationComponent } from './timetable/timetable-station/timetable-station.component';
+import { NgxPerfectScrollbarModule } from 'src/app/modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
+import { TimetableEditorComponent } from './timetable/timetable-editor/timetable-editor.component';
 
 @NgModule({
   imports: [
@@ -23,6 +26,7 @@ import { TimetableAllLineComponent } from './timetable/timetable-all-line/timeta
     RouterModule,
     AngularMaterialModule,
     FlexLayoutModule,
+    NgxPerfectScrollbarModule,
     FormsModule,
     ReactiveFormsModule,
     AccessoriesModule,
@@ -34,6 +38,8 @@ import { TimetableAllLineComponent } from './timetable/timetable-all-line/timeta
     RealTimeComponent,
     TimetableComponent,
     TimetableAllLineComponent,
+    TimetableStationComponent,
+    TimetableEditorComponent,
     AddTimetableComponent
   ]
 })

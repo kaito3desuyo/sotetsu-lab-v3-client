@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatRadioChange, MatDialog, MatSnackBar } from '@angular/material';
 import { HttpClient } from '@angular/common/http';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import { ExceptionDialogComponent } from '../../exception-dialog/exception-dialog.component';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector: 'app-add-operation-sighting-form',
@@ -19,11 +20,14 @@ export class AddOperationSightingFormComponent implements OnInit {
     sightingTime: ['', Validators.required]
   });
 
+  @Output() send: EventEmitter<any> = new EventEmitter<any>();
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     public dialog: MatDialog,
-    public snackBar: MatSnackBar
+    public snackBar: MatSnackBar,
+    private api: ApiService
   ) {}
 
   ngOnInit() {
@@ -47,11 +51,8 @@ export class AddOperationSightingFormComponent implements OnInit {
       .then(() => {
         return new Promise((resolve, reject) => {
           // 車両の存在チェック
-          this.http
-            .get(
-              'http://localhost:3000/api/v1/vehicles/number/' +
-                this.sendDataSet.get('vehicleNumber').value
-            )
+          this.api
+            .getVehicleByNumber(this.sendDataSet.get('vehicleNumber').value)
             .subscribe(result => {
               console.log(result);
               if (result['length'] !== 0) {
@@ -76,12 +77,10 @@ export class AddOperationSightingFormComponent implements OnInit {
             today.subtract(1, 'days');
           }
           // 運用番号の存在チェック
-          this.http
-            .get(
-              'http://localhost:3000/api/v1/operations/date/' +
-                today.format('YYYYMMDD') +
-                '/number/' +
-                this.sendDataSet.get('operationNumber').value
+          this.api
+            .getOperationByDateByNumber(
+              today.format('YYYYMMDD'),
+              this.sendDataSet.get('operationNumber').value
             )
             .subscribe(result => {
               if (result) {
@@ -118,24 +117,23 @@ export class AddOperationSightingFormComponent implements OnInit {
       })
       .then(object => {
         return new Promise((resolve, reject) => {
-          this.http
-            .post('http://localhost:3000/api/v1/operations/sightings/', object)
-            .subscribe(
-              result => {
-                this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
-                  duration: 3000
-                });
-                this.sendDataSet.reset();
-                this.sendDataSet.get('isInput').setValue(false);
-                this.sendDataSet.get('sightingTime').disable();
-              },
-              err => {
-                reject({
-                  title: err.error.message.title,
-                  text: err.error.message.text
-                });
-              }
-            );
+          this.api.postOperationSightings(object).subscribe(
+            result => {
+              this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
+                duration: 3000
+              });
+              this.sendDataSet.reset();
+              this.sendDataSet.get('isInput').setValue(false);
+              this.sendDataSet.get('sightingTime').disable();
+              this.send.emit();
+            },
+            err => {
+              reject({
+                title: err.error.message.title,
+                text: err.error.message.text
+              });
+            }
+          );
         });
       })
       .catch(err => {

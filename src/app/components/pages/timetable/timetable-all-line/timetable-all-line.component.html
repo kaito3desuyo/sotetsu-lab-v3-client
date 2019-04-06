@@ -1,6 +1,7 @@
 <div class="timetable-all-line-container">
   <h2 class="mat-h2">
     {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
+    {{ calender['calender_name'] }}
     {{ direction === 'up' ? '上り' : direction === 'down' ? '下り' : null }}
     全線時刻表
   </h2>
@@ -101,8 +102,8 @@
           </ng-container>
         </tbody>
       </table>
-      <div style="overflow-x: scroll">
-        <table class="table-time" style="table-layout: fixed; min-width: 100%;">
+      <perfect-scrollbar>
+        <table class="table-time" style="table-layout: fixed">
           <thead>
             <tr>
               <th *ngFor="let trip of trips">{{ trip.trip_number }}</th>
@@ -153,9 +154,33 @@
                 </td>
               </tr>
             </ng-container>
+            <tr>
+              <td *ngFor="let trip of trips">
+                <a
+                  [routerLink]="[
+                    '/timetable/edit',
+                    {
+                      dia: this.route.snapshot.paramMap.get('dia'),
+                      direction: this.route.snapshot.paramMap.get('direction'),
+                      trip: trip.id
+                    }
+                  ]"
+                  >編集</a
+                >
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="border-bottom: 1px solid #e0e0e0"
+                *ngFor="let trip of trips"
+              >
+                削除
+              </td>
+            </tr>
           </tbody>
         </table>
-      </div>
+      </perfect-scrollbar>
     </div>
   </mat-card>
 </div>

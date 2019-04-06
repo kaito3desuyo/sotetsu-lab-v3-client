@@ -5,12 +5,23 @@ import { TimetableComponent } from 'src/app/components/pages/timetable/timetable
 import { AddTimetableComponent } from 'src/app/components/pages/timetable/add-timetable/add-timetable.component';
 import { RealTimeComponent } from 'src/app/components/pages/operation/real-time/real-time.component';
 import { TimetableAllLineComponent } from 'src/app/components/pages/timetable/timetable-all-line/timetable-all-line.component';
-import { StationsResolverService } from 'src/app/services/stations-resolver.service';
+import {
+  StationsResolverService,
+  StationTimesByIdResolverService
+} from 'src/app/services/stations-resolver.service';
 import {
   TripsResolverService,
-  TripsCountResolverService
+  TripsCountResolverService,
+  TripByIdResolverService
 } from 'src/app/services/trips-resolver.service';
 import { CalenderByIdResolverService } from 'src/app/services/calender-resolver.service';
+import { TimetableStationComponent } from 'src/app/components/pages/timetable/timetable-station/timetable-station.component';
+import {
+  OperationsByDateResolverService,
+  OperationSightingsByLatestSightingResolverService
+} from 'src/app/services/operations-resolver.service';
+import { ServicesResolverService } from 'src/app/services/services-resolver.service';
+import { TimetableEditorComponent } from 'src/app/components/pages/timetable/timetable-editor/timetable-editor.component';
 
 const routes: Routes = [
   { path: '', component: TopComponent, data: { title: '' } },
@@ -27,13 +38,40 @@ const routes: Routes = [
       stations: StationsResolverService,
       trips: TripsResolverService,
       tripsCount: TripsCountResolverService,
-      calender: CalenderByIdResolverService
+      calender: CalenderByIdResolverService,
+      sightings: OperationSightingsByLatestSightingResolverService
+    }
+  },
+  {
+    path: 'timetable/station',
+    component: TimetableStationComponent,
+    data: { title: '駅時刻表' },
+    resolve: {
+      timeOfStation: StationTimesByIdResolverService,
+      calender: CalenderByIdResolverService,
+      sightings: OperationSightingsByLatestSightingResolverService
     }
   },
   {
     path: 'timetable/add',
-    component: AddTimetableComponent,
-    data: { title: '列車を追加する' }
+    component: TimetableEditorComponent,
+    data: { title: '列車を追加する' },
+    resolve: {
+      services: ServicesResolverService,
+      stations: StationsResolverService,
+      calender: CalenderByIdResolverService
+    }
+  },
+  {
+    path: 'timetable/edit',
+    component: TimetableEditorComponent,
+    data: { title: '列車を編集する' },
+    resolve: {
+      services: ServicesResolverService,
+      stations: StationsResolverService,
+      calender: CalenderByIdResolverService,
+      trip: TripByIdResolverService
+    }
   },
   {
     path: 'operation/real-time',
