@@ -62,7 +62,7 @@ export class SearchTimetableFormComponent implements OnInit {
       ]);
     } else {
       this.router.navigate([
-        '/timetable',
+        '/timetable/station',
         {
           dia: this.searchParam.get('dia').value,
           direction: this.searchParam.get('direction').value,

@@ -1,0 +1,32 @@
+.timetable-station-container {
+  .timetable-container {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  table {
+    border-collapse: collapse;
+
+    td {
+      text-align: center;
+      span {
+        line-height: 24px;
+      }
+    }
+
+    tbody {
+      tr {
+        height: 96px;
+        &:nth-child(odd) {
+          background: rgba(0, 0, 0, 0.06);
+        }
+        th {
+          width: 60px;
+          padding: 12px;
+        }
+        td {
+          width: 48px;
+          padding: 12px;
+        }
+      }
+    }
+  }
+}

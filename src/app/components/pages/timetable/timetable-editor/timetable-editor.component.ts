@@ -4,21 +4,25 @@ import { Station } from 'src/app/interfaces/station';
 import { FormBuilder, FormArray, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as moment from 'moment';
+import * as _ from 'lodash';
 import { Operation } from 'src/app/interfaces/operation';
 import { Calender } from 'src/app/interfaces/calender';
 import { MatSnackBar } from '@angular/material';
 
 @Component({
-  selector: 'app-add-timetable',
-  templateUrl: './add-timetable.component.html',
-  styleUrls: ['./add-timetable.component.scss']
+  selector: 'app-timetable-editor',
+  templateUrl: './timetable-editor.component.html',
+  styleUrls: ['./timetable-editor.component.scss']
 })
-export class AddTimetableComponent implements OnInit, AfterContentChecked {
+export class TimetableEditorComponent implements OnInit {
+  title: string = null;
+
   services: any[];
   classes: any[];
   stations: Station[];
   calender: Calender;
   operations: Operation[];
+  trip: any;
 
   sendDataSet = this.fb.group({
     tripNumber: ['', Validators.required],
@@ -43,42 +47,63 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
 
   ngOnInit() {
     this.route.data.subscribe(
-      (data: { services: any[]; stations: any[]; calender: any }) => {
+      (data: {
+        title: string
+        services: any[]
+        stations: any[]
+        calender: any
+        trip?: any
+      }) => {
+        this.title = data.title;
         console.log(data);
         this.services = data.services;
         this.classes = this.services[0].trip_classes;
         this.stations = data.stations;
-        this.initializeStationTimeFormArray();
         this.calender = data.calender;
         this.operations = data.calender.operations;
+        this.trip = data.trip ? data.trip : {};
+
+        if (this.trip) {
+          this.sendDataSet.get('tripNumber').setValue(this.trip.trip_number);
+          this.sendDataSet.get('operationId').setValue(this.trip.operation_id);
+          this.sendDataSet.get('tripClassId').setValue(this.trip.trip_class_id);
+        }
+
+        this.initializeStationTimeFormArray();
       }
     );
-  }
-
-  ngAfterContentChecked(): void {
-    // Called after every check of the component's or directive's content.
-    // Add 'implements AfterContentChecked' to the class.
-    console.log(this.sendDataSet.valid);
   }
 
   initializeStationTimeFormArray() {
     const stationFormControls = this.stations.map((station, index) =>
       this.fb.group({
-        isAllowArrivalTime: this.checkArrivalTime(station.station_name),
-        isAllowDepartureTime: this.checkDepartureTime(station.station_name),
+        isAllowArrivalTime:
+          this.getTimeOnEditMode(station.id, 'arrival_time') ||
+          this.checkArrivalTime(station.station_name),
+        isAllowDepartureTime:
+          this.getTimeOnEditMode(station.id, 'departure_time') ||
+          this.checkDepartureTime(station.station_name),
         station_id: station.id,
         station_name: station.station_name,
         stop_id: [''],
         arrivalTime: [
           {
-            value: '',
-            disabled: !this.checkArrivalTime(station.station_name)
+            value: this.route.snapshot.paramMap.get('trip')
+              ? this.getTimeOnEditMode(station.id, 'arrival_time')
+              : null,
+            disabled: this.getTimeOnEditMode(station.id, 'arrival_time')
+              ? false
+              : !this.checkArrivalTime(station.station_name)
           }
         ],
         departureTime: [
           {
-            value: '',
-            disabled: !this.checkDepartureTime(station.station_name)
+            value: this.route.snapshot.paramMap.get('trip')
+              ? this.getTimeOnEditMode(station.id, 'departure_time')
+              : null,
+            disabled: this.getTimeOnEditMode(station.id, 'departure_time')
+              ? false
+              : !this.checkDepartureTime(station.station_name)
           }
         ]
       })
@@ -103,6 +128,18 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
     } else {
       this.stationsCtl.controls[index].get('departureTime').disable();
     }
+  }
+
+  getTimeOnEditMode(stationId: string, prop: string) {
+    const result = _.find(this.trip.times, obj => {
+      return obj.station_id === stationId;
+    });
+    if (!result) {
+      return null;
+    }
+    return result[prop] !== null
+      ? moment(result[prop], 'HH:mm:ss').format('HH:mm')
+      : null;
   }
 
   checkIsAllowArrivalTime() {
@@ -272,12 +309,24 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
       extra_calender_id: null,
       times: times
     };
-    this.apiService.addTrip(sendForApiData).subscribe(result => {
-      console.log(result);
-      this.snackBar.open('列車を追加しました。', 'OK', {
-        duration: 3000
+    if (this.trip) {
+      this.apiService
+        .editTrip(this.trip.id, sendForApiData)
+        .subscribe(result => {
+          console.log(result);
+          this.snackBar.open('編集が完了しました。', 'OK', {
+            duration: 3000
+          });
+          this.router.navigate(['/']);
+        });
+    } else {
+      this.apiService.addTrip(sendForApiData).subscribe(result => {
+        console.log(result);
+        this.snackBar.open('列車を追加しました。', 'OK', {
+          duration: 3000
+        });
+        this.router.navigate(['/']);
       });
-      this.router.navigate(['/']);
-    });
+    }
   }
 }

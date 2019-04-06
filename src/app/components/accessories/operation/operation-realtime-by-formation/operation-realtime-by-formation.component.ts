@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  Input,
+  AfterContentChecked
+} from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
 import * as moment from 'moment';
@@ -10,10 +16,11 @@ import { OperationHistoryDialogComponent } from '../operation-history-dialog/ope
   templateUrl: './operation-realtime-by-formation.component.html',
   styleUrls: ['./operation-realtime-by-formation.component.scss']
 })
-export class OperationRealtimeByFormationComponent implements OnInit {
+export class OperationRealtimeByFormationComponent
+  implements OnInit, AfterContentChecked {
   data: any;
 
-  dataSource = new MatTableDataSource<any>(null);
+  @Input() dataSource = new MatTableDataSource<any>(null);
   displayedColumns: string[] = [
     'formationNumber',
     'operationNumber',
@@ -26,74 +33,28 @@ export class OperationRealtimeByFormationComponent implements OnInit {
   constructor(private api: ApiService, private dialog: MatDialog) {}
 
   ngOnInit() {
-    this.getOperationSightingData();
+    // this.getOperationSightingData();
   }
 
-  getOperationSightingData() {
-    this.api.getFormation().subscribe(data => {
-      this.generateTableData(data);
-    });
-  }
-
-  generateTableData(data: any) {
-    console.log(data);
-    this.data = data;
-    const tableData = [];
-    data.forEach(element => {
-      tableData.push({
-        formationNumber: element.formation_number,
-        operationNumber: element.operation_sightings[0]
-          ? element.operation_sightings[0].operation.operation_number
-          : null,
-        sightingTime: element.operation_sightings[0]
-          ? element.operation_sightings[0].sighting_time
-          : null,
-        updateTime: element.operation_sightings[0]
-          ? element.operation_sightings[0].updated_at
-          : null
-      });
-    });
-
-    tableData.forEach(element => {
-      element.operationNumber = this.searchSameOperationNumber(
-        element,
-        tableData
-      )
-        ? '不明'
-        : element.operationNumber;
-      element.operationNumber =
-        element.operationNumber === '100' ? '休車' : element.operationNumber;
-    });
-
-    this.dataSource = new MatTableDataSource<any>(tableData);
+  ngAfterContentChecked() {
     this.dataSource.sort = this.sort;
   }
 
-  searchSameOperationNumber(element, allData) {
-    console.log('データ', element, allData);
-    const checker = _.filter(allData, obj => {
-      return (
-        obj.operationNumber === element.operationNumber &&
-        obj.sightingTime > element.sightingTime
-      );
-    });
-    console.log(checker);
-    return checker.length !== 0;
-  }
+  async openHistoryDialog(formationNumber: string) {
+    console.log(this.dataSource);
+    const historyList = await this.api
+      .getOperationSightingsByFormationNumber(formationNumber)
+      .toPromise();
+    const length = _.find(this.dataSource.data, obj => {
+      return obj.formationNumber === formationNumber;
+    }).length;
 
-  openHistoryDialog(formationNumber: string) {
-    const historyList = _.find(this.data, obj => {
-      return obj.formation_number === formationNumber;
-    }).operation_sightings;
-    const length = _.find(this.data, obj => {
-      return obj.formation_number === formationNumber;
-    }).vehicle_formations.length;
     this.dialog.open(OperationHistoryDialogComponent, {
       width: '640px',
       data: {
         title: formationNumber + '×' + length + 'の',
         type: 'formation',
-        historyList: historyList
+        formationNumber: formationNumber
       }
     });
   }

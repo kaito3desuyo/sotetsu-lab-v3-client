@@ -10,6 +10,7 @@ import * as moment from 'moment';
 })
 export class ApiService {
   private apiUrl = {
+    services: 'http://localhost:3000/api/v1/services',
     stations: 'http://localhost:3000/api/v1/stations',
     calenders: 'http://localhost:3000/api/v1/calenders',
     trips: 'http://localhost:3000/api/v1/trips',
@@ -20,10 +21,24 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
+  getServices(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl.services);
+  }
+
   getStations(direction): Observable<Station[]> {
     const params = new HttpParams().set('direction', direction);
     return this.http.get<Station[]>(this.apiUrl.stations, { params: params });
   }
+
+  getStationTimesById(id: string, dia: string, direction: string) {
+    return this.http.get<any>(this.apiUrl.stations + '/' + id + '/time', {
+      params: {
+        dia: dia,
+        direction: direction
+      }
+    });
+  }
+
   getCalenders(): Observable<Calender[]> {
     return this.http.get<Calender[]>(this.apiUrl.calenders);
   }
@@ -50,6 +65,20 @@ export class ApiService {
     });
   }
 
+  getTripById(
+    calenderId: string,
+    direction: string,
+    tripId: string
+  ): Observable<any> {
+    console.log('id', calenderId, direction, tripId);
+    return this.http.get<any>(this.apiUrl.trips + '/' + tripId, {
+      params: {
+        calender_id: calenderId,
+        direction: direction
+      }
+    });
+  }
+
   getTripsCount(calenderId: string, direction: string): Observable<any> {
     return this.http.get<any>(this.apiUrl.trips + '/count', {
       params: {
@@ -63,15 +92,64 @@ export class ApiService {
     return this.http.post<any>(this.apiUrl.trips, { trip: data });
   }
 
+  editTrip(tripId: string, data: any): Observable<any> {
+    return this.http.put<any>(this.apiUrl.trips + '/' + tripId, { trip: data });
+  }
+
   getFormation(): Observable<any> {
     return this.http.get<any>(this.apiUrl.formations);
   }
 
   getVehicleByNumber(number: string): Observable<any> {
-    return this.http.get<any>(this.apiUrl.vehicles + '/byNumber/' + number);
+    return this.http.get<any>(this.apiUrl.vehicles + '/number/' + number);
   }
 
   getOperationByDate(date: string) {
     return this.http.get<any>(this.apiUrl.operations + '/date/' + date);
+  }
+
+  getOperationByDateByNumber(date: string, number: string) {
+    return this.http.get<any>(
+      this.apiUrl.operations + '/date/' + date + '/number/' + number
+    );
+  }
+
+  getOperationSightingsByFormationNumber(
+    formationNumber: string,
+    params?: {
+      limit: string
+      offset: string
+    }
+  ) {
+    console.log(params);
+    return this.http.get<any>(
+      this.apiUrl.operations + '/sightings/formation/' + formationNumber,
+      {
+        params: params || {}
+      }
+    );
+  }
+
+  getOperationSightingsByOperationNumber(
+    operationNumber: string,
+    params?: {
+      limit: string
+      offset: string
+    }
+  ) {
+    return this.http.get<any>(
+      this.apiUrl.operations + '/sightings/operation/' + operationNumber,
+      {
+        params: params || {}
+      }
+    );
+  }
+
+  getOperationSightingsByLatestSighting() {
+    return this.http.get<any>(this.apiUrl.operations + '/sightings/latest');
+  }
+
+  postOperationSightings(body: any) {
+    return this.http.post(this.apiUrl.operations + '/sightings', body);
   }
 }

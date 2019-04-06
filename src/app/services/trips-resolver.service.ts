@@ -10,9 +10,31 @@ export class TripsResolverService implements Resolve<any> {
   constructor(private api: ApiService) {}
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    if (route.paramMap.get('trip')) {
+      return this.api.getTripById(
+        route.paramMap.get('dia'),
+        route.paramMap.get('direction'),
+        route.paramMap.get('trip')
+      );
+    }
     return this.api.getTrips(
       route.paramMap.get('dia'),
       route.paramMap.get('direction')
+    );
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TripByIdResolverService implements Resolve<any> {
+  constructor(private api: ApiService) {}
+
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    return this.api.getTripById(
+      route.paramMap.get('dia'),
+      route.paramMap.get('direction'),
+      route.paramMap.get('trip')
     );
   }
 }

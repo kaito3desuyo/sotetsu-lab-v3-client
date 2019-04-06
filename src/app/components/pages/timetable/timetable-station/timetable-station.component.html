@@ -1,0 +1,66 @@
+<div class="timetable-station-container">
+  <h2 class="mat-h2">
+    {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
+    {{ calender['calender_name'] }}
+    {{ direction === 'up' ? '上り' : direction === 'down' ? '下り' : null }}
+    {{ timeOfStation.station_name }}
+    駅時刻表
+  </h2>
+  <mat-card>
+    <div class="timetable-container" fxLayout="row">
+      <table>
+        <tbody>
+          <tr *ngFor="let hour of hourList">
+            <th>{{ hour }}</th>
+          </tr>
+        </tbody>
+      </table>
+      <perfect-scrollbar>
+        <table>
+          <tbody>
+            <tr *ngFor="let hour of hourList">
+              <td *ngFor="let time of getTimeByHour(hour)">
+                <a
+                  [routerLink]="[
+                    '/timetable/all-line',
+                    {
+                      dia: this.route.snapshot.paramMap.get('dia'),
+                      direction: this.route.snapshot.paramMap.get('direction'),
+                      trip: time.trip_id
+                    }
+                  ]"
+                  [ngStyle]="{ color: time.trip.trip_class.trip_class_color }"
+                >
+                  {{ convertToDateObj(time.departure_time) | date: 'mm'
+                  }}<!--
+                      -->{{
+                    convertToInitial(
+                      time.trip.times[time.trip.times.length - 1].station
+                        .station_name
+                    )
+                  }}<!--
+                    --></a
+                >
+                <br />
+                <span>{{ time.trip.operation.operation_number }}運</span>
+                <br />
+                <span style="height: 24px;">
+                  {{
+                    getOperationSightingsByOperationNumber(
+                      time.trip.operation.operation_number
+                    )
+                  }}
+                </span>
+              </td>
+              <td
+                *ngFor="
+                  let blank of (maxColumns - getTimeByHour(hour).length | range)
+                "
+              ></td>
+            </tr>
+          </tbody>
+        </table>
+      </perfect-scrollbar>
+    </div>
+  </mat-card>
+</div>

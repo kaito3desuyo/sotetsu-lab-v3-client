@@ -13,6 +13,7 @@ import { PagesModule } from './components/pages/pages.module';
 import { MatPaginatorIntl } from '@angular/material';
 import { CustomPagenator } from './classes/custom-pagenator';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
+import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -22,6 +23,7 @@ import { AuthInterceptor } from './interceptors/auth-interceptor';
     BrowserAnimationsModule,
     FlexLayoutModule,
     AngularMaterialModule,
+    NgxPerfectScrollbarModule,
     AppRoutingModule,
     HttpClientModule,
     PagesModule,
