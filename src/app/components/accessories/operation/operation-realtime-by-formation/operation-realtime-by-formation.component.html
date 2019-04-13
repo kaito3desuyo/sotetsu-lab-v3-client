@@ -1,56 +1,132 @@
 <div class="operation-realtime-by-formation-container mat-elevation-z1">
-  <table mat-table [dataSource]="dataSource" matSort>
-    <ng-container matColumnDef="formationNumber">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>編成番号</th>
-      <td mat-cell *matCellDef="let element">{{ element.formationNumber }}</td>
-    </ng-container>
+  <perfect-scrollbar>
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="formationNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>編成</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.formationNumber }}
+        </td>
+      </ng-container>
 
-    <ng-container matColumnDef="operationNumber">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>運用番号</th>
-      <td mat-cell *matCellDef="let element">
-        <span
-          [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
-        >
-          {{ element.operationNumber }}
-        </span>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="operationNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>運用</th>
+        <td mat-cell *matCellDef="let element">
+          <div
+            fxLayout="row"
+            fxLayoutAlign="center center"
+            style="width: 36px; height: 36px; border-radius: 50%"
+            [ngStyle]="{
+              background: getOperationNumberColor(element.operationNumber)
+            }"
+          >
+            <span
+              [ngClass]="[
+                element.operationNumber === '不明' ? 'duplicate' : ''
+              ]"
+            >
+              {{ element.operationNumber }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
 
-    <ng-container matColumnDef="history">
-      <th mat-header-cell *matHeaderCellDef>履歴</th>
-      <td mat-cell *matCellDef="let element">
-        <button
-          mat-icon-button
-          (click)="openHistoryDialog(element.formationNumber)"
-        >
-          <mat-icon>history</mat-icon>
-        </button>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="history">
+        <th mat-header-cell *matHeaderCellDef>履歴</th>
+        <td mat-cell *matCellDef="let element">
+          <button
+            mat-icon-button
+            (click)="openHistoryDialog(element.formationNumber)"
+          >
+            <mat-icon>history</mat-icon>
+          </button>
+        </td>
+      </ng-container>
 
-    <ng-container matColumnDef="sightingTime">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>目撃時刻</th>
-      <td mat-cell *matCellDef="let element">
-        <span
-          [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
-        >
-          {{ element.sightingTime | date: 'MM/dd HH:mm' }}
-        </span>
-      </td>
-    </ng-container>
+      <ng-container matColumnDef="currentPoint">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>現在地</th>
+        <td mat-cell *matCellDef="let element">
+          <div
+            *ngIf="
+              element.operationNumber !== '不明' && element.operationNumber
+            "
+            fxLayout="row"
+            fxLayoutAlign="start center"
+            fxLayoutGap="8px"
+          >
+            <div fxFlex="1 0 32px">
+              <a
+                fxLayout="column"
+                [ngStyle]="{
+                  color: getCurrentPoint(element.operationNumber).tripClassColor
+                }"
+                [routerLink]="[
+                  '/timetable/all-line',
+                  {
+                    dia: calender.id,
+                    direction: getCurrentPoint(element.operationNumber)
+                      .tripDirection,
+                    trip: getCurrentPoint(element.operationNumber).tripId
+                  }
+                ]"
+              >
+                <span>{{
+                  getCurrentPoint(element.operationNumber).tripClass
+                }}</span>
+                <span>{{
+                  getCurrentPoint(element.operationNumber).tripNumber
+                }}</span>
+              </a>
+            </div>
+            <div fxLayout="column" fxFlex="1 0 60px">
+              <span>{{
+                getCurrentPoint(element.operationNumber).startStation
+              }}</span>
 
-    <ng-container matColumnDef="updateTime">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>更新時刻</th>
-      <td mat-cell *matCellDef="let element">
-        <span
-          [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
-        >
-          {{ element.updateTime | date: 'MM/dd HH:mm' }}
-        </span>
-      </td>
-    </ng-container>
+              <span>{{
+                getCurrentPoint(element.operationNumber).startTime
+              }}</span>
+            </div>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-  </table>
+            <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start center">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+
+            <div fxLayout="column" fxFlex="1 0 60px">
+              <span>{{
+                getCurrentPoint(element.operationNumber).endStation
+              }}</span>
+              <span>
+                {{ getCurrentPoint(element.operationNumber).endTime }}</span
+              >
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="sightingTime">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>目撃</th>
+        <td mat-cell *matCellDef="let element">
+          <span
+            [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
+          >
+            {{ element.sightingTime | date: 'MM/dd HH:mm' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="updateTime">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>更新</th>
+        <td mat-cell *matCellDef="let element">
+          <span
+            [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
+          >
+            {{ element.updateTime | date: 'MM/dd HH:mm' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </perfect-scrollbar>
 </div>

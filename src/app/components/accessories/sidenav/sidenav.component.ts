@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { ApiService } from 'src/app/services/api.service';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-sidenav',
@@ -16,10 +17,13 @@ export class SidenavComponent implements OnInit {
   constructor(private api: ApiService) {}
 
   ngOnInit() {
+    const date = moment()
+      .subtract(Number(moment().format('H')) < 4 ? 1 : 0, 'days')
+      .format('YYYYMMDD');
     this.api.getStations('down').subscribe(data => {
       this.stations = data;
     });
-    this.api.getCalenderByToday().subscribe(data => {
+    this.api.getCalenderByDate(date).subscribe(data => {
       this.calender = data;
       console.log(data);
     });

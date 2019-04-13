@@ -1,56 +1,90 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { interval } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
 import { ApiService } from 'src/app/services/api.service';
-import { MatTableDataSource } from '@angular/material';
+import { MatTableDataSource, MatSnackBar } from '@angular/material';
+import { SocketService } from 'src/app/services/socket.service';
+import { LoadingService } from 'src/app/services/loading.service';
 
 @Component({
   selector: 'app-real-time',
   templateUrl: './real-time.component.html',
   styleUrls: ['./real-time.component.scss']
 })
-export class RealTimeComponent implements OnInit {
+export class RealTimeComponent implements OnInit, OnDestroy {
+  subscriptions: Subscription[] = [];
+
   nowDateTime: Date;
+  finalUpdateTime: Date;
 
   formationTableDataSource = new MatTableDataSource<any>();
   operationTableDataSource = new MatTableDataSource<any>();
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private socketService: SocketService,
+    private snackBar: MatSnackBar,
+    private loading: LoadingService
+  ) {}
 
   ngOnInit() {
-    // interval(1000).subscribe(result => {
-    this.getNowDateTime();
-    // });
-    this.getOperationSightingByFormation();
-    this.getOperationSightingByOperation();
+    const timerSub = interval(1000).subscribe(result => {
+      this.nowDateTime = this.getNowDateTime();
+    });
+
+    this.loadTableData();
+
+    this.socketService.connect('');
+    const connectionSub = this.socketService
+      .on('reload_operation_sighting')
+      .subscribe(async data => {
+        console.log('運用情報を更新してください');
+        await this.loadTableData();
+        this.snackBar.open('最新の運用情報を取得しました。', 'OK', {
+          duration: 3000
+        });
+      });
+
+    this.subscriptions.push(timerSub, connectionSub);
   }
 
   getNowDateTime() {
-    this.nowDateTime = moment().toDate();
+    return moment().toDate();
   }
 
-  onSendSighting() {
+  async onSendSighting() {
     console.log('データが送信されました');
-    this.getOperationSightingByFormation();
-    this.getOperationSightingByOperation();
-  }
-
-  getOperationSightingByFormation() {
-    this.api.getFormation().subscribe(async data => {
-      const tableData = await this.generateTableData(data, 'formation');
-      console.log('編成', tableData);
-      this.formationTableDataSource = new MatTableDataSource<any>(tableData);
+    await this.loadTableData();
+    this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
+      duration: 3000
     });
+    this.socketService.emit('operation_sighting_sent');
   }
 
-  getOperationSightingByOperation() {
-    this.api
+  async loadTableData() {
+    this.loading.open();
+    await Promise.all([
+      this.getOperationSightingByFormation(),
+      this.getOperationSightingByOperation()
+    ]);
+    this.finalUpdateTime = this.getNowDateTime();
+    this.loading.close();
+  }
+
+  async getOperationSightingByFormation() {
+    const apiData = await this.api.getFormation().toPromise();
+    const tableData = await this.generateTableData(apiData, 'formation');
+    console.log('編成', tableData);
+    this.formationTableDataSource = new MatTableDataSource<any>(tableData);
+  }
+
+  async getOperationSightingByOperation() {
+    const apiData = await this.api
       .getOperationByDate(moment().format('YYYYMMDD'))
-      .subscribe(async data => {
-        const tableData = await this.generateTableData(data, 'operation');
-        this.operationTableDataSource = new MatTableDataSource<any>(tableData);
-      });
+      .toPromise();
+    const tableData = await this.generateTableData(apiData, 'operation');
+    this.operationTableDataSource = new MatTableDataSource<any>(tableData);
   }
 
   async generateTableData(data: any, mode: string) {
@@ -144,5 +178,11 @@ export class RealTimeComponent implements OnInit {
     });
 
     return checker.length !== 0;
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 }

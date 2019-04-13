@@ -1,6 +1,9 @@
 <div class="operation-real-time-container">
   <h2 class="mat-h2">リアルタイム運用情報</h2>
   <p>現在の時刻：{{ this.nowDateTime | date: 'yyyy年MM月dd日 HH:mm:ss' }}</p>
+  <p>
+    最終更新時刻：{{ this.finalUpdateTime | date: 'yyyy年MM月dd日 HH:mm:ss' }}
+  </p>
   <mat-tab-group>
     <mat-tab label="編成ごと">
       <app-operation-realtime-by-formation

@@ -16,6 +16,7 @@ import { SidenavComponent } from './sidenav/sidenav.component';
 import { RouterModule } from '@angular/router';
 import { LoadingComponent } from './loading/loading.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
+import { Nl2brModule } from 'nl2br-pipe';
 
 @NgModule({
   imports: [
@@ -26,7 +27,8 @@ import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
     FormsModule,
     ReactiveFormsModule,
     PipesModule.forRoot(),
-    PerfectScrollbarModule
+    PerfectScrollbarModule,
+    Nl2brModule
   ],
   exports: [
     HeaderComponent,

@@ -119,9 +119,6 @@ export class AddOperationSightingFormComponent implements OnInit {
         return new Promise((resolve, reject) => {
           this.api.postOperationSightings(object).subscribe(
             result => {
-              this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
-                duration: 3000
-              });
               this.sendDataSet.reset();
               this.sendDataSet.get('isInput').setValue(false);
               this.sendDataSet.get('sightingTime').disable();
