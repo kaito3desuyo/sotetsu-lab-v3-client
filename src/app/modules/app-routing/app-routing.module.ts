@@ -1,5 +1,11 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import {
+  RouterModule,
+  Routes,
+  Router,
+  NavigationStart,
+  NavigationEnd
+} from '@angular/router';
 import { TopComponent } from 'src/app/components/pages/top/top.component';
 import { TimetableComponent } from 'src/app/components/pages/timetable/timetable.component';
 import { AddTimetableComponent } from 'src/app/components/pages/timetable/add-timetable/add-timetable.component';
@@ -12,9 +18,13 @@ import {
 import {
   TripsResolverService,
   TripsCountResolverService,
-  TripByIdResolverService
+  TripByIdResolverService,
+  TripsGroupByOperationsResolverService
 } from 'src/app/services/trips-resolver.service';
-import { CalenderByIdResolverService } from 'src/app/services/calender-resolver.service';
+import {
+  CalenderByIdResolverService,
+  CalenderByDateResolverService
+} from 'src/app/services/calender-resolver.service';
 import { TimetableStationComponent } from 'src/app/components/pages/timetable/timetable-station/timetable-station.component';
 import {
   OperationsByDateResolverService,
@@ -22,6 +32,9 @@ import {
 } from 'src/app/services/operations-resolver.service';
 import { ServicesResolverService } from 'src/app/services/services-resolver.service';
 import { TimetableEditorComponent } from 'src/app/components/pages/timetable/timetable-editor/timetable-editor.component';
+import * as moment from 'moment';
+import { fromEvent } from 'rxjs';
+import { debounceTime, tap, filter, observeOn, scan } from 'rxjs/operators';
 
 const routes: Routes = [
   { path: '', component: TopComponent, data: { title: '' } },
@@ -76,12 +89,24 @@ const routes: Routes = [
   {
     path: 'operation/real-time',
     component: RealTimeComponent,
-    data: { title: 'リアルタイム運用情報' }
+    data: {
+      title: 'リアルタイム運用情報',
+      date: moment()
+        .subtract(Number(moment().format('H')) < 4 ? 1 : 0, 'days')
+        .format('YYYYMMDD')
+    },
+    resolve: {
+      calender: CalenderByDateResolverService,
+      stations: StationsResolverService,
+      trips: TripsGroupByOperationsResolverService
+    }
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes, { scrollPositionRestoration: 'enabled' })
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}

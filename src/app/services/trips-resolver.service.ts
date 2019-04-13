@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
+import { flatMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -49,6 +50,24 @@ export class TripsCountResolverService implements Resolve<any> {
     return this.api.getTripsCount(
       route.paramMap.get('dia'),
       route.paramMap.get('direction')
+    );
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TripsGroupByOperationsResolverService implements Resolve<any> {
+  constructor(private api: ApiService) {}
+
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    const date = route.data.date;
+    return this.api.getCalenderByDate(date).pipe(
+      flatMap(res => {
+        return this.api.getTripsGroupByOperations({
+          calender_id: res.id
+        });
+      })
     );
   }
 }

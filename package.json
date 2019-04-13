@@ -38,6 +38,7 @@
     "moment": "^2.24.0",
     "ngx-perfect-scrollbar": "^7.2.1",
     "rxjs": "~6.4.0",
+    "socket.io-client": "^2.2.0",
     "typescript": "^3.3.3333",
     "zone.js": "^0.8.29"
   },
@@ -47,6 +48,7 @@
     "@types/jasmine": "^3.3.9",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^11.9.4",
+    "@types/socket.io-client": "^1.4.32",
     "codelyzer": "~4.5.0",
     "jasmine-core": "~3.3.0",
     "jasmine-spec-reporter": "~4.2.1",
@@ -55,6 +57,7 @@
     "karma-coverage-istanbul-reporter": "~2.0.5",
     "karma-jasmine": "~2.0.1",
     "karma-jasmine-html-reporter": "^1.4.0",
+    "nl2br-pipe": "^1.2.2",
     "protractor": "~5.4.2",
     "ts-node": "~8.0.2",
     "tslint": "~5.13.1"

@@ -45,9 +45,14 @@ export class ApiService {
   getCalenderById(id: string): Observable<Calender> {
     return this.http.get<Calender>(this.apiUrl.calenders + '/' + id);
   }
+  getCalenderByDate(date: string): Observable<Calender> {
+    return this.http.get<Calender>(this.apiUrl.calenders + '/date/' + date);
+  }
+  /*
   getCalenderByToday(): Observable<Calender> {
     return this.http.get<Calender>(this.apiUrl.calenders + '/today');
   }
+  */
 
   getTrips(
     calenderId: string,
@@ -85,6 +90,12 @@ export class ApiService {
         calender_id: calenderId,
         direction: direction
       }
+    });
+  }
+
+  getTripsGroupByOperations(params?: { calender_id: string }) {
+    return this.http.get<any>(this.apiUrl.operations + '/trips', {
+      params: params || null
     });
   }
 
