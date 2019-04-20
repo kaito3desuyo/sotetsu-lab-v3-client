@@ -20,11 +20,19 @@
       <ng-container matColumnDef="formationNumber">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>編成</th>
         <td mat-cell *matCellDef="let element">
-          <span
-            [ngClass]="[element.formationNumber === '不明' ? 'duplicate' : '']"
+          <div
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.formationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
-            {{ element.formationNumber }}
-          </span>
+            <span>
+              {{ element.formationNumber }}
+            </span>
+            <span *ngIf="isIncrementData(element.updateTime)">?</span>
+          </div>
         </td>
       </ng-container>
 
@@ -98,7 +106,12 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>目撃</th>
         <td mat-cell *matCellDef="let element">
           <span
-            [ngClass]="[element.formationNumber === '不明' ? 'duplicate' : '']"
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.formationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
             {{ element.sightingTime | date: 'MM/dd HH:mm' }}
           </span>
@@ -109,7 +122,12 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>更新</th>
         <td mat-cell *matCellDef="let element">
           <span
-            [ngClass]="[element.formationNumber === '不明' ? 'duplicate' : '']"
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.formationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
             {{ element.updateTime | date: 'MM/dd HH:mm' }}
           </span>

@@ -18,13 +18,18 @@
             [ngStyle]="{
               background: getOperationNumberColor(element.operationNumber)
             }"
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.operationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
-            <span
-              [ngClass]="[
-                element.operationNumber === '不明' ? 'duplicate' : ''
-              ]"
-            >
+            <span>
               {{ element.operationNumber }}
+            </span>
+            <span *ngIf="isIncrementData(element.updateTime)">
+              ?
             </span>
           </div>
         </td>
@@ -107,7 +112,12 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>目撃</th>
         <td mat-cell *matCellDef="let element">
           <span
-            [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.operationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
             {{ element.sightingTime | date: 'MM/dd HH:mm' }}
           </span>
@@ -118,7 +128,12 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>更新</th>
         <td mat-cell *matCellDef="let element">
           <span
-            [ngClass]="[element.operationNumber === '不明' ? 'duplicate' : '']"
+            [ngClass]="[
+              isIncrementData(element.updateTime) ||
+              element.operationNumber === '不明'
+                ? 'duplicate'
+                : ''
+            ]"
           >
             {{ element.updateTime | date: 'MM/dd HH:mm' }}
           </span>

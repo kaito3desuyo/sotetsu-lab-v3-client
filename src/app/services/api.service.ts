@@ -111,6 +111,10 @@ export class ApiService {
     return this.http.get<any>(this.apiUrl.formations);
   }
 
+  getFormationByNumber(number: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.formations + '/number/' + number);
+  }
+
   getVehicleByNumber(number: string): Observable<any> {
     return this.http.get<any>(this.apiUrl.vehicles + '/number/' + number);
   }
@@ -123,6 +127,10 @@ export class ApiService {
     return this.http.get<any>(
       this.apiUrl.operations + '/date/' + date + '/number/' + number
     );
+  }
+
+  getOperationSightingsByFormation() {
+    return this.http.get<any>(this.apiUrl.operations + '/sightings/formation');
   }
 
   getOperationSightingsByFormationNumber(
@@ -139,6 +147,10 @@ export class ApiService {
         params: params || {}
       }
     );
+  }
+
+  getOperationSightingsByOperation() {
+    return this.http.get<any>(this.apiUrl.operations + '/sightings/operation');
   }
 
   getOperationSightingsByOperationNumber(
