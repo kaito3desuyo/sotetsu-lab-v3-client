@@ -56,11 +56,8 @@ export class OperationRealtimeByOperationComponent
     this.dataSource.sort = this.sort;
   }
 
-  async openHistoryDialog(operationNumber: string) {
+  openHistoryDialog(operationNumber: string) {
     console.log(operationNumber);
-    const historyList = await this.api
-      .getOperationSightingsByOperationNumber(operationNumber)
-      .toPromise();
     this.dialog.open(OperationHistoryDialogComponent, {
       width: '640px',
       data: {
@@ -247,5 +244,9 @@ export class OperationRealtimeByOperationComponent
       default:
         return 'transparent';
     }
+  }
+
+  isIncrementData(date: string) {
+    return moment(date).format('H') === '2';
   }
 }

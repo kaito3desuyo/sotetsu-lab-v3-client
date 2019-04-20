@@ -1,4 +1,10 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Output,
+  EventEmitter,
+  OnDestroy
+} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { MatRadioChange, MatDialog, MatSnackBar } from '@angular/material';
 import { HttpClient } from '@angular/common/http';
@@ -6,6 +12,8 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { ExceptionDialogComponent } from '../../exception-dialog/exception-dialog.component';
 import { ApiService } from 'src/app/services/api.service';
+import { SocketService } from 'src/app/services/socket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-add-operation-sighting-form',
@@ -27,11 +35,13 @@ export class AddOperationSightingFormComponent implements OnInit {
     private http: HttpClient,
     public dialog: MatDialog,
     public snackBar: MatSnackBar,
-    private api: ApiService
+    private api: ApiService,
+    private socketService: SocketService
   ) {}
 
   ngOnInit() {
     this.sendDataSet.get('sightingTime').disable();
+    this.socketService.connect('');
   }
 
   onChangeSightingTimeSelectRadioButton(event: MatRadioChange) {
@@ -123,6 +133,10 @@ export class AddOperationSightingFormComponent implements OnInit {
               this.sendDataSet.get('isInput').setValue(false);
               this.sendDataSet.get('sightingTime').disable();
               this.send.emit();
+              this.socketService.emit('operation_sighting_sent');
+              this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
+                duration: 3000
+              });
             },
             err => {
               reject({

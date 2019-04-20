@@ -55,11 +55,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
 
   async onSendSighting() {
     console.log('データが送信されました');
-    await this.loadTableData();
-    this.snackBar.open('目撃の投稿が完了しました。', 'OK', {
-      duration: 3000
-    });
-    this.socketService.emit('operation_sighting_sent');
+    // await this.loadTableData();
   }
 
   async loadTableData() {
@@ -73,41 +69,32 @@ export class RealTimeComponent implements OnInit, OnDestroy {
   }
 
   async getOperationSightingByFormation() {
-    const apiData = await this.api.getFormation().toPromise();
-    const tableData = await this.generateTableData(apiData, 'formation');
+    const apiData = await this.api
+      .getOperationSightingsByFormation()
+      .toPromise();
+    const tableData = this.generateTableData(apiData, 'formation');
     console.log('編成', tableData);
     this.formationTableDataSource = new MatTableDataSource<any>(tableData);
   }
 
   async getOperationSightingByOperation() {
     const apiData = await this.api
-      .getOperationByDate(moment().format('YYYYMMDD'))
+      .getOperationSightingsByOperation()
       .toPromise();
-    const tableData = await this.generateTableData(apiData, 'operation');
+    const tableData = this.generateTableData(apiData, 'operation');
     this.operationTableDataSource = new MatTableDataSource<any>(tableData);
   }
 
-  async generateTableData(data: any, mode: string) {
+  generateTableData(data: any, mode: string) {
     if (mode === 'formation') {
-      const tableDataPromise = _.map(data, async element => {
-        const sightings = await this.api
-          .getOperationSightingsByFormationNumber(element.formation_number)
-          .toPromise();
-
+      const tableData = _.map(data, element => {
         return {
           formationNumber: element.formation_number,
-          length: element.vehicle_formations.length,
-          operationNumber: sightings.rows[0]
-            ? sightings.rows[0].operation.operation_number
-            : null,
-          sightingTime: sightings.rows[0]
-            ? sightings.rows[0].sighting_time
-            : null,
-          updateTime: sightings.rows[0] ? sightings.rows[0].updatedAt : null
+          operationNumber: element.operation_number,
+          sightingTime: element.sighting_time,
+          updateTime: element.updated_at
         };
       });
-
-      const tableData = await Promise.all(tableDataPromise);
 
       tableData.forEach(element => {
         element.operationNumber = this.searchSameOperationNumber(
@@ -124,24 +111,14 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     }
 
     if (mode === 'operation') {
-      const tableDataPromise = _.map(data, async element => {
-        const sightings = await this.api
-          .getOperationSightingsByOperationNumber(element.operation_number)
-          .toPromise();
+      const tableData = _.map(data, element => {
         return {
-          formationNumber: sightings.rows[0]
-            ? sightings.rows[0].formation.formation_number
-            : null,
-          // length: element.vehicle_formations.length,
+          formationNumber: element.formation_number,
           operationNumber: element.operation_number,
-          sightingTime: sightings.rows[0]
-            ? sightings.rows[0].sighting_time
-            : null,
-          updateTime: sightings.rows[0] ? sightings.rows[0].updatedAt : null
+          sightingTime: element.sighting_time,
+          updateTime: element.updated_at
         };
       });
-
-      const tableData = await Promise.all(tableDataPromise);
 
       tableData.forEach(element => {
         element.formationNumber = this.searchSameFormationNumber(
@@ -162,7 +139,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     const checker = _.filter(allData, obj => {
       return (
         obj.formationNumber === element.formationNumber &&
-        obj.sightingTime > element.sightingTime
+        obj.updateTime > element.updateTime
       );
     });
 
@@ -173,7 +150,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     const checker = _.filter(allData, obj => {
       return (
         obj.operationNumber === element.operationNumber &&
-        obj.sightingTime > element.sightingTime
+        obj.updateTime > element.updateTime
       );
     });
 

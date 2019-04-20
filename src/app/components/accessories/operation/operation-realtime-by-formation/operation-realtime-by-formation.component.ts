@@ -60,17 +60,16 @@ export class OperationRealtimeByFormationComponent
 
   async openHistoryDialog(formationNumber: string) {
     console.log(this.dataSource);
-    const historyList = await this.api
-      .getOperationSightingsByFormationNumber(formationNumber)
+
+    const formation = await this.api
+      .getFormationByNumber(formationNumber)
       .toPromise();
-    const length = _.find(this.dataSource.data, obj => {
-      return obj.formationNumber === formationNumber;
-    }).length;
 
     this.dialog.open(OperationHistoryDialogComponent, {
       width: '640px',
       data: {
-        title: formationNumber + '×' + length + 'の',
+        title:
+          formationNumber + '×' + formation[0].vehicle_formations.length + 'の',
         type: 'formation',
         formationNumber: formationNumber
       }
@@ -253,5 +252,9 @@ export class OperationRealtimeByFormationComponent
       default:
         return 'transparent';
     }
+  }
+
+  isIncrementData(date: string) {
+    return moment(date).format('H') === '2';
   }
 }
