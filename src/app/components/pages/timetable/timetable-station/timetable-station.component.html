@@ -15,8 +15,8 @@
           </tr>
         </tbody>
       </table>
-      <perfect-scrollbar>
-        <table>
+      <perfect-scrollbar fxLayout="row">
+        <table fxFlex="auto">
           <tbody>
             <tr *ngFor="let hour of hourList">
               <td *ngFor="let time of getTimeByHour(hour)">
@@ -54,7 +54,7 @@
               </td>
               <td
                 *ngFor="
-                  let blank of (maxColumns - getTimeByHour(hour).length | range)
+                  let blank of maxColumns - getTimeByHour(hour).length | range
                 "
               ></td>
             </tr>
