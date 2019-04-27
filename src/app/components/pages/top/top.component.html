@@ -1,5 +1,5 @@
 <div fxLayout="column">
-  <div fxLayout="row" fxLayoutGap="24px" fx>
+  <div fxLayout="row" fxLayoutGap="24px">
     <mat-card fxFlex="100%">
       <mat-card-title>このサイトは？</mat-card-title>
       <mat-card-content>
@@ -17,14 +17,14 @@
         fxLayoutAlign="space-between"
         fxLayoutGap="24px"
       >
-        <mat-card fxFlex="50%">
+        <mat-card fxFlex.gt-xs="50%" fxFlex.lt-sm="100%">
           <mat-card-title>時刻表</mat-card-title>
           <mat-card-content>
             相鉄線の時刻表を検索できます。
             <app-search-timetable-form></app-search-timetable-form>
           </mat-card-content>
         </mat-card>
-        <mat-card fxFlex="50%">
+        <mat-card fxFlex.gt-xs="50%" fxFlex.lt-sm="100%">
           <mat-card-title>運用情報</mat-card-title>
           <mat-card-content>
             相鉄線の運用情報を検索できます。
@@ -42,14 +42,14 @@
         fxLayoutAlign="space-between"
         fxLayoutGap="24px"
       >
-        <mat-card fxFlex="50%">
+        <mat-card fxFlex.gt-xs="50%" fxFlex.lt-sm="100%">
           <mat-card-title>列車を追加する</mat-card-title>
           <mat-card-content>
             列車データを追加できます。
             <app-add-timetable-pre-form></app-add-timetable-pre-form>
           </mat-card-content>
         </mat-card>
-        <mat-card fxFlex="50%">
+        <mat-card fxFlex.gt-xs="50%" fxFlex.lt-sm="100%">
           <mat-card-title>運用を投稿する</mat-card-title>
           <mat-card-content>
             運用情報を投稿できます。
