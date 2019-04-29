@@ -13,6 +13,7 @@ import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
 import { SocketService } from 'src/app/services/socket.service';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
 
 @Component({
   selector: 'app-operation-realtime-by-formation',
@@ -20,11 +21,13 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./operation-realtime-by-formation.component.scss']
 })
 export class OperationRealtimeByFormationComponent
-  implements OnInit, AfterContentChecked {
+  implements OnInit, AfterContentChecked, OnDestroy {
   data: any;
   calender: any;
   stations: any[] = [];
   trips: any[] = [];
+  currentPoints: any[] = [];
+  subscriptions: Subscription[] = [];
 
   @Input() dataSource = new MatTableDataSource<any>(null);
   displayedColumns: string[] = [
@@ -50,6 +53,17 @@ export class OperationRealtimeByFormationComponent
         this.calender = data.calender;
         this.stations = data.stations;
         this.trips = data.trips;
+
+        const timerSub = interval(1000).subscribe(() => {
+          console.log('hoge');
+          this.currentPoints = _.map(this.trips, obj => {
+            return {
+              operationNumber: obj.operation_number,
+              ...this.getCurrentPoint(obj)
+            };
+          });
+        });
+        this.subscriptions.push(timerSub);
       }
     );
   }
@@ -76,12 +90,14 @@ export class OperationRealtimeByFormationComponent
     });
   }
 
-  getCurrentPoint(operationNumber: string) {
-    const data = _.find(
-      this.trips,
-      obj => obj.operation_number === operationNumber
+  returnCurrentPoint(operationNumber: number) {
+    return _.find(
+      this.currentPoints,
+      obj => obj.operationNumber === operationNumber
     );
+  }
 
+  getCurrentPoint(data: any) {
     /**
      * 最初の列車が発車する前
      */
@@ -233,7 +249,7 @@ export class OperationRealtimeByFormationComponent
       };
     }
 
-    return 'hoge';
+    return {};
   }
 
   getOperationNumberColor(operationNumber: number) {
@@ -256,5 +272,11 @@ export class OperationRealtimeByFormationComponent
 
   isIncrementData(date: string) {
     return moment(date).format('H') === '2';
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 }

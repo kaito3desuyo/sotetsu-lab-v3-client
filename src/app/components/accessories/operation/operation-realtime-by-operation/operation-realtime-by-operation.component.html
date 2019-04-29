@@ -56,33 +56,34 @@
               <a
                 fxLayout="column"
                 [ngStyle]="{
-                  color: getCurrentPoint(element.operationNumber).tripClassColor
+                  color: returnCurrentPoint(element.operationNumber)
+                    ?.tripClassColor
                 }"
                 [routerLink]="[
                   '/timetable/all-line',
                   {
                     dia: calender.id,
-                    direction: getCurrentPoint(element.operationNumber)
-                      .tripDirection,
-                    trip: getCurrentPoint(element.operationNumber).tripId
+                    direction: returnCurrentPoint(element.operationNumber)
+                      ?.tripDirection,
+                    trip: returnCurrentPoint(element.operationNumber)?.tripId
                   }
                 ]"
               >
                 <span>{{
-                  getCurrentPoint(element.operationNumber).tripClass
+                  returnCurrentPoint(element.operationNumber)?.tripClass
                 }}</span>
                 <span>{{
-                  getCurrentPoint(element.operationNumber).tripNumber
+                  returnCurrentPoint(element.operationNumber)?.tripNumber
                 }}</span>
               </a>
             </div>
             <div fxLayout="column" fxFlex="1 0 60px">
               <span>{{
-                getCurrentPoint(element.operationNumber).startStation
+                returnCurrentPoint(element.operationNumber)?.startStation
               }}</span>
 
               <span>{{
-                getCurrentPoint(element.operationNumber).startTime
+                returnCurrentPoint(element.operationNumber)?.startTime
               }}</span>
             </div>
 
@@ -92,10 +93,10 @@
 
             <div fxLayout="column" fxFlex="1 0 60px">
               <span>{{
-                getCurrentPoint(element.operationNumber).endStation
+                returnCurrentPoint(element.operationNumber)?.endStation
               }}</span>
               <span>
-                {{ getCurrentPoint(element.operationNumber).endTime }}</span
+                {{ returnCurrentPoint(element.operationNumber)?.endTime }}</span
               >
             </div>
           </div>
