@@ -3,7 +3,8 @@ import {
   OnInit,
   ViewChild,
   Input,
-  AfterContentChecked
+  AfterContentChecked,
+  OnDestroy
 } from '@angular/core';
 import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
 import { ApiService } from 'src/app/services/api.service';
@@ -11,6 +12,7 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
 import { ActivatedRoute } from '@angular/router';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-operation-realtime-by-operation',
@@ -18,11 +20,13 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./operation-realtime-by-operation.component.scss']
 })
 export class OperationRealtimeByOperationComponent
-  implements OnInit, AfterContentChecked {
+  implements OnInit, AfterContentChecked, OnDestroy {
   data: any;
   calender: any;
   stations: any[] = [];
   trips: any[] = [];
+  currentPoints: any[] = [];
+  subscriptions: Subscription[] = [];
 
   @Input() dataSource = new MatTableDataSource<any>(null);
   displayedColumns: string[] = [
@@ -48,6 +52,17 @@ export class OperationRealtimeByOperationComponent
         this.calender = data.calender;
         this.stations = data.stations;
         this.trips = data.trips;
+
+        const timerSub = interval(1000).subscribe(() => {
+          console.log('hoge');
+          this.currentPoints = _.map(this.trips, obj => {
+            return {
+              operationNumber: obj.operation_number,
+              ...this.getCurrentPoint(obj)
+            };
+          });
+        });
+        this.subscriptions.push(timerSub);
       }
     );
   }
@@ -68,12 +83,14 @@ export class OperationRealtimeByOperationComponent
     });
   }
 
-  getCurrentPoint(operationNumber: string) {
-    const data = _.find(
-      this.trips,
-      obj => obj.operation_number === operationNumber
+  returnCurrentPoint(operationNumber: number) {
+    return _.find(
+      this.currentPoints,
+      obj => obj.operationNumber === operationNumber
     );
+  }
 
+  getCurrentPoint(data: any) {
     /**
      * 最初の列車が発車する前
      */
@@ -225,7 +242,7 @@ export class OperationRealtimeByOperationComponent
       };
     }
 
-    return 'hoge';
+    return {};
   }
 
   getOperationNumberColor(operationNumber: number) {
@@ -248,5 +265,11 @@ export class OperationRealtimeByOperationComponent
 
   isIncrementData(date: string) {
     return moment(date).format('H') === '2';
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => {
+      sub.unsubscribe();
+    });
   }
 }
