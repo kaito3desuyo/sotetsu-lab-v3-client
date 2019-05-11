@@ -28,10 +28,15 @@
           <mat-card-title>運用情報</mat-card-title>
           <mat-card-content>
             相鉄線の運用情報を検索できます。
-            <mat-nav-list>
+            <mat-nav-list style="margin: 0px -16px">
+              <h3 mat-subheader>運用目撃情報</h3>
               <a mat-list-item routerLink="/operation/real-time"
                 >リアルタイム運用情報</a
               >
+              <h3 mat-subheader>運用表</h3>
+              <div style="margin: 0px 16px">
+                <app-operation-table-search-form></app-operation-table-search-form>
+              </div>
             </mat-nav-list>
           </mat-card-content>
         </mat-card>
@@ -44,8 +49,8 @@
       >
         <mat-card fxFlex.gt-xs="50%" fxFlex.lt-sm="100%">
           <mat-card-title>列車を追加する</mat-card-title>
-          <mat-card-content>
-            列車データを追加できます。
+          <mat-card-content fxLayout="column" fxLayoutGap="12px">
+            <p>列車データを追加できます。</p>
             <app-add-timetable-pre-form></app-add-timetable-pre-form>
           </mat-card-content>
         </mat-card>

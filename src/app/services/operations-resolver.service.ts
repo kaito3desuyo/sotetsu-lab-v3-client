@@ -7,17 +7,33 @@ import * as moment from 'moment';
 @Injectable({
   providedIn: 'root'
 })
+export class OperationsByOperationIdResolverService implements Resolve<any> {
+  constructor(private api: ApiService) {}
+
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
+    return this.api.getOperationByOperationId(route.paramMap.get('id'));
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class OperationsByCalenderIdResolverService implements Resolve<any> {
+  constructor(private api: ApiService) {}
+
+  resolve(route: ActivatedRouteSnapshot): Observable<any[]> {
+    return this.api.getOperationByCalenderId(route.paramMap.get('dia'));
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class OperationsByDateResolverService {
   constructor(private api: ApiService) {}
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
-    return this.api.getOperationByDate(
-      moment().format('H') < '3'
-        ? moment()
-            .subtract(1, 'days')
-            .format('YYYY-MM-DD')
-        : moment().format('YYYY-MM-DD')
-    );
+    return this.api.getOperationByDate(route.data.date);
   }
 }
 

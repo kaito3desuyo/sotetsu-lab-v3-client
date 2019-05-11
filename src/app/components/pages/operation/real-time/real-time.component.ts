@@ -90,6 +90,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       const tableData = _.map(data, element => {
         return {
           formationNumber: element.formation_number,
+          operationId: element.operation_id,
           operationNumber: element.operation_number,
           sightingTime: element.sighting_time,
           updateTime: element.updated_at
@@ -114,6 +115,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       const tableData = _.map(data, element => {
         return {
           formationNumber: element.formation_number,
+          operationId: element.operation_id,
           operationNumber: element.operation_number,
           sightingTime: element.sighting_time,
           updateTime: element.updated_at

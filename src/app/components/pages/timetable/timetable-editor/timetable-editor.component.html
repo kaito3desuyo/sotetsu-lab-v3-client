@@ -1,7 +1,24 @@
 <div class="add-timetable-container">
   <form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
     <h2 class="mat-h2">{{ title }}</h2>
-    <mat-card>
+    <mat-card fxLayout="column" fxLayoutGap="16px">
+      <mat-card-title>
+        <mat-toolbar
+          fxFlex="auto"
+          [ngStyle]="{
+            'background-color':
+              calender?.calender_name === '平日ダイヤ'
+                ? '#428bca'
+                : calender?.calender_name === '土休日ダイヤ'
+                ? '#d9534f'
+                : 'transparent'
+          }"
+          style="color: rgba(255,255,255,0.87); height: 48px; margin-top: -16px; margin-left: -16px; margin-right: -16px"
+        >
+          {{ calender?.start_date | date: 'yyyy年MM月dd日' }}改正
+          {{ calender?.calender_name }}
+        </mat-toolbar>
+      </mat-card-title>
       <mat-card-content>
         <div fxLayout="row" fxLayoutGap="24px">
           <mat-form-field>
@@ -28,6 +45,10 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
+        </div>
+        <div fxLayout="row" fxLayoutGap="24px">
+          <mat-checkbox formControlName="depotIn">入庫便</mat-checkbox>
+          <mat-checkbox formControlName="depotOut">出庫便</mat-checkbox>
         </div>
         <table>
           <ng-container

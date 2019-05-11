@@ -14,7 +14,7 @@
           <div
             fxLayout="row"
             fxLayoutAlign="center center"
-            style="width: 36px; height: 36px; border-radius: 50%"
+            style="width: 36px; height: 36px; border-radius: 50%; position:relative"
             [ngStyle]="{
               background: getOperationNumberColor(element.operationNumber)
             }"
@@ -31,6 +31,16 @@
             <span *ngIf="isIncrementData(element.updateTime)">
               ?
             </span>
+            <a
+              *ngIf="element.operationNumber"
+              style="position: absolute; width: 100%; height: 100%"
+              [routerLink]="[
+                '/operation/route-diagram',
+                {
+                  id: element.operationId
+                }
+              ]"
+            ></a>
           </div>
         </td>
       </ng-container>

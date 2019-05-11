@@ -24,6 +24,8 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
     tripNumber: ['', Validators.required],
     operationId: ['', Validators.required],
     tripClassId: ['', Validators.required],
+    depot_in: [false, Validators.required],
+    depot_out: [false, Validators.required],
     stations: this.fb.array([])
   });
 

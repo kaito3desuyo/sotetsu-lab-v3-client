@@ -28,13 +28,18 @@ import {
 import { TimetableStationComponent } from 'src/app/components/pages/timetable/timetable-station/timetable-station.component';
 import {
   OperationsByDateResolverService,
-  OperationSightingsByLatestSightingResolverService
+  OperationSightingsByLatestSightingResolverService,
+  OperationsByCalenderIdResolverService,
+  OperationsByOperationIdResolverService
 } from 'src/app/services/operations-resolver.service';
 import { ServicesResolverService } from 'src/app/services/services-resolver.service';
 import { TimetableEditorComponent } from 'src/app/components/pages/timetable/timetable-editor/timetable-editor.component';
 import * as moment from 'moment';
 import { fromEvent } from 'rxjs';
 import { debounceTime, tap, filter, observeOn, scan } from 'rxjs/operators';
+import { OperationTableComponent } from 'src/app/components/pages/operation/table/operation-table.component';
+import { OperationChartComponent } from 'src/app/components/pages/operation/chart/operation-chart.component';
+import { OperationRouteDiagramComponent } from 'src/app/components/pages/operation/route-diagram/operation-route-diagram.component';
 
 const routes: Routes = [
   { path: '', component: TopComponent, data: { title: '' } },
@@ -99,6 +104,29 @@ const routes: Routes = [
       calender: CalenderByDateResolverService,
       stations: StationsResolverService,
       trips: TripsGroupByOperationsResolverService
+    }
+  },
+  {
+    path: 'operation/table',
+    component: OperationTableComponent,
+    data: {
+      title: '運用表'
+    },
+    resolve: {
+      calender: CalenderByIdResolverService,
+      stations: StationsResolverService,
+      operationsByCalenderId: OperationsByCalenderIdResolverService
+    }
+  },
+  {
+    path: 'operation/route-diagram',
+    component: OperationRouteDiagramComponent,
+    data: {
+      title: '運用行路図'
+    },
+    resolve: {
+      stations: StationsResolverService,
+      operationByOperationId: OperationsByOperationIdResolverService
     }
   }
 ];

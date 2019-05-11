@@ -18,6 +18,9 @@ import { TimetableAllLineComponent } from './timetable/timetable-all-line/timeta
 import { TimetableStationComponent } from './timetable/timetable-station/timetable-station.component';
 import { NgxPerfectScrollbarModule } from 'src/app/modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
 import { TimetableEditorComponent } from './timetable/timetable-editor/timetable-editor.component';
+import { OperationTableComponent } from './operation/table/operation-table.component';
+import { OperationChartComponent } from './operation/chart/operation-chart.component';
+import { OperationRouteDiagramComponent } from './operation/route-diagram/operation-route-diagram.component';
 
 @NgModule({
   imports: [
@@ -36,6 +39,9 @@ import { TimetableEditorComponent } from './timetable/timetable-editor/timetable
     TopComponent,
     OperationComponent,
     RealTimeComponent,
+    OperationTableComponent,
+    OperationChartComponent,
+    OperationRouteDiagramComponent,
     TimetableComponent,
     TimetableAllLineComponent,
     TimetableStationComponent,

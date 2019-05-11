@@ -2,7 +2,7 @@
   <form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
     <h2 class="mat-h2">列車を追加する</h2>
     <mat-card>
-      <mat-card-content>
+      <mat-card-content fxLayout="column">
         <div fxLayout="row" fxLayoutGap="24px">
           <mat-form-field>
             <input
@@ -22,13 +22,14 @@
             </mat-select>
           </mat-form-field>
           <mat-form-field>
-            <mat-select placeholder="種別" formControlName="tripClassId">
+            <mat-select placeholder="種別a" formControlName="tripClassId">
               <mat-option *ngFor="let class of classes" [value]="class.id">
                 {{ class.trip_class_name }}
               </mat-option>
             </mat-select>
           </mat-form-field>
         </div>
+        <p>adwkaopdakp@</p>
         <table>
           <ng-container
             formArrayName="stations"
