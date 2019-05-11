@@ -10,13 +10,13 @@ import * as moment from 'moment';
 })
 export class ApiService {
   private apiUrl = {
-    services: 'http://localhost:3000/api/v1/services',
-    stations: 'http://localhost:3000/api/v1/stations',
-    calenders: 'http://localhost:3000/api/v1/calenders',
-    trips: 'http://localhost:3000/api/v1/trips',
-    formations: 'http://localhost:3000/api/v1/formations',
-    vehicles: 'http://localhost:3000/api/v1/vehicles',
-    operations: 'http://localhost:3000/api/v1/operations'
+    services: 'http://sotetsu-lab-v3-api:3000/api/v1/services',
+    stations: 'http://sotetsu-lab-v3-api:3000/api/v1/stations',
+    calenders: 'http://sotetsu-lab-v3-api:3000/api/v1/calenders',
+    trips: 'http://sotetsu-lab-v3-api:3000/api/v1/trips',
+    formations: 'http://sotetsu-lab-v3-api:3000/api/v1/formations',
+    vehicles: 'http://sotetsu-lab-v3-api:3000/api/v1/vehicles',
+    operations: 'http://sotetsu-lab-v3-api:3000/api/v1/operations'
   };
 
   constructor(private http: HttpClient) {}
