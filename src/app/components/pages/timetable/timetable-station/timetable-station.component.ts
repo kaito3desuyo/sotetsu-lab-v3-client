@@ -17,6 +17,8 @@ export class TimetableStationComponent implements OnInit {
   sightingsList = [];
   maxColumns = 0;
 
+  timeByHourList = {};
+
   constructor(private route: ActivatedRoute, private api: ApiService) {}
 
   ngOnInit() {
@@ -27,10 +29,16 @@ export class TimetableStationComponent implements OnInit {
         this.timeOfStation = data.timeOfStation;
         this.hourList = _(data.timeOfStation.times)
           .map(obj => {
-            return moment(obj.departure_time, 'HH:mm:ss').format('H');
+            return moment(
+              obj.departure_time || obj.arrival_time,
+              'HH:mm:ss'
+            ).format('H');
           })
           .uniq()
           .value();
+        _.forEach(this.hourList, hour => {
+          this.timeByHourList[hour] = this.getTimeByHour(hour);
+        });
         const columnLengthByHour = _.map(this.hourList, hour => {
           return this.getTimeByHour(hour).length;
         });
@@ -39,7 +47,10 @@ export class TimetableStationComponent implements OnInit {
         });
 
         console.log(this.maxColumns);
-        this.sightingsList = data.sightings;
+        console.log(data.sightings);
+        _.forEach(data.sightings, obj => {
+          this.sightingsList[obj.operation_number] = obj.formation_number;
+        });
       }
     );
     this.route.paramMap.subscribe(params => {
@@ -49,9 +60,18 @@ export class TimetableStationComponent implements OnInit {
   }
 
   getTimeByHour(hour: number) {
-    return _.filter(this.timeOfStation.times, obj => {
-      return moment(obj.departure_time, 'HH:mm:ss').format('H') === String(hour);
+    const filtered = _.filter(this.timeOfStation.times, obj => {
+      return (
+        moment(obj.departure_time || obj.arrival_time, 'HH:mm:ss').format(
+          'H'
+        ) === String(hour)
+      );
     });
+    const sorted = _.sortBy(filtered, obj => {
+      const time = obj.departure_time || obj.arrival_time;
+      return time;
+    });
+    return sorted;
   }
 
   getOperationSightingsByOperationNumber(operationNumber) {
@@ -65,8 +85,8 @@ export class TimetableStationComponent implements OnInit {
     return result.formation_number;
   }
 
-  convertToDateObj(timeStr: string) {
-    return moment(timeStr, 'HH:mm:ss').toDate();
+  convertToMinute(timeStr: string) {
+    return moment(timeStr, 'HH:mm:ss').format('mm');
   }
 
   convertToInitial(str: string) {

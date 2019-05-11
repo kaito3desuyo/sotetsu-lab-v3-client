@@ -1,8 +1,15 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
+import {
+  Router,
+  ActivatedRoute,
+  NavigationEnd,
+  NavigationStart,
+  NavigationCancel
+} from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { MatSidenav } from '@angular/material';
+import { LoadingService } from './services/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -18,10 +25,25 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private titleService: Title
+    private titleService: Title,
+    private loading: LoadingService
   ) {}
 
   ngOnInit(): void {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        console.log('ナビゲーションスタート');
+        this.loading.open();
+      }
+      if (event instanceof NavigationEnd) {
+        console.log('ナビゲーションエンド');
+        this.loading.close();
+      }
+      if (event instanceof NavigationCancel) {
+        console.log('ナビゲーションキャンセル');
+        this.loading.close();
+      }
+    });
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),

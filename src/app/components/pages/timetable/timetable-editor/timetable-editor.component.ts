@@ -28,6 +28,8 @@ export class TimetableEditorComponent implements OnInit {
     tripNumber: ['', Validators.required],
     operationId: ['', Validators.required],
     tripClassId: ['', Validators.required],
+    depotIn: [false, Validators.required],
+    depotOut: [false, Validators.required],
     stations: this.fb.array([])
   });
 
@@ -67,6 +69,12 @@ export class TimetableEditorComponent implements OnInit {
           this.sendDataSet.get('tripNumber').setValue(this.trip.trip_number);
           this.sendDataSet.get('operationId').setValue(this.trip.operation_id);
           this.sendDataSet.get('tripClassId').setValue(this.trip.trip_class_id);
+          this.sendDataSet
+            .get('depotIn')
+            .setValue(_.some(this.trip.times, obj => obj.depot_in));
+          this.sendDataSet
+            .get('depotOut')
+            .setValue(_.some(this.trip.times, obj => obj.depot_out));
         }
 
         this.initializeStationTimeFormArray();
@@ -292,6 +300,17 @@ export class TimetableEditorComponent implements OnInit {
       sequence++;
     });
 
+    const sendTimes = _.map(times, (obj, index) => {
+      return {
+        ...obj,
+        depot_in:
+          index === times.length
+            ? this.sendDataSet.get('depotIn').value
+            : false,
+        depot_out: index === 0 ? this.sendDataSet.get('depotOut').value : false
+      };
+    });
+
     const sendForApiData = {
       service_id: this.calender.service_id,
       operation_id: this.sendDataSet.value.operationId,
@@ -307,7 +326,7 @@ export class TimetableEditorComponent implements OnInit {
       block_id: this.sendDataSet.value.tripNumber,
       calender_id: this.calender.id,
       extra_calender_id: null,
-      times: times
+      times: sendTimes
     };
     if (this.trip) {
       this.apiService

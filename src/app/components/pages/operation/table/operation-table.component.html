@@ -1,0 +1,41 @@
+<div class="operation-table-container" fxLayout="column" fxLayoutGap="24px">
+  <h2 class="mat-h2">運用表</h2>
+  <mat-card fxLayout="column" fxLayoutGap="12px">
+    <mat-card-title>
+      <mat-toolbar
+        fxFlex="auto"
+        [ngStyle]="{
+          'background-color':
+            calender['calender_name'] === '平日ダイヤ'
+              ? '#428bca'
+              : calender['calender_name'] === '土休日ダイヤ'
+              ? '#d9534f'
+              : 'transparent'
+        }"
+        style="color: rgba(255,255,255,0.87); height: 48px; margin-top: -16px; margin-left: -16px; margin-right: -16px"
+      >
+        {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
+        {{ calender['calender_name'] }}
+      </mat-toolbar>
+    </mat-card-title>
+    <mat-card-content>
+      <div fxLayout="row wrap" fxLayoutAlign="space-around">
+        <app-operation-table-small-box
+          *ngFor="let operation of operations"
+          [dia]="dia"
+          [stations]="stations"
+          [operation]="operation"
+          style="margin-bottom: 12px;"
+        ></app-operation-table-small-box>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+    <mat-card-title>
+      検索する
+    </mat-card-title>
+    <mat-card-content>
+      <app-operation-table-search-form></app-operation-table-search-form>
+    </mat-card-content>
+  </mat-card>
+</div>

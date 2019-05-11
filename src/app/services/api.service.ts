@@ -119,6 +119,14 @@ export class ApiService {
     return this.http.get<any>(this.apiUrl.vehicles + '/number/' + number);
   }
 
+  getOperationByOperationId(id: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.operations + '/by-id/' + id);
+  }
+
+  getOperationByCalenderId(id: string): Observable<any> {
+    return this.http.get<any>(this.apiUrl.operations + '/by-calender/' + id);
+  }
+
   getOperationByDate(date: string) {
     return this.http.get<any>(this.apiUrl.operations + '/date/' + date);
   }

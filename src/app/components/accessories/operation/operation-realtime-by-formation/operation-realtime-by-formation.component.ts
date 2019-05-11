@@ -55,9 +55,10 @@ export class OperationRealtimeByFormationComponent
         this.trips = data.trips;
 
         const timerSub = interval(1000).subscribe(() => {
-          console.log('hoge');
+          // console.log('hoge');
           this.currentPoints = _.map(this.trips, obj => {
             return {
+              operationId: obj.id,
               operationNumber: obj.operation_number,
               ...this.getCurrentPoint(obj)
             };

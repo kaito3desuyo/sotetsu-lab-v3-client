@@ -17,6 +17,8 @@ import { RouterModule } from '@angular/router';
 import { LoadingComponent } from './loading/loading.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 import { Nl2brModule } from 'nl2br-pipe';
+import { OperationTableSearchFormComponent } from './operation/operation-table-search-form/operation-table-search-form.component';
+import { OperationTableSmallBoxComponent } from './operation/operation-table-small-box/operation-table-small-box.component';
 
 @NgModule({
   imports: [
@@ -37,6 +39,8 @@ import { Nl2brModule } from 'nl2br-pipe';
     OperationRealtimeByFormationComponent,
     OperationRealtimeByOperationComponent,
     OperationHistoryDialogComponent,
+    OperationTableSearchFormComponent,
+    OperationTableSmallBoxComponent,
     AddOperationSightingFormComponent,
     SearchTimetableFormComponent,
     AddTimetablePreFormComponent,
@@ -49,6 +53,8 @@ import { Nl2brModule } from 'nl2br-pipe';
     OperationRealtimeByFormationComponent,
     OperationRealtimeByOperationComponent,
     OperationHistoryDialogComponent,
+    OperationTableSearchFormComponent,
+    OperationTableSmallBoxComponent,
     AddOperationSightingFormComponent,
     SearchTimetableFormComponent,
     AddTimetablePreFormComponent,

@@ -19,7 +19,8 @@ import {
   MatSidenavModule,
   MatDividerModule,
   MatPaginatorModule,
-  MatProgressSpinnerModule
+  MatProgressSpinnerModule,
+  MatCheckboxModule
 } from '@angular/material';
 import { OverlayModule } from '@angular/cdk/overlay';
 
@@ -45,6 +46,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     MatDividerModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
     OverlayModule
   ],
   exports: [
@@ -67,6 +69,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
     MatDividerModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
     OverlayModule
   ]
 })

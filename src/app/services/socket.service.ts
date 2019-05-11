@@ -6,14 +6,17 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class SocketService {
-  private url = 'http://localhost:3000';
+  private url = 'ws://localhost:3000';
   // private url = 'https://api.sotetsu-lab.com/';
   private socket: any;
 
   constructor() {}
 
   connect(queryString: string) {
-    this.socket = io(this.url, { query: queryString });
+    this.socket = io(this.url, {
+      transports: ['websocket'],
+      query: queryString
+    });
   }
 
   emit(emitName: string, data?: any) {
