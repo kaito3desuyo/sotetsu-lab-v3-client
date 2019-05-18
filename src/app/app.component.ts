@@ -10,9 +10,7 @@ import { Title } from '@angular/platform-browser';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import { MatSidenav } from '@angular/material';
 import { LoadingService } from './services/loading.service';
-
-// declare ga as a function to set and sent the events
-declare let ga: Function;
+import { GoogleAnalyticsService } from './services/google-analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -30,7 +28,8 @@ export class AppComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
     private loading: LoadingService,
-    private cd: ChangeDetectorRef
+    private cd: ChangeDetectorRef,
+    private gaService: GoogleAnalyticsService
   ) {}
 
   ngOnInit(): void {
@@ -44,8 +43,7 @@ export class AppComponent implements OnInit {
         console.log('ナビゲーションエンド');
         this.loading.close();
         this.cd.detectChanges();
-        ga('set', 'page', event.urlAfterRedirects);
-        ga('send', 'pageview');
+        this.gaService.sendPageView(event.urlAfterRedirects);
       }
       if (event instanceof NavigationCancel) {
         console.log('ナビゲーションキャンセル');
