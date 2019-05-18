@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 import { AngularMaterialModule } from 'src/app/modules/angular-material/angular-material.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-import { OperationComponent } from './operation/operation.component';
 import { RealTimeComponent } from './operation/real-time/real-time.component';
 import { TimetableComponent } from './timetable/timetable.component';
 import { AddTimetableComponent } from './timetable/add-timetable/add-timetable.component';
