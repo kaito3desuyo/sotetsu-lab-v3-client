@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   apiUrl: 'http://sotetsu-lab-v3-api:3000',
-  backendUrl: 'http://sotetsu-lab-v3-backend:8080',
+  backendUrl: 'http://localhost:8080',
   socketUrl: 'http://localhost:3000'
 };
 
