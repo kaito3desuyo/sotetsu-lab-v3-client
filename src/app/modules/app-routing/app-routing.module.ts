@@ -38,7 +38,6 @@ import * as moment from 'moment';
 import { fromEvent } from 'rxjs';
 import { debounceTime, tap, filter, observeOn, scan } from 'rxjs/operators';
 import { OperationTableComponent } from 'src/app/components/pages/operation/table/operation-table.component';
-import { OperationChartComponent } from 'src/app/components/pages/operation/chart/operation-chart.component';
 import { OperationRouteDiagramComponent } from 'src/app/components/pages/operation/route-diagram/operation-route-diagram.component';
 
 const routes: Routes = [

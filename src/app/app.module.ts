@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, ErrorHandler } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { AppComponent } from './app.component';
@@ -14,6 +14,7 @@ import { MatPaginatorIntl } from '@angular/material';
 import { CustomPagenator } from './classes/custom-pagenator';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
+import { ErrorHandlerService } from './services/error-handler.service';
 
 @NgModule({
   declarations: [AppComponent],
@@ -39,6 +40,10 @@ import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-p
       useClass: AuthInterceptor,
       // 必須：HTTP_INTERCEPTORSが配列であることを示す
       multi: true
+    },
+    {
+      provide: ErrorHandler,
+      useClass: ErrorHandlerService
     }
   ],
   bootstrap: [AppComponent]

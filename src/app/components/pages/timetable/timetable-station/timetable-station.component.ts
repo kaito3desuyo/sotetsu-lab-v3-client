@@ -27,6 +27,9 @@ export class TimetableStationComponent implements OnInit {
         console.log(data);
         this.calender = data.calender;
         this.timeOfStation = data.timeOfStation;
+        if (!this.timeOfStation) {
+          throw new Error('データがありません。');
+        }
         this.hourList = _(data.timeOfStation.times)
           .map(obj => {
             return moment(

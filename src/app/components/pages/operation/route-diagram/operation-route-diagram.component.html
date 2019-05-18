@@ -1,252 +1,255 @@
-<div
-  class="operation-route-diagram-container"
-  fxLayout="column"
-  fxLayoutGap="24px"
->
-  <h2 class="mat-h2">運用行路図</h2>
-  <mat-card fxLayout="column" fxLayoutGap="16px">
-    <mat-card-title>
-      <mat-toolbar
-        fxFlex="auto"
-        [ngStyle]="{
-          'background-color':
-            calender?.calender_name === '平日ダイヤ'
-              ? '#428bca'
-              : calender?.calender_name === '土休日ダイヤ'
-              ? '#d9534f'
-              : 'transparent'
-        }"
-        style="color: rgba(255,255,255,0.87); height: 48px; margin-top: -16px; margin-left: -16px; margin-right: -16px"
-      >
-        {{ calender?.start_date | date: 'yyyy年MM月dd日' }}改正
-        {{ calender?.calender_name }}
-        {{ operation.operation_number }}運
-      </mat-toolbar>
-    </mat-card-title>
-    <mat-card-content>
-      <perfect-scrollbar>
-        <div
-          style="margin: 0 auto"
-          [ngStyle]="{ width: 50 + filteredStations.length * 60 + 10 + 'px' }"
+<perfect-scrollbar>
+  <div
+    class="page-container operation-route-diagram-container"
+    fxLayout="column"
+    fxLayoutGap="24px"
+    [ngStyle.gt-xs]="{ margin: '24px 60px' }"
+  >
+    <h2 class="mat-h2">運用行路図</h2>
+    <mat-card fxLayout="column" fxLayoutGap="16px">
+      <mat-card-title>
+        <mat-toolbar
+          fxFlex="auto"
+          [ngStyle]="{
+            'background-color':
+              calender?.calender_name === '平日ダイヤ'
+                ? '#428bca'
+                : calender?.calender_name === '土休日ダイヤ'
+                ? '#d9534f'
+                : 'transparent'
+          }"
+          style="color: rgba(255,255,255,0.87); "
         >
-          <svg
-            [attr.width]="50 + filteredStations.length * 60 + 10 + 'px'"
-            [attr.height]="operation.trips.length * 40 + 120 - 20 + 'px'"
+          {{ calender?.start_date | date: 'yyyy年MM月dd日' }}改正
+          {{ calender?.calender_name }}
+          {{ operation.operation_number }}運
+        </mat-toolbar>
+      </mat-card-title>
+      <mat-card-content>
+        <perfect-scrollbar>
+          <div
+            style="margin: 0 auto"
+            [ngStyle]="{ width: 50 + filteredStations.length * 60 + 10 + 'px' }"
           >
-            <g
-              font-family="Noto Sans JP, sans-serif"
-              font-size="16"
-              *ngFor="let station of filteredStations; let i = index"
+            <svg
+              [attr.width]="50 + filteredStations.length * 60 + 10 + 'px'"
+              [attr.height]="operation.trips.length * 40 + 120 - 20 + 'px'"
             >
-              <text
-                [attr.x]="
-                  i * 60 +
-                  ',' +
-                  i * 60 +
-                  ',' +
-                  i * 60 +
-                  ',' +
-                  i * 60 +
-                  ',' +
-                  i * 60
-                "
-                y="16, 16, 16, 16, 16"
-                dx="50, 50, 50, 50, 50"
-                dy="0, 20, 40, 60, 80"
-                fill="black"
+              <g
+                font-family="Noto Sans JP, sans-serif"
+                font-size="16"
+                *ngFor="let station of filteredStations; let i = index"
               >
-                {{ station.station_name }}
-              </text>
-              <line
-                [attr.x1]="i * 60 + 50 + 8"
-                [attr.x2]="i * 60 + 50 + 8"
-                y1="100"
-                [attr.y2]="operation.trips.length * (40 + 16)"
-                stroke="black"
-                stroke-dasharray="10 7"
-                stroke-opacity="0.12"
-              ></line>
-            </g>
-            <g *ngFor="let trip of operation.trips; let i = index">
-              <text
-                [attr.x]="
-                  trip.trip_direction === 0
-                    ? returnStationIndex(trip.times[0].station_id) * 60 +
-                      60 -
-                      47.5
-                    : trip.trip_direction === 1
-                    ? returnStationIndex(
-                        trip.times[trip.times.length - 1].station_id
-                      ) *
-                        60 +
-                      60 -
-                      47.5
-                    : 0
-                "
-                [attr.y]="120 + i * 40"
-                fill="black"
-              >
-                <ng-container *ngIf="trip.trip_direction === 0">
-                  {{ returnTimeString(trip.times[0].departure_time) }}
-                </ng-container>
-                <ng-container *ngIf="trip.trip_direction === 1">
-                  {{
-                    returnTimeString(
-                      trip.times[trip.times.length - 1].arrival_time
-                    )
-                  }}
-                </ng-container>
-              </text>
+                <text
+                  [attr.x]="
+                    i * 60 +
+                    ',' +
+                    i * 60 +
+                    ',' +
+                    i * 60 +
+                    ',' +
+                    i * 60 +
+                    ',' +
+                    i * 60
+                  "
+                  y="16, 16, 16, 16, 16"
+                  dx="50, 50, 50, 50, 50"
+                  dy="0, 20, 40, 60, 80"
+                  fill="black"
+                >
+                  {{ station.station_name }}
+                </text>
+                <line
+                  [attr.x1]="i * 60 + 50 + 8"
+                  [attr.x2]="i * 60 + 50 + 8"
+                  y1="90"
+                  [attr.y2]="operation.trips.length * ((40 + 16) * 2.5)"
+                  stroke="black"
+                  stroke-dasharray="10 7"
+                  stroke-opacity="0.12"
+                ></line>
+              </g>
+              <g *ngFor="let trip of operation.trips; let i = index">
+                <text
+                  [attr.x]="
+                    trip.trip_direction === 0
+                      ? returnStationIndex(trip.times[0].station_id) * 60 +
+                        60 -
+                        47.5
+                      : trip.trip_direction === 1
+                      ? returnStationIndex(
+                          trip.times[trip.times.length - 1].station_id
+                        ) *
+                          60 +
+                        60 -
+                        47.5
+                      : 0
+                  "
+                  [attr.y]="120 + i * 40"
+                  fill="black"
+                >
+                  <ng-container *ngIf="trip.trip_direction === 0">
+                    {{ returnTimeString(trip.times[0].departure_time) }}
+                  </ng-container>
+                  <ng-container *ngIf="trip.trip_direction === 1">
+                    {{
+                      returnTimeString(
+                        trip.times[trip.times.length - 1].arrival_time
+                      )
+                    }}
+                  </ng-container>
+                </text>
 
-              <text
-                style="cursor: pointer"
-                (click)="
-                  navigateTimetable(
-                    trip.id,
-                    trip.trip_direction === 0 ? 'up' : 'down'
-                  )
-                "
-                [attr.x]="
-                  ((returnStationIndex(trip.times[0].station_id) +
+                <text
+                  style="cursor: pointer"
+                  (click)="
+                    navigateTimetable(
+                      trip.id,
+                      trip.trip_direction === 0 ? 'up' : 'down'
+                    )
+                  "
+                  [attr.x]="
+                    ((returnStationIndex(trip.times[0].station_id) +
+                      returnStationIndex(
+                        trip.times[trip.times.length - 1].station_id
+                      )) /
+                      2) *
+                      60 +
+                    60 -
+                    18
+                  "
+                  [attr.y]="120 + i * 40 - 10"
+                  fill="black"
+                >
+                  {{ trip.trip_number }}
+                </text>
+
+                <line
+                  [attr.x1]="
+                    returnStationIndex(trip.times[0].station_id) * 60 + 50 + 8
+                  "
+                  [attr.x2]="
                     returnStationIndex(
                       trip.times[trip.times.length - 1].station_id
-                    )) /
-                    2) *
-                    60 +
-                  60 -
-                  18
-                "
-                [attr.y]="120 + i * 40 - 10"
-                fill="black"
-              >
-                {{ trip.trip_number }}
-              </text>
+                    ) *
+                      60 +
+                    50 +
+                    8
+                  "
+                  [attr.y1]="i * 40 + 120 - 5"
+                  [attr.y2]="i * 40 + 120 - 5"
+                  dy="16"
+                  [attr.stroke]="trip.trip_class.trip_class_color"
+                  [attr.stroke-dasharray]="
+                    trip.trip_class.trip_class_name === '回送' ? '5 3' : ''
+                  "
+                  stroke-width="2px"
+                ></line>
 
-              <line
-                [attr.x1]="
-                  returnStationIndex(trip.times[0].station_id) * 60 + 50 + 8
-                "
-                [attr.x2]="
-                  returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
-                  50 +
-                  8
-                "
-                [attr.y1]="i * 40 + 120 - 5"
-                [attr.y2]="i * 40 + 120 - 5"
-                dy="16"
-                [attr.stroke]="trip.trip_class.trip_class_color"
-                [attr.stroke-dasharray]="
-                  trip.trip_class.trip_class_name === '回送' ? '5 3' : ''
-                "
-                stroke-width="2px"
-              ></line>
-
-              <text
-                [attr.x]="
-                  trip.trip_direction === 0
-                    ? returnStationIndex(
-                        trip.times[trip.times.length - 1].station_id
-                      ) *
+                <text
+                  [attr.x]="
+                    trip.trip_direction === 0
+                      ? returnStationIndex(
+                          trip.times[trip.times.length - 1].station_id
+                        ) *
+                          60 +
                         60 +
-                      60 +
-                      12.5
-                    : trip.trip_direction === 1
-                    ? returnStationIndex(trip.times[0].station_id) * 60 +
-                      60 +
-                      12.5
-                    : 0
-                "
-                [attr.y]="120 + i * 40"
-                fill="black"
-              >
-                <ng-container *ngIf="trip.trip_direction === 0">
-                  {{
-                    returnTimeString(
-                      trip.times[trip.times.length - 1].arrival_time
-                    )
-                  }}
-                </ng-container>
-                <ng-container *ngIf="trip.trip_direction === 1">
-                  {{ returnTimeString(trip.times[0].departure_time) }}
-                </ng-container>
-              </text>
+                        12.5
+                      : trip.trip_direction === 1
+                      ? returnStationIndex(trip.times[0].station_id) * 60 +
+                        60 +
+                        12.5
+                      : 0
+                  "
+                  [attr.y]="120 + i * 40"
+                  fill="black"
+                >
+                  <ng-container *ngIf="trip.trip_direction === 0">
+                    {{
+                      returnTimeString(
+                        trip.times[trip.times.length - 1].arrival_time
+                      )
+                    }}
+                  </ng-container>
+                  <ng-container *ngIf="trip.trip_direction === 1">
+                    {{ returnTimeString(trip.times[0].departure_time) }}
+                  </ng-container>
+                </text>
 
-              <circle
-                *ngIf="trip.times[0].depot_out"
-                [attr.cx]="
-                  returnStationIndex(trip.times[0].station_id) * 60 + 60 - 2
-                "
-                [attr.cy]="120 + i * 40 - 5"
-                r="8"
-                stroke="black"
-                fill="white"
-                stroke-width="2px"
-              ></circle>
-              <polygon
-                *ngIf="trip.times[trip.times.length - 1].depot_in"
-                [attr.points]="
-                  returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
-                  60 -
-                  2 +
-                  ',' +
-                  (120 + i * 40 - 12) +
-                  ' ' +
-                  (returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
+                <circle
+                  *ngIf="trip.times[0].depot_out"
+                  [attr.cx]="
+                    returnStationIndex(trip.times[0].station_id) * 60 + 60 - 2
+                  "
+                  [attr.cy]="120 + i * 40 - 5"
+                  r="8"
+                  stroke="black"
+                  fill="white"
+                  stroke-width="2px"
+                ></circle>
+                <polygon
+                  *ngIf="trip.times[trip.times.length - 1].depot_in"
+                  [attr.points]="
+                    returnStationIndex(
+                      trip.times[trip.times.length - 1].station_id
+                    ) *
+                      60 +
                     60 -
-                    10) +
-                  ',' +
-                  (120 + i * 40 + 1) +
-                  ' ' +
-                  (returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
-                    60 +
-                    6) +
-                  ',' +
-                  (120 + i * 40 + 1)
-                "
-                stroke="black"
-                fill="white"
-                stroke-width="2px"
-              ></polygon>
-              <line
-                *ngIf="!trip.times[trip.times.length - 1].depot_in"
-                [attr.x1]="
-                  returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
-                  50 +
-                  8
-                "
-                [attr.x2]="
-                  returnStationIndex(
-                    trip.times[trip.times.length - 1].station_id
-                  ) *
-                    60 +
-                  50 +
-                  8
-                "
-                [attr.y1]="i * 40 + 120 - 5"
-                [attr.y2]="(i + 1) * 40 + 120 - 5"
-                dy="16"
-                stroke="black"
-                stroke-width="1px"
-              ></line>
-            </g>
-          </svg>
-        </div>
-      </perfect-scrollbar>
-    </mat-card-content>
-  </mat-card>
-</div>
+                    2 +
+                    ',' +
+                    (120 + i * 40 - 12) +
+                    ' ' +
+                    (returnStationIndex(
+                      trip.times[trip.times.length - 1].station_id
+                    ) *
+                      60 +
+                      60 -
+                      10) +
+                    ',' +
+                    (120 + i * 40 + 1) +
+                    ' ' +
+                    (returnStationIndex(
+                      trip.times[trip.times.length - 1].station_id
+                    ) *
+                      60 +
+                      60 +
+                      6) +
+                    ',' +
+                    (120 + i * 40 + 1)
+                  "
+                  stroke="black"
+                  fill="white"
+                  stroke-width="2px"
+                ></polygon>
+                <line
+                  *ngIf="!trip.times[trip.times.length - 1].depot_in"
+                  [attr.x1]="
+                    returnStationIndex(
+                      trip.times[trip.times.length - 1].station_id
+                    ) *
+                      60 +
+                    50 +
+                    8
+                  "
+                  [attr.x2]="
+                    returnStationIndex(
+                      trip.times[trip.times.length - 1].station_id
+                    ) *
+                      60 +
+                    50 +
+                    8
+                  "
+                  [attr.y1]="i * 40 + 120 - 5"
+                  [attr.y2]="(i + 1) * 40 + 120 - 5"
+                  dy="16"
+                  stroke="black"
+                  stroke-width="1px"
+                ></line>
+              </g>
+            </svg>
+          </div>
+        </perfect-scrollbar>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</perfect-scrollbar>

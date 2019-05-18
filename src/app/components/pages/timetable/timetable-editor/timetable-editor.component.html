@@ -1,119 +1,139 @@
-<div class="add-timetable-container">
-  <form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
-    <h2 class="mat-h2">{{ title }}</h2>
-    <mat-card fxLayout="column" fxLayoutGap="16px">
-      <mat-card-title>
-        <mat-toolbar
-          fxFlex="auto"
-          [ngStyle]="{
-            'background-color':
-              calender?.calender_name === '平日ダイヤ'
-                ? '#428bca'
-                : calender?.calender_name === '土休日ダイヤ'
-                ? '#d9534f'
-                : 'transparent'
-          }"
-          style="color: rgba(255,255,255,0.87); height: 48px; margin-top: -16px; margin-left: -16px; margin-right: -16px"
-        >
-          {{ calender?.start_date | date: 'yyyy年MM月dd日' }}改正
-          {{ calender?.calender_name }}
-        </mat-toolbar>
-      </mat-card-title>
-      <mat-card-content>
-        <div fxLayout="row" fxLayoutGap="24px">
-          <mat-form-field>
-            <input
-              matInput
-              placeholder="列車番号"
-              formControlName="tripNumber"
-            />
-          </mat-form-field>
-          <mat-form-field>
-            <mat-select placeholder="運用番号" formControlName="operationId">
-              <mat-option
-                *ngFor="let operation of operations"
-                [value]="operation.id"
-              >
-                {{ operation.operation_number }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-select placeholder="種別" formControlName="tripClassId">
-              <mat-option *ngFor="let class of classes" [value]="class.id">
-                {{ class.trip_class_name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <div fxLayout="row" fxLayoutGap="24px">
-          <mat-checkbox formControlName="depotIn">入庫便</mat-checkbox>
-          <mat-checkbox formControlName="depotOut">出庫便</mat-checkbox>
-        </div>
-        <table>
-          <ng-container
-            formArrayName="stations"
-            *ngFor="let station of stationsCtl.controls; let i = index"
+<perfect-scrollbar>
+  <div
+    class="page-container add-timetable-container"
+    [ngStyle.gt-xs]="{ margin: '24px 60px' }"
+  >
+    <form [formGroup]="sendDataSet" (ngSubmit)="onSubmit()">
+      <h2 class="mat-h2">{{ title }}</h2>
+      <mat-card fxLayout="column" fxLayoutGap="16px">
+        <mat-card-title>
+          <mat-toolbar
+            fxFlex="auto"
+            [ngStyle]="{
+              'background-color':
+                calender?.calender_name === '平日ダイヤ'
+                  ? '#428bca'
+                  : calender?.calender_name === '土休日ダイヤ'
+                  ? '#d9534f'
+                  : 'transparent'
+            }"
+            style="color: rgba(255,255,255,0.87);"
           >
-            <tr [formGroupName]="i">
-              <th>{{ this.stations[i].station_name }}</th>
-              <td>
-                <div
-                  fxLayout="row"
-                  fxLayoutGap="12px"
-                  fxLayoutAlign="start center"
-                >
-                  <mat-slide-toggle
-                    formControlName="isAllowArrivalTime"
-                    (change)="onChangeAllowArrivalTime(i)"
-                  >
-                    着
-                  </mat-slide-toggle>
-                  <mat-slide-toggle
-                    formControlName="isAllowDepartureTime"
-                    (change)="onChangeAllowDepartureTime(i)"
-                  >
-                    発
-                  </mat-slide-toggle>
-                </div>
-              </td>
-              <td>
-                <mat-form-field>
-                  <input
-                    matInput
-                    type="time"
-                    formControlName="arrivalTime"
-                    placeholder="着時刻"
-                  />
-                </mat-form-field>
-              </td>
-              <td>
-                <mat-form-field>
-                  <input
-                    matInput
-                    type="time"
-                    formControlName="departureTime"
-                    placeholder="発時刻"
-                    [attr.disabled]="
-                      station.value.isAllowDepartureTime ? null : true
-                    "
-                  />
-                </mat-form-field>
-              </td>
-            </tr>
-          </ng-container>
-        </table>
+            {{ calender?.start_date | date: 'yyyy年MM月dd日' }}改正
+            {{ calender?.calender_name }}
+          </mat-toolbar>
+        </mat-card-title>
+        <mat-card-content fxLayout="column">
+          <section
+            fxLayout="row wrap"
+            style="margin-left: -6px; margin-right: -6px;"
+          >
+            <mat-form-field style="margin: 0 6px;" fxFlex="auto">
+              <input
+                matInput
+                placeholder="列車番号"
+                formControlName="tripNumber"
+              />
+            </mat-form-field>
 
-        <div>
-          <button
-            mat-raised-button
-            color="primary"
-            [disabled]="!this.sendDataSet.valid"
+            <mat-form-field style="margin: 0 6px;" fxFlex="auto">
+              <mat-select placeholder="運用番号" formControlName="operationId">
+                <mat-option
+                  *ngFor="let operation of operations"
+                  [value]="operation.id"
+                >
+                  {{ operation.operation_number }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field style="margin: 0 6px;" fxFlex="auto">
+              <mat-select placeholder="種別" formControlName="tripClassId">
+                <mat-option *ngFor="let class of classes" [value]="class.id">
+                  {{ class.trip_class_name }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </section>
+          <section
+            fxLayout="row"
+            fxLayoutGap="24px"
+            style="margin-bottom: 12px;"
           >
-            送信する
-          </button>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </form>
-</div>
+            <mat-checkbox formControlName="depotIn">入庫便</mat-checkbox>
+            <mat-checkbox formControlName="depotOut">出庫便</mat-checkbox>
+          </section>
+          <section fxFlex="auto">
+            <ng-container
+              formArrayName="stations"
+              *ngFor="let station of stationsCtl.controls; let i = index"
+            >
+              <div
+                [formGroupName]="i"
+                fxLayout="row"
+                fxLayoutAlign="start center"
+                fxLayoutGap="12px"
+              >
+                <div fxFlex="33.3%">
+                  <span>{{ this.stations[i].station_name }}</span>
+                </div>
+
+                <div fxLayout="column" fxLayoutGap="12px" fxFlex="66.7%">
+                  <div fxLayout="row" fxLayoutGap="12px">
+                    <mat-slide-toggle
+                      fxFlex="calc(50% - 12px)"
+                      formControlName="isAllowArrivalTime"
+                      (change)="onChangeAllowArrivalTime(i)"
+                    >
+                      着
+                    </mat-slide-toggle>
+                    <mat-slide-toggle
+                      fxFlex="calc(50% - 12px)"
+                      formControlName="isAllowDepartureTime"
+                      (change)="onChangeAllowDepartureTime(i)"
+                    >
+                      発
+                    </mat-slide-toggle>
+                  </div>
+
+                  <div fxLayout="row" fxLayoutGap="12px">
+                    <mat-form-field fxFlex="calc(50% - 12px)">
+                      <input
+                        matInput
+                        type="time"
+                        formControlName="arrivalTime"
+                        placeholder="着時刻"
+                      />
+                    </mat-form-field>
+
+                    <mat-form-field fxFlex="calc(50% - 12px)">
+                      <input
+                        matInput
+                        type="time"
+                        formControlName="departureTime"
+                        placeholder="発時刻"
+                        [attr.disabled]="
+                          station.value.isAllowDepartureTime ? null : true
+                        "
+                      />
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </section>
+
+          <div>
+            <button
+              mat-raised-button
+              color="primary"
+              [disabled]="!this.sendDataSet.valid"
+            >
+              送信する
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </form>
+  </div>
+</perfect-scrollbar>
