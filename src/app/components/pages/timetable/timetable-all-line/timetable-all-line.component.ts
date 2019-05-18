@@ -17,7 +17,7 @@ import { LoadingService } from 'src/app/services/loading.service';
 export class TimetableAllLineComponent implements OnInit {
   stations = [];
   trips = [];
-  calender = {};
+  calender: any = {};
 
   stopStationsArray = [];
 
