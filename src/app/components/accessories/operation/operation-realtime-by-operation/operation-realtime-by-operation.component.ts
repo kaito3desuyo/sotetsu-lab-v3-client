@@ -4,7 +4,9 @@ import {
   ViewChild,
   Input,
   AfterContentChecked,
-  OnDestroy
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
 } from '@angular/core';
 import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
 import { ApiService } from 'src/app/services/api.service';
@@ -17,7 +19,8 @@ import { interval, Subscription } from 'rxjs';
 @Component({
   selector: 'app-operation-realtime-by-operation',
   templateUrl: './operation-realtime-by-operation.component.html',
-  styleUrls: ['./operation-realtime-by-operation.component.scss']
+  styleUrls: ['./operation-realtime-by-operation.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationRealtimeByOperationComponent
   implements OnInit, AfterContentChecked, OnDestroy {
@@ -42,25 +45,25 @@ export class OperationRealtimeByOperationComponent
   constructor(
     private api: ApiService,
     private dialog: MatDialog,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.route.data.subscribe(
       (data: { calender: any; stations: any[]; trips: any[] }) => {
-        console.log(data);
         this.calender = data.calender;
         this.stations = data.stations;
         this.trips = data.trips;
 
         const timerSub = interval(1000).subscribe(() => {
-          console.log('hoge');
           this.currentPoints = _.map(this.trips, obj => {
             return {
               operationNumber: obj.operation_number,
               ...this.getCurrentPoint(obj)
             };
           });
+          this.cd.detectChanges();
         });
         this.subscriptions.push(timerSub);
       }
@@ -92,40 +95,17 @@ export class OperationRealtimeByOperationComponent
 
   getCurrentPoint(data: any) {
     /**
-     * 最初の列車が発車する前
-     */
-    const firstTripDepartureTime = moment(
-      data.trips[0].times[0].departure_time,
-      'HH:mm:ss'
-    );
-    if (
-      moment() <
-      firstTripDepartureTime.add(
-        Number(firstTripDepartureTime.format('H')) < 4 ? 1 : 0
-      )
-    ) {
-      return {
-        tripId: '',
-        tripDirection: '',
-        tripNumber: '',
-        tripClass: '',
-        tripClassColor: '',
-        startStation: _.find(
-          this.stations,
-          obj => obj.id === data.trips[0].times[0].station_id
-        ).station_name,
-        startTime: '○',
-        endStation: '出庫前',
-        endTime: firstTripDepartureTime.format('HHmm')
-      };
-    }
-
-    /**
      * 現在充当されている列車
      */
     const currentRunningTrain = _.find(data.trips, obj => {
       return (
-        moment(obj.times[0].departure_time, 'HH:mm:ss') <= moment() &&
+        moment(obj.times[0].departure_time, 'HH:mm:ss').subtract(
+          moment(obj.times[0].departure_time, 'HH:mm:ss') >
+            moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
+            ? 1
+            : 0,
+          'days'
+        ) <= moment() &&
         moment() <
           moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
       );
@@ -207,39 +187,85 @@ export class OperationRealtimeByOperationComponent
       }
     }
 
-    /**
-     * 最後の列車が終わったあと
-     */
-    const finalTripArrivalTime = moment(
-      data.trips[data.trips.length - 1].times[
-        data.trips[data.trips.length - 1].times.length - 1
-      ].arrival_time,
-      'HH:mm:ss'
-    );
-    if (
-      finalTripArrivalTime.add(
-        Number(finalTripArrivalTime.format('H')) < 4 ? 1 : 0,
+    if (Number(moment().format('H')) >= 4) {
+      /**
+       * 最初の列車が発車する前
+       */
+      const firstTripDepartureTime = moment(
+        data.trips[0].times[0].departure_time,
+        'HH:mm:ss'
+      ).subtract(
+        Number(moment().format('H')) < 4 &&
+          Number(
+            moment(data.trips[0].times[0].departure_time, 'HH:mm:ss').format(
+              'H'
+            )
+          ) >= 4
+          ? 1
+          : 0,
         'days'
-      ) < moment()
-    ) {
-      return {
-        tripId: '',
-        tripDirection: '',
-        tripNumber: '',
-        tripClass: '',
-        tripClassColor: '',
-        startStation: _.find(
-          this.stations,
-          obj =>
-            obj.id ===
-            data.trips[data.trips.length - 1].times[
-              data.trips[data.trips.length - 1].times.length - 1
-            ].station_id
-        ).station_name,
-        startTime: finalTripArrivalTime.format('HHmm'),
-        endStation: '入庫済',
-        endTime: '△'
-      };
+      );
+
+      if (moment() < firstTripDepartureTime) {
+        return {
+          tripId: '',
+          tripDirection: '',
+          tripNumber: '',
+          tripClass: '',
+          tripClassColor: '',
+          startStation: _.find(
+            this.stations,
+            obj => obj.id === data.trips[0].times[0].station_id
+          ).station_name,
+          startTime: '○',
+          endStation: '出庫前',
+          endTime: firstTripDepartureTime.format('HHmm')
+        };
+      }
+    } else {
+      /**
+       * 最後の列車が終わったあと
+       */
+      const finalTripArrivalTime = moment(
+        data.trips[data.trips.length - 1].times[
+          data.trips[data.trips.length - 1].times.length - 1
+        ].arrival_time,
+        'HH:mm:ss'
+      ).subtract(
+        Number(moment().format('H')) < 4 &&
+          Number(
+            moment(
+              data.trips[data.trips.length - 1].times[
+                data.trips[data.trips.length - 1].times.length - 1
+              ].arrival_time,
+              'HH:mm:ss'
+            ).format('H')
+          ) >= 4
+          ? 1
+          : 0,
+        'days'
+      );
+
+      if (finalTripArrivalTime < moment()) {
+        return {
+          tripId: '',
+          tripDirection: '',
+          tripNumber: '',
+          tripClass: '',
+          tripClassColor: '',
+          startStation: _.find(
+            this.stations,
+            obj =>
+              obj.id ===
+              data.trips[data.trips.length - 1].times[
+                data.trips[data.trips.length - 1].times.length - 1
+              ].station_id
+          ).station_name,
+          startTime: finalTripArrivalTime.format('HHmm'),
+          endStation: '入庫済',
+          endTime: '△'
+        };
+      }
     }
 
     return {};

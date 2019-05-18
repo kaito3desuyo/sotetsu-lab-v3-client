@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 import { GlobalFunctionService } from 'src/app/services/global-function.service';
@@ -6,7 +6,8 @@ import { GlobalFunctionService } from 'src/app/services/global-function.service'
 @Component({
   selector: 'app-operation-table-small-box',
   templateUrl: './operation-table-small-box.component.html',
-  styleUrls: ['./operation-table-small-box.component.scss']
+  styleUrls: ['./operation-table-small-box.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationTableSmallBoxComponent implements OnInit {
   @Input() dia: string;
