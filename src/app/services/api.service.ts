@@ -4,19 +4,22 @@ import { Station } from '../interfaces/station';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Calender } from '../interfaces/calender';
 import * as moment from 'moment';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
+  private apiBaseUrl = environment.apiUrl + '/api/v1/';
+
   private apiUrl = {
-    services: 'http://sotetsu-lab-v3-api:3000/api/v1/services',
-    stations: 'http://sotetsu-lab-v3-api:3000/api/v1/stations',
-    calenders: 'http://sotetsu-lab-v3-api:3000/api/v1/calenders',
-    trips: 'http://sotetsu-lab-v3-api:3000/api/v1/trips',
-    formations: 'http://sotetsu-lab-v3-api:3000/api/v1/formations',
-    vehicles: 'http://sotetsu-lab-v3-api:3000/api/v1/vehicles',
-    operations: 'http://sotetsu-lab-v3-api:3000/api/v1/operations'
+    services: this.apiBaseUrl + 'services',
+    stations: this.apiBaseUrl + 'stations',
+    calenders: this.apiBaseUrl + 'calenders',
+    trips: this.apiBaseUrl + 'trips',
+    formations: this.apiBaseUrl + 'formations',
+    vehicles: this.apiBaseUrl + 'vehicles',
+    operations: this.apiBaseUrl + 'operations'
   };
 
   constructor(private http: HttpClient) {}

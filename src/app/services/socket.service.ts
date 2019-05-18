@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import * as io from 'socket.io-client';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SocketService {
-  private url = 'http://localhost:3000';
+  private url = environment.socketUrl;
   // private url = 'https://api.sotetsu-lab.com/';
   private socket: any;
 
