@@ -37,7 +37,7 @@
         </mat-paginator>
 
         <div fxLayout="row">
-          <table class="table-station" fxFlex="0 0 auto">
+          <table class="table-station" fxFlex="0 0 120px">
             <thead>
               <tr>
                 <!--<th rowspan="3">Sta No.</th>-->
@@ -73,7 +73,7 @@
                     [ngClass]="[
                       borderCheker(station.station_name) ? 'border-bottom' : ''
                     ]"
-                    style="text-align: right; border-right: 0;"
+                    style="text-align: right; border-right: 0; width: "
                     [rowSpan]="
                       arrivalChecker(station.station_name) &&
                       departureChecker(station.station_name)
