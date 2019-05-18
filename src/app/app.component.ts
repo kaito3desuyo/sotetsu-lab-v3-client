@@ -11,6 +11,9 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 import { MatSidenav } from '@angular/material';
 import { LoadingService } from './services/loading.service';
 
+// declare ga as a function to set and sent the events
+declare let ga: Function;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -41,6 +44,8 @@ export class AppComponent implements OnInit {
         console.log('ナビゲーションエンド');
         this.loading.close();
         this.cd.detectChanges();
+        ga('set', 'page', event.urlAfterRedirects);
+        ga('send', 'pageview');
       }
       if (event instanceof NavigationCancel) {
         console.log('ナビゲーションキャンセル');
