@@ -9,8 +9,16 @@ body {
   margin: 0;
 }
 
-.mat-drawer-container {
-  min-height: calc(100vh - 64px);
+.ps {
+  height: 100%;
+}
+
+.mat-sidenav-content {
+  width: 100vw;
+  height: calc(100vh - 64px) !important;
+}
+.page-container {
+  margin: 24px;
 }
 
 .mat-tab-group {
@@ -28,4 +36,14 @@ body {
 
 .mat-card-header-text {
   margin: 0 !important;
+}
+
+.mat-card-title {
+  .mat-toolbar {
+    font-size: 14px;
+    height: 36px;
+    margin-top: -16px;
+    margin-left: -16px;
+    margin-right: -16px;
+  }
 }

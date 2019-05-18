@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import {
   Router,
   ActivatedRoute,
@@ -26,7 +26,8 @@ export class AppComponent implements OnInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
-    private loading: LoadingService
+    private loading: LoadingService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -34,14 +35,17 @@ export class AppComponent implements OnInit {
       if (event instanceof NavigationStart) {
         console.log('ナビゲーションスタート');
         this.loading.open();
+        this.cd.detectChanges();
       }
       if (event instanceof NavigationEnd) {
         console.log('ナビゲーションエンド');
         this.loading.close();
+        this.cd.detectChanges();
       }
       if (event instanceof NavigationCancel) {
         console.log('ナビゲーションキャンセル');
         this.loading.close();
+        this.cd.detectChanges();
       }
     });
     this.router.events

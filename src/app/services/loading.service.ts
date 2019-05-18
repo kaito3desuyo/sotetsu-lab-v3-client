@@ -1,4 +1,9 @@
-import { Injectable } from '@angular/core';
+import {
+  Injectable,
+  NgZone,
+  ChangeDetectorRef,
+  ApplicationRef
+} from '@angular/core';
 import { OverlayRef, Overlay } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { LoadingComponent } from '../components/accessories/loading/loading.component';
@@ -9,7 +14,11 @@ import { LoadingComponent } from '../components/accessories/loading/loading.comp
 export class LoadingService {
   overlayRef: OverlayRef;
 
-  constructor(private overlay: Overlay) {}
+  constructor(
+    private overlay: Overlay,
+    private zone: NgZone,
+    private ref: ApplicationRef
+  ) {}
 
   open() {
     this.overlayRef = this.overlay.create({
@@ -25,7 +34,7 @@ export class LoadingService {
 
   close() {
     if (this.overlayRef) {
-      this.overlayRef.dispose();
+      this.overlayRef.detach();
     }
   }
 }

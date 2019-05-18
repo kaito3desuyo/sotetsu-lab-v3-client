@@ -1,100 +1,109 @@
-<div class="timetable-station-container">
-  <h2 class="mat-h2">
-    {{ timeOfStation.station_name }}
-    駅時刻表
-  </h2>
-  <mat-card fxLayout="column" fxLayoutGap="16px">
-    <mat-card-title>
-      <mat-toolbar
-        fxFlex="auto"
-        [ngStyle]="{
-          'background-color':
-            calender?.calender_name === '平日ダイヤ'
-              ? '#428bca'
-              : calender?.calender_name === '土休日ダイヤ'
-              ? '#d9534f'
-              : 'transparent'
-        }"
-        style="color: rgba(255,255,255,0.87); height: 48px; margin-top: -16px; margin-left: -16px; margin-right: -16px"
-      >
-        {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
-        {{ calender['calender_name'] }}
-        {{ direction === 'up' ? '上り' : direction === 'down' ? '下り' : null }}
-      </mat-toolbar>
-    </mat-card-title>
-    <mat-card-content>
-      <div class="timetable-container" fxLayout="row">
-        <table>
-          <tbody>
-            <tr *ngFor="let hour of hourList">
-              <th>{{ hour }}</th>
-            </tr>
-          </tbody>
-        </table>
-        <perfect-scrollbar fxLayout="row">
-          <table fxFlex="auto">
+<perfect-scrollbar>
+  <div
+    class="page-container timetable-station-container"
+    [ngStyle.gt-xs]="{ margin: '24px 60px' }"
+    *ngIf="timeOfStation"
+  >
+    <h2 class="mat-h2">
+      {{ timeOfStation.station_name }}
+      駅時刻表
+    </h2>
+    <mat-card fxLayout="column" fxLayoutGap="16px">
+      <mat-card-title>
+        <mat-toolbar
+          fxFlex="auto"
+          [ngStyle]="{
+            'background-color':
+              calender?.calender_name === '平日ダイヤ'
+                ? '#428bca'
+                : calender?.calender_name === '土休日ダイヤ'
+                ? '#d9534f'
+                : 'transparent'
+          }"
+          style="color: rgba(255,255,255,0.87);"
+        >
+          {{ calender['start_date'] | date: 'yyyy年MM月dd日' }}改正
+          {{ calender['calender_name'] }}
+          {{
+            direction === 'up' ? '上り' : direction === 'down' ? '下り' : null
+          }}
+        </mat-toolbar>
+      </mat-card-title>
+      <mat-card-content>
+        <div class="timetable-container" fxLayout="row">
+          <table>
             <tbody>
               <tr *ngFor="let hour of hourList">
-                <td *ngFor="let time of timeByHourList[hour]">
-                  <a
-                    [routerLink]="[
-                      '/timetable/all-line',
-                      {
-                        dia: this.route.snapshot.paramMap.get('dia'),
-                        direction: this.route.snapshot.paramMap.get(
-                          'direction'
-                        ),
-                        trip: time.trip_id
-                      }
-                    ]"
-                    [ngStyle]="{ color: time.trip.trip_class.trip_class_color }"
-                    ><!--
-
-                  --><ng-container *ngIf="time.departure_time">
-                      {{ convertToMinute(time.departure_time)
-                      }}{{
-                        convertToInitial(
-                          time.trip.times[time.trip.times.length - 1].station
-                            .station_name
-                        )
-                      }}</ng-container
-                    >
-                    <ng-container
-                      *ngIf="!time.departure_time && time.arrival_time"
-                    >
-                      {{ convertToMinute(time.arrival_time)
-                      }}{{
-                        convertToInitial(
-                          time.trip.times[time.trip.times.length - 1].station
-                            .station_name
-                        )
-                      }}</ng-container
-                    ><!--
-
-                    --></a
-                  >
-                  <br />
-                  <span>{{ time.trip.operation.operation_number }}運</span>
-                  <br />
-                  <span style="height: 24px;">
-                    {{
-                      this.sightingsList[
-                        time.trip.operation.operation_number
-                      ] || '不明'
-                    }}
-                  </span>
-                </td>
-                <td
-                  *ngFor="
-                    let blank of maxColumns - timeByHourList[hour].length
-                      | range
-                  "
-                ></td>
+                <th>{{ hour }}</th>
               </tr>
             </tbody>
           </table>
-        </perfect-scrollbar>
-      </div>
-    </mat-card-content>
-  </mat-card>
-</div>
+          <perfect-scrollbar fxLayout="row">
+            <table fxFlex="auto">
+              <tbody>
+                <tr *ngFor="let hour of hourList">
+                  <td *ngFor="let time of timeByHourList[hour]">
+                    <a
+                      [routerLink]="[
+                        '/timetable/all-line',
+                        {
+                          dia: this.route.snapshot.paramMap.get('dia'),
+                          direction: this.route.snapshot.paramMap.get(
+                            'direction'
+                          ),
+                          trip: time.trip_id
+                        }
+                      ]"
+                      [ngStyle]="{
+                        color: time.trip.trip_class.trip_class_color
+                      }"
+                      ><!--
+
+                  --><ng-container *ngIf="time.departure_time">
+                        {{ convertToMinute(time.departure_time)
+                        }}{{
+                          convertToInitial(
+                            time.trip.times[time.trip.times.length - 1].station
+                              .station_name
+                          )
+                        }}</ng-container
+                      >
+                      <ng-container
+                        *ngIf="!time.departure_time && time.arrival_time"
+                      >
+                        {{ convertToMinute(time.arrival_time)
+                        }}{{
+                          convertToInitial(
+                            time.trip.times[time.trip.times.length - 1].station
+                              .station_name
+                          )
+                        }}</ng-container
+                      ><!--
+
+                    --></a>
+                    <br />
+                    <span>{{ time.trip.operation.operation_number }}運</span>
+                    <br />
+                    <span style="height: 24px;">
+                      {{
+                        this.sightingsList[
+                          time.trip.operation.operation_number
+                        ] || '不明'
+                      }}
+                    </span>
+                  </td>
+                  <td
+                    *ngFor="
+                      let blank of maxColumns - timeByHourList[hour].length
+                        | range
+                    "
+                  ></td>
+                </tr>
+              </tbody>
+            </table>
+          </perfect-scrollbar>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</perfect-scrollbar>

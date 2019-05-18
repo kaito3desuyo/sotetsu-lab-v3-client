@@ -4,9 +4,13 @@
 // Plus imports for other components in your app.
 @import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
 
-$custom-typography: mat-typography-config(
-  $font-family: 'Noto Sans JP,sans-serif'
-);
+$font-family: 'Noto Sans JP', sans-serif;
+$custom-typography: mat-typography-config($font-family);
+
+html,
+body {
+  font-family: $font-family;
+}
 
 .mat-card {
   // box-shadow: none !important;

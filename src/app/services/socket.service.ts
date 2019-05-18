@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class SocketService {
-  private url = 'ws://localhost:3000';
+  private url = 'http://localhost:3000';
   // private url = 'https://api.sotetsu-lab.com/';
   private socket: any;
 

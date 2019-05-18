@@ -9,7 +9,7 @@ export interface ExceptionDialogData {
 @Component({
   selector: 'app-exception-dialog',
   templateUrl: './exception-dialog.component.html',
-  styleUrls: ['./exception-dialog.component.css']
+  styleUrls: ['./exception-dialog.component.scss']
 })
 export class ExceptionDialogComponent implements OnInit {
   constructor(
@@ -20,6 +20,7 @@ export class ExceptionDialogComponent implements OnInit {
   ngOnInit() {}
 
   onClickOk() {
+    console.log('ダイアログ閉じる');
     this.dialogRef.close();
   }
 }

@@ -5,10 +5,6 @@
     <app-sidenav></app-sidenav>
   </mat-sidenav>
   <mat-sidenav-content>
-    <perfect-scrollbar>
-      <div class="page-container" [ngStyle.gt-xs]="{ margin: '24px 60px' }">
-        <router-outlet></router-outlet>
-      </div>
-    </perfect-scrollbar>
+    <router-outlet></router-outlet>
   </mat-sidenav-content>
 </mat-sidenav-container>
