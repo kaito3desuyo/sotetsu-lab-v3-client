@@ -1,0 +1,54 @@
+<div class="sidenav-container">
+  <mat-nav-list>
+    <a mat-list-item routerLink="/">TOP</a>
+    <h3 mat-subheader>時刻表</h3>
+    <mat-list-item
+      style="height: 56px; padding-top: 16px"
+      [disableRipple]="true"
+    >
+      <mat-form-field>
+        <mat-select placeholder="駅名" [formControl]="station">
+          <mat-option [value]="">
+            選択しない
+          </mat-option>
+          <mat-option *ngFor="let station of stations" [value]="station.id">
+            {{ station.station_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-list-item>
+    <a
+      mat-list-item
+      [routerLink]="[
+        station.value ? '/timetable/station' : '/timetable/all-line',
+        station.value
+          ? { dia: calender['id'], direction: 'up', station: station.value }
+          : { dia: calender['id'], direction: 'up' }
+      ]"
+      >上り</a
+    >
+    <a
+      mat-list-item
+      [routerLink]="[
+        station.value ? '/timetable/station' : '/timetable/all-line',
+        station.value
+          ? { dia: calender['id'], direction: 'down', station: station.value }
+          : { dia: calender['id'], direction: 'down' }
+      ]"
+      >下り</a
+    >
+    <h3 mat-subheader>運用情報</h3>
+    <a mat-list-item routerLink="/operation/real-time">リアルタイム</a>
+    <!--<a mat-list-item routerLink="/">過去の運用情報</a>-->
+    <a
+      mat-list-item
+      [routerLink]="[
+        '/operation/table',
+        {
+          dia: calender['id']
+        }
+      ]"
+      >運用表</a
+    >
+  </mat-nav-list>
+</div>

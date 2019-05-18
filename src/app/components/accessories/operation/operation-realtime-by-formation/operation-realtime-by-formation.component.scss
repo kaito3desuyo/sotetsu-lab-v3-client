@@ -1,0 +1,52 @@
+@import '~@angular/material/theming';
+@import '../../../../../custom-theme.scss';
+$foreground: map-get($sotetsu-lab-v3-client-theme, foreground);
+
+:host {
+  .operation-realtime-by-formation-container {
+    //width: calc(100vw - 48px);
+    margin: 24px;
+    .mat-table {
+      width: 100%;
+      td:not(:last-child) {
+        padding-right: 8px;
+      }
+      .mat-column-operationNumber {
+        //width: 36px;
+        min-width: 36px;
+      }
+
+      .mat-column-formationNumber {
+        //width: 48px;
+        min-width: 48px;
+      }
+
+      .mat-column-currentPoint {
+        //width: 192px;
+        //max-width: 192px;
+        min-width: 192px;
+        font-size: 12px;
+        .mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .mat-column-sightingTime,
+      .mat-column-updateTime {
+        min-width: 80px;
+      }
+      .mat-column-history {
+        //width: 48px;
+        min-width: 48px;
+        .mat-icon {
+          color: mat-color($foreground, secondary-text);
+        }
+      }
+      .duplicate {
+        color: mat-color($foreground, secondary-text);
+      }
+    }
+  }
+}

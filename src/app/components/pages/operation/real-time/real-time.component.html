@@ -1,0 +1,33 @@
+<perfect-scrollbar>
+  <div
+    class="page-container operation-real-time-container"
+    [ngStyle.gt-xs]="{ margin: '24px 60px' }"
+  >
+    <h2 class="mat-h2">リアルタイム運用情報</h2>
+    <p>現在の時刻：{{ this.nowDateTime | date: 'yyyy年MM月dd日 HH:mm:ss' }}</p>
+    <p>
+      最終更新時刻：{{ this.finalUpdateTime | date: 'yyyy年MM月dd日 HH:mm:ss' }}
+    </p>
+    <mat-tab-group>
+      <mat-tab label="編成ごと">
+        <app-operation-realtime-by-formation
+          [dataSource]="formationTableDataSource"
+        ></app-operation-realtime-by-formation>
+      </mat-tab>
+      <mat-tab label="運用番号ごと">
+        <app-operation-realtime-by-operation
+          [dataSource]="operationTableDataSource"
+        ></app-operation-realtime-by-operation>
+      </mat-tab>
+    </mat-tab-group>
+    <mat-card>
+      <mat-card-title>運用を投稿する</mat-card-title>
+      <mat-card-content>
+        運用情報を投稿できます。
+        <app-add-operation-sighting-form
+          (send)="onSendSighting()"
+        ></app-add-operation-sighting-form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</perfect-scrollbar>
