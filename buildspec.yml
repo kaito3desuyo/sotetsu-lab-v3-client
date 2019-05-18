@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - npm install
+      - npm install -g @angular/cli
+  build:
+    commands:
+      - ng build
+  post_build:
+    commands:
+      - aws s3 sync dist/sotetsu-lab-v3-client s3://${BUCKET_NAME} --delete
+      - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths '/*'
