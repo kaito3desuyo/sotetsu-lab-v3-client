@@ -1,4 +1,9 @@
-import { Component, OnInit, AfterContentChecked } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterContentChecked,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { Station } from 'src/app/interfaces/station';
 import { FormBuilder, FormArray, Validators } from '@angular/forms';
@@ -12,7 +17,8 @@ import { MatSnackBar } from '@angular/material';
 @Component({
   selector: 'app-timetable-editor',
   templateUrl: './timetable-editor.component.html',
-  styleUrls: ['./timetable-editor.component.scss']
+  styleUrls: ['./timetable-editor.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TimetableEditorComponent implements OnInit {
   title: string = null;
@@ -347,5 +353,9 @@ export class TimetableEditorComponent implements OnInit {
         this.router.navigate(['/']);
       });
     }
+  }
+
+  trackByItem(index: number, value: any) {
+    return value ? value.value.station_id : null;
   }
 }

@@ -13,7 +13,7 @@ import { MatSnackBar } from '@angular/material';
   templateUrl: './add-timetable.component.html',
   styleUrls: ['./add-timetable.component.scss']
 })
-export class AddTimetableComponent implements OnInit, AfterContentChecked {
+export class AddTimetableComponent implements OnInit {
   services: any[];
   classes: any[];
   stations: Station[];
@@ -55,12 +55,6 @@ export class AddTimetableComponent implements OnInit, AfterContentChecked {
         this.operations = data.calender.operations;
       }
     );
-  }
-
-  ngAfterContentChecked(): void {
-    // Called after every check of the component's or directive's content.
-    // Add 'implements AfterContentChecked' to the class.
-    console.log(this.sendDataSet.valid);
   }
 
   initializeStationTimeFormArray() {
