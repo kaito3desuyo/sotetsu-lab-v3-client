@@ -19,6 +19,8 @@ export class OperationTableSmallBoxComponent implements OnInit {
   @Input() stations: any[];
   @Input() operation: any;
   modifiedOperation: any;
+  color: string;
+  tripString: any[];
 
   stationList = {};
 
@@ -47,6 +49,75 @@ export class OperationTableSmallBoxComponent implements OnInit {
         };
       })
     };
+    this.color = this.returnOperationNumberColor(
+      this.operation.operation_number
+    );
+    this.tripString = this.generateTripString(this.modifiedOperation.trips);
+  }
+
+  generateTripString(trips: any) {
+    const tripList = [];
+    trips.forEach((trip, index) => {
+      let strList = {};
+      if (trip.trip_direction === 0) {
+        strList['tripId'] = trip.id;
+        strList['tripColor'] = trip.trip_class.trip_class_color;
+        strList['tripDirection'] = 'up';
+        strList['downSideMark'] = trip.times[0].depot_out ? '〇' : '┗';
+        strList['downSideStation'] = this.stationList[trip.times[0].station_id];
+        strList['downSideTime'] = trip.times[0].departure_time;
+        strList['downSideArrow'] = '→→';
+        strList['tripClass'] = trip.trip_class.trip_class_name[0];
+        strList['tripNumber'] = trip.trip_number;
+        strList['upSideArrow'] = '→→';
+        strList['upSideTime'] = trip.times[trip.times.length - 1].arrival_time;
+        strList['upSideStation'] = this.stationList[
+          trip.times[trip.times.length - 1].station_id
+        ];
+        strList['upSideMark'] = trip.times[trip.times.length - 1].depot_in
+          ? '△'
+          : '┓';
+      }
+      if (trip.trip_direction === 1) {
+        strList['tripId'] = trip.id;
+        strList['tripColor'] = trip.trip_class.trip_class_color;
+        strList['tripDirection'] = 'down';
+        strList['downSideMark'] = trip.times[trip.times.length - 1].depot_in
+          ? '△'
+          : '┏';
+        strList['downSideStation'] = this.stationList[
+          trip.times[trip.times.length - 1].station_id
+        ];
+        strList['downSideTime'] = trip.times[trip.times.length - 1].arrival_time;
+        strList['downSideArrow'] = '←←';
+        strList['tripClass'] = trip.trip_class.trip_class_name[0];
+        strList['tripNumber'] = trip.trip_number;
+        strList['upSideArrow'] = '←←';
+        strList['upSideTime'] = trip.times[0].departure_time;
+        strList['upSideStation'] = this.stationList[trip.times[0].station_id];
+        strList['upSideMark'] = trip.times[0].depot_out ? '〇' : '┛';
+      }
+
+      tripList.push(strList);
+
+      if (
+        trips[index + 1] &&
+        trip.trip_direction === trips[index + 1].trip_direction
+      ) {
+        strList = {};
+        if (trip.trip_direction === 0) {
+          strList['tripId'] = null;
+          strList['line'] = '┏━━━━━━━━━━━━━━━━━━━━┛';
+        }
+        if (trip.trip_direction === 1) {
+          strList['tripId'] = null;
+          strList['line'] = '┗━━━━━━━━━━━━━━━━━━━━┓';
+        }
+        tripList.push(strList);
+      }
+    });
+
+    return tripList;
   }
 
   returnStationName(stationId: string) {
@@ -65,6 +136,6 @@ export class OperationTableSmallBoxComponent implements OnInit {
   }
 
   trackByItem(index: number, value: any) {
-    return value ? value.id : null;
+    return value ? value.tripId : null;
   }
 }

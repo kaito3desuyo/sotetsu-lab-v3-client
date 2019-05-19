@@ -23,6 +23,7 @@ import {
   MatCheckboxModule
 } from '@angular/material';
 import { OverlayModule } from '@angular/cdk/overlay';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 
 @NgModule({
   declarations: [],
@@ -47,7 +48,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
-    OverlayModule
+    OverlayModule,
+    ScrollingModule
   ],
   exports: [
     MatFormFieldModule,
@@ -70,7 +72,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
     MatPaginatorModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
-    OverlayModule
+    OverlayModule,
+    ScrollingModule
   ]
 })
 export class AngularMaterialModule {}
