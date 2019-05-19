@@ -4,7 +4,7 @@
     fxLayout="row"
     fxLayoutAlign="center center"
     [ngStyle]="{
-      'background-color': returnOperationNumberColor(operation.operation_number)
+      'background-color': color
     }"
   >
     <h3 class="mat-h3">
@@ -19,107 +19,43 @@
       >
     </h3>
   </section>
-  <section
-    *ngFor="
-      let trip of modifiedOperation.trips;
-      let i = index;
-      trackBy: trackByItem
-    "
-  >
-    <div
-      *ngIf="trip.trip_direction === 0"
-      fxLayout="row"
-      fxLayoutAlign="start center"
-    >
+  <section *ngFor="let str of tripString; let i = index; trackBy: trackByItem">
+    <div fxLayout="row" fxLayoutAlign="start center" *ngIf="str.tripId">
       <div fxLayout="row" fxLayoutAlign="start center">
-        <span *ngIf="trip.times[0].depot_out">〇</span>
-        <span *ngIf="!trip.times[0].depot_out">┗</span>
-        <span fxFlex="4em">{{
-          this.stationList[trip.times[0].station_id]
-        }}</span>
+        <span>{{ str.downSideMark }}</span>
+
+        <span fxFlex="4em">{{ str.downSideStation }}</span>
         <span fxFlex="2.375em" style="text-align: center">{{
-          trip.times[0].departure_time
+          str.downSideTime
         }}</span>
       </div>
-      <span [ngStyle]="{ color: trip.trip_class.trip_class_color }">→→</span>
+      <span [ngStyle]="{ color: str.tripColor }">{{ str.downSideArrow }}</span>
       <a
         [routerLink]="[
           '/timetable/all-line',
           {
             dia: dia,
-            direction: 'up',
-            trip: trip.id
+            direction: str.tripDirection,
+            trip: str.tripId
           }
         ]"
-        [ngStyle]="{ color: trip.trip_class.trip_class_color }"
-        >{{ trip.trip_class.trip_class_name[0] }}{{ trip.trip_number }}</a
+        [ngStyle]="{ color: str.tripColor }"
+        >{{ str.tripClass }}{{ str.tripNumber }}</a
       >
-      <span [ngStyle]="{ color: trip.trip_class.trip_class_color }">→→</span>
+      <span [ngStyle]="{ color: str.tripColor }">{{ str.upSideArrow }}</span>
       <div fxLayout="row" fxLayoutAlign="start center">
         <span fxFlex="2.375em" style="text-align: center">
-          {{ trip.times[trip.times.length - 1].arrival_time }}
+          {{ str.upSideTime }}
         </span>
 
         <span fxFlex="4em" style="text-align: right">
-          {{ this.stationList[trip.times[trip.times.length - 1].station_id] }}
+          {{ str.upSideStation }}
         </span>
-        <span *ngIf="trip.times[trip.times.length - 1].depot_in">△</span>
-        <span *ngIf="!trip.times[trip.times.length - 1].depot_in">┓</span>
+        <span>{{ str.upSideMark }}</span>
       </div>
     </div>
-    <div
-      *ngIf="trip.trip_direction === 1"
-      fxLayout="row"
-      fxLayoutAlign="start center"
-    >
-      <div fxLayout="row" fxLayoutAlign="start center">
-        <span *ngIf="trip.times[trip.times.length - 1].depot_in">△</span>
-        <span *ngIf="!trip.times[trip.times.length - 1].depot_in">┏</span>
-        <span fxFlex="4em">
-          {{ this.stationList[trip.times[trip.times.length - 1].station_id] }}
-        </span>
-        <span fxFlex="2.375em" style="text-align: center">
-          {{ trip.times[trip.times.length - 1].arrival_time }}
-        </span>
-      </div>
-      <span [ngStyle]="{ color: trip.trip_class.trip_class_color }">←←</span>
-      <a
-        [routerLink]="[
-          '/timetable/all-line',
-          {
-            dia: dia,
-            direction: 'down',
-            trip: trip.id
-          }
-        ]"
-        [ngStyle]="{ color: trip.trip_class.trip_class_color }"
-      >
-        {{ trip.trip_class.trip_class_name[0] }}{{ trip.trip_number }}
-      </a>
-      <span [ngStyle]="{ color: trip.trip_class.trip_class_color }">←←</span>
-      <div fxLayout="row" fxLayoutAlign="start center">
-        <span fxFlex="2.375em" style="text-align: center">{{
-          trip.times[0].departure_time
-        }}</span>
-
-        <span fxFlex="4em" style="text-align: right">{{
-          this.stationList[trip.times[0].station_id]
-        }}</span>
-        <span *ngIf="trip.times[0].depot_out">〇</span>
-        <span *ngIf="!trip.times[0].depot_out">┛</span>
-      </div>
-    </div>
-    <div *ngIf="trip.trip_direction === operation.trips[i + 1]?.trip_direction">
-      <div *ngIf="trip.trip_direction === 0">
-        <span>┏</span>
-        <span>━━━━━━━━━━━━━━━━━━━━</span>
-        <span>┛</span>
-      </div>
-      <div *ngIf="trip.trip_direction === 1">
-        <span>┗</span>
-        <span>━━━━━━━━━━━━━━━━━━━━</span>
-        <span>┓</span>
-      </div>
+    <div *ngIf="!str.tripId">
+      <span>{{ str.line }}</span>
     </div>
   </section>
 </div>
