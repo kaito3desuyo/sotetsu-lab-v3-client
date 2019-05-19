@@ -27,7 +27,7 @@
       <mat-card-content>
         <div fxLayout="row wrap" fxLayoutAlign="space-around">
           <app-operation-table-small-box
-            *ngFor="let operation of operations"
+            *ngFor="let operation of operations; trackBy: trackByItem"
             [dia]="dia"
             [stations]="stations"
             [operation]="operation"

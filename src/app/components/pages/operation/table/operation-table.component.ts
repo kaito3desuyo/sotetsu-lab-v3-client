@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-operation-table',
   templateUrl: './operation-table.component.html',
-  styleUrls: ['./operation-table.component.scss']
+  styleUrls: ['./operation-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationTableComponent implements OnInit {
   dia: string;
@@ -24,5 +25,9 @@ export class OperationTableComponent implements OnInit {
       this.stations = data.stations;
       this.operations = data.operationsByCalenderId;
     });
+  }
+
+  trackByItem(index: number, value: any) {
+    return value ? value.id : null;
   }
 }

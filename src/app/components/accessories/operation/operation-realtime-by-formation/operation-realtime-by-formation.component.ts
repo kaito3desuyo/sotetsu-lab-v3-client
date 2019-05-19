@@ -104,10 +104,6 @@ export class OperationRealtimeByFormationComponent
     this.subscriptions.push(initSub);
   }
 
-  ngAfterContentChecked() {
-    this.dataSource.sort = this.sort;
-  }
-
   async openHistoryDialog(formationNumber: string) {
     console.log(this.dataSource);
 
