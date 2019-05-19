@@ -6,11 +6,10 @@
   table {
     border-collapse: collapse;
 
+    th,
     td {
+      line-height: 24px;
       text-align: center;
-      span {
-        line-height: 24px;
-      }
     }
 
     tbody {
