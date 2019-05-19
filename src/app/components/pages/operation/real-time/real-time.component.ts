@@ -1,7 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef
+} from '@angular/core';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, BehaviorSubject } from 'rxjs';
 import { ApiService } from 'src/app/services/api.service';
 import { MatTableDataSource, MatSnackBar } from '@angular/material';
 import { SocketService } from 'src/app/services/socket.service';
@@ -10,27 +16,30 @@ import { LoadingService } from 'src/app/services/loading.service';
 @Component({
   selector: 'app-real-time',
   templateUrl: './real-time.component.html',
-  styleUrls: ['./real-time.component.scss']
+  styleUrls: ['./real-time.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RealTimeComponent implements OnInit, OnDestroy {
   subscriptions: Subscription[] = [];
 
-  nowDateTime: Date;
-  finalUpdateTime: Date;
+  nowDateTime: string;
+  finalUpdateTime: string;
 
-  formationTableDataSource = new MatTableDataSource<any>();
-  operationTableDataSource = new MatTableDataSource<any>();
+  formationTableDataSource = new BehaviorSubject(new MatTableDataSource<any>());
+  operationTableDataSource = new BehaviorSubject(new MatTableDataSource<any>());
 
   constructor(
     private api: ApiService,
     private socketService: SocketService,
     private snackBar: MatSnackBar,
-    private loading: LoadingService
+    private loading: LoadingService,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     const timerSub = interval(1000).subscribe(result => {
       this.nowDateTime = this.getNowDateTime();
+      this.cd.detectChanges();
     });
 
     this.loadTableData();
@@ -50,7 +59,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
   }
 
   getNowDateTime() {
-    return moment().toDate();
+    return moment().format('YYYY年MM月DD日 HH:mm:ss');
   }
 
   async onSendSighting() {
@@ -65,6 +74,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       this.getOperationSightingByOperation()
     ]);
     this.finalUpdateTime = this.getNowDateTime();
+    this.cd.detectChanges();
     this.loading.close();
   }
 
@@ -74,7 +84,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       .toPromise();
     const tableData = this.generateTableData(apiData, 'formation');
     console.log('編成', tableData);
-    this.formationTableDataSource = new MatTableDataSource<any>(tableData);
+    this.formationTableDataSource.next(new MatTableDataSource<any>(tableData));
   }
 
   async getOperationSightingByOperation() {
@@ -82,7 +92,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       .getOperationSightingsByOperation()
       .toPromise();
     const tableData = this.generateTableData(apiData, 'operation');
-    this.operationTableDataSource = new MatTableDataSource<any>(tableData);
+    this.operationTableDataSource.next(new MatTableDataSource<any>(tableData));
   }
 
   generateTableData(data: any, mode: string) {

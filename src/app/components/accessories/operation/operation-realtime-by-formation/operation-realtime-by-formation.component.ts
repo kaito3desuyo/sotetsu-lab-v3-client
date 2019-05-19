@@ -5,7 +5,9 @@ import {
   Input,
   AfterContentChecked,
   OnDestroy,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  AfterContentInit
 } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
@@ -14,7 +16,9 @@ import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
 import { SocketService } from 'src/app/services/socket.service';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription, interval } from 'rxjs';
+import { Subscription, interval, Observable } from 'rxjs';
+import { map, flatMap } from 'rxjs/operators';
+import { GlobalFunctionService } from 'src/app/services/global-function.service';
 
 @Component({
   selector: 'app-operation-realtime-by-formation',
@@ -23,15 +27,17 @@ import { Subscription, interval } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationRealtimeByFormationComponent
-  implements OnInit, AfterContentChecked, OnDestroy {
+  implements OnInit, OnDestroy {
   data: any;
   calender: any;
   stations: any[] = [];
   trips: any[] = [];
-  currentPoints: any[] = [];
+  currentPoints: any = {};
+  colors: any = {};
   subscriptions: Subscription[] = [];
 
-  @Input() dataSource = new MatTableDataSource<any>(null);
+  @Input() dataSourceObservable: Observable<MatTableDataSource<any>>;
+  dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [
     'formationNumber',
     'operationNumber',
@@ -44,31 +50,58 @@ export class OperationRealtimeByFormationComponent
 
   constructor(
     private api: ApiService,
+    private globalFunction: GlobalFunctionService,
     private dialog: MatDialog,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.route.data.subscribe(
-      (data: { calender: any; stations: any[]; trips: any[] }) => {
-        console.log(data);
-        this.calender = data.calender;
-        this.stations = data.stations;
-        this.trips = data.trips;
+    const dataSub = this.dataSourceObservable.subscribe(data => {
+      this.dataSource = data;
+      this.dataSource.sort = this.sort;
+      this.cd.markForCheck();
+    });
 
-        const timerSub = interval(1000).subscribe(() => {
-          // console.log('hoge');
-          this.currentPoints = _.map(this.trips, obj => {
-            return {
-              operationId: obj.id,
-              operationNumber: obj.operation_number,
+    this.subscriptions.push(dataSub);
+
+    const initSub = this.route.data
+      .pipe(
+        map(data => {
+          this.calender = data.calender;
+          this.stations = data.stations;
+          this.trips = data.trips;
+
+          this.currentPoints = {};
+          _.forEach(this.trips, obj => {
+            this.currentPoints[obj.operation_number] = {
               ...this.getCurrentPoint(obj)
             };
+            this.colors[
+              obj.operation_number
+            ] = this.globalFunction.returnOperationNumberColor(
+              obj.operation_number
+            );
           });
-        });
-        this.subscriptions.push(timerSub);
-      }
-    );
+          this.cd.detectChanges();
+        }),
+        flatMap(data =>
+          interval(1000 * 10).pipe(
+            map(() => {
+              this.currentPoints = {};
+              _.forEach(this.trips, obj => {
+                this.currentPoints[obj.operation_number] = {
+                  ...this.getCurrentPoint(obj)
+                };
+              });
+              this.cd.detectChanges();
+            })
+          )
+        )
+      )
+      .subscribe(() => console.log('現在地を更新'));
+
+    this.subscriptions.push(initSub);
   }
 
   ngAfterContentChecked() {
@@ -229,50 +262,50 @@ export class OperationRealtimeByFormationComponent
           endTime: firstTripDepartureTime.format('HHmm')
         };
       }
-    } else {
-      /**
-       * 最後の列車が終わったあと
-       */
-      const finalTripArrivalTime = moment(
-        data.trips[data.trips.length - 1].times[
-          data.trips[data.trips.length - 1].times.length - 1
-        ].arrival_time,
-        'HH:mm:ss'
-      ).subtract(
-        Number(moment().format('H')) < 4 &&
-          Number(
-            moment(
-              data.trips[data.trips.length - 1].times[
-                data.trips[data.trips.length - 1].times.length - 1
-              ].arrival_time,
-              'HH:mm:ss'
-            ).format('H')
-          ) >= 4
-          ? 1
-          : 0,
-        'days'
-      );
+    }
 
-      if (finalTripArrivalTime < moment()) {
-        return {
-          tripId: '',
-          tripDirection: '',
-          tripNumber: '',
-          tripClass: '',
-          tripClassColor: '',
-          startStation: _.find(
-            this.stations,
-            obj =>
-              obj.id ===
-              data.trips[data.trips.length - 1].times[
-                data.trips[data.trips.length - 1].times.length - 1
-              ].station_id
-          ).station_name,
-          startTime: finalTripArrivalTime.format('HHmm'),
-          endStation: '入庫済',
-          endTime: '△'
-        };
-      }
+    /**
+     * 最後の列車が終わったあと
+     */
+    const finalTripArrivalTime = moment(
+      data.trips[data.trips.length - 1].times[
+        data.trips[data.trips.length - 1].times.length - 1
+      ].arrival_time,
+      'HH:mm:ss'
+    ).subtract(
+      Number(moment().format('H')) < 4 &&
+        Number(
+          moment(
+            data.trips[data.trips.length - 1].times[
+              data.trips[data.trips.length - 1].times.length - 1
+            ].arrival_time,
+            'HH:mm:ss'
+          ).format('H')
+        ) >= 4
+        ? 1
+        : 0,
+      'days'
+    );
+
+    if (finalTripArrivalTime < moment()) {
+      return {
+        tripId: '',
+        tripDirection: '',
+        tripNumber: '',
+        tripClass: '',
+        tripClassColor: '',
+        startStation: _.find(
+          this.stations,
+          obj =>
+            obj.id ===
+            data.trips[data.trips.length - 1].times[
+              data.trips[data.trips.length - 1].times.length - 1
+            ].station_id
+        ).station_name,
+        startTime: finalTripArrivalTime.format('HHmm'),
+        endStation: '入庫済',
+        endTime: '△'
+      };
     }
 
     return {};

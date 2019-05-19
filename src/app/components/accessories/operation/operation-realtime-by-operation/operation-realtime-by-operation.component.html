@@ -9,7 +9,7 @@
             fxLayoutAlign="center center"
             style="width: 36px; height: 36px; border-radius: 50%; position:relative"
             [ngStyle]="{
-              background: getOperationNumberColor(element.operationNumber)
+              background: colors[element.operationNumber]
             }"
           >
             <span>{{ element.operationNumber }}</span>
@@ -66,34 +66,33 @@
               <a
                 fxLayout="column"
                 [ngStyle]="{
-                  color: returnCurrentPoint(element.operationNumber)
-                    ?.tripClassColor
+                  color: currentPoints[element.operationNumber]?.tripClassColor
                 }"
                 [routerLink]="[
                   '/timetable/all-line',
                   {
                     dia: calender.id,
-                    direction: returnCurrentPoint(element.operationNumber)
-                      ?.tripDirection,
-                    trip: returnCurrentPoint(element.operationNumber)?.tripId
+                    direction:
+                      currentPoints[element.operationNumber]?.tripDirection,
+                    trip: currentPoints[element.operationNumber]?.tripId
                   }
                 ]"
               >
                 <span>{{
-                  returnCurrentPoint(element.operationNumber)?.tripClass
+                  currentPoints[element.operationNumber]?.tripClass
                 }}</span>
                 <span>{{
-                  returnCurrentPoint(element.operationNumber)?.tripNumber
+                  currentPoints[element.operationNumber]?.tripNumber
                 }}</span>
               </a>
             </div>
             <div fxLayout="column" fxFlex="1 0 60px">
               <span>{{
-                returnCurrentPoint(element.operationNumber)?.startStation
+                currentPoints[element.operationNumber]?.startStation
               }}</span>
 
               <span>{{
-                returnCurrentPoint(element.operationNumber)?.startTime
+                currentPoints[element.operationNumber]?.startTime
               }}</span>
             </div>
 
@@ -103,10 +102,10 @@
 
             <div fxLayout="column" fxFlex="1 0 60px">
               <span>{{
-                returnCurrentPoint(element.operationNumber)?.endStation
+                currentPoints[element.operationNumber]?.endStation
               }}</span>
               <span>
-                {{ returnCurrentPoint(element.operationNumber)?.endTime }}</span
+                {{ currentPoints[element.operationNumber]?.endTime }}</span
               >
             </div>
           </div>
