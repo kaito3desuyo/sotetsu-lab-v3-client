@@ -2,7 +2,9 @@ import {
   Component,
   OnInit,
   Input,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  AfterViewInit,
+  ChangeDetectorRef
 } from '@angular/core';
 import * as _ from 'lodash';
 import * as moment from 'moment';
@@ -24,7 +26,10 @@ export class OperationTableSmallBoxComponent implements OnInit {
 
   stationList = {};
 
-  constructor(private globalFunctionService: GlobalFunctionService) {}
+  constructor(
+    private cd: ChangeDetectorRef,
+    private globalFunctionService: GlobalFunctionService
+  ) {}
 
   ngOnInit() {
     _.forEach(this.stations, obj => {
