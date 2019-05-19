@@ -1,4 +1,9 @@
-import { Component, OnInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 import { GlobalFunctionService } from 'src/app/services/global-function.service';
@@ -57,5 +62,9 @@ export class OperationTableSmallBoxComponent implements OnInit {
     return this.globalFunctionService.returnOperationNumberColor(
       operationNumber
     );
+  }
+
+  trackByItem(index: number, value: any) {
+    return value ? value.id : null;
   }
 }

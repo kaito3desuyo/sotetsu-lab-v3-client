@@ -19,7 +19,13 @@
       >
     </h3>
   </section>
-  <section *ngFor="let trip of modifiedOperation.trips; let i = index">
+  <section
+    *ngFor="
+      let trip of modifiedOperation.trips;
+      let i = index;
+      trackBy: trackByItem
+    "
+  >
     <div
       *ngIf="trip.trip_direction === 0"
       fxLayout="row"
