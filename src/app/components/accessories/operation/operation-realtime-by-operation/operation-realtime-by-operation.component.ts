@@ -6,7 +6,8 @@ import {
   AfterContentChecked,
   OnDestroy,
   ChangeDetectionStrategy,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  AfterContentInit
 } from '@angular/core';
 import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
 import { ApiService } from 'src/app/services/api.service';
@@ -14,7 +15,9 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
 import { ActivatedRoute } from '@angular/router';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, Observable } from 'rxjs';
+import { flatMap, map } from 'rxjs/operators';
+import { GlobalFunctionService } from 'src/app/services/global-function.service';
 
 @Component({
   selector: 'app-operation-realtime-by-operation',
@@ -23,15 +26,17 @@ import { interval, Subscription } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationRealtimeByOperationComponent
-  implements OnInit, AfterContentChecked, OnDestroy {
+  implements OnInit, OnDestroy {
   data: any;
   calender: any;
   stations: any[] = [];
   trips: any[] = [];
-  currentPoints: any[] = [];
+  currentPoints: any = {};
+  colors: any = {};
   subscriptions: Subscription[] = [];
 
-  @Input() dataSource = new MatTableDataSource<any>(null);
+  @Input() dataSourceObservable: Observable<MatTableDataSource<any>>;
+  dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [
     'operationNumber',
     'formationNumber',
@@ -44,22 +49,69 @@ export class OperationRealtimeByOperationComponent
 
   constructor(
     private api: ApiService,
+    private globalFunction: GlobalFunctionService,
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
+    const dataSub = this.dataSourceObservable.subscribe(data => {
+      this.dataSource = data;
+      this.dataSource.sort = this.sort;
+      this.cd.markForCheck();
+    });
+
+    this.subscriptions.push(dataSub);
+
+    const initSub = this.route.data
+      .pipe(
+        map(data => {
+          this.calender = data.calender;
+          this.stations = data.stations;
+          this.trips = data.trips;
+
+          this.currentPoints = {};
+          _.forEach(this.trips, obj => {
+            this.currentPoints[obj.operation_number] = {
+              ...this.getCurrentPoint(obj)
+            };
+            this.colors[
+              obj.operation_number
+            ] = this.globalFunction.returnOperationNumberColor(
+              obj.operation_number
+            );
+          });
+          this.cd.detectChanges();
+        }),
+        flatMap(data =>
+          interval(1000 * 10).pipe(
+            map(() => {
+              this.currentPoints = {};
+              _.forEach(this.trips, obj => {
+                this.currentPoints[obj.operation_number] = {
+                  ...this.getCurrentPoint(obj)
+                };
+              });
+              this.cd.detectChanges();
+            })
+          )
+        )
+      )
+      .subscribe(() => console.log('現在地を更新'));
+
+    this.subscriptions.push(initSub);
+    /*
     this.route.data.subscribe(
       (data: { calender: any; stations: any[]; trips: any[] }) => {
         this.calender = data.calender;
         this.stations = data.stations;
         this.trips = data.trips;
 
-        const timerSub = interval(1000).subscribe(() => {
-          this.currentPoints = _.map(this.trips, obj => {
-            return {
-              operationNumber: obj.operation_number,
+        const timerSub = interval(1000 * 10).subscribe(() => {
+          this.currentPoints = {};
+          _.forEach(this.trips, obj => {
+            this.currentPoints[obj.operation_number] = {
               ...this.getCurrentPoint(obj)
             };
           });
@@ -68,10 +120,7 @@ export class OperationRealtimeByOperationComponent
         this.subscriptions.push(timerSub);
       }
     );
-  }
-
-  ngAfterContentChecked() {
-    this.dataSource.sort = this.sort;
+    */
   }
 
   openHistoryDialog(operationNumber: string) {
@@ -87,10 +136,8 @@ export class OperationRealtimeByOperationComponent
   }
 
   returnCurrentPoint(operationNumber: number) {
-    return _.find(
-      this.currentPoints,
-      obj => obj.operationNumber === operationNumber
-    );
+    console.log(this.currentPoints);
+    return _.find(obj => obj.operationNumber === operationNumber);
   }
 
   getCurrentPoint(data: any) {
@@ -222,50 +269,49 @@ export class OperationRealtimeByOperationComponent
           endTime: firstTripDepartureTime.format('HHmm')
         };
       }
-    } else {
-      /**
-       * 最後の列車が終わったあと
-       */
-      const finalTripArrivalTime = moment(
-        data.trips[data.trips.length - 1].times[
-          data.trips[data.trips.length - 1].times.length - 1
-        ].arrival_time,
-        'HH:mm:ss'
-      ).subtract(
-        Number(moment().format('H')) < 4 &&
-          Number(
-            moment(
-              data.trips[data.trips.length - 1].times[
-                data.trips[data.trips.length - 1].times.length - 1
-              ].arrival_time,
-              'HH:mm:ss'
-            ).format('H')
-          ) >= 4
-          ? 1
-          : 0,
-        'days'
-      );
+    }
+    /**
+     * 最後の列車が終わったあと
+     */
+    const finalTripArrivalTime = moment(
+      data.trips[data.trips.length - 1].times[
+        data.trips[data.trips.length - 1].times.length - 1
+      ].arrival_time,
+      'HH:mm:ss'
+    ).subtract(
+      Number(moment().format('H')) < 4 &&
+        Number(
+          moment(
+            data.trips[data.trips.length - 1].times[
+              data.trips[data.trips.length - 1].times.length - 1
+            ].arrival_time,
+            'HH:mm:ss'
+          ).format('H')
+        ) >= 4
+        ? 1
+        : 0,
+      'days'
+    );
 
-      if (finalTripArrivalTime < moment()) {
-        return {
-          tripId: '',
-          tripDirection: '',
-          tripNumber: '',
-          tripClass: '',
-          tripClassColor: '',
-          startStation: _.find(
-            this.stations,
-            obj =>
-              obj.id ===
-              data.trips[data.trips.length - 1].times[
-                data.trips[data.trips.length - 1].times.length - 1
-              ].station_id
-          ).station_name,
-          startTime: finalTripArrivalTime.format('HHmm'),
-          endStation: '入庫済',
-          endTime: '△'
-        };
-      }
+    if (finalTripArrivalTime < moment()) {
+      return {
+        tripId: '',
+        tripDirection: '',
+        tripNumber: '',
+        tripClass: '',
+        tripClassColor: '',
+        startStation: _.find(
+          this.stations,
+          obj =>
+            obj.id ===
+            data.trips[data.trips.length - 1].times[
+              data.trips[data.trips.length - 1].times.length - 1
+            ].station_id
+        ).station_name,
+        startTime: finalTripArrivalTime.format('HHmm'),
+        endStation: '入庫済',
+        endTime: '△'
+      };
     }
 
     return {};
