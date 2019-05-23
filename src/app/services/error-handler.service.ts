@@ -26,7 +26,7 @@ export class ErrorHandlerService implements ErrorHandler {
       });
 
       dialogRef.afterClosed().subscribe(done => {
-        this.location.back();
+        // this.location.back();
       });
     });
   }

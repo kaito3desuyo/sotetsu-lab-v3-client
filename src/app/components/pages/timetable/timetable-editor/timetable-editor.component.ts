@@ -310,7 +310,7 @@ export class TimetableEditorComponent implements OnInit {
       return {
         ...obj,
         depot_in:
-          index === times.length
+          index === times.length - 1
             ? this.sendDataSet.get('depotIn').value
             : false,
         depot_out: index === 0 ? this.sendDataSet.get('depotOut').value : false
@@ -334,7 +334,8 @@ export class TimetableEditorComponent implements OnInit {
       extra_calender_id: null,
       times: sendTimes
     };
-    if (this.trip) {
+    console.log('this.trip', this.trip);
+    if (this.trip && this.trip.id) {
       this.apiService
         .editTrip(this.trip.id, sendForApiData)
         .subscribe(result => {
