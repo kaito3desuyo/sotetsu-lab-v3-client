@@ -15,6 +15,8 @@ import { CustomPagenator } from './classes/custom-pagenator';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
 import { ErrorHandlerService } from './services/error-handler.service';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [AppComponent],
@@ -28,7 +30,8 @@ import { ErrorHandlerService } from './services/error-handler.service';
     AppRoutingModule,
     HttpClientModule,
     PagesModule,
-    AccessoriesModule
+    AccessoriesModule,
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [
     {
