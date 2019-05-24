@@ -24,6 +24,13 @@
       href="https://fonts.googleapis.com/css?family=Quicksand"
       rel="stylesheet"
     />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/ngsw-worker.js')
+        })
+      }
+    </script>
   </head>
   <body>
     <app-root></app-root>
