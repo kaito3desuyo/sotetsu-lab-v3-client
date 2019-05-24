@@ -7,11 +7,12 @@ import {
 } from '@angular/core';
 import * as moment from 'moment';
 import * as _ from 'lodash';
-import { interval, Subscription, BehaviorSubject } from 'rxjs';
+import { interval, Subscription, BehaviorSubject, throwError } from 'rxjs';
 import { ApiService } from 'src/app/services/api.service';
 import { MatTableDataSource, MatSnackBar } from '@angular/material';
 import { SocketService } from 'src/app/services/socket.service';
 import { LoadingService } from 'src/app/services/loading.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-real-time',
@@ -67,32 +68,31 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     // await this.loadTableData();
   }
 
-  async loadTableData() {
+  loadTableData() {
     this.loading.open();
-    await Promise.all([
-      this.getOperationSightingByFormation(),
-      this.getOperationSightingByOperation()
-    ]);
+
+    this.getOperationSightingByFormation(),
+      this.getOperationSightingByOperation();
+
     this.finalUpdateTime = this.getNowDateTime();
     this.cd.detectChanges();
     this.loading.close();
   }
 
-  async getOperationSightingByFormation() {
-    const apiData = await this.api
-      .getOperationSightingsByFormation()
-      .toPromise();
-    const tableData = this.generateTableData(apiData, 'formation');
-    console.log('編成', tableData);
-    this.formationTableDataSource.next(new MatTableDataSource<any>(tableData));
+  getOperationSightingByFormation() {
+    this.api.getOperationSightingsByFormation().subscribe(data => {
+      const tableData = this.generateTableData(data, 'formation');
+      console.log('編成', tableData);
+      this.formationTableDataSource.next(new MatTableDataSource<any>(tableData));
+    });
   }
 
-  async getOperationSightingByOperation() {
-    const apiData = await this.api
-      .getOperationSightingsByOperation()
-      .toPromise();
-    const tableData = this.generateTableData(apiData, 'operation');
-    this.operationTableDataSource.next(new MatTableDataSource<any>(tableData));
+  getOperationSightingByOperation() {
+    this.api.getOperationSightingsByOperation().subscribe(data => {
+      const tableData = this.generateTableData(data, 'operation');
+      console.log('運用', tableData);
+      this.operationTableDataSource.next(new MatTableDataSource<any>(tableData));
+    });
   }
 
   generateTableData(data: any, mode: string) {
@@ -122,24 +122,60 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     }
 
     if (mode === 'operation') {
-      const tableData = _.map(data, element => {
-        return {
-          formationNumber: element.formation_number,
-          operationId: element.operation_id,
-          operationNumber: element.operation_number,
-          sightingTime: element.sighting_time,
-          updateTime: element.updated_at
-        };
+      const tableData = _(data)
+        .filter(element => {
+          return (
+            element.operation_number !== '100' &&
+            element.operation_number !== null
+          );
+        })
+        .map(element => {
+          return {
+            formationNumber: element.formation_number,
+            operationId: element.operation_id,
+            operationNumber: element.operation_number,
+            sightingTime: element.sighting_time,
+            updateTime: element.updated_at
+          };
+        })
+        .map((element, index, allData) => {
+          return {
+            ...element,
+            formationNumber: this.searchSameFormationNumber(element, allData)
+              ? '不明'
+              : element.formationNumber
+          };
+        })
+        .sortBy([
+          element => {
+            return element.operationNumber;
+          }
+        ])
+        .value();
+
+      /*
+      tableData = _.filter(tableData, element => {
+        return !this.searchSameOperationNumber(element, tableData);
       });
 
-      tableData.forEach(element => {
-        element.formationNumber = this.searchSameFormationNumber(
-          element,
-          tableData
-        )
-          ? '不明'
-          : element.formationNumber;
+      tableData = _.map(this.operations, obj => {
+        const targetSighting = _.find(
+          tableData,
+          element => obj.operation_number === element.operationNumber
+        );
+        if (targetSighting) {
+          return targetSighting;
+        } else {
+          return {
+            formationNumber: '不明',
+            operationId: obj.id,
+            operationNumber: obj.operation_number,
+            sightingTime: null,
+            updateTime: null
+          };
+        }
       });
+      */
 
       return tableData;
     }
