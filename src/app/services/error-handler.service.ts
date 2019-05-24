@@ -21,7 +21,7 @@ export class ErrorHandlerService implements ErrorHandler {
       const dialogRef = this.dialog.open(ExceptionDialogComponent, {
         data: {
           title: 'エラーが発生しました',
-          text: error.message
+          text: error
         }
       });
 

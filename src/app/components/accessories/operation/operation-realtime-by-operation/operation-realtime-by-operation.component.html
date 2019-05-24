@@ -123,7 +123,12 @@
                 : ''
             ]"
           >
-            {{ element.sightingTime | date: 'MM/dd HH:mm' }}
+            <ng-container *ngIf="isIncrementData(element.updateTime)">
+              順送り済
+            </ng-container>
+            <ng-container *ngIf="!isIncrementData(element.updateTime)">
+              {{ element.sightingTime | date: 'MM/dd HH:mm' }}
+            </ng-container>
           </span>
         </td>
       </ng-container>
