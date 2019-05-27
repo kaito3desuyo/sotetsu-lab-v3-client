@@ -65,7 +65,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
 
   async onSendSighting() {
     console.log('データが送信されました');
-    // await this.loadTableData();
+    await this.loadTableData();
   }
 
   loadTableData() {
