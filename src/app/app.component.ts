@@ -11,6 +11,8 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 import { MatSidenav } from '@angular/material';
 import { LoadingService } from './services/loading.service';
 import { GoogleAnalyticsService } from './services/google-analytics.service';
+import { SwUpdate } from '@angular/service-worker';
+import { AppUpdateService } from './services/app-update.service';
 
 @Component({
   selector: 'app-root',
@@ -29,7 +31,8 @@ export class AppComponent implements OnInit {
     private titleService: Title,
     private loading: LoadingService,
     private cd: ChangeDetectorRef,
-    private gaService: GoogleAnalyticsService
+    private gaService: GoogleAnalyticsService,
+    private appUpdateService: AppUpdateService
   ) {}
 
   ngOnInit(): void {
