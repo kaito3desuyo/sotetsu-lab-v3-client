@@ -32,7 +32,11 @@
               ?
             </span>
             <a
-              *ngIf="element.operationNumber"
+              *ngIf="
+                element.operationNumber &&
+                element.operationNumber !== '不明' &&
+                element.operationNumber !== '休車'
+              "
               style="position: absolute; width: 100%; height: 100%"
               [routerLink]="[
                 '/operation/route-diagram',

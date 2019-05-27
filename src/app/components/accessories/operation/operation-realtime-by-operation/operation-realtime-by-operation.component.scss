@@ -5,7 +5,7 @@ $foreground: map-get($sotetsu-lab-v3-client-theme, foreground);
 :host {
   .operation-realtime-by-operation-container {
     //width: calc(100vw - 48px);
-    margin: 24px;
+    // margin: 24px;
     .mat-table {
       width: 100%;
       td:not(:last-child) {
