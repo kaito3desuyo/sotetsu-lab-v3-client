@@ -20,6 +20,7 @@ import { Nl2brModule } from 'nl2br-pipe';
 import { OperationTableSearchFormComponent } from './operation/operation-table-search-form/operation-table-search-form.component';
 import { OperationTableSmallBoxComponent } from './operation/operation-table-small-box/operation-table-small-box.component';
 import { MatSpinner } from '@angular/material';
+import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 
 @NgModule({
   imports: [
@@ -36,6 +37,7 @@ import { MatSpinner } from '@angular/material';
   exports: [
     HeaderComponent,
     SidenavComponent,
+    ConfirmDialogComponent,
     ExceptionDialogComponent,
     OperationRealtimeByFormationComponent,
     OperationRealtimeByOperationComponent,
@@ -50,6 +52,7 @@ import { MatSpinner } from '@angular/material';
   declarations: [
     HeaderComponent,
     SidenavComponent,
+    ConfirmDialogComponent,
     ExceptionDialogComponent,
     OperationRealtimeByFormationComponent,
     OperationRealtimeByOperationComponent,
@@ -64,6 +67,7 @@ import { MatSpinner } from '@angular/material';
   entryComponents: [
     OperationHistoryDialogComponent,
     LoadingComponent,
+    ConfirmDialogComponent,
     ExceptionDialogComponent,
     MatSpinner
   ]
