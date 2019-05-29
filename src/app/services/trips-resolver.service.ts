@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { ApiService } from './api.service';
-import { Observable } from 'rxjs';
-import { flatMap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { flatMap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -62,12 +62,25 @@ export class TripsGroupByOperationsResolverService implements Resolve<any> {
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const date = route.data.date;
+    console.log('Calender', date);
     return this.api.getCalenderByDate(date).pipe(
-      flatMap(res => {
+      map(res => {
         return this.api.getTripsGroupByOperations({
           calender_id: res.id
         });
       })
     );
+
+    // return of([]);
+    /*
+    return this.api.getCalenderByDate(date).pipe(
+      flatMap(res => {
+
+        return this.api.getTripsGroupByOperations({
+          calender_id: res.id
+        });
+      })
+    );
+    */
   }
 }

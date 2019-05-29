@@ -69,7 +69,14 @@ export class OperationRealtimeByOperationComponent
         map(data => {
           this.calender = data.calender;
           this.stations = data.stations;
-          this.trips = data.trips;
+        }),
+        flatMap(data => {
+          return this.api.getTripsGroupByOperations({
+            calender_id: this.calender.id
+          });
+        }),
+        map(data => {
+          this.trips = data;
 
           this.currentPoints = {};
           _.forEach(this.trips, obj => {
