@@ -16,7 +16,7 @@ import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
 import { ActivatedRoute } from '@angular/router';
 import { interval, Subscription, Observable } from 'rxjs';
-import { flatMap, map } from 'rxjs/operators';
+import { flatMap, map, tap } from 'rxjs/operators';
 import { GlobalFunctionService } from 'src/app/services/global-function.service';
 
 @Component({
@@ -66,10 +66,17 @@ export class OperationRealtimeByOperationComponent
 
     const initSub = this.route.data
       .pipe(
-        map(data => {
+        tap(async data => {
           this.calender = data.calender;
           this.stations = data.stations;
-          this.trips = data.trips;
+
+          this.trips = await this.api
+            .getTripsGroupByOperations({
+              calender_id: this.calender.id || null
+            })
+            .toPromise();
+
+          console.log(this.trips);
 
           this.currentPoints = {};
           _.forEach(this.trips, obj => {
