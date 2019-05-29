@@ -65,48 +65,41 @@ export class OperationRealtimeByFormationComponent
 
     this.subscriptions.push(dataSub);
 
-    const initSub = this.route.data
-      .pipe(
-        tap(async data => {
-          this.calender = data.calender;
-          this.stations = data.stations;
+    const initSub = this.route.data.subscribe(
+      async (data: { calender: any; stations: any[]; trips: any[] }) => {
+        this.calender = data.calender;
+        this.stations = data.stations;
+        this.trips = await this.api
+          .getTripsGroupByOperations({
+            calender_id: data.calender.id || null
+          })
+          .toPromise();
 
-          this.trips = await this.api
-            .getTripsGroupByOperations({
-              calender_id: this.calender.id || null
-            })
-            .toPromise();
+        this.currentPoints = {};
+        _.forEach(this.trips, obj => {
+          this.currentPoints[obj.operation_number] = {
+            ...this.getCurrentPoint(obj)
+          };
+          this.colors[
+            obj.operation_number
+          ] = this.globalFunction.returnOperationNumberColor(
+            obj.operation_number
+          );
+        });
+        this.cd.detectChanges();
 
-          console.log(this.trips);
-
+        const timerSub = interval(1000 * 10).subscribe(() => {
           this.currentPoints = {};
           _.forEach(this.trips, obj => {
             this.currentPoints[obj.operation_number] = {
               ...this.getCurrentPoint(obj)
             };
-            this.colors[
-              obj.operation_number
-            ] = this.globalFunction.returnOperationNumberColor(
-              obj.operation_number
-            );
           });
           this.cd.detectChanges();
-        }),
-        flatMap(data =>
-          interval(1000 * 10).pipe(
-            map(() => {
-              this.currentPoints = {};
-              _.forEach(this.trips, obj => {
-                this.currentPoints[obj.operation_number] = {
-                  ...this.getCurrentPoint(obj)
-                };
-              });
-              this.cd.detectChanges();
-            })
-          )
-        )
-      )
-      .subscribe(() => console.log('現在地を更新'));
+        });
+        this.subscriptions.push(timerSub);
+      }
+    );
 
     this.subscriptions.push(initSub);
   }

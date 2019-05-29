@@ -63,7 +63,7 @@ export class OperationRealtimeByOperationComponent
     });
 
     this.subscriptions.push(dataSub);
-
+    /*
     const initSub = this.route.data
       .pipe(
         tap(async data => {
@@ -72,7 +72,7 @@ export class OperationRealtimeByOperationComponent
 
           this.trips = await this.api
             .getTripsGroupByOperations({
-              calender_id: this.calender.id || null
+              calender_id: data.calender.id || null
             })
             .toPromise();
 
@@ -107,13 +107,30 @@ export class OperationRealtimeByOperationComponent
       )
       .subscribe(() => console.log('現在地を更新'));
 
-    this.subscriptions.push(initSub);
-    /*
-    this.route.data.subscribe(
-      (data: { calender: any; stations: any[]; trips: any[] }) => {
+
+    */
+    const initSub = this.route.data.subscribe(
+      async (data: { calender: any; stations: any[]; trips: any[] }) => {
         this.calender = data.calender;
         this.stations = data.stations;
-        this.trips = data.trips;
+        this.trips = await this.api
+          .getTripsGroupByOperations({
+            calender_id: data.calender.id || null
+          })
+          .toPromise();
+
+        this.currentPoints = {};
+        _.forEach(this.trips, obj => {
+          this.currentPoints[obj.operation_number] = {
+            ...this.getCurrentPoint(obj)
+          };
+          this.colors[
+            obj.operation_number
+          ] = this.globalFunction.returnOperationNumberColor(
+            obj.operation_number
+          );
+        });
+        this.cd.detectChanges();
 
         const timerSub = interval(1000 * 10).subscribe(() => {
           this.currentPoints = {};
@@ -127,7 +144,8 @@ export class OperationRealtimeByOperationComponent
         this.subscriptions.push(timerSub);
       }
     );
-    */
+
+    this.subscriptions.push(initSub);
   }
 
   openHistoryDialog(operationNumber: string) {
