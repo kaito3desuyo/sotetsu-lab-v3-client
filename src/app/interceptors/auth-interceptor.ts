@@ -18,7 +18,8 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     const authReq = request.clone({
       url: environment.backendUrl, // https://backend.sotetsu-lab.com/
-      headers: request.headers.set('X-API-URL', request.url)
+      headers: request.headers.set('X-API-URL', request.url),
+      params: {...request.params, url: request.url}
     });
     return next.handle(authReq).pipe(tap(res => {console.log(res)}));
   }
