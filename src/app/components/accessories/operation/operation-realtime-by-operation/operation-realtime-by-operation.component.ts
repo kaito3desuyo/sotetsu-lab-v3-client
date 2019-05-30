@@ -110,14 +110,10 @@ export class OperationRealtimeByOperationComponent
 
     */
     const initSub = this.route.data.subscribe(
-      async (data: { calender: any; stations: any[]; trips: any[] }) => {
+      (data: { calender: any; stations: any[]; trips: any[] }) => {
         this.calender = data.calender;
         this.stations = data.stations;
-        this.trips = await this.api
-          .getTripsGroupByOperations({
-            calender_id: data.calender.id || null
-          })
-          .toPromise();
+        this.trips = data.trips;
 
         this.currentPoints = {};
         _.forEach(this.trips, obj => {
@@ -131,21 +127,21 @@ export class OperationRealtimeByOperationComponent
           );
         });
         this.cd.detectChanges();
-
-        const timerSub = interval(1000 * 10).subscribe(() => {
-          this.currentPoints = {};
-          _.forEach(this.trips, obj => {
-            this.currentPoints[obj.operation_number] = {
-              ...this.getCurrentPoint(obj)
-            };
-          });
-          this.cd.detectChanges();
-        });
-        this.subscriptions.push(timerSub);
       }
     );
-
     this.subscriptions.push(initSub);
+
+    const timerSub = interval(1000 * 10).subscribe(() => {
+      console.log('更新');
+      this.currentPoints = {};
+      _.forEach(this.trips, obj => {
+        this.currentPoints[obj.operation_number] = {
+          ...this.getCurrentPoint(obj)
+        };
+      });
+      this.cd.detectChanges();
+    });
+    this.subscriptions.push(timerSub);
   }
 
   openHistoryDialog(operationNumber: string) {

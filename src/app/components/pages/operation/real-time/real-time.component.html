@@ -1,36 +1,35 @@
-<perfect-scrollbar>
-  <div
-    class="page-container operation-real-time-container"
-    fxLayout="column"
-    fxLayoutGap="24px"
-    [ngStyle.gt-xs]="{ margin: '24px 60px' }"
-  >
-    <h2 class="mat-h2">リアルタイム運用情報</h2>
-    <p>
-      現在の時刻：{{ this.nowDateTime }}<br />
-      最終更新時刻：{{ this.finalUpdateTime }}
-    </p>
+<div
+  class="page-container operation-real-time-container"
+  fxLayout="column"
+  fxLayoutGap="24px"
+  [ngStyle.gt-xs]="{ margin: '24px 60px' }"
+>
+  <h2 class="mat-h2">リアルタイム運用情報</h2>
+  <p>
+    現在の時刻：{{ this.nowDateTime }}<br />
+    最終更新時刻：{{ this.finalUpdateTime }}
+  </p>
 
-    <div
-      fxLayout="row"
-      fxLayout.lt-lg="column"
-      fxLayoutGap="48px"
-      fxLayoutGap.lt-lg="24px"
-    >
-      <section fxFlex="calc(50% - 24px)" fxFlex.lt-lg="100%">
-        <h3 class="mat-h3">編成番号順</h3>
-        <app-operation-realtime-by-formation
-          [dataSourceObservable]="formationTableDataSource"
-        ></app-operation-realtime-by-formation>
-      </section>
-      <section fxFlex="calc(50% - 24px)" fxFlex.lt-lg="100%">
-        <h3 class="mat-h3">運用番号順</h3>
-        <app-operation-realtime-by-operation
-          [dataSourceObservable]="operationTableDataSource"
-        ></app-operation-realtime-by-operation>
-      </section>
-    </div>
-    <!--
+  <div
+    fxLayout="row"
+    fxLayout.lt-lg="column"
+    fxLayoutGap="48px"
+    fxLayoutGap.lt-lg="24px"
+  >
+    <section fxFlex="calc(50% - 24px)" fxFlex.lt-lg="100%">
+      <h3 class="mat-h3">編成番号順</h3>
+      <app-operation-realtime-by-formation
+        [dataSourceObservable]="formationTableDataSource"
+      ></app-operation-realtime-by-formation>
+    </section>
+    <section fxFlex="calc(50% - 24px)" fxFlex.lt-lg="100%">
+      <h3 class="mat-h3">運用番号順</h3>
+      <app-operation-realtime-by-operation
+        [dataSourceObservable]="operationTableDataSource"
+      ></app-operation-realtime-by-operation>
+    </section>
+  </div>
+  <!--
     <mat-tab-group>
       <mat-tab label="編成ごと">
         <app-operation-realtime-by-formation
@@ -44,14 +43,13 @@
       </mat-tab>
     </mat-tab-group>
     -->
-    <mat-card>
-      <mat-card-title>運用を投稿する</mat-card-title>
-      <mat-card-content>
-        運用情報を投稿できます。
-        <app-add-operation-sighting-form
-          (send)="onSendSighting()"
-        ></app-add-operation-sighting-form>
-      </mat-card-content>
-    </mat-card>
-  </div>
-</perfect-scrollbar>
+  <mat-card>
+    <mat-card-title>運用を投稿する</mat-card-title>
+    <mat-card-content>
+      運用情報を投稿できます。
+      <app-add-operation-sighting-form
+        (send)="onSendSighting()"
+      ></app-add-operation-sighting-form>
+    </mat-card-content>
+  </mat-card>
+</div>

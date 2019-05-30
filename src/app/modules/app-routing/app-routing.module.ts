@@ -101,8 +101,8 @@ const routes: Routes = [
     },
     resolve: {
       calender: CalenderByDateResolverService,
-      stations: StationsResolverService
-      // trips: TripsGroupByOperationsResolverService
+      stations: StationsResolverService,
+      trips: TripsGroupByOperationsResolverService
     }
   },
   {
