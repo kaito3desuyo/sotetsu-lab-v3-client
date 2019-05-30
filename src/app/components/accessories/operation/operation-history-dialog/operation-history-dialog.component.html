@@ -16,44 +16,42 @@
     (page)="paging($event)"
     [ngStyle]="{ display: dataSource.data.length !== 0 ? 'block' : 'none' }"
   ></mat-paginator>
-  <perfect-scrollbar>
-    <div style="max-height: calc(100vh - 48px - 48px - 52px - 68px)">
-      <table
-        *ngIf="dataSource.data.length !== 0"
-        mat-table
-        [dataSource]="dataSource"
-      >
-        <ng-container matColumnDef="formationNumber">
-          <th mat-header-cell *matHeaderCellDef>編成番号</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.formation.formation_number }}
-          </td>
-        </ng-container>
+  <div style="max-height: calc(100vh - 48px - 48px - 52px - 68px)">
+    <table
+      *ngIf="dataSource.data.length !== 0"
+      mat-table
+      [dataSource]="dataSource"
+    >
+      <ng-container matColumnDef="formationNumber">
+        <th mat-header-cell *matHeaderCellDef>編成番号</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.formation.formation_number }}
+        </td>
+      </ng-container>
 
-        <ng-container matColumnDef="operationNumber">
-          <th mat-header-cell *matHeaderCellDef>運用番号</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.operation.operation_number }}
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="operationNumber">
+        <th mat-header-cell *matHeaderCellDef>運用番号</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.operation.operation_number }}
+        </td>
+      </ng-container>
 
-        <ng-container matColumnDef="sightingTime">
-          <th mat-header-cell *matHeaderCellDef>目撃日時</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.sighting_time | date: 'yyyy年MM月dd日 HH:mm:ss' }}
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="sightingTime">
+        <th mat-header-cell *matHeaderCellDef>目撃日時</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.sighting_time | date: 'yyyy年MM月dd日 HH:mm:ss' }}
+        </td>
+      </ng-container>
 
-        <ng-container matColumnDef="updatedAt">
-          <th mat-header-cell *matHeaderCellDef>最終更新日</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.updatedAt | date: 'yyyy年MM月dd日 HH:mm:ss' }}
-          </td>
-        </ng-container>
+      <ng-container matColumnDef="updatedAt">
+        <th mat-header-cell *matHeaderCellDef>最終更新日</th>
+        <td mat-cell *matCellDef="let element">
+          {{ element.updatedAt | date: 'yyyy年MM月dd日 HH:mm:ss' }}
+        </td>
+      </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-    </div>
-  </perfect-scrollbar>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
 </div>

@@ -13,7 +13,6 @@ import { tap } from 'rxjs/operators';
 export class AuthInterceptor implements HttpInterceptor {
   // リクエストの変換処理。ここに共通処理を記述。
 
-  
   intercept(
     request: HttpRequest<any>,
     next: HttpHandler
@@ -23,7 +22,6 @@ export class AuthInterceptor implements HttpInterceptor {
       headers: request.headers.set('X-API-URL', request.url),
       params: request.params.append('url', request.url)
     });
-    return next.handle(authReq).pipe(tap(res => {console.log(res)}));
+    return next.handle(authReq);
   }
 }
-

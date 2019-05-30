@@ -6,6 +6,7 @@ $foreground: map-get($sotetsu-lab-v3-client-theme, foreground);
   .operation-realtime-by-operation-container {
     //width: calc(100vw - 48px);
     // margin: 24px;
+    overflow-x: auto;
     .mat-table {
       width: 100%;
       td:not(:last-child) {
