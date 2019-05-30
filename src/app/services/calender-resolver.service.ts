@@ -38,6 +38,7 @@ export class CalenderByDateResolverService implements Resolve<any> {
 
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const date = route.data.date;
+    console.log('カレンダーを取得します', date);
     return this.api.getCalenderByDate(date);
   }
 }
