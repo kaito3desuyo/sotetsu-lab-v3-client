@@ -23,11 +23,10 @@
   "dataGroups": [
     {
       "name": "api-freshness",
-      "urls": [],
+      "urls": ["https://backend.sotetsu-lab.com/**"],
       "cacheConfig": {
-        "maxSize": 100,
-        "maxAge": "1h",
-        "timeout": "10s",
+        "maxSize": 0,
+        "maxAge": "0u",
         "strategy": "freshness"
       }
     }
