@@ -88,6 +88,7 @@ export class ApiService {
     );
   }
   getCalenderByDate(date: string): Observable<Calender> {
+    console.log('getCalenderDate', date);
     return this.http
       .get<Calender>(this.apiUrl.calenders + '/date/' + date)
       .pipe(
