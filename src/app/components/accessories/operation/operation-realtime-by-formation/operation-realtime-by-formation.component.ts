@@ -67,6 +67,7 @@ export class OperationRealtimeByFormationComponent
 
     const initSub = this.route.data.subscribe(
       async (data: { calender: any; stations: any[]; trips: any[] }) => {
+        console.log('route.data', data)
         this.calender = data.calender;
         this.stations = data.stations;
         this.trips = await this.api
