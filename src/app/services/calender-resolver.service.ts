@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 /*
 @Injectable({
@@ -39,6 +40,8 @@ export class CalenderByDateResolverService implements Resolve<any> {
   resolve(route: ActivatedRouteSnapshot): Observable<any> {
     const date = route.data.date;
     console.log('カレンダーを取得します', date);
-    return this.api.getCalenderByDate(date);
+    return this.api.getCalenderByDate(date).pipe(
+      take(1)
+    );
   }
 }
