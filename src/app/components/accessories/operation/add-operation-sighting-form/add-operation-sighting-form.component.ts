@@ -6,7 +6,9 @@ import {
   OnDestroy
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { MatRadioChange, MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatRadioChange } from '@angular/material/radio';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
 import * as moment from 'moment';
 import * as _ from 'lodash';

@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AccessoriesModule } from './components/accessories/accessories.module';
 import { PagesModule } from './components/pages/pages.module';
-import { MatPaginatorIntl } from '@angular/material';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import { CustomPagenator } from './classes/custom-pagenator';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-perfect-scrollbar.module';
