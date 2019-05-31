@@ -8,7 +8,7 @@ import {
 } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { filter, map, mergeMap } from 'rxjs/operators';
-import { MatSidenav } from '@angular/material';
+import { MatSidenav } from '@angular/material/sidenav';
 import { LoadingService } from './services/loading.service';
 import { GoogleAnalyticsService } from './services/google-analytics.service';
 import { SwUpdate } from '@angular/service-worker';

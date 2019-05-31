@@ -1,6 +1,6 @@
 import { Injectable, ErrorHandler, NgZone, Injector } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { ExceptionDialogComponent } from '../components/accessories/exception-dialog/exception-dialog.component';
 import { Location } from '@angular/common';
 

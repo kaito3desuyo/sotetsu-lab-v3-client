@@ -12,7 +12,7 @@ import * as moment from 'moment';
 import * as _ from 'lodash';
 import { Operation } from 'src/app/interfaces/operation';
 import { Calender } from 'src/app/interfaces/calender';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-timetable-editor',
