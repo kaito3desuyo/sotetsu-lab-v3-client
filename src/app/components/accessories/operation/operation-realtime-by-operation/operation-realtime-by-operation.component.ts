@@ -9,7 +9,9 @@ import {
   ChangeDetectorRef,
   AfterContentInit
 } from '@angular/core';
-import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import { ApiService } from 'src/app/services/api.service';
 import * as moment from 'moment';
 import * as _ from 'lodash';
@@ -45,7 +47,7 @@ export class OperationRealtimeByOperationComponent
     'sightingTime',
     'updateTime'
   ];
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort: MatSort;
 
   constructor(
     private api: ApiService,

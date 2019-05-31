@@ -6,7 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import * as moment from 'moment';
 import { Operation } from 'src/app/interfaces/operation';
 import { Calender } from 'src/app/interfaces/calender';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-add-timetable',

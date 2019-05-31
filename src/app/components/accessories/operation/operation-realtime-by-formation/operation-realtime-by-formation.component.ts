@@ -10,7 +10,9 @@ import {
   AfterContentInit
 } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
-import { MatTableDataSource, MatSort, MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import { OperationHistoryDialogComponent } from '../operation-history-dialog/operation-history-dialog.component';
@@ -46,7 +48,7 @@ export class OperationRealtimeByFormationComponent
     'sightingTime',
     'updateTime'
   ];
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort: MatSort;
 
   constructor(
     private api: ApiService,
