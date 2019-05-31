@@ -132,14 +132,33 @@ export class OperationRealtimeByFormationComponent
      * 現在充当されている列車
      */
     const currentRunningTrain = _.find(data.trips, obj => {
+      if (
+        moment(obj.times[0].departure_time, 'HH:mm:ss') >
+        moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
+      ) {
+        // console.log('日付をまたぐ');
+        if (Number(moment().format('H')) < 4) {
+          return (
+            moment(obj.times[0].departure_time, 'HH:mm:ss').subtract(
+              1,
+              'days'
+            ) <= moment() &&
+            moment() <
+              moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
+          );
+        } else {
+          return (
+            moment(obj.times[0].departure_time, 'HH:mm:ss') <= moment() &&
+            moment() <
+              moment(
+                obj.times[obj.times.length - 1].arrival_time,
+                'HH:mm:ss'
+              ).add(1, 'days')
+          );
+        }
+      }
       return (
-        moment(obj.times[0].departure_time, 'HH:mm:ss').subtract(
-          moment(obj.times[0].departure_time, 'HH:mm:ss') >
-            moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
-            ? 1
-            : 0,
-          'days'
-        ) <= moment() &&
+        moment(obj.times[0].departure_time, 'HH:mm:ss') <= moment() &&
         moment() <
           moment(obj.times[obj.times.length - 1].arrival_time, 'HH:mm:ss')
       );
@@ -179,8 +198,101 @@ export class OperationRealtimeByFormationComponent
      * 列車と列車の間
      */
     const check = null;
+
     for (let i = 0; i < data.trips.length; i++) {
       if (data.trips[i - 1]) {
+        if (
+          moment(
+            data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+              .arrival_time,
+            'HH:mm:ss'
+          ) > moment(data.trips[i].times[0].departure_time, 'HH:mm:ss')
+        ) {
+          console.log('日付をまたぐ');
+          if (Number(moment().format('H')) < 4) {
+            if (
+              moment(
+                data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                  .arrival_time,
+                'HH:mm:ss'
+              ).subtract(1, 'days') < moment() &&
+              moment() <
+                moment(data.trips[i].times[0].departure_time, 'HH:mm:ss')
+            ) {
+              return {
+                tripId: '',
+                tripDirection: '',
+                tripNumber: '',
+                tripClass: '',
+                tripClassColor: '',
+                startStation: _.find(this.stations, obj => {
+                  return (
+                    obj.id ===
+                    data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                      .station_id
+                  );
+                }).station_name,
+                startTime: moment(
+                  data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                    .arrival_time,
+                  'HH:mm:ss'
+                ).format('HHmm'),
+                endStation:
+                  data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                    .depot_in && data.trips[i].times[0].depot_out
+                    ? '一時入庫'
+                    : '停車中',
+                endTime: moment(
+                  data.trips[i].times[0].departure_time,
+                  'HH:mm:ss'
+                ).format('HHmm')
+              };
+            }
+          } else {
+            if (
+              moment(
+                data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                  .arrival_time,
+                'HH:mm:ss'
+              ) < moment() &&
+              moment() <
+                moment(data.trips[i].times[0].departure_time, 'HH:mm:ss').add(
+                  1,
+                  'days'
+                )
+            ) {
+              return {
+                tripId: '',
+                tripDirection: '',
+                tripNumber: '',
+                tripClass: '',
+                tripClassColor: '',
+                startStation: _.find(this.stations, obj => {
+                  return (
+                    obj.id ===
+                    data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                      .station_id
+                  );
+                }).station_name,
+                startTime: moment(
+                  data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                    .arrival_time,
+                  'HH:mm:ss'
+                ).format('HHmm'),
+                endStation:
+                  data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
+                    .depot_in && data.trips[i].times[0].depot_out
+                    ? '一時入庫'
+                    : '停車中',
+                endTime: moment(
+                  data.trips[i].times[0].departure_time,
+                  'HH:mm:ss'
+                ).format('HHmm')
+              };
+            }
+          }
+        }
+
         if (
           moment(
             data.trips[i - 1].times[data.trips[i - 1].times.length - 1]
@@ -257,10 +369,10 @@ export class OperationRealtimeByFormationComponent
         };
       }
     }
-
     /**
      * 最後の列車が終わったあと
      */
+
     const finalTripArrivalTime = moment(
       data.trips[data.trips.length - 1].times[
         data.trips[data.trips.length - 1].times.length - 1

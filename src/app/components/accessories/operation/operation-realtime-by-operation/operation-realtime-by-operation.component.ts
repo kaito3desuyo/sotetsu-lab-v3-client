@@ -406,7 +406,7 @@ export class OperationRealtimeByOperationComponent
     /**
      * 最後の列車が終わったあと
      */
-    /*
+
     const finalTripArrivalTime = moment(
       data.trips[data.trips.length - 1].times[
         data.trips[data.trips.length - 1].times.length - 1
@@ -447,7 +447,7 @@ export class OperationRealtimeByOperationComponent
         endTime: '△'
       };
     }
-    */
+
     return {};
   }
 

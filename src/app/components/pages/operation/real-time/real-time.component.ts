@@ -66,6 +66,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
   async onSendSighting() {
     console.log('データが送信されました');
     await this.loadTableData();
+    this.cd.detectChanges();
   }
 
   loadTableData() {
@@ -108,14 +109,20 @@ export class RealTimeComponent implements OnInit, OnDestroy {
       });
 
       tableData.forEach(element => {
+        /*
         element.operationNumber = this.searchSameOperationNumber(
           element,
           tableData
         )
           ? '不明'
           : element.operationNumber;
+          */
         element.operationNumber =
-          element.operationNumber === '100' ? '休車' : element.operationNumber;
+          element.operationNumber === '100'
+            ? '休車'
+            : element.operationNumber === null
+            ? '不明'
+            : element.operationNumber;
       });
 
       return tableData;
@@ -124,10 +131,7 @@ export class RealTimeComponent implements OnInit, OnDestroy {
     if (mode === 'operation') {
       const tableData = _(data)
         .filter(element => {
-          return (
-            element.operation_number !== '100' &&
-            element.operation_number !== null
-          );
+          return element.operation_number !== null;
         })
         .map(element => {
           return {
@@ -141,9 +145,11 @@ export class RealTimeComponent implements OnInit, OnDestroy {
         .map((element, index, allData) => {
           return {
             ...element,
-            formationNumber: this.searchSameFormationNumber(element, allData)
-              ? '不明'
-              : element.formationNumber
+            formationNumber:
+              this.searchSameFormationNumber(element, allData) ||
+              element.formationNumber === null
+                ? '不明'
+                : element.formationNumber
           };
         })
         .sortBy([
