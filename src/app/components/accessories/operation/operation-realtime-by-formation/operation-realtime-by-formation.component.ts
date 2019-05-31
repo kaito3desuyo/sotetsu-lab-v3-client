@@ -48,7 +48,7 @@ export class OperationRealtimeByFormationComponent
     'sightingTime',
     'updateTime'
   ];
-  @ViewChild(MatSort) sort: MatSort;
+  @ViewChild(MatSort, {static: true}) sort: MatSort;
 
   constructor(
     private api: ApiService,

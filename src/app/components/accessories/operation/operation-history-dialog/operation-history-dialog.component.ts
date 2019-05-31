@@ -13,7 +13,7 @@ export class OperationHistoryDialogComponent implements OnInit {
   displayedColumns = ['sightingTime', 'updatedAt'];
   dataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   constructor(
     public dialogRef: MatDialogRef<OperationHistoryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
