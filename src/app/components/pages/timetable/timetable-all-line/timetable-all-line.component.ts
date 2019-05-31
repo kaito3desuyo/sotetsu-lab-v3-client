@@ -209,7 +209,7 @@ export class TimetableAllLineComponent implements OnInit {
           }
           break;
         case 0 <= start && start <= 36 && 45 <= end && end <= 51:
-          if (37 <= stationIndex && stationIndex <= 44) {
+          if (37 <= stationIndex && stationIndex <= 43) {
             return '|';
           }
           break;
