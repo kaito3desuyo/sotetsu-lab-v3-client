@@ -19,7 +19,7 @@ import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 import { Nl2brModule } from 'nl2br-pipe';
 import { OperationTableSearchFormComponent } from './operation/operation-table-search-form/operation-table-search-form.component';
 import { OperationTableSmallBoxComponent } from './operation/operation-table-small-box/operation-table-small-box.component';
-import { MatSpinner } from '@angular/material';
+import { MatSpinner } from '@angular/material/progress-spinner';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 
 @NgModule({
