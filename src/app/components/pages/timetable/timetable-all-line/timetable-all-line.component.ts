@@ -24,7 +24,7 @@ export class TimetableAllLineComponent implements OnInit {
   calenderId: string = null;
   direction: string = null;
 
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,

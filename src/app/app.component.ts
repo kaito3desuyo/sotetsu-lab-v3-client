@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
   title = 'Sotetsu Lab.';
   opened: boolean;
 
-  @ViewChild('sidenav') sidenav: MatSidenav;
+  @ViewChild('sidenav', {static: true}) sidenav: MatSidenav;
 
   constructor(
     private router: Router,
