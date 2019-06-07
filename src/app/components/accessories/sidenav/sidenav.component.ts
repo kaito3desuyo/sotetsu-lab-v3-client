@@ -11,6 +11,7 @@ import * as moment from 'moment';
 export class SidenavComponent implements OnInit {
   station = new FormControl('');
 
+  routesStations = [];
   stations = [];
   calender = {};
 
@@ -20,12 +21,14 @@ export class SidenavComponent implements OnInit {
     const date = moment()
       .subtract(Number(moment().format('H')) < 4 ? 1 : 0, 'days')
       .format('YYYYMMDD');
+    this.api.getRoutesStations().subscribe(routesStations => {
+      this.routesStations = routesStations;
+    });
     this.api.getStations('down').subscribe(data => {
       this.stations = data;
     });
     this.api.getCalenderByDate(date).subscribe(data => {
       this.calender = data;
-      console.log(data);
     });
   }
 }

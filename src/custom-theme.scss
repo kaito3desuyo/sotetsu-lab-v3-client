@@ -2,16 +2,34 @@
 // For more information: https://material.angular.io/guide/theming
 @import '~@angular/material/theming';
 // Plus imports for other components in your app.
-@import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
+// @import url('https://fonts.googleapis.com/css?family=Noto+Sans+JP');
 @import url('https://fonts.googleapis.com/css?family=Quicksand');
 @import url('https://fonts.googleapis.com/css?family=Material+Icons');
 
-$font-family: 'Noto Sans JP', sans-serif;
+$font-family: -apple-system, BlinkMacSystemFont, Roboto, '游ゴシック体',
+  YuGothic, 'Yu Gothic Medium', sans-serif;
 $custom-typography: mat-typography-config($font-family);
 
-html,
-body {
+html {
   font-family: $font-family;
+  font-feature-settings: 'pkna' 1;
+}
+body {
+  @extend html;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+.mat-card-title {
+  @extend html;
+  font-family: -apple-system, BlinkMacSystemFont, Roboto, '游ゴシック体',
+    YuGothic, 'Yu Gothic', sans-serif !important;
+  font-weight: 700 !important;
 }
 
 .mat-card {

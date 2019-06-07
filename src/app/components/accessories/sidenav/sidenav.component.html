@@ -11,9 +11,16 @@
           <mat-option [value]="">
             選択しない
           </mat-option>
-          <mat-option *ngFor="let station of stations" [value]="station.id">
-            {{ station.station_name }}
-          </mat-option>
+          <mat-optgroup
+            *ngFor="let route of routesStations"
+            [label]="route.route_name"
+          >
+            <mat-option
+              *ngFor="let routeStation of route.route_station_lists"
+              [value]="routeStation.station.id"
+              >{{ routeStation.station.station_name }}</mat-option
+            >
+          </mat-optgroup>
         </mat-select>
       </mat-form-field>
     </mat-list-item>
