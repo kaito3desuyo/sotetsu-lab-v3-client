@@ -1,11 +1,7 @@
 <form [formGroup]="searchParam" (ngSubmit)="onSubmit()">
-  <div
-    fxLayout="column"
-    fxLayoutGap="12px"
-    style="margin-top: 12px; margin-bottom:12px"
-  >
-    <div>
-      <mat-form-field>
+  <div fxLayout="column" fxLayoutGap="12px" style="margin-top: 12px">
+    <div fxLayout="row">
+      <mat-form-field fxFlex="auto">
         <mat-label>ダイヤ</mat-label>
         <mat-select formControlName="dia">
           <mat-option *ngFor="let calender of calenders" [value]="calender.id">
@@ -15,9 +11,8 @@
         </mat-select>
       </mat-form-field>
     </div>
-    <div>
+    <div style="padding-bottom: 12px">
       <mat-radio-group formControlName="direction">
-        <mat-label> 方向 </mat-label>
         <mat-radio-button value="up"> 上り </mat-radio-button>
         <mat-radio-button value="down"> 下り </mat-radio-button>
       </mat-radio-group>
@@ -27,13 +22,20 @@
         駅を指定して検索する
       </mat-slide-toggle>
     </div>
-    <div>
-      <mat-form-field>
+    <div fxLayout="row">
+      <mat-form-field fxFlex="auto">
         <mat-label>駅名</mat-label>
         <mat-select formControlName="station">
-          <mat-option *ngFor="let station of stations" [value]="station.id">{{
-            station.station_name
-          }}</mat-option>
+          <mat-optgroup
+            *ngFor="let route of routesStations"
+            [label]="route.route_name"
+          >
+            <mat-option
+              *ngFor="let routeStation of route.route_station_lists"
+              [value]="routeStation.station.id"
+              >{{ routeStation.station.station_name }}</mat-option
+            >
+          </mat-optgroup>
         </mat-select>
       </mat-form-field>
     </div>
