@@ -15,6 +15,7 @@ export class ApiService {
 
   private apiUrl = {
     services: this.apiBaseUrl + 'services',
+    routes: this.apiBaseUrl + 'routes',
     stations: this.apiBaseUrl + 'stations',
     calenders: this.apiBaseUrl + 'calenders',
     trips: this.apiBaseUrl + 'trips',
@@ -46,6 +47,13 @@ export class ApiService {
 
   getServices(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl.services).pipe(
+      retry(3),
+      catchError(this.handleError)
+    );
+  }
+
+  getRoutesStations(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl.routes + '/stations').pipe(
       retry(3),
       catchError(this.handleError)
     );

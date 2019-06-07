@@ -4,6 +4,7 @@ import { Station } from 'src/app/interfaces/station';
 import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Calender } from 'src/app/interfaces/calender';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-search-timetable-form',
@@ -13,6 +14,13 @@ import { Calender } from 'src/app/interfaces/calender';
 export class SearchTimetableFormComponent implements OnInit {
   stations: Station[];
   calenders: Calender[];
+  routesStations: any[];
+
+  date = moment()
+    .subtract(Number(moment().format('H')) < 4 ? 1 : 0, 'days')
+    .format('YYYYMMDD');
+
+  todaysCalenderId = '';
 
   searchParam = this.fb.group({
     dia: ['', Validators.required],
@@ -27,14 +35,28 @@ export class SearchTimetableFormComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.getRoutesStations();
     this.getStations();
     this.getCalenders();
+    this.getCalenderByDate();
   }
 
   getCalenders(): void {
     this.apiService
       .getCalenders()
       .subscribe(calender => (this.calenders = calender));
+  }
+
+  getCalenderByDate(): void {
+    this.apiService.getCalenderByDate(this.date).subscribe(data => {
+      this.searchParam.get('dia').setValue(data.id);
+    });
+  }
+
+  getRoutesStations(): void {
+    this.apiService.getRoutesStations().subscribe(routesStations => {
+      this.routesStations = routesStations;
+    });
   }
 
   getStations(): void {

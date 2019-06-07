@@ -1,7 +1,7 @@
 <form [formGroup]="addTimetablePreForm" (ngSubmit)="onSubmit()">
   <div fxLayout="column" fxLayoutGap="12px" style="height: 100%;">
-    <div>
-      <mat-form-field>
+    <div fxLayout="row">
+      <mat-form-field fxFlex="auto">
         <mat-label>ダイヤ</mat-label>
         <mat-select formControlName="dia">
           <mat-option *ngFor="let calender of calenders" [value]="calender.id">
@@ -13,7 +13,6 @@
     </div>
     <div>
       <mat-radio-group formControlName="direction">
-        <mat-label> 方向 </mat-label>
         <mat-radio-button value="up"> 上り </mat-radio-button>
         <mat-radio-button value="down"> 下り </mat-radio-button>
       </mat-radio-group>
