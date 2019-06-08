@@ -14,7 +14,11 @@
     </mat-card>
   </div>
   <div fxLayout.gt-md="row" fxLayout.lt-lg="column" fxLayoutGap="24px">
-    <div fxLayout="column" fxFlex="auto">
+    <div
+      fxLayout="column"
+      fxFlex.gt-xs="calc(100% - 374px)"
+      fxFlex.lt-lg="auto"
+    >
       <div
         fxLayout.gt-xs="row"
         fxLayout.lt-sm="column"
@@ -72,8 +76,8 @@
         </mat-card>
       </div>
     </div>
-    <div>
-      <mat-card fxFlex.gt-xs="300px" fxFlexAlign="start" fxFlex.lt-lg="auto">
+    <div fxFlex.gt-xs="350px" fxFlex.lt-lg="auto">
+      <mat-card fxFlexAlign="start">
         <div>
           <a
             class="twitter-timeline"
