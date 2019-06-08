@@ -17,6 +17,7 @@ import { NgxPerfectScrollbarModule } from './modules/ngx-perfect-scrollbar/ngx-p
 import { ErrorHandlerService } from './services/error-handler.service';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
   declarations: [AppComponent],

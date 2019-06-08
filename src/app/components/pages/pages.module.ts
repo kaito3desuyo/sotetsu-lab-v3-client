@@ -19,6 +19,7 @@ import { NgxPerfectScrollbarModule } from 'src/app/modules/ngx-perfect-scrollbar
 import { TimetableEditorComponent } from './timetable/timetable-editor/timetable-editor.component';
 import { OperationTableComponent } from './operation/table/operation-table.component';
 import { OperationRouteDiagramComponent } from './operation/route-diagram/operation-route-diagram.component';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
   imports: [
@@ -31,7 +32,10 @@ import { OperationRouteDiagramComponent } from './operation/route-diagram/operat
     FormsModule,
     ReactiveFormsModule,
     AccessoriesModule,
-    PipesModule.forRoot()
+    PipesModule.forRoot(),
+    AdsenseModule.forRoot({
+      adClient: 'ca-pub-8923857677281403'
+    })
   ],
   declarations: [
     TopComponent,
