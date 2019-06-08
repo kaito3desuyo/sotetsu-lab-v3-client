@@ -6,8 +6,8 @@
 @import url('https://fonts.googleapis.com/css?family=Quicksand');
 @import url('https://fonts.googleapis.com/css?family=Material+Icons');
 
-$font-family: -apple-system, BlinkMacSystemFont, Roboto, '游ゴシック体',
-  YuGothic, 'Yu Gothic Medium', sans-serif;
+$font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
+  '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;
 $custom-typography: mat-typography-config($font-family);
 
 html {
@@ -18,17 +18,10 @@ body {
   @extend html;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-strong,
-.mat-card-title {
+strong {
   @extend html;
-  font-family: -apple-system, BlinkMacSystemFont, Roboto, '游ゴシック体',
-    YuGothic, 'Yu Gothic', sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
+    '游ゴシック体', YuGothic, 'Yu Gothic', sans-serif !important;
   font-weight: 700 !important;
 }
 
