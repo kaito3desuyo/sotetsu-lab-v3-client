@@ -45,6 +45,11 @@
           </mat-card-content>
         </mat-card>
       </div>
+      <mat-card fxFlex="auto">
+        <div>
+          <ng-adsense [adSlot]="7813861593"></ng-adsense>
+        </div>
+      </mat-card>
       <div
         fxLayout.gt-xs="row"
         fxLayout.lt-sm="column"
@@ -67,20 +72,22 @@
         </mat-card>
       </div>
     </div>
-    <mat-card fxFlex="auto">
-      <div>
-        <a
-          class="twitter-timeline"
-          data-height="722"
-          href="https://twitter.com/sotetsu_lab?ref_src=twsrc%5Etfw"
-          >Tweets by sotetsu_lab</a
-        >
-        <script
-          async
-          src="https://platform.twitter.com/widgets.js"
-          charset="utf-8"
-        ></script>
-      </div>
-    </mat-card>
+    <div>
+      <mat-card fxFlex.gt-xs="300px" fxFlex.lt-lg="auto">
+        <div>
+          <a
+            class="twitter-timeline"
+            data-height="700"
+            href="https://twitter.com/sotetsu_lab?ref_src=twsrc%5Etfw"
+            >Tweets by sotetsu_lab</a
+          >
+          <script
+            async
+            src="https://platform.twitter.com/widgets.js"
+            charset="utf-8"
+          ></script>
+        </div>
+      </mat-card>
+    </div>
   </div>
 </div>
