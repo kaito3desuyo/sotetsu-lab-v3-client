@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ChangeDetectorRef,
+  ElementRef
+} from '@angular/core';
 import {
   Router,
   ActivatedRoute,
@@ -11,8 +17,8 @@ import { filter, map, mergeMap } from 'rxjs/operators';
 import { MatSidenav } from '@angular/material/sidenav';
 import { LoadingService } from './services/loading.service';
 import { GoogleAnalyticsService } from './services/google-analytics.service';
-import { SwUpdate } from '@angular/service-worker';
 import { AppUpdateService } from './services/app-update.service';
+import { Location, PopStateEvent } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -23,10 +29,21 @@ export class AppComponent implements OnInit {
   title = 'Sotetsu Lab.';
   opened: boolean;
 
-  @ViewChild('sidenav', {static: true}) sidenav: MatSidenav;
+  private lastPoppedUrl: string | undefined;
+  private yScrollStack: number[] = [];
+  private baseScrollOptions: ScrollToOptions = {
+    left: 0,
+    top: 0,
+    behavior: 'smooth'
+  };
+
+  @ViewChild('sidenav', { static: true }) sidenav: MatSidenav;
+  @ViewChild('scrollContainer', { static: true, read: ElementRef })
+  scrollContainer: ElementRef;
 
   constructor(
     private router: Router,
+    private location: Location,
     private activatedRoute: ActivatedRoute,
     private titleService: Title,
     private loading: LoadingService,
@@ -36,13 +53,39 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.location.subscribe((event: PopStateEvent) => {
+      console.log('event');
+      this.lastPoppedUrl = event.url;
+    });
+
     this.router.events.subscribe(event => {
+      console.log(this.scrollContainer);
+
+      if (!this.scrollContainer) {
+        return;
+      }
+
       if (event instanceof NavigationStart) {
+        if (event.url !== this.lastPoppedUrl) {
+          this.yScrollStack.push(this.scrollContainer.nativeElement.scrollTop);
+        }
         console.log('ナビゲーションスタート');
         this.loading.open();
         this.cd.detectChanges();
       }
       if (event instanceof NavigationEnd) {
+        console.log('スクロール', this.lastPoppedUrl, this.yScrollStack);
+        setTimeout(() => {
+          if (event.url === this.lastPoppedUrl) {
+            this.lastPoppedUrl = undefined;
+            this.scrollContainer.nativeElement.scroll({
+              ...this.baseScrollOptions,
+              top: this.yScrollStack.pop()
+            });
+          } else {
+            this.scrollContainer.nativeElement.scroll(this.baseScrollOptions);
+          }
+        }, 1000);
         console.log('ナビゲーションエンド');
         this.loading.close();
         this.cd.detectChanges();
@@ -76,5 +119,11 @@ export class AppComponent implements OnInit {
           this.sidenav.close();
         }
       });
+  }
+
+  onActivate(e, scrollContainer) {
+    if (scrollContainer && scrollContainer.getElementRef().nativeElement) {
+      scrollContainer.getElementRef().nativeElement.scrollTop = 0;
+    }
   }
 }

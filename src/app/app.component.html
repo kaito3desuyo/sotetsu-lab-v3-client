@@ -4,7 +4,9 @@
   <mat-sidenav #sidenav mode="push" [(opened)]="opened">
     <app-sidenav></app-sidenav>
   </mat-sidenav>
-  <mat-sidenav-content>
-    <router-outlet></router-outlet>
+  <mat-sidenav-content #scrollContainer>
+    <router-outlet
+      (activate)="onActivate($event, scrollContainer)"
+    ></router-outlet>
   </mat-sidenav-content>
 </mat-sidenav-container>
