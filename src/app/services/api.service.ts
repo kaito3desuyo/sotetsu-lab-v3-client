@@ -117,7 +117,7 @@ export class ApiService {
     count?: number
   ): Observable<any> {
     return this.http
-      .get<any>(this.apiUrl.trips, {
+      .get<any>(this.apiUrl.trips + '/test', {
         params: {
           calender_id: calenderId,
           direction: direction,

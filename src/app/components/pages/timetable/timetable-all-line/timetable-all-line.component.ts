@@ -24,7 +24,7 @@ export class TimetableAllLineComponent implements OnInit {
   calenderId: string = null;
   direction: string = null;
 
-  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
 
   constructor(
     private route: ActivatedRoute,
@@ -228,7 +228,9 @@ export class TimetableAllLineComponent implements OnInit {
       return '↓';
     }
 
+    // 終着駅の次の駅
     if (
+      // 発着両表示
       this.arrivalChecker(
         this.stations[stopStationArray[stopStationArray.length - 1]]
           .station_name
@@ -238,11 +240,57 @@ export class TimetableAllLineComponent implements OnInit {
           .station_name
       )
     ) {
+      if (stationIndex === stopStationArray[0]) {
+        // 始発駅で前の列車から解結・種別変更
+        if (
+          this.trips &&
+          this.trips[tripIndex - 1] &&
+          trip.block_id === this.trips[tripIndex - 1].block_id
+        ) {
+          return '⬎';
+        }
+      }
+
       if (stationIndex === stopStationArray[stopStationArray.length - 1]) {
+        // 終着駅で次の列車に併結・種別変更
+        if (
+          this.trips &&
+          this.trips[tripIndex + 1] &&
+          trip.block_id === this.trips[tripIndex + 1].block_id
+        ) {
+          return '↳';
+        }
+
         return '=';
       }
     } else {
       if (
+        // 始発駅の前の駅が発着両表示駅の場合
+        this.stations[stopStationArray[0] - 1] &&
+        this.arrivalChecker(
+          this.stations[stopStationArray[0] - 1].station_name
+        ) &&
+        this.departureChecker(
+          this.stations[stopStationArray[0] - 1].station_name
+        )
+      ) {
+        if (stationIndex === stopStationArray[0] - 1 && mode === 'departure') {
+          // 始発駅で前の列車から解結・種別変更
+          if (
+            this.trips &&
+            this.trips[tripIndex - 1] &&
+            trip.block_id === this.trips[tripIndex - 1].block_id &&
+            _.some(
+              this.stopStationsArray[tripIndex - 1],
+              nextTripStationIndex => stationIndex - 1 === nextTripStationIndex
+            )
+          ) {
+            return '⬎';
+          }
+        }
+      }
+      if (
+        // 終着駅の次の駅が発着両表示駅の場合
         this.stations[stopStationArray[stopStationArray.length - 1] + 1] &&
         this.arrivalChecker(
           this.stations[stopStationArray[stopStationArray.length - 1] + 1]
@@ -257,13 +305,55 @@ export class TimetableAllLineComponent implements OnInit {
           stationIndex === stopStationArray[stopStationArray.length - 1] + 1 &&
           mode === 'arrival'
         ) {
+          // 終着駅で次の列車に併結・種別変更
+          if (
+            this.trips &&
+            this.trips[tripIndex + 1] &&
+            trip.block_id === this.trips[tripIndex + 1].block_id &&
+            _.some(
+              this.stopStationsArray[tripIndex + 1],
+              nextTripStationIndex => stationIndex - 1 === nextTripStationIndex
+            )
+          ) {
+            return '↳';
+          }
+
           return '=';
         }
       } else {
+        // 発・着のみ表示駅の場合
+        if (stationIndex === stopStationArray[0] - 1) {
+          // 始発駅で前の列車から解結・種別変更
+          if (
+            this.trips &&
+            this.trips[tripIndex - 1] &&
+            trip.block_id === this.trips[tripIndex - 1].block_id &&
+            _.some(
+              this.stopStationsArray[tripIndex - 1],
+              nextTripStationIndex => stationIndex - 1 === nextTripStationIndex
+            )
+          ) {
+            return '⬎';
+          }
+        }
+
         if (
           stationIndex ===
           stopStationArray[stopStationArray.length - 1] + 1
         ) {
+          // 終着駅で次の列車に併結・種別変更
+          if (
+            this.trips &&
+            this.trips[tripIndex + 1] &&
+            trip.block_id === this.trips[tripIndex + 1].block_id &&
+            _.some(
+              this.stopStationsArray[tripIndex + 1],
+              nextTripStationIndex => stationIndex - 1 === nextTripStationIndex
+            )
+          ) {
+            return '↳';
+          }
+
           return '=';
         }
       }
