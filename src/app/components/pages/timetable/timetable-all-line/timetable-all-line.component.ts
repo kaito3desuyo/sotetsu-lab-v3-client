@@ -42,10 +42,13 @@ export class TimetableAllLineComponent implements OnInit {
       }) => {
         console.log(data);
         this.stations = data.stations;
-        this.trips = _.isArray(data.trips) ? data.trips : [data.trips];
+        this.trips =
+          data.trips.rows && _.isArray(data.trips.rows)
+            ? data.trips.rows
+            : [data.trips];
         this.calender = data.calender;
 
-        this.paginator.length = _.isArray(data.trips) ? data.tripsCount : 1;
+        this.paginator.length = data.trips.count ? data.trips.count : 1;
         this.paginator.pageSize = 10;
 
         this.generateStopStationsArray();
@@ -70,7 +73,7 @@ export class TimetableAllLineComponent implements OnInit {
         event.pageSize
       )
       .subscribe(result => {
-        this.trips = result;
+        this.trips = result.rows;
         console.log(this.trips);
         this.generateStopStationsArray();
         this.loading.close();
@@ -306,7 +309,14 @@ export class TimetableAllLineComponent implements OnInit {
             return "↳";
           }
 
-          return "=";
+          if (
+            this.arrivalChecker(this.stations[stationIndex].station_name) &&
+            this.departureChecker(this.stations[stationIndex].station_name) &&
+            mode !== "arrival"
+          ) {
+          } else {
+            return "=";
+          }
         }
       }
     } else {
@@ -393,7 +403,14 @@ export class TimetableAllLineComponent implements OnInit {
             return "↳";
           }
 
-          return "=";
+          if (
+            this.arrivalChecker(this.stations[stationIndex].station_name) &&
+            this.departureChecker(this.stations[stationIndex].station_name) &&
+            mode !== "arrival"
+          ) {
+          } else {
+            return "=";
+          }
         }
       }
     }
