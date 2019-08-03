@@ -1,0 +1,25 @@
+@font-face {
+	font-family: DiaPro;
+	src: url("DiaPro-Regular.otf")  format('opentype'),
+		url("DiaPro-Regular.woff") format('woff'),
+		url("DiaPro-Regular.eot") format('eot');
+}
+
+.dia {
+	font-family: DiaPro;
+	-moz-font-feature-settings: "rlig=1";
+	-ms-font-feature-settings: "rlig";
+	-webkit-font-feature-settings: "rlig";
+	-o-font-feature-settings: "rlig";
+	font-feature-settings: "rlig";
+}
+
+.dia b { /* 太い数字 */
+	font-weight: normal;
+	font-family: DiaPro;
+	-moz-font-feature-settings: "titl=1";
+	-ms-font-feature-settings: "titl";
+	-webkit-font-feature-settings: "titl";
+	-o-font-feature-settings: "titl";
+	font-feature-settings: "titl";
+}

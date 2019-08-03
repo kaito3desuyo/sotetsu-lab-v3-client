@@ -1,0 +1,136 @@
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@import "~@angular/material/theming";
+
+// Plus imports for other components in your app.
+@import url("https://fonts.googleapis.com/css?family=Quicksand");
+@import url("https://fonts.googleapis.com/css?family=Material+Icons");
+
+$font-family: -apple-system, BlinkMacSystemFont, Roboto, "Yu Gothic UI",
+  "游ゴシック体", YuGothic, "Yu Gothic Medium", sans-serif;
+$custom-typography: mat-typography-config($font-family);
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core($custom-typography);
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$sotetsu-lab-v3-client-primary: mat-palette(
+  (
+    50: #e0e3eb,
+    100: #b3b9cc,
+    200: #808aab,
+    300: #4d5b89,
+    400: #26386f,
+    500: #001556,
+    600: #00124f,
+    700: #000f45,
+    800: #000c3c,
+    900: #00062b,
+    A100: #656bff,
+    A200: #323aff,
+    A400: #000afe,
+    A700: #0009e5,
+    contrast: (
+      50: $black-87-opacity,
+      100: $black-87-opacity,
+      200: $black-87-opacity,
+      300: white,
+      400: white,
+      500: white,
+      600: white,
+      700: white,
+      800: white,
+      900: white,
+      A100: white,
+      A200: white,
+      A400: white,
+      A700: white
+    )
+  )
+);
+$sotetsu-lab-v3-client-accent: mat-palette(
+  (
+    50: #fdefe7,
+    100: #fad7c2,
+    200: #f7bd9a,
+    300: #f3a372,
+    400: #f18f53,
+    500: #ee7b35,
+    600: #ec7330,
+    700: #e96828,
+    800: #e75e22,
+    900: #e24b16,
+    A100: #ffffff,
+    A200: #ffe7e0,
+    A400: #ffbfad,
+    A700: #ffac93,
+    contrast: (
+      50: $black-87-opacity,
+      100: $black-87-opacity,
+      200: $black-87-opacity,
+      300: $black-87-opacity,
+      400: $black-87-opacity,
+      500: $black-87-opacity,
+      600: $black-87-opacity,
+      700: $black-87-opacity,
+      800: $black-87-opacity,
+      900: white,
+      A100: $black-87-opacity,
+      A200: $black-87-opacity,
+      A400: $black-87-opacity,
+      A700: $black-87-opacity
+    )
+  )
+);
+
+// The warn palette is optional (defaults to red).
+$sotetsu-lab-v3-client-warn: mat-palette($mat-red);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$sotetsu-lab-v3-client-theme: mat-light-theme(
+  $sotetsu-lab-v3-client-primary,
+  $sotetsu-lab-v3-client-accent,
+  $sotetsu-lab-v3-client-warn
+);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($sotetsu-lab-v3-client-theme);
+
+/* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: $font-family;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mat-sidenav-content {
+  width: 100vw;
+  height: calc(100vh - 64px) !important;
+}
+
+@media (max-width: 599px) {
+  .mat-sidenav-content {
+    height: calc(100vh - 56px) !important;
+  }
+}
