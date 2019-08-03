@@ -3,7 +3,13 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  apiUrl: 'http://localhost:3000',
+  backendUrl: 'http://localhost:8080',
+  socketUrl: 'http://localhost:3000',
+  analytics: {
+    id: 'UA-38754264-6' // IDを設定する、environment.prod.tsにも
+  }
 };
 
 /*
