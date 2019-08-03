@@ -1,0 +1,24 @@
+<section fxLayout="column" fxLayoutGap="32px">
+  <header fxLayout="row" fxLayoutAlign="start center">
+    <h2 class="mat-h2">{{ data.title }}</h2>
+    <span fxFlex="auto"></span>
+    <button mat-icon-button (click)="onClickCancel()">
+      <mat-icon>clear</mat-icon>
+    </button>
+  </header>
+  <main>
+    {{ data.text }}
+  </main>
+  <footer fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="16px">
+    <button mat-button color="primary" (click)="onClickCancel()">
+      {{ data.cancelButtonText }}
+    </button>
+    <button
+      mat-raised-button
+      [color]="data.goButtonColor"
+      (click)="onClickGo()"
+    >
+      {{ data.goButtonText }}
+    </button>
+  </footer>
+</section>
