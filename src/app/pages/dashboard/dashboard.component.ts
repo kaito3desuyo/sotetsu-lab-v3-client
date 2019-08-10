@@ -18,26 +18,12 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.socketService.connect('/operation/real-time');
-    this.socketService.on('test').subscribe(data => {
+    this.socketService.on('sightingReload').subscribe(data => {
       console.log(data);
     });
   }
 
   openDialogTest() {
-    this.socketService.emit('test', 'test');
-    const dialogRef = this.dialog.open(ConfirmDialogContainerComponent, {
-      width: '640px',
-      data: {
-        title: '更新',
-        text: '更新しますか？',
-        goButtonText: '更新する',
-        goButtonColor: 'warn',
-        cancelButtonText: 'キャンセル'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      console.log(result);
-    });
+    this.socketService.emit('sendSighting', { operationNumber: 45 });
   }
 }

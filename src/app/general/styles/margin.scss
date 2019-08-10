@@ -1,0 +1,29 @@
+// 指定するmarginの範囲を定義
+$margin-min: 0;
+$margin-max: 256;
+
+@for $i from $margin-min through $margin-max {
+  .mt-#{$i} {
+    margin-top: #{$i}px;
+  }
+  .mr-#{$i} {
+    margin-right: #{$i}px;
+  }
+  .mb-#{$i} {
+    margin-bottom: #{$i}px;
+  }
+  .ml-#{$i} {
+    margin-left: #{$i}px;
+  }
+  .mx-#{$i} {
+    margin-left: #{$i}px;
+    margin-right: #{$i}px;
+  }
+  .my-#{$i} {
+    margin-top: #{$i}px;
+    margin-bottom: #{$i}px;
+  }
+  .m-#{$i} {
+    margin: #{$i}px;
+  }
+}
