@@ -21,6 +21,7 @@ export class AuthInterceptor implements HttpInterceptor {
       headers: request.headers.set('X-API-URL', request.url),
       params: request.params.append('url', request.url)
     });
+    console.log('リクエスト', request);
     return next.handle(authReq);
   }
 }
