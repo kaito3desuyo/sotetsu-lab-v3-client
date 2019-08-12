@@ -7,9 +7,12 @@
   </mat-card-subtitle>
   <mat-card-content fxLayout="column" fxLayoutGap="16px">
     <mat-form-field>
-      <mat-select>
-        <mat-option>
-          hoge
+      <mat-select placeholder="ダイヤ">
+        <mat-option
+          *ngFor="let calender of calendersSelectList"
+          [value]="calender.value"
+        >
+          {{ calender.label }}
         </mat-option>
       </mat-select>
     </mat-form-field>

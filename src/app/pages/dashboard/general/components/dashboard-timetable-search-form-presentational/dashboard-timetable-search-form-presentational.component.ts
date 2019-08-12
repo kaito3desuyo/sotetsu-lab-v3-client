@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard-timetable-search-form-presentational',
@@ -9,9 +9,8 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardTimetableSearchFormPresentationalComponent
-  implements OnInit {
-  constructor() {}
+export class DashboardTimetableSearchFormPresentationalComponent {
+  @Input() calendersSelectList: { label: string; value: string }[];
 
-  ngOnInit() {}
+  constructor() {}
 }

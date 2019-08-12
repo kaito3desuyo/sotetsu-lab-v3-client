@@ -8,7 +8,12 @@
   <mat-card-content fxLayout="column" fxLayoutGap="16px">
     <mat-form-field>
       <mat-select placeholder="ダイヤ">
-        <mat-option>ほげ</mat-option>
+        <mat-option
+          *ngFor="let calender of calendersSelectList"
+          [value]="calender.value"
+        >
+          {{ calender.label }}
+        </mat-option>
       </mat-select>
     </mat-form-field>
     <mat-radio-group fxLayout="row" fxLayoutGap="16px">

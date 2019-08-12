@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard-operation-search-menu-presentational',
@@ -9,9 +9,8 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardOperationSearchMenuPresentationalComponent
-  implements OnInit {
-  constructor() {}
+export class DashboardOperationSearchMenuPresentationalComponent {
+  @Input() calendersSelectList: { label: string; value: string }[];
 
-  ngOnInit() {}
+  constructor() {}
 }
