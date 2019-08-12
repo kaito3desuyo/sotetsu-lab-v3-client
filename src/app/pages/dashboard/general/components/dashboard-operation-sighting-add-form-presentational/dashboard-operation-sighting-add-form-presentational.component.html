@@ -1,0 +1,33 @@
+<mat-card fxFlex="auto">
+  <mat-card-title>
+    今日の車両運用を投稿
+  </mat-card-title>
+  <mat-card-subtitle>
+    運用目撃情報を投稿できます。
+  </mat-card-subtitle>
+  <mat-card-content fxLayout="column" fxLayoutGap="16px">
+    <mat-form-field>
+      <input matInput placeholder="車両番号" />
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput placeholder="運用番号" />
+      <mat-hint>
+        休車の場合は'100'を入力
+      </mat-hint>
+    </mat-form-field>
+    <mat-radio-group fxLayout="row" fxLayoutGap="16px">
+      <mat-radio-button>
+        現在時刻
+      </mat-radio-button>
+      <mat-radio-button>
+        指定時刻
+      </mat-radio-button>
+    </mat-radio-group>
+    <mat-form-field>
+      <input matInput type="time" placeholder="目撃時刻" />
+    </mat-form-field>
+    <div fxLayout="row" fxLayoutAlign="end center">
+      <button mat-raised-button color="primary">送信</button>
+    </div>
+  </mat-card-content>
+</mat-card>
