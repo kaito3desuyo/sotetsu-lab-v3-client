@@ -22,6 +22,7 @@ import { MatInputModule } from '@angular/material/input';
 import { DashboardTripAddFormContainerComponent } from './general/components/dashboard-trip-add-form-container/dashboard-trip-add-form-container.component';
 import { DashboardTripAddFormPresentationalComponent } from './general/components/dashboard-trip-add-form-presentational/dashboard-trip-add-form-presentational.component';
 import { DashboardResolverService } from './general/services/dashboard-resolver.service';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -38,6 +39,7 @@ import { DashboardResolverService } from './general/services/dashboard-resolver.
   imports: [
     CommonModule,
     FlexLayoutModule,
+    ReactiveFormsModule,
     MatDialogModule,
     MatCardModule,
     MatFormFieldModule,

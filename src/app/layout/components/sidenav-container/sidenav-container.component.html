@@ -1,6 +1,8 @@
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="push" [(opened)]="sidenavState">
-    <app-sidenav-presentational></app-sidenav-presentational>
+    <app-sidenav-presentational
+      [stationsSelectList]="stationsSelectList$ | async"
+    ></app-sidenav-presentational>
   </mat-sidenav>
   <mat-sidenav-content>
     <router-outlet></router-outlet>

@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-sidenav-presentational',
   templateUrl: './sidenav-presentational.component.html',
-  styleUrls: ['./sidenav-presentational.component.scss']
+  styleUrls: ['./sidenav-presentational.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SidenavPresentationalComponent implements OnInit {
+export class SidenavPresentationalComponent {
+  @Input() stationsSelectList: {
+    routeName: string;
+    stations: { label: string; value: string }[];
+  }[];
 
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+  constructor() {}
 }

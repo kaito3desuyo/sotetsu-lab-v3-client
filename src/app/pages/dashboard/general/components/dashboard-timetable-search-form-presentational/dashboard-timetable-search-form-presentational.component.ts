@@ -11,6 +11,10 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 })
 export class DashboardTimetableSearchFormPresentationalComponent {
   @Input() calendersSelectList: { label: string; value: string }[];
+  @Input() stationsSelectList: {
+    routeName: string;
+    stations: { label: string; value: string }[];
+  }[];
 
   constructor() {}
 }

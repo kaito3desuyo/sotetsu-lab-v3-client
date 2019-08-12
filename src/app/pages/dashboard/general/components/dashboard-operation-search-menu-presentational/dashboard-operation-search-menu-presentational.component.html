@@ -12,11 +12,11 @@
         <p mat-line>リアルタイム運用情報</p>
       </mat-list-item>
     </mat-nav-list>
-    <mat-list>
+    <mat-list [formGroup]="operationTableForm">
       <h3 mat-subheader>運用表</h3>
       <mat-list-item>
         <mat-form-field fxFlex="auto">
-          <mat-select placeholder="ダイヤ">
+          <mat-select placeholder="ダイヤ" formControlName="calenderId">
             <mat-option
               *ngFor="let calender of calendersSelectList"
               [value]="calender.value"

@@ -7,10 +7,14 @@ import { RouterModule } from '@angular/router';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 import { HeaderContainerComponent } from './components/header-container/header-container.component';
 import { HeaderPresentationalComponent } from './components/header-presentational/header-presentational.component';
 import { SidenavContainerComponent } from './components/sidenav-container/sidenav-container.component';
 import { SidenavPresentationalComponent } from './components/sidenav-presentational/sidenav-presentational.component';
+import { MatListModule } from '@angular/material/list';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 @NgModule({
   declarations: [
@@ -27,7 +31,11 @@ import { SidenavPresentationalComponent } from './components/sidenav-presentatio
     MatSidenavModule,
     MatToolbarModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MatMenuModule,
+    MatListModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   exports: [LayoutComponent]
 })

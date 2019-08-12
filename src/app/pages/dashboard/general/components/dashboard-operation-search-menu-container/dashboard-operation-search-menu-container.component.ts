@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { DashboardService } from '../../services/dashboard.service';
 import { Observable } from 'rxjs';
-import { ICalender } from 'src/app/general/interfaces/calender';
 import { map } from 'rxjs/operators';
 import { CalendersQuery } from 'src/app/general/models/calenders/state/calenders.query';
+import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
+import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
 
 @Component({
   selector: 'app-dashboard-operation-search-menu-container',
@@ -17,13 +17,15 @@ export class DashboardOperationSearchMenuContainerComponent implements OnInit {
     .selectAll()
     .pipe(
       map(calender =>
-        this.dashboardService.generateCalenderSelectList(calender)
+        this.calendersService.generateCalenderSelectList(calender)
       )
     );
+  todaysCalenderId$: Observable<string> = this.currentParamsQuery.calenderId$;
 
   constructor(
     private calendersQuery: CalendersQuery,
-    private dashboardService: DashboardService
+    private calendersService: CalendersService,
+    private currentParamsQuery: CurrentParamsQuery
   ) {}
 
   ngOnInit() {}
