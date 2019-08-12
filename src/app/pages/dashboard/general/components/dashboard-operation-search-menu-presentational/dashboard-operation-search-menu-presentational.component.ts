@@ -1,4 +1,10 @@
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  OnChanges
+} from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard-operation-search-menu-presentational',
@@ -9,8 +15,18 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardOperationSearchMenuPresentationalComponent {
-  @Input() calendersSelectList: { label: string; value: string }[];
+export class DashboardOperationSearchMenuPresentationalComponent
+  implements OnChanges {
+  operationTableForm = this.fb.group({
+    calenderId: ['', Validators.required]
+  });
 
-  constructor() {}
+  @Input() calendersSelectList: { label: string; value: string }[];
+  @Input() todaysCalenderId: string;
+
+  constructor(private fb: FormBuilder) {}
+
+  ngOnChanges() {
+    this.operationTableForm.get('calenderId').setValue(this.todaysCalenderId);
+  }
 }

@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
-import { DashboardService } from '../../services/dashboard.service';
 import { map } from 'rxjs/operators';
 import { CalendersQuery } from 'src/app/general/models/calenders/state/calenders.query';
+import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
 
 @Component({
   selector: 'app-dashboard-trip-add-form-container',
@@ -16,12 +16,12 @@ export class DashboardTripAddFormContainerComponent implements OnInit {
     .selectAll()
     .pipe(
       map(calender =>
-        this.dashboardService.generateCalenderSelectList(calender)
+        this.calendersService.generateCalenderSelectList(calender)
       )
     );
   constructor(
     private calendersQuery: CalendersQuery,
-    private dashboardService: DashboardService
+    private calendersService: CalendersService
   ) {}
 
   ngOnInit() {}

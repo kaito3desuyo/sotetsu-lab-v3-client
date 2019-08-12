@@ -25,7 +25,14 @@
     </div>
     <mat-form-field>
       <mat-select placeholder="駅名">
-        <mat-option>ほげ</mat-option>
+        <mat-optgroup
+          *ngFor="let route of stationsSelectList"
+          [label]="route.routeName"
+        >
+          <mat-option *ngFor="let station of route.stations">{{
+            station.label
+          }}</mat-option>
+        </mat-optgroup>
       </mat-select>
     </mat-form-field>
     <div fxLayout="row" fxLayoutAlign="end center">
