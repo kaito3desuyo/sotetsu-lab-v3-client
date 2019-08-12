@@ -8,6 +8,7 @@ import { LayoutModule } from './layout/layout.module';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { GeneralModule } from './general/general.module';
+import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 
 @NgModule({
   declarations: [AppComponent],
@@ -19,7 +20,8 @@ import { GeneralModule } from './general/general.module';
     GeneralModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production
-    })
+    }),
+    environment.production ? [] : AkitaNgDevtools.forRoot()
   ],
   bootstrap: [AppComponent]
 })

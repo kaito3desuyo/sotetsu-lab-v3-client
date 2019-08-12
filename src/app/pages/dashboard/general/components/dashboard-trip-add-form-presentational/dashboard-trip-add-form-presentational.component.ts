@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 
 @Component({
   selector: 'app-dashboard-trip-add-form-presentational',
@@ -6,8 +6,8 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
   styleUrls: ['./dashboard-trip-add-form-presentational.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardTripAddFormPresentationalComponent implements OnInit {
-  constructor() {}
+export class DashboardTripAddFormPresentationalComponent {
+  @Input() calendersSelectList: { label: string; value: string }[];
 
-  ngOnInit() {}
+  constructor() {}
 }

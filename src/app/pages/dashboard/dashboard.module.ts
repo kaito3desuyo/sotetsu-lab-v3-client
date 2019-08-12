@@ -21,6 +21,7 @@ import { DashboardOperationSightingAddFormPresentationalComponent } from './gene
 import { MatInputModule } from '@angular/material/input';
 import { DashboardTripAddFormContainerComponent } from './general/components/dashboard-trip-add-form-container/dashboard-trip-add-form-container.component';
 import { DashboardTripAddFormPresentationalComponent } from './general/components/dashboard-trip-add-form-presentational/dashboard-trip-add-form-presentational.component';
+import { DashboardResolverService } from './general/services/dashboard-resolver.service';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { DashboardTripAddFormPresentationalComponent } from './general/component
     MatListModule,
     MatInputModule,
     DashboardRoutingModule
-  ]
+  ],
+  providers: [DashboardResolverService]
 })
 export class DashboardModule {}

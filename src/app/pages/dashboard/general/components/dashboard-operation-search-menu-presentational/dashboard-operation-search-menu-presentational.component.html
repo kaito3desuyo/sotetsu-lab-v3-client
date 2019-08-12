@@ -17,8 +17,11 @@
       <mat-list-item>
         <mat-form-field fxFlex="auto">
           <mat-select placeholder="ダイヤ">
-            <mat-option>
-              hoge
+            <mat-option
+              *ngFor="let calender of calendersSelectList"
+              [value]="calender.value"
+            >
+              {{ calender.label }}
             </mat-option>
           </mat-select>
         </mat-form-field>
