@@ -1,0 +1,27 @@
+<mat-card fxFlex="auto">
+  <mat-card-title>
+    列車を追加
+  </mat-card-title>
+  <mat-card-subtitle>
+    列車データを追加できます。
+  </mat-card-subtitle>
+  <mat-card-content fxLayout="column" fxLayoutGap="16px">
+    <mat-form-field>
+      <mat-select placeholder="ダイヤ">
+        <mat-option
+          *ngFor="let calender of calendersSelectList"
+          [value]="calender.value"
+        >
+          {{ calender.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-radio-group fxLayout="row" fxLayoutGap="16px">
+      <mat-radio-button>上り</mat-radio-button>
+      <mat-radio-button>下り</mat-radio-button>
+    </mat-radio-group>
+    <div fxLayout="row" fxLayoutAlign="end center">
+      <button mat-raised-button color="primary">列車情報入力へ移る</button>
+    </div>
+  </mat-card-content>
+</mat-card>

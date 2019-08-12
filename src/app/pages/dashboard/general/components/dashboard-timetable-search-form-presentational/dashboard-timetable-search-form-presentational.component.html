@@ -1,0 +1,42 @@
+<mat-card fxFlex="auto">
+  <mat-card-title>
+    時刻表
+  </mat-card-title>
+  <mat-card-subtitle>
+    相鉄線の時刻表を検索できます。
+  </mat-card-subtitle>
+  <mat-card-content fxLayout="column" fxLayoutGap="16px">
+    <mat-form-field>
+      <mat-select placeholder="ダイヤ">
+        <mat-option
+          *ngFor="let calender of calendersSelectList"
+          [value]="calender.value"
+        >
+          {{ calender.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-radio-group fxLayout="row" fxLayoutGap="16px">
+      <mat-radio-button>上り</mat-radio-button>
+      <mat-radio-button>下り</mat-radio-button>
+    </mat-radio-group>
+    <div>
+      <mat-slide-toggle>駅を指定して検索する</mat-slide-toggle>
+    </div>
+    <mat-form-field>
+      <mat-select placeholder="駅名">
+        <mat-optgroup
+          *ngFor="let route of stationsSelectList"
+          [label]="route.routeName"
+        >
+          <mat-option *ngFor="let station of route.stations">{{
+            station.label
+          }}</mat-option>
+        </mat-optgroup>
+      </mat-select>
+    </mat-form-field>
+    <div fxLayout="row" fxLayoutAlign="end center">
+      <button mat-raised-button color="primary">検索</button>
+    </div>
+  </mat-card-content>
+</mat-card>
