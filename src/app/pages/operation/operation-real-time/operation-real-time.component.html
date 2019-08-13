@@ -1,0 +1,13 @@
+<section
+  class="operation-real-time my-24"
+  [ngClass.lt-md]="['mx-16']"
+  [ngClass.gt-sm]="['mx-64']"
+  fxLayout="column"
+  fxLayoutGap="24px"
+>
+  <h2 class="mat-h2">リアルタイム運用情報</h2>
+  <div fxLayout="row" fxLayoutGap="64px">
+    <app-operation-sightings-table-by-operation-container></app-operation-sightings-table-by-operation-container>
+    <app-operation-sightings-table-by-formation-container></app-operation-sightings-table-by-formation-container>
+  </div>
+</section>
