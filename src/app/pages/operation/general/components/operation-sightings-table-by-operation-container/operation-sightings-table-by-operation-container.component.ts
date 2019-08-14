@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-
+import { OperationRealTimeService } from '../../services/operation-real-time.service';
+import _ from 'lodash';
+import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { MatTableDataSource } from '@angular/material/table';
 @Component({
   selector: 'app-operation-sightings-table-by-operation-container',
   templateUrl:
@@ -10,7 +13,26 @@ import { Component, OnInit } from '@angular/core';
 })
 export class OperationSightingsTableByOperationContainerComponent
   implements OnInit {
-  constructor() {}
+  dataSource: MatTableDataSource<{
+    operationNumber: string;
+    formationNumber: string;
+    sightings: IOperationSighting[];
+  }> = new MatTableDataSource<{
+    operationNumber: string;
+    formationNumber: string;
+    sightings: IOperationSighting[];
+  }>([]);
 
-  ngOnInit() {}
+  constructor(private operationRealTimeService: OperationRealTimeService) {}
+
+  ngOnInit() {
+    this.operationRealTimeService.getOperationTableData().subscribe(data => {
+      console.log(data);
+      this.dataSource = new MatTableDataSource<{
+        operationNumber: string;
+        formationNumber: string;
+        sightings: IOperationSighting[];
+      }>(data);
+    });
+  }
 }

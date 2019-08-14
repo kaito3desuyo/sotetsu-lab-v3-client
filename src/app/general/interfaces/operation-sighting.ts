@@ -1,3 +1,6 @@
+import { IOperation } from './operation';
+import { IFormation } from './formation';
+
 export interface IOperationSighting {
   id: string;
   formationId: string;
@@ -5,4 +8,6 @@ export interface IOperationSighting {
   sightingTime: string;
   createdAt: string;
   updatedAt: string;
+  formation?: IFormation;
+  operation?: IOperation;
 }

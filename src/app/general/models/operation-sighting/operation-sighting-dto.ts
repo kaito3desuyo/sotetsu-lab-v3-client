@@ -1,3 +1,6 @@
+import { ReadOperationDto } from '../operation/operation-dto';
+import { ReadFormationDto } from '../formation/formation-dto';
+
 /* tslint:disable: variable-name */
 export class ReadOperationSightingDto {
   id: string;
@@ -6,4 +9,6 @@ export class ReadOperationSightingDto {
   sighting_time: string;
   created_at: string;
   updated_at: string;
+  formation?: ReadFormationDto;
+  operation?: ReadOperationDto;
 }
