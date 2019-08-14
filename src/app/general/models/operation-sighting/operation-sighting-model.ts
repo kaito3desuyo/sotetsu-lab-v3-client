@@ -1,5 +1,7 @@
 import { ReadOperationSightingDto } from './operation-sighting-dto';
 import { IOperationSighting } from '../../interfaces/operation-sighting';
+import { OperationModel } from '../operation/operation-model';
+import { FormationModel } from '../formation/formation-model';
 
 export class OperationSightingModel {
   static readOperationSightingDtoImpl(
@@ -13,6 +15,18 @@ export class OperationSightingModel {
       createdAt: operationSighting.created_at,
       updatedAt: operationSighting.updated_at
     };
+
+    if (operationSighting.formation) {
+      returnObj.formation = FormationModel.readFormationDtoImpl(
+        operationSighting.formation
+      );
+    }
+
+    if (operationSighting.operation) {
+      returnObj.operation = OperationModel.readOperationDtoImpl(
+        operationSighting.operation
+      );
+    }
 
     return returnObj;
   }

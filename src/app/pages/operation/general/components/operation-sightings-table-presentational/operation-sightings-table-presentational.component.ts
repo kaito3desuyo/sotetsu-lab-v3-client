@@ -1,4 +1,11 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  Input
+} from '@angular/core';
+import { MatTableDataSource } from '@angular/material/table';
+import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 
 @Component({
   selector: 'app-operation-sightings-table-presentational',
@@ -7,6 +14,18 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationSightingsTablePresentationalComponent implements OnInit {
+  displayedColumns: string[] = [
+    'operationNumber',
+    'formationNumber',
+    'sightingTime',
+    'updatedAt'
+  ];
+  @Input() dataSource: MatTableDataSource<{
+    formationNumber?: string;
+    operationNumber?: string;
+    sightings: IOperationSighting[];
+  }>;
+
   constructor() {}
 
   ngOnInit() {}
