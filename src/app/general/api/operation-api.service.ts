@@ -26,8 +26,8 @@ export class OperationApiService {
     );
   }
 
-  getOperationsAllSightings(): Observable<IOperationSighting[]> {
-    return this.http.get(this.apiUrl + '/all/sightings').pipe(
+  getOperationsAllLatestSightings(): Observable<IOperationSighting[]> {
+    return this.http.get(this.apiUrl + '/all/latest-sightings').pipe(
       map(data => {
         return (data as ReadOperationSightingDto[]).map(result => {
           return OperationSightingModel.readOperationSightingDtoImpl(result);

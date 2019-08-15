@@ -16,12 +16,22 @@ export class OperationSightingsTableByOperationContainerComponent
   dataSource: MatTableDataSource<{
     operationNumber: string;
     formationNumber: string;
+    sightingTime: string;
+    updatedAt: string;
     sightings: IOperationSighting[];
   }> = new MatTableDataSource<{
     operationNumber: string;
     formationNumber: string;
+    sightingTime: string;
+    updatedAt: string;
     sightings: IOperationSighting[];
   }>([]);
+  displayedColumn = [
+    'operationNumber',
+    'formationNumber',
+    'sightingTime',
+    'updatedAt'
+  ];
 
   constructor(private operationRealTimeService: OperationRealTimeService) {}
 
@@ -31,6 +41,8 @@ export class OperationSightingsTableByOperationContainerComponent
       this.dataSource = new MatTableDataSource<{
         operationNumber: string;
         formationNumber: string;
+        sightingTime: string;
+        updatedAt: string;
         sightings: IOperationSighting[];
       }>(data);
     });

@@ -1,3 +1,5 @@
+import { IFormationToVehicle } from './formationToVehicle';
+
 export interface IFormation {
   id: string;
   agencyId: string;
@@ -8,4 +10,5 @@ export interface IFormation {
   endDate: string;
   createdAt: string;
   updatedAt: string;
+  formationToVehicles?: IFormationToVehicle[];
 }

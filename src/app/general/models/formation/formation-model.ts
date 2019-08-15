@@ -1,5 +1,6 @@
 import { ReadFormationDto } from './formation-dto';
 import { IFormation } from '../../interfaces/formation';
+import { FormationToVehicleModel } from '../formation-to-vehicle/formation-to-vehicle-model';
 
 export class FormationModel {
   static readFormationDtoImpl(formation: ReadFormationDto): IFormation {
@@ -14,6 +15,12 @@ export class FormationModel {
       createdAt: formation.created_at,
       updatedAt: formation.updated_at
     };
+
+    if (formation.formation_to_vehicles) {
+      returnObj.formationToVehicles = formation.formation_to_vehicles.map(
+        data => FormationToVehicleModel.readFormationToVehicleModel(data)
+      );
+    }
 
     return returnObj;
   }

@@ -14,7 +14,8 @@ export class OperationResolverService {
 @Injectable({
   providedIn: 'root'
 })
-export class OperationsAllNumbersResolverService implements Resolve<{}[]> {
+export class OperationsAllNumbersResolverService
+  implements Resolve<{ operationNumber: string }[]> {
   constructor(private api: OperationApiService) {}
 
   resolve(): Observable<{ operationNumber: string }[]> {
@@ -25,11 +26,11 @@ export class OperationsAllNumbersResolverService implements Resolve<{}[]> {
 @Injectable({
   providedIn: 'root'
 })
-export class OperationsAllSightingsResolverService
+export class OperationsAllLatestSightingsResolverService
   implements Resolve<IOperationSighting[]> {
   constructor(private api: OperationApiService) {}
 
   resolve(): Observable<IOperationSighting[]> {
-    return this.api.getOperationsAllSightings();
+    return this.api.getOperationsAllLatestSightings();
   }
 }

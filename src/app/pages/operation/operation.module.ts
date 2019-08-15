@@ -8,18 +8,36 @@ import { OperationSightingsTableByOperationContainerComponent } from './general/
 import { OperationSightingsTableByFormationContainerComponent } from './general/components/operation-sightings-table-by-formation-container/operation-sightings-table-by-formation-container.component';
 import { MatTableModule } from '@angular/material/table';
 import { OperationRealTimeService } from './general/services/operation-real-time.service';
+import { OperationSightingAddFormContainerComponent } from './general/components/operation-sighting-add-form-container/operation-sighting-add-form-container.component';
+import { OperationSightingAddFormPresentationalComponent } from './general/components/operation-sighting-add-form-presentational/operation-sighting-add-form-presentational.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatRadioModule } from '@angular/material/radio';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
     OperationRealTimeComponent,
     OperationSightingsTableByOperationContainerComponent,
     OperationSightingsTableByFormationContainerComponent,
-    OperationSightingsTablePresentationalComponent
+    OperationSightingsTablePresentationalComponent,
+    OperationSightingAddFormContainerComponent,
+    OperationSightingAddFormPresentationalComponent
   ],
   imports: [
     CommonModule,
     FlexLayoutModule,
+    ReactiveFormsModule,
     MatTableModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatRadioModule,
     OperationRoutingModule
   ],
   providers: [OperationRealTimeService]

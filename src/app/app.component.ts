@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Inject, Injector } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
@@ -15,6 +15,7 @@ import { CalendersService } from './general/models/calenders/state/calenders.ser
 })
 export class AppComponent extends BaseComponent {
   constructor(
+    @Inject(Injector) injector: Injector,
     private title: Title,
     private route: ActivatedRoute,
     private router: Router,
@@ -23,7 +24,7 @@ export class AppComponent extends BaseComponent {
     private calendersService: CalendersService,
     private currentParamsService: CurrentParamsService
   ) {
-    super();
+    super(injector);
     this.subscription = this.route.data.subscribe((data: { title: string }) => {
       this.title.setTitle(
         `${data.title ? data.title + ' - ' : ''}Sotetsu Lab. v3`
