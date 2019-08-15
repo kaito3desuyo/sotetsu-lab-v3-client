@@ -14,15 +14,12 @@ import { IOperationSighting } from 'src/app/general/interfaces/operation-sightin
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationSightingsTablePresentationalComponent implements OnInit {
-  displayedColumns: string[] = [
-    'operationNumber',
-    'formationNumber',
-    'sightingTime',
-    'updatedAt'
-  ];
+  @Input() displayedColumns: string[] = [];
   @Input() dataSource: MatTableDataSource<{
-    formationNumber?: string;
-    operationNumber?: string;
+    formationNumber: string;
+    operationNumber: string;
+    sightingTime: string;
+    updatedAt: string;
     sightings: IOperationSighting[];
   }>;
 

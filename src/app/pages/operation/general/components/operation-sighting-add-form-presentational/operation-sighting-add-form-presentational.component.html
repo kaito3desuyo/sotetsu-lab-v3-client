@@ -1,0 +1,63 @@
+<mat-card>
+  <mat-card-title>
+    目撃情報を投稿する
+  </mat-card-title>
+  <mat-card-subtitle>
+    各編成の運用充当状況を投稿できます。
+  </mat-card-subtitle>
+  <mat-card-content>
+    <form [formGroup]="sightingForm" fxLayout="column" fxLayoutGap="16px">
+      <div fxLayout="row" fxLayoutGap="24px">
+        <mat-form-field>
+          <mat-select placeholder="所属会社" formControlName="agencyId">
+            <mat-option>
+              hoge
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field fxFlex="auto">
+          <input
+            matInput
+            placeholder="車両番号"
+            formControlName="vehicleNumber"
+          />
+        </mat-form-field>
+      </div>
+      <mat-form-field>
+        <input
+          matInput
+          placeholder="運用番号"
+          formControlName="operationNumber"
+        />
+      </mat-form-field>
+      <mat-radio-group
+        class="pb-16"
+        fxLayout="row"
+        fxLayoutGap="24px"
+        formControlName="timeSetting"
+      >
+        <mat-radio-button value="currentTime">現在時刻</mat-radio-button>
+        <mat-radio-button value="specifiedTime">指定時刻</mat-radio-button>
+      </mat-radio-group>
+      <mat-form-field>
+        <input
+          matInput
+          type="time"
+          placeholder="目撃時刻"
+          formControlName="sightingTime"
+        />
+      </mat-form-field>
+      <div fxLayout="row" fxLayoutAlign="end center">
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="sightingForm.invalid"
+          (click)="onClickSubmit()"
+        >
+          送信
+        </button>
+      </div>
+    </form>
+    {{ sightingForm.value | json }}
+  </mat-card-content>
+</mat-card>
