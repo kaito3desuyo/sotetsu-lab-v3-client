@@ -1,15 +1,35 @@
-<section class="operation-sighting-table mat-elevation-z1" fxLayout="column">
+<section class="operation-sighting-table mat-elevation-z1">
   <table mat-table [dataSource]="dataSource">
     <!-- Position Column -->
     <ng-container matColumnDef="operationNumber">
       <th mat-header-cell *matHeaderCellDef>運用番号</th>
-      <td mat-cell *matCellDef="let element">{{ element.operationNumber }}</td>
+      <td mat-cell *matCellDef="let element">
+        {{ element.operationNumber }} {{ element.rotatedOperationNumber }}
+        {{
+          mode === "formation" &&
+          element.postedOperationNumber !== element.rotatedOperationNumber &&
+          (element.rotatedOperationNumber !== "unknown" &&
+            element.rotatedOperationNumber !== null)
+            ? "?"
+            : ""
+        }}
+      </td>
     </ng-container>
 
     <!-- Name Column -->
     <ng-container matColumnDef="formationNumber">
       <th mat-header-cell *matHeaderCellDef>編成番号</th>
-      <td mat-cell *matCellDef="let element">{{ element.formationNumber }}</td>
+      <td mat-cell *matCellDef="let element">
+        {{ element.formationNumber }}
+        {{
+          mode === "operation" &&
+          element.postedOperationNumber !== element.rotatedOperationNumber &&
+          (element.formationNumber !== "unknown" &&
+            element.formationNumber !== null)
+            ? "?"
+            : ""
+        }}
+      </td>
     </ng-container>
 
     <!-- Weight Column -->

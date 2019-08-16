@@ -1,5 +1,9 @@
 :host {
   .operation-sighting-table {
     overflow-x: scroll;
+
+    table {
+      width: 100%;
+    }
   }
 }
