@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
 
 @Component({
   selector: 'app-operation-sightings-table-presentational',
@@ -14,14 +15,9 @@ import { IOperationSighting } from 'src/app/general/interfaces/operation-sightin
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationSightingsTablePresentationalComponent implements OnInit {
+  @Input() mode: 'formation' | 'operation';
   @Input() displayedColumns: string[] = [];
-  @Input() dataSource: MatTableDataSource<{
-    formationNumber: string;
-    operationNumber: string;
-    sightingTime: string;
-    updatedAt: string;
-    sightings: IOperationSighting[];
-  }>;
+  @Input() dataSource: MatTableDataSource<IOperationSightingTable>;
 
   constructor() {}
 
