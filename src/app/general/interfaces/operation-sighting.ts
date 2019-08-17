@@ -11,3 +11,9 @@ export interface IOperationSighting {
   formation?: IFormation;
   operation?: IOperation;
 }
+
+export interface ICreateOperationSighting {
+  formationId: string;
+  operationId: string;
+  sightingTime: string;
+}

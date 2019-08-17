@@ -12,3 +12,9 @@ export class ReadOperationSightingDto {
   formation?: ReadFormationDto;
   operation?: ReadOperationDto;
 }
+
+export class CreateOperationSightingDto {
+  formation_id: string;
+  operation_id: string;
+  sighting_time: string;
+}

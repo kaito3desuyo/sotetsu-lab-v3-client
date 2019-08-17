@@ -57,10 +57,11 @@ export class OperationApiService {
   }
 
   addOperationSighting(body: {
-    formation_id: string;
-    operation_id: string;
-    sighting_time: string;
+    formationId: string;
+    operationId: string;
+    sightingTime: string;
   }): Observable<any> {
-    return this.http.post(this.apiUrl + '/sightings', body);
+    const data = OperationSightingModel.createOperationSightingDtoImpl(body);
+    return this.http.post(this.apiUrl + '/sightings', data);
   }
 }

@@ -1,9 +1,26 @@
-import { ReadOperationSightingDto } from './operation-sighting-dto';
+import {
+  ReadOperationSightingDto,
+  CreateOperationSightingDto
+} from './operation-sighting-dto';
 import { IOperationSighting } from '../../interfaces/operation-sighting';
 import { OperationModel } from '../operation/operation-model';
 import { FormationModel } from '../formation/formation-model';
 
 export class OperationSightingModel {
+  static createOperationSightingDtoImpl(operationSighting: {
+    formationId: string;
+    operationId: string;
+    sightingTime: string;
+  }): CreateOperationSightingDto {
+    const returnObj: CreateOperationSightingDto = {
+      formation_id: operationSighting.formationId,
+      operation_id: operationSighting.operationId,
+      sighting_time: operationSighting.sightingTime
+    };
+
+    return returnObj;
+  }
+
   static readOperationSightingDtoImpl(
     operationSighting: ReadOperationSightingDto
   ): IOperationSighting {

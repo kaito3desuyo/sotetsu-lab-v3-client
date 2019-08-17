@@ -3,6 +3,7 @@ import { OperationRealTimeService } from '../../services/operation-real-time.ser
 import _ from 'lodash';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { MatTableDataSource } from '@angular/material/table';
+import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
 @Component({
   selector: 'app-operation-sightings-table-by-operation-container',
   templateUrl:
@@ -13,19 +14,7 @@ import { MatTableDataSource } from '@angular/material/table';
 })
 export class OperationSightingsTableByOperationContainerComponent
   implements OnInit {
-  dataSource: MatTableDataSource<{
-    operationNumber: string;
-    formationNumber: string;
-    sightingTime: string;
-    updatedAt: string;
-    sightings: IOperationSighting[];
-  }> = new MatTableDataSource<{
-    operationNumber: string;
-    formationNumber: string;
-    sightingTime: string;
-    updatedAt: string;
-    sightings: IOperationSighting[];
-  }>([]);
+  data: IOperationSightingTable[];
   displayedColumn = [
     'operationNumber',
     'formationNumber',
@@ -37,14 +26,7 @@ export class OperationSightingsTableByOperationContainerComponent
 
   ngOnInit() {
     this.operationRealTimeService.getOperationTableData().subscribe(data => {
-      console.log(data);
-      this.dataSource = new MatTableDataSource<{
-        operationNumber: string;
-        formationNumber: string;
-        sightingTime: string;
-        updatedAt: string;
-        sightings: IOperationSighting[];
-      }>(data);
+      this.data = data;
     });
   }
 }

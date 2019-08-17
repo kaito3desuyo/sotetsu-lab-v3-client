@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
-import { IOperationSightingAddForm } from '../../interfaces/operation-sighting-add-form';
+import { IOperationSightingAddForm } from 'src/app/shared/operation-shared/interfaces/operation-sighting-add-form';
 
 @Component({
   selector: 'app-operation-sighting-add-form-presentational',
@@ -51,5 +51,11 @@ export class OperationSightingAddFormPresentationalComponent
 
   onClickSubmit() {
     this.submitSighting.emit(this.sightingForm.value);
+    this.sightingForm.reset({
+      agencyId: '',
+      vehicleNumber: '',
+      operationNumber: '',
+      timeSetting: 'currentTime'
+    });
   }
 }

@@ -15,10 +15,7 @@ import { IOperationSightingTable } from '../../interfaces/operation-sighting-tab
 })
 export class OperationSightingsTableByFormationContainerComponent
   implements OnInit {
-  dataSource: MatTableDataSource<
-    IOperationSightingTable
-  > = new MatTableDataSource<IOperationSightingTable>([]);
-
+  data: IOperationSightingTable[];
   displayedColumn = [
     'formationNumber',
     'operationNumber',
@@ -33,7 +30,7 @@ export class OperationSightingsTableByFormationContainerComponent
     });
     this.operationRealTimeService.getFormationTableData().subscribe(data => {
       console.log('編成テーブル', data);
-      this.dataSource = new MatTableDataSource<IOperationSightingTable>(data);
+      this.data = data;
     });
   }
 }

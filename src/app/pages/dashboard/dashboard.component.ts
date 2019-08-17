@@ -9,23 +9,23 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  date: string;
+
   constructor(
-    private dialog: MatDialog,
-    private socketService: SocketService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private socketService: SocketService
   ) {}
 
   ngOnInit() {
     this.socketService.connect('/operation/real-time');
-    this.socketService.on('sightingReload').subscribe(data => {
-      console.log(data);
-    });
-    this.route.data.subscribe(result => {
-      console.log(result);
+    this.route.data.subscribe((data: { date: string }) => {
+      this.date = data.date;
     });
   }
 
-  openDialogTest() {
-    this.socketService.emit('sendSighting', { operationNumber: 45 });
+  onReceiveSubmitSighting(result: any): void {
+    this.socketService.emit('sendSighting', result);
   }
+
+  openDialogTest() {}
 }
