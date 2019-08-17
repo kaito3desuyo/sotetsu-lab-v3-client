@@ -8,8 +8,6 @@ import { OperationSightingsTableByOperationContainerComponent } from './general/
 import { OperationSightingsTableByFormationContainerComponent } from './general/components/operation-sightings-table-by-formation-container/operation-sightings-table-by-formation-container.component';
 import { MatTableModule } from '@angular/material/table';
 import { OperationRealTimeService } from './general/services/operation-real-time.service';
-import { OperationSightingAddFormContainerComponent } from './general/components/operation-sighting-add-form-container/operation-sighting-add-form-container.component';
-import { OperationSightingAddFormPresentationalComponent } from './general/components/operation-sighting-add-form-presentational/operation-sighting-add-form-presentational.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +15,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
 import { ReactiveFormsModule } from '@angular/forms';
+import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
+import { MatSortModule } from '@angular/material/sort';
+import { OperationSightingsTableLegendContainerComponent } from './general/components/operation-sightings-table-legend-container/operation-sightings-table-legend-container.component';
+import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
 
 @NgModule({
   declarations: [
@@ -24,8 +26,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     OperationSightingsTableByOperationContainerComponent,
     OperationSightingsTableByFormationContainerComponent,
     OperationSightingsTablePresentationalComponent,
-    OperationSightingAddFormContainerComponent,
-    OperationSightingAddFormPresentationalComponent
+    OperationSightingsTableLegendContainerComponent,
+    OperationSightingsTableLegendPresentationalComponent
   ],
   imports: [
     CommonModule,
@@ -38,7 +40,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatSelectModule,
     MatButtonModule,
     MatRadioModule,
-    OperationRoutingModule
+    MatSortModule,
+    OperationRoutingModule,
+    OperationSharedModule
   ],
   providers: [OperationRealTimeService]
 })

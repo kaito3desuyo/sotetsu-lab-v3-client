@@ -21,6 +21,7 @@ const routes: Routes = [
       operationNumbers: OperationsAllNumbersResolverService,
       operationSightings: OperationsAllLatestSightingsResolverService
     },
+    runGuardsAndResolvers: 'always',
     data: {
       title: 'リアルタイム運用情報',
       date: moment()

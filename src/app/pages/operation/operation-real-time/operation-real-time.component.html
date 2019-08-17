@@ -14,7 +14,10 @@
       fxFlex="auto"
     ></app-operation-sightings-table-by-formation-container>
   </div>
+  <app-operation-sightings-table-legend-container>
+  </app-operation-sightings-table-legend-container>
   <app-operation-sighting-add-form-container
     [date]="date"
+    (submitSighting)="onReceiveSubmitSighting($event)"
   ></app-operation-sighting-add-form-container>
 </section>
