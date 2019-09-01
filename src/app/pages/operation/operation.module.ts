@@ -19,6 +19,11 @@ import { OperationSharedModule } from 'src/app/shared/operation-shared/operation
 import { MatSortModule } from '@angular/material/sort';
 import { OperationSightingsTableLegendContainerComponent } from './general/components/operation-sightings-table-legend-container/operation-sightings-table-legend-container.component';
 import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
+import {
+  OperationRealTimeTripsResolverService,
+  OperationRealTimeOperationNumbersResolverService,
+  OperationRealTimeFormationNumbersResolverService
+} from './general/services/operation-real-time-resolver.service';
 
 @NgModule({
   declarations: [
@@ -44,6 +49,11 @@ import { OperationSightingsTableLegendPresentationalComponent } from './general/
     OperationRoutingModule,
     OperationSharedModule
   ],
-  providers: [OperationRealTimeService]
+  providers: [
+    OperationRealTimeService,
+    OperationRealTimeFormationNumbersResolverService,
+    OperationRealTimeOperationNumbersResolverService,
+    OperationRealTimeTripsResolverService
+  ]
 })
 export class OperationModule {}

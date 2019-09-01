@@ -34,6 +34,24 @@ export class OperationApiService {
       );
   }
 
+  searchOperationNumbers(query: {
+    calender_id?: string;
+  }): Observable<{ operationNumber: string }[]> {
+    return this.http
+      .get(this.apiUrl + '/search/numbers', {
+        params: query
+      })
+      .pipe(
+        map((data: { operation_number: string }[]) => {
+          return data.map(result => {
+            return {
+              operationNumber: result.operation_number
+            };
+          });
+        })
+      );
+  }
+
   getOperationsAllNumbers(): Observable<{ operationNumber: string }[]> {
     return this.http.get(this.apiUrl + '/all/numbers').pipe(
       map(data => {
@@ -44,6 +62,24 @@ export class OperationApiService {
         });
       })
     );
+  }
+
+  getOperationsSearchNumbers(params: {
+    calender_id: string;
+  }): Observable<{ operationNumber: string }[]> {
+    return this.http
+      .get(this.apiUrl + '/search/numbers', {
+        params: params
+      })
+      .pipe(
+        map((data: { operation_number: string }[]) => {
+          return data.map(result => {
+            return {
+              operationNumber: result.operation_number
+            };
+          });
+        })
+      );
   }
 
   getOperationsAllLatestSightings(): Observable<IOperationSighting[]> {

@@ -1,25 +1,25 @@
 import { Routes, RouterModule } from '@angular/router';
 import { OperationRealTimeComponent } from './operation-real-time/operation-real-time.component';
 import { NgModule } from '@angular/core';
-import {
-  OperationsAllNumbersResolverService,
-  OperationsAllLatestSightingsResolverService
-} from 'src/app/general/resolvers/operation-resolver.service';
+import { OperationsAllLatestSightingsResolverService } from 'src/app/general/resolvers/operation-resolver.service';
 import moment from 'moment';
+import { FormationsAllLatestSightingsResolverService } from 'src/app/general/resolvers/formation-resolver.service';
 import {
-  FormationsAllNumbersResolverService,
-  FormationsAllLatestSightingsResolverService
-} from 'src/app/general/resolvers/formation-resolver.service';
+  OperationRealTimeTripsResolverService,
+  OperationRealTimeOperationNumbersResolverService,
+  OperationRealTimeFormationNumbersResolverService
+} from './general/services/operation-real-time-resolver.service';
 
 const routes: Routes = [
   {
     path: 'real-time',
     component: OperationRealTimeComponent,
     resolve: {
-      formationNumbers: FormationsAllNumbersResolverService,
+      formationNumbers: OperationRealTimeFormationNumbersResolverService,
       formationSightings: FormationsAllLatestSightingsResolverService,
-      operationNumbers: OperationsAllNumbersResolverService,
-      operationSightings: OperationsAllLatestSightingsResolverService
+      operationNumbers: OperationRealTimeOperationNumbersResolverService,
+      operationSightings: OperationsAllLatestSightingsResolverService,
+      trips: OperationRealTimeTripsResolverService
     },
     runGuardsAndResolvers: 'always',
     data: {

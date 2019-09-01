@@ -35,6 +35,24 @@ export class FormationApiService {
       );
   }
 
+  searchFormationNumbers(query: {
+    date?: string;
+  }): Observable<{ formationNumber: string }[]> {
+    return this.http
+      .get(this.apiUrl + '/search/numbers', {
+        params: query
+      })
+      .pipe(
+        map((data: { formation_number: string }[]) => {
+          return data.map(result => {
+            return {
+              formationNumber: result.formation_number
+            };
+          });
+        })
+      );
+  }
+
   searchFormationsByVehicleNumber(query: {
     number: string;
     agencyId?: string;

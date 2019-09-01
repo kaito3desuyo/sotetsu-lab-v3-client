@@ -4,8 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { map, flatMap, tap } from 'rxjs/operators';
 import { ICalender } from '../interfaces/calender';
-import { ReadCalenderDto } from '../models/calenders/calender-dto';
-import { CalenderModel } from '../models/calenders/calender-model';
+import { ReadCalenderDto } from '../models/calender/calender-dto';
+import { CalenderModel } from '../models/calender/calender-model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,5 +23,17 @@ export class CalenderApiService {
         });
       })
     );
+  }
+
+  searchCalenders(query: { date?: string }): Observable<ICalender[]> {
+    return this.http
+      .get(this.apiUrl + '/search', {
+        params: query
+      })
+      .pipe(
+        map((data: ReadCalenderDto[]) => {
+          return data.map(result => CalenderModel.readCalenderDtoImpl(result));
+        })
+      );
   }
 }
