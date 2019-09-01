@@ -5,7 +5,8 @@ import { CurrentParamsStore, CurrentParamsState } from './current-params.store';
 @Injectable({ providedIn: 'root' })
 export class CurrentParamsQuery extends Query<CurrentParamsState> {
   day$ = this.select('day');
-  calenderId$ = this.select('calenderId');
+  calender$ = this.select('calender');
+  value = this.getValue();
 
   constructor(protected store: CurrentParamsStore) {
     super(store);

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { BehaviorSubject, Observable, zip } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap, flatMap } from 'rxjs/operators';
 import {
   find,
   some,
@@ -13,9 +13,17 @@ import {
 } from 'lodash';
 import moment from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
+import { ITrip } from 'src/app/general/interfaces/trip';
+import { TripApiService } from 'src/app/general/api/trip-api.service';
+import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
+import { BaseService } from 'src/app/general/classes/base-service';
+import { OperationApiService } from 'src/app/general/api/operation-api.service';
+import { FormationApiService } from 'src/app/general/api/formation-api.service';
 
 @Injectable()
-export class OperationRealTimeService {
+export class OperationRealTimeService extends BaseService {
+  currentCalenderId: string;
+
   private formationNumbers: BehaviorSubject<
     { formationNumber: string }[]
   > = new BehaviorSubject<{ formationNumber: string }[]>([]);
@@ -32,14 +40,63 @@ export class OperationRealTimeService {
     IOperationSighting[]
   > = new BehaviorSubject<IOperationSighting[]>([]);
 
-  constructor() {}
+  private trips: BehaviorSubject<ITrip[]> = new BehaviorSubject<ITrip[]>([]);
 
+  private formationTableData: BehaviorSubject<
+    IOperationSightingTable[]
+  > = new BehaviorSubject<IOperationSightingTable[]>([]);
+  private operationTableData: BehaviorSubject<
+    IOperationSightingTable[]
+  > = new BehaviorSubject<IOperationSightingTable[]>([]);
+
+  constructor(
+    private tripApi: TripApiService,
+    private formationApi: FormationApiService,
+    private operationApi: OperationApiService,
+    private currentParamsQuery: CurrentParamsQuery
+  ) {
+    super();
+    this.subscription = this.currentParamsQuery.calender$.subscribe(obj => {
+      this.currentCalenderId = obj.id;
+    });
+
+    this.subscription = zip(this.formationNumbers, this.formationSightings)
+      .pipe(flatMap(() => this.fetchFormationTableData()))
+      .subscribe(data => {
+        this.setFormationTableData(data);
+      });
+
+    this.subscription = zip(this.operationNumbers, this.operationSightings)
+      .pipe(flatMap(() => this.fetchOperationTableData()))
+      .subscribe(data => {
+        this.setOperationTableData(data);
+      });
+  }
+
+  /**
+   * 編成番号
+   */
   getFormationNumbers(): Observable<{ formationNumber: string }[]> {
     return this.formationNumbers.asObservable();
   }
 
   setFormationNumbers(value: { formationNumber: string }[]): void {
     this.formationNumbers.next(value);
+  }
+
+  fetchFormationNumbers(): Observable<void> {
+    return this.formationApi
+      .searchFormationNumbers({
+        date: moment()
+          .subtract(moment().hour() < 4 ? 1 : 0, 'days')
+          .format('YYYY-MM-DD')
+      })
+      .pipe(
+        tap(numbers => {
+          this.setFormationNumbers(numbers);
+        }),
+        map(() => null)
+      );
   }
 
   getFormationSightings(): Observable<IOperationSighting[]> {
@@ -50,12 +107,28 @@ export class OperationRealTimeService {
     this.formationSightings.next(value);
   }
 
+  /**
+   * 運用番号
+   */
   getOperationNumbers(): Observable<{ operationNumber: string }[]> {
     return this.operationNumbers.asObservable();
   }
 
   setOperationNumbers(value: { operationNumber: string }[]): void {
     this.operationNumbers.next(value);
+  }
+
+  fetchOperationNumbers(): Observable<void> {
+    return this.operationApi
+      .searchOperationNumbers({
+        calender_id: this.currentCalenderId
+      })
+      .pipe(
+        tap(numbers => {
+          this.setOperationNumbers(numbers);
+        }),
+        map(() => null)
+      );
   }
 
   getOperationSightings(): Observable<IOperationSighting[]> {
@@ -66,6 +139,46 @@ export class OperationRealTimeService {
     this.operationSightings.next(value);
   }
 
+  getTrips(): Observable<ITrip[]> {
+    return this.trips.asObservable();
+  }
+
+  setTrips(array: ITrip[]): void {
+    this.trips.next(array);
+  }
+
+  fetchTrips(): Observable<void> {
+    return this.tripApi
+      .searchTrips({
+        calender_id: this.currentCalenderId
+      })
+      .pipe(
+        tap(trips => {
+          this.setTrips(trips);
+        }),
+        map(() => null)
+      );
+  }
+
+  getFormationTableData(): Observable<IOperationSightingTable[]> {
+    return this.formationTableData.asObservable();
+  }
+
+  setFormationTableData(array: IOperationSightingTable[]): void {
+    this.formationTableData.next(array);
+  }
+
+  getOperationTableData(): Observable<IOperationSightingTable[]> {
+    return this.operationTableData.asObservable();
+  }
+
+  setOperationTableData(array: IOperationSightingTable[]): void {
+    this.operationTableData.next(array);
+  }
+
+  /**
+   * 目撃情報から中間データを作成
+   */
   generateIntermidiateData(): Observable<{
     operation: {
       id: string;
@@ -134,6 +247,9 @@ export class OperationRealTimeService {
     );
   }
 
+  /**
+   * 中間データから運用テーブル用のデータを作成
+   */
   generateOperationTableData(): Observable<any> {
     return this.generateIntermidiateData().pipe(
       map(
@@ -221,6 +337,9 @@ export class OperationRealTimeService {
     );
   }
 
+  /**
+   * 中間テーブルから編成テーブル用のデータを作成
+   */
   generateFormationTableData(): Observable<IOperationSightingTable[]> {
     return this.generateIntermidiateData().pipe(
       map(
@@ -340,7 +459,10 @@ export class OperationRealTimeService {
     });
   }
 
-  getFormationTableData(): Observable<IOperationSightingTable[]> {
+  /**
+   * 編成テーブル用データを読み込み
+   */
+  fetchFormationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getFormationNumbers(),
       this.generateFormationTableData()
@@ -375,7 +497,10 @@ export class OperationRealTimeService {
     );
   }
 
-  getOperationTableData(): Observable<IOperationSightingTable[]> {
+  /**
+   * 運用テーブル用データを読み込み
+   */
+  fetchOperationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getOperationNumbers(),
       this.generateOperationTableData()

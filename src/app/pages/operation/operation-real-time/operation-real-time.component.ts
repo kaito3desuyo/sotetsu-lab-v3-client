@@ -40,20 +40,28 @@ export class OperationRealTimeComponent extends BaseComponent {
       }) => {
         console.log(data);
         this.date = data.date;
+        /*
         this.operationRealTimeService.setFormationNumbers(
           data.formationNumbers
         );
+        */
         this.operationRealTimeService.setFormationSightings(
           data.formationSightings
         );
+        /*
         this.operationRealTimeService.setOperationNumbers(
           data.operationNumbers
         );
+        */
         this.operationRealTimeService.setOperationSightings(
           data.operationSightings
         );
       }
     );
+
+    this.operationRealTimeService.getTrips().subscribe(trips => {
+      console.log('trips', trips);
+    });
   }
 
   onReceiveSubmitSighting(result: any): void {
