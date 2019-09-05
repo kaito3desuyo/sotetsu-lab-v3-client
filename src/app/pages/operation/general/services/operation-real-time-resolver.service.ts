@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { OperationRealTimeService } from './operation-real-time.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Resolve } from '@angular/router';
 import { CurrentParamsService } from 'src/app/general/models/current-params/current-params.service';
 import { flatMap } from 'rxjs/operators';
 import moment from 'moment';
 import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
+import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
 
 @Injectable()
 export class OperationRealTimeFormationNumbersResolverService
@@ -46,6 +47,16 @@ export class OperationRealTimeOperationNumbersResolverService
           return this.operationRealTimeService.fetchOperationNumbers();
         })
       );
+  }
+}
+
+@Injectable()
+export class OperationRealTimeOperationsAllTripsResolverService
+  implements Resolve<Observable<void>> {
+  constructor(private operationRealTimeService: OperationRealTimeService) {}
+
+  resolve(): Observable<void> {
+    return this.operationRealTimeService.fetchOperationTrips();
   }
 }
 

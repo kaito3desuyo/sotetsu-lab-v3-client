@@ -1,5 +1,5 @@
 <app-dashboard-operation-search-menu-presentational
   fxFlex="auto"
   [calendersSelectList]="calendersSelectList$ | async"
-  [todaysCalenderId]="todaysCalenderId$ | async"
+  [todaysCalenderId]="(todaysCalender$ | async).id"
 ></app-dashboard-operation-search-menu-presentational>

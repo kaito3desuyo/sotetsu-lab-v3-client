@@ -1,6 +1,6 @@
 <app-operation-sightings-table-presentational
   mode="formation"
-  [data]="data"
+  [data]="data$ | async"
   [displayedColumns]="displayedColumn"
 >
 </app-operation-sightings-table-presentational>
