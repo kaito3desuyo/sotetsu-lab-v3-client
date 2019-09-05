@@ -7,7 +7,8 @@ import { FormationsAllLatestSightingsResolverService } from 'src/app/general/res
 import {
   OperationRealTimeTripsResolverService,
   OperationRealTimeOperationNumbersResolverService,
-  OperationRealTimeFormationNumbersResolverService
+  OperationRealTimeFormationNumbersResolverService,
+  OperationRealTimeOperationsAllTripsResolverService
 } from './general/services/operation-real-time-resolver.service';
 
 const routes: Routes = [
@@ -19,7 +20,8 @@ const routes: Routes = [
       formationSightings: FormationsAllLatestSightingsResolverService,
       operationNumbers: OperationRealTimeOperationNumbersResolverService,
       operationSightings: OperationsAllLatestSightingsResolverService,
-      trips: OperationRealTimeTripsResolverService
+      // trips: OperationRealTimeTripsResolverService
+      operationTrips: OperationRealTimeOperationsAllTripsResolverService
     },
     runGuardsAndResolvers: 'always',
     data: {

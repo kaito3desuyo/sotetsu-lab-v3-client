@@ -36,4 +36,18 @@ export class CalenderApiService {
         })
       );
   }
+
+  searchSpecifiedDateCalenderId(query: {
+    date: string;
+  }): Observable<{ calender_id: string }> {
+    return this.searchCalenders({
+      date: query.date
+    }).pipe(
+      map(data => {
+        return {
+          calender_id: data[0].id
+        };
+      })
+    );
+  }
 }

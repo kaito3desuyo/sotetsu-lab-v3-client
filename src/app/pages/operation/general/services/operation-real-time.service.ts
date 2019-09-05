@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { BehaviorSubject, Observable, zip } from 'rxjs';
+import { BehaviorSubject, Observable, zip, interval, timer } from 'rxjs';
 import { map, tap, flatMap } from 'rxjs/operators';
 import {
   find,
@@ -19,6 +19,8 @@ import { CurrentParamsQuery } from 'src/app/general/models/current-params/curren
 import { BaseService } from 'src/app/general/classes/base-service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
+import { IOperation } from 'src/app/general/interfaces/operation';
+import { CalenderApiService } from 'src/app/general/api/calender-api.service';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -42,6 +44,10 @@ export class OperationRealTimeService extends BaseService {
 
   private trips: BehaviorSubject<ITrip[]> = new BehaviorSubject<ITrip[]>([]);
 
+  private operationTrips: BehaviorSubject<IOperation[]> = new BehaviorSubject<
+    IOperation[]
+  >([]);
+
   private formationTableData: BehaviorSubject<
     IOperationSightingTable[]
   > = new BehaviorSubject<IOperationSightingTable[]>([]);
@@ -51,6 +57,7 @@ export class OperationRealTimeService extends BaseService {
 
   constructor(
     private tripApi: TripApiService,
+    private calenderApi: CalenderApiService,
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
     private currentParamsQuery: CurrentParamsQuery
@@ -60,15 +67,22 @@ export class OperationRealTimeService extends BaseService {
       this.currentCalenderId = obj.id;
     });
 
-    this.subscription = zip(this.formationNumbers, this.formationSightings)
-      .pipe(flatMap(() => this.fetchFormationTableData()))
+    this.subscription = timer(0, 1000 * 60)
+      .pipe(
+        flatMap(() => zip(this.formationNumbers, this.formationSightings)),
+        flatMap(() => this.fetchFormationTableData())
+      )
       .subscribe(data => {
         this.setFormationTableData(data);
       });
 
-    this.subscription = zip(this.operationNumbers, this.operationSightings)
-      .pipe(flatMap(() => this.fetchOperationTableData()))
+    this.subscription = timer(0, 1000 * 60)
+      .pipe(
+        flatMap(() => zip(this.operationNumbers, this.operationSightings)),
+        flatMap(() => this.fetchOperationTableData())
+      )
       .subscribe(data => {
+        console.log('運用番号テーブル', data);
         this.setOperationTableData(data);
       });
   }
@@ -145,6 +159,42 @@ export class OperationRealTimeService extends BaseService {
 
   setTrips(array: ITrip[]): void {
     this.trips.next(array);
+  }
+
+  /**
+   * 運用別列車情報を返す
+   */
+  getOperationTrips(): Observable<IOperation[]> {
+    return this.operationTrips.asObservable();
+  }
+
+  /**
+   * 運用別列車情報をセットする
+   * @param array
+   */
+  setOperationTrips(array: IOperation[]): void {
+    this.operationTrips.next(array);
+  }
+
+  /**
+   * 運用別列車情報を取得する
+   */
+  fetchOperationTrips(): Observable<void> {
+    const today = moment()
+      .subtract(moment().hour() < 4 ? 1 : 0)
+      .format('YYYY-MM-DD');
+    return this.calenderApi.searchSpecifiedDateCalenderId({ date: today }).pipe(
+      flatMap(data => {
+        return this.operationApi.getOperationsAllTrips({
+          calender_id: data.calender_id
+        });
+      }),
+      tap(data => {
+        console.log('運用別列車情報', data);
+        this.setOperationTrips(data);
+      }),
+      map(() => null)
+    );
   }
 
   fetchTrips(): Observable<void> {
@@ -459,15 +509,181 @@ export class OperationRealTimeService extends BaseService {
     });
   }
 
+  generateOperationTripsTableData(): Observable<
+    {
+      operationNumber: string;
+      trip: {
+        tripNumber: string;
+        prevTime: string;
+        nextTime: string;
+      };
+    }[]
+  > {
+    return this.getOperationTrips().pipe(
+      map(operations => {
+        return operations.map(operation => {
+          const now = moment('00:01:00', 'HH:mm:ss');
+          let targetTrip: {
+            tripNumber: string;
+            prevTime: string;
+            nextTime: string;
+          } = {
+            tripNumber: null,
+            prevTime: null,
+            nextTime: null
+          };
+
+          // 0番目の列車の発車時刻より前の場合
+          if (
+            now <
+            moment(operation.trips[0].times[0].departureTime, 'HH:mm:ss')
+              .subtract(now.hour() < 4 ? 1 : 0, 'days')
+              .add(operation.trips[0].times[0].departureDays - 1, 'days')
+          ) {
+            targetTrip = {
+              tripNumber: null,
+              prevTime: null,
+              nextTime: operation.trips[0].times[0].departureTime
+            };
+          }
+
+          // n番目の列車の到着時刻 < 現時刻 <= n + 1番目の列車の出発時刻
+          const nArrToNowToNPlus1Dep = find(
+            operation.trips,
+            (trip, index, array) => {
+              if (!array[index + 1]) {
+                return undefined;
+              }
+              return (
+                moment(
+                  array[index].times[array[index].times.length - 1].arrivalTime,
+                  'HH:mm:ss'
+                )
+                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                  .add(
+                    array[index].times[array[index].times.length - 1]
+                      .arrivalDays - 1,
+                    'days'
+                  ) <= now &&
+                now <
+                  moment(array[index + 1].times[0].departureTime, 'HH:mm:ss')
+                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                    .add(array[index + 1].times[0].departureDays - 1, 'days')
+              );
+            }
+          );
+
+          const nMinus1ToNowToNDep = find(
+            operation.trips,
+            (trip, index, array) => {
+              if (!array[index - 1]) {
+                return undefined;
+              }
+              return (
+                moment(
+                  array[index - 1].times[array[index - 1].times.length - 1]
+                    .arrivalTime,
+                  'HH:mm:ss'
+                )
+                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                  .add(
+                    array[index - 1].times[array[index - 1].times.length - 1]
+                      .arrivalDays - 1,
+                    'days'
+                  ) <= now &&
+                now <
+                  moment(array[index].times[0].departureTime, 'HH:mm:ss')
+                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                    .add(array[index].times[0].departureDays - 1, 'days')
+              );
+            }
+          );
+
+          if (nArrToNowToNPlus1Dep && nMinus1ToNowToNDep) {
+            targetTrip = {
+              tripNumber: null,
+              prevTime:
+                nArrToNowToNPlus1Dep.times[
+                  nArrToNowToNPlus1Dep.times.length - 1
+                ].arrivalTime,
+              nextTime: nMinus1ToNowToNDep.times[0].departureTime
+            };
+          }
+
+          // 現在走行中の列車
+          const currentRunning = find(operation.trips, (trip, index, array) => {
+            return (
+              moment(trip.times[0].departureTime, 'HH:mm:ss')
+                .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                .add(trip.times[0].departureDays - 1, 'days') <= now &&
+              now <
+                moment(
+                  trip.times[trip.times.length - 1].arrivalTime,
+                  'HH:mm:ss'
+                )
+                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                  .add(
+                    trip.times[trip.times.length - 1].arrivalDays - 1,
+                    'days'
+                  )
+            );
+          });
+
+          if (currentRunning) {
+            targetTrip = {
+              tripNumber: currentRunning.tripNumber,
+              prevTime: currentRunning.times[0].departureTime,
+              nextTime:
+                currentRunning.times[currentRunning.times.length - 1]
+                  .arrivalTime
+            };
+          }
+
+          // 最後の列車の到着時刻より現時刻が大きい場合
+          if (
+            moment(
+              operation.trips[operation.trips.length - 1].times[
+                operation.trips[operation.trips.length - 1].times.length - 1
+              ].arrivalTime,
+              'HH:mm:ss'
+            )
+              .subtract(now.hour() < 4 ? 1 : 0, 'days')
+              .add(
+                operation.trips[operation.trips.length - 1].times[
+                  operation.trips[operation.trips.length - 1].times.length - 1
+                ].arrivalDays - 1,
+                'days'
+              ) <= now
+          ) {
+            targetTrip = {
+              tripNumber: null,
+              prevTime:
+                operation.trips[operation.trips.length - 1].times[
+                  operation.trips[operation.trips.length - 1].times.length - 1
+                ].arrivalTime,
+              nextTime: null
+            };
+          }
+
+          return {
+            operationNumber: operation.operationNumber,
+            trip: targetTrip
+          };
+        });
+      })
+    );
+  }
+
   /**
    * 編成テーブル用データを読み込み
    */
   fetchFormationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getFormationNumbers(),
-      this.generateFormationTableData()
+      this.generateFormationTableData(),
+      this.generateOperationTripsTableData()
     ).pipe(
-      map(([numbers, sightings]) => {
+      map(([numbers, sightings, operationTrips]) => {
         return numbers.map(data => {
           const findSightings: IOperationSightingTable = find(
             sightings,
@@ -481,7 +697,8 @@ export class OperationRealTimeService extends BaseService {
               rotatedOperationNumber: null,
               formationNumber: data.formationNumber,
               sightingTime: null,
-              updatedAt: null
+              updatedAt: null,
+              trip: null
             };
           }
 
@@ -490,7 +707,13 @@ export class OperationRealTimeService extends BaseService {
             rotatedOperationNumber: findSightings.rotatedOperationNumber,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
-            updatedAt: findSightings.updatedAt
+            updatedAt: findSightings.updatedAt,
+            trip: find(
+              operationTrips,
+              operationTrip =>
+                findSightings.rotatedOperationNumber ===
+                operationTrip.operationNumber
+            ).trip
           };
         });
       })
@@ -503,9 +726,10 @@ export class OperationRealTimeService extends BaseService {
   fetchOperationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getOperationNumbers(),
-      this.generateOperationTableData()
+      this.generateOperationTableData(),
+      this.generateOperationTripsTableData()
     ).pipe(
-      map(([numbers, sightings]) => {
+      map(([numbers, sightings, operationTrips]) => {
         return numbers.map(data => {
           const findSightings: IOperationSightingTable = find(
             sightings,
@@ -519,7 +743,12 @@ export class OperationRealTimeService extends BaseService {
               rotatedOperationNumber: data.operationNumber,
               formationNumber: null,
               sightingTime: null,
-              updatedAt: null
+              updatedAt: null,
+              trip: find(
+                operationTrips,
+                operationTrip =>
+                  data.operationNumber === operationTrip.operationNumber
+              ).trip
             };
           }
 
@@ -528,7 +757,13 @@ export class OperationRealTimeService extends BaseService {
             rotatedOperationNumber: findSightings.rotatedOperationNumber,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
-            updatedAt: findSightings.updatedAt
+            updatedAt: findSightings.updatedAt,
+            trip: find(
+              operationTrips,
+              operationTrip =>
+                findSightings.rotatedOperationNumber ===
+                operationTrip.operationNumber
+            ).trip
           };
         });
       })

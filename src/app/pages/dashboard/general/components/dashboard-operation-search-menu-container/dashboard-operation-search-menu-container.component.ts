@@ -20,7 +20,8 @@ export class DashboardOperationSearchMenuContainerComponent implements OnInit {
         this.calendersService.generateCalenderSelectList(calender)
       )
     );
-  todaysCalenderId$: Observable<string> = this.currentParamsQuery.calenderId$;
+  todaysCalender$: Observable<{ id: string }> = this.currentParamsQuery
+    .calender$;
 
   constructor(
     private calendersQuery: CalendersQuery,

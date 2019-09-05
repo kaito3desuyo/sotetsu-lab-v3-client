@@ -1,9 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { FormationApiService } from 'src/app/general/api/formation-api.service';
+import { Component } from '@angular/core';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
-import { MatTableDataSource } from '@angular/material/table';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-operation-sightings-table-by-formation-container',
@@ -13,24 +11,16 @@ import { IOperationSightingTable } from '../../interfaces/operation-sighting-tab
     './operation-sightings-table-by-formation-container.component.scss'
   ]
 })
-export class OperationSightingsTableByFormationContainerComponent
-  implements OnInit {
-  data: IOperationSightingTable[];
+export class OperationSightingsTableByFormationContainerComponent {
+  data$: Observable<IOperationSightingTable[]>;
   displayedColumn = [
     'formationNumber',
     'operationNumber',
     'sightingTime',
     'updatedAt'
   ];
-  constructor(private operationRealTimeService: OperationRealTimeService) {}
 
-  ngOnInit() {
-    this.operationRealTimeService.generateIntermidiateData().subscribe(data => {
-      console.log('中間データ', data);
-    });
-    this.operationRealTimeService.getFormationTableData().subscribe(data => {
-      console.log('編成テーブル', data);
-      this.data = data;
-    });
+  constructor(private operationRealTimeService: OperationRealTimeService) {
+    this.data$ = this.operationRealTimeService.getFormationTableData();
   }
 }

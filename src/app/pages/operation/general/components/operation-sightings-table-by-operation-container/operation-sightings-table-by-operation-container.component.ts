@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
-import _ from 'lodash';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
+import { Observable } from 'rxjs';
+
 @Component({
   selector: 'app-operation-sightings-table-by-operation-container',
   templateUrl:
@@ -12,9 +11,8 @@ import { IOperationSightingTable } from '../../interfaces/operation-sighting-tab
     './operation-sightings-table-by-operation-container.component.scss'
   ]
 })
-export class OperationSightingsTableByOperationContainerComponent
-  implements OnInit {
-  data: IOperationSightingTable[];
+export class OperationSightingsTableByOperationContainerComponent {
+  data$: Observable<IOperationSightingTable[]>;
   displayedColumn = [
     'operationNumber',
     'formationNumber',
@@ -22,11 +20,7 @@ export class OperationSightingsTableByOperationContainerComponent
     'updatedAt'
   ];
 
-  constructor(private operationRealTimeService: OperationRealTimeService) {}
-
-  ngOnInit() {
-    this.operationRealTimeService.getOperationTableData().subscribe(data => {
-      this.data = data;
-    });
+  constructor(private operationRealTimeService: OperationRealTimeService) {
+    this.data$ = this.operationRealTimeService.getOperationTableData();
   }
 }

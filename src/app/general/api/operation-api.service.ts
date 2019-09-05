@@ -64,6 +64,22 @@ export class OperationApiService {
     );
   }
 
+  getOperationsAllTrips(params: {
+    calender_id: string;
+  }): Observable<IOperation[]> {
+    return this.http
+      .get(this.apiUrl + '/all/trips', {
+        params: params
+      })
+      .pipe(
+        map((data: ReadOperationDto[]) => {
+          return data.map(result => {
+            return OperationModel.readOperationDtoImpl(result);
+          });
+        })
+      );
+  }
+
   getOperationsSearchNumbers(params: {
     calender_id: string;
   }): Observable<{ operationNumber: string }[]> {

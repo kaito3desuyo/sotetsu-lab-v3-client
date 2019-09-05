@@ -22,7 +22,8 @@ import { OperationSightingsTableLegendPresentationalComponent } from './general/
 import {
   OperationRealTimeTripsResolverService,
   OperationRealTimeOperationNumbersResolverService,
-  OperationRealTimeFormationNumbersResolverService
+  OperationRealTimeFormationNumbersResolverService,
+  OperationRealTimeOperationsAllTripsResolverService
 } from './general/services/operation-real-time-resolver.service';
 
 @NgModule({
@@ -53,7 +54,8 @@ import {
     OperationRealTimeService,
     OperationRealTimeFormationNumbersResolverService,
     OperationRealTimeOperationNumbersResolverService,
-    OperationRealTimeTripsResolverService
+    OperationRealTimeTripsResolverService,
+    OperationRealTimeOperationsAllTripsResolverService
   ]
 })
 export class OperationModule {}

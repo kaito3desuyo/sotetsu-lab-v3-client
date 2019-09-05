@@ -59,9 +59,11 @@ export class OperationRealTimeComponent extends BaseComponent {
       }
     );
 
-    this.operationRealTimeService.getTrips().subscribe(trips => {
-      console.log('trips', trips);
-    });
+    this.operationRealTimeService
+      .generateOperationTripsTableData()
+      .subscribe(trips => {
+        console.log('trips', trips);
+      });
   }
 
   onReceiveSubmitSighting(result: any): void {
