@@ -29,7 +29,7 @@ export class OperationSightingsTablePresentationalComponent
   constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(changes);
+    console.log('ちゃん時', changes);
     if (changes.data) {
       this.dataSource = new MatTableDataSource(changes.data.currentValue);
       this.dataSource.sort = this.sort;

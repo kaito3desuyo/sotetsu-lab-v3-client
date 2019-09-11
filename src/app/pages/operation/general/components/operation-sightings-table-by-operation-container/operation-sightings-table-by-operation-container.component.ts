@@ -16,6 +16,7 @@ export class OperationSightingsTableByOperationContainerComponent {
   displayedColumn = [
     'operationNumber',
     'formationNumber',
+    'trip',
     'sightingTime',
     'updatedAt'
   ];

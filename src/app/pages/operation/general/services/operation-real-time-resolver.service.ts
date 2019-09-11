@@ -61,6 +61,16 @@ export class OperationRealTimeOperationsAllTripsResolverService
 }
 
 @Injectable()
+export class OperationRealTimeStationsResolverService
+  implements Resolve<Observable<void>> {
+  constructor(private operationRealTimeService: OperationRealTimeService) {}
+
+  resolve(): Observable<void> {
+    return this.operationRealTimeService.fetchStations();
+  }
+}
+
+@Injectable()
 export class OperationRealTimeTripsResolverService
   implements Resolve<Observable<void>> {
   constructor(
