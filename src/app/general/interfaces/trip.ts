@@ -1,3 +1,5 @@
+import { ITime } from './time';
+
 export interface ITrip {
   id: string;
   serviceId: string;
@@ -13,5 +15,5 @@ export interface ITrip {
   depotOut: boolean;
   createdAt: string;
   updatedAt: string;
-  times?: any[];
+  times?: ITime[];
 }

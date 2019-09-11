@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { BehaviorSubject, Observable, zip, interval, timer } from 'rxjs';
+import { BehaviorSubject, Observable, zip, interval, timer, of } from 'rxjs';
 import { map, tap, flatMap } from 'rxjs/operators';
 import {
   find,
@@ -21,6 +21,8 @@ import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { CalenderApiService } from 'src/app/general/api/calender-api.service';
+import { IStation } from 'src/app/general/interfaces/station';
+import { StationApiService } from 'src/app/general/api/station-api.service';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -48,6 +50,10 @@ export class OperationRealTimeService extends BaseService {
     IOperation[]
   >([]);
 
+  private stations: BehaviorSubject<IStation[]> = new BehaviorSubject<
+    IStation[]
+  >([]);
+
   private formationTableData: BehaviorSubject<
     IOperationSightingTable[]
   > = new BehaviorSubject<IOperationSightingTable[]>([]);
@@ -60,6 +66,7 @@ export class OperationRealTimeService extends BaseService {
     private calenderApi: CalenderApiService,
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
+    private stationApi: StationApiService,
     private currentParamsQuery: CurrentParamsQuery
   ) {
     super();
@@ -82,7 +89,6 @@ export class OperationRealTimeService extends BaseService {
         flatMap(() => this.fetchOperationTableData())
       )
       .subscribe(data => {
-        console.log('運用番号テーブル', data);
         this.setOperationTableData(data);
       });
   }
@@ -190,7 +196,6 @@ export class OperationRealTimeService extends BaseService {
         });
       }),
       tap(data => {
-        console.log('運用別列車情報', data);
         this.setOperationTrips(data);
       }),
       map(() => null)
@@ -208,6 +213,33 @@ export class OperationRealTimeService extends BaseService {
         }),
         map(() => null)
       );
+  }
+
+  /**
+   * 駅情報を返す
+   */
+  getStations(): Observable<IStation[]> {
+    return this.stations.asObservable();
+  }
+
+  /**
+   * 駅情報をセットする
+   * @param array
+   */
+  setStations(array: IStation[]): void {
+    this.stations.next(array);
+  }
+
+  /**
+   * 駅情報を取得する
+   */
+  fetchStations(): Observable<void> {
+    return this.stationApi.getStations().pipe(
+      tap(stations => {
+        this.setStations(stations);
+      }),
+      map(() => null)
+    );
   }
 
   getFormationTableData(): Observable<IOperationSightingTable[]> {
@@ -519,18 +551,22 @@ export class OperationRealTimeService extends BaseService {
       };
     }[]
   > {
-    return this.getOperationTrips().pipe(
-      map(operations => {
+    return zip(this.getOperationTrips(), this.getStations()).pipe(
+      map(([operations, stations]) => {
         return operations.map(operation => {
-          const now = moment('00:01:00', 'HH:mm:ss');
+          const now = moment();
           let targetTrip: {
             tripNumber: string;
             prevTime: string;
+            prevStation: string;
             nextTime: string;
+            nextStation: string;
           } = {
             tripNumber: null,
             prevTime: null,
-            nextTime: null
+            prevStation: null,
+            nextTime: null,
+            nextStation: null
           };
 
           // 0番目の列車の発車時刻より前の場合
@@ -542,8 +578,13 @@ export class OperationRealTimeService extends BaseService {
           ) {
             targetTrip = {
               tripNumber: null,
-              prevTime: null,
-              nextTime: operation.trips[0].times[0].departureTime
+              prevTime: operation.trips[0].depotOut ? '〇' : null,
+              prevStation: operation.trips[0].depotOut ? '出庫前' : null,
+              nextTime: operation.trips[0].times[0].departureTime,
+              nextStation: find(
+                stations,
+                station => station.id === operation.trips[0].times[0].stationId
+              ).stationName
             };
           }
 
@@ -606,7 +647,19 @@ export class OperationRealTimeService extends BaseService {
                 nArrToNowToNPlus1Dep.times[
                   nArrToNowToNPlus1Dep.times.length - 1
                 ].arrivalTime,
-              nextTime: nMinus1ToNowToNDep.times[0].departureTime
+              prevStation: find(
+                stations,
+                station =>
+                  station.id ===
+                  nArrToNowToNPlus1Dep.times[
+                    nArrToNowToNPlus1Dep.times.length - 1
+                  ].stationId
+              ).stationName,
+              nextTime: nMinus1ToNowToNDep.times[0].departureTime,
+              nextStation:
+                nArrToNowToNPlus1Dep.depotIn && nMinus1ToNowToNDep.depotOut
+                  ? '一時入庫'
+                  : '停車中'
             };
           }
 
@@ -633,9 +686,20 @@ export class OperationRealTimeService extends BaseService {
             targetTrip = {
               tripNumber: currentRunning.tripNumber,
               prevTime: currentRunning.times[0].departureTime,
+              prevStation: find(
+                stations,
+                station => station.id === currentRunning.times[0].stationId
+              ).stationName,
               nextTime:
                 currentRunning.times[currentRunning.times.length - 1]
-                  .arrivalTime
+                  .arrivalTime,
+              nextStation: find(
+                stations,
+                station =>
+                  station.id ===
+                  currentRunning.times[currentRunning.times.length - 1]
+                    .stationId
+              ).stationName
             };
           }
 
@@ -661,7 +725,20 @@ export class OperationRealTimeService extends BaseService {
                 operation.trips[operation.trips.length - 1].times[
                   operation.trips[operation.trips.length - 1].times.length - 1
                 ].arrivalTime,
-              nextTime: null
+              prevStation: find(
+                stations,
+                station =>
+                  station.id ===
+                  operation.trips[operation.trips.length - 1].times[
+                    operation.trips[operation.trips.length - 1].times.length - 1
+                  ].stationId
+              ).stationName,
+              nextTime: operation.trips[operation.trips.length - 1].depotIn
+                ? '△'
+                : null,
+              nextStation: operation.trips[operation.trips.length - 1].depotIn
+                ? '入庫済'
+                : null
             };
           }
 
@@ -702,18 +779,20 @@ export class OperationRealTimeService extends BaseService {
             };
           }
 
+          const targetTrip = find(
+            operationTrips,
+            operationTrip =>
+              findSightings.rotatedOperationNumber ===
+              operationTrip.operationNumber
+          );
+
           return {
             postedOperationNumber: findSightings.postedOperationNumber,
             rotatedOperationNumber: findSightings.rotatedOperationNumber,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
-            trip: find(
-              operationTrips,
-              operationTrip =>
-                findSightings.rotatedOperationNumber ===
-                operationTrip.operationNumber
-            ).trip
+            trip: targetTrip ? targetTrip.trip : null
           };
         });
       })

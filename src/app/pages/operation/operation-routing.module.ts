@@ -8,7 +8,8 @@ import {
   OperationRealTimeTripsResolverService,
   OperationRealTimeOperationNumbersResolverService,
   OperationRealTimeFormationNumbersResolverService,
-  OperationRealTimeOperationsAllTripsResolverService
+  OperationRealTimeOperationsAllTripsResolverService,
+  OperationRealTimeStationsResolverService
 } from './general/services/operation-real-time-resolver.service';
 
 const routes: Routes = [
@@ -21,7 +22,8 @@ const routes: Routes = [
       operationNumbers: OperationRealTimeOperationNumbersResolverService,
       operationSightings: OperationsAllLatestSightingsResolverService,
       // trips: OperationRealTimeTripsResolverService
-      operationTrips: OperationRealTimeOperationsAllTripsResolverService
+      operationTrips: OperationRealTimeOperationsAllTripsResolverService,
+      stations: OperationRealTimeStationsResolverService
     },
     runGuardsAndResolvers: 'always',
     data: {

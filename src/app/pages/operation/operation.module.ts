@@ -23,8 +23,10 @@ import {
   OperationRealTimeTripsResolverService,
   OperationRealTimeOperationNumbersResolverService,
   OperationRealTimeFormationNumbersResolverService,
-  OperationRealTimeOperationsAllTripsResolverService
+  OperationRealTimeOperationsAllTripsResolverService,
+  OperationRealTimeStationsResolverService
 } from './general/services/operation-real-time-resolver.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -47,6 +49,7 @@ import {
     MatButtonModule,
     MatRadioModule,
     MatSortModule,
+    MatIconModule,
     OperationRoutingModule,
     OperationSharedModule
   ],
@@ -55,7 +58,8 @@ import {
     OperationRealTimeFormationNumbersResolverService,
     OperationRealTimeOperationNumbersResolverService,
     OperationRealTimeTripsResolverService,
-    OperationRealTimeOperationsAllTripsResolverService
+    OperationRealTimeOperationsAllTripsResolverService,
+    OperationRealTimeStationsResolverService
   ]
 })
 export class OperationModule {}
