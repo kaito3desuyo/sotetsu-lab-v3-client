@@ -1,3 +1,4 @@
 <app-operation-sighting-add-form-presentational
+  [agencies]="agencies$ | async"
   (submitSighting)="onReceiveSubmitSighting($event)"
 ></app-operation-sighting-add-form-presentational>

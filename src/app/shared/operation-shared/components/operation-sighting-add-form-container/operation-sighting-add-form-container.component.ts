@@ -10,9 +10,10 @@ import {
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
 import moment from 'moment';
-import { SocketService } from 'src/app/general/services/socket.service';
 import { OperationSightingAddFormService } from '../../services/operation-sighting-add-form.service';
 import { IOperationSightingAddForm } from 'src/app/shared/operation-shared/interfaces/operation-sighting-add-form';
+import { Observable } from 'rxjs';
+import { IAgency } from 'src/app/general/interfaces/agency';
 
 @Component({
   selector: 'app-operation-sighting-add-form-container',
@@ -21,17 +22,19 @@ import { IOperationSightingAddForm } from 'src/app/shared/operation-shared/inter
 })
 export class OperationSightingAddFormContainerComponent extends BaseComponent
   implements OnInit {
+  agencies$: Observable<IAgency[]>;
+
   @Input() date: string;
   @Output() submitSighting: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(
     @Inject(Injector) injector: Injector,
-    // private socketService: SocketService,
     private operationSightingAddFormService: OperationSightingAddFormService,
     private currentParamsQuery: CurrentParamsQuery
   ) {
     super(injector);
-    // this.socketService.connect('/operation/real-time');
+    this.operationSightingAddFormService.fetchAgencies().subscribe();
+    this.agencies$ = this.operationSightingAddFormService.getAgencies();
   }
 
   ngOnInit() {}
@@ -41,7 +44,7 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
   ): Promise<void> {
     try {
       const targetFormation = await this.operationSightingAddFormService.getCurrentFormationByVehicleNumber(
-        '',
+        sighting.agencyId,
         sighting.vehicleNumber,
         this.date
       );
@@ -85,7 +88,6 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
 
       this.notification.open('目撃情報を送信しました', 'OK');
       this.submitSighting.emit(addResult);
-      // this.socketService.emit('sendSighting', addResult);
     } catch (e) {
       this.notification.open(e.message, 'OK');
     }

@@ -22,6 +22,7 @@ import { DashboardTripAddFormPresentationalComponent } from './general/component
 import { DashboardResolverService } from './general/services/dashboard-resolver.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
+import { DashboardService } from './general/services/dashboard.service';
 
 @NgModule({
   declarations: [
@@ -49,6 +50,6 @@ import { OperationSharedModule } from 'src/app/shared/operation-shared/operation
     DashboardRoutingModule,
     OperationSharedModule
   ],
-  providers: [DashboardResolverService]
+  providers: [DashboardService, DashboardResolverService]
 })
 export class DashboardModule {}

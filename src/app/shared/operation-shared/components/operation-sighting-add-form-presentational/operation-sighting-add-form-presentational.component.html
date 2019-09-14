@@ -8,12 +8,15 @@
   <mat-card-content>
     <form [formGroup]="sightingForm" fxLayout="column" fxLayoutGap="16px">
       <div fxLayout="row" fxLayoutGap="24px">
-        <mat-form-field>
+        <mat-form-field fxFlex="80px">
           <mat-select placeholder="所属会社" formControlName="agencyId">
-            <mat-option>
-              hoge
+            <mat-option *ngFor="let agency of agencies" [value]="agency.id">
+              {{ agency.agencyName }}
             </mat-option>
           </mat-select>
+          <mat-error *ngIf="sightingForm.get('agencyId').hasError('required')">
+            <strong>必須項目</strong>です
+          </mat-error>
         </mat-form-field>
         <mat-form-field fxFlex="auto">
           <input
@@ -21,6 +24,14 @@
             placeholder="車両番号"
             formControlName="vehicleNumber"
           />
+          <mat-hint>
+            例：相鉄車の場合は「12101」、JR車の場合は「クハE233-7001」
+          </mat-hint>
+          <mat-error
+            *ngIf="sightingForm.get('vehicleNumber').hasError('required')"
+          >
+            <strong>必須項目</strong>です
+          </mat-error>
         </mat-form-field>
       </div>
       <mat-form-field>
@@ -32,6 +43,11 @@
         <mat-hint>
           休車の場合は'100'を入力
         </mat-hint>
+        <mat-error
+          *ngIf="sightingForm.get('operationNumber').hasError('required')"
+        >
+          <strong>必須項目</strong>です
+        </mat-error>
       </mat-form-field>
       <mat-radio-group
         class="pb-16"
@@ -52,6 +68,11 @@
         <mat-hint>
           当日分の入力は 04:00 ～ 現時刻（最大：翌03:59） の範囲で行えます
         </mat-hint>
+        <mat-error
+          *ngIf="sightingForm.get('sightingTime').hasError('required')"
+        >
+          <strong>必須項目</strong>です
+        </mat-error>
       </mat-form-field>
       <div fxLayout="row" fxLayoutAlign="end center">
         <button
@@ -64,6 +85,5 @@
         </button>
       </div>
     </form>
-    {{ sightingForm.value | json }}
   </mat-card-content>
 </mat-card>

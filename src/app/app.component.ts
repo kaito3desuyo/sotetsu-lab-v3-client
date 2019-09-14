@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
 import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
+import { ParamsService } from './state/params';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ export class AppComponent extends BaseComponent {
     private route: ActivatedRoute,
     private router: Router,
     private gaService: GoogleAnalyticsService,
-    private appUpdateService: AppUpdateService
+    private appUpdateService: AppUpdateService,
+    private paramsService: ParamsService
   ) {
     super(injector);
     this.subscription = this.route.data.subscribe((data: { title: string }) => {
@@ -30,5 +32,6 @@ export class AppComponent extends BaseComponent {
         this.gaService.sendPageView(event.urlAfterRedirects);
       }
     });
+    this.subscription = this.paramsService.fetch().subscribe();
   }
 }

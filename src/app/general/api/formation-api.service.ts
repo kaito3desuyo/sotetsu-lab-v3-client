@@ -6,8 +6,6 @@ import { map } from 'rxjs/operators';
 import { IOperationSighting } from '../interfaces/operation-sighting';
 import { ReadOperationSightingDto } from '../models/operation-sighting/operation-sighting-dto';
 import { OperationSightingModel } from '../models/operation-sighting/operation-sighting-model';
-import { IFormation } from '../interfaces/formation';
-import { FormationModel } from '../models/formation/formation-model';
 import { ReadFormationDto } from '../models/formation/formation-dto';
 
 @Injectable({
@@ -19,20 +17,16 @@ export class FormationApiService {
   constructor(private http: HttpClient) {}
 
   searchFormations(query: {
+    agency_id?: string;
+    formation_number?: string;
+    vehicle_number?: string;
     date?: string;
-    number?: string;
-  }): Observable<IFormation[]> {
+  }): Observable<{ formations: ReadFormationDto[] }> {
     return this.http
       .get(this.apiUrl + '/search', {
         params: query
       })
-      .pipe(
-        map((data: ReadFormationDto[]) => {
-          return data.map(result => {
-            return FormationModel.readFormationDtoImpl(result);
-          });
-        })
-      );
+      .pipe(map((data: { formations: ReadFormationDto[] }) => data));
   }
 
   searchFormationNumbers(query: {
@@ -55,20 +49,14 @@ export class FormationApiService {
 
   searchFormationsByVehicleNumber(query: {
     number: string;
-    agencyId?: string;
+    agency_id: string;
     date?: string;
-  }): Observable<IFormation[]> {
+  }): Observable<{ formations: ReadFormationDto[] }> {
     return this.http
-      .get(this.apiUrl + '/search/by-vehicle', {
+      .get(this.apiUrl + '/search/by/vehicle', {
         params: query
       })
-      .pipe(
-        map((data: ReadFormationDto[]) => {
-          return data.map(result => {
-            return FormationModel.readFormationDtoImpl(result);
-          });
-        })
-      );
+      .pipe(map((data: { formations: ReadFormationDto[] }) => data));
   }
 
   getFormationsAllNumbers(
