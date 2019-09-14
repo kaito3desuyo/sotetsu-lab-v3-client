@@ -8,9 +8,9 @@
   <mat-card-content fxLayout="column" fxLayoutGap="16px">
     <mat-nav-list>
       <h3 mat-subheader>目撃情報</h3>
-      <mat-list-item>
-        <p mat-line>リアルタイム運用情報</p>
-      </mat-list-item>
+      <a mat-list-item routerLink="/operation/real-time">
+        リアルタイム運用情報
+      </a>
     </mat-nav-list>
     <mat-list [formGroup]="operationTableForm">
       <h3 mat-subheader>運用表</h3>

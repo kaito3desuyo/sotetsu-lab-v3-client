@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { ActivatedRoute } from '@angular/router';
+import { ParamsQuery } from 'src/app/state/params';
 
 @Component({
   selector: 'app-dashboard',
@@ -9,23 +10,27 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
+  date: string;
+
   constructor(
-    private dialog: MatDialog,
+    private route: ActivatedRoute,
     private socketService: SocketService,
-    private route: ActivatedRoute
+    private paramsQuery: ParamsQuery
   ) {}
 
   ngOnInit() {
     this.socketService.connect('/operation/real-time');
-    this.socketService.on('sightingReload').subscribe(data => {
-      console.log(data);
+    this.route.data.subscribe((data: { date: string }) => {
+      this.date = data.date;
     });
-    this.route.data.subscribe(result => {
-      console.log(result);
+    this.paramsQuery.select('calenderId').subscribe(data => {
+      console.log(data);
     });
   }
 
-  openDialogTest() {
-    this.socketService.emit('sendSighting', { operationNumber: 45 });
+  onReceiveSubmitSighting(result: any): void {
+    this.socketService.emit('sendSighting', result);
   }
+
+  openDialogTest() {}
 }

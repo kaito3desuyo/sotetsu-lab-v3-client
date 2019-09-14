@@ -28,9 +28,11 @@
     <app-dashboard-operation-search-menu-container
       fxFlex="50%"
     ></app-dashboard-operation-search-menu-container>
-    <app-dashboard-operation-sighting-add-form-container
+    <app-operation-sighting-add-form-container
+      [date]="date"
+      (submitSighting)="onReceiveSubmitSighting($event)"
       fxFlex="50%"
-    ></app-dashboard-operation-sighting-add-form-container>
+    ></app-operation-sighting-add-form-container>
   </div>
   <div
     fxLayout.gt-sm="row"

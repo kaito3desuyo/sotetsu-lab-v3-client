@@ -1,15 +1,15 @@
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
-@import "~@angular/material/theming";
-@import "app/general/styles/margin.scss";
-@import "app/general/styles/padding.scss";
+@import '~@angular/material/theming';
+@import 'app/general/styles/margin.scss';
+@import 'app/general/styles/padding.scss';
 
 // Plus imports for other components in your app.
-@import url("https://fonts.googleapis.com/css?family=Quicksand");
-@import url("https://fonts.googleapis.com/css?family=Material+Icons");
+@import url('https://fonts.googleapis.com/css?family=Quicksand');
+@import url('https://fonts.googleapis.com/css?family=Material+Icons');
 
-$font-family: -apple-system, BlinkMacSystemFont, Roboto, "Yu Gothic UI",
-  "游ゴシック体", YuGothic, "Yu Gothic Medium", sans-serif;
+$font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
+  '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;
 $custom-typography: mat-typography-config($font-family);
 
 // Include the common styles for Angular Material. We include this here so that you only
@@ -118,6 +118,10 @@ body {
 .mat-sidenav-content {
   width: 100vw;
   height: calc(100vh - 64px) !important;
+}
+
+.mat-card {
+  border-radius: unset !important;
 }
 
 @media (max-width: 599px) {

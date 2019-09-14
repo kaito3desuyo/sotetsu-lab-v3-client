@@ -3,7 +3,6 @@ import { ID } from '@datorama/akita';
 import { CalendersStore } from './calenders.store';
 import { tap, throttleTime, flatMap } from 'rxjs/operators';
 import { CalenderApiService } from 'src/app/general/api/calender-api.service';
-import { CurrentParamsStore } from '../../current-params/current-params.store';
 import { ICalender } from 'src/app/general/interfaces/calender';
 import moment from 'moment';
 import { BehaviorSubject, of, Observable } from 'rxjs';
@@ -12,6 +11,7 @@ import { CalendersQuery } from './calenders.query';
 import { CurrentParamsQuery } from '../../current-params/current-params.query';
 import { HttpClient } from '@angular/common/http';
 import { CurrentParamsService } from '../../current-params/current-params.service';
+import { Resolve } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class CalendersService extends BaseService {
@@ -69,6 +69,7 @@ export class CalendersService extends BaseService {
   }
 
   setTodaysCalenderId() {
+    /*
     this.subscription = this.currentParamsQuery.day$
       .pipe(
         flatMap(day => {
@@ -91,6 +92,7 @@ export class CalendersService extends BaseService {
       .subscribe(result => {
         this.currentParamsService.update({ calenderId: result.id });
       });
+      */
   }
 
   generateCalenderSelectList(
@@ -105,5 +107,17 @@ export class CalendersService extends BaseService {
         value: calender.id
       };
     });
+  }
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class CalenderTodaysCalenderIdResolverService
+  implements Resolve<Observable<void>> {
+  constructor(private calenderService: CalendersService) {}
+
+  resolve() {
+    return of(null);
   }
 }

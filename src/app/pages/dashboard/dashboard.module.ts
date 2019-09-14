@@ -16,13 +16,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { DashboardOperationSearchMenuContainerComponent } from './general/components/dashboard-operation-search-menu-container/dashboard-operation-search-menu-container.component';
 import { DashboardOperationSearchMenuPresentationalComponent } from './general/components/dashboard-operation-search-menu-presentational/dashboard-operation-search-menu-presentational.component';
 import { MatListModule } from '@angular/material/list';
-import { DashboardOperationSightingAddFormContainerComponent } from './general/components/dashboard-operation-sighting-add-form-container/dashboard-operation-sighting-add-form-container.component';
-import { DashboardOperationSightingAddFormPresentationalComponent } from './general/components/dashboard-operation-sighting-add-form-presentational/dashboard-operation-sighting-add-form-presentational.component';
 import { MatInputModule } from '@angular/material/input';
 import { DashboardTripAddFormContainerComponent } from './general/components/dashboard-trip-add-form-container/dashboard-trip-add-form-container.component';
 import { DashboardTripAddFormPresentationalComponent } from './general/components/dashboard-trip-add-form-presentational/dashboard-trip-add-form-presentational.component';
 import { DashboardResolverService } from './general/services/dashboard-resolver.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
+import { DashboardService } from './general/services/dashboard.service';
 
 @NgModule({
   declarations: [
@@ -31,8 +31,6 @@ import { ReactiveFormsModule } from '@angular/forms';
     DashboardTimetableSearchFormPresentationalComponent,
     DashboardOperationSearchMenuContainerComponent,
     DashboardOperationSearchMenuPresentationalComponent,
-    DashboardOperationSightingAddFormContainerComponent,
-    DashboardOperationSightingAddFormPresentationalComponent,
     DashboardTripAddFormContainerComponent,
     DashboardTripAddFormPresentationalComponent
   ],
@@ -49,8 +47,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     MatButtonModule,
     MatListModule,
     MatInputModule,
-    DashboardRoutingModule
+    DashboardRoutingModule,
+    OperationSharedModule
   ],
-  providers: [DashboardResolverService]
+  providers: [DashboardService, DashboardResolverService]
 })
 export class DashboardModule {}

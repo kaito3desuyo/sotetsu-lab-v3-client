@@ -9,6 +9,7 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { GeneralModule } from './general/general.module';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
+import { AppSharedModule } from './shared/app-shared/app-shared.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -17,6 +18,7 @@ import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
     AppRoutingModule,
     BrowserAnimationsModule,
     LayoutModule,
+    AppSharedModule,
     GeneralModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production
