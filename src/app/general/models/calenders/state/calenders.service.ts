@@ -12,6 +12,7 @@ import { CurrentParamsQuery } from '../../current-params/current-params.query';
 import { HttpClient } from '@angular/common/http';
 import { CurrentParamsService } from '../../current-params/current-params.service';
 import { Resolve } from '@angular/router';
+import { CalenderModel } from '../../calender/calender-model';
 
 @Injectable({ providedIn: 'root' })
 export class CalendersService extends BaseService {
@@ -31,7 +32,10 @@ export class CalendersService extends BaseService {
         .getCalenders()
         .pipe(
           tap(entities => {
-            this.calendersStore.set(entities);
+            const calenders = entities.calenders.map(data =>
+              CalenderModel.readCalenderDtoImpl(data)
+            );
+            this.calendersStore.set(calenders);
             this.setTodaysCalenderId();
           })
         )
