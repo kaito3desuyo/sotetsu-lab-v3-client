@@ -41,7 +41,7 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
   ): Promise<void> {
     try {
       const targetFormation = await this.operationSightingAddFormService.getCurrentFormationByVehicleNumber(
-        null,
+        '',
         sighting.vehicleNumber,
         this.date
       );

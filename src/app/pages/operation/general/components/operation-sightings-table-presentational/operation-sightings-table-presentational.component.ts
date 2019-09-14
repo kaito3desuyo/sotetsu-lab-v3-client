@@ -10,6 +10,7 @@ import {
 import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
 import { MatSort } from '@angular/material/sort';
+import moment from 'moment';
 
 @Component({
   selector: 'app-operation-sightings-table-presentational',
@@ -57,5 +58,17 @@ export class OperationSightingsTablePresentationalComponent
       default:
         return 'transparent';
     }
+  }
+
+  calcDiffSightingTimeToCurrentTime(dateString: string): number {
+    const date = moment(dateString).subtract(
+      moment(dateString).hour() < 4 ? 1 : 0,
+      'days'
+    );
+    const now = moment('2019-09-15 09:00:00').subtract(
+      moment('2019-09-15 09:00:00').hour() < 4 ? 1 : 0,
+      'days'
+    );
+    return now.date() - date.date();
   }
 }

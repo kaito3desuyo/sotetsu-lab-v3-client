@@ -6,6 +6,9 @@ import { environment } from 'src/environments/environment';
 import { map } from 'rxjs/operators';
 import { ReadTripDto } from '../models/trip/trip-dto';
 import { TripModel } from '../models/trip/trip-model';
+import { ITripClass } from '../interfaces/trip-class';
+import { ReadTripClassDto } from '../models/trip-class/trip-class-dto';
+import { TripClassModel } from '../models/trip-class/trip-class-model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +17,20 @@ export class TripApiService {
   private apiUrl = environment.apiUrl + '/v1/trips';
 
   constructor(private http: HttpClient) {}
+
+  getTripClasses(query: { service_id?: string }): Observable<ITripClass[]> {
+    return this.http
+      .get(this.apiUrl + '/classes', {
+        params: query
+      })
+      .pipe(
+        map((data: ReadTripClassDto[]) => {
+          return data.map(result =>
+            TripClassModel.readTripClassDtoImpl(result)
+          );
+        })
+      );
+  }
 
   searchTrips(query: {
     calender_id?: string;

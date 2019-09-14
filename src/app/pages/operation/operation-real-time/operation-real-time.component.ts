@@ -30,34 +30,10 @@ export class OperationRealTimeComponent extends BaseComponent {
         }
         this.router.navigate([this.router.url]);
       });
-    this.subscription = this.route.data.subscribe(
-      (data: {
-        date: string;
-        formationNumbers: { formationNumber: string }[];
-        formationSightings: IOperationSighting[];
-        operationNumbers: { operationNumber: string }[];
-        operationSightings: IOperationSighting[];
-      }) => {
-        console.log(data);
-        this.date = data.date;
-        /*
-        this.operationRealTimeService.setFormationNumbers(
-          data.formationNumbers
-        );
-        */
-        this.operationRealTimeService.setFormationSightings(
-          data.formationSightings
-        );
-        /*
-        this.operationRealTimeService.setOperationNumbers(
-          data.operationNumbers
-        );
-        */
-        this.operationRealTimeService.setOperationSightings(
-          data.operationSightings
-        );
-      }
-    );
+    this.subscription = this.route.data.subscribe((data: { date: string }) => {
+      console.log(data);
+      this.date = data.date;
+    });
 
     this.operationRealTimeService
       .generateOperationTripsTableData()

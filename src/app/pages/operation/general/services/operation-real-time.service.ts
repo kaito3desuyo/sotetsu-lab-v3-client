@@ -13,7 +13,6 @@ import {
 } from 'lodash';
 import moment from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
-import { ITrip } from 'src/app/general/interfaces/trip';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
 import { BaseService } from 'src/app/general/classes/base-service';
@@ -23,10 +22,22 @@ import { IOperation } from 'src/app/general/interfaces/operation';
 import { CalenderApiService } from 'src/app/general/api/calender-api.service';
 import { IStation } from 'src/app/general/interfaces/station';
 import { StationApiService } from 'src/app/general/api/station-api.service';
+import { ITripClass } from 'src/app/general/interfaces/trip-class';
+import { IService } from 'src/app/general/interfaces/service';
+import { ServiceApiService } from 'src/app/general/api/service-api.service';
+import { ICalender } from 'src/app/general/interfaces/calender';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
   currentCalenderId: string;
+
+  private services: BehaviorSubject<IService[]> = new BehaviorSubject<
+    IService[]
+  >(null);
+
+  private calenders: BehaviorSubject<ICalender[]> = new BehaviorSubject<
+    ICalender[]
+  >([]);
 
   private formationNumbers: BehaviorSubject<
     { formationNumber: string }[]
@@ -44,7 +55,9 @@ export class OperationRealTimeService extends BaseService {
     IOperationSighting[]
   > = new BehaviorSubject<IOperationSighting[]>([]);
 
-  private trips: BehaviorSubject<ITrip[]> = new BehaviorSubject<ITrip[]>([]);
+  private tripClasses: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
+    ITripClass[]
+  >([]);
 
   private operationTrips: BehaviorSubject<IOperation[]> = new BehaviorSubject<
     IOperation[]
@@ -62,8 +75,9 @@ export class OperationRealTimeService extends BaseService {
   > = new BehaviorSubject<IOperationSightingTable[]>([]);
 
   constructor(
-    private tripApi: TripApiService,
+    private serviceApi: ServiceApiService,
     private calenderApi: CalenderApiService,
+    private tripApi: TripApiService,
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
     private stationApi: StationApiService,
@@ -94,6 +108,64 @@ export class OperationRealTimeService extends BaseService {
   }
 
   /**
+   * サービス
+   */
+  getServices(): Observable<IService[]> {
+    return this.services.asObservable();
+  }
+
+  getServicesAsStatic(): IService[] {
+    return this.services.getValue();
+  }
+
+  setServices(data: IService[]): void {
+    this.services.next(data);
+  }
+
+  fetchServices(): Observable<void> {
+    return this.serviceApi
+      .searchServices({
+        service_name: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+      })
+      .pipe(
+        tap(service => {
+          this.setServices(service);
+        }),
+        map(() => null)
+      );
+  }
+
+  /**
+   * カレンダー
+   */
+  getCalenders(): Observable<ICalender[]> {
+    return this.calenders.asObservable();
+  }
+
+  getCalendersAsStatic(): ICalender[] {
+    return this.calenders.getValue();
+  }
+
+  setCalenders(data: ICalender[]): void {
+    this.calenders.next(data);
+  }
+
+  fetchCalenders(): Observable<void> {
+    return this.calenderApi
+      .searchCalenders({
+        date: moment()
+          .subtract(moment().hour() < 4 ? 1 : 0, 'days')
+          .format('YYYY-MM-DD')
+      })
+      .pipe(
+        tap(data => {
+          this.setCalenders(data);
+        }),
+        map(() => null)
+      );
+  }
+
+  /**
    * 編成番号
    */
   getFormationNumbers(): Observable<{ formationNumber: string }[]> {
@@ -119,12 +191,24 @@ export class OperationRealTimeService extends BaseService {
       );
   }
 
+  /**
+   * 編成別目撃情報
+   */
   getFormationSightings(): Observable<IOperationSighting[]> {
     return this.formationSightings.asObservable();
   }
 
   setFormationSightings(value: IOperationSighting[]): void {
     this.formationSightings.next(value);
+  }
+
+  fetchFormationSightings(): Observable<void> {
+    return this.formationApi.getFormationsAllLatestSightings().pipe(
+      tap(data => {
+        this.setFormationSightings(data);
+      }),
+      map(() => null)
+    );
   }
 
   /**
@@ -138,10 +222,10 @@ export class OperationRealTimeService extends BaseService {
     this.operationNumbers.next(value);
   }
 
-  fetchOperationNumbers(): Observable<void> {
+  fetchOperationNumbers(calenderId: string): Observable<void> {
     return this.operationApi
       .searchOperationNumbers({
-        calender_id: this.currentCalenderId
+        calender_id: calenderId
       })
       .pipe(
         tap(numbers => {
@@ -151,6 +235,9 @@ export class OperationRealTimeService extends BaseService {
       );
   }
 
+  /**
+   * 運用別目撃情報
+   */
   getOperationSightings(): Observable<IOperationSighting[]> {
     return this.operationSightings.asObservable();
   }
@@ -159,12 +246,13 @@ export class OperationRealTimeService extends BaseService {
     this.operationSightings.next(value);
   }
 
-  getTrips(): Observable<ITrip[]> {
-    return this.trips.asObservable();
-  }
-
-  setTrips(array: ITrip[]): void {
-    this.trips.next(array);
+  fetchOperationSightings(): Observable<void> {
+    return this.operationApi.getOperationsAllLatestSightings().pipe(
+      tap(data => {
+        this.setOperationSightings(data);
+      }),
+      map(() => null)
+    );
   }
 
   /**
@@ -185,31 +273,38 @@ export class OperationRealTimeService extends BaseService {
   /**
    * 運用別列車情報を取得する
    */
-  fetchOperationTrips(): Observable<void> {
-    const today = moment()
-      .subtract(moment().hour() < 4 ? 1 : 0)
-      .format('YYYY-MM-DD');
-    return this.calenderApi.searchSpecifiedDateCalenderId({ date: today }).pipe(
-      flatMap(data => {
-        return this.operationApi.getOperationsAllTrips({
-          calender_id: data.calender_id
-        });
-      }),
-      tap(data => {
-        this.setOperationTrips(data);
-      }),
-      map(() => null)
-    );
-  }
-
-  fetchTrips(): Observable<void> {
-    return this.tripApi
-      .searchTrips({
-        calender_id: this.currentCalenderId
+  fetchOperationTrips(calenderId: string): Observable<void> {
+    return this.operationApi
+      .getOperationsAllTrips({
+        calender_id: calenderId
       })
       .pipe(
-        tap(trips => {
-          this.setTrips(trips);
+        tap(data => {
+          this.setOperationTrips(data);
+        }),
+        map(() => null)
+      );
+  }
+
+  /**
+   * 列車種別
+   */
+  getTripClasses(): Observable<ITripClass[]> {
+    return this.tripClasses.asObservable();
+  }
+
+  setTripClasses(array: ITripClass[]): void {
+    return this.tripClasses.next(array);
+  }
+
+  fetchTripClasses(serviceId: string): Observable<void> {
+    return this.tripApi
+      .getTripClasses({
+        service_id: serviceId
+      })
+      .pipe(
+        tap(data => {
+          this.setTripClasses(data);
         }),
         map(() => null)
       );
@@ -551,18 +646,26 @@ export class OperationRealTimeService extends BaseService {
       };
     }[]
   > {
-    return zip(this.getOperationTrips(), this.getStations()).pipe(
-      map(([operations, stations]) => {
+    return zip(
+      this.getOperationTrips(),
+      this.getStations(),
+      this.getTripClasses()
+    ).pipe(
+      map(([operations, stations, tripClasses]) => {
         return operations.map(operation => {
           const now = moment();
           let targetTrip: {
             tripNumber: string;
+            tripClassName: string;
+            tripClassColor: string;
             prevTime: string;
             prevStation: string;
             nextTime: string;
             nextStation: string;
           } = {
             tripNumber: null,
+            tripClassName: null,
+            tripClassColor: null,
             prevTime: null,
             prevStation: null,
             nextTime: null,
@@ -578,6 +681,8 @@ export class OperationRealTimeService extends BaseService {
           ) {
             targetTrip = {
               tripNumber: null,
+              tripClassName: null,
+              tripClassColor: null,
               prevTime: operation.trips[0].depotOut ? '〇' : null,
               prevStation: operation.trips[0].depotOut ? '出庫前' : null,
               nextTime: operation.trips[0].times[0].departureTime,
@@ -643,6 +748,8 @@ export class OperationRealTimeService extends BaseService {
           if (nArrToNowToNPlus1Dep && nMinus1ToNowToNDep) {
             targetTrip = {
               tripNumber: null,
+              tripClassName: null,
+              tripClassColor: null,
               prevTime:
                 nArrToNowToNPlus1Dep.times[
                   nArrToNowToNPlus1Dep.times.length - 1
@@ -685,6 +792,14 @@ export class OperationRealTimeService extends BaseService {
           if (currentRunning) {
             targetTrip = {
               tripNumber: currentRunning.tripNumber,
+              tripClassName: find(
+                tripClasses,
+                tripClass => tripClass.id === currentRunning.tripClassId
+              ).tripClassName,
+              tripClassColor: find(
+                tripClasses,
+                tripClass => tripClass.id === currentRunning.tripClassId
+              ).tripClassColor,
               prevTime: currentRunning.times[0].departureTime,
               prevStation: find(
                 stations,
@@ -721,6 +836,8 @@ export class OperationRealTimeService extends BaseService {
           ) {
             targetTrip = {
               tripNumber: null,
+              tripClassName: null,
+              tripClassColor: null,
               prevTime:
                 operation.trips[operation.trips.length - 1].times[
                   operation.trips[operation.trips.length - 1].times.length - 1
