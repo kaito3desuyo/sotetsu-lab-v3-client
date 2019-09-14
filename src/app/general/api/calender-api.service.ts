@@ -15,26 +15,20 @@ export class CalenderApiService {
 
   constructor(private http: HttpClient) {}
 
-  getCalenders(): Observable<ICalender[]> {
-    return this.http.get(this.apiUrl).pipe(
-      map(data => {
-        return (data as ReadCalenderDto[]).map(result => {
-          return CalenderModel.readCalenderDtoImpl(result);
-        });
-      })
-    );
+  getCalenders(): Observable<{ calenders: ReadCalenderDto[] }> {
+    return this.http
+      .get(this.apiUrl)
+      .pipe(map((data: { calenders: ReadCalenderDto[] }) => data));
   }
 
-  searchCalenders(query: { date?: string }): Observable<ICalender[]> {
+  searchCalenders(query: {
+    date?: string;
+  }): Observable<{ calenders: ReadCalenderDto[] }> {
     return this.http
       .get(this.apiUrl + '/search', {
         params: query
       })
-      .pipe(
-        map((data: ReadCalenderDto[]) => {
-          return data.map(result => CalenderModel.readCalenderDtoImpl(result));
-        })
-      );
+      .pipe(map((data: { calenders: ReadCalenderDto[] }) => data));
   }
 
   searchSpecifiedDateCalenderId(query: {

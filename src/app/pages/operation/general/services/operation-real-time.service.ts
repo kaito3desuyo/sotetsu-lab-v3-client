@@ -26,6 +26,8 @@ import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { IService } from 'src/app/general/interfaces/service';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
 import { ICalender } from 'src/app/general/interfaces/calender';
+import { OperationModel } from 'src/app/general/models/operation/operation-model';
+import { CalenderModel } from 'src/app/general/models/calender/calender-model';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -159,7 +161,10 @@ export class OperationRealTimeService extends BaseService {
       })
       .pipe(
         tap(data => {
-          this.setCalenders(data);
+          const calenders = data.calenders.map(result =>
+            CalenderModel.readCalenderDtoImpl(result)
+          );
+          this.setCalenders(calenders);
         }),
         map(() => null)
       );
@@ -275,10 +280,15 @@ export class OperationRealTimeService extends BaseService {
    */
   fetchOperationTrips(calenderId: string): Observable<void> {
     return this.operationApi
-      .getOperationsAllTrips({
+      .getOperationsTrips({
         calender_id: calenderId
       })
       .pipe(
+        map(data => {
+          return data.operations.map(result =>
+            OperationModel.readOperationDtoImpl(result)
+          );
+        }),
         tap(data => {
           this.setOperationTrips(data);
         }),

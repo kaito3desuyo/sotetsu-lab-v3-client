@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CalendersQuery } from 'src/app/general/models/calenders/state/calenders.query';
 import { RoutesAllStationsQuery } from 'src/app/general/models/routes/state/routes-all-stations.query';
 import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
-import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
+import { DashboardService } from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-dashboard-timetable-search-form-container',
@@ -12,15 +11,8 @@ import { CalendersService } from 'src/app/general/models/calenders/state/calende
   styleUrls: ['./dashboard-timetable-search-form-container.component.scss']
 })
 export class DashboardTimetableSearchFormContainerComponent {
-  calendersSelectList$: Observable<
-    { label: string; value: string }[]
-  > = this.calendersQuery
-    .selectAll()
-    .pipe(
-      map(calender =>
-        this.calendersService.generateCalenderSelectList(calender)
-      )
-    );
+  calendersSelectList$: Observable<{ label: string; value: string }[]>;
+
   stationsSelectList$: Observable<
     { routeName: string; stations: { label: string; value: string }[] }[]
   > = this.routesAllStationsQuery.selectAll().pipe(
@@ -29,11 +21,12 @@ export class DashboardTimetableSearchFormContainerComponent {
     })
   );
   constructor(
-    private calendersQuery: CalendersQuery,
-    private calendersService: CalendersService,
+    private dashboardService: DashboardService,
+
     private routesAllStationsQuery: RoutesAllStationsQuery,
     private routesAllStationsService: RoutesAllStationsService
   ) {
+    this.calendersSelectList$ = this.dashboardService.getCalenderSelectList();
     this.stationsSelectList$.subscribe(data => {
       console.log(data);
     });

@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { CalendersQuery } from 'src/app/general/models/calenders/state/calenders.query';
-import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
-import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
+
+import { DashboardService } from '../../services/dashboard.service';
+import { ParamsQuery } from 'src/app/state/params';
 
 @Component({
   selector: 'app-dashboard-operation-search-menu-container',
@@ -11,23 +10,16 @@ import { CurrentParamsQuery } from 'src/app/general/models/current-params/curren
   styleUrls: ['./dashboard-operation-search-menu-container.component.scss']
 })
 export class DashboardOperationSearchMenuContainerComponent implements OnInit {
-  calendersSelectList$: Observable<
-    { label: string; value: string }[]
-  > = this.calendersQuery
-    .selectAll()
-    .pipe(
-      map(calender =>
-        this.calendersService.generateCalenderSelectList(calender)
-      )
-    );
-  todaysCalender$: Observable<{ id: string }> = this.currentParamsQuery
-    .calender$;
+  calendersSelectList$: Observable<{ label: string; value: string }[]>;
 
+  todaysCalenderId$: Observable<string>;
   constructor(
-    private calendersQuery: CalendersQuery,
-    private calendersService: CalendersService,
-    private currentParamsQuery: CurrentParamsQuery
-  ) {}
+    private dashboardService: DashboardService,
+    private paramsQuery: ParamsQuery
+  ) {
+    this.todaysCalenderId$ = this.paramsQuery.select('calenderId');
+    this.calendersSelectList$ = this.dashboardService.getCalenderSelectList();
+  }
 
   ngOnInit() {}
 }

@@ -20,18 +20,12 @@ export class OperationApiService {
   searchOperations(query: {
     calender_id?: string;
     operation_number?: string;
-  }): Observable<IOperation[]> {
+  }): Observable<{ operations: ReadOperationDto[] }> {
     return this.http
       .get(this.apiUrl + '/search', {
         params: query
       })
-      .pipe(
-        map((data: ReadOperationDto[]) => {
-          return data.map(result =>
-            OperationModel.readOperationDtoImpl(result)
-          );
-        })
-      );
+      .pipe(map((data: { operations: ReadOperationDto[] }) => data));
   }
 
   searchOperationNumbers(query: {
@@ -64,20 +58,14 @@ export class OperationApiService {
     );
   }
 
-  getOperationsAllTrips(params: {
+  getOperationsTrips(params: {
     calender_id: string;
-  }): Observable<IOperation[]> {
+  }): Observable<{ operations: ReadOperationDto[] }> {
     return this.http
-      .get(this.apiUrl + '/all/trips', {
+      .get(this.apiUrl + '/trips', {
         params: params
       })
-      .pipe(
-        map((data: ReadOperationDto[]) => {
-          return data.map(result => {
-            return OperationModel.readOperationDtoImpl(result);
-          });
-        })
-      );
+      .pipe(map((data: { operations: ReadOperationDto[] }) => data));
   }
 
   getOperationsSearchNumbers(params: {

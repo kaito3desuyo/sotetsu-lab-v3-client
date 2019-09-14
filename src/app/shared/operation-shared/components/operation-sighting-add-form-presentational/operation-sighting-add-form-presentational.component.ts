@@ -5,11 +5,13 @@ import {
   Output,
   EventEmitter,
   Inject,
-  Injector
+  Injector,
+  Input
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { IOperationSightingAddForm } from 'src/app/shared/operation-shared/interfaces/operation-sighting-add-form';
+import { IAgency } from 'src/app/general/interfaces/agency';
 
 @Component({
   selector: 'app-operation-sighting-add-form-presentational',
@@ -21,13 +23,14 @@ export class OperationSightingAddFormPresentationalComponent
   extends BaseComponent
   implements OnInit {
   sightingForm = this.fb.group({
-    agencyId: [''],
+    agencyId: ['', Validators.required],
     vehicleNumber: ['', Validators.required],
     operationNumber: ['', Validators.required],
-    timeSetting: ['currentTime'],
+    timeSetting: ['currentTime', Validators.required],
     sightingTime: [{ value: '', disabled: true }, Validators.required]
   });
 
+  @Input() agencies: IAgency[];
   @Output() submitSighting: EventEmitter<
     IOperationSightingAddForm
   > = new EventEmitter<IOperationSightingAddForm>();

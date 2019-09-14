@@ -24,6 +24,7 @@ export class CurrentParamsService {
     );
   }
 
+  /*
   fetchSpecifiedDateCalenderId(date: string): Observable<string> {
     return this.calenderApi
       .searchCalenders({
@@ -43,6 +44,7 @@ export class CurrentParamsService {
         map(data => data[0].id)
       );
   }
+  */
 
   fetchIsTheSpecifiedDayWeekdayOrHoliday(
     date: moment.Moment

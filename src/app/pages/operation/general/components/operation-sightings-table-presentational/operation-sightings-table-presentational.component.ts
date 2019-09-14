@@ -65,10 +65,7 @@ export class OperationSightingsTablePresentationalComponent
       moment(dateString).hour() < 4 ? 1 : 0,
       'days'
     );
-    const now = moment('2019-09-15 09:00:00').subtract(
-      moment('2019-09-15 09:00:00').hour() < 4 ? 1 : 0,
-      'days'
-    );
+    const now = moment().subtract(moment().hour() < 4 ? 1 : 0, 'days');
     return now.date() - date.date();
   }
 }

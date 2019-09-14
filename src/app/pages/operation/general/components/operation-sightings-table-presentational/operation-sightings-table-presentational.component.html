@@ -18,7 +18,22 @@
         >
           <ng-container *ngIf="element.rotatedOperationNumber === null">
             <div fxLayout="row" fxLayoutAlign="center center">
-              <span class="unknown">不明</span>
+              <span
+                class="unknown"
+                [ngStyle]="{
+                  'font-weight':
+                    calcDiffSightingTimeToCurrentTime(element.sightingTime) ===
+                    0
+                      ? '700'
+                      : '400',
+                  'text-decoration':
+                    calcDiffSightingTimeToCurrentTime(element.sightingTime) ===
+                    1
+                      ? 'underline'
+                      : 'none'
+                }"
+                >不明</span
+              >
             </div>
           </ng-container>
           <ng-container *ngIf="element.rotatedOperationNumber !== null">
@@ -89,7 +104,20 @@
       </th>
       <td mat-cell *matCellDef="let element">
         <ng-container *ngIf="element.formationNumber === null">
-          <span class="unknown">不明</span>
+          <span
+            class="unknown"
+            [ngStyle]="{
+              'font-weight':
+                calcDiffSightingTimeToCurrentTime(element.sightingTime) === 0
+                  ? '700'
+                  : '400',
+              'text-decoration':
+                calcDiffSightingTimeToCurrentTime(element.sightingTime) === 1
+                  ? 'underline'
+                  : 'none'
+            }"
+            >不明</span
+          >
         </ng-container>
         <ng-container *ngIf="element.formationNumber !== null">
           <span
