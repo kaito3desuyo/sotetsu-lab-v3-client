@@ -8,11 +8,18 @@ const routes: Routes = [
       import('./pages/dashboard/dashboard.module').then(
         mod => mod.DashboardModule
       )
+  },
+  {
+    path: 'operation',
+    loadChildren: () =>
+      import('./pages/operation/operation.module').then(
+        mod => mod.OperationModule
+      )
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload' })],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}

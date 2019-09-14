@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { DashboardComponent } from './dashboard.component';
-import { GetCalendersResolverService } from 'src/app/general/resolvers/calender-resolver.service';
 import { DashboardResolverService } from './general/services/dashboard-resolver.service';
+import moment from 'moment';
 
 const routes: Routes = [
   {
@@ -12,7 +12,10 @@ const routes: Routes = [
       dashboard: DashboardResolverService
     },
     data: {
-      title: ''
+      title: '',
+      date: moment()
+        .subtract(moment().hour() < 4 ? 1 : 0)
+        .format('YYYY-MM-DD')
     }
   }
 ];

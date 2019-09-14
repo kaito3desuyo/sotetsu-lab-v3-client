@@ -1,23 +1,13 @@
-import { Observable, of } from 'rxjs';
-import { combineAll, map, tap } from 'rxjs/operators';
+import { Observable, forkJoin } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { CalendersService } from 'src/app/general/models/calenders/state/calenders.service';
-import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
+
+import { DashboardService } from './dashboard.service';
 
 @Injectable()
 export class DashboardResolverService {
-  constructor(
-    private calendersService: CalendersService,
-    private routesAllStationsService: RoutesAllStationsService
-  ) {}
+  constructor(private dashboardService: DashboardService) {}
 
   resolve(): Observable<any> {
-    return of(
-      this.calendersService.get(),
-      this.routesAllStationsService.get()
-    ).pipe(
-      combineAll(),
-      map(([calenders, routes]) => ({ calenders, routes }))
-    );
+    return forkJoin([this.dashboardService.fetchCalenders()]);
   }
 }
