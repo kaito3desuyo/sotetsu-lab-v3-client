@@ -1,4 +1,4 @@
-import { ReadRouteToStationDto } from '../route-to-station/route-to-station-dto';
+import { ReadRouteStationListDto } from '../route-station-list/route-station-list-dto';
 
 /* tslint:disable: variable-name */
 export class ReadRouteDto {
@@ -14,5 +14,5 @@ export class ReadRouteDto {
   route_text_color: string;
   created_at: string;
   updated_at: string;
-  route_to_stations?: ReadRouteToStationDto[];
+  route_station_lists?: ReadRouteStationListDto[];
 }

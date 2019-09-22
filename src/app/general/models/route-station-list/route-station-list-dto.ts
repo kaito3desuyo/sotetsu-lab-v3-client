@@ -1,7 +1,7 @@
 import { ReadRouteDto } from '../routes/route-dto';
 import { ReadStationDto } from '../station/station-dto';
 /* tslint:disable: variable-name */
-export class ReadRouteToStationDto {
+export class ReadRouteStationListDto {
   id: string;
   route_id: string;
   station_id: string;
