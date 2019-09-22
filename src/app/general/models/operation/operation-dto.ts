@@ -1,4 +1,4 @@
-import { ReadTripDto } from '../trip/trip-dto';
+import { ReadTripOperationListDto } from '../trip-operation-list/trip-operation-list-dto';
 
 /* tslint:disable: variable-name */
 export class ReadOperationDto {
@@ -7,5 +7,5 @@ export class ReadOperationDto {
   operation_number: string;
   created_at: string;
   updated_at: string;
-  trips?: ReadTripDto[];
+  trip_operation_lists?: ReadTripOperationListDto[];
 }

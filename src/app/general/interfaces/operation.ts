@@ -1,4 +1,4 @@
-import { ITrip } from './trip';
+import { ITripOperationList } from './trip-operation-list';
 
 export interface IOperation {
   id: string;
@@ -6,5 +6,5 @@ export interface IOperation {
   operationNumber: string;
   createdAt: string;
   updatedAt: string;
-  trips?: ITrip[];
+  tripOperationLists?: ITripOperationList[];
 }

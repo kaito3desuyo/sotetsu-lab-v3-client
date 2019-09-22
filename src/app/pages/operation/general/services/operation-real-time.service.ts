@@ -697,72 +697,94 @@ export class OperationRealTimeService extends BaseService {
           // 0番目の列車の発車時刻より前の場合
           if (
             now <
-            moment(operation.trips[0].times[0].departureTime, 'HH:mm:ss')
+            moment(
+              operation.tripOperationLists[0].trip.times[0].departureTime,
+              'HH:mm:ss'
+            )
               .subtract(now.hour() < 4 ? 1 : 0, 'days')
-              .add(operation.trips[0].times[0].departureDays - 1, 'days')
+              .add(
+                operation.tripOperationLists[0].trip.times[0].departureDays - 1,
+                'days'
+              )
           ) {
             targetTrip = {
               tripNumber: null,
               tripClassName: null,
               tripClassColor: null,
-              prevTime: operation.trips[0].depotOut ? '〇' : null,
-              prevStation: operation.trips[0].depotOut ? '出庫前' : null,
-              nextTime: operation.trips[0].times[0].departureTime,
+              prevTime: operation.tripOperationLists[0].trip.depotOut
+                ? '〇'
+                : null,
+              prevStation: operation.tripOperationLists[0].trip.depotOut
+                ? '出庫前'
+                : null,
+              nextTime:
+                operation.tripOperationLists[0].trip.times[0].departureTime,
               nextStation: find(
                 stations,
-                station => station.id === operation.trips[0].times[0].stationId
+                station =>
+                  station.id ===
+                  operation.tripOperationLists[0].trip.times[0].stationId
               ).stationName
             };
           }
 
           // n番目の列車の到着時刻 < 現時刻 <= n + 1番目の列車の出発時刻
           const nArrToNowToNPlus1Dep = find(
-            operation.trips,
+            operation.tripOperationLists,
             (trip, index, array) => {
               if (!array[index + 1]) {
                 return undefined;
               }
               return (
                 moment(
-                  array[index].times[array[index].times.length - 1].arrivalTime,
+                  array[index].trip.times[array[index].trip.times.length - 1]
+                    .arrivalTime,
                   'HH:mm:ss'
                 )
                   .subtract(now.hour() < 4 ? 1 : 0, 'days')
                   .add(
-                    array[index].times[array[index].times.length - 1]
+                    array[index].trip.times[array[index].trip.times.length - 1]
                       .arrivalDays - 1,
                     'days'
                   ) <= now &&
                 now <
-                  moment(array[index + 1].times[0].departureTime, 'HH:mm:ss')
+                  moment(
+                    array[index + 1].trip.times[0].departureTime,
+                    'HH:mm:ss'
+                  )
                     .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                    .add(array[index + 1].times[0].departureDays - 1, 'days')
+                    .add(
+                      array[index + 1].trip.times[0].departureDays - 1,
+                      'days'
+                    )
               );
             }
           );
 
           const nMinus1ToNowToNDep = find(
-            operation.trips,
+            operation.tripOperationLists,
             (trip, index, array) => {
               if (!array[index - 1]) {
                 return undefined;
               }
               return (
                 moment(
-                  array[index - 1].times[array[index - 1].times.length - 1]
-                    .arrivalTime,
+                  array[index - 1].trip.times[
+                    array[index - 1].trip.times.length - 1
+                  ].arrivalTime,
                   'HH:mm:ss'
                 )
                   .subtract(now.hour() < 4 ? 1 : 0, 'days')
                   .add(
-                    array[index - 1].times[array[index - 1].times.length - 1]
-                      .arrivalDays - 1,
+                    array[index - 1].trip.times[
+                      array[index - 1].trip.times.length - 1
+                    ].arrivalDays - 1,
                     'days'
                   ) <= now &&
                 now <
-                  moment(array[index].times[0].departureTime, 'HH:mm:ss')
+                  moment(array[index].trip.times[0].departureTime, 'HH:mm:ss')
                     .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                    .add(array[index].times[0].departureDays - 1, 'days')
+                    .add(array[index].trip.times[0].departureDays - 1, 'days')
               );
             }
           );
@@ -773,69 +795,84 @@ export class OperationRealTimeService extends BaseService {
               tripClassName: null,
               tripClassColor: null,
               prevTime:
-                nArrToNowToNPlus1Dep.times[
-                  nArrToNowToNPlus1Dep.times.length - 1
+                nArrToNowToNPlus1Dep.trip.times[
+                  nArrToNowToNPlus1Dep.trip.times.length - 1
                 ].arrivalTime,
               prevStation: find(
                 stations,
                 station =>
                   station.id ===
-                  nArrToNowToNPlus1Dep.times[
-                    nArrToNowToNPlus1Dep.times.length - 1
+                  nArrToNowToNPlus1Dep.trip.times[
+                    nArrToNowToNPlus1Dep.trip.times.length - 1
                   ].stationId
               ).stationName,
-              nextTime: nMinus1ToNowToNDep.times[0].departureTime,
+              nextTime: nMinus1ToNowToNDep.trip.times[0].departureTime,
               nextStation:
-                nArrToNowToNPlus1Dep.depotIn && nMinus1ToNowToNDep.depotOut
+                nArrToNowToNPlus1Dep.trip.depotIn &&
+                nMinus1ToNowToNDep.trip.depotOut
                   ? '一時入庫'
                   : '停車中'
             };
           }
 
           // 現在走行中の列車
-          const currentRunning = find(operation.trips, (trip, index, array) => {
-            return (
-              moment(trip.times[0].departureTime, 'HH:mm:ss')
-                .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                .add(trip.times[0].departureDays - 1, 'days') <= now &&
-              now <
+          const currentRunning = find(
+            operation.tripOperationLists,
+            (tripOperationList, index, array) => {
+              return (
                 moment(
-                  trip.times[trip.times.length - 1].arrivalTime,
+                  tripOperationList.trip.times[0].departureTime,
                   'HH:mm:ss'
                 )
                   .subtract(now.hour() < 4 ? 1 : 0, 'days')
                   .add(
-                    trip.times[trip.times.length - 1].arrivalDays - 1,
+                    tripOperationList.trip.times[0].departureDays - 1,
                     'days'
+                  ) <= now &&
+                now <
+                  moment(
+                    tripOperationList.trip.times[
+                      tripOperationList.trip.times.length - 1
+                    ].arrivalTime,
+                    'HH:mm:ss'
                   )
-            );
-          });
+                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
+                    .add(
+                      tripOperationList.trip.times[
+                        tripOperationList.trip.times.length - 1
+                      ].arrivalDays - 1,
+                      'days'
+                    )
+              );
+            }
+          );
 
           if (currentRunning) {
             targetTrip = {
-              tripNumber: currentRunning.tripNumber,
+              tripNumber: currentRunning.trip.tripNumber,
               tripClassName: find(
                 tripClasses,
-                tripClass => tripClass.id === currentRunning.tripClassId
+                tripClass => tripClass.id === currentRunning.trip.tripClassId
               ).tripClassName,
               tripClassColor: find(
                 tripClasses,
-                tripClass => tripClass.id === currentRunning.tripClassId
+                tripClass => tripClass.id === currentRunning.trip.tripClassId
               ).tripClassColor,
-              prevTime: currentRunning.times[0].departureTime,
+              prevTime: currentRunning.trip.times[0].departureTime,
               prevStation: find(
                 stations,
-                station => station.id === currentRunning.times[0].stationId
+                station => station.id === currentRunning.trip.times[0].stationId
               ).stationName,
               nextTime:
-                currentRunning.times[currentRunning.times.length - 1]
+                currentRunning.trip.times[currentRunning.trip.times.length - 1]
                   .arrivalTime,
               nextStation: find(
                 stations,
                 station =>
                   station.id ===
-                  currentRunning.times[currentRunning.times.length - 1]
-                    .stationId
+                  currentRunning.trip.times[
+                    currentRunning.trip.times.length - 1
+                  ].stationId
               ).stationName
             };
           }
@@ -843,15 +880,23 @@ export class OperationRealTimeService extends BaseService {
           // 最後の列車の到着時刻より現時刻が大きい場合
           if (
             moment(
-              operation.trips[operation.trips.length - 1].times[
-                operation.trips[operation.trips.length - 1].times.length - 1
+              operation.tripOperationLists[
+                operation.tripOperationLists.length - 1
+              ].trip.times[
+                operation.tripOperationLists[
+                  operation.tripOperationLists.length - 1
+                ].trip.times.length - 1
               ].arrivalTime,
               'HH:mm:ss'
             )
               .subtract(now.hour() < 4 ? 1 : 0, 'days')
               .add(
-                operation.trips[operation.trips.length - 1].times[
-                  operation.trips[operation.trips.length - 1].times.length - 1
+                operation.tripOperationLists[
+                  operation.tripOperationLists.length - 1
+                ].trip.times[
+                  operation.tripOperationLists[
+                    operation.tripOperationLists.length - 1
+                  ].trip.times.length - 1
                 ].arrivalDays - 1,
                 'days'
               ) <= now
@@ -861,21 +906,33 @@ export class OperationRealTimeService extends BaseService {
               tripClassName: null,
               tripClassColor: null,
               prevTime:
-                operation.trips[operation.trips.length - 1].times[
-                  operation.trips[operation.trips.length - 1].times.length - 1
+                operation.tripOperationLists[
+                  operation.tripOperationLists.length - 1
+                ].trip.times[
+                  operation.tripOperationLists[
+                    operation.tripOperationLists.length - 1
+                  ].trip.times.length - 1
                 ].arrivalTime,
               prevStation: find(
                 stations,
                 station =>
                   station.id ===
-                  operation.trips[operation.trips.length - 1].times[
-                    operation.trips[operation.trips.length - 1].times.length - 1
+                  operation.tripOperationLists[
+                    operation.tripOperationLists.length - 1
+                  ].trip.times[
+                    operation.tripOperationLists[
+                      operation.tripOperationLists.length - 1
+                    ].trip.times.length - 1
                   ].stationId
               ).stationName,
-              nextTime: operation.trips[operation.trips.length - 1].depotIn
+              nextTime: operation.tripOperationLists[
+                operation.tripOperationLists.length - 1
+              ].trip.depotIn
                 ? '△'
                 : null,
-              nextStation: operation.trips[operation.trips.length - 1].depotIn
+              nextStation: operation.tripOperationLists[
+                operation.tripOperationLists.length - 1
+              ].trip.depotIn
                 ? '入庫済'
                 : null
             };

@@ -1,9 +1,9 @@
 import { ReadTimeDto } from '../time/time-dto';
+import { ReadTripOperationListDto } from '../trip-operation-list/trip-operation-list-dto';
 
 export class ReadTripDto {
   id: string;
   service_id: string;
-  operation_id: string;
   trip_number: string;
   trip_class_id: string;
   trip_name: string;
@@ -15,5 +15,6 @@ export class ReadTripDto {
   extra_calendar_id: string;
   created_at: string;
   updated_at: string;
+  trip_operation_lists?: ReadTripOperationListDto[];
   times?: ReadTimeDto[];
 }
