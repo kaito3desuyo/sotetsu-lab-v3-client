@@ -1,4 +1,4 @@
-import { ReadRouteToStationDto } from '../route-to-station/route-to-station-dto';
+import { ReadRouteStationListDto } from '../route-station-list/route-station-list-dto';
 /* tslint:disable: variable-name */
 export class ReadStationDto {
   id: string;
@@ -11,5 +11,5 @@ export class ReadStationDto {
   wheelchair_boarding: boolean;
   created_at: string;
   updated_at: string;
-  station_to_routes?: ReadRouteToStationDto[];
+  route_station_lists?: ReadRouteStationListDto[];
 }

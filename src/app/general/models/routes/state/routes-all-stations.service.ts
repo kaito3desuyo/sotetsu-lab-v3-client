@@ -49,7 +49,7 @@ export class RoutesAllStationsService extends BaseService {
     return routes.map((route: IRoute) => {
       return {
         routeName: route.routeName,
-        stations: route.routeToStations.map(routeToStation => {
+        stations: route.routeStationLists.map(routeToStation => {
           return {
             label: routeToStation.station.stationName,
             value: routeToStation.station.id

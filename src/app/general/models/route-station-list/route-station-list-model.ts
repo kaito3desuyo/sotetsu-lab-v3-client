@@ -1,12 +1,12 @@
-import { ReadRouteToStationDto } from './route-to-station-dto';
-import { IRouteToStation } from '../../interfaces/routeToStation';
 import { StationModel } from '../station/station-model';
+import { ReadRouteStationListDto } from './route-station-list-dto';
+import { IRouteStationList } from '../../interfaces/route-station-list';
 
-export class RouteToStationModel {
-  static readRouteToStationDtoImpl(
-    routeToStation: ReadRouteToStationDto
-  ): IRouteToStation {
-    const returnObj: IRouteToStation = {
+export class RouteStationListModel {
+  static readRouteStationListDtoImpl(
+    routeToStation: ReadRouteStationListDto
+  ): IRouteStationList {
+    const returnObj: IRouteStationList = {
       id: routeToStation.id,
       routeId: routeToStation.route_id,
       stationId: routeToStation.station_id,

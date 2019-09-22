@@ -1,7 +1,7 @@
-import { IStation } from './station';
 import { IRoute } from './route';
+import { IStation } from './station';
 
-export interface IRouteToStation {
+export interface IRouteStationList {
   id: string;
   routeId: string;
   stationId: string;
