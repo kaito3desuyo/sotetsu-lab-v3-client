@@ -3,8 +3,8 @@ import { ITime } from './time';
 export interface ITrip {
   id: string;
   serviceId: string;
-  calenderId: string;
-  extraCalenderId: string;
+  calendarId: string;
+  extraCalendarId: string;
   operationId: string;
   tripNumber: string;
   tripName: string;

@@ -1,0 +1,10 @@
+<div>
+  <h3
+    class="operation-table-title"
+    [ngClass]="[calendar.sunday && calendar.saturday ? 'holiday' : 'weekday']"
+  >
+    {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
+    改正
+    {{ calendar.calendarName }}
+  </h3>
+</div>

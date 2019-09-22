@@ -9,10 +9,10 @@
     <mat-form-field>
       <mat-select placeholder="ダイヤ">
         <mat-option
-          *ngFor="let calender of calendersSelectList"
-          [value]="calender.value"
+          *ngFor="let calendar of calendarsSelectList"
+          [value]="calendar.value"
         >
-          {{ calender.label }}
+          {{ calendar.label }}
         </mat-option>
       </mat-select>
     </mat-form-field>

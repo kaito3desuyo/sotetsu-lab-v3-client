@@ -1,0 +1,19 @@
+:host {
+  div {
+    margin-top: -16px;
+    margin-left: -16px;
+    margin-right: -16px;
+    .operation-table-title {
+      font-size: 16px;
+      margin: 0;
+      padding: 8px;
+      color: rgba(255, 255, 255, 0.87);
+    }
+    .weekday {
+      background: rgb(66, 139, 202);
+    }
+    .holiday {
+      background: rgb(217, 83, 79);
+    }
+  }
+}

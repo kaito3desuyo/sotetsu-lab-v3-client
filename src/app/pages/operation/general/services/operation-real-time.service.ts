@@ -19,26 +19,29 @@ import { BaseService } from 'src/app/general/classes/base-service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
 import { IOperation } from 'src/app/general/interfaces/operation';
-import { CalenderApiService } from 'src/app/general/api/calender-api.service';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { IStation } from 'src/app/general/interfaces/station';
 import { StationApiService } from 'src/app/general/api/station-api.service';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { IService } from 'src/app/general/interfaces/service';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
-import { ICalender } from 'src/app/general/interfaces/calender';
+import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
-import { CalenderModel } from 'src/app/general/models/calender/calender-model';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { StationModel } from 'src/app/general/models/station/station-model';
+import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-model';
+import { ServiceModel } from 'src/app/general/models/service/service-model';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
-  currentCalenderId: string;
+  currentCalendarId: string;
 
   private services: BehaviorSubject<IService[]> = new BehaviorSubject<
     IService[]
   >(null);
 
-  private calenders: BehaviorSubject<ICalender[]> = new BehaviorSubject<
-    ICalender[]
+  private calendars: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
+    ICalendar[]
   >([]);
 
   private formationNumbers: BehaviorSubject<
@@ -78,7 +81,7 @@ export class OperationRealTimeService extends BaseService {
 
   constructor(
     private serviceApi: ServiceApiService,
-    private calenderApi: CalenderApiService,
+    private calendarApi: CalendarApiService,
     private tripApi: TripApiService,
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
@@ -86,8 +89,8 @@ export class OperationRealTimeService extends BaseService {
     private currentParamsQuery: CurrentParamsQuery
   ) {
     super();
-    this.subscription = this.currentParamsQuery.calender$.subscribe(obj => {
-      this.currentCalenderId = obj.id;
+    this.subscription = this.currentParamsQuery.calendar$.subscribe(obj => {
+      this.currentCalendarId = obj.id;
     });
 
     this.subscription = timer(0, 1000 * 60)
@@ -130,8 +133,11 @@ export class OperationRealTimeService extends BaseService {
         service_name: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
       })
       .pipe(
-        tap(service => {
-          this.setServices(service);
+        tap(data => {
+          const services = data.services.map(result =>
+            ServiceModel.readServiceDtoImpl(result)
+          );
+          this.setServices(services);
         }),
         map(() => null)
       );
@@ -140,31 +146,31 @@ export class OperationRealTimeService extends BaseService {
   /**
    * カレンダー
    */
-  getCalenders(): Observable<ICalender[]> {
-    return this.calenders.asObservable();
+  getCalendars(): Observable<ICalendar[]> {
+    return this.calendars.asObservable();
   }
 
-  getCalendersAsStatic(): ICalender[] {
-    return this.calenders.getValue();
+  getCalendarsAsStatic(): ICalendar[] {
+    return this.calendars.getValue();
   }
 
-  setCalenders(data: ICalender[]): void {
-    this.calenders.next(data);
+  setCalendars(data: ICalendar[]): void {
+    this.calendars.next(data);
   }
 
-  fetchCalenders(): Observable<void> {
-    return this.calenderApi
-      .searchCalenders({
+  fetchCalendars(): Observable<void> {
+    return this.calendarApi
+      .searchCalendars({
         date: moment()
           .subtract(moment().hour() < 4 ? 1 : 0, 'days')
           .format('YYYY-MM-DD')
       })
       .pipe(
         tap(data => {
-          const calenders = data.calenders.map(result =>
-            CalenderModel.readCalenderDtoImpl(result)
+          const calendars = data.calendars.map(result =>
+            CalendarModel.readCalendarDtoImpl(result)
           );
-          this.setCalenders(calenders);
+          this.setCalendars(calendars);
         }),
         map(() => null)
       );
@@ -227,10 +233,10 @@ export class OperationRealTimeService extends BaseService {
     this.operationNumbers.next(value);
   }
 
-  fetchOperationNumbers(calenderId: string): Observable<void> {
+  fetchOperationNumbers(calendarId: string): Observable<void> {
     return this.operationApi
       .searchOperationNumbers({
-        calender_id: calenderId
+        calendar_id: calendarId
       })
       .pipe(
         tap(numbers => {
@@ -278,10 +284,10 @@ export class OperationRealTimeService extends BaseService {
   /**
    * 運用別列車情報を取得する
    */
-  fetchOperationTrips(calenderId: string): Observable<void> {
+  fetchOperationTrips(calendarId: string): Observable<void> {
     return this.operationApi
       .getOperationsTrips({
-        calender_id: calenderId
+        calendar_id: calendarId
       })
       .pipe(
         map(data => {
@@ -314,7 +320,10 @@ export class OperationRealTimeService extends BaseService {
       })
       .pipe(
         tap(data => {
-          this.setTripClasses(data);
+          const tripClasses: ITripClass[] = data.trip_classes.map(result =>
+            TripClassModel.readTripClassDtoImpl(result)
+          );
+          this.setTripClasses(tripClasses);
         }),
         map(() => null)
       );
@@ -340,7 +349,10 @@ export class OperationRealTimeService extends BaseService {
    */
   fetchStations(): Observable<void> {
     return this.stationApi.getStations().pipe(
-      tap(stations => {
+      tap(data => {
+        const stations = data.stations.map(result =>
+          StationModel.readStationDtoImpl(result)
+        );
         this.setStations(stations);
       }),
       map(() => null)

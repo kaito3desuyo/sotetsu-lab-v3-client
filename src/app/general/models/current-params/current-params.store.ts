@@ -5,7 +5,7 @@ import moment from 'moment';
 export interface CurrentParamsState {
   today: string;
   day: 'weekday' | 'holiday';
-  calender: {
+  calendar: {
     id: string;
     lastUpdatedAt: string;
   };
@@ -20,7 +20,7 @@ export function createInitialState(): CurrentParamsState {
       .subtract(moment().hour() < 4 ? 1 : 0)
       .format('YYYY-MM-DD'),
     day: null,
-    calender: {
+    calendar: {
       id: '',
       lastUpdatedAt: ''
     },

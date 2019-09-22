@@ -1,0 +1,111 @@
+<section class="mx-12">
+  <header>
+    <h4
+      class="py-8"
+      [ngStyle]="{
+        background: getOperationNumberColor(operationTrips.operationNumber)
+      }"
+    >
+      {{ operationTrips.operationNumber }}
+    </h4>
+  </header>
+  <div role="main">
+    <ng-container *ngFor="let trip of operationTrips.trips; let i = index">
+      <div fxLayout="row">
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span *ngIf="trip.depotOut">○</span>
+          <span *ngIf="!trip.depotOut">┗</span>
+        </ng-container>
+
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span *ngIf="trip.depotIn">△</span>
+          <span *ngIf="!trip.depotIn">┏</span>
+        </ng-container>
+
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span class="station-name">
+            {{ findStationName(trip.times[0].stationId) }}
+          </span>
+          <span class="monoscape">{{
+            convertTimeToDateObject(trip.times[0].departureTime) | date: 'HHmm'
+          }}</span>
+          <span class="monoscape">>></span>
+        </ng-container>
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span class="station-name">
+            {{ findStationName(trip.times[trip.times.length - 1].stationId) }}
+          </span>
+          <span class="monoscape">{{
+            convertTimeToDateObject(
+              trip.times[trip.times.length - 1].arrivalTime
+            ) | date: 'HHmm'
+          }}</span>
+          <span class="monoscape"><<</span>
+        </ng-container>
+
+        <span
+          class="trip-class-name"
+          [ngStyle]="{ color: findTripClassColor(trip.tripClassId) }"
+          >{{ findTripClassName(trip.tripClassId) }}</span
+        >
+        <span
+          class="monoscape"
+          [ngStyle]="{ color: findTripClassColor(trip.tripClassId) }"
+          >{{ trip.tripNumber }}</span
+        >
+
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span class="monoscape">>></span>
+          <span class="monoscape">{{
+            convertTimeToDateObject(
+              trip.times[trip.times.length - 1].arrivalTime
+            ) | date: 'HHmm'
+          }}</span>
+          <span class="station-name">
+            {{ findStationName(trip.times[trip.times.length - 1].stationId) }}
+          </span>
+        </ng-container>
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span class="monoscape"><<</span>
+          <span class="monoscape">{{
+            convertTimeToDateObject(trip.times[0].departureTime) | date: 'HHmm'
+          }}</span>
+          <span class="station-name">
+            {{ findStationName(trip.times[0].stationId) }}
+          </span>
+        </ng-container>
+
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span *ngIf="trip.depotIn">△</span>
+          <span *ngIf="!trip.depotIn">┓</span>
+        </ng-container>
+
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span *ngIf="trip.depotOut">○</span>
+          <span *ngIf="!trip.depotOut">┛</span>
+        </ng-container>
+      </div>
+      <div
+        *ngIf="
+          trip.tripDirection ===
+            (operationTrips?.trips)[i + 1]?.tripDirection &&
+          (!trip.depotIn && !(operationTrips?.trips)[i + 1]?.depotOut)
+        "
+      >
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span>┏</span>
+        </ng-container>
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span>┗</span>
+        </ng-container>
+        <span class="monoscape">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+        <ng-container *ngIf="trip.tripDirection === 0">
+          <span>┛</span>
+        </ng-container>
+        <ng-container *ngIf="trip.tripDirection === 1">
+          <span>┓</span>
+        </ng-container>
+      </div>
+    </ng-container>
+  </div>
+</section>
