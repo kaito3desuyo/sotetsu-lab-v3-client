@@ -1,42 +1,42 @@
 import { Injectable } from '@angular/core';
 import { ID } from '@datorama/akita';
-import { CalendersStore } from './calenders.store';
+import { CalendarsStore } from './calendars.store';
 import { tap, throttleTime, flatMap } from 'rxjs/operators';
-import { CalenderApiService } from 'src/app/general/api/calender-api.service';
-import { ICalender } from 'src/app/general/interfaces/calender';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
+import { ICalendar } from 'src/app/general/interfaces/calendar';
 import moment from 'moment';
 import { BehaviorSubject, of, Observable } from 'rxjs';
 import { BaseService } from 'src/app/general/classes/base-service';
-import { CalendersQuery } from './calenders.query';
+import { CalendarsQuery } from './calendars.query';
 import { CurrentParamsQuery } from '../../current-params/current-params.query';
 import { HttpClient } from '@angular/common/http';
 import { CurrentParamsService } from '../../current-params/current-params.service';
 import { Resolve } from '@angular/router';
-import { CalenderModel } from '../../calender/calender-model';
+import { CalendarModel } from '../../calendar/calendar-model';
 
 @Injectable({ providedIn: 'root' })
-export class CalendersService extends BaseService {
+export class CalendarsService extends BaseService {
   private fetch: BehaviorSubject<void> = new BehaviorSubject<void>(null);
 
   constructor(
     private http: HttpClient,
-    private calendersQuery: CalendersQuery,
-    private calendersStore: CalendersStore,
+    private calendarsQuery: CalendarsQuery,
+    private calendarsStore: CalendarsStore,
     private currentParamsQuery: CurrentParamsQuery,
     private currentParamsService: CurrentParamsService,
-    private calenderApiService: CalenderApiService
+    private calendarApiService: CalendarApiService
   ) {
     super();
     this.subscription = this.fetch.pipe(throttleTime(1000)).subscribe(() => {
-      this.calenderApiService
-        .getCalenders()
+      this.calendarApiService
+        .getCalendars()
         .pipe(
           tap(entities => {
-            const calenders = entities.calenders.map(data =>
-              CalenderModel.readCalenderDtoImpl(data)
+            const calendars = entities.calendars.map(data =>
+              CalendarModel.readCalendarDtoImpl(data)
             );
-            this.calendersStore.set(calenders);
-            this.setTodaysCalenderId();
+            this.calendarsStore.set(calendars);
+            this.setTodaysCalendarId();
           })
         )
         .subscribe();
@@ -48,16 +48,16 @@ export class CalendersService extends BaseService {
     return of('success');
   }
 
-  add(calender: ICalender) {
-    this.calendersStore.add(calender);
+  add(calendar: ICalendar) {
+    this.calendarsStore.add(calendar);
   }
 
-  update(id, calender: Partial<ICalender>) {
-    this.calendersStore.update(id, calender);
+  update(id, calendar: Partial<ICalendar>) {
+    this.calendarsStore.update(id, calendar);
   }
 
   remove(id: ID) {
-    this.calendersStore.remove(id);
+    this.calendarsStore.remove(id);
   }
 
   checkHoliday(date: moment.Moment): Observable<any> {
@@ -72,7 +72,7 @@ export class CalendersService extends BaseService {
     this.currentParamsService.update({ day });
   }
 
-  setTodaysCalenderId() {
+  setTodaysCalendarId() {
     /*
     this.subscription = this.currentParamsQuery.day$
       .pipe(
@@ -84,7 +84,7 @@ export class CalendersService extends BaseService {
                   .subtract(moment().hour() < 4 ? 1 : 0)
                   .format('dddd')
                   .toLowerCase();
-          return this.calendersQuery.selectEntity((e: ICalender) => {
+          return this.calendarsQuery.selectEntity((e: ICalendar) => {
             return (
               moment(e.startDate, 'YYYY-MM-DD') <= moment() &&
               e.endDate === null &&
@@ -94,21 +94,21 @@ export class CalendersService extends BaseService {
         })
       )
       .subscribe(result => {
-        this.currentParamsService.update({ calenderId: result.id });
+        this.currentParamsService.update({ calendarId: result.id });
       });
       */
   }
 
-  generateCalenderSelectList(
-    calenders: ICalender[]
+  generateCalendarSelectList(
+    calendars: ICalendar[]
   ): { label: string; value: string }[] {
-    return calenders.map(calender => {
+    return calendars.map(calendar => {
       return {
         label:
-          moment(calender.startDate).format('YYYY年MM月DD日改正') +
+          moment(calendar.startDate).format('YYYY年MM月DD日改正') +
           ' ' +
-          calender.calenderName,
-        value: calender.id
+          calendar.calendarName,
+        value: calendar.id
       };
     });
   }
@@ -117,9 +117,9 @@ export class CalendersService extends BaseService {
 @Injectable({
   providedIn: 'root'
 })
-export class CalenderTodaysCalenderIdResolverService
+export class CalendarTodaysCalendarIdResolverService
   implements Resolve<Observable<void>> {
-  constructor(private calenderService: CalendersService) {}
+  constructor(private calendarService: CalendarsService) {}
 
   resolve() {
     return of(null);

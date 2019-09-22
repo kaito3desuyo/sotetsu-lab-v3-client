@@ -19,7 +19,7 @@ import moment from 'moment';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationSightingsTablePresentationalComponent
-  implements OnInit, OnChanges {
+  implements OnChanges {
   @Input() mode: 'formation' | 'operation';
   @Input() data: IOperationSightingTable[];
   @Input() displayedColumns: string[] = [];
@@ -30,14 +30,11 @@ export class OperationSightingsTablePresentationalComponent
   constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('ちゃん時', changes);
     if (changes.data) {
       this.dataSource = new MatTableDataSource(changes.data.currentValue);
       this.dataSource.sort = this.sort;
     }
   }
-
-  ngOnInit() {}
 
   getOperationNumberColor(operationNumber: string) {
     if (!operationNumber) {

@@ -1,7 +1,7 @@
-export interface ICalender {
+export interface ICalendar {
   id: string;
   serviceId: string;
-  calenderName: string;
+  calendarName: string;
   sunday: boolean;
   monday: boolean;
   tuesday: boolean;

@@ -21,6 +21,13 @@ import { OperationSightingsTableLegendContainerComponent } from './general/compo
 import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
 import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
 import { MatIconModule } from '@angular/material/icon';
+import { OperationTableComponent } from './operation-table/operation-table.component';
+import { OperationTableTitleContainerComponent } from './general/components/operation-table-title-container/operation-table-title-container.component';
+import { OperationTableTitlePresentationalComponent } from './general/components/operation-table-title-presentational/operation-table-title-presentational.component';
+import { OperationTableTableContainerComponent } from './general/components/operation-table-table-container/operation-table-table-container.component';
+import { OperationTableService } from './general/services/operation-table.service';
+import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
+import { OperationTableTablePresentationalComponent } from './general/components/operation-table-table-presentational/operation-table-table-presentational.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +36,12 @@ import { MatIconModule } from '@angular/material/icon';
     OperationSightingsTableByFormationContainerComponent,
     OperationSightingsTablePresentationalComponent,
     OperationSightingsTableLegendContainerComponent,
-    OperationSightingsTableLegendPresentationalComponent
+    OperationSightingsTableLegendPresentationalComponent,
+    OperationTableComponent,
+    OperationTableTitleContainerComponent,
+    OperationTableTitlePresentationalComponent,
+    OperationTableTableContainerComponent,
+    OperationTableTablePresentationalComponent
   ],
   imports: [
     CommonModule,
@@ -47,6 +59,11 @@ import { MatIconModule } from '@angular/material/icon';
     OperationRoutingModule,
     OperationSharedModule
   ],
-  providers: [OperationRealTimeService, OperationRealTimeResolverService]
+  providers: [
+    OperationRealTimeService,
+    OperationRealTimeResolverService,
+    OperationTableService,
+    OperationTableResolverService
+  ]
 })
 export class OperationModule {}

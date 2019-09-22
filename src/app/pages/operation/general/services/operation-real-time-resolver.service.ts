@@ -12,16 +12,16 @@ export class OperationRealTimeResolverService
   resolve(): Observable<void> {
     return forkJoin([
       this.operationRealTimeService.fetchServices(),
-      this.operationRealTimeService.fetchCalenders(),
+      this.operationRealTimeService.fetchCalendars(),
       this.operationRealTimeService.fetchStations()
     ]).pipe(
       flatMap(() => {
         const services = this.operationRealTimeService.getServicesAsStatic();
-        const calenders = this.operationRealTimeService.getCalendersAsStatic();
+        const calendars = this.operationRealTimeService.getCalendarsAsStatic();
         return forkJoin([
           this.operationRealTimeService.fetchFormationNumbers(),
-          this.operationRealTimeService.fetchOperationNumbers(calenders[0].id),
-          this.operationRealTimeService.fetchOperationTrips(calenders[0].id),
+          this.operationRealTimeService.fetchOperationNumbers(calendars[0].id),
+          this.operationRealTimeService.fetchOperationTrips(calendars[0].id),
           this.operationRealTimeService.fetchTripClasses(services[0].id)
         ]);
       }),

@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { Store, StoreConfig } from '@datorama/akita';
 
 export interface ParamsState {
-  calenderId: string;
+  calendarId: string;
 }
 
 export function createInitialState(): ParamsState {
   return {
-    calenderId: ''
+    calendarId: ''
   };
 }
 

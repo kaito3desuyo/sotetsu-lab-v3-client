@@ -18,22 +18,18 @@ export class TripApiService {
 
   constructor(private http: HttpClient) {}
 
-  getTripClasses(query: { service_id?: string }): Observable<ITripClass[]> {
+  getTripClasses(query: {
+    service_id?: string;
+  }): Observable<{ trip_classes: ReadTripClassDto[] }> {
     return this.http
       .get(this.apiUrl + '/classes', {
         params: query
       })
-      .pipe(
-        map((data: ReadTripClassDto[]) => {
-          return data.map(result =>
-            TripClassModel.readTripClassDtoImpl(result)
-          );
-        })
-      );
+      .pipe(map((data: { trip_classes: ReadTripClassDto[] }) => data));
   }
 
   searchTrips(query: {
-    calender_id?: string;
+    calendar_id?: string;
     trip_direction?: '0' | '1';
   }): Observable<ITrip[]> {
     return this.http

@@ -1,16 +1,16 @@
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, async, inject } from '@angular/core/testing';
-import { CalenderApiService } from './calender-api.service';
+import { TitleService } from './title.service';
 
-describe('Service: CalenderApi', () => {
+describe('Service: Title', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [CalenderApiService]
+      providers: [TitleService]
     });
   });
 
-  it('should ...', inject([CalenderApiService], (service: CalenderApiService) => {
+  it('should ...', inject([TitleService], (service: TitleService) => {
     expect(service).toBeTruthy();
   }));
 });

@@ -1,8 +1,8 @@
 /* tslint:disable: variable-name */
-export class ReadCalenderDto {
+export class ReadCalendarDto {
   id: string;
   service_id: string;
-  calender_name: string;
+  calendar_name: string;
   sunday: boolean;
   monday: boolean;
   tuesday: boolean;

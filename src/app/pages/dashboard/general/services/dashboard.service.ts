@@ -1,48 +1,48 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { CalenderApiService } from 'src/app/general/api/calender-api.service';
-import { ICalender } from 'src/app/general/interfaces/calender';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
+import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { map, tap } from 'rxjs/operators';
-import { CalenderModel } from 'src/app/general/models/calender/calender-model';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import moment from 'moment';
 
 @Injectable()
 export class DashboardService {
-  private calenders$: BehaviorSubject<ICalender[]> = new BehaviorSubject<
-    ICalender[]
+  private calendars$: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
+    ICalendar[]
   >([]);
 
-  constructor(private calenderApi: CalenderApiService) {}
+  constructor(private calendarApi: CalendarApiService) {}
 
-  getCalenders(): Observable<ICalender[]> {
-    return this.calenders$.asObservable();
+  getCalendars(): Observable<ICalendar[]> {
+    return this.calendars$.asObservable();
   }
 
-  setCalenders(array: ICalender[]): void {
-    this.calenders$.next(array);
+  setCalendars(array: ICalendar[]): void {
+    this.calendars$.next(array);
   }
 
-  fetchCalenders(): Observable<void> {
-    return this.calenderApi.getCalenders().pipe(
+  fetchCalendars(): Observable<void> {
+    return this.calendarApi.getCalendars().pipe(
       map(data =>
-        data.calenders.map(result => CalenderModel.readCalenderDtoImpl(result))
+        data.calendars.map(result => CalendarModel.readCalendarDtoImpl(result))
       ),
       tap(data => {
-        this.setCalenders(data);
+        this.setCalendars(data);
       }),
       map(() => null)
     );
   }
 
-  getCalenderSelectList(): Observable<{ label: string; value: string }[]> {
-    return this.getCalenders().pipe(
+  getCalendarSelectList(): Observable<{ label: string; value: string }[]> {
+    return this.getCalendars().pipe(
       map(data => {
-        return data.map(calender => {
+        return data.map(calendar => {
           return {
-            label: `${moment(calender.startDate, 'YYYY-MM-DD').format(
+            label: `${moment(calendar.startDate, 'YYYY-MM-DD').format(
               'YYYY年MM月DD日'
-            )} 改正 ${calender.calenderName}`,
-            value: calender.id
+            )} 改正 ${calendar.calendarName}`,
+            value: calendar.id
           };
         });
       })

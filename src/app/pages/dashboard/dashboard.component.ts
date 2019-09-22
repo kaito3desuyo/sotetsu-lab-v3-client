@@ -23,7 +23,7 @@ export class DashboardComponent implements OnInit {
     this.route.data.subscribe((data: { date: string }) => {
       this.date = data.date;
     });
-    this.paramsQuery.select('calenderId').subscribe(data => {
+    this.paramsQuery.select('calendarId').subscribe(data => {
       console.log(data);
     });
   }

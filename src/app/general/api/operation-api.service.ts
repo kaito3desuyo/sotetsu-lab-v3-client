@@ -18,7 +18,7 @@ export class OperationApiService {
   constructor(private http: HttpClient) {}
 
   searchOperations(query: {
-    calender_id?: string;
+    calendar_id?: string;
     operation_number?: string;
   }): Observable<{ operations: ReadOperationDto[] }> {
     return this.http
@@ -29,7 +29,7 @@ export class OperationApiService {
   }
 
   searchOperationNumbers(query: {
-    calender_id?: string;
+    calendar_id?: string;
   }): Observable<{ operationNumber: string }[]> {
     return this.http
       .get(this.apiUrl + '/search/numbers', {
@@ -59,7 +59,7 @@ export class OperationApiService {
   }
 
   getOperationsTrips(params: {
-    calender_id: string;
+    calendar_id: string;
   }): Observable<{ operations: ReadOperationDto[] }> {
     return this.http
       .get(this.apiUrl + '/trips', {
@@ -69,7 +69,7 @@ export class OperationApiService {
   }
 
   getOperationsSearchNumbers(params: {
-    calender_id: string;
+    calendar_id: string;
   }): Observable<{ operationNumber: string }[]> {
     return this.http
       .get(this.apiUrl + '/search/numbers', {

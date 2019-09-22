@@ -55,8 +55,8 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
 
       const currentParams = this.currentParamsQuery.getValue();
 
-      const targetOperation = await this.operationSightingAddFormService.getOperationByCalenderIdAndOperationNumber(
-        currentParams.calender.id,
+      const targetOperation = await this.operationSightingAddFormService.getOperationByCalendarIdAndOperationNumber(
+        currentParams.calendar.id,
         sighting.operationNumber
       );
 

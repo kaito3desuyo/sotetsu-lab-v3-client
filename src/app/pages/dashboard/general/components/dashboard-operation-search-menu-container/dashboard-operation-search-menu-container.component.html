@@ -1,5 +1,6 @@
 <app-dashboard-operation-search-menu-presentational
   fxFlex="auto"
-  [calendersSelectList]="calendersSelectList$ | async"
-  [todaysCalenderId]="todaysCalenderId$ | async"
+  [calendarsSelectList]="calendarsSelectList$ | async"
+  [todaysCalendarId]="todaysCalendarId$ | async"
+  (clickSearchOperationTable)="onReceiveClickSearchOperationTable($event)"
 ></app-dashboard-operation-search-menu-presentational>
