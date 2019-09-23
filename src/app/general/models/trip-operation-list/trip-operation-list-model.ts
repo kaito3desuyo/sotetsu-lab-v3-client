@@ -2,6 +2,7 @@ import { ReadTripOperationListDto } from './trip-operation-list-dto';
 import { ITripOperationList } from '../../interfaces/trip-operation-list';
 import { TripModel } from '../trip/trip-model';
 import { OperationModel } from '../operation/operation-model';
+import { TimeModel } from '../time/time-model';
 
 export class TripOperationListModel {
   static readTripOperationListDtoImpl(
@@ -18,10 +19,16 @@ export class TripOperationListModel {
     };
 
     if (data.trip) {
-      parsed['trip'] = TripModel.readTripDtoImpl(data.trip);
+      parsed.trip = TripModel.readTripDtoImpl(data.trip);
     }
     if (data.operation) {
-      parsed['operation'] = OperationModel.readOperationDtoImpl(data.operation);
+      parsed.operation = OperationModel.readOperationDtoImpl(data.operation);
+    }
+    if (data.start_time) {
+      parsed.startTime = TimeModel.readTimeDtoImpl(data.start_time);
+    }
+    if (data.end_time) {
+      parsed.endTime = TimeModel.readTimeDtoImpl(data.end_time);
     }
 
     return parsed;

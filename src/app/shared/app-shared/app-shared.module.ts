@@ -1,10 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppSharedService } from './services/app-shared.service';
+import { PaddingPipe } from './pipes/padding.pipe';
 
 @NgModule({
   imports: [CommonModule],
-  declarations: [],
-  providers: [AppSharedService]
+  exports: [PaddingPipe],
+  declarations: [PaddingPipe],
+  providers: []
 })
 export class AppSharedModule {}

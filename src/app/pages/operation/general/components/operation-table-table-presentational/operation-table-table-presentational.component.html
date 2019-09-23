@@ -6,7 +6,9 @@
         background: getOperationNumberColor(operationTrips.operationNumber)
       }"
     >
-      {{ operationTrips.operationNumber }}
+      <a routerLink="/operation/route-diagram/{{ operationTrips.id }}">
+        {{ operationTrips.operationNumber }}
+      </a>
     </h4>
   </header>
   <div role="main">

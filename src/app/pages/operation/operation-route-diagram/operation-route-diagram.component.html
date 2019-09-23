@@ -1,0 +1,18 @@
+<article
+  class="operation-route-diagram my-24"
+  [ngClass.lt-md]="['mx-16']"
+  [ngClass.gt-sm]="['mx-64']"
+  fxLayout="column"
+  fxLayoutGap="24px"
+>
+  <h2 class="mat-h2">運用行路図</h2>
+
+  <mat-card>
+    <mat-card-title>
+      <app-operation-route-diagram-title-container></app-operation-route-diagram-title-container>
+    </mat-card-title>
+    <mat-card-content style="overflow-x: auto">
+      <app-operation-route-diagram-drawing-container></app-operation-route-diagram-drawing-container>
+    </mat-card-content>
+  </mat-card>
+</article>
