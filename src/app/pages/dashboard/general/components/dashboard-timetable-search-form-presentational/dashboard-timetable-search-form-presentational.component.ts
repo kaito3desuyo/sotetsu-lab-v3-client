@@ -10,7 +10,7 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardTimetableSearchFormPresentationalComponent {
-  @Input() calendersSelectList: { label: string; value: string }[];
+  @Input() calendarsSelectList: { label: string; value: string }[];
   @Input() stationsSelectList: {
     routeName: string;
     stations: { label: string; value: string }[];

@@ -1,0 +1,19 @@
+<article
+  class="operation-table my-24"
+  [ngClass.lt-md]="['mx-16']"
+  [ngClass.gt-sm]="['mx-64']"
+  fxLayout="column"
+  fxLayoutGap="24px"
+>
+  <h2 class="mat-h2">
+    運用表
+  </h2>
+  <mat-card>
+    <mat-card-title>
+      <app-operation-table-title-container></app-operation-table-title-container>
+    </mat-card-title>
+    <mat-card-content>
+      <app-operation-table-table-container></app-operation-table-table-container>
+    </mat-card-content>
+  </mat-card>
+</article>

@@ -1,11 +1,12 @@
 import { ITime } from './time';
+import { ITripOperationList } from './trip-operation-list';
+import { ITripClass } from './trip-class';
 
 export interface ITrip {
   id: string;
   serviceId: string;
-  calenderId: string;
-  extraCalenderId: string;
-  operationId: string;
+  calendarId: string;
+  extraCalendarId: string;
   tripNumber: string;
   tripName: string;
   tripDirection: number;
@@ -15,5 +16,7 @@ export interface ITrip {
   depotOut: boolean;
   createdAt: string;
   updatedAt: string;
+  tripClass?: ITripClass;
+  tripOperationLists?: ITripOperationList[];
   times?: ITime[];
 }

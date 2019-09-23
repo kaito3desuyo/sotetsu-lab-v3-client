@@ -5,7 +5,9 @@ import {
   Input,
   OnChanges,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
@@ -19,10 +21,11 @@ import moment from 'moment';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationSightingsTablePresentationalComponent
-  implements OnInit, OnChanges {
+  implements OnChanges {
   @Input() mode: 'formation' | 'operation';
   @Input() data: IOperationSightingTable[];
   @Input() displayedColumns: string[] = [];
+
   dataSource: MatTableDataSource<IOperationSightingTable>;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -30,14 +33,11 @@ export class OperationSightingsTablePresentationalComponent
   constructor() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('ちゃん時', changes);
     if (changes.data) {
       this.dataSource = new MatTableDataSource(changes.data.currentValue);
       this.dataSource.sort = this.sort;
     }
   }
-
-  ngOnInit() {}
 
   getOperationNumberColor(operationNumber: string) {
     if (!operationNumber) {

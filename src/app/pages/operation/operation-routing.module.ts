@@ -3,6 +3,10 @@ import { OperationRealTimeComponent } from './operation-real-time/operation-real
 import { NgModule } from '@angular/core';
 import moment from 'moment';
 import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
+import { OperationTableComponent } from './operation-table/operation-table.component';
+import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
+import { OperationRouteDiagramComponent } from './operation-route-diagram/operation-route-diagram.component';
+import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
 
 const routes: Routes = [
   {
@@ -17,6 +21,27 @@ const routes: Routes = [
       date: moment()
         .subtract(moment().hour() < 4 ? 1 : 0)
         .format('YYYY-MM-DD')
+    }
+  },
+  {
+    path: 'table/:calendarId',
+    component: OperationTableComponent,
+    resolve: {
+      operationTable: OperationTableResolverService
+    },
+    runGuardsAndResolvers: 'always',
+    data: {
+      title: '運用表'
+    }
+  },
+  {
+    path: 'route-diagram/:operationId',
+    component: OperationRouteDiagramComponent,
+    resolve: {
+      operationRouteDiagram: OperationRouteDiagramResolverService
+    },
+    data: {
+      title: '運用行路図'
     }
   }
 ];

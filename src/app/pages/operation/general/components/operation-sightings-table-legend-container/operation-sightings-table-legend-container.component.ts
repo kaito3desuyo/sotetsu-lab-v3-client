@@ -5,8 +5,6 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './operation-sightings-table-legend-container.component.html',
   styleUrls: ['./operation-sightings-table-legend-container.component.scss']
 })
-export class OperationSightingsTableLegendContainerComponent implements OnInit {
+export class OperationSightingsTableLegendContainerComponent {
   constructor() {}
-
-  ngOnInit() {}
 }

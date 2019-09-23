@@ -1,6 +1,6 @@
 import { IRoute } from '../../interfaces/route';
 import { ReadRouteDto } from './route-dto';
-import { RouteToStationModel } from '../route-to-station/route-to-station-model';
+import { RouteStationListModel } from '../route-station-list/route-station-list-model';
 
 export class RouteModel {
   private initialValue: IRoute = {
@@ -46,9 +46,9 @@ export class RouteModel {
       updatedAt: route.updated_at
     };
 
-    if (route.route_to_stations) {
-      returnObj.routeToStations = route.route_to_stations.map(data =>
-        RouteToStationModel.readRouteToStationDtoImpl(data)
+    if (route.route_station_lists) {
+      returnObj.routeStationLists = route.route_station_lists.map(data =>
+        RouteStationListModel.readRouteStationListDtoImpl(data)
       );
     }
 

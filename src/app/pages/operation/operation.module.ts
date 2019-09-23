@@ -21,6 +21,22 @@ import { OperationSightingsTableLegendContainerComponent } from './general/compo
 import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
 import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
 import { MatIconModule } from '@angular/material/icon';
+import { OperationTableComponent } from './operation-table/operation-table.component';
+import { OperationTableTitleContainerComponent } from './general/components/operation-table-title-container/operation-table-title-container.component';
+import { OperationTableTitlePresentationalComponent } from './general/components/operation-table-title-presentational/operation-table-title-presentational.component';
+import { OperationTableTableContainerComponent } from './general/components/operation-table-table-container/operation-table-table-container.component';
+import { OperationTableService } from './general/services/operation-table.service';
+import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
+import { OperationTableTablePresentationalComponent } from './general/components/operation-table-table-presentational/operation-table-table-presentational.component';
+import { OperationRouteDiagramComponent } from './operation-route-diagram/operation-route-diagram.component';
+import { OperationRouteDiagramService } from './general/services/operation-route-diagram.service';
+import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
+import { OperationRouteDiagramTitleContainerComponent } from './general/components/operation-route-diagram-title-container/operation-route-diagram-title-container.component';
+import { OperationRouteDiagramTitlePresentationalComponent } from './general/components/operation-route-diagram-title-presentational/operation-route-diagram-title-presentational.component';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
+import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
+import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 
 @NgModule({
   declarations: [
@@ -29,7 +45,17 @@ import { MatIconModule } from '@angular/material/icon';
     OperationSightingsTableByFormationContainerComponent,
     OperationSightingsTablePresentationalComponent,
     OperationSightingsTableLegendContainerComponent,
-    OperationSightingsTableLegendPresentationalComponent
+    OperationSightingsTableLegendPresentationalComponent,
+    OperationTableComponent,
+    OperationTableTitleContainerComponent,
+    OperationTableTitlePresentationalComponent,
+    OperationTableTableContainerComponent,
+    OperationTableTablePresentationalComponent,
+    OperationRouteDiagramComponent,
+    OperationRouteDiagramTitleContainerComponent,
+    OperationRouteDiagramTitlePresentationalComponent,
+    OperationRouteDiagramDrawingContainerComponent,
+    OperationRouteDiagramDrawingPresentationalComponent
   ],
   imports: [
     CommonModule,
@@ -44,9 +70,18 @@ import { MatIconModule } from '@angular/material/icon';
     MatRadioModule,
     MatSortModule,
     MatIconModule,
+    MatToolbarModule,
+    AppSharedModule,
     OperationRoutingModule,
     OperationSharedModule
   ],
-  providers: [OperationRealTimeService, OperationRealTimeResolverService]
+  providers: [
+    OperationRealTimeService,
+    OperationRealTimeResolverService,
+    OperationTableService,
+    OperationTableResolverService,
+    OperationRouteDiagramService,
+    OperationRouteDiagramResolverService
+  ]
 })
 export class OperationModule {}

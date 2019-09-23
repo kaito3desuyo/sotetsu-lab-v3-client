@@ -37,6 +37,9 @@
         height: 36px;
         border-radius: 50%;
         position: relative;
+        a {
+          cursor: pointer;
+        }
         a,
         div {
           position: absolute;

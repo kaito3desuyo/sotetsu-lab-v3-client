@@ -11,7 +11,7 @@ import { DashboardService } from '../../services/dashboard.service';
   styleUrls: ['./dashboard-timetable-search-form-container.component.scss']
 })
 export class DashboardTimetableSearchFormContainerComponent {
-  calendersSelectList$: Observable<{ label: string; value: string }[]>;
+  calendarsSelectList$: Observable<{ label: string; value: string }[]>;
 
   stationsSelectList$: Observable<
     { routeName: string; stations: { label: string; value: string }[] }[]
@@ -26,7 +26,7 @@ export class DashboardTimetableSearchFormContainerComponent {
     private routesAllStationsQuery: RoutesAllStationsQuery,
     private routesAllStationsService: RoutesAllStationsService
   ) {
-    this.calendersSelectList$ = this.dashboardService.getCalenderSelectList();
+    this.calendarsSelectList$ = this.dashboardService.getCalendarSelectList();
     this.stationsSelectList$.subscribe(data => {
       console.log(data);
     });

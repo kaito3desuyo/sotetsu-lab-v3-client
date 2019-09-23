@@ -1,4 +1,4 @@
-import { IRouteToStation } from './routeToStation';
+import { IRouteStationList } from './route-station-list';
 
 export interface IStation {
   id: string;
@@ -11,5 +11,5 @@ export interface IStation {
   wheelchairBoarding: boolean;
   createdAt: string;
   updatedAt: string;
-  stationToRoutes?: IRouteToStation[];
+  routeStationLists?: IRouteStationList[];
 }

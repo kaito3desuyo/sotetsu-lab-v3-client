@@ -8,9 +8,9 @@ import { DashboardService } from '../../services/dashboard.service';
   styleUrls: ['./dashboard-trip-add-form-container.component.scss']
 })
 export class DashboardTripAddFormContainerComponent {
-  calendersSelectList$: Observable<{ label: string; value: string }[]>;
+  calendarsSelectList$: Observable<{ label: string; value: string }[]>;
 
   constructor(private dashboardService: DashboardService) {
-    this.calendersSelectList$ = this.dashboardService.getCalenderSelectList();
+    this.calendarsSelectList$ = this.dashboardService.getCalendarSelectList();
   }
 }

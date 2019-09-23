@@ -4,7 +4,7 @@ import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import moment from 'moment';
 import { map, tap, flatMap } from 'rxjs/operators';
-import { CalenderApiService } from '../../api/calender-api.service';
+import { CalendarApiService } from '../../api/calendar-api.service';
 import { CurrentParamsQuery } from './current-params.query';
 
 @Injectable({ providedIn: 'root' })
@@ -13,7 +13,7 @@ export class CurrentParamsService {
     private currentParamsStore: CurrentParamsStore,
     private currentParamsQuery: CurrentParamsQuery,
     private http: HttpClient,
-    private calenderApi: CalenderApiService
+    private calendarApi: CalendarApiService
   ) {}
 
   update(value: Partial<CurrentParamsState>) {
@@ -25,15 +25,15 @@ export class CurrentParamsService {
   }
 
   /*
-  fetchSpecifiedDateCalenderId(date: string): Observable<string> {
-    return this.calenderApi
-      .searchCalenders({
+  fetchSpecifiedDateCalendarId(date: string): Observable<string> {
+    return this.calendarApi
+      .searchCalendars({
         date: date
       })
       .pipe(
         tap(data => {
           this.update({
-            calender: {
+            calendar: {
               id: data[0].id,
               lastUpdatedAt: moment()
                 .subtract(moment().hour() < 4 ? 1 : 0, 'days')
@@ -69,7 +69,7 @@ export class CurrentParamsService {
           this.update({ day: day });
         }),
         flatMap((day: 'weekday' | 'holiday' | null) => {
-          return this.calenderApi.getCalenders();
+          return this.calendarApi.getCalendars();
         }),
         map(() => null)
       );
