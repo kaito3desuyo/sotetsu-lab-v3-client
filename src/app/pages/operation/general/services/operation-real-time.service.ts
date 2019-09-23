@@ -31,6 +31,8 @@ import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import { StationModel } from 'src/app/general/models/station/station-model';
 import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-model';
 import { ServiceModel } from 'src/app/general/models/service/service-model';
+import { ReadOperationDto } from 'src/app/general/models/operation/operation-dto';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -42,6 +44,10 @@ export class OperationRealTimeService extends BaseService {
 
   private calendars: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
     ICalendar[]
+  >([]);
+
+  private operations: BehaviorSubject<IOperation[]> = new BehaviorSubject<
+    IOperation[]
   >([]);
 
   private formationNumbers: BehaviorSubject<
@@ -80,6 +86,7 @@ export class OperationRealTimeService extends BaseService {
   > = new BehaviorSubject<IOperationSightingTable[]>([]);
 
   constructor(
+    private router: Router,
     private serviceApi: ServiceApiService,
     private calendarApi: CalendarApiService,
     private tripApi: TripApiService,
@@ -171,6 +178,39 @@ export class OperationRealTimeService extends BaseService {
             CalendarModel.readCalendarDtoImpl(result)
           );
           this.setCalendars(calendars);
+        }),
+        map(() => null)
+      );
+  }
+
+  /**
+   * 運用
+   */
+  getOperations(): Observable<IOperation[]> {
+    return this.operations.asObservable();
+  }
+
+  getOperationsAsStatic(): IOperation[] {
+    return this.operations.getValue();
+  }
+
+  setOperations(array: IOperation[]): void {
+    this.operations.next(array);
+  }
+
+  fetchOperations(calendarId: string): Observable<void> {
+    return this.operationApi
+      .searchOperations({
+        calendar_id: calendarId
+      })
+      .pipe(
+        map((data: { operations: ReadOperationDto[] }) =>
+          data.operations.map(result =>
+            OperationModel.readOperationDtoImpl(result)
+          )
+        ),
+        tap(operations => {
+          this.setOperations(operations);
         }),
         map(() => null)
       );
@@ -952,11 +992,12 @@ export class OperationRealTimeService extends BaseService {
    */
   fetchFormationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
+      this.getOperations(),
       this.getFormationNumbers(),
       this.generateFormationTableData(),
       this.generateOperationTripsTableData()
     ).pipe(
-      map(([numbers, sightings, operationTrips]) => {
+      map(([operations, numbers, sightings, operationTrips]) => {
         return numbers.map(data => {
           const findSightings: IOperationSightingTable = find(
             sightings,
@@ -968,6 +1009,7 @@ export class OperationRealTimeService extends BaseService {
             return {
               postedOperationNumber: null,
               rotatedOperationNumber: null,
+              rotatedOperationId: null,
               formationNumber: data.formationNumber,
               sightingTime: null,
               updatedAt: null,
@@ -985,6 +1027,12 @@ export class OperationRealTimeService extends BaseService {
           return {
             postedOperationNumber: findSightings.postedOperationNumber,
             rotatedOperationNumber: findSightings.rotatedOperationNumber,
+            rotatedOperationId: find(
+              operations,
+              operation =>
+                operation.operationNumber ===
+                findSightings.rotatedOperationNumber
+            ).id,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
@@ -1000,11 +1048,12 @@ export class OperationRealTimeService extends BaseService {
    */
   fetchOperationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
+      this.getOperations(),
       this.getOperationNumbers(),
       this.generateOperationTableData(),
       this.generateOperationTripsTableData()
     ).pipe(
-      map(([numbers, sightings, operationTrips]) => {
+      map(([operations, numbers, sightings, operationTrips]) => {
         return numbers.map(data => {
           const findSightings: IOperationSightingTable = find(
             sightings,
@@ -1016,6 +1065,10 @@ export class OperationRealTimeService extends BaseService {
             return {
               postedOperationNumber: null,
               rotatedOperationNumber: data.operationNumber,
+              rotatedOperationId: find(
+                operations,
+                operation => operation.operationNumber === data.operationNumber
+              ).id,
               formationNumber: null,
               sightingTime: null,
               updatedAt: null,
@@ -1030,6 +1083,12 @@ export class OperationRealTimeService extends BaseService {
           return {
             postedOperationNumber: findSightings.postedOperationNumber,
             rotatedOperationNumber: findSightings.rotatedOperationNumber,
+            rotatedOperationId: find(
+              operations,
+              operation =>
+                operation.operationNumber ===
+                findSightings.rotatedOperationNumber
+            ).id,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
