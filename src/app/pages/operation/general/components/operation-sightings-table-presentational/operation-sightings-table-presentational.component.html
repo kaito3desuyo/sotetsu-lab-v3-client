@@ -60,7 +60,13 @@
               </div>
             </ng-container>
             <ng-container *ngIf="element.rotatedOperationNumber !== '100'">
-              <a routerLink="/" fxLayout="row" fxLayoutAlign="center center">
+              <a
+                routerLink="/operation/route-diagram/{{
+                  element.rotatedOperationId
+                }}"
+                fxLayout="row"
+                fxLayoutAlign="center center"
+              >
                 <span
                   [ngStyle]="{
                     'font-weight':

@@ -22,7 +22,8 @@ export class OperationRealTimeResolverService
           this.operationRealTimeService.fetchFormationNumbers(),
           this.operationRealTimeService.fetchOperationNumbers(calendars[0].id),
           this.operationRealTimeService.fetchOperationTrips(calendars[0].id),
-          this.operationRealTimeService.fetchTripClasses(services[0].id)
+          this.operationRealTimeService.fetchTripClasses(services[0].id),
+          this.operationRealTimeService.fetchOperations(calendars[0].id)
         ]);
       }),
       flatMap(() => {

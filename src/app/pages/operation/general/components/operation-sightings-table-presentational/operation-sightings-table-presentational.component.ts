@@ -5,7 +5,9 @@ import {
   Input,
   OnChanges,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
@@ -23,6 +25,7 @@ export class OperationSightingsTablePresentationalComponent
   @Input() mode: 'formation' | 'operation';
   @Input() data: IOperationSightingTable[];
   @Input() displayedColumns: string[] = [];
+
   dataSource: MatTableDataSource<IOperationSightingTable>;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
