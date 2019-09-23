@@ -7,7 +7,7 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardTripAddFormPresentationalComponent {
-  @Input() calendersSelectList: { label: string; value: string }[];
+  @Input() calendarsSelectList: { label: string; value: string }[];
 
   constructor() {}
 }

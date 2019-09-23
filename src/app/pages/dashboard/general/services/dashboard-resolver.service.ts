@@ -8,6 +8,6 @@ export class DashboardResolverService {
   constructor(private dashboardService: DashboardService) {}
 
   resolve(): Observable<any> {
-    return forkJoin([this.dashboardService.fetchCalenders()]);
+    return forkJoin([this.dashboardService.fetchCalendars()]);
   }
 }

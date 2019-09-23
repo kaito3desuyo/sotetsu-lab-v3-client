@@ -1,4 +1,4 @@
-import { IRouteToStation } from './routeToStation';
+import { IRouteStationList } from './route-station-list';
 
 export interface IRoute {
   id: string;
@@ -13,5 +13,5 @@ export interface IRoute {
   routeTextColor: string;
   createdAt: string;
   updatedAt: string;
-  routeToStations?: IRouteToStation[];
+  routeStationLists?: IRouteStationList[];
 }

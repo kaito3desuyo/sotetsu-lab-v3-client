@@ -2,7 +2,9 @@ import {
   Component,
   ChangeDetectionStrategy,
   Input,
-  OnChanges
+  OnChanges,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 
@@ -18,15 +20,24 @@ import { FormBuilder, Validators } from '@angular/forms';
 export class DashboardOperationSearchMenuPresentationalComponent
   implements OnChanges {
   operationTableForm = this.fb.group({
-    calenderId: ['', Validators.required]
+    calendarId: ['', Validators.required]
   });
 
-  @Input() calendersSelectList: { label: string; value: string }[];
-  @Input() todaysCalenderId: string;
+  @Input() calendarsSelectList: { label: string; value: string }[];
+  @Input() todaysCalendarId: string;
+  @Output() clickSearchOperationTable: EventEmitter<string> = new EventEmitter<
+    string
+  >();
 
   constructor(private fb: FormBuilder) {}
 
   ngOnChanges() {
-    this.operationTableForm.get('calenderId').setValue(this.todaysCalenderId);
+    this.operationTableForm.get('calendarId').setValue(this.todaysCalendarId);
+  }
+
+  onClickSearchOperationTable(): void {
+    this.clickSearchOperationTable.emit(
+      this.operationTableForm.get('calendarId').value
+    );
   }
 }

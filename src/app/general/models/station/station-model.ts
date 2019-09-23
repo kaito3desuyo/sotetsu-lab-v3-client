@@ -1,6 +1,6 @@
 import { ReadStationDto } from './station-dto';
 import { IStation } from '../../interfaces/station';
-import { RouteToStationModel } from '../route-to-station/route-to-station-model';
+import { RouteStationListModel } from '../route-station-list/route-station-list-model';
 
 export class StationModel {
   static readStationDtoImpl(station: ReadStationDto): IStation {
@@ -17,9 +17,9 @@ export class StationModel {
       updatedAt: station.updated_at
     };
 
-    if (station.station_to_routes) {
-      returnObj.stationToRoutes = station.station_to_routes.map(data =>
-        RouteToStationModel.readRouteToStationDtoImpl(data)
+    if (station.route_station_lists) {
+      returnObj.routeStationLists = station.route_station_lists.map(data =>
+        RouteStationListModel.readRouteStationListDtoImpl(data)
       );
     }
 

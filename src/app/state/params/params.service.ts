@@ -3,35 +3,35 @@ import { ParamsStore } from './params.store';
 import { HttpClient } from '@angular/common/http';
 import { tap, map } from 'rxjs/operators';
 import { Observable, forkJoin } from 'rxjs';
-import { CalenderApiService } from 'src/app/general/api/calender-api.service';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import moment from 'moment';
-import { CalenderModel } from 'src/app/general/models/calender/calender-model';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 
 @Injectable({ providedIn: 'root' })
 export class ParamsService {
   constructor(
     private paramsStore: ParamsStore,
-    private calenderApi: CalenderApiService
+    private calendarApi: CalendarApiService
   ) {}
 
   fetch(): Observable<void> {
     return forkJoin([
-      this.calenderApi
-        .searchCalenders({
+      this.calendarApi
+        .searchCalendars({
           date: moment()
             .subtract(moment().hour() < 4 ? 1 : 0, 'days')
             .format('YYYY-MM-DD')
         })
         .pipe(
           map(data =>
-            data.calenders.map(result =>
-              CalenderModel.readCalenderDtoImpl(result)
+            data.calendars.map(result =>
+              CalendarModel.readCalendarDtoImpl(result)
             )
           )
         )
     ]).pipe(
-      tap(([calenders]) => {
-        this.paramsStore.update({ calenderId: calenders[0].id });
+      tap(([calendars]) => {
+        this.paramsStore.update({ calendarId: calendars[0].id });
       }),
       map(() => null)
     );

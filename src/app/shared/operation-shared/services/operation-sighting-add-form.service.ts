@@ -66,13 +66,13 @@ export class OperationSightingAddFormService {
     return result;
   }
 
-  async getOperationByCalenderIdAndOperationNumber(
-    calenderId: string,
+  async getOperationByCalendarIdAndOperationNumber(
+    calendarId: string,
     operationNumber: string
   ): Promise<IOperation[]> {
     const result = await this.operationApi
       .searchOperations({
-        calender_id: calenderId,
+        calendar_id: calendarId,
         operation_number: operationNumber
       })
       .pipe(
