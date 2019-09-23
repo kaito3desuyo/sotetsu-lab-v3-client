@@ -17,6 +17,14 @@ export class OperationApiService {
   private apiUrl = environment.apiUrl + '/v1/operations';
   constructor(private http: HttpClient) {}
 
+  getOperationById(
+    operationId: string
+  ): Observable<{ operation: ReadOperationDto }> {
+    return this.http
+      .get(this.apiUrl + '/' + operationId)
+      .pipe(map((data: { operation: ReadOperationDto }) => data));
+  }
+
   searchOperations(query: {
     calendar_id?: string;
     operation_number?: string;

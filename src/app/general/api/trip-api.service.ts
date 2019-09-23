@@ -6,9 +6,7 @@ import { environment } from 'src/environments/environment';
 import { map } from 'rxjs/operators';
 import { ReadTripDto } from '../models/trip/trip-dto';
 import { TripModel } from '../models/trip/trip-model';
-import { ITripClass } from '../interfaces/trip-class';
 import { ReadTripClassDto } from '../models/trip-class/trip-class-dto';
-import { TripClassModel } from '../models/trip-class/trip-class-model';
 
 @Injectable({
   providedIn: 'root'
