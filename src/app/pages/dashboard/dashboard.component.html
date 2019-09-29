@@ -26,12 +26,14 @@
     fxLayoutGap="24px"
   >
     <app-dashboard-operation-search-menu-container
-      fxFlex="50%"
+      fxFlex.gt-sm="50%"
+      fxFlex.lt-md="auto"
     ></app-dashboard-operation-search-menu-container>
     <app-operation-sighting-add-form-container
       [date]="date"
       (submitSighting)="onReceiveSubmitSighting($event)"
-      fxFlex="50%"
+      fxFlex.gt-sm="50%"
+      fxFlex.lt-md="auto"
     ></app-operation-sighting-add-form-container>
   </div>
   <div
@@ -41,10 +43,12 @@
     fxLayoutGap="24px"
   >
     <app-dashboard-timetable-search-form-container
-      fxFlex="50%"
+      fxFlex.gt-sm="50%"
+      fxFlex.lt-md="auto"
     ></app-dashboard-timetable-search-form-container>
     <app-dashboard-trip-add-form-container
-      fxFlex="50%"
+      fxFlex.gt-sm="50%"
+      fxFlex.lt-md="auto"
     ></app-dashboard-trip-add-form-container>
   </div>
 </section>
