@@ -86,8 +86,8 @@
                 >
                   {{ element.rotatedOperationNumber
                   }}{{
-                    element.postedOperationNumber !==
-                    element.rotatedOperationNumber
+                    calcDiffSightingTimeToCurrentTime(element.sightingTime) !==
+                    0
                       ? '?'
                       : ''
                   }}
@@ -141,7 +141,7 @@
           >
             {{ element.formationNumber
             }}{{
-              element.postedOperationNumber !== element.rotatedOperationNumber
+              calcDiffSightingTimeToCurrentTime(element.sightingTime) !== 0
                 ? '?'
                 : ''
             }}
