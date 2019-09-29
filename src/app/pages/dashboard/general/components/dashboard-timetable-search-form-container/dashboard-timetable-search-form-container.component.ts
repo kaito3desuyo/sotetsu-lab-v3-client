@@ -4,6 +4,8 @@ import { map } from 'rxjs/operators';
 import { RoutesAllStationsQuery } from 'src/app/general/models/routes/state/routes-all-stations.query';
 import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { IDashboardSearchTimetableForm } from '../../interfaces/dashboard-search-timetable-form';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard-timetable-search-form-container',
@@ -21,8 +23,8 @@ export class DashboardTimetableSearchFormContainerComponent {
     })
   );
   constructor(
+    private router: Router,
     private dashboardService: DashboardService,
-
     private routesAllStationsQuery: RoutesAllStationsQuery,
     private routesAllStationsService: RoutesAllStationsService
   ) {
@@ -30,5 +32,14 @@ export class DashboardTimetableSearchFormContainerComponent {
     this.stationsSelectList$.subscribe(data => {
       console.log(data);
     });
+  }
+
+  onReceiveSearchTimetable(form: IDashboardSearchTimetableForm): void {
+    this.router.navigate([
+      'timetable',
+      'all-line',
+      form.calendarId,
+      { trip_direction: form.tripDirection }
+    ]);
   }
 }

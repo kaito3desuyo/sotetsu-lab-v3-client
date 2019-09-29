@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { Routes, RouterModule } from '@angular/router';
+import { Routes, RouterModule, PreloadAllModules } from '@angular/router';
 
 const routes: Routes = [
   {
@@ -15,11 +15,23 @@ const routes: Routes = [
       import('./pages/operation/operation.module').then(
         mod => mod.OperationModule
       )
+  },
+  {
+    path: 'timetable',
+    loadChildren: () =>
+      import('./pages/timetable/timetable.module').then(
+        mod => mod.TimetableModule
+      )
   }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload' })],
+  imports: [
+    RouterModule.forRoot(routes, {
+      onSameUrlNavigation: 'reload',
+      preloadingStrategy: PreloadAllModules
+    })
+  ],
   exports: [RouterModule]
 })
 export class AppRoutingModule {}
