@@ -1,6 +1,5 @@
 import { Component, Inject, Injector, OnInit } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
 import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';

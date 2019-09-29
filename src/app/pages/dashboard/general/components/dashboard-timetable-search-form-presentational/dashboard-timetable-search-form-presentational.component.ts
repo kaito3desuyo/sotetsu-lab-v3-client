@@ -1,4 +1,11 @@
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  Output,
+  EventEmitter
+} from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard-timetable-search-form-presentational',
@@ -10,11 +17,21 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardTimetableSearchFormPresentationalComponent {
+  searchTimetableForm = this.fb.group({
+    calendarId: ['', Validators.required],
+    tripDirection: ['', Validators.required]
+  });
+
   @Input() calendarsSelectList: { label: string; value: string }[];
   @Input() stationsSelectList: {
     routeName: string;
     stations: { label: string; value: string }[];
   }[];
+  @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() {}
+  constructor(private fb: FormBuilder) {}
+
+  onClickSearch(): void {
+    this.searchTimetable.emit(this.searchTimetableForm.value);
+  }
 }
