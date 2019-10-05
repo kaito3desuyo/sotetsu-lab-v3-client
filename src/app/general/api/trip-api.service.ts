@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import { ReadTripDto } from '../models/trip/trip-dto';
 import { TripModel } from '../models/trip/trip-model';
 import { ReadTripClassDto } from '../models/trip-class/trip-class-dto';
+import { ReadTripBlockDto } from '../models/trip-block/trip-block-dto';
 
 @Injectable({
   providedIn: 'root'
@@ -39,5 +40,16 @@ export class TripApiService {
           return data.map(result => TripModel.readTripDtoImpl(result));
         })
       );
+  }
+
+  searchTripsByBlocks(query: {
+    calendar_id?: string;
+    trip_direction?: '0' | '1';
+  }): Observable<{ trip_blocks: ReadTripBlockDto[] }> {
+    return this.http
+      .get(this.apiUrl + '/search/by-blocks', {
+        params: query
+      })
+      .pipe(map((data: { trip_blocks: ReadTripBlockDto[] }) => data));
   }
 }

@@ -5,7 +5,10 @@ import { TimetableAllLineTableResolverService } from './general/services/timetab
 
 const routes: Routes = [
   {
-    path: 'all-line/:calendarid',
+    path: 'all-line/block/:blockId'
+  },
+  {
+    path: 'all-line/:calendarId',
     component: TimetableAllLineComponent,
     resolve: {
       timetableAllLine: TimetableAllLineTableResolverService
