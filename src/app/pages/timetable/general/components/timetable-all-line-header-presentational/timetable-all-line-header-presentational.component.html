@@ -1,0 +1,10 @@
+<mat-toolbar
+  [ngClass]="[calendar.sunday && calendar.saturday ? 'holiday' : 'weekday']"
+>
+  <h3>
+    {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
+    改正
+    {{ calendar.calendarName }}
+    全線時刻表
+  </h3>
+</mat-toolbar>

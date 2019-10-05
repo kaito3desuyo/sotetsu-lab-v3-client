@@ -2,6 +2,7 @@ import { IStation } from 'src/app/general/interfaces/station';
 
 export interface ITimetableStation extends IStation {
   viewMode?: ETimetableStationViewMode;
+  borderSetting?: boolean;
 }
 
 export enum ETimetableStationViewMode {

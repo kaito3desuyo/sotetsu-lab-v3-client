@@ -1,5 +1,5 @@
 <div fxLayout="row">
-  <table class="stations-table" fxFlex="0 0 120px">
+  <table class="stations-table" fxFlex="0 0 auto">
     <thead>
       <tr>
         <th colspan="2">列車番号</th>
@@ -12,8 +12,9 @@
       </tr>
     </thead>
     <tbody>
-      <ng-container *ngFor="let station of stations">
+      <ng-container *ngFor="let station of stations; let i = index">
         <tr
+          [ngClass]="[station.borderSetting ? 'border-bottom' : '']"
           *ngIf="
             station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
             (tripDirection === '0' &&
@@ -23,21 +24,34 @@
           "
         >
           <td
+            class="station-name"
             [rowSpan]="
               station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL ? 2 : 1
             "
           >
             {{ station.stationName }}
           </td>
-          <td>着</td>
+          <td
+            [ngClass]="[
+              station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL
+                ? 'border-bottom'
+                : ''
+            ]"
+          >
+            着
+          </td>
         </tr>
         <tr
+          [ngClass]="[station.borderSetting ? 'border-bottom' : '']"
           *ngIf="
             station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
             station.viewMode === staitonViewMode.ONLY_DEPARTURE
           "
         >
-          <td *ngIf="station.viewMode === staitonViewMode.ONLY_DEPARTURE">
+          <td
+            class="station-name"
+            *ngIf="station.viewMode === staitonViewMode.ONLY_DEPARTURE"
+          >
             {{ station.stationName }}
           </td>
           <td>発</td>
@@ -45,4 +59,75 @@
       </ng-container>
     </tbody>
   </table>
+  <div style="overflow-x: auto">
+    <table class="trips-table">
+      <thead>
+        <tr>
+          <th *ngFor="let trip of trips">{{ trip.tripNumber }}</th>
+        </tr>
+        <tr>
+          <th *ngFor="let trip of trips">
+            <a
+              *ngFor="let tripOperationList of trip.tripOperationLists"
+              [routerLink]="
+                '/operation/route-diagram/' + tripOperationList.operation.id
+              "
+            >
+              {{ tripOperationList.operation.operationNumber }}
+            </a>
+          </th>
+        </tr>
+        <tr>
+          <th
+            *ngFor="let trip of trips"
+            [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+          >
+            {{ trip.tripClass.tripClassName }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let station of stations; let i = index">
+          <tr
+            [ngClass]="[station.borderSetting ? 'border-bottom' : '']"
+            *ngIf="
+              station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+              (tripDirection === '0' &&
+                station.viewMode === staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+              (tripDirection === '1' &&
+                station.viewMode === staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+            "
+          >
+            <td
+              *ngFor="let trip of trips"
+              class="dia"
+              [ngClass]="[
+                station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL
+                  ? 'border-bottom'
+                  : ''
+              ]"
+              [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+            >
+              {{ getTime('arrival', station, trip, i) }}
+            </td>
+          </tr>
+          <tr
+            [ngClass]="[station.borderSetting ? 'border-bottom' : '']"
+            *ngIf="
+              station.viewMode === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+              station.viewMode === staitonViewMode.ONLY_DEPARTURE
+            "
+          >
+            <td
+              *ngFor="let trip of trips"
+              class="dia"
+              [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+            >
+              {{ getTime('departure', station, trip, i) }}
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
 </div>

@@ -29,6 +29,13 @@ export class TimetableAllLineTableResolverService
           );
         }),
         map(() => null)
+      ),
+      this.timetableAllLineService.fetchTrips(
+        this.timetableAllLineService.getCalendarIdAsStatic(),
+        this.timetableAllLineService.getTripDirectionAsStatic()
+      ),
+      this.timetableAllLineService.fetchCalendar(
+        this.timetableAllLineService.getCalendarIdAsStatic()
       )
     ]).pipe(map(() => null));
   }
