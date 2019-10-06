@@ -14,25 +14,64 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { TimetableAllLineHeaderContainerComponent } from './general/components/timetable-all-line-header-container/timetable-all-line-header-container.component';
 import { TimetableAllLineHeaderPresentationalComponent } from './general/components/timetable-all-line-header-presentational/timetable-all-line-header-presentational.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { TimetableAddComponent } from './timetable-add/timetable-add.component';
+import { TimetableAddHeaderContainerComponent } from './general/components/timetable-add-header-container/timetable-add-header-container.component';
+import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
+import { TimetableAddService } from './general/services/timetable-add.service';
+import { TimetableAddResolverService } from './general/services/timetable-add-resolver.service';
+import { TimetableEditorFormContainerComponent } from './general/components/timetable-editor-form-container/timetable-editor-form-container.component';
+import { TimetableEditorFormPresentationalComponent } from './general/components/timetable-editor-form-presentational/timetable-editor-form-presentational.component';
+import { TimetableEditorService } from './general/services/timetable-editor.service';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
   imports: [
     CommonModule,
+    FlexLayoutModule,
+    FormsModule,
+    ReactiveFormsModule,
     TimetableRoutingModule,
+    AppSharedModule,
     FlexLayoutModule,
     MatCardModule,
     MatPaginatorModule,
-    MatToolbarModule
+    MatToolbarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatRadioModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSlideToggleModule
   ],
   declarations: [
     TimetableAllLineComponent,
+    TimetableAddComponent,
     TimetableAllLineHeaderContainerComponent,
     TimetableAllLineHeaderPresentationalComponent,
     TimetableAllLineTableContainerComponent,
     TimetableAllLineTablePresentationalComponent,
     TimetableAllLinePaginatorContainerComponent,
-    TimetableAllLinePaginatorPresentationalComponent
+    TimetableAllLinePaginatorPresentationalComponent,
+    TimetableAddHeaderContainerComponent,
+    TimetableEditorFormContainerComponent,
+    TimetableEditorFormPresentationalComponent
   ],
-  providers: [TimetableAllLineService, TimetableAllLineTableResolverService]
+  providers: [
+    TimetableAllLineService,
+    TimetableAllLineTableResolverService,
+    TimetableAddService,
+    TimetableAddResolverService,
+    TimetableEditorService
+  ]
 })
 export class TimetableModule {}
