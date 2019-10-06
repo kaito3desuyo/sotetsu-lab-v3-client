@@ -1,4 +1,5 @@
 <app-dashboard-trip-add-form-presentational
   fxFlex="auto"
   [calendarsSelectList]="calendarsSelectList$ | async"
+  (clickMoveTripInputPage)="onReceiveMoveTripInputPage($event)"
 ></app-dashboard-trip-add-form-presentational>

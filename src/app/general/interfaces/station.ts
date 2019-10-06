@@ -1,4 +1,5 @@
 import { IRouteStationList } from './route-station-list';
+import { IStop } from '../models/stop/stop';
 
 export interface IStation {
   id: string;
@@ -12,4 +13,5 @@ export interface IStation {
   createdAt: string;
   updatedAt: string;
   routeStationLists?: IRouteStationList[];
+  stops?: IStop[];
 }
