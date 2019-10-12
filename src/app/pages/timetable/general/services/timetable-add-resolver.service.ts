@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { TimetableAddService } from './timetable-add.service';
-import { map, flatMap } from 'rxjs/operators';
+import { map, flatMap, tap } from 'rxjs/operators';
 import { TimetableEditorService } from './timetable-editor.service';
 
 @Injectable()
@@ -16,18 +16,21 @@ export class TimetableAddResolverService implements Resolve<Observable<void>> {
     const calendarId = route.paramMap.get('calendarId');
     const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
-    this.timetableAddService.setTripDirection(tripDirection);
+    this.timetableEditorService.setCalendarId(calendarId);
+    this.timetableEditorService.setTripDirection(Number(tripDirection) as
+      | 0
+      | 1);
 
     return forkJoin(
-      this.timetableAddService.fetchCalendar(calendarId),
-      this.timetableEditorService.fetchOperations(calendarId),
+      this.timetableAddService.fetchCalendar(),
+      this.timetableEditorService.fetchOperations(),
       this.timetableEditorService
         .fetchServiceId()
         .pipe(
-          flatMap(id =>
+          flatMap(() =>
             forkJoin(
-              this.timetableEditorService.fetchStations(id, tripDirection),
-              this.timetableEditorService.fetchTripClasses(id)
+              this.timetableEditorService.fetchStations(),
+              this.timetableEditorService.fetchTripClasses()
             )
           )
         )

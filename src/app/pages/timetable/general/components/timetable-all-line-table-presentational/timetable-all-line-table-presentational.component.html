@@ -79,10 +79,25 @@
         </tr>
         <tr>
           <th
+            style="white-space: nowrap"
             *ngFor="let trip of trips"
-            [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+            [ngStyle]="{
+              color: trip.tripClass.tripClassColor
+            }"
           >
-            {{ trip.tripClass.tripClassName }}
+            <div fxLayout="row" fxLayoutAlign="center center">
+              <div
+                style="transform-origin: center"
+                [ngStyle]="{
+                  transform:
+                    'scale(' +
+                    (trip.tripClass.tripClassName.length >= 3 ? 0.5 : 1) +
+                    ', 1)'
+                }"
+              >
+                {{ trip.tripClass.tripClassName }}
+              </div>
+            </div>
           </th>
         </tr>
       </thead>

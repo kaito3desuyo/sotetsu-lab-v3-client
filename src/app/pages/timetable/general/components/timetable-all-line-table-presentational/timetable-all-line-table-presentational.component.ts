@@ -44,6 +44,14 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
 
     if (time) {
       switch (true) {
+        case mode === 'arrival' &&
+          station.viewMode === this.staitonViewMode.DEPARTURE_AND_ARRIVAL &&
+          !time.arrivalTime:
+          if (time.dropoffType === 1) {
+            return '‥';
+          }
+
+          return this.formatTime(time.arrivalTime);
         case mode === 'arrival':
           if (
             time.pickupType === 1 &&
@@ -54,7 +62,8 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
           }
           return this.formatTime(time.arrivalTime);
         case mode === 'departure' &&
-          station.viewMode === this.staitonViewMode.ONLY_DEPARTURE &&
+          (station.viewMode === this.staitonViewMode.ONLY_DEPARTURE ||
+            station.viewMode === this.staitonViewMode.DEPARTURE_AND_ARRIVAL) &&
           !time.departureTime:
           if (
             time.pickupType === 1 &&
@@ -63,6 +72,14 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
           ) {
             return '↓';
           }
+
+          if (
+            time.pickupType === 1 &&
+            station.viewMode === this.staitonViewMode.DEPARTURE_AND_ARRIVAL
+          ) {
+            return '‥';
+          }
+
           return this.formatTime(time.arrivalTime);
         case mode === 'departure':
           if (
@@ -105,6 +122,6 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
     if (time.length === 3) {
       time = '-' + time;
     }
-    return timeString ? time : '‥';
+    return timeString ? time : '';
   }
 }

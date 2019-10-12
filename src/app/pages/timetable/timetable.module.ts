@@ -31,6 +31,12 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { TimetableAddModeSelectContainerComponent } from './general/components/timetable-add-mode-select-container/timetable-add-mode-select-container.component';
+import { TimetableAddModeSelectPresentationalComponent } from './general/components/timetable-add-mode-select-presentational/timetable-add-mode-select-presentational.component';
+import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
+import { TimetableUpdateHeaderContainerComponent } from './general/components/timetable-update-header-container/timetable-update-header-container.component';
+import { TimetableUpdateService } from './general/services/timetable-update.service';
+import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
 
 @NgModule({
   imports: [
@@ -56,6 +62,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
   declarations: [
     TimetableAllLineComponent,
     TimetableAddComponent,
+    TimetableUpdateComponent,
     TimetableAllLineHeaderContainerComponent,
     TimetableAllLineHeaderPresentationalComponent,
     TimetableAllLineTableContainerComponent,
@@ -63,6 +70,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     TimetableAllLinePaginatorContainerComponent,
     TimetableAllLinePaginatorPresentationalComponent,
     TimetableAddHeaderContainerComponent,
+    TimetableAddModeSelectContainerComponent,
+    TimetableAddModeSelectPresentationalComponent,
+    TimetableUpdateHeaderContainerComponent,
     TimetableEditorFormContainerComponent,
     TimetableEditorFormPresentationalComponent
   ],
@@ -71,6 +81,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     TimetableAllLineTableResolverService,
     TimetableAddService,
     TimetableAddResolverService,
+    TimetableUpdateService,
+    TimetableUpdateResolverService,
     TimetableEditorService
   ]
 })
