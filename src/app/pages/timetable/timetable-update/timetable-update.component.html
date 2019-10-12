@@ -1,20 +1,19 @@
 <article
-  class="timetable-add my-24"
+  class="timetable-update my-24"
   [ngClass.lt-md]="['mx-16']"
   [ngClass.gt-sm]="['mx-64']"
   fxLayout="column"
   fxLayoutGap="24px"
 >
   <h2 class="mat-h2">
-    列車を追加する
+    列車を編集する
   </h2>
 
   <mat-card>
     <mat-card-title>
-      <app-timetable-add-header-container></app-timetable-add-header-container>
+      <app-timetable-update-header-container></app-timetable-update-header-container>
     </mat-card-title>
     <mat-card-content>
-      <app-timetable-add-mode-select-container></app-timetable-add-mode-select-container>
       <app-timetable-editor-form-container></app-timetable-editor-form-container>
     </mat-card-content>
   </mat-card>
