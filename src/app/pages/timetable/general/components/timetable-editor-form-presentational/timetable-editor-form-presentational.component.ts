@@ -30,6 +30,7 @@ import moment from 'moment';
 })
 export class TimetableEditorFormPresentationalComponent implements OnInit {
   tripForm: FormArray = this.fb.array([]);
+  tripCount: number = 0;
 
   @Input() tripBlock: ITripBlock;
   @Input() stations: IStation[];
@@ -54,6 +55,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
   formInitialize() {
     this.tripForm = this.fb.array([]);
     if (this.tripBlock) {
+      this.tripCount = this.tripBlock.trips.length;
       this.tripBlock.trips.forEach(trip => {
         this.tripForm.push(this.generateTrip(trip));
       });
