@@ -143,6 +143,18 @@
           </tr>
         </ng-container>
       </tbody>
+      <tfoot>
+        <tr>
+          <td *ngFor="let trip of trips">
+            <a [routerLink]="'/timetable/update/' + trip.tripBlockId">編集</a>
+          </td>
+        </tr>
+        <tr>
+          <td *ngFor="let trip of trips">
+            <a>削除</a>
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 </div>

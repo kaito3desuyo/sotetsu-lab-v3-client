@@ -16,6 +16,7 @@ export class TimetableAddResolverService implements Resolve<Observable<void>> {
     const calendarId = route.paramMap.get('calendarId');
     const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
+    this.timetableEditorService.setTripBlock(null);
     this.timetableEditorService.setCalendarId(calendarId);
     this.timetableEditorService.setTripDirection(Number(tripDirection) as
       | 0

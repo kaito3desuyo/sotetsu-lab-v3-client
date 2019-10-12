@@ -8,7 +8,7 @@
             <button
               mat-icon-button
               (click)="deleteTrip(i)"
-              [disabled]="i === 0"
+              [disabled]="i === 0 || tripCount > i"
             >
               <mat-icon>remove</mat-icon>
             </button>
