@@ -9,7 +9,7 @@ import { IStation } from 'src/app/general/interfaces/station';
 import { StationApiService } from 'src/app/general/api/station-api.service';
 import { ReadStationDto } from 'src/app/general/models/station/station-dto';
 import { StationModel } from 'src/app/general/models/station/station-model';
-import { filter, map as lodashMap, find } from 'lodash';
+import { map as lodashMap, find } from 'lodash';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
@@ -40,11 +40,7 @@ export class OperationRouteDiagramService {
     private stationApi: StationApiService,
     private operationApi: OperationApiService,
     private calendarApi: CalendarApiService
-  ) {
-    this.getTripOperationLists().subscribe(data => {
-      console.log('adwdwadadw', data);
-    });
-  }
+  ) {}
 
   getCalendar(): Observable<ICalendar> {
     return this.calendar.asObservable();

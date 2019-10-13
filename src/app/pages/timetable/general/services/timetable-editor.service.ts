@@ -74,7 +74,6 @@ export class TimetableEditorService {
     return this.tripApi.getTripBlockById(id).pipe(
       map(data => TripBlockModel.readTripBlockDtoImpl(data.trip_block)),
       tap(data => {
-        console.log(data);
         this.setTripBlock(data);
       }),
       map(() => null)

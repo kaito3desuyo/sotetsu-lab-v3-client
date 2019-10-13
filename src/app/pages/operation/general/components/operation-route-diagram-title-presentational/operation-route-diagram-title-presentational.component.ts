@@ -1,10 +1,4 @@
-import {
-  Component,
-  ChangeDetectionStrategy,
-  Input,
-  OnChanges,
-  SimpleChanges
-} from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { IOperation } from 'src/app/general/interfaces/operation';
 
@@ -14,14 +8,9 @@ import { IOperation } from 'src/app/general/interfaces/operation';
   styleUrls: ['./operation-route-diagram-title-presentational.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OperationRouteDiagramTitlePresentationalComponent
-  implements OnChanges {
+export class OperationRouteDiagramTitlePresentationalComponent {
   @Input() calendar: ICalendar;
   @Input() operation: IOperation;
 
   constructor() {}
-
-  ngOnChanges(changes: SimpleChanges) {
-    console.log(changes);
-  }
 }

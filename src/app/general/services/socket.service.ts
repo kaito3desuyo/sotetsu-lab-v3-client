@@ -16,7 +16,6 @@ export class SocketService {
     this.socket = io(this.url + namespace, {
       transports: ['websocket']
     });
-    console.log(this.socket);
   }
 
   emit(emitName: string, data?: any): void {
