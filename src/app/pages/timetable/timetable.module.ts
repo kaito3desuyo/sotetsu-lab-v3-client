@@ -39,7 +39,6 @@ import { TimetableUpdateHeaderContainerComponent } from './general/components/ti
 import { TimetableUpdateService } from './general/services/timetable-update.service';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
 import { MatDialogModule } from '@angular/material/dialog';
-import { ConfirmDialogComponent } from 'legacy/src/app/components/accessories/confirm-dialog/confirm-dialog.component';
 
 @NgModule({
   imports: [
