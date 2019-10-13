@@ -4,26 +4,26 @@ $margin-max: 256;
 
 @for $i from $margin-min through $margin-max {
   .mt-#{$i} {
-    margin-top: #{$i}px;
+    margin-top: #{$i}px !important;
   }
   .mr-#{$i} {
-    margin-right: #{$i}px;
+    margin-right: #{$i}px !important;
   }
   .mb-#{$i} {
-    margin-bottom: #{$i}px;
+    margin-bottom: #{$i}px !important;
   }
   .ml-#{$i} {
-    margin-left: #{$i}px;
+    margin-left: #{$i}px !important;
   }
   .mx-#{$i} {
-    margin-left: #{$i}px;
-    margin-right: #{$i}px;
+    margin-left: #{$i}px !important;
+    margin-right: #{$i}px !important;
   }
   .my-#{$i} {
-    margin-top: #{$i}px;
-    margin-bottom: #{$i}px;
+    margin-top: #{$i}px !important;
+    margin-bottom: #{$i}px !important;
   }
   .m-#{$i} {
-    margin: #{$i}px;
+    margin: #{$i}px !important;
   }
 }

@@ -2,7 +2,10 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-operation-list-dto';
+import {
+  ReadTripOperationListDto,
+  UpdateTripOperationListDto
+} from '../models/trip-operation-list/trip-operation-list-dto';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -25,5 +28,12 @@ export class TripOperationListApiService {
           (data: { trip_operation_lists: ReadTripOperationListDto[] }) => data
         )
       );
+  }
+
+  patchTripOperationListById(
+    id: string,
+    body: Partial<UpdateTripOperationListDto>
+  ): Observable<any> {
+    return this.http.patch(this.apiUrl + '/' + id, body);
   }
 }

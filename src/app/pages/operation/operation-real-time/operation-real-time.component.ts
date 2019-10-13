@@ -21,6 +21,7 @@ export class OperationRealTimeComponent extends BaseComponent {
     private titleService: TitleService
   ) {
     super(injector);
+    /*
     this.socketService.connect('/operation/real-time');
     this.subscription = this.socketService
       .on('sightingReload')
@@ -30,7 +31,7 @@ export class OperationRealTimeComponent extends BaseComponent {
         }
         this.router.navigate([this.router.url]);
       });
-
+      */
     this.subscription = this.route.data.subscribe((data: { date: string }) => {
       this.date = data.date;
     });

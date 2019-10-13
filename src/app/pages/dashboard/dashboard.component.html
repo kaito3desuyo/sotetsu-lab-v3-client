@@ -5,7 +5,6 @@
   fxLayout="column"
   fxLayoutGap="24px"
 >
-  <button (click)="openDialogTest()">aaa</button>
   <mat-card>
     <mat-card-title>
       このサイトは？
@@ -30,8 +29,6 @@
       fxFlex.lt-md="auto"
     ></app-dashboard-operation-search-menu-container>
     <app-operation-sighting-add-form-container
-      [date]="date"
-      (submitSighting)="onReceiveSubmitSighting($event)"
       fxFlex.gt-sm="50%"
       fxFlex.lt-md="auto"
     ></app-operation-sighting-add-form-container>

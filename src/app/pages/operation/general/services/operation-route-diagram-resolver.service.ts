@@ -12,7 +12,6 @@ export class OperationRouteDiagramResolverService
   ) {}
 
   resolve(route: ActivatedRouteSnapshot): Observable<void> {
-    console.log('resolver');
     const operationId: string = route.paramMap.get('operationId');
     return forkJoin(
       this.operationRouteDiagramService.fetchOperationAndCalender(operationId),

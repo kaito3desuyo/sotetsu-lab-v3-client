@@ -20,7 +20,6 @@ export class HeaderPresentationalComponent implements OnInit {
   }
 
   toggleSidenav() {
-    console.log('サイドナビを開閉する');
     this.sidenavService.setState(!this.sidenavState);
   }
 }
