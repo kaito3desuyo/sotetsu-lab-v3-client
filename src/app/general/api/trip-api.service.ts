@@ -35,6 +35,10 @@ export class TripApiService {
     );
   }
 
+  deleteTripById(id: string): Observable<any> {
+    return this.http.delete(this.apiUrl + '/' + id);
+  }
+
   getTripBlockById(id: string): Observable<{ trip_block: ReadTripBlockDto }> {
     return this.http
       .get(this.apiUrl + '/blocks/' + id)

@@ -5,6 +5,7 @@
   [isGroupingMode]="isGroupingMode$ | async"
   [groupingBaseTrip]="groupingBaseTrip$ | async"
   (clickEdit)="onReceiveClickEdit($event)"
+  (clickDelete)="onReceiveClickDelete($event)"
   (clickGrouping)="onReceiveClickGrouping($event)"
   (clickAddTripInGroup)="onReceiveClickAddTripInGroup($event)"
   (clickRemoveTripInGroup)="onReceiveClickRemoveTripInGroup($event)"
