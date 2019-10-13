@@ -31,12 +31,15 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TimetableAddModeSelectContainerComponent } from './general/components/timetable-add-mode-select-container/timetable-add-mode-select-container.component';
 import { TimetableAddModeSelectPresentationalComponent } from './general/components/timetable-add-mode-select-presentational/timetable-add-mode-select-presentational.component';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 import { TimetableUpdateHeaderContainerComponent } from './general/components/timetable-update-header-container/timetable-update-header-container.component';
 import { TimetableUpdateService } from './general/services/timetable-update.service';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
+import { MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from 'legacy/src/app/components/accessories/confirm-dialog/confirm-dialog.component';
 
 @NgModule({
   imports: [
@@ -57,7 +60,9 @@ import { TimetableUpdateResolverService } from './general/services/timetable-upd
     MatRadioModule,
     MatButtonModule,
     MatIconModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatTooltipModule,
+    MatDialogModule
   ],
   declarations: [
     TimetableAllLineComponent,

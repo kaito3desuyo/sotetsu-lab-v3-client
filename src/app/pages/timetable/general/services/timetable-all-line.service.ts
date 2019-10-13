@@ -6,7 +6,7 @@ import {
 } from '../interfaces/timetable-station';
 import { IService } from 'src/app/general/interfaces/service';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, flatMap } from 'rxjs/operators';
 import { ServiceModel } from 'src/app/general/models/service/service-model';
 import { StationModel } from 'src/app/general/models/station/station-model';
 import { ITrip } from 'src/app/general/interfaces/trip';
@@ -17,6 +17,9 @@ import { concat } from 'lodash';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogContainerComponent } from 'src/app/general/components/confirm-dialog-container/confirm-dialog-container.component';
+import { NotificationService } from 'src/app/general/services/notification.service';
 
 @Injectable()
 export class TimetableAllLineService {
@@ -50,7 +53,13 @@ export class TimetableAllLineService {
     pageSize: 10
   });
 
+  private groupingBaseTrip: BehaviorSubject<ITrip> = new BehaviorSubject<ITrip>(
+    null
+  );
+
   constructor(
+    private dialog: MatDialog,
+    private notificationService: NotificationService,
     private serviceApi: ServiceApiService,
     private tripApi: TripApiService,
     private calendarApi: CalendarApiService
@@ -76,8 +85,8 @@ export class TimetableAllLineService {
     this.calendar.next(calendar);
   }
 
-  fetchCalendar(calendarId: string): Observable<void> {
-    return this.calendarApi.getCalendarById(calendarId).pipe(
+  fetchCalendar(): Observable<void> {
+    return this.calendarApi.getCalendarById(this.getCalendarIdAsStatic()).pipe(
       map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
       tap(data => {
         this.setCalendar(data);
@@ -134,10 +143,10 @@ export class TimetableAllLineService {
     this.stations.next(array);
   }
 
-  fetchStations(serviceId: string, tripDirection: '0' | '1'): Observable<void> {
+  fetchStations(): Observable<void> {
     return this.serviceApi
-      .getServiceStationsById(serviceId, {
-        trip_direction: tripDirection
+      .getServiceStationsById(this.getServiceAsStatic().id, {
+        trip_direction: this.getTripDirectionAsStatic()
       })
       .pipe(
         map(data => {
@@ -190,11 +199,11 @@ export class TimetableAllLineService {
     this.trips.next(trips);
   }
 
-  fetchTrips(calendarId: string, tripDirection: '0' | '1') {
+  fetchTrips() {
     return this.tripApi
       .searchTripsByBlocks({
-        calendar_id: calendarId,
-        trip_direction: tripDirection
+        calendar_id: this.getCalendarIdAsStatic(),
+        trip_direction: this.getTripDirectionAsStatic()
       })
       .pipe(
         map(data =>
@@ -233,6 +242,18 @@ export class TimetableAllLineService {
       ...current,
       ...setting
     });
+  }
+
+  getGroupingBaseTrip(): Observable<ITrip> {
+    return this.groupingBaseTrip.asObservable();
+  }
+
+  getGroupingBaseTripAsStatic(): ITrip {
+    return this.groupingBaseTrip.getValue();
+  }
+
+  setGroupingBaseTrip(trip: ITrip): void {
+    this.groupingBaseTrip.next(trip);
   }
 
   getViewMode(
@@ -295,5 +316,69 @@ export class TimetableAllLineService {
     } else {
       return false;
     }
+  }
+
+  addTripInBaseTripBlock(targetTrip: ITrip): void {
+    const baseTrip = this.getGroupingBaseTripAsStatic();
+
+    const dialogRef = this.dialog.open(ConfirmDialogContainerComponent, {
+      width: '480px',
+      data: {
+        title: 'グループに追加する',
+        text: `${targetTrip.tripNumber}列車を${baseTrip.tripNumber}列車が所属するグループに追加しますか？`,
+        cancelButtonText: 'キャンセル',
+        goButtonText: '追加する',
+        goButtonColor: 'primary'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(done => {
+      if (done) {
+        this.tripApi
+          .addTripToTripBlockById(targetTrip.id, baseTrip.tripBlockId)
+          .pipe(flatMap(() => this.fetchTrips()))
+          .subscribe(
+            () => {
+              this.setGroupingBaseTrip(null);
+              this.notificationService.open('グループに追加しました', 'OK');
+            },
+            error => {
+              this.notificationService.open('エラーが発生しました', 'OK');
+            }
+          );
+      }
+    });
+  }
+
+  removeTripInBaseTripBlock(targetTrip: ITrip): void {
+    const baseTrip = this.getGroupingBaseTripAsStatic();
+
+    const dialogRef = this.dialog.open(ConfirmDialogContainerComponent, {
+      width: '480px',
+      data: {
+        title: 'グループから除外する',
+        text: `${targetTrip.tripNumber}列車を${baseTrip.tripNumber}列車が所属するグループから除外しますか？`,
+        cancelButtonText: 'キャンセル',
+        goButtonText: '除外する',
+        goButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(done => {
+      if (done) {
+        this.tripApi
+          .removeTripFromTripBlockById(targetTrip.id)
+          .pipe(flatMap(() => this.fetchTrips()))
+          .subscribe(
+            () => {
+              this.setGroupingBaseTrip(null);
+              this.notificationService.open('グループから除外しました', 'OK');
+            },
+            error => {
+              this.notificationService.open('エラーが発生しました', 'OK');
+            }
+          );
+      }
+    });
   }
 }

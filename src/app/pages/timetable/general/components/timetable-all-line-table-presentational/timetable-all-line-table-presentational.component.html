@@ -1,5 +1,5 @@
 <div fxLayout="row">
-  <table class="stations-table" fxFlex="0 0 auto">
+  <table class="stations-table" fxFlex="0 0 128px">
     <thead>
       <tr>
         <th colspan="2">列車番号</th>
@@ -144,14 +144,67 @@
         </ng-container>
       </tbody>
       <tfoot>
-        <tr>
+        <tr *ngIf="!groupingBaseTrip">
           <td *ngFor="let trip of trips">
-            <a [routerLink]="'/timetable/update/' + trip.tripBlockId">編集</a>
+            <button mat-icon-button (click)="onClickEdit(trip.tripBlockId)">
+              <mat-icon>edit</mat-icon>
+            </button>
           </td>
         </tr>
-        <tr>
+        <tr *ngIf="!groupingBaseTrip">
           <td *ngFor="let trip of trips">
-            <a>削除</a>
+            <button
+              mat-icon-button
+              (click)="onClickDelete(trip.id)"
+              [disabled]="true"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!groupingBaseTrip">
+          <td *ngFor="let trip of trips">
+            <button
+              mat-icon-button
+              matTooltip="この列車を基準として列車をグルーピングする"
+              (click)="onClickGrouping(trip)"
+            >
+              <mat-icon>link</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="groupingBaseTrip">
+          <td *ngFor="let trip of trips">
+            <button
+              *ngIf="trip.id === groupingBaseTrip.id"
+              mat-icon-button
+              matTooltip="キャンセル"
+              (click)="onClickGrouping(null)"
+            >
+              <mat-icon>clear</mat-icon>
+            </button>
+            <button
+              *ngIf="
+                trip.id !== groupingBaseTrip.id &&
+                trip.tripBlockId !== groupingBaseTrip.tripBlockId
+              "
+              mat-icon-button
+              matTooltip="グループに追加する"
+              (click)="onClickAddTripInGroup(trip)"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+            <button
+              *ngIf="
+                trip.id !== groupingBaseTrip.id &&
+                trip.tripBlockId === groupingBaseTrip.tripBlockId
+              "
+              mat-icon-button
+              matTooltip="グループから外す"
+              (click)="onClickRemoveTripInGroup(trip)"
+            >
+              <mat-icon>remove</mat-icon>
+            </button>
           </td>
         </tr>
       </tfoot>

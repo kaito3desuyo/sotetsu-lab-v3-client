@@ -21,6 +21,20 @@ export class TripApiService {
 
   constructor(private http: HttpClient) {}
 
+  addTripToTripBlockById(tripId: string, tripBlockId: string): Observable<any> {
+    return this.http.patch(
+      this.apiUrl + '/' + tripId + '/add-to-block/' + tripBlockId,
+      null
+    );
+  }
+
+  removeTripFromTripBlockById(tripId: string): Observable<any> {
+    return this.http.patch(
+      this.apiUrl + '/' + tripId + '/remove-from-block',
+      null
+    );
+  }
+
   getTripBlockById(id: string): Observable<{ trip_block: ReadTripBlockDto }> {
     return this.http
       .get(this.apiUrl + '/blocks/' + id)

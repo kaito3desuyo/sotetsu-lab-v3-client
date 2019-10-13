@@ -2,7 +2,9 @@ import {
   Component,
   OnInit,
   ChangeDetectionStrategy,
-  Input
+  Input,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import {
   ITimetableStation,
@@ -27,6 +29,17 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
   @Input() tripDirection: '0' | '1';
   @Input() stations: ITimetableStation[];
   @Input() trips: ITrip[];
+  @Input() isGroupingMode: boolean;
+  @Input() groupingBaseTrip: ITrip;
+
+  @Output() clickEdit: EventEmitter<string> = new EventEmitter<string>();
+  @Output() clickGrouping: EventEmitter<ITrip> = new EventEmitter<ITrip>();
+  @Output() clickAddTripInGroup: EventEmitter<ITrip> = new EventEmitter<
+    ITrip
+  >();
+  @Output() clickRemoveTripInGroup: EventEmitter<ITrip> = new EventEmitter<
+    ITrip
+  >();
 
   constructor() {}
 
@@ -123,5 +136,25 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
       time = '-' + time;
     }
     return timeString ? time : '';
+  }
+
+  onClickEdit(blockId: string): void {
+    this.clickEdit.emit(blockId);
+  }
+
+  onClickDelete(tripId: string): void {
+    console.log('削除');
+  }
+
+  onClickGrouping(trip: ITrip): void {
+    this.clickGrouping.emit(trip);
+  }
+
+  onClickAddTripInGroup(trip: ITrip): void {
+    this.clickAddTripInGroup.emit(trip);
+  }
+
+  onClickRemoveTripInGroup(trip: ITrip): void {
+    this.clickRemoveTripInGroup.emit(trip);
   }
 }
