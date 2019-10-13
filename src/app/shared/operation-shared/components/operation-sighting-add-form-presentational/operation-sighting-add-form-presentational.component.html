@@ -21,14 +21,16 @@
         <mat-form-field fxFlex="auto">
           <input
             matInput
-            placeholder="車両番号"
-            formControlName="vehicleNumber"
+            placeholder="編成番号もしくは車両番号"
+            formControlName="formationOrVehicleNumber"
           />
           <mat-hint>
-            例：相鉄車の場合は「12101」、JR車の場合は「クハE233-7001」
+            例：相鉄車の場合は「12101」、JR車の場合は「ハエ101」「クハE233-7001」
           </mat-hint>
           <mat-error
-            *ngIf="sightingForm.get('vehicleNumber').hasError('required')"
+            *ngIf="
+              sightingForm.get('formationOrVehicleNumber').hasError('required')
+            "
           >
             <strong>必須項目</strong>です
           </mat-error>

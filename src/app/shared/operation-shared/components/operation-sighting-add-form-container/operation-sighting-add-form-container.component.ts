@@ -29,8 +29,7 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
 
   constructor(
     @Inject(Injector) injector: Injector,
-    private operationSightingAddFormService: OperationSightingAddFormService,
-    private currentParamsQuery: CurrentParamsQuery
+    private operationSightingAddFormService: OperationSightingAddFormService
   ) {
     super(injector);
     this.operationSightingAddFormService.fetchAgencies().subscribe();
@@ -39,57 +38,7 @@ export class OperationSightingAddFormContainerComponent extends BaseComponent
 
   ngOnInit() {}
 
-  async onReceiveSubmitSighting(
-    sighting: IOperationSightingAddForm
-  ): Promise<void> {
-    try {
-      const targetFormation = await this.operationSightingAddFormService.getCurrentFormationByVehicleNumber(
-        sighting.agencyId,
-        sighting.vehicleNumber,
-        this.date
-      );
-
-      if (!targetFormation || !targetFormation.length) {
-        throw new Error('存在しない車両番号です');
-      }
-
-      const currentParams = this.currentParamsQuery.getValue();
-
-      const targetOperation = await this.operationSightingAddFormService.getOperationByCalendarIdAndOperationNumber(
-        currentParams.calendar.id,
-        sighting.operationNumber
-      );
-
-      if (!targetOperation || !targetOperation.length) {
-        throw new Error('存在しない運用番号です');
-      }
-
-      let sightingTime = moment();
-      if (sighting.sightingTime) {
-        if (moment().hour() < 4) {
-          sightingTime = moment(sighting.sightingTime, 'HH:mm').subtract(
-            moment(sighting.sightingTime, 'HH:mm').hour() >= 4 ? 1 : 0
-          );
-        } else {
-          sightingTime = moment(sighting.sightingTime, 'HH:mm').add(
-            moment(sighting.sightingTime, 'HH:mm').hour() < 4 ? 1 : 0
-          );
-        }
-        if (moment() < sightingTime) {
-          throw new Error('未来の時刻を選択することはできません');
-        }
-      }
-
-      const addResult = await this.operationSightingAddFormService.addOperationSighting(
-        targetFormation[0].id,
-        targetOperation[0].id,
-        moment().toISOString()
-      );
-
-      this.notification.open('目撃情報を送信しました', 'OK');
-      this.submitSighting.emit(addResult);
-    } catch (e) {
-      this.notification.open(e.message, 'OK');
-    }
+  onReceiveSubmitSighting(sighting: IOperationSightingAddForm): void {
+    this.operationSightingAddFormService.addOperationSighting(sighting);
   }
 }

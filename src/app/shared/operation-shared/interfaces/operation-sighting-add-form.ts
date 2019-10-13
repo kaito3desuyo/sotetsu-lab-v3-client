@@ -1,6 +1,6 @@
 export interface IOperationSightingAddForm {
   agencyId: string;
-  vehicleNumber: string;
+  formationOrVehicleNumber: string;
   operationNumber: string;
   timeSetting: 'currentTime' | 'specifiedTime';
   sightingTime?: string;
