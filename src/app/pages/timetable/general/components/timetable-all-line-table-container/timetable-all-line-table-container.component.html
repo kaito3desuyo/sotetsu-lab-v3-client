@@ -1,0 +1,12 @@
+<app-timetable-all-line-table-presentational
+  [tripDirection]="tripDirection$ | async"
+  [stations]="stations$ | async"
+  [trips]="trips$ | async"
+  [isGroupingMode]="isGroupingMode$ | async"
+  [groupingBaseTrip]="groupingBaseTrip$ | async"
+  (clickEdit)="onReceiveClickEdit($event)"
+  (clickDelete)="onReceiveClickDelete($event)"
+  (clickGrouping)="onReceiveClickGrouping($event)"
+  (clickAddTripInGroup)="onReceiveClickAddTripInGroup($event)"
+  (clickRemoveTripInGroup)="onReceiveClickRemoveTripInGroup($event)"
+></app-timetable-all-line-table-presentational>

@@ -1,0 +1,41 @@
+<mat-card fxFlex="auto">
+  <mat-card-title>
+    列車を追加
+  </mat-card-title>
+  <mat-card-subtitle>
+    列車データを追加できます。
+  </mat-card-subtitle>
+  <mat-card-content>
+    <form fxLayout="column" fxLayoutGap="16px" [formGroup]="form">
+      <mat-form-field>
+        <mat-select placeholder="ダイヤ" formControlName="calendarId">
+          <mat-option
+            *ngFor="let calendar of calendarsSelectList"
+            [value]="calendar.value"
+          >
+            {{ calendar.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-radio-group
+        fxLayout="row"
+        fxLayoutGap="16px"
+        formControlName="tripDirection"
+      >
+        <mat-radio-button value="0">上り</mat-radio-button>
+        <mat-radio-button value="1">下り</mat-radio-button>
+      </mat-radio-group>
+      <div fxLayout="row" fxLayoutAlign="end center">
+        <button
+          type="button"
+          mat-raised-button
+          color="primary"
+          [disabled]="form.invalid"
+          (click)="onClickMoveTripInputPage()"
+        >
+          列車情報入力へ移る
+        </button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>

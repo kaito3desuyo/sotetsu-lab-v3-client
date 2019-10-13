@@ -1,0 +1,16 @@
+<div
+  class="mt-16 p-16"
+  style="background: rgba(0,0,0,0.06)"
+  fxLayout="column"
+  fxLayoutGap="16px"
+>
+  <p class="m-0">
+    デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
+    途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
+    <br />
+    分割・併合・直通がない列車を複数同時に保存する（グループを作成せず、単一列車に単一グループを割り当てる）場合は、以下のトグルをONにしてください。
+  </p>
+  <mat-slide-toggle [formControl]="isSaveTripsIndividually">
+    列車個別保存モード
+  </mat-slide-toggle>
+</div>

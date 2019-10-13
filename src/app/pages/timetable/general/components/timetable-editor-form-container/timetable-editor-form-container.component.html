@@ -1,0 +1,8 @@
+<app-timetable-editor-form-presentational
+  [tripBlock]="tripBlock$ | async"
+  [stations]="stations$ | async"
+  [operations]="operations$ | async"
+  [tripClasses]="tripClasses$ | async"
+  [clearEvent$]="clearEvent$"
+  (clickSave)="onReceiveClickSave($event)"
+></app-timetable-editor-form-presentational>
