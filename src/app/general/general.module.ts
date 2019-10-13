@@ -13,6 +13,7 @@ import { ErrorHandlerService } from './services/error-handler.service';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { CustomPaginator } from './classes/custom-paginator';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,10 @@ import { CustomPaginator } from './classes/custom-paginator';
     MatDialogModule,
     MatSnackBarModule,
     HttpClientModule,
-    LoggerModule.forRoot({ level: NgxLoggerLevel.OFF })
+    LoggerModule.forRoot({
+      level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.DEBUG,
+      serverLogLevel: NgxLoggerLevel.OFF
+    })
   ],
   exports: [
     ConfirmDialogContainerComponent,
