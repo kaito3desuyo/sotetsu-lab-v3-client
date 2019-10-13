@@ -2,4 +2,10 @@
   [tripDirection]="tripDirection$ | async"
   [stations]="stations$ | async"
   [trips]="trips$ | async"
+  [isGroupingMode]="isGroupingMode$ | async"
+  [groupingBaseTrip]="groupingBaseTrip$ | async"
+  (clickEdit)="onReceiveClickEdit($event)"
+  (clickGrouping)="onReceiveClickGrouping($event)"
+  (clickAddTripInGroup)="onReceiveClickAddTripInGroup($event)"
+  (clickRemoveTripInGroup)="onReceiveClickRemoveTripInGroup($event)"
 ></app-timetable-all-line-table-presentational>

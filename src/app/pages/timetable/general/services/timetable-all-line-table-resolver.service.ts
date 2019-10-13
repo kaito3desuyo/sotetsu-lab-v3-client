@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { TimetableAllLineService } from './timetable-all-line.service';
-import { flatMap, tap, map } from 'rxjs/operators';
-import { ServiceModel } from 'src/app/general/models/service/service-model';
+import { flatMap, map } from 'rxjs/operators';
 
 @Injectable()
 export class TimetableAllLineTableResolverService
@@ -21,22 +20,11 @@ export class TimetableAllLineTableResolverService
 
     return forkJoin([
       this.timetableAllLineService.fetchService().pipe(
-        flatMap(() => {
-          const service = this.timetableAllLineService.getServiceAsStatic();
-          return this.timetableAllLineService.fetchStations(
-            service.id,
-            this.timetableAllLineService.getTripDirectionAsStatic()
-          );
-        }),
+        flatMap(() => this.timetableAllLineService.fetchStations()),
         map(() => null)
       ),
-      this.timetableAllLineService.fetchTrips(
-        this.timetableAllLineService.getCalendarIdAsStatic(),
-        this.timetableAllLineService.getTripDirectionAsStatic()
-      ),
-      this.timetableAllLineService.fetchCalendar(
-        this.timetableAllLineService.getCalendarIdAsStatic()
-      )
+      this.timetableAllLineService.fetchTrips(),
+      this.timetableAllLineService.fetchCalendar()
     ]).pipe(map(() => null));
   }
 }
