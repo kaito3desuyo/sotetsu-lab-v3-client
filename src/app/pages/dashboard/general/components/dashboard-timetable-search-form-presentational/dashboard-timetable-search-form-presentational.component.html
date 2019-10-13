@@ -30,10 +30,12 @@
         <mat-radio-button value="1">下り</mat-radio-button>
       </mat-radio-group>
       <div>
-        <mat-slide-toggle>駅を指定して検索する</mat-slide-toggle>
+        <mat-slide-toggle [disabled]="true"
+          >駅を指定して検索する</mat-slide-toggle
+        >
       </div>
       <mat-form-field>
-        <mat-select placeholder="駅名">
+        <mat-select placeholder="駅名" [disabled]="true">
           <mat-optgroup
             *ngFor="let route of stationsSelectList"
             [label]="route.routeName"

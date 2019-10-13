@@ -3,7 +3,8 @@ import {
   ChangeDetectionStrategy,
   Input,
   Output,
-  EventEmitter
+  EventEmitter,
+  OnInit
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 
@@ -16,10 +17,11 @@ import { FormBuilder, Validators } from '@angular/forms';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardTimetableSearchFormPresentationalComponent {
+export class DashboardTimetableSearchFormPresentationalComponent
+  implements OnInit {
   searchTimetableForm = this.fb.group({
     calendarId: ['', Validators.required],
-    tripDirection: ['', Validators.required]
+    tripDirection: ['0', Validators.required]
   });
 
   @Input() calendarsSelectList: { label: string; value: string }[];
@@ -27,9 +29,18 @@ export class DashboardTimetableSearchFormPresentationalComponent {
     routeName: string;
     stations: { label: string; value: string }[];
   }[];
+  @Input() todaysCalendarId: string;
   @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(private fb: FormBuilder) {}
+
+  ngOnInit(): void {
+    if (this.todaysCalendarId) {
+      this.searchTimetableForm
+        .get('calendarId')
+        .setValue(this.todaysCalendarId);
+    }
+  }
 
   onClickSearch(): void {
     this.searchTimetable.emit(this.searchTimetableForm.value);
