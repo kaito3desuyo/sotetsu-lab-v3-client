@@ -15,3 +15,22 @@ export class ReadTripOperationListDto {
   start_time?: ReadTimeDto;
   end_time?: ReadTimeDto;
 }
+
+export class CreateTripOperationListDto {
+  trip_id?: string;
+  operation_id?: string;
+  start_time_id?: string;
+  end_time_id?: string;
+  start_station_id?: string;
+  end_station_id?: string;
+}
+
+export class UpdateTripOperationListDto {
+  id: string;
+  trip_id: string;
+  operation_id: string;
+  start_time_id: string;
+  end_time_id: string;
+  start_station_id?: string;
+  end_station_id?: string;
+}

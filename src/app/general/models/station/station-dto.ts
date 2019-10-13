@@ -1,4 +1,5 @@
 import { ReadRouteStationListDto } from '../route-station-list/route-station-list-dto';
+import { ReadStopDto } from '../stop/stop-dto';
 /* tslint:disable: variable-name */
 export class ReadStationDto {
   id: string;
@@ -12,4 +13,5 @@ export class ReadStationDto {
   created_at: string;
   updated_at: string;
   route_station_lists?: ReadRouteStationListDto[];
+  stops?: ReadStopDto[];
 }

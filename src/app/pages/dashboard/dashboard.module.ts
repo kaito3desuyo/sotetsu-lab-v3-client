@@ -20,7 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 import { DashboardTripAddFormContainerComponent } from './general/components/dashboard-trip-add-form-container/dashboard-trip-add-form-container.component';
 import { DashboardTripAddFormPresentationalComponent } from './general/components/dashboard-trip-add-form-presentational/dashboard-trip-add-form-presentational.component';
 import { DashboardResolverService } from './general/services/dashboard-resolver.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
 import { DashboardService } from './general/services/dashboard.service';
 
@@ -37,6 +37,7 @@ import { DashboardService } from './general/services/dashboard.service';
   imports: [
     CommonModule,
     FlexLayoutModule,
+    FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
     MatCardModule,

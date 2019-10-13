@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { BehaviorSubject, Observable, zip, interval, timer, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  zip,
+  interval,
+  timer,
+  of,
+  forkJoin
+} from 'rxjs';
 import { map, tap, flatMap } from 'rxjs/operators';
 import {
   find,
@@ -33,6 +41,8 @@ import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-mod
 import { ServiceModel } from 'src/app/general/models/service/service-model';
 import { ReadOperationDto } from 'src/app/general/models/operation/operation-dto';
 import { Router } from '@angular/router';
+import { SocketService } from 'src/app/general/services/socket.service';
+import { NotificationService } from 'src/app/general/services/notification.service';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -87,15 +97,46 @@ export class OperationRealTimeService extends BaseService {
 
   constructor(
     private router: Router,
+    private socketService: SocketService,
     private serviceApi: ServiceApiService,
     private calendarApi: CalendarApiService,
     private tripApi: TripApiService,
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
     private stationApi: StationApiService,
-    private currentParamsQuery: CurrentParamsQuery
+    private currentParamsQuery: CurrentParamsQuery,
+    private notification: NotificationService
   ) {
     super();
+    this.socketService.connect('/operation/real-time');
+
+    this.subscription = this.socketService
+      .on('sightingReload')
+      .subscribe(data => {
+        if (data.eventType === 'receive') {
+          this.notification.open('データが更新されました', 'OK');
+        }
+        const services = this.getServicesAsStatic();
+        const calendars = this.getCalendarsAsStatic();
+
+        forkJoin([
+          this.fetchFormationNumbers(),
+          this.fetchOperationNumbers(calendars[0].id),
+          this.fetchOperationTrips(calendars[0].id),
+          this.fetchTripClasses(services[0].id),
+          this.fetchOperations(calendars[0].id)
+        ])
+          .pipe(
+            flatMap(() =>
+              forkJoin([
+                this.fetchFormationSightings(),
+                this.fetchOperationSightings()
+              ])
+            )
+          )
+          .subscribe();
+      });
+
     this.subscription = this.currentParamsQuery.calendar$.subscribe(obj => {
       this.currentCalendarId = obj.id;
     });
@@ -733,6 +774,21 @@ export class OperationRealTimeService extends BaseService {
             nextTime: null,
             nextStation: null
           };
+
+          if (operation.tripOperationLists.length === 0) {
+            return {
+              operationNumber: operation.operationNumber,
+              trip: {
+                tripNumber: null,
+                tripClassName: null,
+                tripClassColor: null,
+                prevTime: null,
+                prevStation: '不明',
+                nextTime: null,
+                nextStation: '不明'
+              }
+            };
+          }
 
           // 0番目の列車の発車時刻より前の場合
           if (
