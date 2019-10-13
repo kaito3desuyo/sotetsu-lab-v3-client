@@ -9,9 +9,6 @@ import { TimetableUpdateResolverService } from './general/services/timetable-upd
 
 const routes: Routes = [
   {
-    path: 'all-line/block/:blockId'
-  },
-  {
     path: 'all-line/:calendarId',
     component: TimetableAllLineComponent,
     resolve: {

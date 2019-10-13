@@ -1,6 +1,7 @@
 <mat-sidenav-container>
-  <mat-sidenav #sidenav mode="push" [(opened)]="sidenavState">
+  <mat-sidenav #sidenav mode="push" [opened]="sidenavState$ | async">
     <app-sidenav-presentational
+      [todaysCalendarId]="todaysCalendarId$ | async"
       [stationsSelectList]="stationsSelectList$ | async"
     ></app-sidenav-presentational>
   </mat-sidenav>

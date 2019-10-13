@@ -734,6 +734,21 @@ export class OperationRealTimeService extends BaseService {
             nextStation: null
           };
 
+          if (operation.tripOperationLists.length === 0) {
+            return {
+              operationNumber: operation.operationNumber,
+              trip: {
+                tripNumber: null,
+                tripClassName: null,
+                tripClassColor: null,
+                prevTime: null,
+                prevStation: '不明',
+                nextTime: null,
+                nextStation: '不明'
+              }
+            };
+          }
+
           // 0番目の列車の発車時刻より前の場合
           if (
             now <
