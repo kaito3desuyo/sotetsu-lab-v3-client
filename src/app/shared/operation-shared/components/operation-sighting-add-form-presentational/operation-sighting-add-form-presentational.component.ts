@@ -24,7 +24,7 @@ export class OperationSightingAddFormPresentationalComponent
   implements OnInit {
   sightingForm = this.fb.group({
     agencyId: ['', Validators.required],
-    vehicleNumber: ['', Validators.required],
+    formationOrVehicleNumber: ['', Validators.required],
     operationNumber: ['', Validators.required],
     timeSetting: ['currentTime', Validators.required],
     sightingTime: [{ value: '', disabled: true }, Validators.required]
