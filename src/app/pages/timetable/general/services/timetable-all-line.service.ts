@@ -318,6 +318,35 @@ export class TimetableAllLineService {
     }
   }
 
+  deleteTripById(trip: ITrip): void {
+    const dialogRef = this.dialog.open(ConfirmDialogContainerComponent, {
+      width: '480px',
+      data: {
+        title: 'グループに追加する',
+        text: `${trip.tripNumber}列車を削除しますか？この操作は元に戻すことができません。`,
+        cancelButtonText: 'キャンセル',
+        goButtonText: '削除する',
+        goButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(done => {
+      if (done) {
+        this.tripApi
+          .deleteTripById(trip.id)
+          .pipe(flatMap(() => this.fetchTrips()))
+          .subscribe(
+            () => {
+              this.notificationService.open('削除しました', 'OK');
+            },
+            error => {
+              this.notificationService.open('エラーが発生しました', 'OK');
+            }
+          );
+      }
+    });
+  }
+
   addTripInBaseTripBlock(targetTrip: ITrip): void {
     const baseTrip = this.getGroupingBaseTripAsStatic();
 

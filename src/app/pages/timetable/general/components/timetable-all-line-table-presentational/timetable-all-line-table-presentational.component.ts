@@ -33,6 +33,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
   @Input() groupingBaseTrip: ITrip;
 
   @Output() clickEdit: EventEmitter<string> = new EventEmitter<string>();
+  @Output() clickDelete: EventEmitter<ITrip> = new EventEmitter<ITrip>();
   @Output() clickGrouping: EventEmitter<ITrip> = new EventEmitter<ITrip>();
   @Output() clickAddTripInGroup: EventEmitter<ITrip> = new EventEmitter<
     ITrip
@@ -142,8 +143,8 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
     this.clickEdit.emit(blockId);
   }
 
-  onClickDelete(tripId: string): void {
-    console.log('削除');
+  onClickDelete(trip: ITrip): void {
+    this.clickDelete.emit(trip);
   }
 
   onClickGrouping(trip: ITrip): void {

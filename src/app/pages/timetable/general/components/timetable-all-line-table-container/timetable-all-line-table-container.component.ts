@@ -37,6 +37,10 @@ export class TimetableAllLineTableContainerComponent {
     this.router.navigate(['timetable', 'update', blockId]);
   }
 
+  onReceiveClickDelete(trip: ITrip): void {
+    this.timetableAllLineService.deleteTripById(trip);
+  }
+
   onReceiveClickGrouping(trip: ITrip): void {
     this.timetableAllLineService.setGroupingBaseTrip(trip);
   }

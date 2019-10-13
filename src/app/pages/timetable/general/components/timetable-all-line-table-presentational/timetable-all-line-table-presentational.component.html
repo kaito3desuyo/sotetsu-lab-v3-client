@@ -146,7 +146,11 @@
       <tfoot>
         <tr *ngIf="!groupingBaseTrip">
           <td *ngFor="let trip of trips">
-            <button mat-icon-button (click)="onClickEdit(trip.tripBlockId)">
+            <button
+              mat-icon-button
+              matTooltip="編集する"
+              (click)="onClickEdit(trip.tripBlockId)"
+            >
               <mat-icon>edit</mat-icon>
             </button>
           </td>
@@ -155,8 +159,8 @@
           <td *ngFor="let trip of trips">
             <button
               mat-icon-button
-              (click)="onClickDelete(trip.id)"
-              [disabled]="true"
+              matTooltip="削除する"
+              (click)="onClickDelete(trip)"
             >
               <mat-icon>delete</mat-icon>
             </button>
@@ -200,7 +204,7 @@
                 trip.tripBlockId === groupingBaseTrip.tripBlockId
               "
               mat-icon-button
-              matTooltip="グループから外す"
+              matTooltip="グループから除外する"
               (click)="onClickRemoveTripInGroup(trip)"
             >
               <mat-icon>remove</mat-icon>
