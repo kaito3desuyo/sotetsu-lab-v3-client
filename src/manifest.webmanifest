@@ -4,8 +4,8 @@
   "theme_color": "#001556",
   "background_color": "#fafafa",
   "display": "standalone",
-  "scope": "https://v3.sotetsu-lab.com/",
-  "start_url": "https://v3.sotetsu-lab.com/",
+  "scope": "/index.html",
+  "start_url": "/index.html",
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png",
