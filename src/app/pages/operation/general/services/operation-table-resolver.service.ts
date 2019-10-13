@@ -11,7 +11,6 @@ export class OperationTableResolverService
 
   resolve(route: ActivatedRouteSnapshot): Observable<void> {
     const calendarId = route.paramMap.get('calendarId');
-    console.log(calendarId);
     return forkJoin([
       this.operationTableService.fetchOperationTrips(calendarId),
       this.operationTableService.fetchStations(),
