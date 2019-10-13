@@ -1,8 +1,10 @@
 <mat-nav-list>
-  <mat-list-item>TOP</mat-list-item>
+  <a mat-list-item routerLink="/">
+    TOP
+  </a>
   <h3 matSubheader>時刻表</h3>
   <mat-form-field class="px-16">
-    <mat-select placeholder="駅名">
+    <mat-select placeholder="駅名" [formControl]="stationId" [disabled]="true">
       <mat-option [value]="null">
         選択しない（全線検索）
       </mat-option>
@@ -18,11 +20,15 @@
       </mat-optgroup>
     </mat-select>
   </mat-form-field>
-  <mat-list-item>
-    <a matLine routerLink="/">上り</a>
-  </mat-list-item>
-  <mat-list-item>下り</mat-list-item>
+  <a mat-list-item [routerLink]="upTimetableLink | async">
+    上り
+  </a>
+  <a mat-list-item [routerLink]="downTimetableLink | async">
+    下り
+  </a>
   <h3 matSubheader>運用情報</h3>
-  <mat-list-item>ﾘｱﾙﾀｲﾑ運用情報</mat-list-item>
-  <mat-list-item>運用表</mat-list-item>
+  <a mat-list-item routerLink="/operation/real-time">リアルタイム運用情報</a>
+  <a mat-list-item [routerLink]="'/operation/table/' + todaysCalendarId">
+    運用表
+  </a>
 </mat-nav-list>

@@ -1,4 +1,16 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Input,
+  ChangeDetectionStrategy,
+  Inject,
+  Injector,
+  OnInit,
+  OnChanges,
+  SimpleChanges
+} from '@angular/core';
+import { FormControl, FormBuilder } from '@angular/forms';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { BaseComponent } from 'src/app/general/classes/base-component';
 
 @Component({
   selector: 'app-sidenav-presentational',
@@ -6,11 +18,60 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   styleUrls: ['./sidenav-presentational.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SidenavPresentationalComponent {
+export class SidenavPresentationalComponent extends BaseComponent
+  implements OnInit, OnChanges {
+  stationId: FormControl = this.fb.control('');
+  upTimetableLink: BehaviorSubject<
+    [string, { [key: string]: any }]
+  > = new BehaviorSubject<[string, { [key: string]: any }]>(null);
+  downTimetableLink: BehaviorSubject<
+    [string, { [key: string]: any }]
+  > = new BehaviorSubject<[string, { [key: string]: any }]>(null);
+
+  @Input() todaysCalendarId: string;
   @Input() stationsSelectList: {
     routeName: string;
     stations: { label: string; value: string }[];
   }[];
 
-  constructor() {}
+  constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+    super(injector);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.todaysCalendarId) {
+      this.upTimetableLink.next([
+        '/timetable/all-line/' + this.todaysCalendarId,
+        { trip_direction: '0' }
+      ]);
+      this.downTimetableLink.next([
+        '/timetable/all-line/' + this.todaysCalendarId,
+        { trip_direction: '1' }
+      ]);
+    }
+  }
+
+  ngOnInit(): void {
+    this.subscription = this.stationId.valueChanges.subscribe(id => {
+      if (id) {
+        this.upTimetableLink.next([
+          '/timetable/station/' + this.todaysCalendarId,
+          { trip_direction: '0', station_id: id }
+        ]);
+        this.downTimetableLink.next([
+          '/timetable/station/' + this.todaysCalendarId,
+          { trip_direction: '1', station_id: id }
+        ]);
+      } else {
+        this.upTimetableLink.next([
+          '/timetable/all-line/' + this.todaysCalendarId,
+          { trip_direction: '0' }
+        ]);
+        this.downTimetableLink.next([
+          '/timetable/all-line/' + this.todaysCalendarId,
+          { trip_direction: '1' }
+        ]);
+      }
+    });
+  }
 }
