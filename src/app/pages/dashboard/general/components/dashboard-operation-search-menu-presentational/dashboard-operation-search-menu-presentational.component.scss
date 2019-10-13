@@ -1,0 +1,11 @@
+:host {
+  .mat-list-item {
+    margin-left: -16px;
+    margin-right: -16px;
+    width: calc(100% + 32px);
+  }
+
+  .mat-subheader {
+    padding: 0 !important;
+  }
+}
