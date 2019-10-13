@@ -6,6 +6,7 @@ import { RoutesAllStationsService } from 'src/app/general/models/routes/state/ro
 import { DashboardService } from '../../services/dashboard.service';
 import { IDashboardSearchTimetableForm } from '../../interfaces/dashboard-search-timetable-form';
 import { Router } from '@angular/router';
+import { ParamsQuery } from 'src/app/state/params';
 
 @Component({
   selector: 'app-dashboard-timetable-search-form-container',
@@ -17,21 +18,24 @@ export class DashboardTimetableSearchFormContainerComponent {
 
   stationsSelectList$: Observable<
     { routeName: string; stations: { label: string; value: string }[] }[]
-  > = this.routesAllStationsQuery.selectAll().pipe(
-    map(route => {
-      return this.routesAllStationsService.generateStationSelectList(route);
-    })
-  );
+  >;
+
+  todaysCalendarId$: Observable<string>;
+
   constructor(
     private router: Router,
     private dashboardService: DashboardService,
     private routesAllStationsQuery: RoutesAllStationsQuery,
-    private routesAllStationsService: RoutesAllStationsService
+    private routesAllStationsService: RoutesAllStationsService,
+    private paramsQuery: ParamsQuery
   ) {
     this.calendarsSelectList$ = this.dashboardService.getCalendarSelectList();
-    this.stationsSelectList$.subscribe(data => {
-      console.log(data);
-    });
+    this.stationsSelectList$ = this.routesAllStationsQuery.selectAll().pipe(
+      map(route => {
+        return this.routesAllStationsService.generateStationSelectList(route);
+      })
+    );
+    this.todaysCalendarId$ = this.paramsQuery.select('calendarId');
   }
 
   onReceiveSearchTimetable(form: IDashboardSearchTimetableForm): void {
