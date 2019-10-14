@@ -33,12 +33,12 @@
           <span class="station-name">
             {{ findStationName(tripOperationList.trip.times[0].stationId) }}
           </span>
-          <span>{{
+          <span class="monoscape">{{
             convertTimeToDateObject(
               tripOperationList.trip.times[0].departureTime
             ) | date: 'HHmm'
           }}</span>
-          <span>>></span>
+          <span>→</span>
         </ng-container>
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
           <span class="station-name">
@@ -50,14 +50,14 @@
               )
             }}
           </span>
-          <span>{{
+          <span class="monoscape">{{
             convertTimeToDateObject(
               tripOperationList.trip.times[
                 tripOperationList.trip.times.length - 1
               ].arrivalTime
             ) | date: 'HHmm'
           }}</span>
-          <span><<</span>
+          <span>←</span>
         </ng-container>
 
         <span
@@ -68,6 +68,7 @@
           >{{ findTripClassName(tripOperationList.trip.tripClassId) }}</span
         >
         <span
+          class="monoscape"
           [ngStyle]="{
             color: findTripClassColor(tripOperationList.trip.tripClassId)
           }"
@@ -75,8 +76,8 @@
         >
 
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
-          <span>>></span>
-          <span>{{
+          <span>→</span>
+          <span class="monoscape">{{
             convertTimeToDateObject(
               tripOperationList.trip.times[
                 tripOperationList.trip.times.length - 1
@@ -94,8 +95,8 @@
           </span>
         </ng-container>
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
-          <span><<</span>
-          <span>{{
+          <span>←</span>
+          <span class="monoscape">{{
             convertTimeToDateObject(
               tripOperationList.trip.times[0].departureTime
             ) | date: 'HHmm'
