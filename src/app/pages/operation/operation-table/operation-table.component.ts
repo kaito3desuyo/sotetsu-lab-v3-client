@@ -15,7 +15,6 @@ export class OperationTableComponent extends BaseComponent {
     private titleService: TitleService
   ) {
     super(injector);
-
     this.subscription = this.route.data.subscribe((data: { title: string }) => {
       this.titleService.setTitle(data.title);
     });

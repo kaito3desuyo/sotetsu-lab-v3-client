@@ -24,6 +24,7 @@ export class GoogleAnalyticsService {
     if (!environment.production) {
       return;
     }
+
     console.log('Google Analytics Service', url);
     if (!this.useGA()) {
       return;
