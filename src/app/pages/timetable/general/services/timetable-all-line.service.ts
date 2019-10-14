@@ -297,7 +297,7 @@ export class TimetableAllLineService {
   getBorderSetting(stationName: string, tripDirection: '0' | '1'): boolean {
     if (tripDirection === '0') {
       switch (stationName) {
-        case '海老名':
+        case '厚木':
         case '希望ヶ丘':
         case '横浜':
           return true;
@@ -308,7 +308,7 @@ export class TimetableAllLineService {
       switch (stationName) {
         case '羽沢横浜国大':
         case '湘南台':
-        case '厚木':
+        case '海老名':
           return true;
         default:
           return false;
