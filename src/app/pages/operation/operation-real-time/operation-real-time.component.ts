@@ -16,29 +16,16 @@ export class OperationRealTimeComponent extends BaseComponent {
   constructor(
     @Inject(Injector) injector: Injector,
     private route: ActivatedRoute,
-    private router: Router,
     private socketService: SocketService,
     private titleService: TitleService
   ) {
     super(injector);
-    /*
-    this.socketService.connect('/operation/real-time');
-    this.subscription = this.socketService
-      .on('sightingReload')
-      .subscribe(data => {
-        if (data.eventType === 'receive') {
-          this.notification.open('データが更新されました', 'OK');
-        }
-        this.router.navigate([this.router.url]);
-      });
-      */
-    this.subscription = this.route.data.subscribe((data: { date: string }) => {
-      this.date = data.date;
-    });
-
-    this.subscription = this.route.data.subscribe((data: { title: string }) => {
-      this.titleService.setTitle(data.title);
-    });
+    this.subscription = this.route.data.subscribe(
+      (data: { date: string; title: string }) => {
+        this.date = data.date;
+        this.titleService.setTitle(data.title);
+      }
+    );
   }
 
   onReceiveSubmitSighting(result: any): void {
