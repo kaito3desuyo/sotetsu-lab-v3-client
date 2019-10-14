@@ -20,10 +20,10 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
     LayoutModule,
     AppSharedModule,
     GeneralModule,
+    environment.production ? [] : AkitaNgDevtools.forRoot(),
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production
-    }),
-    environment.production ? [] : AkitaNgDevtools.forRoot()
+    })
   ],
   bootstrap: [AppComponent]
 })

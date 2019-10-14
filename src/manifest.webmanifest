@@ -1,11 +1,11 @@
 {
-  "name": "Sotetsu Lab.",
-  "short_name": "Sotetsu Lab.",
+  "name": "Sotetsu Lab. v3",
+  "short_name": "Sotetsu Lab. v3",
   "theme_color": "#001556",
   "background_color": "#fafafa",
   "display": "standalone",
-  "scope": "/index.html",
-  "start_url": "/index.html",
+  "scope": "/",
+  "start_url": "/",
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png",
