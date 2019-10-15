@@ -1079,16 +1079,18 @@ export class OperationRealTimeService extends BaseService {
               findSightings.rotatedOperationNumber ===
               operationTrip.operationNumber
           );
-
-          return {
-            postedOperationNumber: findSightings.postedOperationNumber,
-            rotatedOperationNumber: findSightings.rotatedOperationNumber,
-            rotatedOperationId: find(
+          
+          const targetOperation = find(
               operations,
               operation =>
                 operation.operationNumber ===
                 findSightings.rotatedOperationNumber
-            ).id,
+          )
+
+          return {
+            postedOperationNumber: findSightings.postedOperationNumber,
+            rotatedOperationNumber: findSightings.rotatedOperationNumber,
+            rotatedOperationId: targetOperation ? targetOperation.id : null,
             formationNumber: findSightings.formationNumber,
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
