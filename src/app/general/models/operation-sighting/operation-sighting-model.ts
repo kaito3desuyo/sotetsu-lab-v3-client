@@ -33,6 +33,11 @@ export class OperationSightingModel {
       updatedAt: operationSighting.updated_at
     };
 
+    if (operationSighting.circulated_operation_id) {
+      returnObj.circulatedOperationId =
+        operationSighting.circulated_operation_id;
+    }
+
     if (operationSighting.formation) {
       returnObj.formation = FormationModel.readFormationDtoImpl(
         operationSighting.formation
@@ -42,6 +47,12 @@ export class OperationSightingModel {
     if (operationSighting.operation) {
       returnObj.operation = OperationModel.readOperationDtoImpl(
         operationSighting.operation
+      );
+    }
+
+    if (operationSighting.circulated_operation) {
+      returnObj.circulatedOperation = OperationModel.readOperationDtoImpl(
+        operationSighting.circulated_operation
       );
     }
 
