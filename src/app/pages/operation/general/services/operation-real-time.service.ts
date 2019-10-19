@@ -1,24 +1,8 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import {
-  BehaviorSubject,
-  Observable,
-  zip,
-  interval,
-  timer,
-  of,
-  forkJoin
-} from 'rxjs';
+import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
 import { map, tap, flatMap } from 'rxjs/operators';
-import {
-  find,
-  some,
-  groupBy,
-  uniqBy,
-  sortBy,
-  reverse,
-  map as lodashMap
-} from 'lodash';
+import { find } from 'lodash';
 import moment from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
@@ -43,6 +27,7 @@ import { ReadOperationDto } from 'src/app/general/models/operation/operation-dto
 import { Router } from '@angular/router';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { NotificationService } from 'src/app/general/services/notification.service';
+import { OperationSightingModel } from 'src/app/general/models/operation-sighting/operation-sighting-model';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -64,17 +49,9 @@ export class OperationRealTimeService extends BaseService {
     { formationNumber: string }[]
   > = new BehaviorSubject<{ formationNumber: string }[]>([]);
 
-  private formationSightings: BehaviorSubject<
-    IOperationSighting[]
-  > = new BehaviorSubject<IOperationSighting[]>([]);
-
   private operationNumbers: BehaviorSubject<
     { operationNumber: string }[]
   > = new BehaviorSubject<{ operationNumber: string }[]>([]);
-
-  private operationSightings: BehaviorSubject<
-    IOperationSighting[]
-  > = new BehaviorSubject<IOperationSighting[]>([]);
 
   private tripClasses: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
     ITripClass[]
@@ -94,6 +71,13 @@ export class OperationRealTimeService extends BaseService {
   private operationTableData: BehaviorSubject<
     IOperationSightingTable[]
   > = new BehaviorSubject<IOperationSightingTable[]>([]);
+
+  private formationSightingsLatest: BehaviorSubject<
+    IOperationSighting[]
+  > = new BehaviorSubject<IOperationSighting[]>([]);
+  private operationSightingsLatest: BehaviorSubject<
+    IOperationSighting[]
+  > = new BehaviorSubject<IOperationSighting[]>([]);
 
   constructor(
     private router: Router,
@@ -116,25 +100,20 @@ export class OperationRealTimeService extends BaseService {
         if (data.eventType === 'receive') {
           this.notification.open('データが更新されました', 'OK');
         }
-        const services = this.getServicesAsStatic();
-        const calendars = this.getCalendarsAsStatic();
 
-        forkJoin([
-          this.fetchFormationNumbers(),
-          this.fetchOperationNumbers(calendars[0].id),
-          this.fetchOperationTrips(calendars[0].id),
-          this.fetchTripClasses(services[0].id),
-          this.fetchOperations(calendars[0].id)
-        ])
+        forkJoin([this.fetchSightingsLatest()])
           .pipe(
             flatMap(() =>
               forkJoin([
-                this.fetchFormationSightings(),
-                this.fetchOperationSightings()
+                this.fetchFormationTableData(),
+                this.fetchOperationTableData()
               ])
             )
           )
-          .subscribe();
+          .subscribe(([formation, operation]) => {
+            this.setFormationTableData(formation);
+            this.setOperationTableData(operation);
+          });
       });
 
     this.subscription = this.currentParamsQuery.calendar$.subscribe(obj => {
@@ -143,21 +122,58 @@ export class OperationRealTimeService extends BaseService {
 
     this.subscription = timer(0, 1000 * 60)
       .pipe(
-        flatMap(() => zip(this.formationNumbers, this.formationSightings)),
-        flatMap(() => this.fetchFormationTableData())
+        flatMap(() =>
+          forkJoin([
+            this.fetchFormationTableData(),
+            this.fetchOperationTableData()
+          ])
+        )
       )
-      .subscribe(data => {
-        this.setFormationTableData(data);
+      .subscribe(([formation, operation]) => {
+        this.setFormationTableData(formation);
+        this.setOperationTableData(operation);
       });
+  }
 
-    this.subscription = timer(0, 1000 * 60)
+  /**
+   * 最終目撃情報
+   */
+  fetchSightingsLatest(): Observable<void> {
+    return this.operationApi
+      .getOperationSightingsLatest({
+        calendar_id: this.getCalendarsAsStatic()[0].id
+      })
       .pipe(
-        flatMap(() => zip(this.operationNumbers, this.operationSightings)),
-        flatMap(() => this.fetchOperationTableData())
-      )
-      .subscribe(data => {
-        this.setOperationTableData(data);
-      });
+        tap(data => {
+          this.setFormationSightingsLatest(
+            data.group_by_formations.map(data =>
+              OperationSightingModel.readOperationSightingDtoImpl(data)
+            )
+          );
+          this.setOperationSightingsLatest(
+            data.group_by_operations.map(data =>
+              OperationSightingModel.readOperationSightingDtoImpl(data)
+            )
+          );
+        }),
+        map(() => null)
+      );
+  }
+
+  getFormationSightingsLatest(): Observable<IOperationSighting[]> {
+    return this.formationSightingsLatest.asObservable();
+  }
+
+  setFormationSightingsLatest(sightings: IOperationSighting[]): void {
+    this.formationSightingsLatest.next(sightings);
+  }
+
+  getOperationSightingsLatest(): Observable<IOperationSighting[]> {
+    return this.operationSightingsLatest.asObservable();
+  }
+
+  setOperationSightingsLatest(sightings: IOperationSighting[]): void {
+    this.operationSightingsLatest.next(sightings);
   }
 
   /**
@@ -239,10 +255,10 @@ export class OperationRealTimeService extends BaseService {
     this.operations.next(array);
   }
 
-  fetchOperations(calendarId: string): Observable<void> {
+  fetchOperations(): Observable<void> {
     return this.operationApi
       .searchOperations({
-        calendar_id: calendarId
+        calendar_id: this.getCalendarsAsStatic()[0].id
       })
       .pipe(
         map((data: { operations: ReadOperationDto[] }) =>
@@ -284,26 +300,6 @@ export class OperationRealTimeService extends BaseService {
   }
 
   /**
-   * 編成別目撃情報
-   */
-  getFormationSightings(): Observable<IOperationSighting[]> {
-    return this.formationSightings.asObservable();
-  }
-
-  setFormationSightings(value: IOperationSighting[]): void {
-    this.formationSightings.next(value);
-  }
-
-  fetchFormationSightings(): Observable<void> {
-    return this.formationApi.getFormationsAllLatestSightings().pipe(
-      tap(data => {
-        this.setFormationSightings(data);
-      }),
-      map(() => null)
-    );
-  }
-
-  /**
    * 運用番号
    */
   getOperationNumbers(): Observable<{ operationNumber: string }[]> {
@@ -314,10 +310,10 @@ export class OperationRealTimeService extends BaseService {
     this.operationNumbers.next(value);
   }
 
-  fetchOperationNumbers(calendarId: string): Observable<void> {
+  fetchOperationNumbers(): Observable<void> {
     return this.operationApi
       .searchOperationNumbers({
-        calendar_id: calendarId
+        calendar_id: this.getCalendarsAsStatic()[0].id
       })
       .pipe(
         tap(numbers => {
@@ -325,26 +321,6 @@ export class OperationRealTimeService extends BaseService {
         }),
         map(() => null)
       );
-  }
-
-  /**
-   * 運用別目撃情報
-   */
-  getOperationSightings(): Observable<IOperationSighting[]> {
-    return this.operationSightings.asObservable();
-  }
-
-  setOperationSightings(value: IOperationSighting[]): void {
-    this.operationSightings.next(value);
-  }
-
-  fetchOperationSightings(): Observable<void> {
-    return this.operationApi.getOperationsAllLatestSightings().pipe(
-      tap(data => {
-        this.setOperationSightings(data);
-      }),
-      map(() => null)
-    );
   }
 
   /**
@@ -365,10 +341,10 @@ export class OperationRealTimeService extends BaseService {
   /**
    * 運用別列車情報を取得する
    */
-  fetchOperationTrips(calendarId: string): Observable<void> {
+  fetchOperationTrips(): Observable<void> {
     return this.operationApi
       .getOperationsTrips({
-        calendar_id: calendarId
+        calendar_id: this.getCalendarsAsStatic()[0].id
       })
       .pipe(
         map(data => {
@@ -394,10 +370,10 @@ export class OperationRealTimeService extends BaseService {
     return this.tripClasses.next(array);
   }
 
-  fetchTripClasses(serviceId: string): Observable<void> {
+  fetchTripClasses(): Observable<void> {
     return this.tripApi
       .getTripClasses({
-        service_id: serviceId
+        service_id: this.getServicesAsStatic()[0].id
       })
       .pipe(
         tap(data => {
@@ -454,289 +430,6 @@ export class OperationRealTimeService extends BaseService {
 
   setOperationTableData(array: IOperationSightingTable[]): void {
     this.operationTableData.next(array);
-  }
-
-  /**
-   * 目撃情報から中間データを作成
-   */
-  generateIntermidiateData(): Observable<{
-    operation: {
-      id: string;
-      formationNumber: string;
-      operationNumber: string;
-      sightingTime: string;
-      updatedAt: string;
-    }[];
-    formation: {
-      id: string;
-      formationNumber: string;
-      operationNumber: string;
-      sightingTime: string;
-      updatedAt: string;
-    }[];
-  }> {
-    return zip(this.getFormationSightings(), this.getOperationSightings()).pipe(
-      map(([formationSightings, operationSightings]) => {
-        const formationArray = formationSightings.map(data => ({
-          id: data.id,
-          formationNumber: data.formation.formationNumber,
-          operationNumber: data.operation.operationNumber,
-          sightingTime: data.sightingTime,
-          updatedAt: data.updatedAt
-        }));
-        const operationArray = operationSightings.map(data => ({
-          id: data.id,
-          formationNumber: data.formation.formationNumber,
-          operationNumber: data.operation.operationNumber,
-          sightingTime: data.sightingTime,
-          updatedAt: data.updatedAt
-        }));
-
-        const merged = [].concat(formationArray, operationArray);
-        const uniq = uniqBy(merged, data => data.id);
-        const sorted = sortBy(uniq, data => data.sightingTime);
-        const reversed = reverse(sorted);
-
-        const operationGrouped = groupBy(
-          reversed,
-          data => data.operationNumber
-        );
-        const formationGrouped = groupBy(
-          reversed,
-          data => data.formationNumber
-        );
-
-        const operationDuplicateChecked = lodashMap(
-          operationGrouped,
-          (value, key) => {
-            return value[0];
-          }
-        );
-        const formationDuplicateChecked = lodashMap(
-          formationGrouped,
-          (value, key) => {
-            return value[0];
-          }
-        );
-
-        return {
-          operation: operationDuplicateChecked,
-          formation: formationDuplicateChecked
-        };
-      })
-    );
-  }
-
-  /**
-   * 中間データから運用テーブル用のデータを作成
-   */
-  generateOperationTableData(): Observable<any> {
-    return this.generateIntermidiateData().pipe(
-      map(
-        (sightings: {
-          formation: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[];
-          operation: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[];
-        }) => {
-          const newestSightings = sightings.operation.map(target => {
-            const checker = this.isExistNewerSighting(
-              target,
-              sightings.formation,
-              'formationNumber'
-            );
-            const checker2 = this.isExistNewerSighting(
-              target,
-              sightings.operation,
-              'formationNumber'
-            );
-
-            return {
-              ...target,
-              formationNumber:
-                checker || checker2 ? null : target.formationNumber
-            };
-          });
-
-          return newestSightings;
-        }
-      ),
-      map(
-        (
-          sightings: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[]
-        ) => {
-          const rotatedSightings = sightings.map(formationSighting => {
-            return {
-              postedOperationNumber: formationSighting.operationNumber,
-              rotatedOperationNumber:
-                formationSighting.operationNumber !== '100' &&
-                formationSighting.operationNumber !== null
-                  ? this.rotateOperationNumber(
-                      formationSighting.operationNumber,
-                      this.calcDaySabun(formationSighting.sightingTime)
-                    )
-                  : formationSighting.operationNumber,
-              formationNumber: formationSighting.formationNumber,
-              sightingTime: formationSighting.sightingTime,
-              updatedAt: formationSighting.updatedAt
-            };
-          });
-          return rotatedSightings;
-        }
-      ),
-      map(data => {
-        return data.map((target, index, array) => {
-          return {
-            ...target,
-            rotatedOperationNumber: this.isExistNewerSighting(
-              target,
-              array,
-              'rotatedOperationNumber'
-            )
-              ? null
-              : target.rotatedOperationNumber
-          };
-        });
-      })
-    );
-  }
-
-  /**
-   * 中間テーブルから編成テーブル用のデータを作成
-   */
-  generateFormationTableData(): Observable<IOperationSightingTable[]> {
-    return this.generateIntermidiateData().pipe(
-      map(
-        (sightings: {
-          formation: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[];
-          operation: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[];
-        }) => {
-          const newestSightings = sightings.formation.map(target => {
-            const checker = this.isExistNewerSighting(
-              target,
-              sightings.formation,
-              'operationNumber'
-            );
-            const checker2 = this.isExistNewerSighting(
-              target,
-              sightings.operation,
-              'operationNumber'
-            );
-            return {
-              ...target,
-              operationNumber:
-                checker || checker2 ? null : target.operationNumber
-            };
-          });
-
-          return newestSightings;
-        }
-      ),
-      map(
-        (
-          sightings: {
-            id: string;
-            formationNumber: string;
-            operationNumber: string;
-            sightingTime: string;
-            updatedAt: string;
-          }[]
-        ) => {
-          const rotatedSightings = sightings.map(formationSighting => {
-            return {
-              postedOperationNumber: formationSighting.operationNumber,
-              rotatedOperationNumber:
-                formationSighting.operationNumber !== '100' &&
-                formationSighting.operationNumber !== null
-                  ? this.rotateOperationNumber(
-                      formationSighting.operationNumber,
-                      this.calcDaySabun(formationSighting.sightingTime)
-                    )
-                  : formationSighting.operationNumber,
-              formationNumber: formationSighting.formationNumber,
-              sightingTime: formationSighting.sightingTime,
-              updatedAt: formationSighting.updatedAt
-            };
-          });
-
-          return rotatedSightings;
-        }
-      ),
-      map((sightings: IOperationSightingTable[]) => {
-        return sightings.map((target, index, array) => {
-          return {
-            ...target,
-            rotatedOperationNumber: this.isExistNewerSighting(
-              target,
-              array,
-              'rotatedOperationNumber'
-            )
-              ? null
-              : target.rotatedOperationNumber
-          };
-        });
-      })
-    );
-  }
-
-  calcDaySabun(timestamp: string) {
-    return (
-      moment()
-        .subtract(moment().hour() < 4 ? 1 : 0)
-        .day() -
-      moment(timestamp)
-        .subtract(moment(timestamp).hour() < 4 ? 1 : 0, 'days')
-        .day()
-    );
-  }
-
-  rotateOperationNumber(operationNumber: string, days: number) {
-    const posted = Number(operationNumber);
-    let added = posted;
-    for (let i = 1; i <= days; i++) {
-      added = added + 1;
-      if (String(added).slice(-1) === '0') {
-        added = added - 9;
-      }
-    }
-    return String(added);
-  }
-
-  isExistNewerSighting(target: any, allData: any[], propName: string) {
-    return some(allData, (data: IOperationSightingTable) => {
-      return (
-        target[propName] === data[propName] &&
-        moment(target.sightingTime) < moment(data.sightingTime)
-      );
-    });
   }
 
   generateOperationTripsTableData(): Observable<
@@ -1048,17 +741,16 @@ export class OperationRealTimeService extends BaseService {
    */
   fetchFormationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
-      this.getOperations(),
       this.getFormationNumbers(),
-      this.generateFormationTableData(),
-      this.generateOperationTripsTableData()
+      this.generateOperationTripsTableData(),
+      this.getFormationSightingsLatest()
     ).pipe(
-      map(([operations, numbers, sightings, operationTrips]) => {
+      map(([numbers, operationTrips, formationSightings]) => {
         return numbers.map(data => {
-          const findSightings: IOperationSightingTable = find(
-            sightings,
-            (val: IOperationSightingTable) =>
-              val.formationNumber === data.formationNumber
+          const findSightings: IOperationSighting = find(
+            formationSightings,
+            (val: IOperationSighting) =>
+              val.formation.formationNumber === data.formationNumber
           );
 
           if (!findSightings) {
@@ -1076,27 +768,29 @@ export class OperationRealTimeService extends BaseService {
           const targetTrip = find(
             operationTrips,
             operationTrip =>
-              findSightings.rotatedOperationNumber ===
-              operationTrip.operationNumber
+              findSightings.circulatedOperation &&
+              findSightings.circulatedOperation.operationNumber ===
+                operationTrip.operationNumber
           );
-          
-          const targetOperation = find(
-              operations,
-              operation =>
-                operation.operationNumber ===
-                findSightings.rotatedOperationNumber
-          )
 
           return {
-            postedOperationNumber: findSightings.postedOperationNumber,
-            rotatedOperationNumber: findSightings.rotatedOperationNumber,
-            rotatedOperationId: targetOperation ? targetOperation.id : null,
-            formationNumber: findSightings.formationNumber,
+            postedOperationNumber: findSightings.operation
+              ? findSightings.operation.operationNumber
+              : null,
+            rotatedOperationNumber: findSightings.circulatedOperation
+              ? findSightings.circulatedOperation.operationNumber
+              : null,
+            rotatedOperationId: findSightings.circulatedOperationId,
+            formationNumber: findSightings.formation.formationNumber,
+
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
             trip: targetTrip ? targetTrip.trip : null
           };
         });
+      }),
+      tap(data => {
+        this.setFormationTableData(data);
       })
     );
   }
@@ -1108,15 +802,16 @@ export class OperationRealTimeService extends BaseService {
     return zip(
       this.getOperations(),
       this.getOperationNumbers(),
-      this.generateOperationTableData(),
-      this.generateOperationTripsTableData()
+      this.generateOperationTripsTableData(),
+      this.getOperationSightingsLatest()
     ).pipe(
-      map(([operations, numbers, sightings, operationTrips]) => {
+      map(([operations, numbers, operationTrips, operationSightings]) => {
         return numbers.map(data => {
-          const findSightings: IOperationSightingTable = find(
-            sightings,
-            (val: IOperationSightingTable) =>
-              val.rotatedOperationNumber === data.operationNumber
+          const findSightings: IOperationSighting = find(
+            operationSightings,
+            (val: IOperationSighting) =>
+              val.circulatedOperation &&
+              val.circulatedOperation.operationNumber === data.operationNumber
           );
 
           if (!findSightings) {
@@ -1139,25 +834,27 @@ export class OperationRealTimeService extends BaseService {
           }
 
           return {
-            postedOperationNumber: findSightings.postedOperationNumber,
-            rotatedOperationNumber: findSightings.rotatedOperationNumber,
-            rotatedOperationId: find(
-              operations,
-              operation =>
-                operation.operationNumber ===
-                findSightings.rotatedOperationNumber
-            ).id,
-            formationNumber: findSightings.formationNumber,
+            postedOperationNumber: findSightings.operation.operationNumber,
+            rotatedOperationNumber:
+              findSightings.circulatedOperation.operationNumber,
+            rotatedOperationId: findSightings.circulatedOperationId,
+            formationNumber: findSightings.formation
+              ? findSightings.formation.formationNumber
+              : null,
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
             trip: find(
               operationTrips,
               operationTrip =>
-                findSightings.rotatedOperationNumber ===
-                operationTrip.operationNumber
+                findSightings.circulatedOperation &&
+                findSightings.circulatedOperation.operationNumber ===
+                  operationTrip.operationNumber
             ).trip
           };
         });
+      }),
+      tap(data => {
+        this.setOperationTableData(data);
       })
     );
   }

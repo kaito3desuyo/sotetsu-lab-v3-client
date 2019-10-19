@@ -15,6 +15,7 @@ import { OperationModel } from '../models/operation/operation-model';
 })
 export class OperationApiService {
   private apiUrl = environment.apiUrl + '/v1/operations';
+  private apiUrl2 = environment.apiUrl + '/v1/operation-sightings';
   constructor(private http: HttpClient) {}
 
   getOperationById(
@@ -111,5 +112,25 @@ export class OperationApiService {
   }): Observable<any> {
     const data = OperationSightingModel.createOperationSightingDtoImpl(body);
     return this.http.post(this.apiUrl + '/sightings', data);
+  }
+
+  getOperationSightingsLatest(params: {
+    calendar_id: string;
+  }): Observable<{
+    group_by_formations: ReadOperationSightingDto[];
+    group_by_operations: ReadOperationSightingDto[];
+  }> {
+    return this.http
+      .get(this.apiUrl2 + '/latest', {
+        params
+      })
+      .pipe(
+        map(
+          (data: {
+            group_by_formations: ReadOperationSightingDto[];
+            group_by_operations: ReadOperationSightingDto[];
+          }) => data
+        )
+      );
   }
 }
