@@ -782,6 +782,7 @@ export class OperationRealTimeService extends BaseService {
               : null,
             rotatedOperationId: findSightings.circulatedOperationId,
             formationNumber: findSightings.formation.formationNumber,
+
             sightingTime: findSightings.sightingTime,
             updatedAt: findSightings.updatedAt,
             trip: targetTrip ? targetTrip.trip : null
