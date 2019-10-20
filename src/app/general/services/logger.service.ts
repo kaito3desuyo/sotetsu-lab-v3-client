@@ -9,7 +9,9 @@ export class LoggerService {
   private logger: NGXLogger;
   constructor(private customLogger: CustomNGXLoggerService) {
     this.logger = this.customLogger.create({
-      level: NgxLoggerLevel.DEBUG,
+      level: environment.production
+        ? NgxLoggerLevel.ERROR
+        : NgxLoggerLevel.DEBUG,
       serverLoggingUrl: environment.apiUrl + '/api/v1/log',
       serverLogLevel: NgxLoggerLevel.OFF
     });
