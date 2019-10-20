@@ -7,10 +7,12 @@ import {
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { LoggerService } from '../services/logger.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   // リクエストの変換処理。ここに共通処理を記述。
+  constructor(private logger: LoggerService) {}
 
   intercept(
     request: HttpRequest<any>,
@@ -21,7 +23,7 @@ export class AuthInterceptor implements HttpInterceptor {
       headers: request.headers.set('X-API-URL', request.url),
       params: request.params.append('url', request.url)
     });
-    console.log('リクエスト', request);
+    this.logger.debug('リクエスト：' + request.url);
     return next.handle(authReq);
   }
 }
