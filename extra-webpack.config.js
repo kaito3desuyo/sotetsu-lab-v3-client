@@ -2,9 +2,6 @@ const webpack = require('webpack');
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 module.exports = {
-  output: {
-    filename: '[name].[chunkhash].js' // name of the generated bundle
-  },
   optimization: {
     splitChunks: {
       chunks: 'async',
