@@ -13,7 +13,7 @@ import { ITrip } from 'src/app/general/interfaces/trip';
 import { PageEvent } from '@angular/material/paginator';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { TripBlockModel } from 'src/app/general/models/trip-block/trip-block-model';
-import { concat } from 'lodash';
+import concat from 'lodash/concat';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';

@@ -11,7 +11,8 @@ import { IStation } from 'src/app/general/interfaces/station';
 import { FormGroup, FormBuilder, FormArray, Validators } from '@angular/forms';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
-import { find, sortBy } from 'lodash';
+import find from 'lodash/find';
+import sortBy from 'lodash/sortBy';
 import { MatRadioChange } from '@angular/material/radio';
 import { IStop } from 'src/app/general/models/stop/stop';
 

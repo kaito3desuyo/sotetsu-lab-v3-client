@@ -2,28 +2,21 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { IStation } from 'src/app/general/interfaces/station';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
-import { flatMap, map, tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { StationModel } from 'src/app/general/models/station/station-model';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
-import { reject } from 'lodash';
+import reject from 'lodash/reject';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-model';
-import { ReadServiceDto } from 'src/app/general/models/service/service-dto';
 import { ITimetableTripForm } from '../interfaces/timetable-trip-form';
 import {
   CreateTripDto,
   UpdateTripDto
 } from 'src/app/general/models/trip/trip-dto';
-import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
 import moment from 'moment';
-import { CreateTripOperationListDto } from 'src/app/general/models/trip-operation-list/trip-operation-list-dto';
-import {
-  CreateTripBlockDto,
-  ReadTripBlockDto
-} from 'src/app/general/models/trip-block/trip-block-dto';
 import { ITripBlock } from 'src/app/general/models/trip-block/trip-block';
 import { TripBlockModel } from 'src/app/general/models/trip-block/trip-block-model';
 import { UpdateTimeDto } from 'src/app/general/models/time/time-dto';

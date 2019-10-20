@@ -11,7 +11,8 @@ import {
   ETimetableStationViewMode
 } from '../../interfaces/timetable-station';
 import { ITrip } from 'src/app/general/interfaces/trip';
-import { find, some } from 'lodash';
+import find from 'lodash/find';
+import some from 'lodash/some';
 import moment from 'moment';
 
 @Component({
