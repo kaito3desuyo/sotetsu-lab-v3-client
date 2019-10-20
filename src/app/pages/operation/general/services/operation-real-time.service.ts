@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
 import { map, tap, flatMap } from 'rxjs/operators';
-import { find } from 'lodash';
+import find from 'lodash/find';
 import moment from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
 import { TripApiService } from 'src/app/general/api/trip-api.service';

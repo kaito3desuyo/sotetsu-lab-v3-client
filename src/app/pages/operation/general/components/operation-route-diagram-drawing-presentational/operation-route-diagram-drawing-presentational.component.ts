@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { IStation } from 'src/app/general/interfaces/station';
 import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import { findIndex } from 'lodash';
+import findIndex from 'lodash/findIndex';
 import moment from 'moment';
 
 @Component({
