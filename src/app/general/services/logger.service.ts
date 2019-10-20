@@ -11,11 +11,15 @@ export class LoggerService {
     this.logger = this.customLogger.create({
       level: NgxLoggerLevel.DEBUG,
       serverLoggingUrl: environment.apiUrl + '/api/v1/log',
-      serverLogLevel: NgxLoggerLevel.ERROR
+      serverLogLevel: NgxLoggerLevel.OFF
     });
   }
 
   error(message: string, ...additional: any[]): void {
     this.logger.error(message, ...additional);
+  }
+
+  debug(message: string, ...additional: any[]): void {
+    this.logger.debug(message, ...additional);
   }
 }
