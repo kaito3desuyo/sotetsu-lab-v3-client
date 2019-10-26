@@ -9,6 +9,7 @@ import { OperationSightingModel } from '../models/operation-sighting/operation-s
 import { IOperation } from '../interfaces/operation';
 import { ReadOperationDto } from '../models/operation/operation-dto';
 import { OperationModel } from '../models/operation/operation-model';
+import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-operation-list-dto';
 
 @Injectable({
   providedIn: 'root'
@@ -35,6 +36,40 @@ export class OperationApiService {
         params: query
       })
       .pipe(map((data: { operations: ReadOperationDto[] }) => data));
+  }
+
+  searchOperationsCurrentPosition(query: {
+    calendar_id: string;
+  }): Observable<{
+    operations: Array<
+      Pick<ReadOperationDto, 'id' | 'operation_number'> & {
+        current_position: {
+          prev: ReadTripOperationListDto;
+          current: ReadTripOperationListDto;
+          next: ReadTripOperationListDto;
+        };
+      }
+    >;
+  }> {
+    return this.http
+      .get(this.apiUrl + '/search/current-position', {
+        params: query
+      })
+      .pipe(
+        map(
+          (data: {
+            operations: Array<
+              Pick<ReadOperationDto, 'id' | 'operation_number'> & {
+                current_position: {
+                  prev: ReadTripOperationListDto;
+                  current: ReadTripOperationListDto;
+                  next: ReadTripOperationListDto;
+                };
+              }
+            >;
+          }) => data
+        )
+      );
   }
 
   searchOperationNumbers(query: {
