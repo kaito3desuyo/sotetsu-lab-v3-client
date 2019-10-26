@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
-import { map, tap, flatMap } from 'rxjs/operators';
+import { map, tap, flatMap, delay, skip } from 'rxjs/operators';
 import find from 'lodash/find';
 import moment from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
@@ -28,6 +28,8 @@ import { Router } from '@angular/router';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { NotificationService } from 'src/app/general/services/notification.service';
 import { OperationSightingModel } from 'src/app/general/models/operation-sighting/operation-sighting-model';
+import { IOperationCurrentPosition } from 'src/app/general/interfaces/operation-current-position';
+import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -57,9 +59,9 @@ export class OperationRealTimeService extends BaseService {
     ITripClass[]
   >([]);
 
-  private operationTrips: BehaviorSubject<IOperation[]> = new BehaviorSubject<
-    IOperation[]
-  >([]);
+  private operationsCurrentPosition: BehaviorSubject<
+    IOperationCurrentPosition[]
+  > = new BehaviorSubject<IOperationCurrentPosition[]>([]);
 
   private stations: BehaviorSubject<IStation[]> = new BehaviorSubject<
     IStation[]
@@ -92,6 +94,7 @@ export class OperationRealTimeService extends BaseService {
     private notification: NotificationService
   ) {
     super();
+
     this.socketService.connect('/operation/real-time');
 
     this.subscription = this.socketService
@@ -105,8 +108,8 @@ export class OperationRealTimeService extends BaseService {
           .pipe(
             flatMap(() =>
               forkJoin([
-                this.fetchFormationTableData(),
-                this.fetchOperationTableData()
+                this.generateFormationTableData(),
+                this.generateOperationTableData()
               ])
             )
           )
@@ -122,10 +125,12 @@ export class OperationRealTimeService extends BaseService {
 
     this.subscription = timer(0, 1000 * 60)
       .pipe(
+        skip(1),
+        flatMap(() => this.fetchOperationsCurrentPosition()),
         flatMap(() =>
           forkJoin([
-            this.fetchFormationTableData(),
-            this.fetchOperationTableData()
+            this.generateFormationTableData(),
+            this.generateOperationTableData()
           ])
         )
       )
@@ -324,36 +329,49 @@ export class OperationRealTimeService extends BaseService {
   }
 
   /**
-   * 運用別列車情報を返す
+   * 現在位置情報
    */
-  getOperationTrips(): Observable<IOperation[]> {
-    return this.operationTrips.asObservable();
+  getOperationsCurrentPosition(): Observable<IOperationCurrentPosition[]> {
+    return this.operationsCurrentPosition.asObservable();
   }
 
-  /**
-   * 運用別列車情報をセットする
-   * @param array
-   */
-  setOperationTrips(array: IOperation[]): void {
-    this.operationTrips.next(array);
+  setOperationsCurrentPosition(position: IOperationCurrentPosition[]): void {
+    this.operationsCurrentPosition.next(position);
   }
 
-  /**
-   * 運用別列車情報を取得する
-   */
-  fetchOperationTrips(): Observable<void> {
+  fetchOperationsCurrentPosition(): Observable<void> {
     return this.operationApi
-      .getOperationsTrips({
+      .searchOperationsCurrentPosition({
         calendar_id: this.getCalendarsAsStatic()[0].id
       })
       .pipe(
         map(data => {
-          return data.operations.map(result =>
-            OperationModel.readOperationDtoImpl(result)
-          );
+          return data.operations.map(result => {
+            return {
+              id: result.id,
+              operationNumber: result.operation_number,
+              currentPosition: {
+                prev:
+                  result.current_position.prev &&
+                  TripOperationListModel.readTripOperationListDtoImpl(
+                    result.current_position.prev
+                  ),
+                current:
+                  result.current_position.current &&
+                  TripOperationListModel.readTripOperationListDtoImpl(
+                    result.current_position.current
+                  ),
+                next:
+                  result.current_position.next &&
+                  TripOperationListModel.readTripOperationListDtoImpl(
+                    result.current_position.next
+                  )
+              }
+            };
+          });
         }),
         tap(data => {
-          this.setOperationTrips(data);
+          this.setOperationsCurrentPosition(data);
         }),
         map(() => null)
       );
@@ -437,299 +455,151 @@ export class OperationRealTimeService extends BaseService {
       operationNumber: string;
       trip: {
         tripNumber: string;
+        tripClassName: string;
+        tripClassColor: string;
         prevTime: string;
+        prevStation: string;
         nextTime: string;
+        nextStation: string;
       };
     }[]
   > {
     return zip(
-      this.getOperationTrips(),
+      this.getOperationsCurrentPosition(),
       this.getStations(),
       this.getTripClasses()
     ).pipe(
-      map(([operations, stations, tripClasses]) => {
-        return operations.map(operation => {
-          const now = moment();
-          let targetTrip: {
-            tripNumber: string;
-            tripClassName: string;
-            tripClassColor: string;
-            prevTime: string;
-            prevStation: string;
-            nextTime: string;
-            nextStation: string;
-          } = {
-            tripNumber: null,
-            tripClassName: null,
-            tripClassColor: null,
-            prevTime: null,
-            prevStation: null,
-            nextTime: null,
-            nextStation: null
-          };
-
-          if (operation.tripOperationLists.length === 0) {
+      map(([positions, stations, tripClasses]) => {
+        console.log(tripClasses);
+        return positions.map(position => {
+          if (
+            !position.currentPosition.prev &&
+            !position.currentPosition.current &&
+            position.currentPosition.next
+          ) {
             return {
-              operationNumber: operation.operationNumber,
+              operationNumber: position.operationNumber,
               trip: {
                 tripNumber: null,
                 tripClassName: null,
                 tripClassColor: null,
-                prevTime: null,
-                prevStation: '不明',
-                nextTime: null,
-                nextStation: '不明'
+                prevTime: position.currentPosition.next.trip.depotOut
+                  ? '〇'
+                  : null,
+                prevStation: position.currentPosition.next.trip.depotOut
+                  ? '出庫前'
+                  : null,
+                nextTime: position.currentPosition.next.startTime.departureTime,
+                nextStation: find(
+                  stations,
+                  station =>
+                    station.id ===
+                    position.currentPosition.next.startTime.stationId
+                ).stationName
               }
             };
           }
 
-          // 0番目の列車の発車時刻より前の場合
           if (
-            now <
-            moment(
-              operation.tripOperationLists[0].trip.times[0].departureTime,
-              'HH:mm:ss'
-            )
-              .subtract(now.hour() < 4 ? 1 : 0, 'days')
-              .add(
-                operation.tripOperationLists[0].trip.times[0].departureDays - 1,
-                'days'
-              )
+            position.currentPosition.prev &&
+            !position.currentPosition.current &&
+            position.currentPosition.next
           ) {
-            targetTrip = {
-              tripNumber: null,
-              tripClassName: null,
-              tripClassColor: null,
-              prevTime: operation.tripOperationLists[0].trip.depotOut
-                ? '〇'
-                : null,
-              prevStation: operation.tripOperationLists[0].trip.depotOut
-                ? '出庫前'
-                : null,
-              nextTime:
-                operation.tripOperationLists[0].trip.times[0].departureTime,
-              nextStation: find(
-                stations,
-                station =>
-                  station.id ===
-                  operation.tripOperationLists[0].trip.times[0].stationId
-              ).stationName
-            };
-          }
-
-          // n番目の列車の到着時刻 < 現時刻 <= n + 1番目の列車の出発時刻
-          const nArrToNowToNPlus1Dep = find(
-            operation.tripOperationLists,
-            (trip, index, array) => {
-              if (!array[index + 1]) {
-                return undefined;
+            return {
+              operationNumber: position.operationNumber,
+              trip: {
+                tripNumber: null,
+                tripClassName: null,
+                tripClassColor: null,
+                prevTime: position.currentPosition.prev.endTime.arrivalTime,
+                prevStation: find(
+                  stations,
+                  station =>
+                    station.id ===
+                    position.currentPosition.prev.endTime.stationId
+                ).stationName,
+                nextTime: position.currentPosition.next.startTime.departureTime,
+                nextStation:
+                  position.currentPosition.prev.trip.depotIn &&
+                  position.currentPosition.next.trip.depotOut
+                    ? '一時入庫'
+                    : '停車中'
               }
-              return (
-                moment(
-                  array[index].trip.times[array[index].trip.times.length - 1]
-                    .arrivalTime,
-                  'HH:mm:ss'
-                )
-                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                  .add(
-                    array[index].trip.times[array[index].trip.times.length - 1]
-                      .arrivalDays - 1,
-                    'days'
-                  ) <= now &&
-                now <
-                  moment(
-                    array[index + 1].trip.times[0].departureTime,
-                    'HH:mm:ss'
-                  )
-                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                    .add(
-                      array[index + 1].trip.times[0].departureDays - 1,
-                      'days'
-                    )
-              );
-            }
-          );
-
-          const nMinus1ToNowToNDep = find(
-            operation.tripOperationLists,
-            (trip, index, array) => {
-              if (!array[index - 1]) {
-                return undefined;
-              }
-              return (
-                moment(
-                  array[index - 1].trip.times[
-                    array[index - 1].trip.times.length - 1
-                  ].arrivalTime,
-                  'HH:mm:ss'
-                )
-                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                  .add(
-                    array[index - 1].trip.times[
-                      array[index - 1].trip.times.length - 1
-                    ].arrivalDays - 1,
-                    'days'
-                  ) <= now &&
-                now <
-                  moment(array[index].trip.times[0].departureTime, 'HH:mm:ss')
-                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                    .add(array[index].trip.times[0].departureDays - 1, 'days')
-              );
-            }
-          );
-
-          if (nArrToNowToNPlus1Dep && nMinus1ToNowToNDep) {
-            targetTrip = {
-              tripNumber: null,
-              tripClassName: null,
-              tripClassColor: null,
-              prevTime:
-                nArrToNowToNPlus1Dep.trip.times[
-                  nArrToNowToNPlus1Dep.trip.times.length - 1
-                ].arrivalTime,
-              prevStation: find(
-                stations,
-                station =>
-                  station.id ===
-                  nArrToNowToNPlus1Dep.trip.times[
-                    nArrToNowToNPlus1Dep.trip.times.length - 1
-                  ].stationId
-              ).stationName,
-              nextTime: nMinus1ToNowToNDep.trip.times[0].departureTime,
-              nextStation:
-                nArrToNowToNPlus1Dep.trip.depotIn &&
-                nMinus1ToNowToNDep.trip.depotOut
-                  ? '一時入庫'
-                  : '停車中'
             };
           }
 
-          // 現在走行中の列車
-          const currentRunning = find(
-            operation.tripOperationLists,
-            (tripOperationList, index, array) => {
-              return (
-                moment(
-                  tripOperationList.trip.times[0].departureTime,
-                  'HH:mm:ss'
-                )
-                  .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                  .add(
-                    tripOperationList.trip.times[0].departureDays - 1,
-                    'days'
-                  ) <= now &&
-                now <
-                  moment(
-                    tripOperationList.trip.times[
-                      tripOperationList.trip.times.length - 1
-                    ].arrivalTime,
-                    'HH:mm:ss'
-                  )
-                    .subtract(now.hour() < 4 ? 1 : 0, 'days')
-                    .add(
-                      tripOperationList.trip.times[
-                        tripOperationList.trip.times.length - 1
-                      ].arrivalDays - 1,
-                      'days'
-                    )
-              );
-            }
-          );
-
-          if (currentRunning) {
-            targetTrip = {
-              tripNumber: currentRunning.trip.tripNumber,
-              tripClassName: find(
-                tripClasses,
-                tripClass => tripClass.id === currentRunning.trip.tripClassId
-              ).tripClassName,
-              tripClassColor: find(
-                tripClasses,
-                tripClass => tripClass.id === currentRunning.trip.tripClassId
-              ).tripClassColor,
-              prevTime: currentRunning.trip.times[0].departureTime,
-              prevStation: find(
-                stations,
-                station => station.id === currentRunning.trip.times[0].stationId
-              ).stationName,
-              nextTime:
-                currentRunning.trip.times[currentRunning.trip.times.length - 1]
-                  .arrivalTime,
-              nextStation: find(
-                stations,
-                station =>
-                  station.id ===
-                  currentRunning.trip.times[
-                    currentRunning.trip.times.length - 1
-                  ].stationId
-              ).stationName
-            };
-          }
-
-          // 最後の列車の到着時刻より現時刻が大きい場合
           if (
-            moment(
-              operation.tripOperationLists[
-                operation.tripOperationLists.length - 1
-              ].trip.times[
-                operation.tripOperationLists[
-                  operation.tripOperationLists.length - 1
-                ].trip.times.length - 1
-              ].arrivalTime,
-              'HH:mm:ss'
-            )
-              .subtract(now.hour() < 4 ? 1 : 0, 'days')
-              .add(
-                operation.tripOperationLists[
-                  operation.tripOperationLists.length - 1
-                ].trip.times[
-                  operation.tripOperationLists[
-                    operation.tripOperationLists.length - 1
-                  ].trip.times.length - 1
-                ].arrivalDays - 1,
-                'days'
-              ) <= now
+            !position.currentPosition.prev &&
+            position.currentPosition.current &&
+            !position.currentPosition.next
           ) {
-            targetTrip = {
-              tripNumber: null,
-              tripClassName: null,
-              tripClassColor: null,
-              prevTime:
-                operation.tripOperationLists[
-                  operation.tripOperationLists.length - 1
-                ].trip.times[
-                  operation.tripOperationLists[
-                    operation.tripOperationLists.length - 1
-                  ].trip.times.length - 1
-                ].arrivalTime,
-              prevStation: find(
-                stations,
-                station =>
-                  station.id ===
-                  operation.tripOperationLists[
-                    operation.tripOperationLists.length - 1
-                  ].trip.times[
-                    operation.tripOperationLists[
-                      operation.tripOperationLists.length - 1
-                    ].trip.times.length - 1
-                  ].stationId
-              ).stationName,
-              nextTime: operation.tripOperationLists[
-                operation.tripOperationLists.length - 1
-              ].trip.depotIn
-                ? '△'
-                : null,
-              nextStation: operation.tripOperationLists[
-                operation.tripOperationLists.length - 1
-              ].trip.depotIn
-                ? '入庫済'
-                : null
+            const tripClass = find(
+              tripClasses,
+              o => o.id === position.currentPosition.current.trip.tripClassId
+            );
+            return {
+              operationNumber: position.operationNumber,
+              trip: {
+                tripNumber: position.currentPosition.current.trip.tripNumber,
+                tripClassName: tripClass.tripClassName,
+                tripClassColor: tripClass.tripClassColor,
+                prevTime:
+                  position.currentPosition.current.startTime.departureTime,
+                prevStation: find(
+                  stations,
+                  station =>
+                    station.id ===
+                    position.currentPosition.current.startTime.stationId
+                ).stationName,
+                nextTime: position.currentPosition.current.endTime.arrivalTime,
+                nextStation: find(
+                  stations,
+                  station =>
+                    station.id ===
+                    position.currentPosition.current.endTime.stationId
+                ).stationName
+              }
             };
           }
 
+          if (
+            position.currentPosition.prev &&
+            !position.currentPosition.current &&
+            !position.currentPosition.next
+          ) {
+            return {
+              operationNumber: position.operationNumber,
+              trip: {
+                tripNumber: null,
+                tripClassName: null,
+                tripClassColor: null,
+                prevTime: position.currentPosition.prev.endTime.arrivalTime,
+                prevStation: find(
+                  stations,
+                  station =>
+                    station.id ===
+                    position.currentPosition.prev.endTime.stationId
+                ).stationName,
+                nextTime: position.currentPosition.prev.trip.depotIn
+                  ? '△'
+                  : null,
+                nextStation: position.currentPosition.prev.trip.depotIn
+                  ? '入庫済'
+                  : null
+              }
+            };
+          }
           return {
-            operationNumber: operation.operationNumber,
-            trip: targetTrip
+            operationNumber: position.operationNumber,
+            trip: {
+              tripNumber: null,
+              tripClassName: null,
+              tripClassColor: null,
+              prevTime: null,
+              prevStation: '不明',
+              nextTime: null,
+              nextStation: '不明'
+            }
           };
         });
       })
@@ -739,7 +609,7 @@ export class OperationRealTimeService extends BaseService {
   /**
    * 編成テーブル用データを読み込み
    */
-  fetchFormationTableData(): Observable<IOperationSightingTable[]> {
+  generateFormationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getFormationNumbers(),
       this.generateOperationTripsTableData(),
@@ -798,7 +668,7 @@ export class OperationRealTimeService extends BaseService {
   /**
    * 運用テーブル用データを読み込み
    */
-  fetchOperationTableData(): Observable<IOperationSightingTable[]> {
+  generateOperationTableData(): Observable<IOperationSightingTable[]> {
     return zip(
       this.getOperations(),
       this.getOperationNumbers(),
