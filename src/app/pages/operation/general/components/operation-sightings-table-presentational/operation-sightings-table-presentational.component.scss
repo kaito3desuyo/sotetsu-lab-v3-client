@@ -7,12 +7,12 @@
 
       .mat-column-operationNumber {
         //width: 36px;
-        min-width: 48px;
+        min-width: 72px;
       }
 
       .mat-column-formationNumber {
         //width: 48px;
-        min-width: 48px;
+        min-width: 72px;
       }
 
       .mat-column-trip {
@@ -28,8 +28,8 @@
       }
 
       .mat-column-sightingTime,
-      .mat-column-updateTime {
-        min-width: 80px;
+      .mat-column-updatedAt {
+        min-width: 144px;
       }
 
       .operation-number-circle {
