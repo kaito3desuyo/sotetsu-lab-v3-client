@@ -39,6 +39,13 @@ import { TimetableUpdateHeaderContainerComponent } from './general/components/ti
 import { TimetableUpdateService } from './general/services/timetable-update.service';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
 import { MatDialogModule } from '@angular/material/dialog';
+import { TimetableStationComponent } from './timetable-station/timetable-station.component';
+import { TimetableStationHeaderContainerComponent } from './general/components/timetable-station-header-container/timetable-station-header-container.component';
+import { TimetableStationHeaderPresentationalComponent } from './general/components/timetable-station-header-presentational/timetable-station-header-presentational.component';
+import { TimetableStationService } from './general/services/timetable-station.service';
+import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
+import { TimetableStationTableContainerComponent } from './general/components/timetable-station-table-container/timetable-station-table-container.component';
+import { TimetableStationTablePresentationalComponent } from './general/components/timetable-station-table-presentational/timetable-station-table-presentational.component';
 
 @NgModule({
   imports: [
@@ -65,6 +72,7 @@ import { MatDialogModule } from '@angular/material/dialog';
   ],
   declarations: [
     TimetableAllLineComponent,
+    TimetableStationComponent,
     TimetableAddComponent,
     TimetableUpdateComponent,
     TimetableAllLineHeaderContainerComponent,
@@ -73,6 +81,10 @@ import { MatDialogModule } from '@angular/material/dialog';
     TimetableAllLineTablePresentationalComponent,
     TimetableAllLinePaginatorContainerComponent,
     TimetableAllLinePaginatorPresentationalComponent,
+    TimetableStationHeaderContainerComponent,
+    TimetableStationHeaderPresentationalComponent,
+    TimetableStationTableContainerComponent,
+    TimetableStationTablePresentationalComponent,
     TimetableAddHeaderContainerComponent,
     TimetableAddModeSelectContainerComponent,
     TimetableAddModeSelectPresentationalComponent,
@@ -83,6 +95,8 @@ import { MatDialogModule } from '@angular/material/dialog';
   providers: [
     TimetableAllLineService,
     TimetableAllLineTableResolverService,
+    TimetableStationService,
+    TimetableStationResolverService,
     TimetableAddService,
     TimetableAddResolverService,
     TimetableUpdateService,

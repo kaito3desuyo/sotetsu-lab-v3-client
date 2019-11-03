@@ -1,0 +1,60 @@
+<div fxLayout="row" style="overflow-x: scroll;">
+  <table>
+    <tr *ngFor="let row of data">
+      <th class="hour">{{ row.hour }}</th>
+      <td *ngFor="let time of row.times">
+        <div
+          fxLayout="row"
+          fxLayout="row"
+          fxLayoutAlign="start center"
+          fxLayoutGap="8px"
+        >
+          <div
+            class="minute"
+            [ngClass]="time.mode === 'arrival' ? 'underbar' : ''"
+            [ngStyle]="{ color: time.tripClassColor }"
+          >
+            {{ time.minute }}
+          </div>
+          <div fxLayout="column">
+            <div fxLayout="row" fxLayoutGap="8px">
+              <div fxLayout="column">
+                <span [ngStyle]="{ color: time.tripClassColor }">
+                  {{ time.tripClassName }}
+                </span>
+                <span>{{ time.lastStop }}</span>
+              </div>
+              <div
+                fxLayout="column"
+                *ngFor="let sighting of time.operationSightings"
+              >
+                <span> {{ sighting.operationNumber }}運 </span>
+                <span>
+                  {{ sighting.formationNumber || '不明'
+                  }}{{
+                    sighting.formationNumber &&
+                    calcDiffSightingTimeToCurrentTime(sighting.sightingTime) !==
+                      0
+                      ? '?'
+                      : ''
+                  }}
+                </span>
+              </div>
+            </div>
+            <ng-container *ngFor="let trips of time.sameTripBlockTrips">
+              <small>
+                {{
+                  trips.tripOperationLists[0].startStation.stationName
+                }}から<br />
+                {{ trips.tripClass.tripClassName }}
+                {{ trips.tripOperationLists[0].endStation.stationName }}
+                行き
+              </small>
+            </ng-container>
+          </div>
+        </div>
+      </td>
+      <td *ngFor="let blank of maxColumnsCount - row.times.length | range"></td>
+    </tr>
+  </table>
+</div>

@@ -1,6 +1,7 @@
 import { ReadTripDto } from '../trip/trip-dto';
 import { ReadOperationDto } from '../operation/operation-dto';
 import { ReadTimeDto } from '../time/time-dto';
+import { ReadStationDto } from '../station/station-dto';
 
 export class ReadTripOperationListDto {
   id: string;
@@ -12,6 +13,8 @@ export class ReadTripOperationListDto {
   updated_at: string;
   trip?: ReadTripDto;
   operation?: ReadOperationDto;
+  start_station?: ReadStationDto;
+  end_station?: ReadStationDto;
   start_time?: ReadTimeDto;
   end_time?: ReadTimeDto;
 }

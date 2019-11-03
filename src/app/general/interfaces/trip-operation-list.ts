@@ -1,6 +1,7 @@
 import { ITrip } from './trip';
 import { IOperation } from './operation';
 import { ITime } from './time';
+import { IStation } from './station';
 
 export interface ITripOperationList {
   id: string;
@@ -12,6 +13,8 @@ export interface ITripOperationList {
   updatedAt: string;
   trip?: ITrip;
   operation?: IOperation;
+  startStation?: IStation;
+  endStation?: IStation;
   startTime?: ITime;
   endTime?: ITime;
 }
