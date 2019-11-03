@@ -322,7 +322,7 @@ export class TimetableAllLineService {
     const dialogRef = this.dialog.open(ConfirmDialogContainerComponent, {
       width: '480px',
       data: {
-        title: 'グループに追加する',
+        title: '列車を削除する',
         text: `${trip.tripNumber}列車を削除しますか？この操作は元に戻すことができません。`,
         cancelButtonText: 'キャンセル',
         goButtonText: '削除する',

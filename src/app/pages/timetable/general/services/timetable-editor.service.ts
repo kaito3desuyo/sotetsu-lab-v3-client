@@ -209,17 +209,11 @@ export class TimetableEditorService {
       trip_direction: this.getTripDirectionAsStatic(),
       depot_in: value.depotIn,
       depot_out: value.depotOut,
-      trip_operation_lists: [
-        {
-          operation_id: value.operationId,
-          start_station_id: times[0].stationId,
-          end_station_id: times[times.length - 1].stationId
-        }
-      ],
+      trip_operation_lists: [],
       times: times.map((time, index, array) => {
         const timeObj = {
           station_id: time.stationId,
-          stop_id: time.stopId,
+          stop_id: time.stopId || null,
           stop_sequence: index + 1,
           pickup_type:
             time.stopType === 'stop' && index !== array.length - 1
@@ -254,6 +248,14 @@ export class TimetableEditorService {
               ? moment(time.departureTime, 'HH:mm').format('HH:mm:00')
               : null
         };
+
+        if (value.operationId) {
+          tripObj.trip_operation_lists.push({
+            operation_id: value.operationId,
+            start_station_id: times[0].stationId,
+            end_station_id: times[times.length - 1].stationId
+          });
+        }
 
         if (time.id) {
           (timeObj as UpdateTimeDto).id = time.id;
