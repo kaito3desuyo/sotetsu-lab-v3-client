@@ -11,11 +11,9 @@ import map from 'lodash/map';
 import concat from 'lodash/concat';
 import join from 'lodash/join';
 import moment from 'moment';
-import { IOperation } from 'src/app/general/interfaces/operation';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import find from 'lodash/find';
 import sortBy from 'lodash/sortBy';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { ITrip } from 'src/app/general/interfaces/trip';
 
 @Component({
@@ -36,10 +34,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.times || changes.sightings) {
-      console.log('times', changes.times.currentValue);
-      console.log('sightings', changes.sightings.currentValue);
-
-      const groupedByDay = groupBy(changes.times.currentValue as ITime[], o =>
+      const groupedByDay = groupBy(this.times as ITime[], o =>
         o.departureDays ? o.departureDays : o.arrivalDays ? o.arrivalDays : null
       );
       const mapped = map(groupedByDay, o => {
@@ -53,7 +48,6 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
             'HH:mm:ss'
           ).format('H')
         );
-        console.log(groupedByTime);
         const mappedByTime = map(groupedByTime, (times, key) => {
           return {
             hour: key,
@@ -75,16 +69,10 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
               sameTripBlockTrips: time.trip.tripBlock.trips.filter(
                 trip => trip.id !== time.trip.id
               ),
-              /*join(
-                time.trip.tripBlock.trips.map(
-                  trip => trip.tripOperationLists[0].endStation.stationName
-                ),
-                '・'
-              )
-              */ operationSightings: time.trip.tripOperationLists.map(
+              operationSightings: time.trip.tripOperationLists.map(
                 tripOperationList => {
                   const operationSighting = find(
-                    changes.sightings.currentValue as IOperationSighting[],
+                    this.sightings as IOperationSighting[],
                     o =>
                       o.circulatedOperationId === tripOperationList.operation.id
                   );
@@ -98,10 +86,13 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                     };
                   } else {
                     return {
-                      operationNumber:
-                        operationSighting.circulatedOperation.operationNumber,
+                      operationNumber: operationSighting
+                        ? operationSighting.circulatedOperation.operationNumber
+                        : null,
                       formationNumber: null,
-                      sightingTime: operationSighting.sightingTime
+                      sightingTime: operationSighting
+                        ? operationSighting.sightingTime
+                        : null
                     };
                   }
                 }
@@ -112,20 +103,18 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
         return mappedByTime;
       });
 
-      console.log(mapped);
-
       const sorted = concat([], ...mapped).map(row => ({
         ...row,
         times: sortBy(row.times, o => o.minute)
       }));
 
       this.data = sorted;
+      this.maxColumnsCount = 0;
       this.data.forEach(col => {
         if (this.maxColumnsCount < col.times.length) {
           this.maxColumnsCount = col.times.length;
         }
       });
-      console.log(this.maxColumnsCount);
     }
   }
 

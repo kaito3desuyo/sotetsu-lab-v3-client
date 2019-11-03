@@ -46,6 +46,7 @@ import { TimetableStationService } from './general/services/timetable-station.se
 import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
 import { TimetableStationTableContainerComponent } from './general/components/timetable-station-table-container/timetable-station-table-container.component';
 import { TimetableStationTablePresentationalComponent } from './general/components/timetable-station-table-presentational/timetable-station-table-presentational.component';
+import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 
 @NgModule({
   imports: [
@@ -68,7 +69,8 @@ import { TimetableStationTablePresentationalComponent } from './general/componen
     MatIconModule,
     MatSlideToggleModule,
     MatTooltipModule,
-    MatDialogModule
+    MatDialogModule,
+    TimetableSharedModule
   ],
   declarations: [
     TimetableAllLineComponent,

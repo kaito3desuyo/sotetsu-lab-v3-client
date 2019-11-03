@@ -16,6 +16,7 @@ import { IStation } from 'src/app/general/interfaces/station';
 export class TimetableStationHeaderPresentationalComponent {
   @Input() calendar: ICalendar;
   @Input() station: IStation;
+  @Input() tripDirection: '0' | '1';
 
   constructor() {}
 }

@@ -163,7 +163,6 @@ export class TimetableStationService {
           )
         ),
         tap(data => {
-          console.log(data);
           this.setOperationSightings(data);
         }),
         map(() => null)

@@ -17,6 +17,7 @@ export class TimetableAllLineTableResolverService
     this.timetableAllLineService.setTripDirection(
       tripDirection === '0' || tripDirection === '1' ? tripDirection : null
     );
+    this.timetableAllLineService.updatePageSetting({ pageIndex: 0 });
 
     return forkJoin([
       this.timetableAllLineService.fetchService().pipe(
