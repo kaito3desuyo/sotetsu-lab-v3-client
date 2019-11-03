@@ -3,21 +3,21 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
-import { DashboardTimetableSearchFormContainerComponent } from './dashboard-timetable-search-form-container.component';
+import { TimetableSearchFormPresentationalComponent } from './timetable-search-form-presentational.component';
 
-describe('DashboardTimetableSearchFormContainerComponent', () => {
-  let component: DashboardTimetableSearchFormContainerComponent;
-  let fixture: ComponentFixture<DashboardTimetableSearchFormContainerComponent>;
+describe('TimetableSearchFormPresentationalComponent', () => {
+  let component: TimetableSearchFormPresentationalComponent;
+  let fixture: ComponentFixture<TimetableSearchFormPresentationalComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DashboardTimetableSearchFormContainerComponent ]
+      declarations: [ TimetableSearchFormPresentationalComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(DashboardTimetableSearchFormContainerComponent);
+    fixture = TestBed.createComponent(TimetableSearchFormPresentationalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
