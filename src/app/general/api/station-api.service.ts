@@ -18,4 +18,10 @@ export class StationApiService {
       .get(this.apiUrl)
       .pipe(map((data: { stations: ReadStationDto[] }) => data));
   }
+
+  getStationById(id: string): Observable<{ station: ReadStationDto }> {
+    return this.http
+      .get(this.apiUrl + '/' + id)
+      .pipe(map((data: { station: ReadStationDto }) => data));
+  }
 }

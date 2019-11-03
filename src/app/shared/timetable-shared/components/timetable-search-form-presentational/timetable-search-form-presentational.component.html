@@ -13,11 +13,11 @@
     >
       <mat-form-field>
         <mat-select placeholder="ダイヤ" formControlName="calendarId">
-          <mat-option
-            *ngFor="let calendar of calendarsSelectList"
-            [value]="calendar.value"
-          >
-            {{ calendar.label }}
+          <mat-option *ngFor="let calendar of calendars" [value]="calendar.id">
+            {{
+              (calendar.startDate | date: 'yyyy年MM月dd日 改正 ') +
+                calendar.calendarName
+            }}
           </mat-option>
         </mat-select>
       </mat-form-field>
@@ -30,19 +30,21 @@
         <mat-radio-button value="1">下り</mat-radio-button>
       </mat-radio-group>
       <div>
-        <mat-slide-toggle [disabled]="true"
-          >駅を指定して検索する</mat-slide-toggle
-        >
+        <mat-slide-toggle formControlName="isSearchStation">
+          駅を指定して検索する
+        </mat-slide-toggle>
       </div>
       <mat-form-field>
-        <mat-select placeholder="駅名" [disabled]="true">
+        <mat-select placeholder="駅名" formControlName="stationId">
           <mat-optgroup
             *ngFor="let route of stationsSelectList"
             [label]="route.routeName"
           >
-            <mat-option *ngFor="let station of route.stations">{{
-              station.label
-            }}</mat-option>
+            <mat-option
+              *ngFor="let station of route.stations"
+              [value]="station.value"
+              >{{ station.label }}</mat-option
+            >
           </mat-optgroup>
         </mat-select>
       </mat-form-field>

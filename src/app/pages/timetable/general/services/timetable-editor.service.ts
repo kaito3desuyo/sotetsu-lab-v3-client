@@ -249,14 +249,6 @@ export class TimetableEditorService {
               : null
         };
 
-        if (value.operationId) {
-          tripObj.trip_operation_lists.push({
-            operation_id: value.operationId,
-            start_station_id: times[0].stationId,
-            end_station_id: times[times.length - 1].stationId
-          });
-        }
-
         if (time.id) {
           (timeObj as UpdateTimeDto).id = time.id;
         }
@@ -272,6 +264,14 @@ export class TimetableEditorService {
     if (value.tripOperationListId) {
       (tripObj as UpdateTripDto).trip_operation_lists[0].id =
         value.tripOperationListId;
+    }
+
+    if (value.operationId) {
+      tripObj.trip_operation_lists.push({
+        operation_id: value.operationId,
+        start_station_id: times[0].stationId,
+        end_station_id: times[times.length - 1].stationId
+      });
     }
 
     return tripObj;

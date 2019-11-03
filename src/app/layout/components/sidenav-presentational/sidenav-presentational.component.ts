@@ -41,11 +41,11 @@ export class SidenavPresentationalComponent extends BaseComponent
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.todaysCalendarId) {
       this.upTimetableLink.next([
-        '/timetable/all-line/' + this.todaysCalendarId,
+        '/timetable/' + this.todaysCalendarId + '/all-line',
         { trip_direction: '0' }
       ]);
       this.downTimetableLink.next([
-        '/timetable/all-line/' + this.todaysCalendarId,
+        '/timetable/' + this.todaysCalendarId + '/all-line',
         { trip_direction: '1' }
       ]);
     }
@@ -55,20 +55,20 @@ export class SidenavPresentationalComponent extends BaseComponent
     this.subscription = this.stationId.valueChanges.subscribe(id => {
       if (id) {
         this.upTimetableLink.next([
-          '/timetable/station/' + this.todaysCalendarId,
-          { trip_direction: '0', station_id: id }
+          '/timetable/' + this.todaysCalendarId + '/station/' + id,
+          { trip_direction: '0' }
         ]);
         this.downTimetableLink.next([
-          '/timetable/station/' + this.todaysCalendarId,
+          '/timetable/' + this.todaysCalendarId + '/station/' + id,
           { trip_direction: '1', station_id: id }
         ]);
       } else {
         this.upTimetableLink.next([
-          '/timetable/all-line/' + this.todaysCalendarId,
+          '/timetable/' + this.todaysCalendarId + '/all-line',
           { trip_direction: '0' }
         ]);
         this.downTimetableLink.next([
-          '/timetable/all-line/' + this.todaysCalendarId,
+          '/timetable/' + this.todaysCalendarId + '/all-line',
           { trip_direction: '1' }
         ]);
       }

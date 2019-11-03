@@ -1,0 +1,6 @@
+<app-timetable-search-form-presentational
+  [calendars]="calendars$ | async"
+  [stationsSelectList]="stationsSelectList$ | async"
+  [todaysCalendarId]="todaysCalendarId$ | async"
+  (searchTimetable)="onReceiveSearchTimetable($event)"
+></app-timetable-search-form-presentational>
