@@ -1,6 +1,7 @@
 import { ITime } from './time';
 import { ITripOperationList } from './trip-operation-list';
 import { ITripClass } from './trip-class';
+import { ITripBlock } from '../models/trip-block/trip-block';
 
 export interface ITrip {
   id: string;
@@ -16,6 +17,7 @@ export interface ITrip {
   depotOut: boolean;
   createdAt: string;
   updatedAt: string;
+  tripBlock?: ITripBlock;
   tripClass?: ITripClass;
   tripOperationLists?: ITripOperationList[];
   times?: ITime[];

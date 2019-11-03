@@ -3,6 +3,7 @@ import { ITripOperationList } from '../../interfaces/trip-operation-list';
 import { TripModel } from '../trip/trip-model';
 import { OperationModel } from '../operation/operation-model';
 import { TimeModel } from '../time/time-model';
+import { StationModel } from '../station/station-model';
 
 export class TripOperationListModel {
   static readTripOperationListDtoImpl(
@@ -23,6 +24,12 @@ export class TripOperationListModel {
     }
     if (data.operation) {
       parsed.operation = OperationModel.readOperationDtoImpl(data.operation);
+    }
+    if (data.start_station) {
+      parsed.startStation = StationModel.readStationDtoImpl(data.start_station);
+    }
+    if (data.end_station) {
+      parsed.endStation = StationModel.readStationDtoImpl(data.end_station);
     }
     if (data.start_time) {
       parsed.startTime = TimeModel.readTimeDtoImpl(data.start_time);

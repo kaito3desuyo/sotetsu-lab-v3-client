@@ -6,6 +6,8 @@ import { TimetableAddComponent } from './timetable-add/timetable-add.component';
 import { TimetableAddResolverService } from './general/services/timetable-add-resolver.service';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
+import { TimetableStationComponent } from './timetable-station/timetable-station.component';
+import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
 
 const routes: Routes = [
   {
@@ -16,6 +18,16 @@ const routes: Routes = [
     },
     data: {
       title: '全線時刻表'
+    }
+  },
+  {
+    path: ':calendarId/station/:stationId',
+    component: TimetableStationComponent,
+    resolve: {
+      from: TimetableStationResolverService
+    },
+    data: {
+      title: '駅別時刻表'
     }
   },
   {

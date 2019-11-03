@@ -1,0 +1,45 @@
+:host {
+  .hour {
+    font-size: 24px;
+  }
+
+  .minute {
+    font-size: 24px;
+  }
+
+  .underbar {
+    text-decoration: underline;
+  }
+
+  table {
+    border-collapse: collapse;
+    tr {
+      height: 72px;
+      min-height: 72px;
+      &:nth-child(odd) {
+        th,
+        td {
+          background: white;
+        }
+      }
+      &:nth-child(even) {
+        th,
+        td {
+          background: #eeeeee;
+        }
+      }
+    }
+    th {
+      min-width: 48px;
+      position: sticky;
+      left: 0;
+    }
+    td {
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      min-width: 152px;
+    }
+  }
+}

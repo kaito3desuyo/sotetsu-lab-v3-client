@@ -1,3 +1,7 @@
+import { ITrip } from './trip';
+import { IStation } from './station';
+import { IStop } from '../models/stop/stop';
+
 export interface ITime {
   id: string;
   tripId: string;
@@ -12,4 +16,7 @@ export interface ITime {
   departureTime: string;
   createdAt: string;
   updatedAt: string;
+  trip?: ITrip;
+  station?: IStation;
+  stop?: IStop;
 }
