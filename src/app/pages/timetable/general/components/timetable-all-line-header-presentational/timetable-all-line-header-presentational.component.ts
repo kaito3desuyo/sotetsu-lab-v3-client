@@ -14,5 +14,6 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 })
 export class TimetableAllLineHeaderPresentationalComponent {
   @Input() calendar: ICalendar;
+  @Input() tripDirection: '0' | '1';
   constructor() {}
 }

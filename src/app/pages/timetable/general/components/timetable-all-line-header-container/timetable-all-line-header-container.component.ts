@@ -10,8 +10,10 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 })
 export class TimetableAllLineHeaderContainerComponent implements OnInit {
   calendar$: Observable<ICalendar>;
+  tripDirection$: Observable<'0' | '1'>;
   constructor(private timetableAllLineService: TimetableAllLineService) {
     this.calendar$ = this.timetableAllLineService.getCalendar();
+    this.tripDirection$ = this.timetableAllLineService.getTripDirection();
   }
 
   ngOnInit() {}

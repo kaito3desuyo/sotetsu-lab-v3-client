@@ -3,6 +3,7 @@ import { ITrip } from '../../interfaces/trip';
 import { TimeModel } from '../time/time-model';
 import { TripOperationListModel } from '../trip-operation-list/trip-operation-list-model';
 import { TripClassModel } from '../trip-class/trip-class-model';
+import { TripBlockModel } from '../trip-block/trip-block-model';
 
 export class TripModel {
   static readTripDtoImpl(trip: ReadTripDto): ITrip {
@@ -22,6 +23,10 @@ export class TripModel {
       createdAt: trip.created_at,
       updatedAt: trip.updated_at
     };
+
+    if (trip.trip_block) {
+      parsed.tripBlock = TripBlockModel.readTripBlockDtoImpl(trip.trip_block);
+    }
 
     if (trip.trip_class) {
       parsed.tripClass = TripClassModel.readTripClassDtoImpl(trip.trip_class);

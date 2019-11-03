@@ -6,16 +6,33 @@ import { TimetableAddComponent } from './timetable-add/timetable-add.component';
 import { TimetableAddResolverService } from './general/services/timetable-add-resolver.service';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
+import { TimetableStationComponent } from './timetable-station/timetable-station.component';
+import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
+import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-shared/services/timetable-search-form-resolver.service';
 
 const routes: Routes = [
   {
-    path: 'all-line/:calendarId',
+    path: ':calendarId/all-line',
     component: TimetableAllLineComponent,
     resolve: {
-      timetableAllLine: TimetableAllLineTableResolverService
+      timetableAllLine: TimetableAllLineTableResolverService,
+      from2: TimetableSearchFormResolverService
     },
+    runGuardsAndResolvers: 'always',
     data: {
       title: '全線時刻表'
+    }
+  },
+  {
+    path: ':calendarId/station/:stationId',
+    component: TimetableStationComponent,
+    resolve: {
+      from: TimetableStationResolverService,
+      from2: TimetableSearchFormResolverService
+    },
+    runGuardsAndResolvers: 'always',
+    data: {
+      title: '駅別時刻表'
     }
   },
   {

@@ -6,8 +6,6 @@ import { DashboardComponent } from './dashboard.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DashboardTimetableSearchFormContainerComponent } from './general/components/dashboard-timetable-search-form-container/dashboard-timetable-search-form-container.component';
-import { DashboardTimetableSearchFormPresentationalComponent } from './general/components/dashboard-timetable-search-form-presentational/dashboard-timetable-search-form-presentational.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -23,12 +21,11 @@ import { DashboardResolverService } from './general/services/dashboard-resolver.
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
 import { DashboardService } from './general/services/dashboard.service';
+import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 
 @NgModule({
   declarations: [
     DashboardComponent,
-    DashboardTimetableSearchFormContainerComponent,
-    DashboardTimetableSearchFormPresentationalComponent,
     DashboardOperationSearchMenuContainerComponent,
     DashboardOperationSearchMenuPresentationalComponent,
     DashboardTripAddFormContainerComponent,
@@ -49,7 +46,8 @@ import { DashboardService } from './general/services/dashboard.service';
     MatListModule,
     MatInputModule,
     DashboardRoutingModule,
-    OperationSharedModule
+    OperationSharedModule,
+    TimetableSharedModule
   ],
   providers: [DashboardService, DashboardResolverService]
 })
