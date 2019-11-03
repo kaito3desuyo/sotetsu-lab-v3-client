@@ -79,13 +79,15 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
       return this.fb.group({
         id: [trip.id],
         tripNumber: [trip.tripNumber, Validators.required],
+        /*
         tripOperationListId: [
-          trip.tripOperationLists[0].id,
-          Validators.required
+          trip.tripOperationLists.length ? trip.tripOperationLists[0].id : ''
         ],
+        */
         operationId: [
-          trip.tripOperationLists[0].operationId,
-          Validators.required
+          trip.tripOperationLists.length
+            ? trip.tripOperationLists[0].operationId
+            : ''
         ],
         tripClassId: [trip.tripClassId, Validators.required],
         depotIn: [trip.depotIn],
@@ -102,7 +104,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
     } else {
       return this.fb.group({
         tripNumber: ['', Validators.required],
-        operationId: ['', Validators.required],
+        operationId: [''],
         tripClassId: ['', Validators.required],
         depotIn: [false],
         depotOut: [false],
@@ -122,7 +124,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
           Validators.required
         ],
         stationId: [station.id, Validators.required],
-        stopId: [{ value: time.stopId, disabled: false }, Validators.required],
+        stopId: [{ value: time.stopId, disabled: false }],
         arrivalTime: [
           {
             value: time.arrivalTime
@@ -144,7 +146,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
       return this.fb.group({
         stopType: ['noVia', Validators.required],
         stationId: [station.id, Validators.required],
-        stopId: [{ value: '', disabled: true }, Validators.required],
+        stopId: [{ value: '', disabled: true }],
         arrivalTime: [{ value: '', disabled: true }],
         departureTime: [{ value: '', disabled: true }]
       });
