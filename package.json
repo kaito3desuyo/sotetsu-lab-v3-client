@@ -21,7 +21,7 @@
     "@angular/material": "^8.2.0",
     "@angular/platform-browser": "~8.2.6",
     "@angular/platform-browser-dynamic": "~8.2.6",
-    "@angular/pwa": "^0.803.4",
+    "@angular/pwa": "^0.803.17",
     "@angular/router": "~8.2.6",
     "@angular/service-worker": "~8.2.6",
     "@datorama/akita": "^4.9.3",
