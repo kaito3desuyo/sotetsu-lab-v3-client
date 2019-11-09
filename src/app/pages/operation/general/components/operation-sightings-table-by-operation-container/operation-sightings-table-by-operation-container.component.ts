@@ -20,8 +20,10 @@ export class OperationSightingsTableByOperationContainerComponent {
     'sightingTime',
     'updatedAt'
   ];
+  currentCalendarId$: Observable<string>;
 
   constructor(private operationRealTimeService: OperationRealTimeService) {
     this.data$ = this.operationRealTimeService.getOperationTableData();
+    this.currentCalendarId$ = this.operationRealTimeService.currentCalendarId$;
   }
 }

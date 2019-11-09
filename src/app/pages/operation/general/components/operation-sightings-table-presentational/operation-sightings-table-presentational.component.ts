@@ -25,6 +25,7 @@ export class OperationSightingsTablePresentationalComponent
   @Input() mode: 'formation' | 'operation';
   @Input() data: IOperationSightingTable[];
   @Input() displayedColumns: string[] = [];
+  @Input() currentCalendarId: string;
 
   dataSource: MatTableDataSource<IOperationSightingTable>;
 

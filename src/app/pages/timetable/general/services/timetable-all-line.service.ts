@@ -35,6 +35,8 @@ export class TimetableAllLineService {
     '0' | '1'
   >(null);
 
+  private blockId: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+
   private service: BehaviorSubject<IService> = new BehaviorSubject<IService>(
     null
   );
@@ -105,6 +107,18 @@ export class TimetableAllLineService {
 
   setTripDirection(direction: '0' | '1'): void {
     this.tripDirection.next(direction);
+  }
+
+  getBlockId(): Observable<string> {
+    return this.blockId.asObservable();
+  }
+
+  getBlockIdAsStatic(): string {
+    return this.blockId.getValue();
+  }
+
+  setBlockId(id: string): void {
+    this.blockId.next(id);
   }
 
   getService(): Observable<IService> {
@@ -200,28 +214,38 @@ export class TimetableAllLineService {
   }
 
   fetchTrips() {
-    return this.tripApi
-      .searchTripsByBlocks({
-        calendar_id: this.getCalendarIdAsStatic(),
-        trip_direction: this.getTripDirectionAsStatic()
+    const blockId = this.getBlockIdAsStatic();
+
+    const params: {
+      calendar_id?: string;
+      trip_direction?: '0' | '1';
+      trip_block_id?: string;
+    } = {
+      calendar_id: this.getCalendarIdAsStatic(),
+      trip_direction: this.getTripDirectionAsStatic()
+    };
+
+    if (blockId) {
+      params.trip_block_id = blockId;
+    }
+
+    return this.tripApi.searchTripsByBlocks(params).pipe(
+      map(data =>
+        data.trip_blocks.map(tripBlock =>
+          TripBlockModel.readTripBlockDtoImpl(tripBlock)
+        )
+      ),
+      tap(data => {
+        let trips: ITrip[] = [];
+        data.forEach(tripBlock => {
+          trips = concat(trips, tripBlock.trips);
+        });
+        this.setTrips(trips);
+        this.updatePageSetting({
+          length: trips.length
+        });
       })
-      .pipe(
-        map(data =>
-          data.trip_blocks.map(tripBlock =>
-            TripBlockModel.readTripBlockDtoImpl(tripBlock)
-          )
-        ),
-        tap(data => {
-          let trips: ITrip[] = [];
-          data.forEach(tripBlock => {
-            trips = concat(trips, tripBlock.trips);
-          });
-          this.setTrips(trips);
-          this.updatePageSetting({
-            length: trips.length
-          });
-        })
-      );
+    );
   }
 
   getPageSetting(): Observable<PageEvent> {
