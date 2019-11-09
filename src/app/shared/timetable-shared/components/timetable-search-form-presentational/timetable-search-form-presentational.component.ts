@@ -4,10 +4,13 @@ import {
   ChangeDetectionStrategy,
   Input,
   Output,
-  EventEmitter
+  EventEmitter,
+  OnChanges,
+  SimpleChanges
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
 
 @Component({
   selector: 'app-timetable-search-form-presentational',
@@ -15,7 +18,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
   styleUrls: ['./timetable-search-form-presentational.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TimetableSearchFormPresentationalComponent {
+export class TimetableSearchFormPresentationalComponent implements OnChanges {
   searchTimetableForm = this.fb.group({
     calendarId: ['', Validators.required],
     tripDirection: ['0', Validators.required],
@@ -24,11 +27,11 @@ export class TimetableSearchFormPresentationalComponent {
   });
 
   @Input() calendars: ICalendar[];
+  @Input() params: ITimetableSearchForm;
   @Input() stationsSelectList: {
     routeName: string;
     stations: { label: string; value: string }[];
   }[];
-  @Input() todaysCalendarId: string;
   @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
   constructor(private fb: FormBuilder) {
@@ -43,11 +46,9 @@ export class TimetableSearchFormPresentationalComponent {
       });
   }
 
-  ngOnInit(): void {
-    if (this.todaysCalendarId) {
-      this.searchTimetableForm
-        .get('calendarId')
-        .setValue(this.todaysCalendarId);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.params) {
+      this.searchTimetableForm.patchValue(this.params);
     }
   }
 

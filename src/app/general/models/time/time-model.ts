@@ -1,6 +1,7 @@
 import { ReadTimeDto } from './time-dto';
 import { ITime } from '../../interfaces/time';
 import { TripModel } from '../trip/trip-model';
+import { StationModel } from '../station/station-model';
 
 export class TimeModel {
   static readTimeDtoImpl(data: ReadTimeDto): ITime {
@@ -22,6 +23,10 @@ export class TimeModel {
 
     if (data.trip) {
       parsed.trip = TripModel.readTripDtoImpl(data.trip);
+    }
+
+    if (data.station) {
+      parsed.station = StationModel.readStationDtoImpl(data.station);
     }
 
     return parsed;

@@ -7,6 +7,7 @@ import { RoutesAllStationsQuery } from 'src/app/general/models/routes/state/rout
 import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
 
 @Component({
   selector: 'app-timetable-search-form-container',
@@ -15,6 +16,7 @@ import { Router } from '@angular/router';
 })
 export class TimetableSearchFormContainerComponent {
   calendars$: Observable<ICalendar[]>;
+  params$: Observable<ITimetableSearchForm>;
   stationsSelectList$: Observable<
     { routeName: string; stations: { label: string; value: string }[] }[]
   >;
@@ -22,26 +24,21 @@ export class TimetableSearchFormContainerComponent {
 
   constructor(
     private router: Router,
-    private paramsQuery: ParamsQuery,
     private routesAllStationsQuery: RoutesAllStationsQuery,
     private routesAllStationsService: RoutesAllStationsService,
     private timetableSearchFormService: TimetableSearchFormService
   ) {
     this.calendars$ = this.timetableSearchFormService.getCalendars();
+    this.params$ = this.timetableSearchFormService.getParams();
     this.stationsSelectList$ = this.routesAllStationsQuery.selectAll().pipe(
       map(route => {
         return this.routesAllStationsService.generateStationSelectList(route);
       })
     );
-    this.todaysCalendarId$ = this.paramsQuery.calendar$;
   }
 
-  onReceiveSearchTimetable(form: {
-    calendarId: string;
-    tripDirection: '0' | '1';
-    isSearchStation: boolean;
-    stationId?: string;
-  }): void {
+  onReceiveSearchTimetable(form: ITimetableSearchForm): void {
+    this.timetableSearchFormService.setParams(form);
     if (form.isSearchStation) {
       this.router.navigate([
         'timetable',

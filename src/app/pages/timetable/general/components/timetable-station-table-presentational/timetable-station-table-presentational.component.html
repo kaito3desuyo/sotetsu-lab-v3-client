@@ -22,7 +22,11 @@
                 <span [ngStyle]="{ color: time.tripClassColor }">
                   {{ time.tripClassName }}
                 </span>
-                <span>{{ time.lastStop }}</span>
+                <span>{{
+                  time.lastStop
+                    | findById
+                      : { collection: stations, property: 'stationName' }
+                }}</span>
               </div>
               <div
                 fxLayout="column"
@@ -44,10 +48,16 @@
             <ng-container *ngFor="let trips of time.sameTripBlockTrips">
               <small>
                 {{
-                  trips.tripOperationLists[0].startStation.stationName
+                  trips.times[0]?.stationId
+                    | findById
+                      : { collection: stations, property: 'stationName' }
                 }}から<br />
                 {{ trips.tripClass.tripClassName }}
-                {{ trips.tripOperationLists[0].endStation.stationName }}
+                {{
+                  trips.times[trips.times.length - 1]?.stationId
+                    | findById
+                      : { collection: stations, property: 'stationName' }
+                }}
                 行き
               </small>
             </ng-container>
