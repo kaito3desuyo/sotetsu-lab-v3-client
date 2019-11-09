@@ -12,11 +12,19 @@ export class TimetableAllLineTableResolverService
   resolve(route: ActivatedRouteSnapshot): Observable<void> {
     const calendarId = route.paramMap.get('calendarId');
     const tripDirection = route.paramMap.get('trip_direction');
+    const blockId = route.paramMap.get('trip_block_id');
 
     this.timetableAllLineService.setCalendarId(calendarId);
     this.timetableAllLineService.setTripDirection(
       tripDirection === '0' || tripDirection === '1' ? tripDirection : null
     );
+
+    if (blockId) {
+      this.timetableAllLineService.setBlockId(blockId);
+    } else {
+      this.timetableAllLineService.setBlockId(null);
+    }
+
     this.timetableAllLineService.updatePageSetting({ pageIndex: 0 });
 
     return forkJoin([

@@ -30,10 +30,12 @@ import { NotificationService } from 'src/app/general/services/notification.servi
 import { OperationSightingModel } from 'src/app/general/models/operation-sighting/operation-sighting-model';
 import { IOperationCurrentPosition } from 'src/app/general/interfaces/operation-current-position';
 import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
+import { ParamsQuery } from 'src/app/state/params';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
   currentCalendarId: string;
+  currentCalendarId$: Observable<string>;
 
   private services: BehaviorSubject<IService[]> = new BehaviorSubject<
     IService[]
@@ -90,6 +92,7 @@ export class OperationRealTimeService extends BaseService {
     private formationApi: FormationApiService,
     private operationApi: OperationApiService,
     private stationApi: StationApiService,
+    private paramsQuery: ParamsQuery,
     private currentParamsQuery: CurrentParamsQuery,
     private notification: NotificationService
   ) {
@@ -122,6 +125,7 @@ export class OperationRealTimeService extends BaseService {
     this.subscription = this.currentParamsQuery.calendar$.subscribe(obj => {
       this.currentCalendarId = obj.id;
     });
+    this.currentCalendarId$ = this.paramsQuery.calendar$;
 
     this.subscription = timer(0, 1000 * 60)
       .pipe(
@@ -454,6 +458,9 @@ export class OperationRealTimeService extends BaseService {
     {
       operationNumber: string;
       trip: {
+        tripId: string;
+        tripBlockId: string;
+        tripDirection: 0 | 1;
         tripNumber: string;
         tripClassName: string;
         tripClassColor: string;
@@ -480,6 +487,9 @@ export class OperationRealTimeService extends BaseService {
             return {
               operationNumber: position.operationNumber,
               trip: {
+                tripId: null,
+                tripBlockId: null,
+                tripDirection: null,
                 tripNumber: null,
                 tripClassName: null,
                 tripClassColor: null,
@@ -508,6 +518,9 @@ export class OperationRealTimeService extends BaseService {
             return {
               operationNumber: position.operationNumber,
               trip: {
+                tripId: null,
+                tripBlockId: null,
+                tripDirection: null,
                 tripNumber: null,
                 tripClassName: null,
                 tripClassColor: null,
@@ -540,6 +553,10 @@ export class OperationRealTimeService extends BaseService {
             return {
               operationNumber: position.operationNumber,
               trip: {
+                tripId: position.currentPosition.current.tripId,
+                tripBlockId: position.currentPosition.current.trip.tripBlockId,
+                tripDirection: position.currentPosition.current.trip
+                  .tripDirection as 0 | 1,
                 tripNumber: position.currentPosition.current.trip.tripNumber,
                 tripClassName: tripClass.tripClassName,
                 tripClassColor: tripClass.tripClassColor,
@@ -570,6 +587,9 @@ export class OperationRealTimeService extends BaseService {
             return {
               operationNumber: position.operationNumber,
               trip: {
+                tripId: null,
+                tripBlockId: null,
+                tripDirection: null,
                 tripNumber: null,
                 tripClassName: null,
                 tripClassColor: null,
@@ -592,6 +612,9 @@ export class OperationRealTimeService extends BaseService {
           return {
             operationNumber: position.operationNumber,
             trip: {
+              tripId: null,
+              tripBlockId: null,
+              tripDirection: null,
               tripNumber: null,
               tripClassName: null,
               tripClassColor: null,

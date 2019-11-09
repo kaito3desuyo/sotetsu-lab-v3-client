@@ -161,12 +161,20 @@
       <td mat-cell *matCellDef="let element">
         <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="24px">
           <div fxLayout="column" fxFlex="32px">
-            <span [ngStyle]="{ color: element.trip?.tripClassColor }">{{
-              element.trip?.tripClassName
-            }}</span>
-            <span [ngStyle]="{ color: element.trip?.tripClassColor }">{{
-              element.trip?.tripNumber
-            }}</span>
+            <a
+              [routerLink]="[
+                '/timetable/' + currentCalendarId + '/all-line',
+                {
+                  trip_direction: element.trip?.tripDirection,
+                  trip_block_id: element.trip?.tripBlockId
+                }
+              ]"
+              [ngStyle]="{ color: element.trip?.tripClassColor }"
+            >
+              {{ element.trip?.tripClassName }}
+              <br />
+              {{ element.trip?.tripNumber }}
+            </a>
           </div>
           <div fxLayout="column" fxFlex="64px">
             <span>{{ element.trip?.prevStation }}</span>

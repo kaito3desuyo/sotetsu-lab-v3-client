@@ -9,13 +9,20 @@
           fxLayoutAlign="start center"
           fxLayoutGap="8px"
         >
-          <div
+          <a
             class="minute"
-            [ngClass]="time.mode === 'arrival' ? 'underbar' : ''"
+            [ngClass]="time.mode === 'arrival' ? 'underline' : 'none'"
             [ngStyle]="{ color: time.tripClassColor }"
+            [routerLink]="[
+              '/timetable/' + calendarId + '/all-line',
+              {
+                trip_direction: time.tripDirection,
+                trip_block_id: time.tripBlockId
+              }
+            ]"
           >
-            {{ time.minute }}
-          </div>
+            <span>{{ time.minute }}</span>
+          </a>
           <div fxLayout="column">
             <div fxLayout="row" fxLayoutGap="8px">
               <div fxLayout="column">

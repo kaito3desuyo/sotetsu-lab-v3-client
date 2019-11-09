@@ -1,0 +1,7 @@
+<app-dashboard-timetable-search-form-presentational
+  fxFlex="auto"
+  [calendarsSelectList]="calendarsSelectList$ | async"
+  [stationsSelectList]="stationsSelectList$ | async"
+  [todaysCalendarId]="todaysCalendarId$ | async"
+  (searchTimetable)="onReceiveSearchTimetable($event)"
+></app-dashboard-timetable-search-form-presentational>

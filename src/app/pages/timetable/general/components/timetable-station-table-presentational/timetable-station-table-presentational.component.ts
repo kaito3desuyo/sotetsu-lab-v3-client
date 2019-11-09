@@ -26,6 +26,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
   data: ITimetableStationTable[] = [];
   maxColumnsCount = 0;
 
+  @Input() calendarId: string;
   @Input() times: ITime[];
   @Input() sightings: IOperationSighting[];
   @Input() stations: IStation[];
@@ -72,6 +73,8 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                 : time.arrivalTime
                 ? moment(time.arrivalTime, 'HH:mm:ss').format('mm')
                 : null,
+              tripDirection: time.trip.tripDirection,
+              tripBlockId: time.trip.tripBlockId,
               tripClassName: time.trip.tripClass.tripClassName,
               tripClassColor: time.trip.tripClass.tripClassColor,
               lastStop: time.trip.times.length

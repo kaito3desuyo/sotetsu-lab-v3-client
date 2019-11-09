@@ -90,6 +90,7 @@ export class TripApiService {
   searchTripsByBlocks(query: {
     calendar_id?: string;
     trip_direction?: '0' | '1';
+    trip_block_id?: string;
   }): Observable<{ trip_blocks: ReadTripBlockDto[] }> {
     return this.http
       .get(this.apiUrl + '/search/by-blocks', {
