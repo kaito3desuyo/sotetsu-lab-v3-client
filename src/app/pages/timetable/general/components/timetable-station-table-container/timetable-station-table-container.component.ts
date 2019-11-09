@@ -3,6 +3,7 @@ import { TimetableStationService } from '../../services/timetable-station.servic
 import { Observable } from 'rxjs';
 import { ITime } from 'src/app/general/interfaces/time';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { IStation } from 'src/app/general/interfaces/station';
 
 @Component({
   selector: 'app-timetable-station-table-container',
@@ -12,11 +13,11 @@ import { IOperationSighting } from 'src/app/general/interfaces/operation-sightin
 export class TimetableStationTableContainerComponent {
   times$: Observable<ITime[]>;
   sightings$: Observable<IOperationSighting[]>;
-  stationId$: Observable<string>;
+  stations$: Observable<IStation[]>;
 
   constructor(private timetableStationService: TimetableStationService) {
     this.times$ = this.timetableStationService.getTimes();
     this.sightings$ = this.timetableStationService.getOperationSightings();
-    this.stationId$ = this.timetableStationService.getStationId();
+    this.stations$ = this.timetableStationService.getStations();
   }
 }

@@ -49,7 +49,12 @@
         </mat-select>
       </mat-form-field>
       <div fxLayout="row" fxLayoutAlign="end center">
-        <button mat-raised-button color="primary" (click)="onClickSearch()">
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="searchTimetableForm.invalid"
+          (click)="onClickSearch()"
+        >
           検索
         </button>
       </div>
