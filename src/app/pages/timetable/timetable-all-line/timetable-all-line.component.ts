@@ -2,6 +2,7 @@ import { Component, OnInit, Injector, Inject } from '@angular/core';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { ActivatedRoute } from '@angular/router';
 import { TitleService } from 'src/app/general/services/title.service';
+import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/services/timetable-search-form.service';
 
 @Component({
   selector: 'app-timetable-all-line',
@@ -12,11 +13,24 @@ export class TimetableAllLineComponent extends BaseComponent {
   constructor(
     @Inject(Injector) injector: Injector,
     private route: ActivatedRoute,
-    private titleService: TitleService
+    private titleService: TitleService,
+    private timetableSearchFormService: TimetableSearchFormService
   ) {
     super(injector);
     this.subscription = this.route.data.subscribe((data: { title: string }) => {
       this.titleService.setTitle(data.title);
+    });
+
+    this.subscription = this.route.paramMap.subscribe(params => {
+      const calendarId = params.get('calendarId');
+      const tripDirection = params.get('trip_direction');
+
+      this.timetableSearchFormService.updateParams({
+        calendarId: calendarId,
+        tripDirection: tripDirection as '0' | '1',
+        isSearchStation: false,
+        stationId: ''
+      });
     });
   }
 }

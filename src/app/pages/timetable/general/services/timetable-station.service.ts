@@ -29,6 +29,9 @@ export class TimetableStationService {
   private _station$: BehaviorSubject<IStation> = new BehaviorSubject<IStation>(
     null
   );
+  private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
+    IStation[]
+  >([]);
 
   private _tripDirection$: BehaviorSubject<'0' | '1'> = new BehaviorSubject<
     '0' | '1'
@@ -89,19 +92,19 @@ export class TimetableStationService {
     this._stationId$.next(id);
   }
 
-  getStation(): Observable<IStation> {
-    return this._station$.asObservable();
+  getStations(): Observable<IStation[]> {
+    return this._stations$.asObservable();
   }
 
-  setStation(station: IStation): void {
-    this._station$.next(station);
+  setStations(stations: IStation[]): void {
+    this._stations$.next(stations);
   }
 
-  fetchStation(): Observable<void> {
-    return this.stationApi.getStationById(this.getStationIdAsStatic()).pipe(
-      map(data => StationModel.readStationDtoImpl(data.station)),
+  fetchStations(): Observable<void> {
+    return this.stationApi.getStations().pipe(
+      map(data => data.stations.map(o => StationModel.readStationDtoImpl(o))),
       tap(data => {
-        this.setStation(data);
+        this.setStations(data);
       }),
       map(() => null)
     );

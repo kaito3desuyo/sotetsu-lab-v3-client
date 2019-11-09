@@ -6,6 +6,8 @@
     改正
     {{ calendar.calendarName }}
     {{ tripDirection === '0' ? '上り' : tripDirection === '1' ? '下り' : '' }}
-    {{ station.stationName }}駅時刻表
+    {{
+      stationId | findById: { collection: stations, property: 'stationName' }
+    }}駅時刻表
   </h3>
 </mat-toolbar>

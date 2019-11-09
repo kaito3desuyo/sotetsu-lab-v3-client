@@ -1,9 +1,10 @@
 import { Component, Inject, Injector, OnInit } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
 import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
 import { ParamsService } from './state/params';
+import { LoadingService } from './shared/app-shared/loading/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -16,12 +17,17 @@ export class AppComponent extends BaseComponent {
     private router: Router,
     private gaService: GoogleAnalyticsService,
     private appUpdateService: AppUpdateService,
-    private paramsService: ParamsService
+    private paramsService: ParamsService,
+    private loadingService: LoadingService
   ) {
     super(injector);
 
     this.subscription = this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        this.loadingService.open();
+      }
       if (event instanceof NavigationEnd) {
+        this.loadingService.close();
         this.gaService.sendPageView(event.urlAfterRedirects);
       }
     });

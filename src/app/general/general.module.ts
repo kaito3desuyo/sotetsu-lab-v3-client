@@ -16,10 +16,6 @@ import { CustomPaginator } from './classes/custom-paginator';
 import { environment } from 'src/environments/environment';
 
 @NgModule({
-  declarations: [
-    ConfirmDialogContainerComponent,
-    ConfirmDialogPresentationalComponent
-  ],
   imports: [
     CommonModule,
     FlexLayoutModule,
@@ -34,6 +30,10 @@ import { environment } from 'src/environments/environment';
     })
   ],
   exports: [
+    ConfirmDialogContainerComponent,
+    ConfirmDialogPresentationalComponent
+  ],
+  declarations: [
     ConfirmDialogContainerComponent,
     ConfirmDialogPresentationalComponent
   ],
