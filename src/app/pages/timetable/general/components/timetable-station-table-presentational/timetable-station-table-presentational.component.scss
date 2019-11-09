@@ -4,11 +4,25 @@
   }
 
   .minute {
+    width: 48px;
+    height: 48px;
     font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .underbar {
     text-decoration: underline;
+  }
+
+  .none {
+    text-decoration: none;
+  }
+
+  .last-stop {
+    border: 1px dashed rgba(255, 0, 0, 0.36);
+    border-radius: 50%;
   }
 
   table {

@@ -1,3 +1,5 @@
+import { ITrip } from 'src/app/general/interfaces/trip';
+
 export interface IOperationSightingTable {
   postedOperationNumber: string;
   rotatedOperationNumber: string;
@@ -5,4 +7,5 @@ export interface IOperationSightingTable {
   formationNumber: string;
   sightingTime: string;
   updatedAt: string;
+  trip: any;
 }
