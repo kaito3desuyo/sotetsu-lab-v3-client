@@ -20,7 +20,7 @@ export class TimetableStationResolverService
 
     return forkJoin([
       this.timetableStationService.fetchCalendar(),
-      this.timetableStationService.fetchStation(),
+      this.timetableStationService.fetchStations(),
       this.timetableStationService.fetchTimes(),
       this.timetableStationService.fetchOperationSightings()
     ]).pipe(map(() => null));
