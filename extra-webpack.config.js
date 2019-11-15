@@ -2,6 +2,7 @@ const webpack = require('webpack');
 const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 module.exports = {
+  /*
   optimization: {
     splitChunks: {
       chunks: 'async',
@@ -25,6 +26,7 @@ module.exports = {
       }
     }
   },
+  */
   plugins: [
     new MomentLocalesPlugin({
       localesToKeep: ['ja']
