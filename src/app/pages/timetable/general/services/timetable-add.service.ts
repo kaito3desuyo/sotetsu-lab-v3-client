@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { map, tap } from 'rxjs/operators';
@@ -16,6 +16,14 @@ import { TripOperationListApiService } from 'src/app/general/api/trip-operation-
 
 @Injectable()
 export class TimetableAddService {
+  private _subscription: Subscription = new Subscription();
+  get subscription() {
+    return this._subscription;
+  }
+  set subscription(sub: Subscription) {
+    this._subscription.add(sub);
+  }
+
   isSaveTripsIndividually$: BehaviorSubject<boolean> = new BehaviorSubject<
     boolean
   >(false);
@@ -31,36 +39,40 @@ export class TimetableAddService {
     private tripApi: TripApiService,
     private tripOperationListApi: TripOperationListApiService,
     private timetableEditorService: TimetableEditorService
-  ) {
-    this.timetableEditorService.receiveSaveEvent().subscribe(formValue => {
-      const data = formValue.map(value =>
-        this.timetableEditorService.convertFormValueToSaveData(value)
-      );
-      const isSaveTripsIndividually = this.getIsSaveTripsIndividuallyAsStatic();
+  ) {}
 
-      let blocks = [];
-      if (isSaveTripsIndividually) {
-        blocks = data.map(trip => ({ trips: [trip] }));
-      } else {
-        blocks = [
-          {
-            trips: data
-          }
-        ];
-      }
+  receiveSaveEvent(): Subscription {
+    return (this.subscription = this.timetableEditorService
+      .receiveSaveEvent()
+      .subscribe(formValue => {
+        const data = formValue.map(value =>
+          this.timetableEditorService.convertFormValueToSaveData(value)
+        );
+        const isSaveTripsIndividually = this.getIsSaveTripsIndividuallyAsStatic();
 
-      this.notificationService.open('列車を保存しています...', 'OK');
-
-      this.addTripBlocks(blocks).subscribe(
-        result => {
-          this.timetableEditorService.emitClearEvent();
-          this.notificationService.open('保存しました', 'OK');
-        },
-        error => {
-          this.notificationService.open('エラーが発生しました', 'OK');
+        let blocks = [];
+        if (isSaveTripsIndividually) {
+          blocks = data.map(trip => ({ trips: [trip] }));
+        } else {
+          blocks = [
+            {
+              trips: data
+            }
+          ];
         }
-      );
-    });
+
+        this.notificationService.open('列車を保存しています...', 'OK');
+
+        this.addTripBlocks(blocks).subscribe(
+          result => {
+            this.timetableEditorService.emitClearEvent();
+            this.notificationService.open('保存しました', 'OK');
+          },
+          error => {
+            this.notificationService.open('エラーが発生しました', 'OK');
+          }
+        );
+      }));
   }
 
   getIsSaveTripsIndividuallyAsStatic(): boolean {
