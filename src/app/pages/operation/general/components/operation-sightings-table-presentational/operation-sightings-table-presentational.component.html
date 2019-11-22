@@ -148,20 +148,22 @@
       <td mat-cell *matCellDef="let element">
         <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="24px">
           <div fxLayout="column" fxFlex="32px">
-            <a
-              [routerLink]="[
-                '/timetable/' + currentCalendarId + '/all-line',
-                {
-                  trip_direction: element.trip?.tripDirection,
-                  trip_block_id: element.trip?.tripBlockId
-                }
-              ]"
-              [ngStyle]="{ color: element.trip?.tripClassColor }"
-            >
-              {{ element.trip?.tripClassName }}
-              <br />
-              {{ element.trip?.tripNumber }}
-            </a>
+            <ng-container *ngIf="element.trip?.tripNumber">
+              <a
+                [routerLink]="[
+                  '/timetable/' + currentCalendarId + '/all-line',
+                  {
+                    trip_direction: element.trip?.tripDirection,
+                    trip_block_id: element.trip?.tripBlockId
+                  }
+                ]"
+                [ngStyle]="{ color: element.trip?.tripClassColor }"
+              >
+                {{ element.trip?.tripClassName }}
+                <br />
+                {{ element.trip?.tripNumber }}
+              </a>
+            </ng-container>
           </div>
           <div fxLayout="column" fxFlex="64px">
             <span>{{ element.trip?.prevStation }}</span>
@@ -192,7 +194,7 @@
               : ''
           ]"
         >
-          {{ element.sightingTime | date: 'MM/dd HH:mm:ss' }}
+          {{ element.sightingTime | date: 'yyyy/MM/dd HH:mm:ss' }}
         </span>
       </td>
     </ng-container>
@@ -211,7 +213,7 @@
               : ''
           ]"
         >
-          {{ element.updatedAt | date: 'MM/dd HH:mm:ss' }}
+          {{ element.updatedAt | date: 'yyyy/MM/dd HH:mm:ss' }}
         </span>
       </td>
     </ng-container>
