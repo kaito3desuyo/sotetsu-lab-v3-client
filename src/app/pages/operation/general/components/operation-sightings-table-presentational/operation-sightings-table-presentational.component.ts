@@ -61,7 +61,7 @@ export class OperationSightingsTablePresentationalComponent
     }
   }
 
-  calcDiffSightingTimeToCurrentTime(dateString: string): number {
+  calcDiffTimeToCurrentTime(dateString: string): number {
     const date = moment(dateString).subtract(
       moment(dateString).hour() < 4 ? 1 : 0,
       'days'

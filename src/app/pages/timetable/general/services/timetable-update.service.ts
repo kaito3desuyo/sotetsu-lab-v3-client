@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { map, tap } from 'rxjs/operators';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
@@ -10,6 +10,14 @@ import { NotificationService } from 'src/app/general/services/notification.servi
 
 @Injectable()
 export class TimetableUpdateService {
+  private _subscription: Subscription = new Subscription();
+  get subscription() {
+    return this._subscription;
+  }
+  set subscription(sub: Subscription) {
+    this._subscription.add(sub);
+  }
+
   blockId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
   calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<ICalendar>(null);
 
@@ -18,29 +26,33 @@ export class TimetableUpdateService {
     private tripApi: TripApiService,
     private calendarApi: CalendarApiService,
     private timetableEditorService: TimetableEditorService
-  ) {
-    this.timetableEditorService.receiveSaveEvent().subscribe(formValue => {
-      const data = formValue.map(value =>
-        this.timetableEditorService.convertFormValueToSaveData(value)
-      );
+  ) {}
 
-      const block = {
-        trips: data
-      };
-
-      this.notificationService.open('列車を保存しています...', 'OK');
-
-      this.tripApi
-        .updateTripBlockById(this.getBlockIdAsStatic(), block)
-        .subscribe(
-          result => {
-            this.notificationService.open('保存しました', 'OK');
-          },
-          error => {
-            this.notificationService.open('エラーが発生しました', 'OK');
-          }
+  receiveSaveEvent(): Subscription {
+    return this.timetableEditorService
+      .receiveSaveEvent()
+      .subscribe(formValue => {
+        const data = formValue.map(value =>
+          this.timetableEditorService.convertFormValueToSaveData(value)
         );
-    });
+
+        const block = {
+          trips: data
+        };
+
+        this.notificationService.open('列車を保存しています...', 'OK');
+
+        this.tripApi
+          .updateTripBlockById(this.getBlockIdAsStatic(), block)
+          .subscribe(
+            result => {
+              this.notificationService.open('保存しました', 'OK');
+            },
+            error => {
+              this.notificationService.open('エラーが発生しました', 'OK');
+            }
+          );
+      });
   }
 
   getBlockIdAsStatic(): string {
