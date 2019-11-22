@@ -3,7 +3,7 @@ import { IOperationSighting } from 'src/app/general/interfaces/operation-sightin
 import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
 import { map, tap, flatMap, delay, skip } from 'rxjs/operators';
 import find from 'lodash/find';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
@@ -34,6 +34,34 @@ import { ParamsQuery } from 'src/app/state/params';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
+  private _finalUpdateTime$: BehaviorSubject<Moment> = new BehaviorSubject<
+    Moment
+  >(moment());
+  finalUpdateTime$: Observable<Moment> = this._finalUpdateTime$.asObservable();
+
+  private _isAutoReloadEnabled$: BehaviorSubject<boolean> = new BehaviorSubject<
+    boolean
+  >(true);
+  isAutoReloadEnabled$: Observable<
+    boolean
+  > = this._isAutoReloadEnabled$.asObservable();
+  get isAutoReloadEnabled() {
+    return this._isAutoReloadEnabled$.getValue();
+  }
+  set isAutoReloadEnabled(bool: boolean) {
+    this._isAutoReloadEnabled$.next(bool);
+  }
+
+  private _isVisibleCurrentPosition$: BehaviorSubject<
+    boolean
+  > = new BehaviorSubject<boolean>(true);
+  isVisibleCurrentPosition$: Observable<
+    boolean
+  > = this._isVisibleCurrentPosition$.asObservable();
+  set isVisibleCurrentPosition(bool: boolean) {
+    this._isVisibleCurrentPosition$.next(bool);
+  }
+
   currentCalendarId: string;
   currentCalendarId$: Observable<string>;
 
@@ -103,23 +131,27 @@ export class OperationRealTimeService extends BaseService {
     this.subscription = this.socketService
       .on('sightingReload')
       .subscribe(data => {
-        if (data.eventType === 'receive') {
-          this.notification.open('データが更新されました', 'OK');
-        }
+        console.log(data);
+        if (this.isAutoReloadEnabled) {
+          if (data.eventType === 'receive') {
+            this.notification.open('データが更新されました', 'OK');
+            this._finalUpdateTime$.next(moment());
+          }
 
-        forkJoin([this.fetchSightingsLatest()])
-          .pipe(
-            flatMap(() =>
-              forkJoin([
-                this.generateFormationTableData(),
-                this.generateOperationTableData()
-              ])
+          forkJoin([this.fetchSightingsLatest()])
+            .pipe(
+              flatMap(() =>
+                forkJoin([
+                  this.generateFormationTableData(),
+                  this.generateOperationTableData()
+                ])
+              )
             )
-          )
-          .subscribe(([formation, operation]) => {
-            this.setFormationTableData(formation);
-            this.setOperationTableData(operation);
-          });
+            .subscribe(([formation, operation]) => {
+              this.setFormationTableData(formation);
+              this.setOperationTableData(operation);
+            });
+        }
       });
 
     this.subscription = this.currentParamsQuery.calendar$.subscribe(obj => {

@@ -37,6 +37,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
+import { OperationSightingsControlPanelContainerComponent } from './general/components/operation-sightings-control-panel-container/operation-sightings-control-panel-container.component';
+import { OperationSightingsControlPanelPresentationalComponent } from './general/components/operation-sightings-control-panel-presentational/operation-sightings-control-panel-presentational.component';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
   declarations: [
@@ -46,6 +49,8 @@ import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
     OperationSightingsTablePresentationalComponent,
     OperationSightingsTableLegendContainerComponent,
     OperationSightingsTableLegendPresentationalComponent,
+    OperationSightingsControlPanelContainerComponent,
+    OperationSightingsControlPanelPresentationalComponent,
     OperationTableComponent,
     OperationTableTitleContainerComponent,
     OperationTableTitlePresentationalComponent,
@@ -71,6 +76,7 @@ import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
     MatSortModule,
     MatIconModule,
     MatToolbarModule,
+    MatSlideToggleModule,
     AppSharedModule,
     OperationRoutingModule,
     OperationSharedModule

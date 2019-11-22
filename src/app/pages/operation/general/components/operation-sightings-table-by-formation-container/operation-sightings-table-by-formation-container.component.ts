@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, Inject, Injector } from '@angular/core';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
 import { Observable } from 'rxjs';
+import { BaseComponent } from 'src/app/general/classes/base-component';
 
 @Component({
   selector: 'app-operation-sightings-table-by-formation-container',
@@ -11,7 +12,7 @@ import { Observable } from 'rxjs';
     './operation-sightings-table-by-formation-container.component.scss'
   ]
 })
-export class OperationSightingsTableByFormationContainerComponent {
+export class OperationSightingsTableByFormationContainerComponent extends BaseComponent {
   data$: Observable<IOperationSightingTable[]>;
   displayedColumn = [
     'formationNumber',
@@ -22,8 +23,32 @@ export class OperationSightingsTableByFormationContainerComponent {
   ];
   currentCalendarId$: Observable<string>;
 
-  constructor(private operationRealTimeService: OperationRealTimeService) {
+  constructor(
+    @Inject(Injector) injector: Injector,
+    private operationRealTimeService: OperationRealTimeService
+  ) {
+    super(injector);
     this.data$ = this.operationRealTimeService.getFormationTableData();
     this.currentCalendarId$ = this.operationRealTimeService.currentCalendarId$;
+    this.subscription = this.operationRealTimeService.isVisibleCurrentPosition$.subscribe(
+      bool => {
+        if (bool) {
+          this.displayedColumn = [
+            'formationNumber',
+            'operationNumber',
+            'trip',
+            'sightingTime',
+            'updatedAt'
+          ];
+        } else {
+          this.displayedColumn = [
+            'formationNumber',
+            'operationNumber',
+            'sightingTime',
+            'updatedAt'
+          ];
+        }
+      }
+    );
   }
 }
