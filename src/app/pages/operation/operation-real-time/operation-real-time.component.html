@@ -6,6 +6,7 @@
   fxLayoutGap="24px"
 >
   <h2 class="mat-h2">リアルタイム運用情報</h2>
+  <app-operation-sightings-control-panel-container></app-operation-sightings-control-panel-container>
   <div [fxLayout.gt-sm]="'row'" [fxLayout.lt-md]="'column'" fxLayoutGap="64px">
     <app-operation-sightings-table-by-operation-container
       [fxFlex.gt-sm]="'calc(50% - 64px)'"
