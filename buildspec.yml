@@ -1,13 +1,15 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      nodejs: 10
   pre_build:
     commands:
       - npm install
-      - npm install -g @angular/cli
   build:
     commands:
-      - ng build --prod --aot
+      - npm run build:${DEPLOY_STAGE}
   post_build:
     commands:
       - aws s3 sync dist/sotetsu-lab-v3-client s3://${BUCKET_NAME} --delete
