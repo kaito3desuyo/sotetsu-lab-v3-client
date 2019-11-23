@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: "https://test.sotetsu-lab.com",
+  apiUrl: "/api",
   backendUrl: "https://test.sotetsu-lab.com",
   socketUrl: "https://api.sotetsu-lab.com",
   analytics: {
