@@ -10,7 +10,7 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { LoggerModule, NgxLoggerLevel } from "ngx-logger";
 import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { ErrorHandlerService } from "./services/error-handler.service";
-import { AuthInterceptor } from "./interceptors/auth-interceptor";
+// import { AuthInterceptor } from "./interceptors/auth-interceptor";
 import { MatPaginatorIntl } from "@angular/material/paginator";
 import { CustomPaginator } from "./classes/custom-paginator";
 import { environment } from "src/environments/environment";
