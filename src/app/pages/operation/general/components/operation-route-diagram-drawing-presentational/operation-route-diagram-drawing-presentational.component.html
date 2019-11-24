@@ -74,6 +74,12 @@
         "
         [attr.y]="160 + i * 40 - 10"
         fill="black"
+        (click)="
+          navigateTimetable(
+            tripOperationList.trip.tripBlockId,
+            tripOperationList.trip.tripDirection
+          )
+        "
       >
         {{ tripOperationList.trip.tripNumber }}
       </text>
