@@ -33,11 +33,20 @@
           <span class="station-name">
             {{ findStationName(tripOperationList.trip.times[0].stationId) }}
           </span>
-          <span class="monoscape">{{
-            convertTimeToDateObject(
-              tripOperationList.trip.times[0].departureTime
-            ) | date: 'HHmm'
-          }}</span>
+          <span class="monoscape">
+            <ng-container *ngIf="tripOperationList.trip.times[0].departureTime">
+              {{
+                convertTimeToDateObject(
+                  tripOperationList.trip.times[0].departureTime
+                ) | date: "HHmm"
+              }}
+            </ng-container>
+            <ng-container
+              *ngIf="!tripOperationList.trip.times[0].departureTime"
+            >
+              &nbsp;&nbsp;&nbsp;&nbsp;
+            </ng-container>
+          </span>
           <span>→</span>
         </ng-container>
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
@@ -50,40 +59,92 @@
               )
             }}
           </span>
-          <span class="monoscape">{{
-            convertTimeToDateObject(
-              tripOperationList.trip.times[
-                tripOperationList.trip.times.length - 1
-              ].arrivalTime
-            ) | date: 'HHmm'
-          }}</span>
+          <span class="monoscape">
+            <ng-container
+              *ngIf="
+                tripOperationList.trip.times[
+                  tripOperationList.trip.times.length - 1
+                ].arrivalTime
+              "
+            >
+              {{
+                convertTimeToDateObject(
+                  tripOperationList.trip.times[
+                    tripOperationList.trip.times.length - 1
+                  ].arrivalTime
+                ) | date: "HHmm"
+              }}
+            </ng-container>
+            <ng-container
+              *ngIf="
+                !tripOperationList.trip.times[
+                  tripOperationList.trip.times.length - 1
+                ].arrivalTime
+              "
+            >
+              &nbsp;&nbsp;&nbsp;&nbsp;
+            </ng-container>
+          </span>
           <span>←</span>
         </ng-container>
 
-        <span
-          class="trip-class-name"
-          [ngStyle]="{
-            color: findTripClassColor(tripOperationList.trip.tripClassId)
-          }"
-          >{{ findTripClassName(tripOperationList.trip.tripClassId) }}</span
+        <a
+          style="width: 4.5em; text-align:center"
+          [routerLink]="[
+            '/',
+            'timetable',
+            calendar.id,
+            'all-line',
+            {
+              trip_direction: tripOperationList.trip.tripDirection,
+              trip_block_id: tripOperationList.trip.tripBlockId
+            }
+          ]"
         >
-        <span
-          class="monoscape"
-          [ngStyle]="{
-            color: findTripClassColor(tripOperationList.trip.tripClassId)
-          }"
-          >{{ tripOperationList.trip.tripNumber }}</span
-        >
+          <span
+            class="trip-class-name"
+            [ngStyle]="{
+              color: findTripClassColor(tripOperationList.trip.tripClassId)
+            }"
+            >{{ findTripClassName(tripOperationList.trip.tripClassId) }}</span
+          >
+          <span
+            class="monoscape"
+            [ngStyle]="{
+              color: findTripClassColor(tripOperationList.trip.tripClassId)
+            }"
+            >{{ tripOperationList.trip.tripNumber }}</span
+          >
+        </a>
 
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
           <span>→</span>
-          <span class="monoscape">{{
-            convertTimeToDateObject(
-              tripOperationList.trip.times[
-                tripOperationList.trip.times.length - 1
-              ].arrivalTime
-            ) | date: 'HHmm'
-          }}</span>
+          <span class="monoscape">
+            <ng-container
+              *ngIf="
+                tripOperationList.trip.times[
+                  tripOperationList.trip.times.length - 1
+                ].arrivalTime
+              "
+            >
+              {{
+                convertTimeToDateObject(
+                  tripOperationList.trip.times[
+                    tripOperationList.trip.times.length - 1
+                  ].arrivalTime
+                ) | date: "HHmm"
+              }}
+            </ng-container>
+            <ng-container
+              *ngIf="
+                !tripOperationList.trip.times[
+                  tripOperationList.trip.times.length - 1
+                ].arrivalTime
+              "
+            >
+              &nbsp;&nbsp;&nbsp;&nbsp;
+            </ng-container>
+          </span>
           <span class="station-name">
             {{
               findStationName(
@@ -96,11 +157,20 @@
         </ng-container>
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
           <span>←</span>
-          <span class="monoscape">{{
-            convertTimeToDateObject(
-              tripOperationList.trip.times[0].departureTime
-            ) | date: 'HHmm'
-          }}</span>
+          <span class="monoscape">
+            <ng-container *ngIf="tripOperationList.trip.times[0].departureTime">
+              {{
+                convertTimeToDateObject(
+                  tripOperationList.trip.times[0].departureTime
+                ) | date: "HHmm"
+              }}
+            </ng-container>
+            <ng-container
+              *ngIf="!tripOperationList.trip.times[0].departureTime"
+            >
+              &nbsp;&nbsp;&nbsp;&nbsp;
+            </ng-container>
+          </span>
           <span class="station-name">
             {{ findStationName(tripOperationList.trip.times[0].stationId) }}
           </span>
@@ -120,8 +190,8 @@
         *ngIf="
           tripOperationList.trip.tripDirection ===
             (operationTrips?.tripOperationLists)[i + 1]?.trip?.tripDirection &&
-          (!tripOperationList.trip.depotIn &&
-            !(operationTrips?.tripOperationLists)[i + 1]?.trip?.depotOut)
+          !tripOperationList.trip.depotIn &&
+          !(operationTrips?.tripOperationLists)[i + 1]?.trip?.depotOut
         "
       >
         <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
