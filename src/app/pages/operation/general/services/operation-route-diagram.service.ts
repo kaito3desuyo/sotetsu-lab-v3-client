@@ -1,22 +1,22 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import { TripOperationListApiService } from 'src/app/general/api/trip-operation-list-api.service';
-import { map, tap, flatMap } from 'rxjs/operators';
-import { ReadTripOperationListDto } from 'src/app/general/models/trip-operation-list/trip-operation-list-dto';
-import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
-import { IStation } from 'src/app/general/interfaces/station';
-import { StationApiService } from 'src/app/general/api/station-api.service';
-import { ReadStationDto } from 'src/app/general/models/station/station-dto';
-import { StationModel } from 'src/app/general/models/station/station-model';
-import lodashMap from 'lodash/map';
-import find from 'lodash/find';
-import { OperationApiService } from 'src/app/general/api/operation-api.service';
-import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
-import { OperationModel } from 'src/app/general/models/operation/operation-model';
-import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
-import { IOperation } from 'src/app/general/interfaces/operation';
+import { Injectable } from "@angular/core";
+import { BehaviorSubject, Observable } from "rxjs";
+import { ITripOperationList } from "src/app/general/interfaces/trip-operation-list";
+import { TripOperationListApiService } from "src/app/general/api/trip-operation-list-api.service";
+import { map, tap, flatMap } from "rxjs/operators";
+import { ReadTripOperationListDto } from "src/app/general/models/trip-operation-list/trip-operation-list-dto";
+import { TripOperationListModel } from "src/app/general/models/trip-operation-list/trip-operation-list-model";
+import { IStation } from "src/app/general/interfaces/station";
+import { StationApiService } from "src/app/general/api/station-api.service";
+import { ReadStationDto } from "src/app/general/models/station/station-dto";
+import { StationModel } from "src/app/general/models/station/station-model";
+import lodashMap from "lodash/map";
+import find from "lodash/find";
+import { OperationApiService } from "src/app/general/api/operation-api.service";
+import { CalendarApiService } from "src/app/general/api/calendar-api.service";
+import { OperationModel } from "src/app/general/models/operation/operation-model";
+import { CalendarModel } from "src/app/general/models/calendar/calendar-model";
+import { ICalendar } from "src/app/general/interfaces/calendar";
+import { IOperation } from "src/app/general/interfaces/operation";
 
 @Injectable()
 export class OperationRouteDiagramService {
@@ -45,6 +45,10 @@ export class OperationRouteDiagramService {
 
   getCalendar(): Observable<ICalendar> {
     return this.calendar.asObservable();
+  }
+
+  getCalendarAsStatic(): ICalendar {
+    return this.calendar.getValue();
   }
 
   setCalendar(data: ICalendar): void {
@@ -110,26 +114,29 @@ export class OperationRouteDiagramService {
 
   fetchStations(): Observable<void> {
     const targetStation = [
-      '厚木',
-      '海老名',
-      'かしわ台',
-      '相模大塚',
-      '大和',
-      '瀬谷',
-      '湘南台',
-      'いずみ野',
-      '二俣川',
-      '西谷',
-      '星川',
-      '西横浜',
-      '横浜',
-      '羽沢横浜国大',
-      '大崎',
-      '新宿',
-      '池袋',
-      '板橋',
-      '大宮',
-      '川越'
+      "厚木",
+      "海老名",
+      "かしわ台",
+      "相模大塚",
+      "大和",
+      "瀬谷",
+      "湘南台",
+      "いずみ野",
+      "二俣川",
+      "西谷",
+      "星川",
+      "西横浜",
+      "横浜",
+      "羽沢横浜国大",
+      "大崎",
+      "新宿",
+      "池袋",
+      "板橋",
+      "赤羽",
+      "武蔵浦和",
+      "大宮",
+      "指扇",
+      "川越"
     ];
 
     return this.stationApi.getStations().pipe(
