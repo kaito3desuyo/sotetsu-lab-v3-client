@@ -5,32 +5,32 @@ import { OperationApiService } from '../api/operation-api.service';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class OperationResolverService {
-  constructor() {}
+    constructor() {}
 }
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class OperationsAllNumbersResolverService
-  implements Resolve<{ operationNumber: string }[]> {
-  constructor(private api: OperationApiService) {}
+    implements Resolve<{ operationNumber: string }[]> {
+    constructor(private api: OperationApiService) {}
 
-  resolve(): Observable<{ operationNumber: string }[]> {
-    return this.api.getOperationsAllNumbers();
-  }
+    resolve(): Observable<{ operationNumber: string }[]> {
+        return this.api.getOperationsAllNumbers();
+    }
 }
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class OperationsAllLatestSightingsResolverService
-  implements Resolve<IOperationSighting[]> {
-  constructor(private api: OperationApiService) {}
+    implements Resolve<IOperationSighting[]> {
+    constructor(private api: OperationApiService) {}
 
-  resolve(): Observable<IOperationSighting[]> {
-    return this.api.getOperationsAllLatestSightings();
-  }
+    resolve(): Observable<IOperationSighting[]> {
+        return this.api.getOperationsAllLatestSightings();
+    }
 }

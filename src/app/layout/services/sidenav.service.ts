@@ -2,20 +2,20 @@ import { Injectable, EventEmitter } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class SidenavService {
-  private readonly sidenavState: BehaviorSubject<boolean> = new BehaviorSubject<
-    boolean
-  >(false);
+    private readonly sidenavState: BehaviorSubject<
+        boolean
+    > = new BehaviorSubject<boolean>(false);
 
-  constructor() {}
+    constructor() {}
 
-  getState(): Observable<boolean> {
-    return this.sidenavState.asObservable();
-  }
+    getState(): Observable<boolean> {
+        return this.sidenavState.asObservable();
+    }
 
-  setState(bool: boolean): void {
-    this.sidenavState.next(bool);
-  }
+    setState(bool: boolean): void {
+        this.sidenavState.next(bool);
+    }
 }

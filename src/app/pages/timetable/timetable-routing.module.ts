@@ -11,54 +11,54 @@ import { TimetableStationResolverService } from './general/services/timetable-st
 import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-shared/services/timetable-search-form-resolver.service';
 
 const routes: Routes = [
-  {
-    path: ':calendarId/all-line',
-    component: TimetableAllLineComponent,
-    resolve: {
-      timetableAllLine: TimetableAllLineTableResolverService,
-      from2: TimetableSearchFormResolverService
+    {
+        path: ':calendarId/all-line',
+        component: TimetableAllLineComponent,
+        resolve: {
+            timetableAllLine: TimetableAllLineTableResolverService,
+            from2: TimetableSearchFormResolverService
+        },
+        runGuardsAndResolvers: 'always',
+        data: {
+            title: '全線時刻表'
+        }
     },
-    runGuardsAndResolvers: 'always',
-    data: {
-      title: '全線時刻表'
-    }
-  },
-  {
-    path: ':calendarId/station/:stationId',
-    component: TimetableStationComponent,
-    resolve: {
-      from: TimetableStationResolverService,
-      from2: TimetableSearchFormResolverService
+    {
+        path: ':calendarId/station/:stationId',
+        component: TimetableStationComponent,
+        resolve: {
+            from: TimetableStationResolverService,
+            from2: TimetableSearchFormResolverService
+        },
+        runGuardsAndResolvers: 'always',
+        data: {
+            title: '駅別時刻表'
+        }
     },
-    runGuardsAndResolvers: 'always',
-    data: {
-      title: '駅別時刻表'
-    }
-  },
-  {
-    path: 'add/:calendarId',
-    component: TimetableAddComponent,
-    resolve: {
-      from: TimetableAddResolverService
+    {
+        path: 'add/:calendarId',
+        component: TimetableAddComponent,
+        resolve: {
+            from: TimetableAddResolverService
+        },
+        data: {
+            title: '列車を追加する'
+        }
     },
-    data: {
-      title: '列車を追加する'
+    {
+        path: 'update/:blockId',
+        component: TimetableUpdateComponent,
+        resolve: {
+            from: TimetableUpdateResolverService
+        },
+        data: {
+            title: '列車を編集する'
+        }
     }
-  },
-  {
-    path: 'update/:blockId',
-    component: TimetableUpdateComponent,
-    resolve: {
-      from: TimetableUpdateResolverService
-    },
-    data: {
-      title: '列車を編集する'
-    }
-  }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
 })
 export class TimetableRoutingModule {}

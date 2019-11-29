@@ -6,23 +6,23 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class TimetableStationResolverService
-  implements Resolve<Observable<void>> {
-  constructor(private timetableStationService: TimetableStationService) {}
+    implements Resolve<Observable<void>> {
+    constructor(private timetableStationService: TimetableStationService) {}
 
-  resolve(route: ActivatedRouteSnapshot): Observable<void> {
-    const calendarId = route.paramMap.get('calendarId');
-    const stationId = route.paramMap.get('stationId');
-    const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
+    resolve(route: ActivatedRouteSnapshot): Observable<void> {
+        const calendarId = route.paramMap.get('calendarId');
+        const stationId = route.paramMap.get('stationId');
+        const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
-    this.timetableStationService.setCalendarId(calendarId);
-    this.timetableStationService.setStationId(stationId);
-    this.timetableStationService.setTripDirection(tripDirection);
+        this.timetableStationService.setCalendarId(calendarId);
+        this.timetableStationService.setStationId(stationId);
+        this.timetableStationService.setTripDirection(tripDirection);
 
-    return forkJoin([
-      this.timetableStationService.fetchCalendar(),
-      this.timetableStationService.fetchStations(),
-      this.timetableStationService.fetchTimes(),
-      this.timetableStationService.fetchOperationSightings()
-    ]).pipe(map(() => null));
-  }
+        return forkJoin([
+            this.timetableStationService.fetchCalendar(),
+            this.timetableStationService.fetchStations(),
+            this.timetableStationService.fetchTimes(),
+            this.timetableStationService.fetchOperationSightings()
+        ]).pipe(map(() => null));
+    }
 }

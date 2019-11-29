@@ -14,22 +14,22 @@ import { TimetableSearchFormResolverService } from './services/timetable-search-
 import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FlexLayoutModule,
-    MatCardModule,
-    MatInputModule,
-    MatSelectModule,
-    MatRadioModule,
-    MatButtonModule,
-    MatSlideToggleModule
-  ],
-  exports: [TimetableSearchFormContainerComponent],
-  declarations: [
-    TimetableSearchFormContainerComponent,
-    TimetableSearchFormPresentationalComponent
-  ],
-  providers: [TimetableSearchFormService, TimetableSearchFormResolverService]
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FlexLayoutModule,
+        MatCardModule,
+        MatInputModule,
+        MatSelectModule,
+        MatRadioModule,
+        MatButtonModule,
+        MatSlideToggleModule
+    ],
+    exports: [TimetableSearchFormContainerComponent],
+    declarations: [
+        TimetableSearchFormContainerComponent,
+        TimetableSearchFormPresentationalComponent
+    ],
+    providers: [TimetableSearchFormService, TimetableSearchFormResolverService]
 })
 export class TimetableSharedModule {}

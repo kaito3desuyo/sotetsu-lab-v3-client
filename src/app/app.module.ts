@@ -12,19 +12,19 @@ import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    LayoutModule,
-    AppSharedModule,
-    GeneralModule,
-    environment.production ? [] : AkitaNgDevtools.forRoot(),
-    ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: environment.production
-    })
-  ],
-  bootstrap: [AppComponent]
+    declarations: [AppComponent],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        LayoutModule,
+        AppSharedModule,
+        GeneralModule,
+        environment.production ? [] : AkitaNgDevtools.forRoot(),
+        ServiceWorkerModule.register('ngsw-worker.js', {
+            enabled: environment.production
+        })
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule {}

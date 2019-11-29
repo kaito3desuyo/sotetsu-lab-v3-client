@@ -7,9 +7,9 @@ export interface RoutesAllStationsState extends EntityState<IRoute> {}
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'routesAllStations' })
 export class RoutesAllStationsStore extends EntityStore<
-  RoutesAllStationsState
+    RoutesAllStationsState
 > {
-  constructor() {
-    super();
-  }
+    constructor() {
+        super();
+    }
 }

@@ -9,22 +9,22 @@ import { CurrentParamsQuery } from './current-params.query';
 
 @Injectable({ providedIn: 'root' })
 export class CurrentParamsService {
-  constructor(
-    private currentParamsStore: CurrentParamsStore,
-    private currentParamsQuery: CurrentParamsQuery,
-    private http: HttpClient,
-    private calendarApi: CalendarApiService
-  ) {}
+    constructor(
+        private currentParamsStore: CurrentParamsStore,
+        private currentParamsQuery: CurrentParamsQuery,
+        private http: HttpClient,
+        private calendarApi: CalendarApiService
+    ) {}
 
-  update(value: Partial<CurrentParamsState>) {
-    this.currentParamsStore.update(value);
-    localStorage.setItem(
-      'currentParams',
-      JSON.stringify(this.currentParamsQuery.getValue())
-    );
-  }
+    update(value: Partial<CurrentParamsState>) {
+        this.currentParamsStore.update(value);
+        localStorage.setItem(
+            'currentParams',
+            JSON.stringify(this.currentParamsQuery.getValue())
+        );
+    }
 
-  /*
+    /*
   fetchSpecifiedDateCalendarId(date: string): Observable<string> {
     return this.calendarApi
       .searchCalendars({
@@ -46,32 +46,32 @@ export class CurrentParamsService {
   }
   */
 
-  fetchIsTheSpecifiedDayWeekdayOrHoliday(
-    date: moment.Moment
-  ): Observable<string> {
-    return this.http
-      .get(
-        `http://s-proj.com/utils/checkHoliday.php?kind=h&date=${date.format(
-          'YYYYMMDD'
-        )}`
-      )
-      .pipe(
-        map(result => {
-          if (result === 'else') {
-            return 'weekday';
-          } else if (result === 'holiday') {
-            return 'holiday';
-          } else {
-            return null;
-          }
-        }),
-        tap((day: 'weekday' | 'holiday' | null) => {
-          this.update({ day: day });
-        }),
-        flatMap((day: 'weekday' | 'holiday' | null) => {
-          return this.calendarApi.getCalendars();
-        }),
-        map(() => null)
-      );
-  }
+    fetchIsTheSpecifiedDayWeekdayOrHoliday(
+        date: moment.Moment
+    ): Observable<string> {
+        return this.http
+            .get(
+                `http://s-proj.com/utils/checkHoliday.php?kind=h&date=${date.format(
+                    'YYYYMMDD'
+                )}`
+            )
+            .pipe(
+                map(result => {
+                    if (result === 'else') {
+                        return 'weekday';
+                    } else if (result === 'holiday') {
+                        return 'holiday';
+                    } else {
+                        return null;
+                    }
+                }),
+                tap((day: 'weekday' | 'holiday' | null) => {
+                    this.update({ day });
+                }),
+                flatMap((day: 'weekday' | 'holiday' | null) => {
+                    return this.calendarApi.getCalendars();
+                }),
+                map(() => null)
+            );
+    }
 }

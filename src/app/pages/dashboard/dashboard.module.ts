@@ -24,31 +24,31 @@ import { DashboardService } from './general/services/dashboard.service';
 import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 
 @NgModule({
-  declarations: [
-    DashboardComponent,
-    DashboardOperationSearchMenuContainerComponent,
-    DashboardOperationSearchMenuPresentationalComponent,
-    DashboardTripAddFormContainerComponent,
-    DashboardTripAddFormPresentationalComponent
-  ],
-  imports: [
-    CommonModule,
-    FlexLayoutModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatRadioModule,
-    MatSlideToggleModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatListModule,
-    MatInputModule,
-    DashboardRoutingModule,
-    OperationSharedModule,
-    TimetableSharedModule
-  ],
-  providers: [DashboardService, DashboardResolverService]
+    declarations: [
+        DashboardComponent,
+        DashboardOperationSearchMenuContainerComponent,
+        DashboardOperationSearchMenuPresentationalComponent,
+        DashboardTripAddFormContainerComponent,
+        DashboardTripAddFormPresentationalComponent
+    ],
+    imports: [
+        CommonModule,
+        FlexLayoutModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatRadioModule,
+        MatSlideToggleModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatListModule,
+        MatInputModule,
+        DashboardRoutingModule,
+        OperationSharedModule,
+        TimetableSharedModule
+    ],
+    providers: [DashboardService, DashboardResolverService]
 })
 export class DashboardModule {}

@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { TimetableEditorFormPresentationalComponent } from './timetable-editor-form-presentational.component';
 
 describe('TimetableEditorFormPresentationalComponent', () => {
-  let component: TimetableEditorFormPresentationalComponent;
-  let fixture: ComponentFixture<TimetableEditorFormPresentationalComponent>;
+    let component: TimetableEditorFormPresentationalComponent;
+    let fixture: ComponentFixture<TimetableEditorFormPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableEditorFormPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableEditorFormPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableEditorFormPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            TimetableEditorFormPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

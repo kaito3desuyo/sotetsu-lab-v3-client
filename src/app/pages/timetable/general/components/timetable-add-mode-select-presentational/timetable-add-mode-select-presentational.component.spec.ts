@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { TimetableAddModeSelectPresentationalComponent } from './timetable-add-mode-select-presentational.component';
 
 describe('TimetableAddModeSelectPresentationalComponent', () => {
-  let component: TimetableAddModeSelectPresentationalComponent;
-  let fixture: ComponentFixture<TimetableAddModeSelectPresentationalComponent>;
+    let component: TimetableAddModeSelectPresentationalComponent;
+    let fixture: ComponentFixture<TimetableAddModeSelectPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableAddModeSelectPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableAddModeSelectPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableAddModeSelectPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            TimetableAddModeSelectPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

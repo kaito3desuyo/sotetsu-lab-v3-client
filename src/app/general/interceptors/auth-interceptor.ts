@@ -1,13 +1,13 @@
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
 import {
-  HttpEvent,
-  HttpInterceptor,
-  HttpHandler,
-  HttpRequest
-} from "@angular/common/http";
-import { Observable } from "rxjs";
-import { environment } from "src/environments/environment";
-import { LoggerService } from "../services/logger.service";
+    HttpEvent,
+    HttpInterceptor,
+    HttpHandler,
+    HttpRequest
+} from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { LoggerService } from '../services/logger.service';
 /* 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
