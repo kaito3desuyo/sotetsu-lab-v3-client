@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { TimetableStationHeaderPresentationalComponent } from './timetable-station-header-presentational.component';
 
 describe('TimetableStationHeaderPresentationalComponent', () => {
-  let component: TimetableStationHeaderPresentationalComponent;
-  let fixture: ComponentFixture<TimetableStationHeaderPresentationalComponent>;
+    let component: TimetableStationHeaderPresentationalComponent;
+    let fixture: ComponentFixture<TimetableStationHeaderPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableStationHeaderPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableStationHeaderPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableStationHeaderPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            TimetableStationHeaderPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

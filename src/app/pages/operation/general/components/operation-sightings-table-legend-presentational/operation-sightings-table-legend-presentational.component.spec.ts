@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { OperationSightingsTableLegendPresentationalComponent } from './operation-sightings-table-legend-presentational.component';
 
 describe('OperationSightingsTableLegendPresentationalComponent', () => {
-  let component: OperationSightingsTableLegendPresentationalComponent;
-  let fixture: ComponentFixture<OperationSightingsTableLegendPresentationalComponent>;
+    let component: OperationSightingsTableLegendPresentationalComponent;
+    let fixture: ComponentFixture<OperationSightingsTableLegendPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationSightingsTableLegendPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationSightingsTableLegendPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationSightingsTableLegendPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationSightingsTableLegendPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

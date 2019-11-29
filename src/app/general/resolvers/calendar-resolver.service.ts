@@ -4,12 +4,12 @@ import { Observable } from 'rxjs';
 import { CalendarApiService } from '../api/calendar-api.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class GetCalendarsResolverService implements Resolve<any> {
-  constructor(private api: CalendarApiService) {}
+    constructor(private api: CalendarApiService) {}
 
-  resolve(): Observable<any> {
-    return this.api.getCalendars();
-  }
+    resolve(): Observable<any> {
+        return this.api.getCalendars();
+    }
 }

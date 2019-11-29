@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { OperationSightingAddFormPresentationalComponent } from './operation-sighting-add-form-presentational.component';
 
 describe('OperationSightingAddFormPresentationalComponent', () => {
-  let component: OperationSightingAddFormPresentationalComponent;
-  let fixture: ComponentFixture<OperationSightingAddFormPresentationalComponent>;
+    let component: OperationSightingAddFormPresentationalComponent;
+    let fixture: ComponentFixture<OperationSightingAddFormPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationSightingAddFormPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationSightingAddFormPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationSightingAddFormPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationSightingAddFormPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

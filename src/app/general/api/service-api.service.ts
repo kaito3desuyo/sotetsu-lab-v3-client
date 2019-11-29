@@ -7,33 +7,33 @@ import { map } from 'rxjs/operators';
 import { ReadStationDto } from '../models/station/station-dto';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class ServiceApiService {
-  private apiUrl = environment.apiUrl + '/v1/services';
+    private apiUrl = environment.apiUrl + '/v1/services';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {}
 
-  searchServices(query: {
-    service_name?: string;
-  }): Observable<{ services: ReadServiceDto[] }> {
-    return this.http
-      .get(this.apiUrl + '/search', {
-        params: query
-      })
-      .pipe(map((data: { services: ReadServiceDto[] }) => data));
-  }
-
-  getServiceStationsById(
-    serviceId: string,
-    query: {
-      trip_direction: '0' | '1';
+    searchServices(query: {
+        service_name?: string;
+    }): Observable<{ services: ReadServiceDto[] }> {
+        return this.http
+            .get(this.apiUrl + '/search', {
+                params: query
+            })
+            .pipe(map((data: { services: ReadServiceDto[] }) => data));
     }
-  ): Observable<{ stations: ReadStationDto[] }> {
-    return this.http
-      .get(this.apiUrl + '/' + serviceId + '/stations', {
-        params: query
-      })
-      .pipe(map((data: { stations: ReadStationDto[] }) => data));
-  }
+
+    getServiceStationsById(
+        serviceId: string,
+        query: {
+            trip_direction: '0' | '1';
+        }
+    ): Observable<{ stations: ReadStationDto[] }> {
+        return this.http
+            .get(this.apiUrl + '/' + serviceId + '/stations', {
+                params: query
+            })
+            .pipe(map((data: { stations: ReadStationDto[] }) => data));
+    }
 }
