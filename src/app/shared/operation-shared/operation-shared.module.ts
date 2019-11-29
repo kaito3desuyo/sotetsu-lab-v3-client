@@ -12,24 +12,24 @@ import { OperationSightingAddFormService } from './services/operation-sighting-a
 import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FlexLayoutModule,
-    MatCardModule,
-    MatInputModule,
-    MatSelectModule,
-    MatRadioModule,
-    MatButtonModule
-  ],
-  exports: [
-    OperationSightingAddFormContainerComponent,
-    OperationSightingAddFormPresentationalComponent
-  ],
-  declarations: [
-    OperationSightingAddFormContainerComponent,
-    OperationSightingAddFormPresentationalComponent
-  ],
-  providers: [OperationSightingAddFormService]
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        FlexLayoutModule,
+        MatCardModule,
+        MatInputModule,
+        MatSelectModule,
+        MatRadioModule,
+        MatButtonModule
+    ],
+    exports: [
+        OperationSightingAddFormContainerComponent,
+        OperationSightingAddFormPresentationalComponent
+    ],
+    declarations: [
+        OperationSightingAddFormContainerComponent,
+        OperationSightingAddFormPresentationalComponent
+    ],
+    providers: [OperationSightingAddFormService]
 })
 export class OperationSharedModule {}

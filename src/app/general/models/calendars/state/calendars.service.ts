@@ -16,64 +16,66 @@ import { CalendarModel } from '../../calendar/calendar-model';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarsService extends BaseService {
-  private fetch: BehaviorSubject<void> = new BehaviorSubject<void>(null);
+    private fetch: BehaviorSubject<void> = new BehaviorSubject<void>(null);
 
-  constructor(
-    private http: HttpClient,
-    private calendarsQuery: CalendarsQuery,
-    private calendarsStore: CalendarsStore,
-    private currentParamsQuery: CurrentParamsQuery,
-    private currentParamsService: CurrentParamsService,
-    private calendarApiService: CalendarApiService
-  ) {
-    super();
-    this.subscription = this.fetch.pipe(throttleTime(1000)).subscribe(() => {
-      this.calendarApiService
-        .getCalendars()
-        .pipe(
-          tap(entities => {
-            const calendars = entities.calendars.map(data =>
-              CalendarModel.readCalendarDtoImpl(data)
-            );
-            this.calendarsStore.set(calendars);
-            this.setTodaysCalendarId();
-          })
-        )
-        .subscribe();
-    });
-  }
+    constructor(
+        private http: HttpClient,
+        private calendarsQuery: CalendarsQuery,
+        private calendarsStore: CalendarsStore,
+        private currentParamsQuery: CurrentParamsQuery,
+        private currentParamsService: CurrentParamsService,
+        private calendarApiService: CalendarApiService
+    ) {
+        super();
+        this.subscription = this.fetch
+            .pipe(throttleTime(1000))
+            .subscribe(() => {
+                this.calendarApiService
+                    .getCalendars()
+                    .pipe(
+                        tap(entities => {
+                            const calendars = entities.calendars.map(data =>
+                                CalendarModel.readCalendarDtoImpl(data)
+                            );
+                            this.calendarsStore.set(calendars);
+                            this.setTodaysCalendarId();
+                        })
+                    )
+                    .subscribe();
+            });
+    }
 
-  get() {
-    this.fetch.next();
-    return of('success');
-  }
+    get() {
+        this.fetch.next();
+        return of('success');
+    }
 
-  add(calendar: ICalendar) {
-    this.calendarsStore.add(calendar);
-  }
+    add(calendar: ICalendar) {
+        this.calendarsStore.add(calendar);
+    }
 
-  update(id, calendar: Partial<ICalendar>) {
-    this.calendarsStore.update(id, calendar);
-  }
+    update(id, calendar: Partial<ICalendar>) {
+        this.calendarsStore.update(id, calendar);
+    }
 
-  remove(id: ID) {
-    this.calendarsStore.remove(id);
-  }
+    remove(id: ID) {
+        this.calendarsStore.remove(id);
+    }
 
-  checkHoliday(date: moment.Moment): Observable<any> {
-    return this.http.get(
-      `http://s-proj.com/utils/checkHoliday.php?kind=h&date=${date.format(
-        'YYYYMMDD'
-      )}`
-    );
-  }
+    checkHoliday(date: moment.Moment): Observable<any> {
+        return this.http.get(
+            `http://s-proj.com/utils/checkHoliday.php?kind=h&date=${date.format(
+                'YYYYMMDD'
+            )}`
+        );
+    }
 
-  setWeekdayOrHoliday(day: 'weekday' | 'holiday') {
-    this.currentParamsService.update({ day });
-  }
+    setWeekdayOrHoliday(day: 'weekday' | 'holiday') {
+        this.currentParamsService.update({ day });
+    }
 
-  setTodaysCalendarId() {
-    /*
+    setTodaysCalendarId() {
+        /*
     this.subscription = this.currentParamsQuery.day$
       .pipe(
         flatMap(day => {
@@ -97,31 +99,31 @@ export class CalendarsService extends BaseService {
         this.currentParamsService.update({ calendarId: result.id });
       });
       */
-  }
+    }
 
-  generateCalendarSelectList(
-    calendars: ICalendar[]
-  ): { label: string; value: string }[] {
-    return calendars.map(calendar => {
-      return {
-        label:
-          moment(calendar.startDate).format('YYYY年MM月DD日改正') +
-          ' ' +
-          calendar.calendarName,
-        value: calendar.id
-      };
-    });
-  }
+    generateCalendarSelectList(
+        calendars: ICalendar[]
+    ): { label: string; value: string }[] {
+        return calendars.map(calendar => {
+            return {
+                label:
+                    moment(calendar.startDate).format('YYYY年MM月DD日改正') +
+                    ' ' +
+                    calendar.calendarName,
+                value: calendar.id
+            };
+        });
+    }
 }
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class CalendarTodaysCalendarIdResolverService
-  implements Resolve<Observable<void>> {
-  constructor(private calendarService: CalendarsService) {}
+    implements Resolve<Observable<void>> {
+    constructor(private calendarService: CalendarsService) {}
 
-  resolve() {
-    return of(null);
-  }
+    resolve() {
+        return of(null);
+    }
 }

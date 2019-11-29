@@ -42,52 +42,52 @@ import { OperationSightingsControlPanelPresentationalComponent } from './general
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @NgModule({
-  declarations: [
-    OperationRealTimeComponent,
-    OperationSightingsTableByOperationContainerComponent,
-    OperationSightingsTableByFormationContainerComponent,
-    OperationSightingsTablePresentationalComponent,
-    OperationSightingsTableLegendContainerComponent,
-    OperationSightingsTableLegendPresentationalComponent,
-    OperationSightingsControlPanelContainerComponent,
-    OperationSightingsControlPanelPresentationalComponent,
-    OperationTableComponent,
-    OperationTableTitleContainerComponent,
-    OperationTableTitlePresentationalComponent,
-    OperationTableTableContainerComponent,
-    OperationTableTablePresentationalComponent,
-    OperationRouteDiagramComponent,
-    OperationRouteDiagramTitleContainerComponent,
-    OperationRouteDiagramTitlePresentationalComponent,
-    OperationRouteDiagramDrawingContainerComponent,
-    OperationRouteDiagramDrawingPresentationalComponent
-  ],
-  imports: [
-    CommonModule,
-    FlexLayoutModule,
-    ReactiveFormsModule,
-    MatTableModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatRadioModule,
-    MatSortModule,
-    MatIconModule,
-    MatToolbarModule,
-    MatSlideToggleModule,
-    AppSharedModule,
-    OperationRoutingModule,
-    OperationSharedModule
-  ],
-  providers: [
-    OperationRealTimeService,
-    OperationRealTimeResolverService,
-    OperationTableService,
-    OperationTableResolverService,
-    OperationRouteDiagramService,
-    OperationRouteDiagramResolverService
-  ]
+    declarations: [
+        OperationRealTimeComponent,
+        OperationSightingsTableByOperationContainerComponent,
+        OperationSightingsTableByFormationContainerComponent,
+        OperationSightingsTablePresentationalComponent,
+        OperationSightingsTableLegendContainerComponent,
+        OperationSightingsTableLegendPresentationalComponent,
+        OperationSightingsControlPanelContainerComponent,
+        OperationSightingsControlPanelPresentationalComponent,
+        OperationTableComponent,
+        OperationTableTitleContainerComponent,
+        OperationTableTitlePresentationalComponent,
+        OperationTableTableContainerComponent,
+        OperationTableTablePresentationalComponent,
+        OperationRouteDiagramComponent,
+        OperationRouteDiagramTitleContainerComponent,
+        OperationRouteDiagramTitlePresentationalComponent,
+        OperationRouteDiagramDrawingContainerComponent,
+        OperationRouteDiagramDrawingPresentationalComponent
+    ],
+    imports: [
+        CommonModule,
+        FlexLayoutModule,
+        ReactiveFormsModule,
+        MatTableModule,
+        MatCardModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatRadioModule,
+        MatSortModule,
+        MatIconModule,
+        MatToolbarModule,
+        MatSlideToggleModule,
+        AppSharedModule,
+        OperationRoutingModule,
+        OperationSharedModule
+    ],
+    providers: [
+        OperationRealTimeService,
+        OperationRealTimeResolverService,
+        OperationTableService,
+        OperationTableResolverService,
+        OperationRouteDiagramService,
+        OperationRouteDiagramResolverService
+    ]
 })
 export class OperationModule {}

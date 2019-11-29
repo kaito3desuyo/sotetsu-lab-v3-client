@@ -18,124 +18,127 @@ import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 
 @Injectable()
 export class OperationTableService {
-  private calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
-    ICalendar
-  >(null);
+    private calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
+        ICalendar
+    >(null);
 
-  private operationTrips$: BehaviorSubject<IOperation[]> = new BehaviorSubject<
-    IOperation[]
-  >([]);
+    private operationTrips$: BehaviorSubject<
+        IOperation[]
+    > = new BehaviorSubject<IOperation[]>([]);
 
-  private stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
-    IStation[]
-  >([]);
+    private stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
+        IStation[]
+    >([]);
 
-  private tripClasses$: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
-    ITripClass[]
-  >([]);
+    private tripClasses$: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
+        ITripClass[]
+    >([]);
 
-  constructor(
-    private calendarApi: CalendarApiService,
-    private serviceApi: ServiceApiService,
-    private operationApi: OperationApiService,
-    private stationApi: StationApiService,
-    private tripApi: TripApiService
-  ) {}
+    constructor(
+        private calendarApi: CalendarApiService,
+        private serviceApi: ServiceApiService,
+        private operationApi: OperationApiService,
+        private stationApi: StationApiService,
+        private tripApi: TripApiService
+    ) {}
 
-  getCalendar(): Observable<ICalendar> {
-    return this.calendar$.asObservable();
-  }
+    getCalendar(): Observable<ICalendar> {
+        return this.calendar$.asObservable();
+    }
 
-  setCalendar(calendar: ICalendar): void {
-    this.calendar$.next(calendar);
-  }
+    setCalendar(calendar: ICalendar): void {
+        this.calendar$.next(calendar);
+    }
 
-  fetchCalendar(id: string): Observable<void> {
-    return this.calendarApi.getCalendarById(id).pipe(
-      map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-      tap(data => {
-        this.setCalendar(data);
-      }),
-      map(() => null)
-    );
-  }
+    fetchCalendar(id: string): Observable<void> {
+        return this.calendarApi.getCalendarById(id).pipe(
+            map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
+            tap(data => {
+                this.setCalendar(data);
+            }),
+            map(() => null)
+        );
+    }
 
-  getOperationTrips(): Observable<IOperation[]> {
-    return this.operationTrips$.asObservable();
-  }
+    getOperationTrips(): Observable<IOperation[]> {
+        return this.operationTrips$.asObservable();
+    }
 
-  setOperationTrips(array: IOperation[]): void {
-    this.operationTrips$.next(array);
-  }
+    setOperationTrips(array: IOperation[]): void {
+        this.operationTrips$.next(array);
+    }
 
-  fetchOperationTrips(calendarId: string): Observable<void> {
-    return this.operationApi
-      .getOperationsTrips({
-        calendar_id: calendarId
-      })
-      .pipe(
-        map(data => {
-          return data.operations.map(result =>
-            OperationModel.readOperationDtoImpl(result)
-          );
-        }),
-        tap(data => {
-          this.setOperationTrips(data);
-        }),
-        map(() => null)
-      );
-  }
+    fetchOperationTrips(calendarId: string): Observable<void> {
+        return this.operationApi
+            .getOperationsTrips({
+                calendar_id: calendarId
+            })
+            .pipe(
+                map(data => {
+                    return data.operations.map(result =>
+                        OperationModel.readOperationDtoImpl(result)
+                    );
+                }),
+                tap(data => {
+                    this.setOperationTrips(data);
+                }),
+                map(() => null)
+            );
+    }
 
-  getStations(): Observable<IStation[]> {
-    return this.stations$.asObservable();
-  }
+    getStations(): Observable<IStation[]> {
+        return this.stations$.asObservable();
+    }
 
-  setStations(array: IStation[]): void {
-    this.stations$.next(array);
-  }
+    setStations(array: IStation[]): void {
+        this.stations$.next(array);
+    }
 
-  fetchStations(): Observable<void> {
-    return this.stationApi.getStations().pipe(
-      pipe(
-        map(data =>
-          data.stations.map(result => StationModel.readStationDtoImpl(result))
-        ),
-        tap(data => {
-          this.setStations(data);
-        }),
-        map(() => null)
-      )
-    );
-  }
+    fetchStations(): Observable<void> {
+        return this.stationApi.getStations().pipe(
+            pipe(
+                map(data =>
+                    data.stations.map(result =>
+                        StationModel.readStationDtoImpl(result)
+                    )
+                ),
+                tap(data => {
+                    this.setStations(data);
+                }),
+                map(() => null)
+            )
+        );
+    }
 
-  getTripClasses(): Observable<ITripClass[]> {
-    return this.tripClasses$.asObservable();
-  }
+    getTripClasses(): Observable<ITripClass[]> {
+        return this.tripClasses$.asObservable();
+    }
 
-  setTripClasses(array: ITripClass[]): void {
-    this.tripClasses$.next(array);
-  }
+    setTripClasses(array: ITripClass[]): void {
+        this.tripClasses$.next(array);
+    }
 
-  fetchTripClasses(): Observable<void> {
-    return this.serviceApi
-      .searchServices({
-        service_name: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
-      })
-      .pipe(
-        flatMap((data: { services: ReadServiceDto[] }) =>
-          this.tripApi.getTripClasses({
-            service_id: data.services[0].id
-          })
-        ),
-        map(data =>
-          data.trip_classes.map(result =>
-            TripClassModel.readTripClassDtoImpl(result)
-          )
-        ),
-        tap(data => {
-          this.setTripClasses(data);
-        }),
-        map(() => null)
-      );
-  }
+    fetchTripClasses(): Observable<void> {
+        return this.serviceApi
+            .searchServices({
+                service_name:
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+            })
+            .pipe(
+                flatMap((data: { services: ReadServiceDto[] }) =>
+                    this.tripApi.getTripClasses({
+                        service_id: data.services[0].id
+                    })
+                ),
+                map(data =>
+                    data.trip_classes.map(result =>
+                        TripClassModel.readTripClassDtoImpl(result)
+                    )
+                ),
+                tap(data => {
+                    this.setTripClasses(data);
+                }),
+                map(() => null)
+            );
+    }
 }

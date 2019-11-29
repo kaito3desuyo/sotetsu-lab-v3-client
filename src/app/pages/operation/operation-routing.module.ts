@@ -9,45 +9,45 @@ import { OperationRouteDiagramComponent } from './operation-route-diagram/operat
 import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
 
 const routes: Routes = [
-  {
-    path: 'real-time',
-    component: OperationRealTimeComponent,
-    resolve: {
-      operationRealTime: OperationRealTimeResolverService
+    {
+        path: 'real-time',
+        component: OperationRealTimeComponent,
+        resolve: {
+            operationRealTime: OperationRealTimeResolverService
+        },
+        runGuardsAndResolvers: 'always',
+        data: {
+            title: 'リアルタイム運用情報',
+            date: moment()
+                .subtract(moment().hour() < 4 ? 1 : 0)
+                .format('YYYY-MM-DD')
+        }
     },
-    runGuardsAndResolvers: 'always',
-    data: {
-      title: 'リアルタイム運用情報',
-      date: moment()
-        .subtract(moment().hour() < 4 ? 1 : 0)
-        .format('YYYY-MM-DD')
-    }
-  },
-  {
-    path: 'table/:calendarId',
-    component: OperationTableComponent,
-    resolve: {
-      operationTable: OperationTableResolverService
+    {
+        path: 'table/:calendarId',
+        component: OperationTableComponent,
+        resolve: {
+            operationTable: OperationTableResolverService
+        },
+        runGuardsAndResolvers: 'always',
+        data: {
+            title: '運用表'
+        }
     },
-    runGuardsAndResolvers: 'always',
-    data: {
-      title: '運用表'
+    {
+        path: 'route-diagram/:operationId',
+        component: OperationRouteDiagramComponent,
+        resolve: {
+            operationRouteDiagram: OperationRouteDiagramResolverService
+        },
+        data: {
+            title: '運用行路図'
+        }
     }
-  },
-  {
-    path: 'route-diagram/:operationId',
-    component: OperationRouteDiagramComponent,
-    resolve: {
-      operationRouteDiagram: OperationRouteDiagramResolverService
-    },
-    data: {
-      title: '運用行路図'
-    }
-  }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
 })
 export class OperationRoutingModule {}

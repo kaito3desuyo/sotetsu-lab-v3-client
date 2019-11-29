@@ -8,18 +8,18 @@ import { FindByIdPipe } from './pipes/find-by-id.pipe';
 import { LoadingModule } from './loading/loading.module';
 
 @NgModule({
-  imports: [CommonModule, MatToolbarModule, LoadingModule],
-  exports: [
-    PaddingPipe,
-    RangePipe,
-    FindByIdPipe,
-    CalendarCardHeaderPresentationalComponent
-  ],
-  declarations: [
-    PaddingPipe,
-    RangePipe,
-    FindByIdPipe,
-    CalendarCardHeaderPresentationalComponent
-  ]
+    imports: [CommonModule, MatToolbarModule, LoadingModule],
+    exports: [
+        PaddingPipe,
+        RangePipe,
+        FindByIdPipe,
+        CalendarCardHeaderPresentationalComponent
+    ],
+    declarations: [
+        PaddingPipe,
+        RangePipe,
+        FindByIdPipe,
+        CalendarCardHeaderPresentationalComponent
+    ]
 })
 export class AppSharedModule {}

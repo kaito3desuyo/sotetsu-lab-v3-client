@@ -16,159 +16,165 @@ import { OperationSightingModel } from 'src/app/general/models/operation-sightin
 
 @Injectable()
 export class TimetableStationService {
-  private _calendarId$: BehaviorSubject<string> = new BehaviorSubject<string>(
-    null
-  );
-  private _calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
-    ICalendar
-  >(null);
-
-  private _stationId$: BehaviorSubject<string> = new BehaviorSubject<string>(
-    null
-  );
-  private _station$: BehaviorSubject<IStation> = new BehaviorSubject<IStation>(
-    null
-  );
-  private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
-    IStation[]
-  >([]);
-
-  private _tripDirection$: BehaviorSubject<'0' | '1'> = new BehaviorSubject<
-    '0' | '1'
-  >(null);
-
-  private _times$: BehaviorSubject<ITime[]> = new BehaviorSubject<ITime[]>([]);
-
-  private _operationSightings$: BehaviorSubject<
-    IOperationSighting[]
-  > = new BehaviorSubject<IOperationSighting[]>([]);
-
-  constructor(
-    private calendarApi: CalendarApiService,
-    private stationApi: StationApiService,
-    private timeApi: TimeApiService,
-    private operationApi: OperationApiService
-  ) {}
-
-  getCalendarId(): Observable<string> {
-    return this._calendarId$.asObservable();
-  }
-
-  getCalendarIdAsStatic(): string {
-    return this._calendarId$.getValue();
-  }
-
-  setCalendarId(id: string): void {
-    this._calendarId$.next(id);
-  }
-
-  getCalendar(): Observable<ICalendar> {
-    return this._calendar$.asObservable();
-  }
-
-  setCalendar(calendar: ICalendar): void {
-    this._calendar$.next(calendar);
-  }
-
-  fetchCalendar(): Observable<void> {
-    return this.calendarApi.getCalendarById(this.getCalendarIdAsStatic()).pipe(
-      map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-      tap(data => {
-        this.setCalendar(data);
-      }),
-      map(() => null)
+    private _calendarId$: BehaviorSubject<string> = new BehaviorSubject<string>(
+        null
     );
-  }
+    private _calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
+        ICalendar
+    >(null);
 
-  getStationId(): Observable<string> {
-    return this._stationId$.asObservable();
-  }
-
-  getStationIdAsStatic(): string {
-    return this._stationId$.getValue();
-  }
-
-  setStationId(id: string): void {
-    this._stationId$.next(id);
-  }
-
-  getStations(): Observable<IStation[]> {
-    return this._stations$.asObservable();
-  }
-
-  setStations(stations: IStation[]): void {
-    this._stations$.next(stations);
-  }
-
-  fetchStations(): Observable<void> {
-    return this.stationApi.getStations().pipe(
-      map(data => data.stations.map(o => StationModel.readStationDtoImpl(o))),
-      tap(data => {
-        this.setStations(data);
-      }),
-      map(() => null)
+    private _stationId$: BehaviorSubject<string> = new BehaviorSubject<string>(
+        null
     );
-  }
+    private _station$: BehaviorSubject<IStation> = new BehaviorSubject<
+        IStation
+    >(null);
+    private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
+        IStation[]
+    >([]);
 
-  getTripDirection(): Observable<'0' | '1'> {
-    return this._tripDirection$.asObservable();
-  }
+    private _tripDirection$: BehaviorSubject<'0' | '1'> = new BehaviorSubject<
+        '0' | '1'
+    >(null);
 
-  getTripDirectionAsStatic(): '0' | '1' {
-    return this._tripDirection$.getValue();
-  }
+    private _times$: BehaviorSubject<ITime[]> = new BehaviorSubject<ITime[]>(
+        []
+    );
 
-  setTripDirection(direction: '0' | '1'): void {
-    this._tripDirection$.next(direction);
-  }
+    private _operationSightings$: BehaviorSubject<
+        IOperationSighting[]
+    > = new BehaviorSubject<IOperationSighting[]>([]);
 
-  getTimes(): Observable<ITime[]> {
-    return this._times$.asObservable();
-  }
+    constructor(
+        private calendarApi: CalendarApiService,
+        private stationApi: StationApiService,
+        private timeApi: TimeApiService,
+        private operationApi: OperationApiService
+    ) {}
 
-  setTimes(times: ITime[]): void {
-    this._times$.next(times);
-  }
+    getCalendarId(): Observable<string> {
+        return this._calendarId$.asObservable();
+    }
 
-  fetchTimes(): Observable<void> {
-    return this.timeApi
-      .searchTimes({
-        station_id: this.getStationIdAsStatic(),
-        calendar_id: this.getCalendarIdAsStatic(),
-        trip_direction: this.getTripDirectionAsStatic()
-      })
-      .pipe(
-        map(data => data.times.map(o => TimeModel.readTimeDtoImpl(o))),
-        tap(data => {
-          this.setTimes(data);
-        }),
-        map(() => null)
-      );
-  }
+    getCalendarIdAsStatic(): string {
+        return this._calendarId$.getValue();
+    }
 
-  getOperationSightings(): Observable<IOperationSighting[]> {
-    return this._operationSightings$.asObservable();
-  }
+    setCalendarId(id: string): void {
+        this._calendarId$.next(id);
+    }
 
-  setOperationSightings(sightings: IOperationSighting[]): void {
-    this._operationSightings$.next(sightings);
-  }
+    getCalendar(): Observable<ICalendar> {
+        return this._calendar$.asObservable();
+    }
 
-  fetchOperationSightings(): Observable<void> {
-    return this.operationApi
-      .getOperationSightingsLatest({
-        calendar_id: this.getCalendarIdAsStatic()
-      })
-      .pipe(
-        map(data =>
-          data.group_by_operations.map(o =>
-            OperationSightingModel.readOperationSightingDtoImpl(o)
-          )
-        ),
-        tap(data => {
-          this.setOperationSightings(data);
-        }),
-        map(() => null)
-      );
-  }
+    setCalendar(calendar: ICalendar): void {
+        this._calendar$.next(calendar);
+    }
+
+    fetchCalendar(): Observable<void> {
+        return this.calendarApi
+            .getCalendarById(this.getCalendarIdAsStatic())
+            .pipe(
+                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap(data => {
+                    this.setCalendar(data);
+                }),
+                map(() => null)
+            );
+    }
+
+    getStationId(): Observable<string> {
+        return this._stationId$.asObservable();
+    }
+
+    getStationIdAsStatic(): string {
+        return this._stationId$.getValue();
+    }
+
+    setStationId(id: string): void {
+        this._stationId$.next(id);
+    }
+
+    getStations(): Observable<IStation[]> {
+        return this._stations$.asObservable();
+    }
+
+    setStations(stations: IStation[]): void {
+        this._stations$.next(stations);
+    }
+
+    fetchStations(): Observable<void> {
+        return this.stationApi.getStations().pipe(
+            map(data =>
+                data.stations.map(o => StationModel.readStationDtoImpl(o))
+            ),
+            tap(data => {
+                this.setStations(data);
+            }),
+            map(() => null)
+        );
+    }
+
+    getTripDirection(): Observable<'0' | '1'> {
+        return this._tripDirection$.asObservable();
+    }
+
+    getTripDirectionAsStatic(): '0' | '1' {
+        return this._tripDirection$.getValue();
+    }
+
+    setTripDirection(direction: '0' | '1'): void {
+        this._tripDirection$.next(direction);
+    }
+
+    getTimes(): Observable<ITime[]> {
+        return this._times$.asObservable();
+    }
+
+    setTimes(times: ITime[]): void {
+        this._times$.next(times);
+    }
+
+    fetchTimes(): Observable<void> {
+        return this.timeApi
+            .searchTimes({
+                station_id: this.getStationIdAsStatic(),
+                calendar_id: this.getCalendarIdAsStatic(),
+                trip_direction: this.getTripDirectionAsStatic()
+            })
+            .pipe(
+                map(data => data.times.map(o => TimeModel.readTimeDtoImpl(o))),
+                tap(data => {
+                    this.setTimes(data);
+                }),
+                map(() => null)
+            );
+    }
+
+    getOperationSightings(): Observable<IOperationSighting[]> {
+        return this._operationSightings$.asObservable();
+    }
+
+    setOperationSightings(sightings: IOperationSighting[]): void {
+        this._operationSightings$.next(sightings);
+    }
+
+    fetchOperationSightings(): Observable<void> {
+        return this.operationApi
+            .getOperationSightingsLatest({
+                calendar_id: this.getCalendarIdAsStatic()
+            })
+            .pipe(
+                map(data =>
+                    data.group_by_operations.map(o =>
+                        OperationSightingModel.readOperationSightingDtoImpl(o)
+                    )
+                ),
+                tap(data => {
+                    this.setOperationSightings(data);
+                }),
+                map(() => null)
+            );
+    }
 }

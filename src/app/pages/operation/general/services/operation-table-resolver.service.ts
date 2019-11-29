@@ -6,16 +6,16 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class OperationTableResolverService
-  implements Resolve<Observable<void>> {
-  constructor(private operationTableService: OperationTableService) {}
+    implements Resolve<Observable<void>> {
+    constructor(private operationTableService: OperationTableService) {}
 
-  resolve(route: ActivatedRouteSnapshot): Observable<void> {
-    const calendarId = route.paramMap.get('calendarId');
-    return forkJoin([
-      this.operationTableService.fetchOperationTrips(calendarId),
-      this.operationTableService.fetchStations(),
-      this.operationTableService.fetchTripClasses(),
-      this.operationTableService.fetchCalendar(calendarId)
-    ]).pipe(map(() => null));
-  }
+    resolve(route: ActivatedRouteSnapshot): Observable<void> {
+        const calendarId = route.paramMap.get('calendarId');
+        return forkJoin([
+            this.operationTableService.fetchOperationTrips(calendarId),
+            this.operationTableService.fetchStations(),
+            this.operationTableService.fetchTripClasses(),
+            this.operationTableService.fetchCalendar(calendarId)
+        ]).pipe(map(() => null));
+    }
 }
