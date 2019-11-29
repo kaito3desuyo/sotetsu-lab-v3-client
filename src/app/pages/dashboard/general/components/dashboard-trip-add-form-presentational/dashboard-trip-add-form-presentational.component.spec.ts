@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { DashboardTripAddFormPresentationalComponent } from './dashboard-trip-add-form-presentational.component';
 
 describe('DashboardTripAddFormPresentationalComponent', () => {
-  let component: DashboardTripAddFormPresentationalComponent;
-  let fixture: ComponentFixture<DashboardTripAddFormPresentationalComponent>;
+    let component: DashboardTripAddFormPresentationalComponent;
+    let fixture: ComponentFixture<DashboardTripAddFormPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ DashboardTripAddFormPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [DashboardTripAddFormPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(DashboardTripAddFormPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            DashboardTripAddFormPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

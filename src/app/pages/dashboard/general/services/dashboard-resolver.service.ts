@@ -5,9 +5,9 @@ import { DashboardService } from './dashboard.service';
 
 @Injectable()
 export class DashboardResolverService {
-  constructor(private dashboardService: DashboardService) {}
+    constructor(private dashboardService: DashboardService) {}
 
-  resolve(): Observable<any> {
-    return forkJoin([this.dashboardService.fetchCalendars()]);
-  }
+    resolve(): Observable<any> {
+        return forkJoin([this.dashboardService.fetchCalendars()]);
+    }
 }

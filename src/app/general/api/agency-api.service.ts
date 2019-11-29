@@ -6,16 +6,16 @@ import { map } from 'rxjs/operators';
 import { ReadAgencyDto } from '../models/agency/agency-dto';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class AgencyApiService {
-  private apiUrl = environment.apiUrl + '/v1/agencies';
+    private apiUrl = environment.apiUrl + '/v1/agencies';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {}
 
-  getAgencies(): Observable<{ agencies: ReadAgencyDto[] }> {
-    return this.http
-      .get(this.apiUrl)
-      .pipe(map((data: { agencies: ReadAgencyDto[] }) => data));
-  }
+    getAgencies(): Observable<{ agencies: ReadAgencyDto[] }> {
+        return this.http
+            .get(this.apiUrl)
+            .pipe(map((data: { agencies: ReadAgencyDto[] }) => data));
+    }
 }

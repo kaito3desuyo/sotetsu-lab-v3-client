@@ -6,22 +6,22 @@ import { environment } from 'src/environments/environment';
 import { map } from 'rxjs/operators';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class StationApiService {
-  private apiUrl = environment.apiUrl + '/v1/stations';
+    private apiUrl = environment.apiUrl + '/v1/stations';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {}
 
-  getStations(): Observable<{ stations: ReadStationDto[] }> {
-    return this.http
-      .get(this.apiUrl)
-      .pipe(map((data: { stations: ReadStationDto[] }) => data));
-  }
+    getStations(): Observable<{ stations: ReadStationDto[] }> {
+        return this.http
+            .get(this.apiUrl)
+            .pipe(map((data: { stations: ReadStationDto[] }) => data));
+    }
 
-  getStationById(id: string): Observable<{ station: ReadStationDto }> {
-    return this.http
-      .get(this.apiUrl + '/' + id)
-      .pipe(map((data: { station: ReadStationDto }) => data));
-  }
+    getStationById(id: string): Observable<{ station: ReadStationDto }> {
+        return this.http
+            .get(this.apiUrl + '/' + id)
+            .pipe(map((data: { station: ReadStationDto }) => data));
+    }
 }

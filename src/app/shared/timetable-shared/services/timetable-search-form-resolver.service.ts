@@ -5,10 +5,12 @@ import { TimetableSearchFormService } from './timetable-search-form.service';
 
 @Injectable()
 export class TimetableSearchFormResolverService
-  implements Resolve<Observable<void>> {
-  constructor(private timetableSearchFormService: TimetableSearchFormService) {}
+    implements Resolve<Observable<void>> {
+    constructor(
+        private timetableSearchFormService: TimetableSearchFormService
+    ) {}
 
-  resolve(): Observable<void> {
-    return this.timetableSearchFormService.fetchCalendars();
-  }
+    resolve(): Observable<void> {
+        return this.timetableSearchFormService.fetchCalendars();
+    }
 }

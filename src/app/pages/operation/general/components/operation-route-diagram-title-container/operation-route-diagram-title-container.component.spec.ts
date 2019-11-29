@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { OperationRouteDiagramTitleContainerComponent } from './operation-route-diagram-title-container.component';
 
 describe('OperationRouteDiagramTitleContainerComponent', () => {
-  let component: OperationRouteDiagramTitleContainerComponent;
-  let fixture: ComponentFixture<OperationRouteDiagramTitleContainerComponent>;
+    let component: OperationRouteDiagramTitleContainerComponent;
+    let fixture: ComponentFixture<OperationRouteDiagramTitleContainerComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationRouteDiagramTitleContainerComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationRouteDiagramTitleContainerComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationRouteDiagramTitleContainerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramTitleContainerComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

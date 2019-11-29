@@ -7,7 +7,7 @@ export interface CalendarsState extends EntityState<ICalendar> {}
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'calendars' })
 export class CalendarsStore extends EntityStore<CalendarsState> {
-  constructor() {
-    super();
-  }
+    constructor() {
+        super();
+    }
 }
