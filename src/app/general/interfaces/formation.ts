@@ -1,14 +1,14 @@
 import { IFormationToVehicle } from './formationToVehicle';
 
 export interface IFormation {
-  id: string;
-  agencyId: string;
-  vehicleType: string;
-  formationNumber: string;
-  formationDescription: string;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
-  formationToVehicles?: IFormationToVehicle[];
+    id: string;
+    agencyId: string;
+    vehicleType: string;
+    formationNumber: string;
+    formationDescription: string;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+    updatedAt: string;
+    formationToVehicles?: IFormationToVehicle[];
 }

@@ -3,20 +3,20 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 
 @Component({
-  selector: 'app-confirm-dialog-container',
-  templateUrl: './confirm-dialog-container.component.html',
-  styleUrls: ['./confirm-dialog-container.component.scss']
+    selector: 'app-confirm-dialog-container',
+    templateUrl: './confirm-dialog-container.component.html',
+    styleUrls: ['./confirm-dialog-container.component.scss']
 })
 export class ConfirmDialogContainerComponent implements OnInit {
-  constructor(
-    public dialogRef: MatDialogRef<ConfirmDialogContainerComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: IConfirmDialogData
-  ) {}
+    constructor(
+        public dialogRef: MatDialogRef<ConfirmDialogContainerComponent>,
+        @Inject(MAT_DIALOG_DATA)
+        public data: IConfirmDialogData
+    ) {}
 
-  ngOnInit() {}
+    ngOnInit() {}
 
-  onReceiveClickButton(bool: boolean) {
-    this.dialogRef.close(bool);
-  }
+    onReceiveClickButton(bool: boolean) {
+        this.dialogRef.close(bool);
+    }
 }

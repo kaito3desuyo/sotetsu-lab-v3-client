@@ -7,30 +7,30 @@ import { ParamsService } from './state/params';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
 export class AppComponent extends BaseComponent {
-  constructor(
-    @Inject(Injector) injector: Injector,
-    private router: Router,
-    private gaService: GoogleAnalyticsService,
-    private appUpdateService: AppUpdateService,
-    private paramsService: ParamsService,
-    private loadingService: LoadingService
-  ) {
-    super(injector);
+    constructor(
+        @Inject(Injector) injector: Injector,
+        private router: Router,
+        private gaService: GoogleAnalyticsService,
+        private appUpdateService: AppUpdateService,
+        private paramsService: ParamsService,
+        private loadingService: LoadingService
+    ) {
+        super(injector);
 
-    this.subscription = this.router.events.subscribe(event => {
-      if (event instanceof NavigationStart) {
-        this.loadingService.open();
-      }
-      if (event instanceof NavigationEnd) {
-        this.loadingService.close();
-        this.gaService.sendPageView(event.urlAfterRedirects);
-      }
-    });
-    this.subscription = this.paramsService.fetch().subscribe();
-  }
+        this.subscription = this.router.events.subscribe(event => {
+            if (event instanceof NavigationStart) {
+                this.loadingService.open();
+            }
+            if (event instanceof NavigationEnd) {
+                this.loadingService.close();
+                this.gaService.sendPageView(event.urlAfterRedirects);
+            }
+        });
+        this.subscription = this.paramsService.fetch().subscribe();
+    }
 }

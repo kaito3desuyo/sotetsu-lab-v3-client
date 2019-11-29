@@ -6,22 +6,22 @@ import { ReadTimeDto } from '../models/time/time-dto';
 import { map } from 'rxjs/operators';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class TimeApiService {
-  private apiUrl = environment.apiUrl + '/v1/times';
+    private apiUrl = environment.apiUrl + '/v1/times';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {}
 
-  searchTimes(query: {
-    station_id?: string;
-    calendar_id?: string;
-    trip_direction?: '0' | '1';
-  }): Observable<{ times: ReadTimeDto[] }> {
-    return this.http
-      .get(this.apiUrl + '/search', {
-        params: query
-      })
-      .pipe(map((data: { times: ReadTimeDto[] }) => data));
-  }
+    searchTimes(query: {
+        station_id?: string;
+        calendar_id?: string;
+        trip_direction?: '0' | '1';
+    }): Observable<{ times: ReadTimeDto[] }> {
+        return this.http
+            .get(this.apiUrl + '/search', {
+                params: query
+            })
+            .pipe(map((data: { times: ReadTimeDto[] }) => data));
+    }
 }

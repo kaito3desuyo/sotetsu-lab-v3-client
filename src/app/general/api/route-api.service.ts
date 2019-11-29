@@ -7,20 +7,20 @@ import { ReadRouteDto } from '../models/routes/route-dto';
 import { RouteModel } from '../models/routes/route-model';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class RouteApiService {
-  private apiUrl = environment.apiUrl + '/v1/routes';
+    private apiUrl = environment.apiUrl + '/v1/routes';
 
-  constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {}
 
-  getRoutesAllStations(): Observable<any> {
-    return this.http.get(this.apiUrl + '/all/stations').pipe(
-      map(data => {
-        return (data as ReadRouteDto[]).map(result => {
-          return RouteModel.readRouteDtoImpl(result);
-        });
-      })
-    );
-  }
+    getRoutesAllStations(): Observable<any> {
+        return this.http.get(this.apiUrl + '/all/stations').pipe(
+            map(data => {
+                return (data as ReadRouteDto[]).map(result => {
+                    return RouteModel.readRouteDtoImpl(result);
+                });
+            })
+        );
+    }
 }

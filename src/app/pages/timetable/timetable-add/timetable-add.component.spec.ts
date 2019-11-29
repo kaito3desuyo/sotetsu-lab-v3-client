@@ -6,23 +6,22 @@ import { DebugElement } from '@angular/core';
 import { TimetableAddComponent } from './timetable-add.component';
 
 describe('TimetableAddComponent', () => {
-  let component: TimetableAddComponent;
-  let fixture: ComponentFixture<TimetableAddComponent>;
+    let component: TimetableAddComponent;
+    let fixture: ComponentFixture<TimetableAddComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableAddComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableAddComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableAddComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(TimetableAddComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

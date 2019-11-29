@@ -5,35 +5,35 @@ import { Observable } from 'rxjs';
 import { IOperationSighting } from '../interfaces/operation-sighting';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class FormationResolverService {
-  constructor() {}
+    constructor() {}
 }
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class FormationsAllNumbersResolverService
-  implements Resolve<{ formationNumber: string }[]> {
-  constructor(private api: FormationApiService) {}
+    implements Resolve<{ formationNumber: string }[]> {
+    constructor(private api: FormationApiService) {}
 
-  resolve(
-    route: ActivatedRouteSnapshot
-  ): Observable<{ formationNumber: string }[]> {
-    const date: string = route.data.date;
-    return this.api.getFormationsAllNumbers(date);
-  }
+    resolve(
+        route: ActivatedRouteSnapshot
+    ): Observable<{ formationNumber: string }[]> {
+        const date: string = route.data.date;
+        return this.api.getFormationsAllNumbers(date);
+    }
 }
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class FormationsAllLatestSightingsResolverService
-  implements Resolve<IOperationSighting[]> {
-  constructor(private api: FormationApiService) {}
+    implements Resolve<IOperationSighting[]> {
+    constructor(private api: FormationApiService) {}
 
-  resolve(): Observable<IOperationSighting[]> {
-    return this.api.getFormationsAllLatestSightings();
-  }
+    resolve(): Observable<IOperationSighting[]> {
+        return this.api.getFormationsAllLatestSightings();
+    }
 }
