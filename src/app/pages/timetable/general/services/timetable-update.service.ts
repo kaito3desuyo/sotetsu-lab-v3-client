@@ -10,76 +10,85 @@ import { NotificationService } from 'src/app/general/services/notification.servi
 
 @Injectable()
 export class TimetableUpdateService {
-  private _subscription: Subscription = new Subscription();
-  get subscription() {
-    return this._subscription;
-  }
-  set subscription(sub: Subscription) {
-    this._subscription.add(sub);
-  }
+    private _subscription: Subscription = new Subscription();
+    get subscription() {
+        return this._subscription;
+    }
+    set subscription(sub: Subscription) {
+        this._subscription.add(sub);
+    }
 
-  blockId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
-  calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<ICalendar>(null);
+    blockId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+    calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<ICalendar>(
+        null
+    );
 
-  constructor(
-    private notificationService: NotificationService,
-    private tripApi: TripApiService,
-    private calendarApi: CalendarApiService,
-    private timetableEditorService: TimetableEditorService
-  ) {}
+    constructor(
+        private notificationService: NotificationService,
+        private tripApi: TripApiService,
+        private calendarApi: CalendarApiService,
+        private timetableEditorService: TimetableEditorService
+    ) {}
 
-  receiveSaveEvent(): Subscription {
-    return this.timetableEditorService
-      .receiveSaveEvent()
-      .subscribe(formValue => {
-        const data = formValue.map(value =>
-          this.timetableEditorService.convertFormValueToSaveData(value)
-        );
+    receiveSaveEvent(): Subscription {
+        return this.timetableEditorService
+            .receiveSaveEvent()
+            .subscribe(formValue => {
+                const data = formValue.map(value =>
+                    this.timetableEditorService.convertFormValueToSaveData(
+                        value
+                    )
+                );
 
-        const block = {
-          trips: data
-        };
+                const block = {
+                    trips: data
+                };
 
-        this.notificationService.open('列車を保存しています...', 'OK');
+                this.notificationService.open('列車を保存しています...', 'OK');
 
-        this.tripApi
-          .updateTripBlockById(this.getBlockIdAsStatic(), block)
-          .subscribe(
-            result => {
-              this.notificationService.open('保存しました', 'OK');
-            },
-            error => {
-              this.notificationService.open('エラーが発生しました', 'OK');
-            }
-          );
-      });
-  }
+                this.tripApi
+                    .updateTripBlockById(this.getBlockIdAsStatic(), block)
+                    .subscribe(
+                        result => {
+                            this.notificationService.open('保存しました', 'OK');
+                        },
+                        error => {
+                            this.notificationService.open(
+                                'エラーが発生しました',
+                                'OK'
+                            );
+                        }
+                    );
+            });
+    }
 
-  getBlockIdAsStatic(): string {
-    return this.blockId$.getValue();
-  }
+    getBlockIdAsStatic(): string {
+        return this.blockId$.getValue();
+    }
 
-  setBlockId(id: string): void {
-    this.blockId$.next(id);
-  }
+    setBlockId(id: string): void {
+        this.blockId$.next(id);
+    }
 
-  getCalendar(): Observable<ICalendar> {
-    return this.calendar$.asObservable();
-  }
+    getCalendar(): Observable<ICalendar> {
+        return this.calendar$.asObservable();
+    }
 
-  setCalendar(calendar: ICalendar): void {
-    this.calendar$.next(calendar);
-  }
+    setCalendar(calendar: ICalendar): void {
+        this.calendar$.next(calendar);
+    }
 
-  fetchCalendar(): Observable<void> {
-    return this.calendarApi
-      .getCalendarById(this.timetableEditorService.getCalendarIdAsStatic())
-      .pipe(
-        map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-        tap(data => {
-          this.setCalendar(data);
-        }),
-        map(() => null)
-      );
-  }
+    fetchCalendar(): Observable<void> {
+        return this.calendarApi
+            .getCalendarById(
+                this.timetableEditorService.getCalendarIdAsStatic()
+            )
+            .pipe(
+                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap(data => {
+                    this.setCalendar(data);
+                }),
+                map(() => null)
+            );
+    }
 }

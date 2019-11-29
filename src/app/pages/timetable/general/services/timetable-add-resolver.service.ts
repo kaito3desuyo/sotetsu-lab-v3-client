@@ -7,34 +7,34 @@ import { TimetableEditorService } from './timetable-editor.service';
 
 @Injectable()
 export class TimetableAddResolverService implements Resolve<Observable<void>> {
-  constructor(
-    private timetableAddService: TimetableAddService,
-    private timetableEditorService: TimetableEditorService
-  ) {}
+    constructor(
+        private timetableAddService: TimetableAddService,
+        private timetableEditorService: TimetableEditorService
+    ) {}
 
-  resolve(route: ActivatedRouteSnapshot): Observable<void> {
-    const calendarId = route.paramMap.get('calendarId');
-    const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
+    resolve(route: ActivatedRouteSnapshot): Observable<void> {
+        const calendarId = route.paramMap.get('calendarId');
+        const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
-    this.timetableEditorService.setTripBlock(null);
-    this.timetableEditorService.setCalendarId(calendarId);
-    this.timetableEditorService.setTripDirection(Number(tripDirection) as
-      | 0
-      | 1);
+        this.timetableEditorService.setTripBlock(null);
+        this.timetableEditorService.setCalendarId(calendarId);
+        this.timetableEditorService.setTripDirection(
+            Number(tripDirection) as 0 | 1
+        );
 
-    return forkJoin(
-      this.timetableAddService.fetchCalendar(),
-      this.timetableEditorService.fetchOperations(),
-      this.timetableEditorService
-        .fetchServiceId()
-        .pipe(
-          flatMap(() =>
-            forkJoin(
-              this.timetableEditorService.fetchStations(),
-              this.timetableEditorService.fetchTripClasses()
-            )
-          )
-        )
-    ).pipe(map(() => null));
-  }
+        return forkJoin([
+            this.timetableAddService.fetchCalendar(),
+            this.timetableEditorService.fetchOperations(),
+            this.timetableEditorService
+                .fetchServiceId()
+                .pipe(
+                    flatMap(() =>
+                        forkJoin([
+                            this.timetableEditorService.fetchStations(),
+                            this.timetableEditorService.fetchTripClasses()
+                        ])
+                    )
+                )
+        ]).pipe(map(() => null));
+    }
 }

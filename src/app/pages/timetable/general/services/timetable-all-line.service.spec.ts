@@ -4,13 +4,16 @@ import { TestBed, async, inject } from '@angular/core/testing';
 import { TimetableAllLineService } from './timetable-all-line.service';
 
 describe('Service: TimetableAllLine', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [TimetableAllLineService]
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [TimetableAllLineService]
+        });
     });
-  });
 
-  it('should ...', inject([TimetableAllLineService], (service: TimetableAllLineService) => {
-    expect(service).toBeTruthy();
-  }));
+    it('should ...', inject(
+        [TimetableAllLineService],
+        (service: TimetableAllLineService) => {
+            expect(service).toBeTruthy();
+        }
+    ));
 });

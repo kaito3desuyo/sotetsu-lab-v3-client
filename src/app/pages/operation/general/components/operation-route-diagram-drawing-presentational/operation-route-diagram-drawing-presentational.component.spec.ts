@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './operation-route-diagram-drawing-presentational.component';
 
 describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
-  let component: OperationRouteDiagramDrawingPresentationalComponent;
-  let fixture: ComponentFixture<OperationRouteDiagramDrawingPresentationalComponent>;
+    let component: OperationRouteDiagramDrawingPresentationalComponent;
+    let fixture: ComponentFixture<OperationRouteDiagramDrawingPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationRouteDiagramDrawingPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationRouteDiagramDrawingPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationRouteDiagramDrawingPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramDrawingPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

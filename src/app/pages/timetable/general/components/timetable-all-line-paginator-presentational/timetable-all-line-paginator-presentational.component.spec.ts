@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { TimetableAllLinePaginatorPresentationalComponent } from './timetable-all-line-paginator-presentational.component';
 
 describe('TimetableAllLinePaginatorPresentationalComponent', () => {
-  let component: TimetableAllLinePaginatorPresentationalComponent;
-  let fixture: ComponentFixture<TimetableAllLinePaginatorPresentationalComponent>;
+    let component: TimetableAllLinePaginatorPresentationalComponent;
+    let fixture: ComponentFixture<TimetableAllLinePaginatorPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableAllLinePaginatorPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableAllLinePaginatorPresentationalComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableAllLinePaginatorPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            TimetableAllLinePaginatorPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

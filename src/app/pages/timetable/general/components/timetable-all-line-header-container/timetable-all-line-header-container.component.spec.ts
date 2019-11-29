@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { TimetableAllLineHeaderContainerComponent } from './timetable-all-line-header-container.component';
 
 describe('TimetableAllLineHeaderContainerComponent', () => {
-  let component: TimetableAllLineHeaderContainerComponent;
-  let fixture: ComponentFixture<TimetableAllLineHeaderContainerComponent>;
+    let component: TimetableAllLineHeaderContainerComponent;
+    let fixture: ComponentFixture<TimetableAllLineHeaderContainerComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ TimetableAllLineHeaderContainerComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [TimetableAllLineHeaderContainerComponent]
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TimetableAllLineHeaderContainerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            TimetableAllLineHeaderContainerComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

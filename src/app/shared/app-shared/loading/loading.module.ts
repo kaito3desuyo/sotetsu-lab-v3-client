@@ -6,9 +6,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { LoadingService } from './loading.service';
 
 @NgModule({
-  imports: [CommonModule, MatProgressSpinnerModule, MatProgressBarModule],
-  declarations: [LoadingComponent],
-  entryComponents: [LoadingComponent],
-  providers: [LoadingService]
+    imports: [CommonModule, MatProgressSpinnerModule, MatProgressBarModule],
+    declarations: [LoadingComponent],
+    entryComponents: [LoadingComponent],
+    providers: [LoadingService]
 })
 export class LoadingModule {}

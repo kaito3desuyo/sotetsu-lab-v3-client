@@ -1,58 +1,58 @@
 import {
-  Component,
-  OnInit,
-  ChangeDetectionStrategy,
-  Input,
-  Output,
-  EventEmitter,
-  OnChanges,
-  SimpleChanges
+    Component,
+    OnInit,
+    ChangeDetectionStrategy,
+    Input,
+    Output,
+    EventEmitter,
+    OnChanges,
+    SimpleChanges
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
 
 @Component({
-  selector: 'app-timetable-search-form-presentational',
-  templateUrl: './timetable-search-form-presentational.component.html',
-  styleUrls: ['./timetable-search-form-presentational.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'app-timetable-search-form-presentational',
+    templateUrl: './timetable-search-form-presentational.component.html',
+    styleUrls: ['./timetable-search-form-presentational.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TimetableSearchFormPresentationalComponent implements OnChanges {
-  searchTimetableForm = this.fb.group({
-    calendarId: ['', Validators.required],
-    tripDirection: ['0', Validators.required],
-    isSearchStation: [false, Validators.required],
-    stationId: [{ value: '', disabled: true }, Validators.required]
-  });
+    searchTimetableForm = this.fb.group({
+        calendarId: ['', Validators.required],
+        tripDirection: ['0', Validators.required],
+        isSearchStation: [false, Validators.required],
+        stationId: [{ value: '', disabled: true }, Validators.required]
+    });
 
-  @Input() calendars: ICalendar[];
-  @Input() params: ITimetableSearchForm;
-  @Input() stationsSelectList: {
-    routeName: string;
-    stations: { label: string; value: string }[];
-  }[];
-  @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
+    @Input() calendars: ICalendar[];
+    @Input() params: ITimetableSearchForm;
+    @Input() stationsSelectList: {
+        routeName: string;
+        stations: { label: string; value: string }[];
+    }[];
+    @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor(private fb: FormBuilder) {
-    this.searchTimetableForm
-      .get('isSearchStation')
-      .valueChanges.subscribe(bool => {
-        if (bool) {
-          this.searchTimetableForm.get('stationId').enable();
-        } else {
-          this.searchTimetableForm.get('stationId').disable();
-        }
-      });
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes.params) {
-      this.searchTimetableForm.patchValue(this.params);
+    constructor(private fb: FormBuilder) {
+        this.searchTimetableForm
+            .get('isSearchStation')
+            .valueChanges.subscribe(bool => {
+                if (bool) {
+                    this.searchTimetableForm.get('stationId').enable();
+                } else {
+                    this.searchTimetableForm.get('stationId').disable();
+                }
+            });
     }
-  }
 
-  onClickSearch(): void {
-    this.searchTimetable.emit(this.searchTimetableForm.value);
-  }
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.params) {
+            this.searchTimetableForm.patchValue(this.params);
+        }
+    }
+
+    onClickSearch(): void {
+        this.searchTimetable.emit(this.searchTimetableForm.value);
+    }
 }

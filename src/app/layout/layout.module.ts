@@ -18,28 +18,28 @@ import { MatSelectModule } from '@angular/material/select';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
-  declarations: [
-    LayoutComponent,
-    HeaderContainerComponent,
-    HeaderPresentationalComponent,
-    SidenavContainerComponent,
-    SidenavPresentationalComponent
-  ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule,
-    FlexLayoutModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatButtonModule,
-    MatMenuModule,
-    MatListModule,
-    MatFormFieldModule,
-    MatSelectModule
-  ],
-  exports: [LayoutComponent]
+    declarations: [
+        LayoutComponent,
+        HeaderContainerComponent,
+        HeaderPresentationalComponent,
+        SidenavContainerComponent,
+        SidenavPresentationalComponent
+    ],
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        RouterModule,
+        FlexLayoutModule,
+        MatSidenavModule,
+        MatToolbarModule,
+        MatIconModule,
+        MatButtonModule,
+        MatMenuModule,
+        MatListModule,
+        MatFormFieldModule,
+        MatSelectModule
+    ],
+    exports: [LayoutComponent]
 })
 export class LayoutModule {}
