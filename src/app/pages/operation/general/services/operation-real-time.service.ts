@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
-import { map, tap, flatMap, delay, skip } from 'rxjs/operators';
+import { map, tap, flatMap, delay, skip, take } from 'rxjs/operators';
 import find from 'lodash/find';
 import moment, { Moment } from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
@@ -31,6 +31,7 @@ import { OperationSightingModel } from 'src/app/general/models/operation-sightin
 import { IOperationCurrentPosition } from 'src/app/general/interfaces/operation-current-position';
 import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
 import { ParamsQuery } from 'src/app/state/params';
+import { OperationSightingAddFormService } from 'src/app/shared/operation-shared/services/operation-sighting-add-form.service';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -122,37 +123,29 @@ export class OperationRealTimeService extends BaseService {
         private operationApi: OperationApiService,
         private stationApi: StationApiService,
         private paramsQuery: ParamsQuery,
-        private currentParamsQuery: CurrentParamsQuery,
-        private notification: NotificationService
+        private notification: NotificationService,
+        private operationSightingAddFormService: OperationSightingAddFormService
     ) {
         super();
 
-        this.socketService.connect('/operation/real-time');
-
         this.subscription = this.socketService
-            .on('sightingReload')
+            .on('sendSighting')
             .subscribe(data => {
                 if (this.isAutoReloadEnabled) {
-                    if (data.eventType === 'receive') {
-                        this.notification.open('データが更新されました', 'OK');
-                        this._finalUpdateTime$.next(moment());
-                    }
-
-                    forkJoin([this.fetchSightingsLatest()])
-                        .pipe(
-                            flatMap(() =>
-                                forkJoin([
-                                    this.generateFormationTableData(),
-                                    this.generateOperationTableData()
-                                ])
-                            )
-                        )
-                        .subscribe(([formation, operation]) => {
-                            this.setFormationTableData(formation);
-                            this.setOperationTableData(operation);
-                        });
+                    this.notification.open('データが更新されました', 'OK');
+                    this.fetchSightingsLatest()
+                        .pipe(flatMap(() => this.generateTable()))
+                        .subscribe();
                 }
             });
+
+        this.subscription = this.operationSightingAddFormService.sendSightingEvent$.subscribe(
+            () => {
+                this.fetchSightingsLatest()
+                    .pipe(flatMap(() => this.generateTable()))
+                    .subscribe();
+            }
+        );
 
         this.currentCalendarId$ = this.paramsQuery.calendar$;
 
@@ -160,17 +153,9 @@ export class OperationRealTimeService extends BaseService {
             .pipe(
                 skip(1),
                 flatMap(() => this.fetchOperationsCurrentPosition()),
-                flatMap(() =>
-                    forkJoin([
-                        this.generateFormationTableData(),
-                        this.generateOperationTableData()
-                    ])
-                )
+                flatMap(() => this.generateTable())
             )
-            .subscribe(([formation, operation]) => {
-                this.setFormationTableData(formation);
-                this.setOperationTableData(operation);
-            });
+            .subscribe();
     }
 
     /**
@@ -197,6 +182,7 @@ export class OperationRealTimeService extends BaseService {
                             )
                         )
                     );
+                    this._finalUpdateTime$.next(moment());
                 }),
                 map(() => null)
             );
@@ -699,6 +685,7 @@ export class OperationRealTimeService extends BaseService {
             this.generateOperationTripsTableData(),
             this.getFormationSightingsLatest()
         ).pipe(
+            take(1),
             map(([numbers, operationTrips, formationSightings]) => {
                 return numbers.map(data => {
                     const findSightings: IOperationSighting = find(
@@ -762,6 +749,7 @@ export class OperationRealTimeService extends BaseService {
             this.generateOperationTripsTableData(),
             this.getOperationSightingsLatest()
         ).pipe(
+            take(1),
             map(([operations, numbers, operationTrips, operationSightings]) => {
                 return numbers.map(data => {
                     const findSightings: IOperationSighting = find(
@@ -823,6 +811,22 @@ export class OperationRealTimeService extends BaseService {
             tap(data => {
                 this.setOperationTableData(data);
             })
+        );
+    }
+
+    /**
+     * テーブルを生成する
+     */
+    generateTable(): Observable<void> {
+        return forkJoin([
+            this.generateFormationTableData(),
+            this.generateOperationTableData()
+        ]).pipe(
+            tap(([formation, operation]) => {
+                this.setFormationTableData(formation);
+                this.setOperationTableData(operation);
+            }),
+            map(() => null)
         );
     }
 }
