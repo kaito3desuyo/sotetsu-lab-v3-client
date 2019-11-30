@@ -4,14 +4,13 @@ import { FormationApiService } from 'src/app/general/api/formation-api.service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { AgencyApiService } from 'src/app/general/api/agency-api.service';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { IAgency } from 'src/app/general/interfaces/agency';
 import { tap, map } from 'rxjs/operators';
 import { AgencyModel } from 'src/app/general/models/agency/agency-model';
 import { FormationModel } from 'src/app/general/models/formation/formation-model';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
 import { IOperationSightingAddForm } from '../interfaces/operation-sighting-add-form';
-import { ActivatedRoute } from '@angular/router';
 import { BaseService } from 'src/app/general/classes/base-service';
 import { ParamsQuery } from 'src/app/state/params';
 import moment from 'moment';
@@ -27,6 +26,11 @@ export class OperationSightingAddFormService extends BaseService {
         .subtract(moment().hour() < 4 ? 1 : 0)
         .format('YYYY-MM-DD');
 
+    private _sendSightingEvent$: Subject<void> = new Subject<void>();
+    sendSightingEvent$: Observable<
+        void
+    > = this._sendSightingEvent$.asObservable();
+
     constructor(
         private socketService: SocketService,
         private agencyApi: AgencyApiService,
@@ -36,7 +40,6 @@ export class OperationSightingAddFormService extends BaseService {
         private notification: NotificationService
     ) {
         super();
-        this.socketService.connect('/operation/real-time');
     }
 
     getAgencies(): Observable<IAgency[]> {
@@ -146,6 +149,7 @@ export class OperationSightingAddFormService extends BaseService {
 
             this.notification.open('目撃情報を送信しました', 'OK');
             this.socketService.emit('sendSighting', addResult);
+            this._sendSightingEvent$.next();
         } catch (e) {
             this.notification.open(e.message, 'OK');
         }
