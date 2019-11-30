@@ -26,18 +26,10 @@ export class OperationRealTimeResolverService
                     this.operationRealTimeService.fetchSightingsLatest()
                 ]);
             }),
-            tap(() => {
-                forkJoin([
-                    this.operationRealTimeService.generateFormationTableData(),
-                    this.operationRealTimeService.generateOperationTableData()
-                ]).subscribe(([formation, operation]) => {
-                    this.operationRealTimeService.setFormationTableData(
-                        formation
-                    );
-                    this.operationRealTimeService.setOperationTableData(
-                        operation
-                    );
-                });
+            flatMap(() => {
+                return forkJoin([
+                    this.operationRealTimeService.generateTable()
+                ]);
             }),
             map(() => null)
         );
