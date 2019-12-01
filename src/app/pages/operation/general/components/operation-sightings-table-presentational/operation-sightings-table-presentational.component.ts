@@ -71,6 +71,19 @@ export class OperationSightingsTablePresentationalComponent
             'days'
         );
         const now = moment().subtract(moment().hour() < 4 ? 1 : 0, 'days');
-        return now.date() - date.date();
+
+        return now
+            .hour(0)
+            .minute(0)
+            .second(0)
+            .millisecond(0)
+            .diff(
+                date
+                    .hour(0)
+                    .minute(0)
+                    .second(0)
+                    .millisecond(0),
+                'days'
+            );
     }
 }
