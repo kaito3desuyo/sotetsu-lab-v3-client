@@ -1,7 +1,7 @@
 :host {
     .operation-sighting-table {
         overflow-x: auto;
-        will-change: transform;
+        will-change: scroll-position;
 
         table {
             width: 100%;
