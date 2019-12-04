@@ -1,5 +1,5 @@
 <mat-sidenav-container>
-  <mat-sidenav #sidenav mode="push" [opened]="sidenavState$ | async">
+  <mat-sidenav #sidenav mode="over" [opened]="sidenavState$ | async">
     <app-sidenav-presentational
       [todaysCalendarId]="todaysCalendarId$ | async"
       [stationsSelectList]="stationsSelectList$ | async"
