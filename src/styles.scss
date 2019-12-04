@@ -116,6 +116,10 @@ body {
     font-feature-settings: 'pkna';
 }
 
+.mat-sidenav {
+    width: 250px;
+}
+
 .mat-sidenav-content {
     width: 100vw;
     height: calc(100vh - 64px) !important;
