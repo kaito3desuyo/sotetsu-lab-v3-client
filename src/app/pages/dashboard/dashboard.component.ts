@@ -4,6 +4,10 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
 import { ActivatedRoute } from '@angular/router';
 import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/services/timetable-search-form.service';
 import { ParamsQuery } from 'src/app/state/params';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import qs from 'qs';
+import moment from 'moment';
 
 @Component({
     selector: 'app-dashboard',
@@ -16,7 +20,8 @@ export class DashboardComponent extends BaseComponent {
         private route: ActivatedRoute,
         private titleService: TitleService,
         private paramsQuery: ParamsQuery,
-        private tiletableSearchFormService: TimetableSearchFormService
+        private tiletableSearchFormService: TimetableSearchFormService,
+        private http: HttpClient
     ) {
         super(injector);
         this.subscription = this.route.data.subscribe(
@@ -30,5 +35,19 @@ export class DashboardComponent extends BaseComponent {
                 calendarId
             });
         });
+
+        let params = qs.stringify({
+            where: {
+                operation_id: 'hoge'
+            }
+        });
+
+        this.http
+            .get(environment.apiUrl + '/v1/operation-sightings/search', {
+                params: {
+                    order: '-sighting_time'
+                }
+            })
+            .subscribe();
     }
 }

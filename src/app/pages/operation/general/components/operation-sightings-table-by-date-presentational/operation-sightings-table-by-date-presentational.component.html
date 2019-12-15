@@ -1,0 +1,11 @@
+<mat-card>
+    <mat-card-content>
+        <table>
+            <tbody>
+                <tr *ngFor="let row of groupedByDate">
+                    <td>{{ row | json }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </mat-card-content>
+</mat-card>
