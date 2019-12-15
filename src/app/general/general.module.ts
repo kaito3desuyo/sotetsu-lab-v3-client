@@ -14,6 +14,9 @@ import { ErrorHandlerService } from './services/error-handler.service';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { CustomPaginator } from './classes/custom-paginator';
 import { environment } from 'src/environments/environment';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
+import { MatDatepickerIntl } from '@angular/material/datepicker';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 @NgModule({
     imports: [
@@ -23,6 +26,7 @@ import { environment } from 'src/environments/environment';
         MatIconModule,
         MatDialogModule,
         MatSnackBarModule,
+        MatMomentDateModule,
         HttpClientModule,
         LoggerModule.forRoot({
             level: environment.production
@@ -48,7 +52,8 @@ import { environment } from 'src/environments/environment';
         {
             provide: ErrorHandler,
             useClass: ErrorHandlerService
-        }
+        },
+        { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' }
         /* 
     {
       provide: HTTP_INTERCEPTORS,
