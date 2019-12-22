@@ -7,6 +7,8 @@ import { OperationTableComponent } from './operation-table/operation-table.compo
 import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
 import { OperationRouteDiagramComponent } from './operation-route-diagram/operation-route-diagram.component';
 import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
+import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
+import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
 
 const routes: Routes = [
     {
@@ -21,6 +23,17 @@ const routes: Routes = [
             date: moment()
                 .subtract(moment().hour() < 4 ? 1 : 0)
                 .format('YYYY-MM-DD')
+        }
+    },
+    {
+        path: 'past-time',
+        component: OperationPastTimeComponent,
+        resolve: {
+            from: OperationPastTimeResolverService
+        },
+        runGuardsAndResolvers: 'always',
+        data: {
+            title: '過去の運用情報'
         }
     },
     {
