@@ -133,6 +133,32 @@ export class OperationApiService {
             );
     }
 
+    getOperationSightings(params?: {
+        start_sighting_time?: string;
+        end_sighting_time?: string;
+    }): Observable<IOperationSighting[]> {
+        return this.http
+            .get(this.apiUrl2, {
+                params: {
+                    ...params,
+                    order: 'sighting_time'
+                }
+            })
+            .pipe(
+                map(
+                    (data: {
+                        operation_sightings: ReadOperationSightingDto[];
+                    }) => {
+                        return data.operation_sightings.map(o =>
+                            OperationSightingModel.readOperationSightingDtoImpl(
+                                o
+                            )
+                        );
+                    }
+                )
+            );
+    }
+
     getOperationsAllLatestSightings(): Observable<IOperationSighting[]> {
         return this.http.get(this.apiUrl + '/all/latest-sightings').pipe(
             map(data => {

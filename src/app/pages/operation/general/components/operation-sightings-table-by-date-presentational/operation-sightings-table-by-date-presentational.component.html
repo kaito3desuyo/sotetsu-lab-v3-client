@@ -1,0 +1,126 @@
+<mat-card>
+    <mat-card-content>
+        <div fxLayout="row" *ngIf="calendars.length">
+            <div class="formation">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>編成</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let formation of formations">
+                            <td>{{ formation.formationNumber }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="operation-sighting-by-date">
+                <table>
+                    <thead>
+                        <tr>
+                            <th *ngFor="let calendar of calendars">
+                                {{ calendar.date.format('MM/DD') }}<br />
+                                <small>{{
+                                    calendar.calendar.calendarName
+                                }}</small>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let formation of formations">
+                            <td *ngFor="let calendar of calendars">
+                                <ng-container
+                                    *ngIf="
+                                        groupedByDate[formation.id] &&
+                                        groupedByDate[formation.id][
+                                            calendar.date.format('YYYY-MM-DD')
+                                        ]
+                                    "
+                                >
+                                    <div
+                                        fxLayout="row"
+                                        fxLayoutAlign="start center"
+                                        fxLayoutGap="8px"
+                                    >
+                                        <ng-container
+                                            *ngFor="
+                                                let sighting of groupedByDate[
+                                                    formation.id
+                                                ][
+                                                    calendar.date.format(
+                                                        'YYYY-MM-DD'
+                                                    )
+                                                ];
+                                                let i = index
+                                            "
+                                        >
+                                            <div
+                                                class="operation-number-circle"
+                                                [ngStyle]="{
+                                                    background: getOperationNumberColor(
+                                                        sighting?.operation
+                                                            ?.operationNumber
+                                                    )
+                                                }"
+                                                [matTooltip]="
+                                                    convertMoment(
+                                                        sighting?.sightingTime
+                                                    ).format(
+                                                        '目撃：YYYY/MM/DD HH:mm:ss'
+                                                    )
+                                                "
+                                            >
+                                                <ng-container
+                                                    *ngIf="
+                                                        sighting?.operation
+                                                            ?.operationNumber ===
+                                                        '100'
+                                                    "
+                                                >
+                                                    <div
+                                                        fxLayout="row"
+                                                        fxLayoutAlign="center center"
+                                                    >
+                                                        <span>
+                                                            休
+                                                        </span>
+                                                    </div>
+                                                </ng-container>
+                                                <ng-container
+                                                    *ngIf="
+                                                        sighting?.operation
+                                                            ?.operationNumber !==
+                                                        '100'
+                                                    "
+                                                >
+                                                    <a
+                                                        routerLink="/operation/route-diagram/{{
+                                                            sighting?.operation
+                                                                ?.id
+                                                        }}"
+                                                        fxLayout="row"
+                                                        fxLayoutAlign="center center"
+                                                    >
+                                                        <span>
+                                                            {{
+                                                                sighting
+                                                                    ?.operation
+                                                                    ?.operationNumber
+                                                            }}
+                                                        </span>
+                                                    </a>
+                                                </ng-container>
+                                            </div>
+                                        </ng-container>
+                                    </div>
+                                </ng-container>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p *ngIf="!calendars.length">基準日と日数を設定して検索してください</p>
+    </mat-card-content>
+</mat-card>
