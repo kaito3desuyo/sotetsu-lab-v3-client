@@ -4,6 +4,13 @@ import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { tap, map } from 'rxjs/operators';
 import { Moment } from 'moment';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { IFormation } from 'src/app/general/interfaces/formation';
+import { FormationApiService } from 'src/app/general/api/formation-api.service';
+import { FormationModel } from 'src/app/general/models/formation/formation-model';
+import { cloneDeep } from 'lodash';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
+import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 
 @Injectable()
 export class OperationPastTimeService {
@@ -21,6 +28,18 @@ export class OperationPastTimeService {
         this._days$.next(days);
     }
 
+    private _calendars$: BehaviorSubject<
+        { date: Moment; calendar: ICalendar }[]
+    > = new BehaviorSubject<{ date: Moment; calendar: ICalendar }[]>(null);
+    calendars$: Observable<
+        { date: Moment; calendar: ICalendar }[]
+    > = this._calendars$.asObservable();
+
+    private _formations$: BehaviorSubject<IFormation[]> = new BehaviorSubject<
+        IFormation[]
+    >([]);
+    formations$: Observable<IFormation[]> = this._formations$.asObservable();
+
     private _operationSightings$: BehaviorSubject<
         IOperationSighting[]
     > = new BehaviorSubject<IOperationSighting[]>([]);
@@ -28,24 +47,56 @@ export class OperationPastTimeService {
         IOperationSighting[]
     > = this._operationSightings$.asObservable();
 
-    constructor(private operationApi: OperationApiService) {}
+    constructor(
+        private calendarApi: CalendarApiService,
+        private formationApi: FormationApiService,
+        private operationApi: OperationApiService
+    ) {}
+
+    fetchFormations(): Observable<void> {
+        if (!this._referenceDate$.getValue() || !this._days$.getValue()) {
+            this._operationSightings$.next([]);
+            return of();
+        }
+
+        const referenceDate = cloneDeep(this._referenceDate$.getValue());
+        const start = referenceDate.format('YYYY-MM-DD');
+        const end = referenceDate
+            .add(this._days$.getValue() - 1, 'days')
+            .format('YYYY-MM-DD');
+
+        return this.formationApi
+            .searchFormations({
+                start_date: start,
+                end_date: end
+            })
+            .pipe(
+                map(data =>
+                    data.formations.map(o =>
+                        FormationModel.readFormationDtoImpl(o)
+                    )
+                ),
+                tap(data => {
+                    this._formations$.next(data);
+                }),
+                map(() => null)
+            );
+    }
 
     fetchOperationSightings(): Observable<void> {
         if (!this._referenceDate$.getValue() || !this._days$.getValue()) {
             this._operationSightings$.next([]);
-            return;
+            return of();
         }
 
-        const start = this._referenceDate$
-            .getValue()
+        const referenceDate = cloneDeep(this._referenceDate$.getValue());
+        const start = referenceDate
             .hour(4)
             .minute(0)
             .second(0)
             .millisecond(0)
             .toISOString();
-
-        const end = this._referenceDate$
-            .getValue()
+        const end = referenceDate
             .hour(4)
             .minute(0)
             .second(0)
@@ -64,5 +115,38 @@ export class OperationPastTimeService {
                 }),
                 map(() => null)
             );
+    }
+
+    async fetchCalendars(): Promise<void> {
+        const days = this._days$.getValue();
+        const promises: Promise<{ date: Moment; calendar: ICalendar }>[] = [];
+
+        for (let i = 0; i < days; i++) {
+            const referenceDate = cloneDeep(this._referenceDate$.getValue());
+            const target = referenceDate.add(i, 'days');
+
+            promises.push(
+                this.calendarApi
+                    .searchCalendars({
+                        date: target.format('YYYY-MM-DD')
+                    })
+                    .pipe(
+                        map(data =>
+                            data.calendars.map(o =>
+                                CalendarModel.readCalendarDtoImpl(o)
+                            )
+                        ),
+                        map(data => {
+                            return {
+                                date: target,
+                                calendar: data[0]
+                            };
+                        })
+                    )
+                    .toPromise()
+            );
+        }
+
+        this._calendars$.next(await Promise.all(promises));
     }
 }

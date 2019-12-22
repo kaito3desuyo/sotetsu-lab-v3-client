@@ -139,7 +139,10 @@ export class OperationApiService {
     }): Observable<IOperationSighting[]> {
         return this.http
             .get(this.apiUrl2, {
-                params
+                params: {
+                    ...params,
+                    order: 'sighting_time'
+                }
             })
             .pipe(
                 map(
