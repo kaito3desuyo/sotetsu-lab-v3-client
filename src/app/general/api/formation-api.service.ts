@@ -21,6 +21,8 @@ export class FormationApiService {
         formation_number?: string;
         vehicle_number?: string;
         date?: string;
+        start_date?: string;
+        end_date?: string;
     }): Observable<{ formations: ReadFormationDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
