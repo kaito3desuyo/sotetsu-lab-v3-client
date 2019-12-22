@@ -11,7 +11,6 @@ export class OperationPastTimeResolverService
     constructor(private operationPastTimeService: OperationPastTimeService) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        console.log(route);
         this.operationPastTimeService.referenceDate = moment(
             route.paramMap.get('reference_date'),
             'YYYY-MM-DD'
@@ -19,6 +18,8 @@ export class OperationPastTimeResolverService
         this.operationPastTimeService.days = +route.paramMap.get('days');
 
         return forkJoin([
+            this.operationPastTimeService.fetchCalendars(),
+            this.operationPastTimeService.fetchFormations(),
             this.operationPastTimeService.fetchOperationSightings()
         ]).pipe(map(() => null));
     }

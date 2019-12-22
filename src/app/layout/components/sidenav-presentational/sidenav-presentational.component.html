@@ -1,34 +1,35 @@
-<mat-nav-list>
-  <a mat-list-item routerLink="/">
-    TOP
-  </a>
-  <h3 matSubheader>時刻表</h3>
-  <mat-form-field class="px-16">
-    <mat-select placeholder="駅名" [formControl]="stationId">
-      <mat-option [value]="null">
-        選択しない（全線検索）
-      </mat-option>
-      <mat-optgroup
-        *ngFor="let route of stationsSelectList"
-        [label]="route.routeName"
-      >
-        <mat-option
-          *ngFor="let station of route.stations"
-          [value]="station.value"
-          >{{ station.label }}</mat-option
-        >
-      </mat-optgroup>
-    </mat-select>
-  </mat-form-field>
-  <a mat-list-item [routerLink]="upTimetableLink | async">
-    上り
-  </a>
-  <a mat-list-item [routerLink]="downTimetableLink | async">
-    下り
-  </a>
-  <h3 matSubheader>運用情報</h3>
-  <a mat-list-item routerLink="/operation/real-time">リアルタイム運用情報</a>
-  <a mat-list-item [routerLink]="'/operation/table/' + todaysCalendarId">
-    運用表
-  </a>
+<mat-nav-list fxLayout="column">
+    <a mat-list-item routerLink="/">
+        TOP
+    </a>
+    <h3 matSubheader>時刻表</h3>
+    <mat-form-field class="px-16">
+        <mat-select placeholder="駅名" [formControl]="stationId">
+            <mat-option [value]="null">
+                選択しない（全線検索）
+            </mat-option>
+            <mat-optgroup
+                *ngFor="let route of stationsSelectList"
+                [label]="route.routeName"
+            >
+                <mat-option
+                    *ngFor="let station of route.stations"
+                    [value]="station.value"
+                    >{{ station.label }}</mat-option
+                >
+            </mat-optgroup>
+        </mat-select>
+    </mat-form-field>
+    <a mat-list-item [routerLink]="upTimetableLink | async">
+        上り
+    </a>
+    <a mat-list-item [routerLink]="downTimetableLink | async">
+        下り
+    </a>
+    <h3 matSubheader>運用情報</h3>
+    <a mat-list-item routerLink="/operation/real-time">リアルタイム運用情報</a>
+    <a mat-list-item routerLink="/operation/past-time">過去の運用情報</a>
+    <a mat-list-item [routerLink]="'/operation/table/' + todaysCalendarId">
+        運用表
+    </a>
 </mat-nav-list>

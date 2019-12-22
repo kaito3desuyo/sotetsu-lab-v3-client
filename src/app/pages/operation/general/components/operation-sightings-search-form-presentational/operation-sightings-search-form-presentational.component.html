@@ -4,23 +4,30 @@
     fxLayoutAlign="start center"
     fxLayoutGap="8px"
 >
-    <mat-form-field>
+    <mat-form-field fxFlex="108px">
         <input
             matInput
             [matDatepicker]="picker"
+            [max]="maxDate"
             placeholder="基準日"
             formControlName="referenceDate"
         />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="searchForm.get('referenceDate').hasError('required')">
+            必須項目です
+        </mat-error>
     </mat-form-field>
     <span>
-        から
+        ～
     </span>
     <mat-form-field fxFlex="48px">
         <input matInput type="number" min="1" max="30" formControlName="days" />
+        <mat-error *ngIf="searchForm.get('days').hasError('required')">
+            必須項目
+        </mat-error>
     </mat-form-field>
-    <span>日間の目撃情報を</span>
+    <span>日間を</span>
     <button
         mat-raised-button
         color="primary"

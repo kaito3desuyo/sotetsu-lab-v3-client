@@ -48,6 +48,7 @@ import { OperationPastTimeService } from './general/services/operation-past-time
 import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
 import { OperationSightingsTableByDateContainerComponent } from './general/components/operation-sightings-table-by-date-container/operation-sightings-table-by-date-container.component';
 import { OperationSightingsTableByDatePresentationalComponent } from './general/components/operation-sightings-table-by-date-presentational/operation-sightings-table-by-date-presentational.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
     declarations: [
@@ -89,6 +90,7 @@ import { OperationSightingsTableByDatePresentationalComponent } from './general/
         MatSortModule,
         MatIconModule,
         MatToolbarModule,
+        MatTooltipModule,
         MatSlideToggleModule,
         MatDatepickerModule,
         AppSharedModule,
