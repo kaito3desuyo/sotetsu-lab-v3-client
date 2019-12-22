@@ -1,0 +1,5 @@
+<app-operation-sightings-search-form-presentational
+    [referenceDate]="referenceDate$ | async"
+    [days]="days$ | async"
+    (clickSearch)="onReceiveClickSearch($event)"
+></app-operation-sightings-search-form-presentational>

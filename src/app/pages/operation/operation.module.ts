@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
 import { MatSortModule } from '@angular/material/sort';
@@ -40,17 +41,30 @@ import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { OperationSightingsControlPanelContainerComponent } from './general/components/operation-sightings-control-panel-container/operation-sightings-control-panel-container.component';
 import { OperationSightingsControlPanelPresentationalComponent } from './general/components/operation-sightings-control-panel-presentational/operation-sightings-control-panel-presentational.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
+import { OperationSightingsSearchFormContainerComponent } from './general/components/operation-sightings-search-form-container/operation-sightings-search-form-container.component';
+import { OperationSightingsSearchFormPresentationalComponent } from './general/components/operation-sightings-search-form-presentational/operation-sightings-search-form-presentational.component';
+import { OperationPastTimeService } from './general/services/operation-past-time.service';
+import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
+import { OperationSightingsTableByDateContainerComponent } from './general/components/operation-sightings-table-by-date-container/operation-sightings-table-by-date-container.component';
+import { OperationSightingsTableByDatePresentationalComponent } from './general/components/operation-sightings-table-by-date-presentational/operation-sightings-table-by-date-presentational.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
     declarations: [
         OperationRealTimeComponent,
+        OperationPastTimeComponent,
         OperationSightingsTableByOperationContainerComponent,
         OperationSightingsTableByFormationContainerComponent,
+        OperationSightingsTableByDateContainerComponent,
         OperationSightingsTablePresentationalComponent,
+        OperationSightingsTableByDatePresentationalComponent,
         OperationSightingsTableLegendContainerComponent,
         OperationSightingsTableLegendPresentationalComponent,
         OperationSightingsControlPanelContainerComponent,
         OperationSightingsControlPanelPresentationalComponent,
+        OperationSightingsSearchFormContainerComponent,
+        OperationSightingsSearchFormPresentationalComponent,
         OperationTableComponent,
         OperationTableTitleContainerComponent,
         OperationTableTitlePresentationalComponent,
@@ -76,7 +90,9 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
         MatSortModule,
         MatIconModule,
         MatToolbarModule,
+        MatTooltipModule,
         MatSlideToggleModule,
+        MatDatepickerModule,
         AppSharedModule,
         OperationRoutingModule,
         OperationSharedModule
@@ -84,6 +100,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     providers: [
         OperationRealTimeService,
         OperationRealTimeResolverService,
+        OperationPastTimeService,
+        OperationPastTimeResolverService,
         OperationTableService,
         OperationTableResolverService,
         OperationRouteDiagramService,
