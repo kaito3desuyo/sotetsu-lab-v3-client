@@ -2,17 +2,19 @@ import { OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 export class BaseService implements OnDestroy {
-    subscriptions: Subscription[] = [];
+    private _subscription: Subscription = new Subscription();
+
+    get subscription(): Subscription {
+        return this._subscription;
+    }
 
     set subscription(sub: Subscription) {
-        this.subscriptions.push(sub);
+        this._subscription.add(sub);
     }
 
     ngOnDestroy(): void {
-        if (this.subscriptions && this.subscriptions.length) {
-            this.subscriptions.forEach(sub => {
-                sub.unsubscribe();
-            });
+        if (this._subscription) {
+            this._subscription.unsubscribe();
         }
     }
 }

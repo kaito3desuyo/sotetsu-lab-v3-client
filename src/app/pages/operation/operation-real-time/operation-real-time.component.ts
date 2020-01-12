@@ -1,7 +1,6 @@
-import { Component, OnInit, Inject, Injector } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, Inject, Injector } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from 'src/app/general/classes/base-component';
-import { OperationRealTimeService } from '../general/services/operation-real-time.service';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { TitleService } from 'src/app/general/services/title.service';
 
