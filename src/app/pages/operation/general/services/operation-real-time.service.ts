@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
-import { map, tap, flatMap, delay, skip, take } from 'rxjs/operators';
+import { map, tap, flatMap, skip, take } from 'rxjs/operators';
 import find from 'lodash/find';
 import moment, { Moment } from 'moment';
 import { IOperationSightingTable } from '../interfaces/operation-sighting-table';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
-import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
 import { BaseService } from 'src/app/general/classes/base-service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
