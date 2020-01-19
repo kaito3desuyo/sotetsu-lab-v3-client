@@ -1,18 +1,21 @@
 :host {
-  h4 {
-    text-align: center;
-  }
-  span.monoscape {
-    font-feature-settings: 'hwid' on;
-  }
-  span.station-name {
-    width: 4em;
-    font-feature-settings: initial;
-    text-align: center;
-  }
-  span.trip-class-name {
-    width: 2em;
-    font-feature-settings: initial;
-    text-align: center;
-  }
+    section {
+        width: 294px;
+    }
+    h4 {
+        text-align: center;
+    }
+    span.monoscape {
+        font-feature-settings: 'hwid' on;
+    }
+    span.station-name {
+        width: 4em;
+        font-feature-settings: initial;
+        text-align: center;
+    }
+    span.trip-class-name {
+        width: 2em;
+        font-feature-settings: initial;
+        text-align: center;
+    }
 }
