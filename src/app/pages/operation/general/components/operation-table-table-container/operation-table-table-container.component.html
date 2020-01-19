@@ -1,19 +1,18 @@
 <div
-  fxLayout="row wrap"
-  fxLayoutAlign="center start"
-  style="overflow-x: visible"
+    fxLayout="row wrap"
+    fxLayoutAlign="center start"
+    style="overflow-x: visible"
 >
-  <app-operation-table-table-presentational
-    *ngFor="let operationTrips of operationTrips$ | async"
-    [operationTrips]="operationTrips"
-    [stations]="stations$ | async"
-    [tripClasses]="tripClasses$ | async"
-    [calendar]="calendar$ | async"
-  >
-  </app-operation-table-table-presentational>
-  <div
-    *ngFor="let operationTrips of operationTrips$ | async"
-    class="mx-12"
-    style="width: 280px; height: 0"
-  ></div>
+    <app-operation-table-table-presentational
+        *ngFor="let operationTrips of operationTrips$ | async"
+        [operationTrips]="operationTrips"
+        [stations]="stations$ | async"
+        [tripClasses]="tripClasses$ | async"
+        [calendar]="calendar$ | async"
+    >
+    </app-operation-table-table-presentational>
+    <div
+        *ngFor="let operationTrips of operationTrips$ | async"
+        class="mx-12 blank"
+    ></div>
 </div>
