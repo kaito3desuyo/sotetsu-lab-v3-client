@@ -1,77 +1,108 @@
 <div fxLayout="row" style="overflow-x: scroll;">
-  <table>
-    <tr *ngFor="let row of data">
-      <th class="hour">{{ row.hour }}</th>
-      <td *ngFor="let time of row.times">
-        <div
-          fxLayout="row"
-          fxLayout="row"
-          fxLayoutAlign="start center"
-          fxLayoutGap="8px"
-        >
-          <a
-            class="minute"
-            [ngClass]="time.mode === 'arrival' ? 'underline' : 'none'"
-            [ngStyle]="{ color: time.tripClassColor }"
-            [routerLink]="[
-              '/timetable/' + calendarId + '/all-line',
-              {
-                trip_direction: time.tripDirection,
-                trip_block_id: time.tripBlockId
-              }
-            ]"
-          >
-            <span>{{ time.minute }}</span>
-          </a>
-          <div fxLayout="column">
-            <div fxLayout="row" fxLayoutGap="8px">
-              <div fxLayout="column">
-                <span [ngStyle]="{ color: time.tripClassColor }">
-                  {{ time.tripClassName }}
-                </span>
-                <span>{{
-                  time.lastStop
-                    | findById
-                      : { collection: stations, property: 'stationName' }
-                }}</span>
-              </div>
-              <div
-                fxLayout="column"
-                *ngFor="let sighting of time.operationSightings"
-              >
-                <span> {{ sighting.operationNumber }}運 </span>
-                <span>
-                  {{ sighting.formationNumber || '不明'
-                  }}{{
-                    sighting.formationNumber &&
-                    calcDiffSightingTimeToCurrentTime(sighting.sightingTime) !==
-                      0
-                      ? '?'
-                      : ''
-                  }}
-                </span>
-              </div>
-            </div>
-            <ng-container *ngFor="let trips of time.sameTripBlockTrips">
-              <small>
-                {{
-                  trips.times[0]?.stationId
-                    | findById
-                      : { collection: stations, property: 'stationName' }
-                }}から<br />
-                {{ trips.tripClass.tripClassName }}
-                {{
-                  trips.times[trips.times.length - 1]?.stationId
-                    | findById
-                      : { collection: stations, property: 'stationName' }
-                }}
-                行き
-              </small>
-            </ng-container>
-          </div>
-        </div>
-      </td>
-      <td *ngFor="let blank of maxColumnsCount - row.times.length | range"></td>
-    </tr>
-  </table>
+    <table>
+        <tr *ngFor="let row of data">
+            <th class="hour">{{ row.hour }}</th>
+            <td *ngFor="let time of row.times">
+                <div
+                    fxLayout="row"
+                    fxLayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="8px"
+                >
+                    <a
+                        class="minute"
+                        [ngClass]="
+                            time.mode === 'arrival' ? 'underline' : 'none'
+                        "
+                        [ngStyle]="{ color: time.tripClassColor }"
+                        [routerLink]="[
+                            '/timetable/' + calendarId + '/all-line',
+                            {
+                                trip_direction: time.tripDirection,
+                                trip_block_id: time.tripBlockId
+                            }
+                        ]"
+                    >
+                        <span>{{ time.minute }}</span>
+                    </a>
+                    <div fxLayout="column">
+                        <div
+                            fxLayout="row"
+                            fxLayoutAlign="start center"
+                            fxLayoutGap="8px"
+                        >
+                            <div fxLayout="column">
+                                <small>
+                                    {{ time.tripNumber }}
+                                </small>
+                                <span
+                                    [ngStyle]="{ color: time.tripClassColor }"
+                                >
+                                    {{ time.tripClassName }}
+                                </span>
+                                <span>
+                                    {{
+                                        time.lastStop()
+                                            | findById
+                                                : {
+                                                      collection: stations,
+                                                      property: 'stationName'
+                                                  }
+                                    }}
+                                </span>
+                            </div>
+                            <div
+                                fxLayout="column"
+                                *ngFor="let sighting of time.operationSightings"
+                            >
+                                <span> {{ sighting.operationNumber }}運 </span>
+                                <span>
+                                    {{ sighting.formationNumber || '不明'
+                                    }}{{
+                                        sighting.formationNumber &&
+                                        calcDiffSightingTimeToCurrentTime(
+                                            sighting.sightingTime
+                                        ) !== 0
+                                            ? '?'
+                                            : ''
+                                    }}
+                                </span>
+                            </div>
+                        </div>
+                        <ng-container
+                            *ngFor="let trips of time.sameTripBlockTrips"
+                        >
+                            <small>
+                                {{
+                                    trips.times[0]?.stationId
+                                        | findById
+                                            : {
+                                                  collection: stations,
+                                                  property: 'stationName'
+                                              }
+                                }}から<br />
+                                {{ trips.tripNumber }}
+                                {{ trips.tripClass.tripClassName }}
+                                <!--
+                                {{
+                                    trips.times[trips.times.length - 1]
+                                        ?.stationId
+                                        | findById
+                                            : {
+                                                  collection: stations,
+                                                  property: 'stationName'
+                                              }
+                                }}
+                                行き
+                                -->
+                            </small>
+                        </ng-container>
+                    </div>
+                </div>
+            </td>
+            <td
+                *ngFor="let blank of maxColumnsCount - row.times.length | range"
+            ></td>
+        </tr>
+    </table>
 </div>
