@@ -80,9 +80,15 @@
                                                   collection: stations,
                                                   property: 'stationName'
                                               }
-                                }}から<br />
+                                }}より<br />
                                 {{ trips.tripNumber }}
-                                {{ trips.tripClass.tripClassName }}
+                                <span
+                                    [ngStyle]="{
+                                        color: trips.tripClass.tripClassColor
+                                    }"
+                                >
+                                    {{ trips.tripClass.tripClassName }}
+                                </span>
                                 <!--
                                 {{
                                     trips.times[trips.times.length - 1]
