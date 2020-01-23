@@ -88,55 +88,75 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                             tripClassName: time.trip.tripClass.tripClassName,
                             tripClassColor: time.trip.tripClass.tripClassColor,
                             lastStop: () => {
-                                if (time.trip.tripBlock.trips.length) {
-                                    const finalTrip = find(
-                                        time.trip.tripBlock.trips,
-                                        (trip, _, array) => {
-                                            const currentTripFinalStop = find(
-                                                trip.times,
-                                                currentTime =>
-                                                    currentTime.departureTime ===
-                                                        null &&
-                                                    currentTime.arrivalTime !==
-                                                        null
-                                            );
-                                            const isExist = some(
-                                                array,
-                                                searchTrip =>
-                                                    some(
-                                                        searchTrip.times,
-                                                        t =>
-                                                            t.departureTime !==
-                                                                null &&
-                                                            t.arrivalTime ===
-                                                                null &&
-                                                            t.stationId ===
-                                                                currentTripFinalStop.stationId
-                                                    )
-                                            );
-                                            return !isExist;
-                                        }
-                                    );
+                                const finalTrip = find(
+                                    time.trip.tripBlock.trips.filter(
+                                        blockTrip =>
+                                            moment(
+                                                blockTrip.times[0]
+                                                    .departureTime,
+                                                'HH:mm:ss'
+                                            ).add(
+                                                blockTrip.times[0]
+                                                    .departureDays - 1,
+                                                'days'
+                                            ) >
+                                            moment(
+                                                time.trip.times[0]
+                                                    .departureTime,
+                                                'HH:mm:ss'
+                                            ).add(
+                                                time.trip.times[0]
+                                                    .departureDays - 1,
+                                                'days'
+                                            )
+                                    ),
+                                    (trip, _, array) => {
+                                        const currentTripFinalStop = find(
+                                            trip.times,
+                                            currentTime =>
+                                                currentTime.departureTime ===
+                                                    null &&
+                                                currentTime.arrivalTime !== null
+                                        );
+                                        const isExist = some(
+                                            array,
+                                            searchTrip =>
+                                                some(
+                                                    searchTrip.times,
+                                                    t =>
+                                                        t.departureTime !==
+                                                            null &&
+                                                        t.arrivalTime ===
+                                                            null &&
+                                                        t.stationId ===
+                                                            currentTripFinalStop.stationId
+                                                )
+                                        );
+                                        return !isExist;
+                                    }
+                                );
 
-                                    const finalStop = find(
-                                        finalTrip.times,
-                                        finalTripTime =>
-                                            finalTripTime.departureTime ===
-                                                null &&
-                                            finalTripTime.arrivalTime !== null
-                                    );
-
-                                    return finalStop.stationId || null;
-                                } else {
-                                    const finalStop = find(
+                                if (!finalTrip) {
+                                    const finalStopOfCurrentTrip = find(
                                         time.trip.times,
                                         t =>
                                             t.departureTime === null &&
                                             t.arrivalTime !== null
                                     );
 
-                                    return finalStop.stationId || null;
+                                    return (
+                                        finalStopOfCurrentTrip.stationId || null
+                                    );
                                 }
+
+                                const finalStopOfFinalTrip = find(
+                                    finalTrip.times,
+                                    finalTripTime =>
+                                        finalTripTime.departureTime === null &&
+                                        finalTripTime.arrivalTime !== null
+                                );
+
+                                return finalStopOfFinalTrip.stationId || null;
                             },
 
                             /*time.trip.tripOperationLists[0]
@@ -189,7 +209,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
 
             const sorted = concat([], ...mapped).map(row => ({
                 ...row,
-                times: sortBy(row.times, o => o.minute)
+                times: sortBy(row.times, ['minute', 'mode'])
             }));
 
             this.data = sorted;
