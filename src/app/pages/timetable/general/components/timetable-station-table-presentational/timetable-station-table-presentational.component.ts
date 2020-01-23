@@ -15,6 +15,7 @@ import find from 'lodash/find';
 import sortBy from 'lodash/sortBy';
 import { ITrip } from 'src/app/general/interfaces/trip';
 import { IStation } from 'src/app/general/interfaces/station';
+import some from 'lodash/some';
 
 @Component({
     selector: 'app-timetable-station-table-presentational',
@@ -81,14 +82,62 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                                       'mm'
                                   )
                                 : null,
+                            tripNumber: time.trip.tripNumber,
                             tripDirection: time.trip.tripDirection,
                             tripBlockId: time.trip.tripBlockId,
                             tripClassName: time.trip.tripClass.tripClassName,
                             tripClassColor: time.trip.tripClass.tripClassColor,
-                            lastStop: time.trip.times.length
-                                ? time.trip.times[time.trip.times.length - 1]
-                                      .stationId
-                                : null,
+                            lastStop: () => {
+                                if (time.trip.tripBlock.trips.length) {
+                                    const finalTrip = find(
+                                        time.trip.tripBlock.trips,
+                                        (trip, _, array) => {
+                                            const currentTripFinalStop = find(
+                                                trip.times,
+                                                currentTime =>
+                                                    currentTime.departureTime ===
+                                                        null &&
+                                                    currentTime.arrivalTime !==
+                                                        null
+                                            );
+                                            const isExist = some(
+                                                array,
+                                                searchTrip =>
+                                                    some(
+                                                        searchTrip.times,
+                                                        t =>
+                                                            t.departureTime !==
+                                                                null &&
+                                                            t.arrivalTime ===
+                                                                null &&
+                                                            t.stationId ===
+                                                                currentTripFinalStop.stationId
+                                                    )
+                                            );
+                                            return !isExist;
+                                        }
+                                    );
+
+                                    const finalStop = find(
+                                        finalTrip.times,
+                                        finalTripTime =>
+                                            finalTripTime.departureTime ===
+                                                null &&
+                                            finalTripTime.arrivalTime !== null
+                                    );
+
+                                    return finalStop.stationId || null;
+                                } else {
+                                    const finalStop = find(
+                                        time.trip.times,
+                                        t =>
+                                            t.departureTime === null &&
+                                            t.arrivalTime !== null
+                                    );
+
+                                    return finalStop.stationId || null;
+                                }
+                            },
 
                             /*time.trip.tripOperationLists[0]
                 ? time.trip.tripOperationLists[0].endStation.stationName
@@ -168,7 +217,12 @@ interface ITimetableStationTable {
     times: {
         mode: string; // 'departure' | 'arrival';
         minute: string;
-        lastStop: string;
+        tripNumber: string;
+        tripDirection: number;
+        tripBlockId: string;
+        tripClassName: string;
+        tripClassColor: string;
+        lastStop: () => string;
         sameTripBlockTrips: ITrip[];
         operationSightings: {
             operationNumber: string;
