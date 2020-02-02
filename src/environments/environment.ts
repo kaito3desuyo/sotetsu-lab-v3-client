@@ -6,7 +6,7 @@ export const environment = {
     production: false,
     apiUrl: 'http://localhost:8080/api',
     // backendUrl: 'http://localhost:8080',
-    socketUrl: 'http://localhost:3000',
+    socketUrl: 'wss://lxac6g1ue7.execute-api.ap-northeast-1.amazonaws.com/Prod',
     analytics: {
         id: 'UA-38754264-6' // IDを設定する、environment.prod.tsにも
     }

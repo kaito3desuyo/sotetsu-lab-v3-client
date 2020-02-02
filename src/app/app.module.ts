@@ -14,7 +14,10 @@ import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 
 const socketConfig: SocketIoConfig = {
     url: environment.socketUrl,
-    options: {}
+    options: {
+        transports: ['websocket'],
+        path: '/Prod'
+    }
 };
 
 @NgModule({
@@ -29,8 +32,8 @@ const socketConfig: SocketIoConfig = {
         environment.production ? [] : AkitaNgDevtools.forRoot(),
         ServiceWorkerModule.register('ngsw-worker.js', {
             enabled: environment.production
-        }),
-        SocketIoModule.forRoot(socketConfig)
+        })
+        // SocketIoModule.forRoot(socketConfig)
     ],
     bootstrap: [AppComponent]
 })
