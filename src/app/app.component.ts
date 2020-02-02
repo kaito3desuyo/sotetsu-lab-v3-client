@@ -1,24 +1,26 @@
-import { Component, Inject, Injector, OnInit } from '@angular/core';
+import { Component, Inject, Injector, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
 import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
 import { ParamsService } from './state/params';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
+import { SocketService } from './general/services/socket.service';
 
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
-export class AppComponent extends BaseComponent {
+export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
     constructor(
         @Inject(Injector) injector: Injector,
         private router: Router,
         private gaService: GoogleAnalyticsService,
         private appUpdateService: AppUpdateService,
         private paramsService: ParamsService,
-        private loadingService: LoadingService
+        private loadingService: LoadingService,
+        private socketService: SocketService
     ) {
         super(injector);
 
@@ -32,5 +34,13 @@ export class AppComponent extends BaseComponent {
             }
         });
         this.subscription = this.paramsService.fetch().subscribe();
+    }
+
+    ngOnInit(): void {
+        this.socketService.connect();
+    }
+
+    ngOnDestroy(): void {
+        this.socketService.disconnect();
     }
 }

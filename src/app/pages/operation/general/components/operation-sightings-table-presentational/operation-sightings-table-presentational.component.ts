@@ -86,4 +86,8 @@ export class OperationSightingsTablePresentationalComponent
                 'days'
             );
     }
+
+    trackByItem(index: number, value: IOperationSightingTable): string {
+        return value ? value.id : null;
+    }
 }

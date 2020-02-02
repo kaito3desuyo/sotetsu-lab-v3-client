@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { BehaviorSubject, Observable, zip, timer, forkJoin } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    zip,
+    timer,
+    forkJoin,
+    Subscription
+} from 'rxjs';
 import { map, tap, flatMap, skip, take } from 'rxjs/operators';
 import find from 'lodash/find';
 import moment, { Moment } from 'moment';
@@ -31,6 +38,7 @@ import { IOperationCurrentPosition } from 'src/app/general/interfaces/operation-
 import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
 import { ParamsQuery } from 'src/app/state/params';
 import { OperationSightingAddFormService } from 'src/app/shared/operation-shared/services/operation-sighting-add-form.service';
+import { cloneDeep } from 'lodash';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -112,6 +120,8 @@ export class OperationRealTimeService extends BaseService {
         IOperationSighting[]
     > = new BehaviorSubject<IOperationSighting[]>([]);
 
+    private socketSub: Subscription;
+
     constructor(
         private router: Router,
         private socketService: SocketService,
@@ -127,16 +137,16 @@ export class OperationRealTimeService extends BaseService {
     ) {
         super();
 
-        this.subscription = this.socketService
-            .on('sendSighting')
-            .subscribe(data => {
-                if (this.isAutoReloadEnabled) {
-                    this.notification.open('データが更新されました', 'OK');
-                    this.fetchSightingsLatest()
-                        .pipe(flatMap(() => this.generateTable()))
-                        .subscribe();
-                }
-            });
+        /*
+        this.subscription = this.socketService.on().subscribe(data => {
+            if (this.isAutoReloadEnabled) {
+                this.notification.open('データが更新されました', 'OK');
+                this.fetchSightingsLatest()
+                    .pipe(flatMap(() => this.generateTable()))
+                    .subscribe();
+            }
+        });
+        */
 
         this.subscription = this.operationSightingAddFormService.sendSightingEvent$.subscribe(
             () => {
@@ -155,6 +165,24 @@ export class OperationRealTimeService extends BaseService {
                 flatMap(() => this.generateTable())
             )
             .subscribe();
+    }
+
+    startSocketReceive(): void {
+        console.log('開始');
+        this.socketSub = this.socketService.on().subscribe(data => {
+            console.log(data);
+            if (this.isAutoReloadEnabled) {
+                this.notification.open('データが更新されました', 'OK');
+                this.fetchSightingsLatest()
+                    .pipe(flatMap(() => this.generateTable()))
+                    .subscribe();
+            }
+        });
+    }
+
+    stopSocketReceive(): void {
+        console.log('終了');
+        this.socketSub.unsubscribe();
     }
 
     /**
@@ -696,6 +724,7 @@ export class OperationRealTimeService extends BaseService {
 
                     if (!findSightings) {
                         return {
+                            id: null,
                             postedOperationNumber: null,
                             rotatedOperationNumber: null,
                             rotatedOperationId: null,
@@ -716,6 +745,7 @@ export class OperationRealTimeService extends BaseService {
                     );
 
                     return {
+                        id: findSightings.id,
                         postedOperationNumber: findSightings.operation
                             ? findSightings.operation.operationNumber
                             : null,
@@ -768,6 +798,7 @@ export class OperationRealTimeService extends BaseService {
                         );
 
                         return {
+                            id: null,
                             postedOperationNumber: null,
                             rotatedOperationNumber: data.operationNumber,
                             rotatedOperationId: find(
@@ -793,6 +824,7 @@ export class OperationRealTimeService extends BaseService {
                     );
 
                     return {
+                        id: findSightings.id,
                         postedOperationNumber:
                             findSightings.operation.operationNumber,
                         rotatedOperationNumber:
