@@ -8,42 +8,35 @@ import { Socket } from 'ngx-socket-io';
     providedIn: 'root'
 })
 export class SocketService {
-    // private readonly url = environment.socketUrl;
-    // private socket: SocketIOClient.Socket;
+    private readonly url = environment.socketUrl;
+    private conn: WebSocket;
 
-    constructor(private socket: Socket) {
-        console.log(socket);
+    connect(): void {
+        console.log('connected to socket server');
+        const conn = new WebSocket(this.url);
+        this.conn = conn;
     }
 
-    emit(emitName: string, data?: any): void {
-        this.socket.emit(emitName, data);
+    disconnect(): void {
+        console.log('disconnected to socket server');
+        this.conn.close();
     }
 
-    on(onName: string): Observable<unknown> {
-        return this.socket.fromEvent(onName);
-    }
-    /*
-    connect(namespace: string = ''): void {
-        this.socket = io(this.url + namespace, {
-            transports: ['websocket']
-        });
-    }
-
-    emit(emitName: string, data?: any): void {
-        this.socket.emit(emitName, data);
+    emit(action: string, data: any): void {
+        this.conn.send(
+            JSON.stringify({
+                action,
+                data: JSON.stringify(data)
+            })
+        );
     }
 
-    on(onName: string): Observable<any> {
+    on(): Observable<any> {
         const observable = new Observable(observer => {
-            this.socket.on(onName, (data: any) => {
-                observer.next(data);
-            });
-
-            return () => {
-                this.socket.disconnect();
+            this.conn.onmessage = e => {
+                observer.next(e);
             };
         });
         return observable;
     }
-    */
 }
