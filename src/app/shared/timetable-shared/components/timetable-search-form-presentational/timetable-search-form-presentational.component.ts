@@ -6,11 +6,14 @@ import {
     Output,
     EventEmitter,
     OnChanges,
-    SimpleChanges
+    SimpleChanges,
+    Inject,
+    Injector
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
+import { BaseComponent } from 'src/app/general/classes/base-component';
 
 @Component({
     selector: 'app-timetable-search-form-presentational',
@@ -18,7 +21,8 @@ import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
     styleUrls: ['./timetable-search-form-presentational.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TimetableSearchFormPresentationalComponent implements OnChanges {
+export class TimetableSearchFormPresentationalComponent extends BaseComponent
+    implements OnChanges {
     searchTimetableForm = this.fb.group({
         calendarId: ['', Validators.required],
         tripDirection: ['0', Validators.required],
@@ -34,16 +38,19 @@ export class TimetableSearchFormPresentationalComponent implements OnChanges {
     }[];
     @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
-    constructor(private fb: FormBuilder) {
-        this.searchTimetableForm
-            .get('isSearchStation')
-            .valueChanges.subscribe(bool => {
-                if (bool) {
-                    this.searchTimetableForm.get('stationId').enable();
-                } else {
-                    this.searchTimetableForm.get('stationId').disable();
-                }
-            });
+    constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+        super(injector);
+        if (this.searchTimetableForm.get('isSearchStation')) {
+            this.subscription = this.searchTimetableForm
+                .get('isSearchStation')
+                .valueChanges.subscribe(bool => {
+                    if (bool) {
+                        this.searchTimetableForm.get('stationId').enable();
+                    } else {
+                        this.searchTimetableForm.get('stationId').disable();
+                    }
+                });
+        }
     }
 
     ngOnChanges(changes: SimpleChanges): void {
