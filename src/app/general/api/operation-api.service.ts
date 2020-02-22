@@ -17,6 +17,7 @@ import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-ope
 export class OperationApiService {
     private apiUrl = environment.apiUrl + '/v1/operations';
     private apiUrl2 = environment.apiUrl + '/v1/operation-sightings';
+    private apiUrl3 = environment.apiUrl + '/v2/operation-sightings';
     constructor(private http: HttpClient) {}
 
     getOperationById(
@@ -189,7 +190,7 @@ export class OperationApiService {
         group_by_operations: ReadOperationSightingDto[];
     }> {
         return this.http
-            .get(this.apiUrl2 + '/latest', {
+            .get(this.apiUrl3 + '/latest', {
                 params
             })
             .pipe(
