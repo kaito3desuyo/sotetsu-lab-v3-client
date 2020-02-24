@@ -16,6 +16,7 @@ import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-ope
 })
 export class OperationApiService {
     private apiUrl = environment.apiUrl + '/v1/operations';
+    private apiUrlv2 = environment.apiUrl + '/v2/operations';
     private apiUrl2 = environment.apiUrl + '/v1/operation-sightings';
     private apiUrl3 = environment.apiUrl + '/v2/operation-sightings';
     constructor(private http: HttpClient) {}
@@ -110,7 +111,7 @@ export class OperationApiService {
         calendar_id: string;
     }): Observable<{ operations: ReadOperationDto[] }> {
         return this.http
-            .get(this.apiUrl + '/trips', {
+            .get(this.apiUrlv2 + '/trips', {
                 params
             })
             .pipe(map((data: { operations: ReadOperationDto[] }) => data));
