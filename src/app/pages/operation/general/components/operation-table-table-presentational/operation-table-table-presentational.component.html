@@ -41,27 +41,22 @@
                     <span class="station-name">
                         {{
                             findStationName(
-                                tripOperationList.trip.times[0].stationId
+                                tripOperationList.startTime.stationId
                             )
                         }}
                     </span>
                     <span class="monoscape">
                         <ng-container
-                            *ngIf="
-                                tripOperationList.trip.times[0].departureTime
-                            "
+                            *ngIf="tripOperationList.startTime.departureTime"
                         >
                             {{
                                 convertTimeToDateObject(
-                                    tripOperationList.trip.times[0]
-                                        .departureTime
+                                    tripOperationList.startTime.departureTime
                                 ) | date: 'HHmm'
                             }}
                         </ng-container>
                         <ng-container
-                            *ngIf="
-                                !tripOperationList.trip.times[0].departureTime
-                            "
+                            *ngIf="!tripOperationList.startTime.departureTime"
                         >
                             &nbsp;&nbsp;&nbsp;&nbsp;
                         </ng-container>
@@ -73,35 +68,21 @@
                 >
                     <span class="station-name">
                         {{
-                            findStationName(
-                                tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].stationId
-                            )
+                            findStationName(tripOperationList.endTime.stationId)
                         }}
                     </span>
                     <span class="monoscape">
                         <ng-container
-                            *ngIf="
-                                tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].arrivalTime
-                            "
+                            *ngIf="tripOperationList.endTime.arrivalTime"
                         >
                             {{
                                 convertTimeToDateObject(
-                                    tripOperationList.trip.times[
-                                        tripOperationList.trip.times.length - 1
-                                    ].arrivalTime
+                                    tripOperationList.endTime.arrivalTime
                                 ) | date: 'HHmm'
                             }}
                         </ng-container>
                         <ng-container
-                            *ngIf="
-                                !tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].arrivalTime
-                            "
+                            *ngIf="!tripOperationList.endTime.arrivalTime"
                         >
                             &nbsp;&nbsp;&nbsp;&nbsp;
                         </ng-container>
@@ -153,37 +134,23 @@
                     <span>→</span>
                     <span class="monoscape">
                         <ng-container
-                            *ngIf="
-                                tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].arrivalTime
-                            "
+                            *ngIf="tripOperationList.endTime.arrivalTime"
                         >
                             {{
                                 convertTimeToDateObject(
-                                    tripOperationList.trip.times[
-                                        tripOperationList.trip.times.length - 1
-                                    ].arrivalTime
+                                    tripOperationList.endTime.arrivalTime
                                 ) | date: 'HHmm'
                             }}
                         </ng-container>
                         <ng-container
-                            *ngIf="
-                                !tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].arrivalTime
-                            "
+                            *ngIf="!tripOperationList.endTime.arrivalTime"
                         >
                             &nbsp;&nbsp;&nbsp;&nbsp;
                         </ng-container>
                     </span>
                     <span class="station-name">
                         {{
-                            findStationName(
-                                tripOperationList.trip.times[
-                                    tripOperationList.trip.times.length - 1
-                                ].stationId
-                            )
+                            findStationName(tripOperationList.endTime.stationId)
                         }}
                     </span>
                 </ng-container>
@@ -193,21 +160,16 @@
                     <span>←</span>
                     <span class="monoscape">
                         <ng-container
-                            *ngIf="
-                                tripOperationList.trip.times[0].departureTime
-                            "
+                            *ngIf="tripOperationList.startTime.departureTime"
                         >
                             {{
                                 convertTimeToDateObject(
-                                    tripOperationList.trip.times[0]
-                                        .departureTime
+                                    tripOperationList.startTime.departureTime
                                 ) | date: 'HHmm'
                             }}
                         </ng-container>
                         <ng-container
-                            *ngIf="
-                                !tripOperationList.trip.times[0].departureTime
-                            "
+                            *ngIf="!tripOperationList.startTime.departureTime"
                         >
                             &nbsp;&nbsp;&nbsp;&nbsp;
                         </ng-container>
@@ -215,7 +177,7 @@
                     <span class="station-name">
                         {{
                             findStationName(
-                                tripOperationList.trip.times[0].stationId
+                                tripOperationList.startTime.stationId
                             )
                         }}
                     </span>
