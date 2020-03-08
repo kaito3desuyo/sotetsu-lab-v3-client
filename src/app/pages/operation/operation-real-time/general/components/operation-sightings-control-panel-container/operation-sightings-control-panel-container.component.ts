@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { Observable } from 'rxjs';
 import { Moment } from 'moment';
+import { OperationRealTimeService } from '../../services/operation-real-time.service';
 
 @Component({
     selector: 'app-operation-sightings-control-panel-container',

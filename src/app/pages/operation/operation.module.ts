@@ -1,13 +1,8 @@
 import { NgModule } from '@angular/core';
-import { OperationRealTimeComponent } from './operation-real-time/operation-real-time.component';
 import { OperationRoutingModule } from './operation-routing.module';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { OperationSightingsTablePresentationalComponent } from './general/components/operation-sightings-table-presentational/operation-sightings-table-presentational.component';
-import { OperationSightingsTableByOperationContainerComponent } from './general/components/operation-sightings-table-by-operation-container/operation-sightings-table-by-operation-container.component';
-import { OperationSightingsTableByFormationContainerComponent } from './general/components/operation-sightings-table-by-formation-container/operation-sightings-table-by-formation-container.component';
 import { MatTableModule } from '@angular/material/table';
-import { OperationRealTimeService } from './general/services/operation-real-time.service';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,9 +13,6 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { ReactiveFormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
 import { MatSortModule } from '@angular/material/sort';
-import { OperationSightingsTableLegendContainerComponent } from './general/components/operation-sightings-table-legend-container/operation-sightings-table-legend-container.component';
-import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
-import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
 import { MatIconModule } from '@angular/material/icon';
 import { OperationTableComponent } from './operation-table/operation-table.component';
 import { OperationTableTitleContainerComponent } from './general/components/operation-table-title-container/operation-table-title-container.component';
@@ -38,31 +30,22 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
-import { OperationSightingsControlPanelContainerComponent } from './general/components/operation-sightings-control-panel-container/operation-sightings-control-panel-container.component';
-import { OperationSightingsControlPanelPresentationalComponent } from './general/components/operation-sightings-control-panel-presentational/operation-sightings-control-panel-presentational.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
-import { OperationSightingsSearchFormContainerComponent } from './general/components/operation-sightings-search-form-container/operation-sightings-search-form-container.component';
-import { OperationSightingsSearchFormPresentationalComponent } from './general/components/operation-sightings-search-form-presentational/operation-sightings-search-form-presentational.component';
 import { OperationPastTimeService } from './general/services/operation-past-time.service';
 import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { OperationRealTimeModule } from './operation-real-time/operation-real-time.module';
 import { OperationSightingsTableByDateContainerComponent } from './general/components/operation-sightings-table-by-date-container/operation-sightings-table-by-date-container.component';
 import { OperationSightingsTableByDatePresentationalComponent } from './general/components/operation-sightings-table-by-date-presentational/operation-sightings-table-by-date-presentational.component';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { OperationSightingsSearchFormContainerComponent } from './general/components/operation-sightings-search-form-container/operation-sightings-search-form-container.component';
+import { OperationSightingsSearchFormPresentationalComponent } from './general/components/operation-sightings-search-form-presentational/operation-sightings-search-form-presentational.component';
 
 @NgModule({
     declarations: [
-        OperationRealTimeComponent,
         OperationPastTimeComponent,
-        OperationSightingsTableByOperationContainerComponent,
-        OperationSightingsTableByFormationContainerComponent,
         OperationSightingsTableByDateContainerComponent,
-        OperationSightingsTablePresentationalComponent,
         OperationSightingsTableByDatePresentationalComponent,
-        OperationSightingsTableLegendContainerComponent,
-        OperationSightingsTableLegendPresentationalComponent,
-        OperationSightingsControlPanelContainerComponent,
-        OperationSightingsControlPanelPresentationalComponent,
         OperationSightingsSearchFormContainerComponent,
         OperationSightingsSearchFormPresentationalComponent,
         OperationTableComponent,
@@ -95,11 +78,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         MatDatepickerModule,
         AppSharedModule,
         OperationRoutingModule,
-        OperationSharedModule
+        OperationSharedModule,
+        OperationRealTimeModule
     ],
     providers: [
-        OperationRealTimeService,
-        OperationRealTimeResolverService,
         OperationPastTimeService,
         OperationPastTimeResolverService,
         OperationTableService,

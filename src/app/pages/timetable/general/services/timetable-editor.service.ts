@@ -7,7 +7,7 @@ import { StationModel } from 'src/app/general/models/station/station-model';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
-import reject from 'lodash/reject';
+import { reject } from 'lodash-es';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-model';

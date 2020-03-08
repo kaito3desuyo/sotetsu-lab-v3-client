@@ -1,22 +1,22 @@
 import { Component, Inject, Injector } from '@angular/core';
-import { OperationRealTimeService } from '../../services/operation-real-time.service';
-import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
+import { IOperationSightingTableData } from '../../interfaces/operation-sighting-table';
 import { Observable } from 'rxjs';
 import { BaseComponent } from 'src/app/general/classes/base-component';
+import { OperationRealTimeService } from '../../services/operation-real-time.service';
 
 @Component({
-    selector: 'app-operation-sightings-table-by-formation-container',
+    selector: 'app-operation-sightings-table-by-operation-container',
     templateUrl:
-        './operation-sightings-table-by-formation-container.component.html',
+        './operation-sightings-table-by-operation-container.component.html',
     styleUrls: [
-        './operation-sightings-table-by-formation-container.component.scss'
+        './operation-sightings-table-by-operation-container.component.scss'
     ]
 })
-export class OperationSightingsTableByFormationContainerComponent extends BaseComponent {
-    data$: Observable<IOperationSightingTable[]>;
+export class OperationSightingsTableByOperationContainerComponent extends BaseComponent {
+    data$: Observable<IOperationSightingTableData[]>;
     displayedColumn = [
-        'formationNumber',
         'operationNumber',
+        'formationNumber',
         'trip',
         'sightingTime',
         'updatedAt'
@@ -28,22 +28,22 @@ export class OperationSightingsTableByFormationContainerComponent extends BaseCo
         private operationRealTimeService: OperationRealTimeService
     ) {
         super(injector);
-        this.data$ = this.operationRealTimeService.getFormationTableData();
+        this.data$ = this.operationRealTimeService.operationTableData$;
         this.currentCalendarId$ = this.operationRealTimeService.currentCalendarId$;
         this.subscription = this.operationRealTimeService.isVisibleCurrentPosition$.subscribe(
             bool => {
                 if (bool) {
                     this.displayedColumn = [
-                        'formationNumber',
                         'operationNumber',
+                        'formationNumber',
                         'trip',
                         'sightingTime',
                         'updatedAt'
                     ];
                 } else {
                     this.displayedColumn = [
-                        'formationNumber',
                         'operationNumber',
+                        'formationNumber',
                         'sightingTime',
                         'updatedAt'
                     ];

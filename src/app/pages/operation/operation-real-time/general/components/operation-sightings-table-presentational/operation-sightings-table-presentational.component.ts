@@ -5,12 +5,10 @@ import {
     Input,
     OnChanges,
     SimpleChanges,
-    ViewChild,
-    Output,
-    EventEmitter
+    ViewChild
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { IOperationSightingTable } from '../../interfaces/operation-sighting-table';
+import { IOperationSightingTableData } from '../../interfaces/operation-sighting-table';
 import { MatSort } from '@angular/material/sort';
 import moment from 'moment';
 
@@ -23,11 +21,11 @@ import moment from 'moment';
 export class OperationSightingsTablePresentationalComponent
     implements OnChanges {
     @Input() mode: 'formation' | 'operation';
-    @Input() data: IOperationSightingTable[];
+    @Input() data: IOperationSightingTableData[];
     @Input() displayedColumns: string[] = [];
     @Input() currentCalendarId: string;
 
-    dataSource: MatTableDataSource<IOperationSightingTable>;
+    dataSource: MatTableDataSource<IOperationSightingTableData>;
 
     @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -87,7 +85,7 @@ export class OperationSightingsTablePresentationalComponent
             );
     }
 
-    trackByItem(index: number, value: IOperationSightingTable): string {
+    trackByItem(index: number, value: IOperationSightingTableData): string {
         return value ? value.id : null;
     }
 }

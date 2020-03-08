@@ -1,7 +1,7 @@
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { IStation } from 'src/app/general/interfaces/station';
-import find from 'lodash/find';
+import { find } from 'lodash-es';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import moment from 'moment';
 import { ICalendar } from 'src/app/general/interfaces/calendar';

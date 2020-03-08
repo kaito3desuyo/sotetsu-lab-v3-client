@@ -189,38 +189,40 @@
                     fxLayout="row"
                     fxLayoutAlign="start center"
                     fxLayoutGap="24px"
+                    *ngIf="element.trip"
+                ></div>
+                <div
+                    fxLayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="16px"
+                    *ngIf="element.trip"
                 >
-                    <div fxLayout="column" fxFlex="32px">
-                        <ng-container *ngIf="element.trip?.tripNumber">
-                            <a
-                                [routerLink]="[
-                                    '/timetable/' +
-                                        currentCalendarId +
-                                        '/all-line',
-                                    {
-                                        trip_direction:
-                                            element.trip?.tripDirection,
-                                        trip_block_id: element.trip?.tripBlockId
-                                    }
-                                ]"
-                                [ngStyle]="{
-                                    color: element.trip?.tripClassColor
-                                }"
-                            >
-                                {{ element.trip?.tripClassName }}
-                                <br />
-                                {{ element.trip?.tripNumber }}
-                            </a>
-                        </ng-container>
+                    <div fxFlex="48px">
+                        <a
+                            *ngIf="element.trip.tripNumber"
+                            [routerLink]="[
+                                '/timetable/' + currentCalendarId + '/all-line',
+                                {
+                                    trip_direction: element.trip.tripDirection,
+                                    trip_block_id: element.trip.tripBlockId
+                                }
+                            ]"
+                            [ngStyle]="{
+                                color: element.trip.tripClassColor
+                            }"
+                        >
+                            {{ element.trip.tripClassName
+                            }}{{ element.trip.tripNumber }}
+                        </a>
                     </div>
-                    <div fxLayout="column" fxFlex="64px">
-                        <span>{{ element.trip?.prevStation }}</span>
-                        <span>{{ element.trip?.prevTime }}</span>
+                    <div fxLayout="column" fxFlex="72px">
+                        <span>{{ element.trip.prevStation }}</span>
+                        <span>{{ element.trip.prevTime }}</span>
                     </div>
-                    <mat-icon *ngIf="element.trip">arrow_forward</mat-icon>
-                    <div fxLayout="column" fxFlex="64px">
-                        <span>{{ element.trip?.nextStation }}</span>
-                        <span>{{ element.trip?.nextTime }}</span>
+                    <mat-icon>arrow_forward</mat-icon>
+                    <div fxLayout="column" fxFlex="72px">
+                        <span>{{ element.trip.nextStation }}</span>
+                        <span>{{ element.trip.nextTime }}</span>
                     </div>
                 </div>
             </td>

@@ -7,7 +7,7 @@ import { IOperationSighting } from 'src/app/general/interfaces/operation-sightin
 import { IFormation } from 'src/app/general/interfaces/formation';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
 import { FormationModel } from 'src/app/general/models/formation/formation-model';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';

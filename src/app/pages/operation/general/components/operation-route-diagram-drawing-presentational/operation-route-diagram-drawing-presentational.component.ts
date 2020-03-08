@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { IStation } from 'src/app/general/interfaces/station';
 import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import findIndex from 'lodash/findIndex';
+import { findIndex } from 'lodash-es';
 import moment from 'moment';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { Router } from '@angular/router';

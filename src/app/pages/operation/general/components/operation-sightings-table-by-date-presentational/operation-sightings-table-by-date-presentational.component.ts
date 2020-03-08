@@ -7,11 +7,9 @@ import {
     OnChanges
 } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import groupBy from 'lodash/groupBy';
+import { groupBy, forIn } from 'lodash-es';
 import moment, { Moment } from 'moment';
-import map from 'lodash/map';
 import { IFormation } from 'src/app/general/interfaces/formation';
-import { forIn } from 'lodash';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 
 @Component({
