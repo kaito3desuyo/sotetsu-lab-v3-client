@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import find from 'lodash/find';
+import { find } from 'lodash-es';
 
 @Pipe({
     name: 'findById'

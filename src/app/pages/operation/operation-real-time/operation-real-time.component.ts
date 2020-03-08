@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { TitleService } from 'src/app/general/services/title.service';
-import { OperationRealTimeService } from '../general/services/operation-real-time.service';
+import { OperationRealTimeService } from './general/services/operation-real-time.service';
 
 @Component({
     selector: 'app-operation-real-time',

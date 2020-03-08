@@ -1,0 +1,46 @@
+:host {
+    section {
+        width: 294px;
+    }
+    h4 {
+        text-align: center;
+    }
+    span.monoscape {
+        font-feature-settings: 'hwid' on;
+    }
+    span.station-name {
+        width: 5em;
+        font-feature-settings: initial;
+        text-align: center;
+    }
+    span.trip-class-name {
+        width: 2em;
+        font-feature-settings: initial;
+        text-align: center;
+    }
+
+    .blank {
+        width: 294px;
+        height: 0;
+    }
+
+    .mat-toolbar {
+        width: calc(100% + 32px);
+        height: 48px;
+        margin-top: -16px;
+        margin-left: -16px;
+        margin-right: -16px;
+
+        h3 {
+            font-size: 16px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.87);
+        }
+    }
+    .weekday {
+        background: rgb(66, 139, 202);
+    }
+    .holiday {
+        background: rgb(217, 83, 79);
+    }
+}

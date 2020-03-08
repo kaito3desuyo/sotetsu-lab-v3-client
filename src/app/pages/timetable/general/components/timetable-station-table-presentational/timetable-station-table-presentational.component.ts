@@ -6,16 +6,11 @@ import {
     SimpleChanges
 } from '@angular/core';
 import { ITime } from 'src/app/general/interfaces/time';
-import groupBy from 'lodash/groupBy';
-import map from 'lodash/map';
-import concat from 'lodash/concat';
+import { groupBy, map, concat, find, sortBy, some } from 'lodash-es';
 import moment from 'moment';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import find from 'lodash/find';
-import sortBy from 'lodash/sortBy';
 import { ITrip } from 'src/app/general/interfaces/trip';
 import { IStation } from 'src/app/general/interfaces/station';
-import some from 'lodash/some';
 
 @Component({
     selector: 'app-timetable-station-table-presentational',

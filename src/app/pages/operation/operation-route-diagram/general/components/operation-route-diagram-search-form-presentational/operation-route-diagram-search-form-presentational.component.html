@@ -1,0 +1,55 @@
+<mat-card fxFlex="auto">
+    <mat-card-title>
+        運用行路図を検索する
+    </mat-card-title>
+    <mat-card-subtitle>
+        各ダイヤの運用行路図を検索できます。
+    </mat-card-subtitle>
+    <mat-card-content>
+        <form [formGroup]="searchForm" fxLayout="column" fxLayoutGap="16px">
+            <mat-form-field>
+                <mat-select placeholder="ダイヤ" formControlName="calendarId">
+                    <mat-option
+                        *ngFor="let calendar of calendarSelectList"
+                        [value]="calendar.value"
+                    >
+                        {{ calendar.label }}
+                    </mat-option>
+                </mat-select>
+                <mat-error
+                    *ngIf="searchForm.get('calendarId').hasError('required')"
+                >
+                    <strong>必須項目</strong>です
+                </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-select
+                    placeholder="運用番号"
+                    formControlName="operationId"
+                >
+                    <mat-option
+                        *ngFor="let operation of operationSelectList"
+                        [value]="operation.value"
+                    >
+                        {{ operation.label }}
+                    </mat-option>
+                </mat-select>
+                <mat-error
+                    *ngIf="searchForm.get('operationId').hasError('required')"
+                >
+                    <strong>必須項目</strong>です
+                </mat-error>
+            </mat-form-field>
+            <div>
+                <button
+                    mat-raised-button
+                    color="primary"
+                    [disabled]="!searchForm.valid"
+                    (click)="onClickSearch()"
+                >
+                    検索する
+                </button>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>
