@@ -1,7 +1,5 @@
 import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
-import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
-import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
 
 const routes: Routes = [
     {
@@ -13,14 +11,10 @@ const routes: Routes = [
     },
     {
         path: 'past-time',
-        component: OperationPastTimeComponent,
-        resolve: {
-            from: OperationPastTimeResolverService
-        },
-        runGuardsAndResolvers: 'always',
-        data: {
-            title: '過去の運用情報'
-        }
+        loadChildren: () =>
+            import('./operation-past-time/operation-past-time.module').then(
+                mod => mod.OperationPastTimeModule
+            )
     },
     {
         path: 'table',
