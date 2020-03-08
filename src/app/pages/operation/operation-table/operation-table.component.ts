@@ -9,6 +9,8 @@ import { TitleService } from 'src/app/general/services/title.service';
     styleUrls: ['./operation-table.component.scss']
 })
 export class OperationTableComponent extends BaseComponent {
+    calendarId: string;
+
     constructor(
         @Inject(Injector) injector: Injector,
         private route: ActivatedRoute,
@@ -20,5 +22,8 @@ export class OperationTableComponent extends BaseComponent {
                 this.titleService.setTitle(data.title);
             }
         );
+        this.subscription = this.route.paramMap.subscribe(params => {
+            this.calendarId = params.get('calendar_id');
+        });
     }
 }

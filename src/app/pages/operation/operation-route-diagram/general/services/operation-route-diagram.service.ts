@@ -19,6 +19,20 @@ import { IOperation } from 'src/app/general/interfaces/operation';
 
 @Injectable()
 export class OperationRouteDiagramService {
+    private _calendarId$: BehaviorSubject<string> = new BehaviorSubject<string>(
+        null
+    );
+    set calendarId(id: string) {
+        this._calendarId$.next(id);
+    }
+
+    private _operationId$: BehaviorSubject<string> = new BehaviorSubject<
+        string
+    >(null);
+    set operationId(id: string) {
+        this._operationId$.next(id);
+    }
+
     private _calendars$: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
         ICalendar[]
     >([]);
@@ -66,10 +80,14 @@ export class OperationRouteDiagramService {
         );
     }
 
-    fetchOperations(calendarId: string): Observable<void> {
+    fetchOperations(): Observable<void> {
+        const id = this._calendarId$.getValue();
+        if (!id) {
+            return of(null).pipe(tap(() => this._operations$.next(null)));
+        }
         return this.operationApi
             .searchOperations({
-                calendar_id: calendarId
+                calendar_id: id
             })
             .pipe(
                 map(data =>
@@ -87,8 +105,17 @@ export class OperationRouteDiagramService {
             );
     }
 
-    fetchOperationAndCalender(operationId: string): Observable<void> {
-        return this.operationApi.getOperationById(operationId).pipe(
+    fetchOperationAndCalender(): Observable<void> {
+        const id = this._operationId$.getValue();
+        if (!id) {
+            return of(null).pipe(
+                tap(() => {
+                    this._operation$.next(null);
+                    this._calendar$.next(null);
+                })
+            );
+        }
+        return this.operationApi.getOperationById(id).pipe(
             map(data => OperationModel.readOperationDtoImpl(data.operation)),
             tap(operation => {
                 this._operation$.next(operation);
@@ -104,9 +131,13 @@ export class OperationRouteDiagramService {
         );
     }
 
-    fetchTripOperationLists(operationId: string): Observable<void> {
+    fetchTripOperationLists(): Observable<void> {
+        const id = this._operationId$.getValue();
+        if (!id) {
+            return of(null).pipe(tap(() => this._tripOperationLists$.next([])));
+        }
         return this.tripOperationListApi
-            .searchTripOperationLists({ operation_id: operationId })
+            .searchTripOperationLists({ operation_id: id })
             .pipe(
                 map(
                     (data: {

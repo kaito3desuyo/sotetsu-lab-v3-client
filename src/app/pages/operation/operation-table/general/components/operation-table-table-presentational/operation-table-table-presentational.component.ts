@@ -13,7 +13,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationTableTablePresentationalComponent {
-    @Input() operationTrips: IOperation;
+    @Input() operationTrips: IOperation[];
     @Input() stations: IStation[];
     @Input() tripClasses: ITripClass[];
     @Input() calendar: ICalendar;

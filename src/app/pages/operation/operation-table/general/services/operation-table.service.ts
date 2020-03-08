@@ -18,21 +18,37 @@ import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 
 @Injectable()
 export class OperationTableService {
-    private calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
+    private _calendarId$: BehaviorSubject<string> = new BehaviorSubject<string>(
+        null
+    );
+    set calendarId(id: string) {
+        this._calendarId$.next(id);
+    }
+
+    private _calendars$: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
+        ICalendar[]
+    >([]);
+    calendars$ = this._calendars$.asObservable();
+
+    private _calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
         ICalendar
     >(null);
+    calendar$ = this._calendar$.asObservable();
 
-    private operationTrips$: BehaviorSubject<
+    private _operationTrips$: BehaviorSubject<
         IOperation[]
     > = new BehaviorSubject<IOperation[]>([]);
+    operationTrips$ = this._operationTrips$.asObservable();
 
-    private stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
+    private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
         IStation[]
     >([]);
+    stations$ = this._stations$.asObservable();
 
-    private tripClasses$: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
+    private _tripClasses$: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
         ITripClass[]
     >([]);
+    tripClasses$ = this._tripClasses$.asObservable();
 
     constructor(
         private calendarApi: CalendarApiService,
@@ -42,36 +58,38 @@ export class OperationTableService {
         private tripApi: TripApiService
     ) {}
 
-    getCalendar(): Observable<ICalendar> {
-        return this.calendar$.asObservable();
+    fetchCalendars(): Observable<ICalendar> {
+        return this.calendarApi.getCalendars().pipe(
+            map(data =>
+                data.calendars.map(o => CalendarModel.readCalendarDtoImpl(o))
+            ),
+            tap(calendars => this._calendars$.next(calendars)),
+            map(() => null)
+        );
     }
 
-    setCalendar(calendar: ICalendar): void {
-        this.calendar$.next(calendar);
-    }
-
-    fetchCalendar(id: string): Observable<void> {
+    fetchCalendar(): Observable<void> {
+        const id = this._calendarId$.getValue();
+        if (!id) {
+            return of(null).pipe(tap(() => this._calendar$.next(null)));
+        }
         return this.calendarApi.getCalendarById(id).pipe(
             map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
             tap(data => {
-                this.setCalendar(data);
+                this._calendar$.next(data);
             }),
             map(() => null)
         );
     }
 
-    getOperationTrips(): Observable<IOperation[]> {
-        return this.operationTrips$.asObservable();
-    }
-
-    setOperationTrips(array: IOperation[]): void {
-        this.operationTrips$.next(array);
-    }
-
-    fetchOperationTrips(calendarId: string): Observable<void> {
+    fetchOperationTrips(): Observable<void> {
+        const id = this._calendarId$.getValue();
+        if (!id) {
+            return of(null).pipe(tap(() => this._operationTrips$.next(null)));
+        }
         return this.operationApi
             .getOperationsTrips({
-                calendar_id: calendarId
+                calendar_id: id
             })
             .pipe(
                 map(data => {
@@ -80,18 +98,10 @@ export class OperationTableService {
                     );
                 }),
                 tap(data => {
-                    this.setOperationTrips(data);
+                    this._operationTrips$.next(data);
                 }),
                 map(() => null)
             );
-    }
-
-    getStations(): Observable<IStation[]> {
-        return this.stations$.asObservable();
-    }
-
-    setStations(array: IStation[]): void {
-        this.stations$.next(array);
     }
 
     fetchStations(): Observable<void> {
@@ -103,19 +113,11 @@ export class OperationTableService {
                     )
                 ),
                 tap(data => {
-                    this.setStations(data);
+                    this._stations$.next(data);
                 }),
                 map(() => null)
             )
         );
-    }
-
-    getTripClasses(): Observable<ITripClass[]> {
-        return this.tripClasses$.asObservable();
-    }
-
-    setTripClasses(array: ITripClass[]): void {
-        this.tripClasses$.next(array);
     }
 
     fetchTripClasses(): Observable<void> {
@@ -136,7 +138,7 @@ export class OperationTableService {
                     )
                 ),
                 tap(data => {
-                    this.setTripClasses(data);
+                    this._tripClasses$.next(data);
                 }),
                 map(() => null)
             );

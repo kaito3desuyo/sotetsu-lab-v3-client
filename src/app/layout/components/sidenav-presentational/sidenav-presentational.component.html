@@ -29,7 +29,10 @@
     <h3 matSubheader>運用情報</h3>
     <a mat-list-item routerLink="/operation/real-time">リアルタイム運用情報</a>
     <a mat-list-item routerLink="/operation/past-time">過去の運用情報</a>
-    <a mat-list-item [routerLink]="'/operation/table/' + todaysCalendarId">
+    <a
+        mat-list-item
+        [routerLink]="['/operation/table', { calendar_id: todaysCalendarId }]"
+    >
         運用表
     </a>
 </mat-nav-list>

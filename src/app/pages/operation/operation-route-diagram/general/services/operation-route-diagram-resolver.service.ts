@@ -13,21 +13,11 @@ export class OperationRouteDiagramResolverService
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         const operationId: string = route.paramMap.get('operation_id');
-
-        if (!operationId) {
-            return forkJoin([
-                this.operationRouteDiagramService.fetchCalendars()
-            ]).pipe(map(() => null));
-        }
-
+        this.operationRouteDiagramService.operationId = operationId;
         return forkJoin([
             this.operationRouteDiagramService.fetchCalendars(),
-            this.operationRouteDiagramService.fetchOperationAndCalender(
-                operationId
-            ),
-            this.operationRouteDiagramService.fetchTripOperationLists(
-                operationId
-            ),
+            this.operationRouteDiagramService.fetchOperationAndCalender(),
+            this.operationRouteDiagramService.fetchTripOperationLists(),
             this.operationRouteDiagramService.fetchStations()
         ]).pipe(map(() => null));
     }

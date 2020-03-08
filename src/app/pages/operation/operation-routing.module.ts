@@ -1,9 +1,7 @@
 import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
-import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
 import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
 import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
-import { OperationTableComponent } from './operation-table/operation-table.component';
 
 const routes: Routes = [
     {
@@ -25,15 +23,11 @@ const routes: Routes = [
         }
     },
     {
-        path: 'table/:calendarId',
-        component: OperationTableComponent,
-        resolve: {
-            operationTable: OperationTableResolverService
-        },
-        runGuardsAndResolvers: 'always',
-        data: {
-            title: '運用表'
-        }
+        path: 'table',
+        loadChildren: () =>
+            import('./operation-table/operation-table.module').then(
+                mod => mod.OperationTableModule
+            )
     },
     {
         path: 'route-diagram',

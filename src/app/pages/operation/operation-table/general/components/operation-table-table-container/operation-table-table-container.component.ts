@@ -18,9 +18,9 @@ export class OperationTableTableContainerComponent {
     calendar$: Observable<ICalendar>;
 
     constructor(private operationTableService: OperationTableService) {
-        this.operationTrips$ = this.operationTableService.getOperationTrips();
-        this.stations$ = this.operationTableService.getStations();
-        this.tripClasses$ = this.operationTableService.getTripClasses();
-        this.calendar$ = this.operationTableService.getCalendar();
+        this.operationTrips$ = this.operationTableService.operationTrips$;
+        this.stations$ = this.operationTableService.stations$;
+        this.tripClasses$ = this.operationTableService.tripClasses$;
+        this.calendar$ = this.operationTableService.calendar$;
     }
 }

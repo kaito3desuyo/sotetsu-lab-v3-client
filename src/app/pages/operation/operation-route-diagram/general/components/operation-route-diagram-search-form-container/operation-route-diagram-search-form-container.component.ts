@@ -29,9 +29,8 @@ export class OperationRouteDiagramSearchFormContainerComponent
     ngOnInit(): void {}
 
     onReceiveChangeCalendarId(calendarId: string): void {
-        this.operationRouteDiagramService
-            .fetchOperations(calendarId)
-            .subscribe();
+        this.operationRouteDiagramService.calendarId = calendarId;
+        this.operationRouteDiagramService.fetchOperations().subscribe();
     }
 
     onReceiveClickSearch(operationId: string): void {

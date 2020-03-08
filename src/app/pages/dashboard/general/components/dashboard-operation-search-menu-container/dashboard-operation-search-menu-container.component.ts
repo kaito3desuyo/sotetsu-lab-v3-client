@@ -24,6 +24,6 @@ export class DashboardOperationSearchMenuContainerComponent {
     }
 
     onReceiveClickSearchOperationTable(calendarId: string): void {
-        this.router.navigate(['operation', 'table', calendarId]);
+        this.router.navigate(['/operation/table', { calendar_id: calendarId }]);
     }
 }
