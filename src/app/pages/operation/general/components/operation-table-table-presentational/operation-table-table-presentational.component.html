@@ -8,7 +8,12 @@
                 )
             }"
         >
-            <a routerLink="/operation/route-diagram/{{ operationTrips.id }}">
+            <a
+                [routerLink]="[
+                    '/operation/route-diagram',
+                    { operation_id: operationTrips.id }
+                ]"
+            >
                 {{ operationTrips.operationNumber }}
             </a>
         </h4>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
 import { TripOperationListApiService } from 'src/app/general/api/trip-operation-list-api.service';
 import { map, tap, flatMap } from 'rxjs/operators';
@@ -19,21 +19,35 @@ import { IOperation } from 'src/app/general/interfaces/operation';
 
 @Injectable()
 export class OperationRouteDiagramService {
-    private calendar: BehaviorSubject<ICalendar> = new BehaviorSubject<
+    private _calendars$: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
+        ICalendar[]
+    >([]);
+    calendars$ = this._calendars$.asObservable();
+
+    private _operations$: BehaviorSubject<IOperation[]> = new BehaviorSubject<
+        IOperation[]
+    >([]);
+    operations$ = this._operations$.asObservable();
+
+    private _calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
         ICalendar
     >(null);
+    calendar$ = this._calendar$.asObservable();
 
-    private operation: BehaviorSubject<IOperation> = new BehaviorSubject<
+    private _operation$: BehaviorSubject<IOperation> = new BehaviorSubject<
         IOperation
     >(null);
+    operation$ = this._operation$.asObservable();
 
-    private tripOperationLists: BehaviorSubject<
+    private _tripOperationLists$: BehaviorSubject<
         ITripOperationList[]
     > = new BehaviorSubject<ITripOperationList[]>([]);
+    tripOperationLists$ = this._tripOperationLists$.asObservable();
 
-    private stations: BehaviorSubject<IStation[]> = new BehaviorSubject<
+    private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
         IStation[]
     >([]);
+    stations$ = this._stations$.asObservable();
 
     constructor(
         private tripOperationListApi: TripOperationListApiService,
@@ -42,49 +56,52 @@ export class OperationRouteDiagramService {
         private calendarApi: CalendarApiService
     ) {}
 
-    getCalendar(): Observable<ICalendar> {
-        return this.calendar.asObservable();
+    fetchCalendars(): Observable<void> {
+        return this.calendarApi.getCalendars().pipe(
+            map(data =>
+                data.calendars.map(o => CalendarModel.readCalendarDtoImpl(o))
+            ),
+            tap(calendars => this._calendars$.next(calendars)),
+            map(() => null)
+        );
     }
 
-    getCalendarAsStatic(): ICalendar {
-        return this.calendar.getValue();
-    }
-
-    setCalendar(data: ICalendar): void {
-        this.calendar.next(data);
-    }
-
-    getOperation(): Observable<IOperation> {
-        return this.operation.asObservable();
-    }
-
-    setOperation(data: IOperation): void {
-        this.operation.next(data);
+    fetchOperations(calendarId: string): Observable<void> {
+        return this.operationApi
+            .searchOperations({
+                calendar_id: calendarId
+            })
+            .pipe(
+                map(data =>
+                    data.operations
+                        .filter(o => o.operation_number !== '100')
+                        .sort(
+                            (a, b) =>
+                                Number(a.operation_number) -
+                                Number(b.operation_number)
+                        )
+                        .map(o => OperationModel.readOperationDtoImpl(o))
+                ),
+                tap(operations => this._operations$.next(operations)),
+                map(() => null)
+            );
     }
 
     fetchOperationAndCalender(operationId: string): Observable<void> {
         return this.operationApi.getOperationById(operationId).pipe(
             map(data => OperationModel.readOperationDtoImpl(data.operation)),
             tap(operation => {
-                this.setOperation(operation);
+                this._operation$.next(operation);
             }),
             flatMap(operation => {
                 return this.calendarApi.getCalendarById(operation.calendarId);
             }),
             map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
             tap(calendar => {
-                this.setCalendar(calendar);
+                this._calendar$.next(calendar);
             }),
             map(() => null)
         );
-    }
-
-    getTripOperationLists(): Observable<ITripOperationList[]> {
-        return this.tripOperationLists.asObservable();
-    }
-
-    setTripOperationLists(array: ITripOperationList[]): void {
-        this.tripOperationLists.next(array);
     }
 
     fetchTripOperationLists(operationId: string): Observable<void> {
@@ -102,18 +119,10 @@ export class OperationRouteDiagramService {
                         )
                 ),
                 tap((data: ITripOperationList[]) => {
-                    this.setTripOperationLists(data);
+                    this._tripOperationLists$.next(data);
                 }),
                 map(() => null)
             );
-    }
-
-    getStations(): Observable<IStation[]> {
-        return this.stations.asObservable();
-    }
-
-    setStations(array: IStation[]): void {
-        this.stations.next(array);
     }
 
     fetchStations(): Observable<void> {
@@ -153,7 +162,7 @@ export class OperationRouteDiagramService {
                 const stations = lodashMap(targetStation, stationName =>
                     find(data, obj => obj.stationName === stationName)
                 );
-                this.setStations(stations);
+                this._stations$.next(stations);
             }),
             map(() => null)
         );

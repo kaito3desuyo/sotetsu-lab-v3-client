@@ -6,9 +6,7 @@ import { IOperationSighting } from '../interfaces/operation-sighting';
 import { map } from 'rxjs/operators';
 import { ReadOperationSightingDto } from '../models/operation-sighting/operation-sighting-dto';
 import { OperationSightingModel } from '../models/operation-sighting/operation-sighting-model';
-import { IOperation } from '../interfaces/operation';
 import { ReadOperationDto } from '../models/operation/operation-dto';
-import { OperationModel } from '../models/operation/operation-model';
 import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-operation-list-dto';
 
 @Injectable({

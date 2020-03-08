@@ -9,6 +9,8 @@ import { TitleService } from 'src/app/general/services/title.service';
     styleUrls: ['./operation-route-diagram.component.scss']
 })
 export class OperationRouteDiagramComponent extends BaseComponent {
+    operationId: string;
+
     constructor(
         @Inject(Injector) injector: Injector,
         private route: ActivatedRoute,
@@ -20,5 +22,8 @@ export class OperationRouteDiagramComponent extends BaseComponent {
                 this.titleService.setTitle(data.title);
             }
         );
+        this.subscription = this.route.paramMap.subscribe(params => {
+            this.operationId = params.get('operation_id');
+        });
     }
 }

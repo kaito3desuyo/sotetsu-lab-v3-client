@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { OperationRouteDiagramService } from './operation-route-diagram.service';
 import { map } from 'rxjs/operators';
 
@@ -12,8 +12,16 @@ export class OperationRouteDiagramResolverService
     ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        const operationId: string = route.paramMap.get('operationId');
+        const operationId: string = route.paramMap.get('operation_id');
+
+        if (!operationId) {
+            return forkJoin([
+                this.operationRouteDiagramService.fetchCalendars()
+            ]).pipe(map(() => null));
+        }
+
         return forkJoin([
+            this.operationRouteDiagramService.fetchCalendars(),
             this.operationRouteDiagramService.fetchOperationAndCalender(
                 operationId
             ),

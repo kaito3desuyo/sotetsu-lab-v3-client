@@ -95,10 +95,15 @@
                                                     "
                                                 >
                                                     <a
-                                                        routerLink="/operation/route-diagram/{{
-                                                            sighting?.operation
-                                                                ?.id
-                                                        }}"
+                                                        [routerLink]="[
+                                                            '/operation/route-diagram',
+                                                            {
+                                                                operation_id:
+                                                                    sighting
+                                                                        ?.operation
+                                                                        ?.id
+                                                            }
+                                                        ]"
                                                         fxLayout="row"
                                                         fxLayoutAlign="center center"
                                                     >

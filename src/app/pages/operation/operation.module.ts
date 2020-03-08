@@ -21,14 +21,7 @@ import { OperationTableTableContainerComponent } from './general/components/oper
 import { OperationTableService } from './general/services/operation-table.service';
 import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
 import { OperationTableTablePresentationalComponent } from './general/components/operation-table-table-presentational/operation-table-table-presentational.component';
-import { OperationRouteDiagramComponent } from './operation-route-diagram/operation-route-diagram.component';
-import { OperationRouteDiagramService } from './general/services/operation-route-diagram.service';
-import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
-import { OperationRouteDiagramTitleContainerComponent } from './general/components/operation-route-diagram-title-container/operation-route-diagram-title-container.component';
-import { OperationRouteDiagramTitlePresentationalComponent } from './general/components/operation-route-diagram-title-presentational/operation-route-diagram-title-presentational.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
-import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { OperationPastTimeComponent } from './operation-past-time/operation-past-time.component';
@@ -52,12 +45,7 @@ import { OperationSightingsSearchFormPresentationalComponent } from './general/c
         OperationTableTitleContainerComponent,
         OperationTableTitlePresentationalComponent,
         OperationTableTableContainerComponent,
-        OperationTableTablePresentationalComponent,
-        OperationRouteDiagramComponent,
-        OperationRouteDiagramTitleContainerComponent,
-        OperationRouteDiagramTitlePresentationalComponent,
-        OperationRouteDiagramDrawingContainerComponent,
-        OperationRouteDiagramDrawingPresentationalComponent
+        OperationTableTablePresentationalComponent
     ],
     imports: [
         CommonModule,
@@ -78,16 +66,13 @@ import { OperationSightingsSearchFormPresentationalComponent } from './general/c
         MatDatepickerModule,
         AppSharedModule,
         OperationRoutingModule,
-        OperationSharedModule,
-        OperationRealTimeModule
+        OperationSharedModule
     ],
     providers: [
         OperationPastTimeService,
         OperationPastTimeResolverService,
         OperationTableService,
-        OperationTableResolverService,
-        OperationRouteDiagramService,
-        OperationRouteDiagramResolverService
+        OperationTableResolverService
     ]
 })
 export class OperationModule {}

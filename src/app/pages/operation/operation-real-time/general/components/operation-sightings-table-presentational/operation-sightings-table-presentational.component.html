@@ -73,9 +73,10 @@
                             *ngIf="element.rotatedOperationNumber !== '100'"
                         >
                             <a
-                                routerLink="/operation/route-diagram/{{
-                                    element.rotatedOperationId
-                                }}"
+                                [routerLink]="[
+                                    '/operation/route-diagram',
+                                    { operation_id: element.rotatedOperationId }
+                                ]"
                                 fxLayout="row"
                                 fxLayoutAlign="center center"
                             >
