@@ -1,29 +1,29 @@
 // 指定するpaddingの範囲を定義
 $padding-min: 0;
-$padding-max: 256;
+$padding-max: 128 / 4;
 
 @for $i from $padding-min through $padding-max {
-  .pt-#{$i} {
-    padding-top: #{$i}px !important;
+  .pt-#{$i * 4} {
+    padding-top: #{$i * 4}px !important;
   }
-  .pr-#{$i} {
-    padding-right: #{$i}px !important;
+  .pr-#{$i * 4} {
+    padding-right: #{$i * 4}px !important;
   }
-  .pb-#{$i} {
-    padding-bottom: #{$i}px !important;
+  .pb-#{$i * 4} {
+    padding-bottom: #{$i * 4}px !important;
   }
-  .pl-#{$i} {
-    padding-left: #{$i}px !important;
+  .pl-#{$i * 4} {
+    padding-left: #{$i * 4}px !important;
   }
-  .px-#{$i} {
-    padding-left: #{$i}px !important;
-    padding-right: #{$i}px !important;
+  .px-#{$i * 4} {
+    padding-left: #{$i * 4}px !important;
+    padding-right: #{$i * 4}px !important;
   }
-  .py-#{$i} {
-    padding-top: #{$i}px !important;
-    padding-bottom: #{$i}px !important;
+  .py-#{$i * 4} {
+    padding-top: #{$i * 4}px !important;
+    padding-bottom: #{$i * 4}px !important;
   }
-  .p-#{$i} {
-    padding: #{$i}px !important;
+  .p-#{$i * 4} {
+    padding: #{$i * 4}px !important;
   }
 }
