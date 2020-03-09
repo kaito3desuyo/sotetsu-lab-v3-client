@@ -20,6 +20,7 @@ import { OperationRealTimeResolverService } from './general/services/operation-r
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSortModule } from '@angular/material/sort';
 
 @NgModule({
     declarations: [
@@ -42,6 +43,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
         MatIconModule,
         MatFormFieldModule,
         MatDatepickerModule,
+        MatSortModule,
         OperationRealTimeRoutingModule,
         OperationSharedModule
     ],
