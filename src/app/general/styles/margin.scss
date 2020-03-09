@@ -1,29 +1,29 @@
 // 指定するmarginの範囲を定義
 $margin-min: 0;
-$margin-max: 256;
+$margin-max: 128 / 4;
 
 @for $i from $margin-min through $margin-max {
-  .mt-#{$i} {
-    margin-top: #{$i}px !important;
+  .mt-#{$i * 4} {
+    margin-top: #{$i * 4}px !important;
   }
-  .mr-#{$i} {
-    margin-right: #{$i}px !important;
+  .mr-#{$i * 4} {
+    margin-right: #{$i * 4}px !important;
   }
-  .mb-#{$i} {
-    margin-bottom: #{$i}px !important;
+  .mb-#{$i * 4} {
+    margin-bottom: #{$i * 4}px !important;
   }
-  .ml-#{$i} {
-    margin-left: #{$i}px !important;
+  .ml-#{$i * 4} {
+    margin-left: #{$i * 4}px !important;
   }
-  .mx-#{$i} {
-    margin-left: #{$i}px !important;
-    margin-right: #{$i}px !important;
+  .mx-#{$i * 4} {
+    margin-left: #{$i * 4}px !important;
+    margin-right: #{$i * 4}px !important;
   }
-  .my-#{$i} {
-    margin-top: #{$i}px !important;
-    margin-bottom: #{$i}px !important;
+  .my-#{$i * 4} {
+    margin-top: #{$i * 4}px !important;
+    margin-bottom: #{$i * 4}px !important;
   }
-  .m-#{$i} {
-    margin: #{$i}px !important;
+  .m-#{$i * 4} {
+    margin: #{$i * 4}px !important;
   }
 }
