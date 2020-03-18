@@ -8,8 +8,11 @@
 // @import url('https://fonts.googleapis.com/css?family=Quicksand');
 // @import url('https://fonts.googleapis.com/css?family=Material+Icons');
 
-$font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
-    '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;
+$font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN',
+    'Hiragino Sans', 'BIZ UDPGothic', Meiryo, sans-serif;
+
+// -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
+//     '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;
 $custom-typography: mat-typography-config($font-family);
 
 // Include the common styles for Angular Material. We include this here so that you only
