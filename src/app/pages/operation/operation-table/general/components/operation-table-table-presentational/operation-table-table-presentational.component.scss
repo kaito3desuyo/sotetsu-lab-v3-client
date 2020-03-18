@@ -1,26 +1,39 @@
 :host {
     section {
-        width: 294px;
+        width: 299px;
     }
     h4 {
         text-align: center;
     }
+    span.kigou {
+        font-size: 13px;
+    }
     span.monoscape {
+        font-size: 13px;
         font-feature-settings: 'hwid' on;
     }
     span.station-name {
         width: 5em;
-        font-feature-settings: initial;
+        font-size: 13px;
+        // font-feature-settings: initial;
+        text-align: center;
+    }
+    .trip-class {
+        width: 5em;
         text-align: center;
     }
     span.trip-class-name {
         width: 2em;
+        font-size: 13px;
         font-feature-settings: initial;
         text-align: center;
     }
+    div.row {
+        line-height: 1.5em;
+    }
 
     .blank {
-        width: 294px;
+        width: 299px;
         height: 0;
     }
 
