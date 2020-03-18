@@ -62,19 +62,35 @@
                     let i = index
                 "
             >
-                <div fxLayout="row">
+                <div fxLayout="row" class="row">
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 0"
                     >
-                        <span *ngIf="tripOperationList.trip.depotOut">○</span>
-                        <span *ngIf="!tripOperationList.trip.depotOut">┗</span>
+                        <span
+                            class="kigou"
+                            *ngIf="tripOperationList.trip.depotOut"
+                            >◯</span
+                        >
+                        <span
+                            class="kigou"
+                            *ngIf="!tripOperationList.trip.depotOut"
+                            >┗</span
+                        >
                     </ng-container>
 
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 1"
                     >
-                        <span *ngIf="tripOperationList.trip.depotIn">△</span>
-                        <span *ngIf="!tripOperationList.trip.depotIn">┏</span>
+                        <span
+                            class="kigou"
+                            *ngIf="tripOperationList.trip.depotIn"
+                            >△</span
+                        >
+                        <span
+                            class="kigou"
+                            *ngIf="!tripOperationList.trip.depotIn"
+                            >┏</span
+                        >
                     </ng-container>
 
                     <ng-container
@@ -139,44 +155,45 @@
                         <span>←</span>
                     </ng-container>
 
-                    <a
-                        style="width: 5.5em; text-align:center"
-                        [routerLink]="[
-                            '/',
-                            'timetable',
-                            calendar.id,
-                            'all-line',
-                            {
-                                trip_direction:
-                                    tripOperationList.trip.tripDirection,
-                                trip_block_id:
-                                    tripOperationList.trip.tripBlockId
-                            }
-                        ]"
-                    >
-                        <span
-                            class="trip-class-name"
-                            [ngStyle]="{
-                                color: findTripClassColor(
-                                    tripOperationList.trip.tripClassId
-                                )
-                            }"
-                            >{{
-                                findTripClassName(
-                                    tripOperationList.trip.tripClassId
-                                )
-                            }}</span
+                    <div class="trip-class">
+                        <a
+                            [routerLink]="[
+                                '/',
+                                'timetable',
+                                calendar.id,
+                                'all-line',
+                                {
+                                    trip_direction:
+                                        tripOperationList.trip.tripDirection,
+                                    trip_block_id:
+                                        tripOperationList.trip.tripBlockId
+                                }
+                            ]"
                         >
-                        <span
-                            class="monoscape"
-                            [ngStyle]="{
-                                color: findTripClassColor(
-                                    tripOperationList.trip.tripClassId
-                                )
-                            }"
-                            >{{ tripOperationList.trip.tripNumber }}</span
-                        >
-                    </a>
+                            <span
+                                class="trip-class-name"
+                                [ngStyle]="{
+                                    color: findTripClassColor(
+                                        tripOperationList.trip.tripClassId
+                                    )
+                                }"
+                                >{{
+                                    findTripClassName(
+                                        tripOperationList.trip.tripClassId
+                                    )
+                                }}</span
+                            >
+                            <span
+                                class="monoscape"
+                                [ngStyle]="{
+                                    color: findTripClassColor(
+                                        tripOperationList.trip.tripClassId
+                                    )
+                                }"
+                                >{{ tripOperationList.trip.tripNumber }}</span
+                            >
+                        </a>
+                    </div>
 
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 0"
@@ -243,15 +260,31 @@
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 0"
                     >
-                        <span *ngIf="tripOperationList.trip.depotIn">△</span>
-                        <span *ngIf="!tripOperationList.trip.depotIn">┓</span>
+                        <span
+                            class="kigou"
+                            *ngIf="tripOperationList.trip.depotIn"
+                            >△</span
+                        >
+                        <span
+                            class="kigou"
+                            *ngIf="!tripOperationList.trip.depotIn"
+                            >┓</span
+                        >
                     </ng-container>
 
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 1"
                     >
-                        <span *ngIf="tripOperationList.trip.depotOut">○</span>
-                        <span *ngIf="!tripOperationList.trip.depotOut">┛</span>
+                        <span
+                            class="kigou"
+                            *ngIf="tripOperationList.trip.depotOut"
+                            >◯</span
+                        >
+                        <span
+                            class="kigou"
+                            *ngIf="!tripOperationList.trip.depotOut"
+                            >┛</span
+                        >
                     </ng-container>
                 </div>
                 <div
@@ -267,23 +300,23 @@
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 0"
                     >
-                        <span>┏</span>
+                        <span class="kigou">┏</span>
                     </ng-container>
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 1"
                     >
-                        <span>┗</span>
+                        <span class="kigou">┗</span>
                     </ng-container>
-                    <span>━━━━━━━━━━━━━━━━━━━</span>
+                    <span class="kigou">━━━━━━━━━━━━━━━━━━━━━</span>
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 0"
                     >
-                        <span>┛</span>
+                        <span class="kigou">┛</span>
                     </ng-container>
                     <ng-container
                         *ngIf="tripOperationList.trip.tripDirection === 1"
                     >
-                        <span>┓</span>
+                        <span class="kigou">┓</span>
                     </ng-container>
                 </div>
             </ng-container>
