@@ -13,12 +13,12 @@ export class FormationModel {
             startDate: formation.start_date,
             endDate: formation.end_date,
             createdAt: formation.created_at,
-            updatedAt: formation.updated_at
+            updatedAt: formation.updated_at,
         };
 
         if (formation.formation_to_vehicles) {
             returnObj.formationToVehicles = formation.formation_to_vehicles.map(
-                data =>
+                (data) =>
                     FormationToVehicleModel.readFormationToVehicleModel(data)
             );
         }

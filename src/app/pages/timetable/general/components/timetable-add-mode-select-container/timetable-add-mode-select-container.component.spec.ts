@@ -11,7 +11,7 @@ describe('TimetableAddModeSelectContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAddModeSelectContainerComponent]
+            declarations: [TimetableAddModeSelectContainerComponent],
         }).compileComponents();
     }));
 

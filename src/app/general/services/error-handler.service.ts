@@ -3,7 +3,7 @@ import { NotificationService } from './notification.service';
 import { LoggerService } from './logger.service';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class ErrorHandlerService implements ErrorHandler {
     constructor(private loggerService: LoggerService) {}

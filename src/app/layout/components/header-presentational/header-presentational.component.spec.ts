@@ -8,7 +8,7 @@ describe('HeaderPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [HeaderPresentationalComponent]
+            declarations: [HeaderPresentationalComponent],
         }).compileComponents();
     }));
 

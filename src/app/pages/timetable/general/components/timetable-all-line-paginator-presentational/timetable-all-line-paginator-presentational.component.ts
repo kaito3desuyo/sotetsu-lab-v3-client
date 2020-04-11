@@ -3,7 +3,7 @@ import {
     ChangeDetectionStrategy,
     Input,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 
@@ -11,7 +11,7 @@ import { PageEvent } from '@angular/material/paginator';
     selector: 'app-timetable-all-line-paginator-presentational',
     templateUrl: './timetable-all-line-paginator-presentational.component.html',
     styleUrls: ['./timetable-all-line-paginator-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableAllLinePaginatorPresentationalComponent {
     @Input() pageSetting: PageEvent;

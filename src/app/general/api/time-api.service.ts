@@ -6,7 +6,7 @@ import { ReadTimeDto } from '../models/time/time-dto';
 import { map } from 'rxjs/operators';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class TimeApiService {
     private apiUrl = environment.apiUrl + '/v1/times';
@@ -20,7 +20,7 @@ export class TimeApiService {
     }): Observable<{ times: ReadTimeDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { times: ReadTimeDto[] }) => data));
     }

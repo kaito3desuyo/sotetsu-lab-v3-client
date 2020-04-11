@@ -16,7 +16,7 @@ export class RoutesAllStationsService extends BaseService {
         this.subscription = this.routeApi
             .getRoutesAllStations()
             .pipe(
-                tap(entities => {
+                tap((entities) => {
                     this.routesAllStationsStore.set(entities);
                 })
             )
@@ -39,12 +39,12 @@ export class RoutesAllStationsService extends BaseService {
         return routes.map((route: IRoute) => {
             return {
                 routeName: route.routeName,
-                stations: route.routeStationLists.map(routeToStation => {
+                stations: route.routeStationLists.map((routeToStation) => {
                     return {
                         label: routeToStation.station.stationName,
-                        value: routeToStation.station.id
+                        value: routeToStation.station.id,
                     };
-                })
+                }),
             };
         });
     }

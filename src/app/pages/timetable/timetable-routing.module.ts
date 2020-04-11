@@ -16,49 +16,49 @@ const routes: Routes = [
         component: TimetableAllLineComponent,
         resolve: {
             timetableAllLine: TimetableAllLineTableResolverService,
-            from2: TimetableSearchFormResolverService
+            from2: TimetableSearchFormResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
-            title: '全線時刻表'
-        }
+            title: '全線時刻表',
+        },
     },
     {
         path: ':calendarId/station/:stationId',
         component: TimetableStationComponent,
         resolve: {
             from: TimetableStationResolverService,
-            from2: TimetableSearchFormResolverService
+            from2: TimetableSearchFormResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
-            title: '駅別時刻表'
-        }
+            title: '駅別時刻表',
+        },
     },
     {
         path: 'add/:calendarId',
         component: TimetableAddComponent,
         resolve: {
-            from: TimetableAddResolverService
+            from: TimetableAddResolverService,
         },
         data: {
-            title: '列車を追加する'
-        }
+            title: '列車を追加する',
+        },
     },
     {
         path: 'update/:blockId',
         component: TimetableUpdateComponent,
         resolve: {
-            from: TimetableUpdateResolverService
+            from: TimetableUpdateResolverService,
         },
         data: {
-            title: '列車を編集する'
-        }
-    }
+            title: '列車を編集する',
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class TimetableRoutingModule {}

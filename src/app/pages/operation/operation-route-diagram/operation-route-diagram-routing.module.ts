@@ -9,17 +9,17 @@ const routes: Routes = [
         path: '',
         component: OperationRouteDiagramComponent,
         resolve: {
-            from: OperationRouteDiagramResolverService
+            from: OperationRouteDiagramResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
-            title: '運用行路図'
-        }
-    }
+            title: '運用行路図',
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class OperationRouteDiagramRoutingModule {}

@@ -6,7 +6,7 @@ import { TimeApiService } from './time-api.service';
 describe('Service: TimeApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimeApiService]
+            providers: [TimeApiService],
         });
     });
 

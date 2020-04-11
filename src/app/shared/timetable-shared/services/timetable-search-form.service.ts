@@ -14,7 +14,7 @@ export class TimetableSearchFormService {
         calendarId: '',
         tripDirection: '0',
         isSearchStation: false,
-        stationId: ''
+        stationId: '',
     });
 
     private _calendars$: BehaviorSubject<ICalendar[]> = new BehaviorSubject<
@@ -35,7 +35,7 @@ export class TimetableSearchFormService {
         const current = this._params$.getValue();
         this.setParams({
             ...current,
-            ...params
+            ...params,
         });
     }
 
@@ -49,10 +49,10 @@ export class TimetableSearchFormService {
 
     fetchCalendars(): Observable<void> {
         return this.calendarApi.getCalendars().pipe(
-            map(data =>
-                data.calendars.map(o => CalendarModel.readCalendarDtoImpl(o))
+            map((data) =>
+                data.calendars.map((o) => CalendarModel.readCalendarDtoImpl(o))
             ),
-            tap(data => {
+            tap((data) => {
                 this.setCalendars(data);
             }),
             map(() => null)

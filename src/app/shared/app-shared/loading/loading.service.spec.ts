@@ -6,7 +6,7 @@ import { LoadingService } from './loading.service';
 describe('Service: Loading', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [LoadingService]
+            providers: [LoadingService],
         });
     });
 

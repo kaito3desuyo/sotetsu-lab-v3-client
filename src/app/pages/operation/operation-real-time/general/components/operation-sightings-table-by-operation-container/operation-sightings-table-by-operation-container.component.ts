@@ -9,8 +9,8 @@ import { OperationRealTimeService } from '../../services/operation-real-time.ser
     templateUrl:
         './operation-sightings-table-by-operation-container.component.html',
     styleUrls: [
-        './operation-sightings-table-by-operation-container.component.scss'
-    ]
+        './operation-sightings-table-by-operation-container.component.scss',
+    ],
 })
 export class OperationSightingsTableByOperationContainerComponent extends BaseComponent {
     data$: Observable<IOperationSightingTableData[]>;
@@ -19,7 +19,7 @@ export class OperationSightingsTableByOperationContainerComponent extends BaseCo
         'formationNumber',
         'trip',
         'sightingTime',
-        'updatedAt'
+        'updatedAt',
     ];
     currentCalendarId$: Observable<string>;
 
@@ -31,21 +31,21 @@ export class OperationSightingsTableByOperationContainerComponent extends BaseCo
         this.data$ = this.operationRealTimeService.operationTableData$;
         this.currentCalendarId$ = this.operationRealTimeService.currentCalendarId$;
         this.subscription = this.operationRealTimeService.isVisibleCurrentPosition$.subscribe(
-            bool => {
+            (bool) => {
                 if (bool) {
                     this.displayedColumn = [
                         'operationNumber',
                         'formationNumber',
                         'trip',
                         'sightingTime',
-                        'updatedAt'
+                        'updatedAt',
                     ];
                 } else {
                     this.displayedColumn = [
                         'operationNumber',
                         'formationNumber',
                         'sightingTime',
-                        'updatedAt'
+                        'updatedAt',
                     ];
                 }
             }

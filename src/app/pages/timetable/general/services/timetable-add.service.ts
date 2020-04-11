@@ -7,7 +7,7 @@ import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import { TimetableEditorService } from './timetable-editor.service';
 import {
     CreateTripBlockDto,
-    ReadTripBlockDto
+    ReadTripBlockDto,
 } from 'src/app/general/models/trip-block/trip-block-dto';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { NotificationService } from 'src/app/general/services/notification.service';
@@ -46,8 +46,8 @@ export class TimetableAddService {
     receiveSaveEvent(): Subscription {
         return (this.subscription = this.timetableEditorService
             .receiveSaveEvent()
-            .subscribe(formValue => {
-                const data = formValue.map(value =>
+            .subscribe((formValue) => {
+                const data = formValue.map((value) =>
                     this.timetableEditorService.convertFormValueToSaveData(
                         value
                     )
@@ -56,23 +56,23 @@ export class TimetableAddService {
 
                 let blocks = [];
                 if (isSaveTripsIndividually) {
-                    blocks = data.map(trip => ({ trips: [trip] }));
+                    blocks = data.map((trip) => ({ trips: [trip] }));
                 } else {
                     blocks = [
                         {
-                            trips: data
-                        }
+                            trips: data,
+                        },
                     ];
                 }
 
                 this.notificationService.open('列車を保存しています...', 'OK');
 
                 this.addTripBlocks(blocks).subscribe(
-                    result => {
+                    (result) => {
                         this.timetableEditorService.emitClearEvent();
                         this.notificationService.open('保存しました', 'OK');
                     },
-                    error => {
+                    (error) => {
                         this.notificationService.open(
                             'エラーが発生しました',
                             'OK'
@@ -116,8 +116,8 @@ export class TimetableAddService {
                 this.timetableEditorService.getCalendarIdAsStatic()
             )
             .pipe(
-                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-                tap(data => {
+                map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap((data) => {
                     this.setCalendar(data);
                 }),
                 map(() => null)

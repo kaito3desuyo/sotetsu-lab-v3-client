@@ -11,12 +11,12 @@ export class VehicleModel {
             productionDate: vehicle.production_date,
             scrappedDate: vehicle.scrapped_date,
             createdAt: vehicle.created_at,
-            updatedAt: vehicle.updated_at
+            updatedAt: vehicle.updated_at,
         };
 
         if (vehicle.vehicle_to_formations) {
             returnObj.vehicleToFormations = vehicle.vehicle_to_formations.map(
-                data =>
+                (data) =>
                     FormationToVehicleModel.readFormationToVehicleModel(data)
             );
         }

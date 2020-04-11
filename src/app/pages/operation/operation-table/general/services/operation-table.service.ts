@@ -60,10 +60,10 @@ export class OperationTableService {
 
     fetchCalendars(): Observable<ICalendar> {
         return this.calendarApi.getCalendars().pipe(
-            map(data =>
-                data.calendars.map(o => CalendarModel.readCalendarDtoImpl(o))
+            map((data) =>
+                data.calendars.map((o) => CalendarModel.readCalendarDtoImpl(o))
             ),
-            tap(calendars => this._calendars$.next(calendars)),
+            tap((calendars) => this._calendars$.next(calendars)),
             map(() => null)
         );
     }
@@ -74,8 +74,8 @@ export class OperationTableService {
             return of(null).pipe(tap(() => this._calendar$.next(null)));
         }
         return this.calendarApi.getCalendarById(id).pipe(
-            map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-            tap(data => {
+            map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+            tap((data) => {
                 this._calendar$.next(data);
             }),
             map(() => null)
@@ -89,15 +89,15 @@ export class OperationTableService {
         }
         return this.operationApi
             .getOperationsTrips({
-                calendar_id: id
+                calendar_id: id,
             })
             .pipe(
-                map(data => {
-                    return data.operations.map(result =>
+                map((data) => {
+                    return data.operations.map((result) =>
                         OperationModel.readOperationDtoImpl(result)
                     );
                 }),
-                tap(data => {
+                tap((data) => {
                     this._operationTrips$.next(data);
                 }),
                 map(() => null)
@@ -107,12 +107,12 @@ export class OperationTableService {
     fetchStations(): Observable<void> {
         return this.stationApi.getStations().pipe(
             pipe(
-                map(data =>
-                    data.stations.map(result =>
+                map((data) =>
+                    data.stations.map((result) =>
                         StationModel.readStationDtoImpl(result)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this._stations$.next(data);
                 }),
                 map(() => null)
@@ -124,20 +124,20 @@ export class OperationTableService {
         return this.serviceApi
             .searchServices({
                 service_name:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
             })
             .pipe(
                 flatMap((data: { services: ReadServiceDto[] }) =>
                     this.tripApi.getTripClasses({
-                        service_id: data.services[0].id
+                        service_id: data.services[0].id,
                     })
                 ),
-                map(data =>
-                    data.trip_classes.map(result =>
+                map((data) =>
+                    data.trip_classes.map((result) =>
                         TripClassModel.readTripClassDtoImpl(result)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this._tripClasses$.next(data);
                 }),
                 map(() => null)

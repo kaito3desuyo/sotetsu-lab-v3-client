@@ -33,15 +33,15 @@ export class TimetableUpdateService {
     receiveSaveEvent(): Subscription {
         return this.timetableEditorService
             .receiveSaveEvent()
-            .subscribe(formValue => {
-                const data = formValue.map(value =>
+            .subscribe((formValue) => {
+                const data = formValue.map((value) =>
                     this.timetableEditorService.convertFormValueToSaveData(
                         value
                     )
                 );
 
                 const block = {
-                    trips: data
+                    trips: data,
                 };
 
                 this.notificationService.open('列車を保存しています...', 'OK');
@@ -49,10 +49,10 @@ export class TimetableUpdateService {
                 this.tripApi
                     .updateTripBlockById(this.getBlockIdAsStatic(), block)
                     .subscribe(
-                        result => {
+                        (result) => {
                             this.notificationService.open('保存しました', 'OK');
                         },
-                        error => {
+                        (error) => {
                             this.notificationService.open(
                                 'エラーが発生しました',
                                 'OK'
@@ -84,8 +84,8 @@ export class TimetableUpdateService {
                 this.timetableEditorService.getCalendarIdAsStatic()
             )
             .pipe(
-                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-                tap(data => {
+                map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap((data) => {
                     this.setCalendar(data);
                 }),
                 map(() => null)

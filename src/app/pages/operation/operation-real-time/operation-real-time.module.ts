@@ -31,7 +31,7 @@ import { MatSortModule } from '@angular/material/sort';
         OperationSightingsTableLegendContainerComponent,
         OperationSightingsTableLegendPresentationalComponent,
         OperationSightingsControlPanelContainerComponent,
-        OperationSightingsControlPanelPresentationalComponent
+        OperationSightingsControlPanelPresentationalComponent,
     ],
     imports: [
         CommonModule,
@@ -45,9 +45,9 @@ import { MatSortModule } from '@angular/material/sort';
         MatDatepickerModule,
         MatSortModule,
         OperationRealTimeRoutingModule,
-        OperationSharedModule
+        OperationSharedModule,
     ],
     exports: [],
-    providers: [OperationRealTimeService, OperationRealTimeResolverService]
+    providers: [OperationRealTimeService, OperationRealTimeResolverService],
 })
 export class OperationRealTimeModule {}

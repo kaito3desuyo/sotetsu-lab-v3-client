@@ -22,7 +22,7 @@ import { MatButtonModule } from '@angular/material/button';
         OperationTableTableContainerComponent,
         OperationTableTablePresentationalComponent,
         OperationTableSearchFormContainerComponent,
-        OperationTableSearchFormPresentationalComponent
+        OperationTableSearchFormPresentationalComponent,
     ],
     imports: [
         CommonModule,
@@ -33,8 +33,8 @@ import { MatButtonModule } from '@angular/material/button';
         MatToolbarModule,
         MatFormFieldModule,
         MatSelectModule,
-        MatButtonModule
+        MatButtonModule,
     ],
-    providers: [OperationTableService, OperationTableResolverService]
+    providers: [OperationTableService, OperationTableResolverService],
 })
 export class OperationTableModule {}

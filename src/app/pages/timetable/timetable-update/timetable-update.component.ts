@@ -7,7 +7,7 @@ import { TimetableUpdateService } from '../general/services/timetable-update.ser
 @Component({
     selector: 'app-timetable-update',
     templateUrl: './timetable-update.component.html',
-    styleUrls: ['./timetable-update.component.scss']
+    styleUrls: ['./timetable-update.component.scss'],
 })
 export class TimetableUpdateComponent extends BaseComponent {
     constructor(

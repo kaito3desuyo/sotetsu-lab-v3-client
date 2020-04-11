@@ -7,7 +7,7 @@ export interface ParamsState {
 
 export function createInitialState(): ParamsState {
     return {
-        calendarId: ''
+        calendarId: '',
     };
 }
 

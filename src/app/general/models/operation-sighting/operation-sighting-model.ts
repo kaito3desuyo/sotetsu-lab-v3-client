@@ -1,6 +1,6 @@
 import {
     ReadOperationSightingDto,
-    CreateOperationSightingDto
+    CreateOperationSightingDto,
 } from './operation-sighting-dto';
 import { IOperationSighting } from '../../interfaces/operation-sighting';
 import { OperationModel } from '../operation/operation-model';
@@ -15,7 +15,7 @@ export class OperationSightingModel {
         const returnObj: CreateOperationSightingDto = {
             formation_id: operationSighting.formationId,
             operation_id: operationSighting.operationId,
-            sighting_time: operationSighting.sightingTime
+            sighting_time: operationSighting.sightingTime,
         };
 
         return returnObj;
@@ -30,7 +30,7 @@ export class OperationSightingModel {
             operationId: operationSighting.operation_id,
             sightingTime: operationSighting.sighting_time,
             createdAt: operationSighting.created_at,
-            updatedAt: operationSighting.updated_at
+            updatedAt: operationSighting.updated_at,
         };
 
         if (operationSighting.circulated_operation_id) {

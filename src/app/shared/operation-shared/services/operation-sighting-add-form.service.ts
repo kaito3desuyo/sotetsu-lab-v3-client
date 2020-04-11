@@ -52,8 +52,8 @@ export class OperationSightingAddFormService extends BaseService {
 
     fetchAgencies(): Observable<void> {
         return this.agencyApi.getAgencies().pipe(
-            tap(data => {
-                const agencies = data.agencies.map(result =>
+            tap((data) => {
+                const agencies = data.agencies.map((result) =>
                     AgencyModel.readAgencyDtoImpl(result)
                 );
                 this.setAgencies(agencies);
@@ -72,7 +72,7 @@ export class OperationSightingAddFormService extends BaseService {
                 .searchFormations({
                     agency_id: sighting.agencyId,
                     formation_number: sighting.formationOrVehicleNumber,
-                    date: this.date
+                    date: this.date,
                 })
                 .toPromise();
 
@@ -85,7 +85,7 @@ export class OperationSightingAddFormService extends BaseService {
                     .searchFormations({
                         agency_id: sighting.agencyId,
                         vehicle_number: sighting.formationOrVehicleNumber,
-                        date: this.date
+                        date: this.date,
                     })
                     .toPromise();
 
@@ -106,7 +106,7 @@ export class OperationSightingAddFormService extends BaseService {
             const targetOperation = await this.operationApi
                 .searchOperations({
                     calendar_id: currentParams.calendarId,
-                    operation_number: sighting.operationNumber
+                    operation_number: sighting.operationNumber,
                 })
                 .toPromise();
 
@@ -143,7 +143,7 @@ export class OperationSightingAddFormService extends BaseService {
                 .addOperationSighting({
                     formationId: targetFormationId,
                     operationId: targetOperationId,
-                    sightingTime: sightingTime.toISOString()
+                    sightingTime: sightingTime.toISOString(),
                 })
                 .toPromise();
 
@@ -164,11 +164,11 @@ export class OperationSightingAddFormService extends BaseService {
             .searchFormations({
                 agency_id: agencyId,
                 vehicle_number: vehicleNumber,
-                date
+                date,
             })
             .pipe(
-                map(data => {
-                    return data.formations.map(o =>
+                map((data) => {
+                    return data.formations.map((o) =>
                         FormationModel.readFormationDtoImpl(o)
                     );
                 })
@@ -185,11 +185,11 @@ export class OperationSightingAddFormService extends BaseService {
         const result = await this.operationApi
             .searchOperations({
                 calendar_id: calendarId,
-                operation_number: operationNumber
+                operation_number: operationNumber,
             })
             .pipe(
-                map(data => {
-                    return data.operations.map(o =>
+                map((data) => {
+                    return data.operations.map((o) =>
                         OperationModel.readOperationDtoImpl(o)
                     );
                 })

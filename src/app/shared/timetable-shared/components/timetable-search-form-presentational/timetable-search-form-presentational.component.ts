@@ -8,7 +8,7 @@ import {
     OnChanges,
     SimpleChanges,
     Inject,
-    Injector
+    Injector,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
@@ -19,7 +19,7 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
     selector: 'app-timetable-search-form-presentational',
     templateUrl: './timetable-search-form-presentational.component.html',
     styleUrls: ['./timetable-search-form-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableSearchFormPresentationalComponent extends BaseComponent
     implements OnChanges {
@@ -27,7 +27,7 @@ export class TimetableSearchFormPresentationalComponent extends BaseComponent
         calendarId: ['', Validators.required],
         tripDirection: ['0', Validators.required],
         isSearchStation: [false, Validators.required],
-        stationId: [{ value: '', disabled: true }, Validators.required]
+        stationId: [{ value: '', disabled: true }, Validators.required],
     });
 
     @Input() calendars: ICalendar[];
@@ -43,7 +43,7 @@ export class TimetableSearchFormPresentationalComponent extends BaseComponent
         if (this.searchTimetableForm.get('isSearchStation')) {
             this.subscription = this.searchTimetableForm
                 .get('isSearchStation')
-                .valueChanges.subscribe(bool => {
+                .valueChanges.subscribe((bool) => {
                     if (bool) {
                         this.searchTimetableForm.get('stationId').enable();
                     } else {

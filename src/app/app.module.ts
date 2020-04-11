@@ -21,9 +21,9 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
         GeneralModule,
         environment.production ? [] : AkitaNgDevtools.forRoot(),
         ServiceWorkerModule.register('ngsw-worker.js', {
-            enabled: environment.production
-        })
+            enabled: environment.production,
+        }),
     ],
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

@@ -9,7 +9,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 @Component({
     selector: 'app-operation-table-table-container',
     templateUrl: './operation-table-table-container.component.html',
-    styleUrls: ['./operation-table-table-container.component.scss']
+    styleUrls: ['./operation-table-table-container.component.scss'],
 })
 export class OperationTableTableContainerComponent {
     operationTrips$: Observable<IOperation[]>;

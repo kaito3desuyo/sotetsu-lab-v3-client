@@ -11,7 +11,7 @@ describe('DashboardTripAddFormContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [DashboardTripAddFormContainerComponent]
+            declarations: [DashboardTripAddFormContainerComponent],
         }).compileComponents();
     }));
 

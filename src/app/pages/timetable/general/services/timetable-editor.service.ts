@@ -14,7 +14,7 @@ import { TripClassModel } from 'src/app/general/models/trip-class/trip-class-mod
 import { ITimetableTripForm } from '../interfaces/timetable-trip-form';
 import {
     CreateTripDto,
-    UpdateTripDto
+    UpdateTripDto,
 } from 'src/app/general/models/trip/trip-dto';
 import moment from 'moment';
 import { ITripBlock } from 'src/app/general/models/trip-block/trip-block';
@@ -67,8 +67,8 @@ export class TimetableEditorService {
 
     fetchTripBlock(id: string): Observable<void> {
         return this.tripApi.getTripBlockById(id).pipe(
-            map(data => TripBlockModel.readTripBlockDtoImpl(data.trip_block)),
-            tap(data => {
+            map((data) => TripBlockModel.readTripBlockDtoImpl(data.trip_block)),
+            tap((data) => {
                 this.setTripBlock(data);
             }),
             map(() => null)
@@ -79,11 +79,11 @@ export class TimetableEditorService {
         return this.serviceApi
             .searchServices({
                 service_name:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
             })
             .pipe(
-                map(data => data.services[0].id),
-                tap(id => this.setServiceId(id))
+                map((data) => data.services[0].id),
+                tap((id) => this.setServiceId(id))
             );
     }
 
@@ -116,15 +116,15 @@ export class TimetableEditorService {
             .getServiceStationsById(this.getServiceIdAsStatic(), {
                 trip_direction: String(this.getTripDirectionAsStatic()) as
                     | '0'
-                    | '1'
+                    | '1',
             })
             .pipe(
-                map(data =>
-                    data.stations.map(station =>
+                map((data) =>
+                    data.stations.map((station) =>
                         StationModel.readStationDtoImpl(station)
                     )
                 ),
-                tap(data => this.setStations(data)),
+                tap((data) => this.setStations(data)),
                 map(() => null)
             );
     }
@@ -141,14 +141,14 @@ export class TimetableEditorService {
         return this.operationApi
             .searchOperations({ calendar_id: this.getCalendarIdAsStatic() })
             .pipe(
-                map(data =>
-                    data.operations.map(operation =>
+                map((data) =>
+                    data.operations.map((operation) =>
                         OperationModel.readOperationDtoImpl(operation)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this.setOperations(
-                        reject(data, o => o.operationNumber === '100')
+                        reject(data, (o) => o.operationNumber === '100')
                     );
                 }),
                 map(() => null)
@@ -167,12 +167,12 @@ export class TimetableEditorService {
         return this.tripApi
             .getTripClasses({ service_id: this.getServiceIdAsStatic() })
             .pipe(
-                map(data =>
-                    data.trip_classes.map(tripClass =>
+                map((data) =>
+                    data.trip_classes.map((tripClass) =>
                         TripClassModel.readTripClassDtoImpl(tripClass)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this.setTripClasses(data);
                 }),
                 map(() => null)
@@ -206,7 +206,7 @@ export class TimetableEditorService {
     convertFormValueToSaveData(
         value: ITimetableTripForm
     ): CreateTripDto | UpdateTripDto {
-        const times = value.times.filter(time => time.stopType !== 'noVia');
+        const times = value.times.filter((time) => time.stopType !== 'noVia');
 
         const tripObj = {
             service_id: this.getServiceIdAsStatic(),
@@ -259,7 +259,7 @@ export class TimetableEditorService {
                             ? moment(time.departureTime, 'HH:mm').format(
                                   'HH:mm:00'
                               )
-                            : null
+                            : null,
                 };
 
                 if (time.id) {
@@ -267,7 +267,7 @@ export class TimetableEditorService {
                 }
 
                 return timeObj;
-            })
+            }),
         };
 
         if (value.id) {
@@ -283,7 +283,7 @@ export class TimetableEditorService {
             tripObj.trip_operation_lists.push({
                 operation_id: value.operationId,
                 start_station_id: times[0].stationId,
-                end_station_id: times[times.length - 1].stationId
+                end_station_id: times[times.length - 1].stationId,
             });
         }
 

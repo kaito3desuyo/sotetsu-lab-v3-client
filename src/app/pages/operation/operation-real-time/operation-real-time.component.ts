@@ -8,7 +8,7 @@ import { OperationRealTimeService } from './general/services/operation-real-time
 @Component({
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
-    styleUrls: ['./operation-real-time.component.scss']
+    styleUrls: ['./operation-real-time.component.scss'],
 })
 export class OperationRealTimeComponent extends BaseComponent
     implements OnInit, OnDestroy {

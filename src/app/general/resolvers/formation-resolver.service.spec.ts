@@ -6,7 +6,7 @@ import { FormationResolverService } from './formation-resolver.service';
 describe('Service: FormationResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [FormationResolverService]
+            providers: [FormationResolverService],
         });
     });
 

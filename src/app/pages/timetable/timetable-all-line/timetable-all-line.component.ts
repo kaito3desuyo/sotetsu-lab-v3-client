@@ -7,7 +7,7 @@ import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/serv
 @Component({
     selector: 'app-timetable-all-line',
     templateUrl: './timetable-all-line.component.html',
-    styleUrls: ['./timetable-all-line.component.scss']
+    styleUrls: ['./timetable-all-line.component.scss'],
 })
 export class TimetableAllLineComponent extends BaseComponent {
     constructor(
@@ -23,7 +23,7 @@ export class TimetableAllLineComponent extends BaseComponent {
             }
         );
 
-        this.subscription = this.route.paramMap.subscribe(params => {
+        this.subscription = this.route.paramMap.subscribe((params) => {
             const calendarId = params.get('calendarId');
             const tripDirection = params.get('trip_direction');
 
@@ -31,7 +31,7 @@ export class TimetableAllLineComponent extends BaseComponent {
                 calendarId,
                 tripDirection: tripDirection as '0' | '1',
                 isSearchStation: false,
-                stationId: ''
+                stationId: '',
             });
         });
     }

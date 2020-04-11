@@ -16,7 +16,7 @@ export class CalendarModel {
         startDate: '',
         endDate: '',
         createdAt: '',
-        updatedAt: ''
+        updatedAt: '',
     };
 
     private state = { ...this.initialValue };
@@ -46,7 +46,7 @@ export class CalendarModel {
             startDate: calendar.start_date,
             endDate: calendar.end_date,
             createdAt: calendar.created_at,
-            updatedAt: calendar.updated_at
+            updatedAt: calendar.updated_at,
         };
     }
 }

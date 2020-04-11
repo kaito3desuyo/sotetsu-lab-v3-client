@@ -6,32 +6,32 @@ const routes: Routes = [
         path: '',
         loadChildren: () =>
             import('./pages/dashboard/dashboard.module').then(
-                mod => mod.DashboardModule
-            )
+                (mod) => mod.DashboardModule
+            ),
     },
     {
         path: 'operation',
         loadChildren: () =>
             import('./pages/operation/operation.module').then(
-                mod => mod.OperationModule
-            )
+                (mod) => mod.OperationModule
+            ),
     },
     {
         path: 'timetable',
         loadChildren: () =>
             import('./pages/timetable/timetable.module').then(
-                mod => mod.TimetableModule
-            )
-    }
+                (mod) => mod.TimetableModule
+            ),
+    },
 ];
 
 @NgModule({
     imports: [
         RouterModule.forRoot(routes, {
             onSameUrlNavigation: 'reload',
-            preloadingStrategy: PreloadAllModules
-        })
+            preloadingStrategy: PreloadAllModules,
+        }),
     ],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class AppRoutingModule {}

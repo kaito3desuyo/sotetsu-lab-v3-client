@@ -6,7 +6,7 @@ import { ReadVehicleDto } from '../models/vehicle/vehicle-dto';
 import { VehicleModel } from '../models/vehicle/vehicle-model';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class VehicleApiService {
     private apiUrl = environment.apiUrl + '/v1/vehicles';
@@ -16,7 +16,7 @@ export class VehicleApiService {
     searchVehicles(query: { number?: string; relations?: string[] }) {
         return this.http.post(this.apiUrl + '/search', query).pipe(
             map((data: ReadVehicleDto[]) => {
-                return data.map(result => {
+                return data.map((result) => {
                     return VehicleModel.readVehicleDtoImpl(result);
                 });
             })

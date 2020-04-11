@@ -15,17 +15,18 @@ export class StationModel {
             stationUrl: station.station_url,
             wheelchairBoarding: station.wheelchair_boarding,
             createdAt: station.created_at,
-            updatedAt: station.updated_at
+            updatedAt: station.updated_at,
         };
 
         if (station.route_station_lists) {
             returnObj.routeStationLists = station.route_station_lists.map(
-                data => RouteStationListModel.readRouteStationListDtoImpl(data)
+                (data) =>
+                    RouteStationListModel.readRouteStationListDtoImpl(data)
             );
         }
 
         if (station.stops) {
-            returnObj.stops = station.stops.map(data =>
+            returnObj.stops = station.stops.map((data) =>
                 StopModel.readStopDtoImpl(data)
             );
         }

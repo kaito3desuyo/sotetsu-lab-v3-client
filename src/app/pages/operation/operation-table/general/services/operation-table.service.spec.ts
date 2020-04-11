@@ -6,7 +6,7 @@ import { OperationTableService } from './operation-table.service';
 describe('Service: OperationTable', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationTableService]
+            providers: [OperationTableService],
         });
     });
 

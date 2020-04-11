@@ -7,7 +7,7 @@ import { TimetableAddService } from '../general/services/timetable-add.service';
 @Component({
     selector: 'app-timetable-add',
     templateUrl: './timetable-add.component.html',
-    styleUrls: ['./timetable-add.component.scss']
+    styleUrls: ['./timetable-add.component.scss'],
 })
 export class TimetableAddComponent extends BaseComponent {
     constructor(

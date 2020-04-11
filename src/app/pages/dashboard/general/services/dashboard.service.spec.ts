@@ -6,7 +6,7 @@ import { DashboardService } from './dashboard.service';
 describe('Service: Dashboard', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [DashboardService]
+            providers: [DashboardService],
         });
     });
 

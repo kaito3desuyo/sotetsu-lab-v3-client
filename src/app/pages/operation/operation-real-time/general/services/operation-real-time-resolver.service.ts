@@ -13,7 +13,7 @@ export class OperationRealTimeResolverService
         return forkJoin([
             this.operationRealTimeService.fetchServices(),
             this.operationRealTimeService.fetchCalendars(),
-            this.operationRealTimeService.fetchStations()
+            this.operationRealTimeService.fetchStations(),
         ]).pipe(
             flatMap(() => {
                 return forkJoin([
@@ -23,12 +23,12 @@ export class OperationRealTimeResolverService
                     this.operationRealTimeService.fetchOperationsCurrentPosition(),
                     this.operationRealTimeService.fetchTripClasses(),
                     this.operationRealTimeService.fetchOperations(),
-                    this.operationRealTimeService.fetchSightingsLatest()
+                    this.operationRealTimeService.fetchSightingsLatest(),
                 ]);
             }),
             flatMap(() => {
                 return forkJoin([
-                    this.operationRealTimeService.generateTable()
+                    this.operationRealTimeService.generateTable(),
                 ]);
             }),
             map(() => null)

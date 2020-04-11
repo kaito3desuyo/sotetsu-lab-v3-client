@@ -5,7 +5,7 @@ import {
     OnInit,
     Output,
     EventEmitter,
-    ChangeDetectorRef
+    ChangeDetectorRef,
 } from '@angular/core';
 import { IStation } from 'src/app/general/interfaces/station';
 import { FormGroup, FormBuilder, FormArray, Validators } from '@angular/forms';
@@ -26,7 +26,7 @@ import moment from 'moment';
     selector: 'app-timetable-editor-form-presentational',
     templateUrl: './timetable-editor-form-presentational.component.html',
     styleUrls: ['./timetable-editor-form-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableEditorFormPresentationalComponent implements OnInit {
     tripForm: FormArray = this.fb.array([]);
@@ -56,7 +56,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
         this.tripForm = this.fb.array([]);
         if (this.tripBlock) {
             this.tripCount = this.tripBlock.trips.length;
-            this.tripBlock.trips.forEach(trip => {
+            this.tripBlock.trips.forEach((trip) => {
                 this.tripForm.push(this.generateTrip(trip));
             });
         } else {
@@ -86,22 +86,22 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                 operationId: [
                     trip.tripOperationLists.length
                         ? trip.tripOperationLists[0].operationId
-                        : ''
+                        : '',
                 ],
                 tripClassId: [trip.tripClassId, Validators.required],
                 depotIn: [trip.depotIn],
                 depotOut: [trip.depotOut],
                 times: this.fb.array(
-                    this.stations.map(station =>
+                    this.stations.map((station) =>
                         this.generateTime(
                             station,
                             find(
                                 trip.times,
-                                time => time.stationId === station.id
+                                (time) => time.stationId === station.id
                             )
                         )
                     )
-                )
+                ),
             });
         } else {
             return this.fb.group({
@@ -111,8 +111,8 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                 depotIn: [false],
                 depotOut: [false],
                 times: this.fb.array(
-                    this.stations.map(station => this.generateTime(station))
-                )
+                    this.stations.map((station) => this.generateTime(station))
+                ),
             });
         }
     }
@@ -125,7 +125,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                     time.pickupType === 1 && time.dropoffType === 1
                         ? 'passing'
                         : 'stop',
-                    Validators.required
+                    Validators.required,
                 ],
                 stationId: [station.id, Validators.required],
                 stopId: [{ value: time.stopId, disabled: false }],
@@ -136,8 +136,8 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                                   'HH:mm'
                               )
                             : null,
-                        disabled: false
-                    }
+                        disabled: false,
+                    },
                 ],
                 departureTime: [
                     {
@@ -146,9 +146,9 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                                   'HH:mm'
                               )
                             : null,
-                        disabled: false
-                    }
-                ]
+                        disabled: false,
+                    },
+                ],
             });
         } else {
             return this.fb.group({
@@ -156,7 +156,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
                 stationId: [station.id, Validators.required],
                 stopId: [{ value: '', disabled: true }],
                 arrivalTime: [{ value: '', disabled: true }],
-                departureTime: [{ value: '', disabled: true }]
+                departureTime: [{ value: '', disabled: true }],
             });
         }
     }
@@ -164,7 +164,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
     getTime(stationId: string, form: FormArray): FormGroup {
         return find(
             form.controls,
-            ctls => ctls.get('stationId').value === stationId
+            (ctls) => ctls.get('stationId').value === stationId
         ) as FormGroup;
     }
 
@@ -184,7 +184,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
     }
 
     sortStops(array: IStop[]) {
-        return sortBy(array, o => o.stopName);
+        return sortBy(array, (o) => o.stopName);
     }
 
     onClickClear(): void {

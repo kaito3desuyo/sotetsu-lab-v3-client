@@ -6,7 +6,7 @@ import { OperationRealTimeService } from '../../services/operation-real-time.ser
 @Component({
     selector: 'app-operation-sightings-control-panel-container',
     templateUrl: './operation-sightings-control-panel-container.component.html',
-    styleUrls: ['./operation-sightings-control-panel-container.component.scss']
+    styleUrls: ['./operation-sightings-control-panel-container.component.scss'],
 })
 export class OperationSightingsControlPanelContainerComponent {
     finalUpdateTime$: Observable<Moment>;

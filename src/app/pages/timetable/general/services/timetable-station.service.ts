@@ -76,8 +76,8 @@ export class TimetableStationService {
         return this.calendarApi
             .getCalendarById(this.getCalendarIdAsStatic())
             .pipe(
-                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-                tap(data => {
+                map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap((data) => {
                     this.setCalendar(data);
                 }),
                 map(() => null)
@@ -106,10 +106,10 @@ export class TimetableStationService {
 
     fetchStations(): Observable<void> {
         return this.stationApi.getStations().pipe(
-            map(data =>
-                data.stations.map(o => StationModel.readStationDtoImpl(o))
+            map((data) =>
+                data.stations.map((o) => StationModel.readStationDtoImpl(o))
             ),
-            tap(data => {
+            tap((data) => {
                 this.setStations(data);
             }),
             map(() => null)
@@ -141,11 +141,13 @@ export class TimetableStationService {
             .searchTimes({
                 station_id: this.getStationIdAsStatic(),
                 calendar_id: this.getCalendarIdAsStatic(),
-                trip_direction: this.getTripDirectionAsStatic()
+                trip_direction: this.getTripDirectionAsStatic(),
             })
             .pipe(
-                map(data => data.times.map(o => TimeModel.readTimeDtoImpl(o))),
-                tap(data => {
+                map((data) =>
+                    data.times.map((o) => TimeModel.readTimeDtoImpl(o))
+                ),
+                tap((data) => {
                     this.setTimes(data);
                 }),
                 map(() => null)
@@ -163,15 +165,15 @@ export class TimetableStationService {
     fetchOperationSightings(): Observable<void> {
         return this.operationApi
             .getOperationSightingsLatest({
-                calendar_id: this.getCalendarIdAsStatic()
+                calendar_id: this.getCalendarIdAsStatic(),
             })
             .pipe(
-                map(data =>
-                    data.group_by_operations.map(o =>
+                map((data) =>
+                    data.group_by_operations.map((o) =>
                         OperationSightingModel.readOperationSightingDtoImpl(o)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this.setOperationSightings(data);
                 }),
                 map(() => null)

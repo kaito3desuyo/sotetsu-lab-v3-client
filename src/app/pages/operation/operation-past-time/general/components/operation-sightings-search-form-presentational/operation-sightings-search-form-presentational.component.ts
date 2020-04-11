@@ -5,7 +5,7 @@ import {
     EventEmitter,
     Input,
     OnChanges,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import moment, { Moment } from 'moment';
@@ -15,9 +15,9 @@ import moment, { Moment } from 'moment';
     templateUrl:
         './operation-sightings-search-form-presentational.component.html',
     styleUrls: [
-        './operation-sightings-search-form-presentational.component.scss'
+        './operation-sightings-search-form-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsSearchFormPresentationalComponent
     implements OnChanges {
@@ -25,8 +25,8 @@ export class OperationSightingsSearchFormPresentationalComponent
         referenceDate: [null, Validators.required],
         days: [
             null,
-            [Validators.required, Validators.min(1), Validators.max(30)]
-        ]
+            [Validators.required, Validators.min(1), Validators.max(30)],
+        ],
     });
     maxDate = moment();
 

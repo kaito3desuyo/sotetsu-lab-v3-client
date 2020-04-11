@@ -4,12 +4,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
     ReadTripOperationListDto,
-    UpdateTripOperationListDto
+    UpdateTripOperationListDto,
 } from '../models/trip-operation-list/trip-operation-list-dto';
 import { map } from 'rxjs/operators';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class TripOperationListApiService {
     private apiUrl = environment.apiUrl + '/v1/trip-operation-lists';
@@ -21,7 +21,7 @@ export class TripOperationListApiService {
     }): Observable<{ trip_operation_lists: ReadTripOperationListDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(
                 map(

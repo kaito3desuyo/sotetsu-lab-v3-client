@@ -5,9 +5,9 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
     templateUrl:
         './operation-sightings-table-legend-presentational.component.html',
     styleUrls: [
-        './operation-sightings-table-legend-presentational.component.scss'
+        './operation-sightings-table-legend-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsTableLegendPresentationalComponent {
     constructor() {}

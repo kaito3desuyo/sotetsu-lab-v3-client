@@ -6,7 +6,7 @@ import { FormationApiService } from './formation-api.service';
 describe('Service: FormationApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [FormationApiService]
+            providers: [FormationApiService],
         });
     });
 

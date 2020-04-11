@@ -6,7 +6,7 @@ import { TripOperationListApiService } from './trip-operation-list-api.service';
 describe('Service: TripOperationListApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TripOperationListApiService]
+            providers: [TripOperationListApiService],
         });
     });
 

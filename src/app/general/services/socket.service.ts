@@ -3,7 +3,7 @@ import { environment } from 'src/environments/environment';
 import { Observable } from 'rxjs';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class SocketService {
     private readonly url = environment.socketUrl;
@@ -24,14 +24,14 @@ export class SocketService {
         this.conn.send(
             JSON.stringify({
                 action,
-                data: JSON.stringify(data)
+                data: JSON.stringify(data),
             })
         );
     }
 
     on(): Observable<any> {
-        const observable = new Observable(observer => {
-            this.conn.onmessage = e => {
+        const observable = new Observable((observer) => {
+            this.conn.onmessage = (e) => {
                 observer.next(e);
             };
         });

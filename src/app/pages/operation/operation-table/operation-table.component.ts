@@ -6,7 +6,7 @@ import { TitleService } from 'src/app/general/services/title.service';
 @Component({
     selector: 'app-operation-table',
     templateUrl: './operation-table.component.html',
-    styleUrls: ['./operation-table.component.scss']
+    styleUrls: ['./operation-table.component.scss'],
 })
 export class OperationTableComponent extends BaseComponent {
     calendarId: string;
@@ -22,7 +22,7 @@ export class OperationTableComponent extends BaseComponent {
                 this.titleService.setTitle(data.title);
             }
         );
-        this.subscription = this.route.paramMap.subscribe(params => {
+        this.subscription = this.route.paramMap.subscribe((params) => {
             this.calendarId = params.get('calendar_id');
         });
     }

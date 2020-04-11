@@ -6,7 +6,7 @@ import { TimetableStationResolverService } from './timetable-station-resolver.se
 describe('Service: TimetableStationResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableStationResolverService]
+            providers: [TimetableStationResolverService],
         });
     });
 

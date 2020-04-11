@@ -11,7 +11,7 @@ describe('TimetableAddComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAddComponent]
+            declarations: [TimetableAddComponent],
         }).compileComponents();
     }));
 

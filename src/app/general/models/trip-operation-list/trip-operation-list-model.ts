@@ -16,7 +16,7 @@ export class TripOperationListModel {
             startTimeId: data.start_time_id,
             endTimeId: data.end_time_id,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         if (data.trip) {

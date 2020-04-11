@@ -6,7 +6,7 @@ import { TimetableAllLineTableResolverService } from './timetable-all-line-table
 describe('Service: TimetableAllLineTableResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableAllLineTableResolverService]
+            providers: [TimetableAllLineTableResolverService],
         });
     });
 

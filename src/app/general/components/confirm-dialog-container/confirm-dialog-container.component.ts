@@ -5,7 +5,7 @@ import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interfa
 @Component({
     selector: 'app-confirm-dialog-container',
     templateUrl: './confirm-dialog-container.component.html',
-    styleUrls: ['./confirm-dialog-container.component.scss']
+    styleUrls: ['./confirm-dialog-container.component.scss'],
 })
 export class ConfirmDialogContainerComponent implements OnInit {
     constructor(

@@ -6,7 +6,7 @@ import { map } from 'rxjs/operators';
 import { ReadAgencyDto } from '../models/agency/agency-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class AgencyApiService {
     private apiUrl = environment.apiUrl + '/v1/agencies';

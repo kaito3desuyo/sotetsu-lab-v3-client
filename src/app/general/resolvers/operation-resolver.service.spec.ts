@@ -6,7 +6,7 @@ import { OperationResolverService } from './operation-resolver.service';
 describe('Service: OperationResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationResolverService]
+            providers: [OperationResolverService],
         });
     });
 

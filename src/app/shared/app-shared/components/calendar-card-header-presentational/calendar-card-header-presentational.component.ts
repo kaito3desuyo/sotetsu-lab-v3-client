@@ -2,7 +2,7 @@ import {
     Component,
     OnInit,
     ChangeDetectionStrategy,
-    Input
+    Input,
 } from '@angular/core';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 
@@ -10,7 +10,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     selector: 'app-calendar-card-header-presentational',
     templateUrl: './calendar-card-header-presentational.component.html',
     styleUrls: ['./calendar-card-header-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarCardHeaderPresentationalComponent {
     @Input() calendar: ICalendar;
