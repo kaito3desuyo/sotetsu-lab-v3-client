@@ -4,7 +4,7 @@ import { environment } from 'src/environments/environment';
 declare let gtag: any;
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class GoogleAnalyticsService {
     constructor() {}
@@ -33,7 +33,7 @@ export class GoogleAnalyticsService {
             url = `/${url}`;
         }
         gtag('config', environment.analytics.id, {
-            page_path: url
+            page_path: url,
         });
     }
 
@@ -58,7 +58,7 @@ export class GoogleAnalyticsService {
         gtag('event', eventName, {
             event_category: eventCategory,
             event_action: eventAction,
-            event_label: eventLabel
+            event_label: eventLabel,
         });
     }
 }

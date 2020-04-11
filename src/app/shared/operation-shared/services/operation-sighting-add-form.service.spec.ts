@@ -6,7 +6,7 @@ import { OperationSightingAddFormService } from './operation-sighting-add-form.s
 describe('Service: OperationSightingAddForm', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationSightingAddFormService]
+            providers: [OperationSightingAddFormService],
         });
     });
 

@@ -37,7 +37,7 @@ export class TimetableUpdateResolverService
                     this.timetableUpdateService.fetchCalendar(),
                     this.timetableEditorService.fetchOperations(),
                     this.timetableEditorService.fetchStations(),
-                    this.timetableEditorService.fetchTripClasses()
+                    this.timetableEditorService.fetchTripClasses(),
                 ]).pipe(map(() => null))
             )
         );

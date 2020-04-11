@@ -15,7 +15,7 @@ export class RouteModel {
         routeColor: '',
         routeTextColor: '',
         createdAt: '',
-        updatedAt: ''
+        updatedAt: '',
     };
 
     private state = { ...this.initialValue };
@@ -43,12 +43,13 @@ export class RouteModel {
             routeColor: route.route_color,
             routeTextColor: route.route_text_color,
             createdAt: route.created_at,
-            updatedAt: route.updated_at
+            updatedAt: route.updated_at,
         };
 
         if (route.route_station_lists) {
-            returnObj.routeStationLists = route.route_station_lists.map(data =>
-                RouteStationListModel.readRouteStationListDtoImpl(data)
+            returnObj.routeStationLists = route.route_station_lists.map(
+                (data) =>
+                    RouteStationListModel.readRouteStationListDtoImpl(data)
             );
         }
 

@@ -21,7 +21,7 @@ export class TripModel {
             depotIn: trip.depot_in,
             depotOut: trip.depot_out,
             createdAt: trip.created_at,
-            updatedAt: trip.updated_at
+            updatedAt: trip.updated_at,
         };
 
         if (trip.trip_block) {
@@ -38,7 +38,7 @@ export class TripModel {
 
         if (trip.trip_operation_lists) {
             parsed.tripOperationLists = trip.trip_operation_lists.map(
-                tripOperationList =>
+                (tripOperationList) =>
                     TripOperationListModel.readTripOperationListDtoImpl(
                         tripOperationList
                     )
@@ -46,7 +46,7 @@ export class TripModel {
         }
 
         if (trip.times) {
-            parsed.times = trip.times.map(time =>
+            parsed.times = trip.times.map((time) =>
                 TimeModel.readTimeDtoImpl(time)
             );
         }

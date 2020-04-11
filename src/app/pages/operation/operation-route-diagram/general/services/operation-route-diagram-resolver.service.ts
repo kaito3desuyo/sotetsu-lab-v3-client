@@ -18,7 +18,7 @@ export class OperationRouteDiagramResolverService
             this.operationRouteDiagramService.fetchCalendars(),
             this.operationRouteDiagramService.fetchOperationAndCalender(),
             this.operationRouteDiagramService.fetchTripOperationLists(),
-            this.operationRouteDiagramService.fetchStations()
+            this.operationRouteDiagramService.fetchStations(),
         ]).pipe(map(() => null));
     }
 }

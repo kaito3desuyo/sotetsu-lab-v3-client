@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-dashboard-operation-search-menu-container',
     templateUrl: './dashboard-operation-search-menu-container.component.html',
-    styleUrls: ['./dashboard-operation-search-menu-container.component.scss']
+    styleUrls: ['./dashboard-operation-search-menu-container.component.scss'],
 })
 export class DashboardOperationSearchMenuContainerComponent {
     calendarsSelectList$: Observable<{ label: string; value: string }[]>;

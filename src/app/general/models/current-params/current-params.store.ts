@@ -22,10 +22,10 @@ export function createInitialState(): CurrentParamsState {
         day: null,
         calendar: {
             id: '',
-            lastUpdatedAt: ''
+            lastUpdatedAt: '',
         },
         stationId: '',
-        ...(localStorageValue || {})
+        ...(localStorageValue || {}),
     };
 }
 

@@ -11,7 +11,7 @@ describe('OperationSightingAddFormPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationSightingAddFormPresentationalComponent]
+            declarations: [OperationSightingAddFormPresentationalComponent],
         }).compileComponents();
     }));
 

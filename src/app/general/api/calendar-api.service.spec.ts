@@ -6,7 +6,7 @@ import { CalendarApiService } from './calendar-api.service';
 describe('Service: CalendarApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [CalendarApiService]
+            providers: [CalendarApiService],
         });
     });
 

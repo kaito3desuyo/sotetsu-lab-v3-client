@@ -6,7 +6,7 @@ import { OperationRealTimeResolverService } from './operation-real-time-resolver
 describe('Service: OperationRealTimeResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationRealTimeResolverService]
+            providers: [OperationRealTimeResolverService],
         });
     });
 

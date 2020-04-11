@@ -10,7 +10,7 @@ export class TripClassModel {
             tripClassColor: tripClass.trip_class_color,
             sequence: tripClass.sequence,
             createdAt: tripClass.created_at,
-            updatedAt: tripClass.updated_at
+            updatedAt: tripClass.updated_at,
         };
 
         return parsed;

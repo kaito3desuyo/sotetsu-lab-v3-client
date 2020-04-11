@@ -2,7 +2,7 @@ import {
     Component,
     OnInit,
     ChangeDetectionStrategy,
-    Input
+    Input,
 } from '@angular/core';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { IStation } from 'src/app/general/interfaces/station';
@@ -11,7 +11,7 @@ import { IStation } from 'src/app/general/interfaces/station';
     selector: 'app-timetable-station-header-presentational',
     templateUrl: './timetable-station-header-presentational.component.html',
     styleUrls: ['./timetable-station-header-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableStationHeaderPresentationalComponent {
     @Input() calendar: ICalendar;

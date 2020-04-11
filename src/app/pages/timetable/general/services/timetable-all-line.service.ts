@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import {
     ITimetableStation,
-    ETimetableStationViewMode
+    ETimetableStationViewMode,
 } from '../interfaces/timetable-station';
 import { IService } from 'src/app/general/interfaces/service';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
@@ -54,7 +54,7 @@ export class TimetableAllLineService {
     >({
         length: 0,
         pageIndex: 0,
-        pageSize: 10
+        pageSize: 10,
     });
 
     private groupingBaseTrip: BehaviorSubject<ITrip> = new BehaviorSubject<
@@ -93,8 +93,8 @@ export class TimetableAllLineService {
         return this.calendarApi
             .getCalendarById(this.getCalendarIdAsStatic())
             .pipe(
-                map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-                tap(data => {
+                map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+                tap((data) => {
                     this.setCalendar(data);
                 }),
                 map(() => null)
@@ -141,13 +141,13 @@ export class TimetableAllLineService {
         return this.serviceApi
             .searchServices({
                 service_name:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
             })
             .pipe(
-                map(data => {
+                map((data) => {
                     return ServiceModel.readServiceDtoImpl(data.services[0]);
                 }),
-                tap(data => {
+                tap((data) => {
                     this.setService(data);
                 }),
                 map(() => null)
@@ -165,17 +165,17 @@ export class TimetableAllLineService {
     fetchStations(): Observable<void> {
         return this.serviceApi
             .getServiceStationsById(this.getServiceAsStatic().id, {
-                trip_direction: this.getTripDirectionAsStatic()
+                trip_direction: this.getTripDirectionAsStatic(),
             })
             .pipe(
-                map(data => {
-                    return data.stations.map(result =>
+                map((data) => {
+                    return data.stations.map((result) =>
                         StationModel.readStationDtoImpl(result)
                     );
                 }),
-                tap(data => {
+                tap((data) => {
                     this.setStations(
-                        data.map(station => ({
+                        data.map((station) => ({
                             ...station,
                             viewMode: this.getViewMode(
                                 station.stationName,
@@ -184,7 +184,7 @@ export class TimetableAllLineService {
                             borderSetting: this.getBorderSetting(
                                 station.stationName,
                                 this.getTripDirectionAsStatic()
-                            )
+                            ),
                         }))
                     );
                 }),
@@ -227,7 +227,7 @@ export class TimetableAllLineService {
             trip_block_id?: string;
         } = {
             calendar_id: this.getCalendarIdAsStatic(),
-            trip_direction: this.getTripDirectionAsStatic()
+            trip_direction: this.getTripDirectionAsStatic(),
         };
 
         if (blockId) {
@@ -235,19 +235,19 @@ export class TimetableAllLineService {
         }
 
         return this.tripApi.searchTripsByBlocks(params).pipe(
-            map(data =>
-                data.trip_blocks.map(tripBlock =>
+            map((data) =>
+                data.trip_blocks.map((tripBlock) =>
                     TripBlockModel.readTripBlockDtoImpl(tripBlock)
                 )
             ),
-            tap(data => {
+            tap((data) => {
                 let trips: ITrip[] = [];
-                data.forEach(tripBlock => {
+                data.forEach((tripBlock) => {
                     trips = concat(trips, tripBlock.trips);
                 });
                 this.setTrips(trips);
                 this.updatePageSetting({
-                    length: trips.length
+                    length: trips.length,
                 });
             })
         );
@@ -269,7 +269,7 @@ export class TimetableAllLineService {
         const current = this.getPageSettingAsStatic();
         this.setPageSetting({
             ...current,
-            ...setting
+            ...setting,
         });
     }
 
@@ -355,11 +355,11 @@ export class TimetableAllLineService {
                 text: `${trip.tripNumber}列車を削除しますか？この操作は元に戻すことができません。`,
                 cancelButtonText: 'キャンセル',
                 goButtonText: '削除する',
-                goButtonColor: 'warn'
-            }
+                goButtonColor: 'warn',
+            },
         });
 
-        dialogRef.afterClosed().subscribe(done => {
+        dialogRef.afterClosed().subscribe((done) => {
             if (done) {
                 this.tripApi
                     .deleteTripById(trip.id)
@@ -368,7 +368,7 @@ export class TimetableAllLineService {
                         () => {
                             this.notificationService.open('削除しました', 'OK');
                         },
-                        error => {
+                        (error) => {
                             this.notificationService.open(
                                 'エラーが発生しました',
                                 'OK'
@@ -389,11 +389,11 @@ export class TimetableAllLineService {
                 text: `${targetTrip.tripNumber}列車を${baseTrip.tripNumber}列車が所属するグループに追加しますか？`,
                 cancelButtonText: 'キャンセル',
                 goButtonText: '追加する',
-                goButtonColor: 'primary'
-            }
+                goButtonColor: 'primary',
+            },
         });
 
-        dialogRef.afterClosed().subscribe(done => {
+        dialogRef.afterClosed().subscribe((done) => {
             if (done) {
                 this.tripApi
                     .addTripToTripBlockById(targetTrip.id, baseTrip.tripBlockId)
@@ -406,7 +406,7 @@ export class TimetableAllLineService {
                                 'OK'
                             );
                         },
-                        error => {
+                        (error) => {
                             this.notificationService.open(
                                 'エラーが発生しました',
                                 'OK'
@@ -427,11 +427,11 @@ export class TimetableAllLineService {
                 text: `${targetTrip.tripNumber}列車を${baseTrip.tripNumber}列車が所属するグループから除外しますか？`,
                 cancelButtonText: 'キャンセル',
                 goButtonText: '除外する',
-                goButtonColor: 'warn'
-            }
+                goButtonColor: 'warn',
+            },
         });
 
-        dialogRef.afterClosed().subscribe(done => {
+        dialogRef.afterClosed().subscribe((done) => {
             if (done) {
                 this.tripApi
                     .removeTripFromTripBlockById(targetTrip.id)
@@ -444,7 +444,7 @@ export class TimetableAllLineService {
                                 'OK'
                             );
                         },
-                        error => {
+                        (error) => {
                             this.notificationService.open(
                                 'エラーが発生しました',
                                 'OK'

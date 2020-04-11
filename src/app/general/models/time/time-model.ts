@@ -18,7 +18,7 @@ export class TimeModel {
             departureDays: data.departure_days,
             departureTime: data.departure_time,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         if (data.trip) {

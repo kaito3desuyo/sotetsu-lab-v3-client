@@ -2,7 +2,7 @@ import { Injectable, EventEmitter } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class SidenavService {
     private readonly sidenavState: BehaviorSubject<

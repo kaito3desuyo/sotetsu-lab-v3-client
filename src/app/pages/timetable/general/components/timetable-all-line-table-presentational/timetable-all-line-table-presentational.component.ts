@@ -4,11 +4,11 @@ import {
     ChangeDetectionStrategy,
     Input,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import {
     ITimetableStation,
-    ETimetableStationViewMode
+    ETimetableStationViewMode,
 } from '../../interfaces/timetable-station';
 import { ITrip } from 'src/app/general/interfaces/trip';
 import { find, some } from 'lodash-es';
@@ -19,9 +19,9 @@ import moment from 'moment';
     templateUrl: './timetable-all-line-table-presentational.component.html',
     styleUrls: [
         './timetable-all-line-table-presentational.component.scss',
-        '../../../../../../assets/fonts/DiaPro-web/DiaPro.css'
+        '../../../../../../assets/fonts/DiaPro-web/DiaPro.css',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableAllLineTablePresentationalComponent implements OnInit {
     staitonViewMode: typeof ETimetableStationViewMode = ETimetableStationViewMode;
@@ -52,7 +52,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
         trip: ITrip,
         stationIndex: number
     ) {
-        const time = find(trip.times, o => {
+        const time = find(trip.times, (o) => {
             return o.stationId === station.id;
         });
 
@@ -129,14 +129,14 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
             let isExistTimeAfterStation = false;
             for (let i = 0; i < stationIndex; i++) {
                 const stationId = this.stations[i].id;
-                if (some(trip.times, o => o.stationId === stationId)) {
+                if (some(trip.times, (o) => o.stationId === stationId)) {
                     isExistTimeBeforeStation = true;
                     break;
                 }
             }
             for (let i = stationIndex; i < this.stations.length - 1; i++) {
                 const stationId = this.stations[i].id;
-                if (some(trip.times, o => o.stationId === stationId)) {
+                if (some(trip.times, (o) => o.stationId === stationId)) {
                     isExistTimeAfterStation = true;
                     break;
                 }
@@ -148,7 +148,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
 
             const minus1Station = this.stations[stationIndex - 1];
             if (minus1Station) {
-                const minus1Time = find(trip.times, o => {
+                const minus1Time = find(trip.times, (o) => {
                     return o.stationId === minus1Station.id;
                 });
 

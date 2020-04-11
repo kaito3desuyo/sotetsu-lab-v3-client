@@ -5,14 +5,14 @@ import { Observable } from 'rxjs';
 import { IOperationSighting } from '../interfaces/operation-sighting';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class FormationResolverService {
     constructor() {}
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class FormationsAllNumbersResolverService
     implements Resolve<{ formationNumber: string }[]> {
@@ -27,7 +27,7 @@ export class FormationsAllNumbersResolverService
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class FormationsAllLatestSightingsResolverService
     implements Resolve<IOperationSighting[]> {

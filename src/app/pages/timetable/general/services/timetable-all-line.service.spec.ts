@@ -6,7 +6,7 @@ import { TimetableAllLineService } from './timetable-all-line.service';
 describe('Service: TimetableAllLine', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableAllLineService]
+            providers: [TimetableAllLineService],
         });
     });
 

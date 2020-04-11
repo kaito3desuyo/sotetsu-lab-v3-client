@@ -70,7 +70,7 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         MatSlideToggleModule,
         MatTooltipModule,
         MatDialogModule,
-        TimetableSharedModule
+        TimetableSharedModule,
     ],
     declarations: [
         TimetableAllLineComponent,
@@ -92,7 +92,7 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         TimetableAddModeSelectPresentationalComponent,
         TimetableUpdateHeaderContainerComponent,
         TimetableEditorFormContainerComponent,
-        TimetableEditorFormPresentationalComponent
+        TimetableEditorFormPresentationalComponent,
     ],
     providers: [
         TimetableAllLineService,
@@ -103,7 +103,7 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         TimetableAddResolverService,
         TimetableUpdateService,
         TimetableUpdateResolverService,
-        TimetableEditorService
-    ]
+        TimetableEditorService,
+    ],
 })
 export class TimetableModule {}

@@ -10,11 +10,11 @@ import { ReadTripClassDto } from '../models/trip-class/trip-class-dto';
 import {
     ReadTripBlockDto,
     CreateTripBlockDto,
-    UpdateTripBlockDto
+    UpdateTripBlockDto,
 } from '../models/trip-block/trip-block-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class TripApiService {
     private apiUrl = environment.apiUrl + '/v1/trips';
@@ -70,7 +70,7 @@ export class TripApiService {
     }): Observable<{ trip_classes: ReadTripClassDto[] }> {
         return this.http
             .get(this.apiUrl + '/classes', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { trip_classes: ReadTripClassDto[] }) => data));
     }
@@ -81,11 +81,11 @@ export class TripApiService {
     }): Observable<ITrip[]> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(
                 map((data: ReadTripDto[]) => {
-                    return data.map(result =>
+                    return data.map((result) =>
                         TripModel.readTripDtoImpl(result)
                     );
                 })
@@ -99,7 +99,7 @@ export class TripApiService {
     }): Observable<{ trip_blocks: ReadTripBlockDto[] }> {
         return this.http
             .get(this.apiUrl + '/search/by-blocks', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { trip_blocks: ReadTripBlockDto[] }) => data));
     }

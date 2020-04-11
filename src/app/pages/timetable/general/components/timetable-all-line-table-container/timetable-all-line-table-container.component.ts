@@ -9,7 +9,7 @@ import { map } from 'rxjs/operators';
 @Component({
     selector: 'app-timetable-all-line-table-container',
     templateUrl: './timetable-all-line-table-container.component.html',
-    styleUrls: ['./timetable-all-line-table-container.component.scss']
+    styleUrls: ['./timetable-all-line-table-container.component.scss'],
 })
 export class TimetableAllLineTableContainerComponent {
     tripDirection$: Observable<'0' | '1'>;
@@ -29,7 +29,7 @@ export class TimetableAllLineTableContainerComponent {
 
         this.isGroupingMode$ = this.timetableAllLineService
             .getGroupingBaseTrip()
-            .pipe(map(data => (data ? true : false)));
+            .pipe(map((data) => (data ? true : false)));
         this.groupingBaseTrip$ = this.timetableAllLineService.getGroupingBaseTrip();
     }
 

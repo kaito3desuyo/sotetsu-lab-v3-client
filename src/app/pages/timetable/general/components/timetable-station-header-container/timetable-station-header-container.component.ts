@@ -7,7 +7,7 @@ import { IStation } from 'src/app/general/interfaces/station';
 @Component({
     selector: 'app-timetable-station-header-container',
     templateUrl: './timetable-station-header-container.component.html',
-    styleUrls: ['./timetable-station-header-container.component.scss']
+    styleUrls: ['./timetable-station-header-container.component.scss'],
 })
 export class TimetableStationHeaderContainerComponent {
     calendar$: Observable<ICalendar>;

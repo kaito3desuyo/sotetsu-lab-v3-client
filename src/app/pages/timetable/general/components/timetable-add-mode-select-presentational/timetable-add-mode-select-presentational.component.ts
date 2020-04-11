@@ -5,7 +5,7 @@ import {
     Output,
     EventEmitter,
     Inject,
-    Injector
+    Injector,
 } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
@@ -14,7 +14,7 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
     selector: 'app-timetable-add-mode-select-presentational',
     templateUrl: './timetable-add-mode-select-presentational.component.html',
     styleUrls: ['./timetable-add-mode-select-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableAddModeSelectPresentationalComponent extends BaseComponent {
     isSaveTripsIndividually = this.fb.control(false);
@@ -26,7 +26,7 @@ export class TimetableAddModeSelectPresentationalComponent extends BaseComponent
     constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
         super(injector);
         this.subscription = this.isSaveTripsIndividually.valueChanges.subscribe(
-            bool => {
+            (bool) => {
                 this.changeIsSaveTripsIndividually.emit(bool);
             }
         );

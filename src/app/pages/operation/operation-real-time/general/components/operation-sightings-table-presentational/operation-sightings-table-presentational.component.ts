@@ -5,7 +5,7 @@ import {
     Input,
     OnChanges,
     SimpleChanges,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { IOperationSightingTableData } from '../../interfaces/operation-sighting-table';
@@ -16,7 +16,7 @@ import moment from 'moment';
     selector: 'app-operation-sightings-table-presentational',
     templateUrl: './operation-sightings-table-presentational.component.html',
     styleUrls: ['./operation-sightings-table-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsTablePresentationalComponent
     implements OnChanges {
@@ -75,14 +75,7 @@ export class OperationSightingsTablePresentationalComponent
             .minute(0)
             .second(0)
             .millisecond(0)
-            .diff(
-                date
-                    .hour(0)
-                    .minute(0)
-                    .second(0)
-                    .millisecond(0),
-                'days'
-            );
+            .diff(date.hour(0).minute(0).second(0).millisecond(0), 'days');
     }
 
     trackByItem(index: number, value: IOperationSightingTableData): string {

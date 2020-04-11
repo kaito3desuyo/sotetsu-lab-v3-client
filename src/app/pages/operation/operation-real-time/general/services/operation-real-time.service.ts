@@ -6,7 +6,7 @@ import {
     zip,
     timer,
     forkJoin,
-    Subscription
+    Subscription,
 } from 'rxjs';
 import { map, tap, flatMap, skip, take } from 'rxjs/operators';
 import { find } from 'lodash-es';
@@ -38,7 +38,7 @@ import { ParamsQuery } from 'src/app/state/params';
 import { OperationSightingAddFormService } from 'src/app/shared/operation-shared/services/operation-sighting-add-form.service';
 import {
     IOperationSightingTableData,
-    IOperationCurrentPositionTableData
+    IOperationCurrentPositionTableData,
 } from '../interfaces/operation-sighting-table';
 
 @Injectable()
@@ -172,7 +172,7 @@ export class OperationRealTimeService extends BaseService {
 
     startSocketReceive(): void {
         console.log('開始');
-        this.socketSub = this.socketService.on().subscribe(data => {
+        this.socketSub = this.socketService.on().subscribe((data) => {
             console.log(data);
             if (this.isAutoReloadEnabled) {
                 this.notification.open('データが更新されました', 'OK');
@@ -194,12 +194,12 @@ export class OperationRealTimeService extends BaseService {
     fetchSightingsLatest(): Observable<void> {
         return this.operationApi
             .getOperationSightingsLatest({
-                calendar_id: this._calendars$.getValue()[0].id
+                calendar_id: this._calendars$.getValue()[0].id,
             })
             .pipe(
-                tap(data => {
+                tap((data) => {
                     this._formationSightingsLatest$.next(
-                        data.group_by_formations.map(o =>
+                        data.group_by_formations.map((o) =>
                             OperationSightingModel.readOperationSightingDtoImpl(
                                 o
                             )
@@ -207,7 +207,7 @@ export class OperationRealTimeService extends BaseService {
                     );
 
                     this._operationSightingsLatest$.next(
-                        data.group_by_operations.map(o =>
+                        data.group_by_operations.map((o) =>
                             OperationSightingModel.readOperationSightingDtoImpl(
                                 o
                             )
@@ -226,11 +226,11 @@ export class OperationRealTimeService extends BaseService {
         return this.serviceApi
             .searchServices({
                 service_name:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線'
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
             })
             .pipe(
-                tap(data => {
-                    const services = data.services.map(result =>
+                tap((data) => {
+                    const services = data.services.map((result) =>
                         ServiceModel.readServiceDtoImpl(result)
                     );
                     this._services$.next(services);
@@ -247,11 +247,11 @@ export class OperationRealTimeService extends BaseService {
             .searchCalendars({
                 date: moment()
                     .subtract(moment().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD')
+                    .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap(data => {
-                    const calendars = data.calendars.map(result =>
+                tap((data) => {
+                    const calendars = data.calendars.map((result) =>
                         CalendarModel.readCalendarDtoImpl(result)
                     );
                     this._calendars$.next(calendars);
@@ -266,15 +266,15 @@ export class OperationRealTimeService extends BaseService {
     fetchOperations(): Observable<void> {
         return this.operationApi
             .searchOperations({
-                calendar_id: this._calendars$.getValue()[0].id
+                calendar_id: this._calendars$.getValue()[0].id,
             })
             .pipe(
                 map((data: { operations: ReadOperationDto[] }) =>
-                    data.operations.map(result =>
+                    data.operations.map((result) =>
                         OperationModel.readOperationDtoImpl(result)
                     )
                 ),
-                tap(operations => {
+                tap((operations) => {
                     this._operations$.next(operations);
                 }),
                 map(() => null)
@@ -289,10 +289,10 @@ export class OperationRealTimeService extends BaseService {
             .searchFormationNumbers({
                 date: moment()
                     .subtract(moment().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD')
+                    .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap(numbers => {
+                tap((numbers) => {
                     this._formationNumbers$.next(numbers);
                 }),
                 map(() => null)
@@ -305,10 +305,10 @@ export class OperationRealTimeService extends BaseService {
     fetchOperationNumbers(): Observable<void> {
         return this.operationApi
             .searchOperationNumbers({
-                calendar_id: this._calendars$.getValue()[0].id
+                calendar_id: this._calendars$.getValue()[0].id,
             })
             .pipe(
-                tap(numbers => {
+                tap((numbers) => {
                     this._operationNumbers$.next(numbers);
                 }),
                 map(() => null)
@@ -321,11 +321,11 @@ export class OperationRealTimeService extends BaseService {
     fetchOperationsCurrentPosition(): Observable<void> {
         return this.operationApi
             .searchOperationsCurrentPosition({
-                calendar_id: this._calendars$.getValue()[0].id
+                calendar_id: this._calendars$.getValue()[0].id,
             })
             .pipe(
-                map(data => {
-                    return data.operations.map(result => {
+                map((data) => {
+                    return data.operations.map((result) => {
                         return {
                             id: result.id,
                             operationNumber: result.operation_number,
@@ -344,12 +344,12 @@ export class OperationRealTimeService extends BaseService {
                                     result.current_position.next &&
                                     TripOperationListModel.readTripOperationListDtoImpl(
                                         result.current_position.next
-                                    )
-                            }
+                                    ),
+                            },
                         };
                     });
                 }),
-                tap(data => {
+                tap((data) => {
                     this._operationsCurrentPosition$.next(data);
                 }),
                 map(() => null)
@@ -362,12 +362,12 @@ export class OperationRealTimeService extends BaseService {
     fetchTripClasses(): Observable<void> {
         return this.tripApi
             .getTripClasses({
-                service_id: this._services$.getValue()[0].id
+                service_id: this._services$.getValue()[0].id,
             })
             .pipe(
-                tap(data => {
+                tap((data) => {
                     const tripClasses: ITripClass[] = data.trip_classes.map(
-                        result => TripClassModel.readTripClassDtoImpl(result)
+                        (result) => TripClassModel.readTripClassDtoImpl(result)
                     );
                     this._tripClasses$.next(tripClasses);
                 }),
@@ -380,8 +380,8 @@ export class OperationRealTimeService extends BaseService {
      */
     fetchStations(): Observable<void> {
         return this.stationApi.getStations().pipe(
-            tap(data => {
-                const stations = data.stations.map(result =>
+            tap((data) => {
+                const stations = data.stations.map((result) =>
                     StationModel.readStationDtoImpl(result)
                 );
                 this._stations$.next(stations);
@@ -417,10 +417,10 @@ export class OperationRealTimeService extends BaseService {
                 nextTime: position.currentPosition.next.startTime.departureTime,
                 nextStation: find(
                     stations,
-                    station =>
+                    (station) =>
                         station.id ===
                         position.currentPosition.next.startTime.stationId
-                ).stationName
+                ).stationName,
             };
         }
 
@@ -439,7 +439,7 @@ export class OperationRealTimeService extends BaseService {
                 prevTime: position.currentPosition.prev.endTime.arrivalTime,
                 prevStation: find(
                     stations,
-                    station =>
+                    (station) =>
                         station.id ===
                         position.currentPosition.prev.endTime.stationId
                 ).stationName,
@@ -448,7 +448,7 @@ export class OperationRealTimeService extends BaseService {
                     position.currentPosition.prev.trip.depotIn &&
                     position.currentPosition.next.trip.depotOut
                         ? '一時入庫'
-                        : '停車中'
+                        : '停車中',
             };
         }
 
@@ -459,7 +459,8 @@ export class OperationRealTimeService extends BaseService {
         ) {
             const tripClass = find(
                 tripClasses,
-                o => o.id === position.currentPosition.current.trip.tripClassId
+                (o) =>
+                    o.id === position.currentPosition.current.trip.tripClassId
             );
             return {
                 tripId: position.currentPosition.current.tripId,
@@ -473,17 +474,17 @@ export class OperationRealTimeService extends BaseService {
                     position.currentPosition.current.startTime.departureTime,
                 prevStation: find(
                     stations,
-                    station =>
+                    (station) =>
                         station.id ===
                         position.currentPosition.current.startTime.stationId
                 ).stationName,
                 nextTime: position.currentPosition.current.endTime.arrivalTime,
                 nextStation: find(
                     stations,
-                    station =>
+                    (station) =>
                         station.id ===
                         position.currentPosition.current.endTime.stationId
-                ).stationName
+                ).stationName,
             };
         }
 
@@ -502,7 +503,7 @@ export class OperationRealTimeService extends BaseService {
                 prevTime: position.currentPosition.prev.endTime.arrivalTime,
                 prevStation: find(
                     stations,
-                    station =>
+                    (station) =>
                         station.id ===
                         position.currentPosition.prev.endTime.stationId
                 ).stationName,
@@ -511,7 +512,7 @@ export class OperationRealTimeService extends BaseService {
                     : null,
                 nextStation: position.currentPosition.prev.trip.depotIn
                     ? '入庫済'
-                    : null
+                    : null,
             };
         }
         return {
@@ -524,7 +525,7 @@ export class OperationRealTimeService extends BaseService {
             prevTime: null,
             prevStation: '不明',
             nextTime: null,
-            nextStation: '不明'
+            nextStation: '不明',
         };
     }
 
@@ -539,7 +540,7 @@ export class OperationRealTimeService extends BaseService {
         ).pipe(
             take(1),
             map(([numbers, formationSightings, currentPositions]) => {
-                return numbers.map(data => {
+                return numbers.map((data) => {
                     const findSightings: IOperationSighting = find(
                         formationSightings,
                         (val: IOperationSighting) =>
@@ -556,13 +557,13 @@ export class OperationRealTimeService extends BaseService {
                             formationNumber: data.formationNumber,
                             sightingTime: null,
                             updatedAt: null,
-                            trip: null
+                            trip: null,
                         };
                     }
 
                     const targetPosition = find(
                         currentPositions,
-                        position =>
+                        (position) =>
                             findSightings.circulatedOperation &&
                             findSightings.circulatedOperation
                                 .operationNumber === position.operationNumber
@@ -586,11 +587,11 @@ export class OperationRealTimeService extends BaseService {
                             ? this.generateCurrentPositionTableData(
                                   targetPosition
                               )
-                            : null
+                            : null,
                     };
                 });
             }),
-            tap(data => {
+            tap((data) => {
                 this._formationTableData$.next(data);
             })
         );
@@ -612,9 +613,9 @@ export class OperationRealTimeService extends BaseService {
                     operations,
                     numbers,
                     operationSightings,
-                    currentPositions
+                    currentPositions,
                 ]) => {
-                    return numbers.map(data => {
+                    return numbers.map((data) => {
                         const findSightings: IOperationSighting = find(
                             operationSightings,
                             (val: IOperationSighting) =>
@@ -626,7 +627,7 @@ export class OperationRealTimeService extends BaseService {
                         if (!findSightings) {
                             const targetPosition1 = find(
                                 currentPositions,
-                                position =>
+                                (position) =>
                                     data.operationNumber ===
                                     position.operationNumber
                             );
@@ -637,7 +638,7 @@ export class OperationRealTimeService extends BaseService {
                                 rotatedOperationNumber: data.operationNumber,
                                 rotatedOperationId: find(
                                     operations,
-                                    operation =>
+                                    (operation) =>
                                         operation.operationNumber ===
                                         data.operationNumber
                                 ).id,
@@ -648,13 +649,13 @@ export class OperationRealTimeService extends BaseService {
                                     ? this.generateCurrentPositionTableData(
                                           targetPosition1
                                       )
-                                    : null
+                                    : null,
                             };
                         }
 
                         const targetPosition2 = find(
                             currentPositions,
-                            position =>
+                            (position) =>
                                 findSightings.circulatedOperation &&
                                 findSightings.circulatedOperation
                                     .operationNumber ===
@@ -679,12 +680,12 @@ export class OperationRealTimeService extends BaseService {
                                 ? this.generateCurrentPositionTableData(
                                       targetPosition2
                                   )
-                                : null
+                                : null,
                         };
                     });
                 }
             ),
-            tap(data => {
+            tap((data) => {
                 this._operationTableData$.next(data);
             })
         );
@@ -696,7 +697,7 @@ export class OperationRealTimeService extends BaseService {
     generateTable(): Observable<void> {
         return forkJoin([
             this.generateFormationTableData(),
-            this.generateOperationTableData()
+            this.generateOperationTableData(),
         ]).pipe(map(() => null));
     }
 }

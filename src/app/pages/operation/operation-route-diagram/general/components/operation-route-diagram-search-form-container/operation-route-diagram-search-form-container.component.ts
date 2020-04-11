@@ -10,8 +10,8 @@ import { Router } from '@angular/router';
     templateUrl:
         './operation-route-diagram-search-form-container.component.html',
     styleUrls: [
-        './operation-route-diagram-search-form-container.component.scss'
-    ]
+        './operation-route-diagram-search-form-container.component.scss',
+    ],
 })
 export class OperationRouteDiagramSearchFormContainerComponent
     implements OnInit {
@@ -36,7 +36,7 @@ export class OperationRouteDiagramSearchFormContainerComponent
     onReceiveClickSearch(operationId: string): void {
         this.router.navigate([
             '/operation/route-diagram',
-            { operation_id: operationId }
+            { operation_id: operationId },
         ]);
     }
 }

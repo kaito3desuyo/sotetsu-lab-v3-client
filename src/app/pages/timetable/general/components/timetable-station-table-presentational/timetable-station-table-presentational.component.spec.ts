@@ -11,7 +11,7 @@ describe('TimetableStationTablePresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableStationTablePresentationalComponent]
+            declarations: [TimetableStationTablePresentationalComponent],
         }).compileComponents();
     }));
 

@@ -3,7 +3,7 @@ import { CustomNGXLoggerService, NGXLogger, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class LoggerService {
     private logger: NGXLogger;
@@ -13,7 +13,7 @@ export class LoggerService {
                 ? NgxLoggerLevel.ERROR
                 : NgxLoggerLevel.DEBUG,
             serverLoggingUrl: environment.apiUrl + '/api/v1/log',
-            serverLogLevel: NgxLoggerLevel.OFF
+            serverLogLevel: NgxLoggerLevel.OFF,
         });
     }
 

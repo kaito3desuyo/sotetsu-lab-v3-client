@@ -35,7 +35,7 @@ export class TimetableAllLineTableResolverService
                 map(() => null)
             ),
             this.timetableAllLineService.fetchTrips(),
-            this.timetableAllLineService.fetchCalendar()
+            this.timetableAllLineService.fetchCalendar(),
         ]).pipe(map(() => null));
     }
 }

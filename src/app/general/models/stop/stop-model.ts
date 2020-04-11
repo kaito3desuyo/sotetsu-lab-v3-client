@@ -11,7 +11,7 @@ export class StopModel {
             stopLatLng: data.stop_latlng,
             zoneId: data.zone_id,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         return parsed;

@@ -6,7 +6,7 @@ import { OperationRealTimeService } from './operation-real-time.service';
 describe('Service: OperationRealTime', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationRealTimeService]
+            providers: [OperationRealTimeService],
         });
     });
 

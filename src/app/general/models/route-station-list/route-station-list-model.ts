@@ -13,7 +13,7 @@ export class RouteStationListModel {
             stationSequence: routeToStation.station_sequence,
             stationNumbering: routeToStation.station_numbering,
             createdAt: routeToStation.created_at,
-            updatedAt: routeToStation.updated_at
+            updatedAt: routeToStation.updated_at,
         };
 
         if (routeToStation.station) {

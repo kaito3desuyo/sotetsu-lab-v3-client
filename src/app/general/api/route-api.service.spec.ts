@@ -6,7 +6,7 @@ import { RouteApiService } from './route-api.service';
 describe('Service: RouteApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [RouteApiService]
+            providers: [RouteApiService],
         });
     });
 

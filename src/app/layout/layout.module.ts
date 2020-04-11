@@ -23,7 +23,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         HeaderContainerComponent,
         HeaderPresentationalComponent,
         SidenavContainerComponent,
-        SidenavPresentationalComponent
+        SidenavPresentationalComponent,
     ],
     imports: [
         CommonModule,
@@ -38,8 +38,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         MatMenuModule,
         MatListModule,
         MatFormFieldModule,
-        MatSelectModule
+        MatSelectModule,
     ],
-    exports: [LayoutComponent]
+    exports: [LayoutComponent],
 })
 export class LayoutModule {}

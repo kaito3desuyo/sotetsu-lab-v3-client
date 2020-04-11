@@ -9,7 +9,7 @@ import { SocketService } from 'src/app/general/services/socket.service';
 @Component({
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
-    styleUrls: ['./dashboard.component.scss']
+    styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent extends BaseComponent implements OnInit {
     constructor(
@@ -27,14 +27,16 @@ export class DashboardComponent extends BaseComponent implements OnInit {
             }
         );
 
-        this.subscription = this.paramsQuery.calendar$.subscribe(calendarId => {
-            this.tiletableSearchFormService.updateParams({
-                calendarId
-            });
-        });
+        this.subscription = this.paramsQuery.calendar$.subscribe(
+            (calendarId) => {
+                this.tiletableSearchFormService.updateParams({
+                    calendarId,
+                });
+            }
+        );
     }
 
     async ngOnInit() {
-        this.socketService.on().subscribe(e => console.log(e));
+        this.socketService.on().subscribe((e) => console.log(e));
     }
 }

@@ -11,7 +11,7 @@ describe('TimetableAllLineHeaderPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAllLineHeaderPresentationalComponent]
+            declarations: [TimetableAllLineHeaderPresentationalComponent],
         }).compileComponents();
     }));
 

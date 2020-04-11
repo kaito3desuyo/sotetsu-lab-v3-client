@@ -9,17 +9,17 @@ const routes: Routes = [
         path: '',
         component: OperationTableComponent,
         resolve: {
-            from: OperationTableResolverService
+            from: OperationTableResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
-            title: '運用表'
-        }
-    }
+            title: '運用表',
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class OperationTableRoutingModule {}

@@ -6,7 +6,7 @@ import { TimetableAddResolverService } from './timetable-add-resolver.service';
 describe('Service: TimetableAddResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableAddResolverService]
+            providers: [TimetableAddResolverService],
         });
     });
 

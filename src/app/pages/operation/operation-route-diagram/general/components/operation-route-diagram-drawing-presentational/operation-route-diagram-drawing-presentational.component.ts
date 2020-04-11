@@ -8,7 +8,7 @@ import {
     ElementRef,
     SimpleChanges,
     ChangeDetectorRef,
-    OnChanges
+    OnChanges,
 } from '@angular/core';
 import { IStation } from 'src/app/general/interfaces/station';
 import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
@@ -23,9 +23,9 @@ import { IOperation } from 'src/app/general/interfaces/operation';
     templateUrl:
         './operation-route-diagram-drawing-presentational.component.html',
     styleUrls: [
-        './operation-route-diagram-drawing-presentational.component.scss'
+        './operation-route-diagram-drawing-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationRouteDiagramDrawingPresentationalComponent
     implements OnChanges {
@@ -58,7 +58,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
     }
 
     returnStationIndex(id: string) {
-        return findIndex(this.stations, obj => {
+        return findIndex(this.stations, (obj) => {
             return obj.id === id;
         });
     }
@@ -68,7 +68,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
             'timetable',
             this.calendar.id,
             'all-line',
-            { trip_direction: tripDirection, trip_block_id: tripBlockId }
+            { trip_direction: tripDirection, trip_block_id: tripBlockId },
         ]);
     }
 
@@ -132,7 +132,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
                 '運用行路図.png';
             link.click();
         };
-        image.onerror = e => {
+        image.onerror = (e) => {
             console.error(e);
         };
         // SVGデータを取り出す

@@ -2,7 +2,7 @@ import { ReadTimeDto, CreateTimeDto, UpdateTimeDto } from '../time/time-dto';
 import {
     ReadTripOperationListDto,
     CreateTripOperationListDto,
-    UpdateTripOperationListDto
+    UpdateTripOperationListDto,
 } from '../trip-operation-list/trip-operation-list-dto';
 import { ReadTripClassDto } from '../trip-class/trip-class-dto';
 import { ReadTripBlockDto } from '../trip-block/trip-block-dto';

@@ -4,7 +4,7 @@ import {
     ChangeDetectionStrategy,
     Input,
     SimpleChanges,
-    OnChanges
+    OnChanges,
 } from '@angular/core';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { groupBy, forIn } from 'lodash-es';
@@ -17,9 +17,9 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     templateUrl:
         './operation-sightings-table-by-date-presentational.component.html',
     styleUrls: [
-        './operation-sightings-table-by-date-presentational.component.scss'
+        './operation-sightings-table-by-date-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsTableByDatePresentationalComponent
     implements OnChanges {
@@ -37,10 +37,10 @@ export class OperationSightingsTableByDatePresentationalComponent
             this.groupedByDate = {};
             const groupByFormationId = groupBy(
                 this.operationSightings,
-                v => v.formationId
+                (v) => v.formationId
             );
             forIn(groupByFormationId, (v: IOperationSighting[], k: string) => {
-                this.groupedByDate[k] = groupBy(v, o =>
+                this.groupedByDate[k] = groupBy(v, (o) =>
                     moment(o.sightingTime)
                         .subtract(
                             moment(o.sightingTime).hour() < 4 ? 1 : 0,

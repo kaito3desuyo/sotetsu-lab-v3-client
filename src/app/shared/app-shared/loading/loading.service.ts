@@ -16,7 +16,7 @@ export class LoadingService {
                 .position()
                 .global()
                 .centerHorizontally()
-                .centerVertically()
+                .centerVertically(),
         });
 
         this.overlayRef.attach(new ComponentPortal(LoadingComponent));

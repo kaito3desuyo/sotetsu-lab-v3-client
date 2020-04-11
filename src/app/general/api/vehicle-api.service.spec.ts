@@ -6,7 +6,7 @@ import { VehicleApiService } from './vehicle-api.service';
 describe('Service: VehicleApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [VehicleApiService]
+            providers: [VehicleApiService],
         });
     });
 

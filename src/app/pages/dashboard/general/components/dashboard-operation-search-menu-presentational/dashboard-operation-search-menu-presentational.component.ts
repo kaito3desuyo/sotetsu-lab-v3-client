@@ -4,7 +4,7 @@ import {
     Input,
     OnChanges,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 
@@ -13,14 +13,14 @@ import { FormBuilder, Validators } from '@angular/forms';
     templateUrl:
         './dashboard-operation-search-menu-presentational.component.html',
     styleUrls: [
-        './dashboard-operation-search-menu-presentational.component.scss'
+        './dashboard-operation-search-menu-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardOperationSearchMenuPresentationalComponent
     implements OnChanges {
     operationTableForm = this.fb.group({
-        calendarId: ['', Validators.required]
+        calendarId: ['', Validators.required],
     });
 
     @Input() calendarsSelectList: { label: string; value: string }[];

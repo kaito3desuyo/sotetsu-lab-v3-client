@@ -20,15 +20,15 @@ export class ParamsService {
                 .searchCalendars({
                     date: moment()
                         .subtract(moment().hour() < 4 ? 1 : 0, 'days')
-                        .format('YYYY-MM-DD')
+                        .format('YYYY-MM-DD'),
                 })
                 .pipe(
-                    map(data =>
-                        data.calendars.map(result =>
+                    map((data) =>
+                        data.calendars.map((result) =>
                             CalendarModel.readCalendarDtoImpl(result)
                         )
                     )
-                )
+                ),
         ]).pipe(
             tap(([calendars]) => {
                 this.paramsStore.update({ calendarId: calendars[0].id });

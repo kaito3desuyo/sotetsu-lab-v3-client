@@ -6,7 +6,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 @Component({
     selector: 'app-timetable-update-header-container',
     templateUrl: './timetable-update-header-container.component.html',
-    styleUrls: ['./timetable-update-header-container.component.scss']
+    styleUrls: ['./timetable-update-header-container.component.scss'],
 })
 export class TimetableUpdateHeaderContainerComponent {
     calendar$: Observable<ICalendar>;

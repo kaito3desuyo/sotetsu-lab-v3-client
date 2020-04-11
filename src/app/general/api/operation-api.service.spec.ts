@@ -6,7 +6,7 @@ import { OperationApiService } from './operation-api.service';
 describe('Service: OperationApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationApiService]
+            providers: [OperationApiService],
         });
     });
 

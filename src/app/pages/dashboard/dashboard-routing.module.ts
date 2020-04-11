@@ -11,19 +11,19 @@ const routes: Routes = [
         component: DashboardComponent,
         resolve: {
             dashboard: DashboardResolverService,
-            timetableSearchForm: TimetableSearchFormResolverService
+            timetableSearchForm: TimetableSearchFormResolverService,
         },
         data: {
             title: '',
             date: moment()
                 .subtract(moment().hour() < 4 ? 1 : 0)
-                .format('YYYY-MM-DD')
-        }
-    }
+                .format('YYYY-MM-DD'),
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class DashboardRoutingModule {}

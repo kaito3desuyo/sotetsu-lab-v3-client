@@ -10,7 +10,7 @@ import { SocketService } from './general/services/socket.service';
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss'],
 })
 export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
     constructor(
@@ -24,7 +24,7 @@ export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
     ) {
         super(injector);
 
-        this.subscription = this.router.events.subscribe(event => {
+        this.subscription = this.router.events.subscribe((event) => {
             if (event instanceof NavigationStart) {
                 this.loadingService.open();
             }

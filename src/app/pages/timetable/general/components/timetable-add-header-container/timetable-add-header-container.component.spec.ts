@@ -11,7 +11,7 @@ describe('TimetableAddHeaderContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAddHeaderContainerComponent]
+            declarations: [TimetableAddHeaderContainerComponent],
         }).compileComponents();
     }));
 

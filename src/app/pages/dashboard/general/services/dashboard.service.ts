@@ -24,12 +24,12 @@ export class DashboardService {
 
     fetchCalendars(): Observable<void> {
         return this.calendarApi.getCalendars().pipe(
-            map(data =>
-                data.calendars.map(result =>
+            map((data) =>
+                data.calendars.map((result) =>
                     CalendarModel.readCalendarDtoImpl(result)
                 )
             ),
-            tap(data => {
+            tap((data) => {
                 this.setCalendars(data);
             }),
             map(() => null)
@@ -38,8 +38,8 @@ export class DashboardService {
 
     getCalendarSelectList(): Observable<{ label: string; value: string }[]> {
         return this.getCalendars().pipe(
-            map(data => {
-                return data.map(calendar => {
+            map((data) => {
+                return data.map((calendar) => {
                     return {
                         label: `${moment(
                             calendar.startDate,
@@ -47,7 +47,7 @@ export class DashboardService {
                         ).format('YYYY年MM月DD日')} 改正 ${
                             calendar.calendarName
                         }`,
-                        value: calendar.id
+                        value: calendar.id,
                     };
                 });
             })

@@ -10,7 +10,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     selector: 'app-operation-table-table-presentational',
     templateUrl: './operation-table-table-presentational.component.html',
     styleUrls: ['./operation-table-table-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationTableTablePresentationalComponent {
     @Input() operationTrips: IOperation[];
@@ -28,7 +28,7 @@ export class OperationTableTablePresentationalComponent {
         if (!this.stations) {
             return '';
         }
-        const findObj = find(this.stations, station => station.id === id);
+        const findObj = find(this.stations, (station) => station.id === id);
         return findObj ? this.formatStationName(findObj.stationName) : '';
     }
 
@@ -38,7 +38,7 @@ export class OperationTableTablePresentationalComponent {
         }
         const findObj = find(
             this.tripClasses,
-            tripClass => tripClass.id === id
+            (tripClass) => tripClass.id === id
         );
         return findObj ? this.formatTripClassName(findObj.tripClassName) : '';
     }
@@ -49,7 +49,7 @@ export class OperationTableTablePresentationalComponent {
         }
         const findObj = find(
             this.tripClasses,
-            tripClass => tripClass.id === id
+            (tripClass) => tripClass.id === id
         );
         return findObj ? findObj.tripClassColor : '';
     }

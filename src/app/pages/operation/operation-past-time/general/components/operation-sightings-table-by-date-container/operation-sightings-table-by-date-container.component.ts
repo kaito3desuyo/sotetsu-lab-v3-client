@@ -9,7 +9,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 @Component({
     selector: 'app-operation-sightings-table-by-date-container',
     templateUrl: './operation-sightings-table-by-date-container.component.html',
-    styleUrls: ['./operation-sightings-table-by-date-container.component.scss']
+    styleUrls: ['./operation-sightings-table-by-date-container.component.scss'],
 })
 export class OperationSightingsTableByDateContainerComponent {
     formations$: Observable<IFormation[]>;

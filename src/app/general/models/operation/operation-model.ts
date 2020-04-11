@@ -10,12 +10,12 @@ export class OperationModel {
             calendarId: operation.calendar_id,
             operationNumber: operation.operation_number,
             createdAt: operation.created_at,
-            updatedAt: operation.updated_at
+            updatedAt: operation.updated_at,
         };
 
         if (operation.trip_operation_lists) {
             returnObj.tripOperationLists = operation.trip_operation_lists.map(
-                data => {
+                (data) => {
                     return TripOperationListModel.readTripOperationListDtoImpl(
                         data
                     );
