@@ -6,23 +6,24 @@ import { DebugElement } from '@angular/core';
 import { OperationSightingsSearchFormContainerComponent } from './operation-sightings-search-form-container.component';
 
 describe('OperationSightingsSearchFormContainerComponent', () => {
-  let component: OperationSightingsSearchFormContainerComponent;
-  let fixture: ComponentFixture<OperationSightingsSearchFormContainerComponent>;
+    let component: OperationSightingsSearchFormContainerComponent;
+    let fixture: ComponentFixture<OperationSightingsSearchFormContainerComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationSightingsSearchFormContainerComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationSightingsSearchFormContainerComponent],
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationSightingsSearchFormContainerComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationSightingsSearchFormContainerComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

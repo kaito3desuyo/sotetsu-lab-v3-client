@@ -6,7 +6,7 @@ import {
     Injector,
     OnInit,
     OnChanges,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormBuilder } from '@angular/forms';
 import { Observable, BehaviorSubject } from 'rxjs';
@@ -16,7 +16,7 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
     selector: 'app-sidenav-presentational',
     templateUrl: './sidenav-presentational.component.html',
     styleUrls: ['./sidenav-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidenavPresentationalComponent extends BaseComponent
     implements OnInit, OnChanges {
@@ -42,34 +42,34 @@ export class SidenavPresentationalComponent extends BaseComponent
         if (changes.todaysCalendarId) {
             this.upTimetableLink.next([
                 '/timetable/' + this.todaysCalendarId + '/all-line',
-                { trip_direction: '0' }
+                { trip_direction: '0' },
             ]);
             this.downTimetableLink.next([
                 '/timetable/' + this.todaysCalendarId + '/all-line',
-                { trip_direction: '1' }
+                { trip_direction: '1' },
             ]);
         }
     }
 
     ngOnInit(): void {
-        this.subscription = this.stationId.valueChanges.subscribe(id => {
+        this.subscription = this.stationId.valueChanges.subscribe((id) => {
             if (id) {
                 this.upTimetableLink.next([
                     '/timetable/' + this.todaysCalendarId + '/station/' + id,
-                    { trip_direction: '0' }
+                    { trip_direction: '0' },
                 ]);
                 this.downTimetableLink.next([
                     '/timetable/' + this.todaysCalendarId + '/station/' + id,
-                    { trip_direction: '1', station_id: id }
+                    { trip_direction: '1', station_id: id },
                 ]);
             } else {
                 this.upTimetableLink.next([
                     '/timetable/' + this.todaysCalendarId + '/all-line',
-                    { trip_direction: '0' }
+                    { trip_direction: '0' },
                 ]);
                 this.downTimetableLink.next([
                     '/timetable/' + this.todaysCalendarId + '/all-line',
-                    { trip_direction: '1' }
+                    { trip_direction: '1' },
                 ]);
             }
         });

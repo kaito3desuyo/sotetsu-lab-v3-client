@@ -9,7 +9,7 @@ import { IOperation } from 'src/app/general/interfaces/operation';
 @Component({
     selector: 'app-operation-route-diagram-drawing-container',
     templateUrl: './operation-route-diagram-drawing-container.component.html',
-    styleUrls: ['./operation-route-diagram-drawing-container.component.scss']
+    styleUrls: ['./operation-route-diagram-drawing-container.component.scss'],
 })
 export class OperationRouteDiagramDrawingContainerComponent {
     stations$: Observable<IStation[]>;

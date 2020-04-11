@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Component({
     selector: 'app-timetable-add-header-container',
     templateUrl: './timetable-add-header-container.component.html',
-    styleUrls: ['./timetable-add-header-container.component.scss']
+    styleUrls: ['./timetable-add-header-container.component.scss'],
 })
 export class TimetableAddHeaderContainerComponent {
     calendar$: Observable<ICalendar>;

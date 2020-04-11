@@ -3,7 +3,7 @@ import {
     ChangeDetectionStrategy,
     Input,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 
@@ -11,12 +11,12 @@ import { FormBuilder, Validators } from '@angular/forms';
     selector: 'app-dashboard-trip-add-form-presentational',
     templateUrl: './dashboard-trip-add-form-presentational.component.html',
     styleUrls: ['./dashboard-trip-add-form-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardTripAddFormPresentationalComponent {
     form = this.fb.group({
         calendarId: ['', Validators.required],
-        tripDirection: ['0', Validators.required]
+        tripDirection: ['0', Validators.required],
     });
 
     @Input() calendarsSelectList: { label: string; value: string }[];

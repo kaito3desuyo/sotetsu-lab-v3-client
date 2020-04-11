@@ -6,7 +6,7 @@ import { TripApiService } from './trip-api.service';
 describe('Service: TripApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TripApiService]
+            providers: [TripApiService],
         });
     });
 

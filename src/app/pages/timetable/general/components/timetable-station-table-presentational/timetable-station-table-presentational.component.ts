@@ -3,7 +3,7 @@ import {
     ChangeDetectionStrategy,
     Input,
     OnChanges,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
 import { ITime } from 'src/app/general/interfaces/time';
 import { groupBy, map, concat, find, sortBy, some } from 'lodash-es';
@@ -16,7 +16,7 @@ import { IStation } from 'src/app/general/interfaces/station';
     selector: 'app-timetable-station-table-presentational',
     templateUrl: './timetable-station-table-presentational.component.html',
     styleUrls: ['./timetable-station-table-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableStationTablePresentationalComponent implements OnChanges {
     data: ITimetableStationTable[] = [];
@@ -31,15 +31,15 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.times || changes.sightings) {
-            const groupedByDay = groupBy(this.times as ITime[], o =>
+            const groupedByDay = groupBy(this.times as ITime[], (o) =>
                 o.departureDays
                     ? o.departureDays
                     : o.arrivalDays
                     ? o.arrivalDays
                     : null
             );
-            const mapped = map(groupedByDay, o => {
-                const groupedByTime = groupBy(o, time => {
+            const mapped = map(groupedByDay, (o) => {
+                const groupedByTime = groupBy(o, (time) => {
                     const target = time.departureTime
                         ? time.departureTime
                         : time.arrivalTime
@@ -62,7 +62,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                 const mappedByTime = map(groupedByTime, (times, key) => {
                     return {
                         hour: key,
-                        times: times.map(time => ({
+                        times: times.map((time) => ({
                             mode: time.departureTime
                                 ? 'departure'
                                 : time.arrivalTime
@@ -85,7 +85,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                             lastStop: () => {
                                 const finalTrip = find(
                                     time.trip.tripBlock.trips.filter(
-                                        blockTrip =>
+                                        (blockTrip) =>
                                             moment(
                                                 blockTrip.times[0]
                                                     .departureTime,
@@ -108,17 +108,17 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                                     (trip, _, array) => {
                                         const currentTripFinalStop = find(
                                             trip.times,
-                                            currentTime =>
+                                            (currentTime) =>
                                                 currentTime.departureTime ===
                                                     null &&
                                                 currentTime.arrivalTime !== null
                                         );
                                         const isExist = some(
                                             array,
-                                            searchTrip =>
+                                            (searchTrip) =>
                                                 some(
                                                     searchTrip.times,
-                                                    t =>
+                                                    (t) =>
                                                         t.departureTime !==
                                                             null &&
                                                         t.arrivalTime ===
@@ -134,7 +134,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                                 if (!finalTrip) {
                                     const finalStopOfCurrentTrip = find(
                                         time.trip.times,
-                                        t =>
+                                        (t) =>
                                             t.departureTime === null &&
                                             t.arrivalTime !== null
                                     );
@@ -146,7 +146,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
 
                                 const finalStopOfFinalTrip = find(
                                     finalTrip.times,
-                                    finalTripTime =>
+                                    (finalTripTime) =>
                                         finalTripTime.departureTime === null &&
                                         finalTripTime.arrivalTime !== null
                                 );
@@ -159,13 +159,13 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                 : null,*/
 
                             sameTripBlockTrips: time.trip.tripBlock.trips.filter(
-                                trip => trip.id !== time.trip.id
+                                (trip) => trip.id !== time.trip.id
                             ),
                             operationSightings: time.trip.tripOperationLists.map(
-                                tripOperationList => {
+                                (tripOperationList) => {
                                     const operationSighting = find(
                                         this.sightings as IOperationSighting[],
-                                        v =>
+                                        (v) =>
                                             v.circulatedOperationId ===
                                             tripOperationList.operationId
                                     );
@@ -181,7 +181,7 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                                                 operationSighting.formation
                                                     .formationNumber,
                                             sightingTime:
-                                                operationSighting.sightingTime
+                                                operationSighting.sightingTime,
                                         };
                                     } else {
                                         return {
@@ -191,25 +191,25 @@ export class TimetableStationTablePresentationalComponent implements OnChanges {
                                             formationNumber: null,
                                             sightingTime: operationSighting
                                                 ? operationSighting.sightingTime
-                                                : null
+                                                : null,
                                         };
                                     }
                                 }
-                            )
-                        }))
+                            ),
+                        })),
                     };
                 });
                 return mappedByTime;
             });
 
-            const sorted = concat([], ...mapped).map(row => ({
+            const sorted = concat([], ...mapped).map((row) => ({
                 ...row,
-                times: sortBy(row.times, ['minute', 'mode'])
+                times: sortBy(row.times, ['minute', 'mode']),
             }));
 
             this.data = sorted;
             this.maxColumnsCount = 0;
-            this.data.forEach(col => {
+            this.data.forEach((col) => {
                 if (this.maxColumnsCount < col.times.length) {
                     this.maxColumnsCount = col.times.length;
                 }

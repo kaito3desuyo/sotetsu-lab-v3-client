@@ -11,7 +11,9 @@ describe('OperationSightingsTableByFormationContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationSightingsTableByFormationContainerComponent]
+            declarations: [
+                OperationSightingsTableByFormationContainerComponent,
+            ],
         }).compileComponents();
     }));
 

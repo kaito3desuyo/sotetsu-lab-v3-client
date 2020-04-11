@@ -6,7 +6,7 @@ import { StationApiService } from './station-api.service';
 describe('Service: StationApi', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [StationApiService]
+            providers: [StationApiService],
         });
     });
 

@@ -13,13 +13,13 @@ import { LoadingModule } from './loading/loading.module';
         PaddingPipe,
         RangePipe,
         FindByIdPipe,
-        CalendarCardHeaderPresentationalComponent
+        CalendarCardHeaderPresentationalComponent,
     ],
     declarations: [
         PaddingPipe,
         RangePipe,
         FindByIdPipe,
-        CalendarCardHeaderPresentationalComponent
-    ]
+        CalendarCardHeaderPresentationalComponent,
+    ],
 })
 export class AppSharedModule {}

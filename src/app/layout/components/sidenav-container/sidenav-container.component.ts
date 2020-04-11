@@ -11,14 +11,14 @@ import { ParamsQuery } from 'src/app/state/params';
 @Component({
     selector: 'app-sidenav-container',
     templateUrl: './sidenav-container.component.html',
-    styleUrls: ['./sidenav-container.component.scss']
+    styleUrls: ['./sidenav-container.component.scss'],
 })
 export class SidenavContainerComponent extends BaseComponent {
     todaysCalendarId$: Observable<string>;
     stationsSelectList$ = this.routesAllStationsQuery
         .selectAll()
         .pipe(
-            map(routes =>
+            map((routes) =>
                 this.routesAllStationsService.generateStationSelectList(routes)
             )
         );
@@ -34,7 +34,7 @@ export class SidenavContainerComponent extends BaseComponent {
     ) {
         super(injector);
         this.todaysCalendarId$ = this.paramsQuery.select('calendarId');
-        this.subscription = this.router.events.subscribe(events => {
+        this.subscription = this.router.events.subscribe((events) => {
             if (events instanceof NavigationEnd) {
                 this.sidenavService.setState(false);
             }

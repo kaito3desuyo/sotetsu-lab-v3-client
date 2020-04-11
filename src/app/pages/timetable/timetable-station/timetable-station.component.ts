@@ -7,7 +7,7 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
 @Component({
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
-    styleUrls: ['./timetable-station.component.scss']
+    styleUrls: ['./timetable-station.component.scss'],
 })
 export class TimetableStationComponent extends BaseComponent {
     constructor(
@@ -23,7 +23,7 @@ export class TimetableStationComponent extends BaseComponent {
             }
         );
 
-        this.subscription = this.route.paramMap.subscribe(params => {
+        this.subscription = this.route.paramMap.subscribe((params) => {
             const calendarId = params.get('calendarId');
             const tripDirection = params.get('trip_direction');
             const stationId = params.get('stationId');
@@ -32,7 +32,7 @@ export class TimetableStationComponent extends BaseComponent {
                 calendarId,
                 tripDirection: tripDirection as '0' | '1',
                 isSearchStation: true,
-                stationId
+                stationId,
             });
         });
     }

@@ -8,7 +8,7 @@ import { IStation } from 'src/app/general/interfaces/station';
 @Component({
     selector: 'app-timetable-station-table-container',
     templateUrl: './timetable-station-table-container.component.html',
-    styleUrls: ['./timetable-station-table-container.component.scss']
+    styleUrls: ['./timetable-station-table-container.component.scss'],
 })
 export class TimetableStationTableContainerComponent {
     calendarId$: Observable<string>;

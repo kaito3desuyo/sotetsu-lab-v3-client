@@ -11,7 +11,7 @@ describe('OperationRouteDiagramComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationRouteDiagramComponent]
+            declarations: [OperationRouteDiagramComponent],
         }).compileComponents();
     }));
 

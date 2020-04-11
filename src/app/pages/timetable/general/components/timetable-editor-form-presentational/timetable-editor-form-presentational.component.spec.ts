@@ -11,7 +11,7 @@ describe('TimetableEditorFormPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableEditorFormPresentationalComponent]
+            declarations: [TimetableEditorFormPresentationalComponent],
         }).compileComponents();
     }));
 

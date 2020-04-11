@@ -11,7 +11,7 @@ describe('TimetableAddModeSelectPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAddModeSelectPresentationalComponent]
+            declarations: [TimetableAddModeSelectPresentationalComponent],
         }).compileComponents();
     }));
 

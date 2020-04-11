@@ -4,12 +4,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogContainerComponent } from '../components/confirm-dialog-container/confirm-dialog-container.component';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class AppUpdateService {
     constructor(updates: SwUpdate, dialog: MatDialog) {
         // console.log('App Update Service');
-        updates.available.subscribe(event => {
+        updates.available.subscribe((event) => {
             /*
       console.log('current version is', event.current);
       console.log('available version is', event.available);
@@ -22,11 +22,11 @@ export class AppUpdateService {
                         'アプリに新しいバージョンがあります。今すぐ更新しますか？',
                     goButtonText: '更新する',
                     goButtonColor: 'primary',
-                    cancelButtonText: 'キャンセル'
-                }
+                    cancelButtonText: 'キャンセル',
+                },
             });
 
-            dialogRef.afterClosed().subscribe(result => {
+            dialogRef.afterClosed().subscribe((result) => {
                 if (result) {
                     updates
                         .activateUpdate()

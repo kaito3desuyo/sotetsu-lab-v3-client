@@ -6,7 +6,7 @@ import { TimetableSearchFormResolverService } from './timetable-search-form-reso
 describe('Service: TimetableSearchFormResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableSearchFormResolverService]
+            providers: [TimetableSearchFormResolverService],
         });
     });
 

@@ -6,7 +6,7 @@ import { map } from 'rxjs/operators';
 import { ReadCalendarDto } from '../models/calendar/calendar-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class CalendarApiService {
     private apiUrl = environment.apiUrl + '/v1/calendars';
@@ -30,7 +30,7 @@ export class CalendarApiService {
     }): Observable<{ calendars: ReadCalendarDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { calendars: ReadCalendarDto[] }) => data));
     }
@@ -39,11 +39,11 @@ export class CalendarApiService {
         date: string;
     }): Observable<{ calendar_id: string }> {
         return this.searchCalendars({
-            date: query.date
+            date: query.date,
         }).pipe(
-            map(data => {
+            map((data) => {
                 return {
-                    calendar_id: data[0].id
+                    calendar_id: data[0].id,
                 };
             })
         );

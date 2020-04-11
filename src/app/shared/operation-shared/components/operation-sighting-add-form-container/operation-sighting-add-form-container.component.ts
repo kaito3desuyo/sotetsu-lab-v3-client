@@ -5,7 +5,7 @@ import {
     Inject,
     Injector,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { CurrentParamsQuery } from 'src/app/general/models/current-params/current-params.query';
@@ -18,7 +18,7 @@ import { IAgency } from 'src/app/general/interfaces/agency';
 @Component({
     selector: 'app-operation-sighting-add-form-container',
     templateUrl: './operation-sighting-add-form-container.component.html',
-    styleUrls: ['./operation-sighting-add-form-container.component.scss']
+    styleUrls: ['./operation-sighting-add-form-container.component.scss'],
 })
 export class OperationSightingAddFormContainerComponent extends BaseComponent
     implements OnInit {

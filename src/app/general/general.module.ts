@@ -32,28 +32,28 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
             level: environment.production
                 ? NgxLoggerLevel.OFF
                 : NgxLoggerLevel.DEBUG,
-            serverLogLevel: NgxLoggerLevel.OFF
-        })
+            serverLogLevel: NgxLoggerLevel.OFF,
+        }),
     ],
     exports: [
         ConfirmDialogContainerComponent,
-        ConfirmDialogPresentationalComponent
+        ConfirmDialogPresentationalComponent,
     ],
     declarations: [
         ConfirmDialogContainerComponent,
-        ConfirmDialogPresentationalComponent
+        ConfirmDialogPresentationalComponent,
     ],
     entryComponents: [ConfirmDialogContainerComponent],
     providers: [
         {
             provide: MatPaginatorIntl,
-            useClass: CustomPaginator
+            useClass: CustomPaginator,
         },
         {
             provide: ErrorHandler,
-            useClass: ErrorHandlerService
+            useClass: ErrorHandlerService,
         },
-        { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' }
+        { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
         /* 
     {
       provide: HTTP_INTERCEPTORS,
@@ -62,6 +62,6 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
       multi: true
     }
     */
-    ]
+    ],
 })
 export class GeneralModule {}

@@ -30,7 +30,7 @@ import { ReactiveFormsModule } from '@angular/forms';
         MatSelectModule,
         MatInputModule,
         AppSharedModule,
-        OperationRouteDiagramRoutingModule
+        OperationRouteDiagramRoutingModule,
     ],
     exports: [],
     declarations: [
@@ -38,11 +38,11 @@ import { ReactiveFormsModule } from '@angular/forms';
         OperationRouteDiagramDrawingContainerComponent,
         OperationRouteDiagramDrawingPresentationalComponent,
         OperationRouteDiagramSearchFormContainerComponent,
-        OperationRouteDiagramSearchFormPresentationalComponent
+        OperationRouteDiagramSearchFormPresentationalComponent,
     ],
     providers: [
         OperationRouteDiagramService,
-        OperationRouteDiagramResolverService
-    ]
+        OperationRouteDiagramResolverService,
+    ],
 })
 export class OperationRouteDiagramModule {}

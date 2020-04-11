@@ -4,7 +4,7 @@ import {
     ChangeDetectionStrategy,
     Output,
     EventEmitter,
-    Input
+    Input,
 } from '@angular/core';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { Moment } from 'moment';
@@ -14,9 +14,9 @@ import { Moment } from 'moment';
     templateUrl:
         './operation-sightings-control-panel-presentational.component.html',
     styleUrls: [
-        './operation-sightings-control-panel-presentational.component.scss'
+        './operation-sightings-control-panel-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsControlPanelPresentationalComponent {
     @Input() finalUpdateTime: Moment;

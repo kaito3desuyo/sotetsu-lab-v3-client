@@ -18,7 +18,7 @@ export class OperationTableResolverService
             this.operationTableService.fetchOperationTrips(),
             this.operationTableService.fetchStations(),
             this.operationTableService.fetchTripClasses(),
-            this.operationTableService.fetchCalendar()
+            this.operationTableService.fetchCalendar(),
         ]).pipe(map(() => null));
     }
 }

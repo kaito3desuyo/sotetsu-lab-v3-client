@@ -23,13 +23,13 @@ import { MatButtonModule } from '@angular/material/button';
         MatSelectModule,
         MatRadioModule,
         MatButtonModule,
-        MatSlideToggleModule
+        MatSlideToggleModule,
     ],
     exports: [TimetableSearchFormContainerComponent],
     declarations: [
         TimetableSearchFormContainerComponent,
-        TimetableSearchFormPresentationalComponent
+        TimetableSearchFormPresentationalComponent,
     ],
-    providers: [TimetableSearchFormService, TimetableSearchFormResolverService]
+    providers: [TimetableSearchFormService, TimetableSearchFormResolverService],
 })
 export class TimetableSharedModule {}

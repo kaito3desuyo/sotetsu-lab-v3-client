@@ -22,7 +22,7 @@ export class TimetableStationResolverService
             this.timetableStationService.fetchCalendar(),
             this.timetableStationService.fetchStations(),
             this.timetableStationService.fetchTimes(),
-            this.timetableStationService.fetchOperationSightings()
+            this.timetableStationService.fetchOperationSightings(),
         ]).pipe(map(() => null));
     }
 }

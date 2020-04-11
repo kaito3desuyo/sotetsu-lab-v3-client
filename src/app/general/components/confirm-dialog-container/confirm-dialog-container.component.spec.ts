@@ -8,7 +8,7 @@ describe('ConfirmDialogContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [ConfirmDialogContainerComponent]
+            declarations: [ConfirmDialogContainerComponent],
         }).compileComponents();
     }));
 

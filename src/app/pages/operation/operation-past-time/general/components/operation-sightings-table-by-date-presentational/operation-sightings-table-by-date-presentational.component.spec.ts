@@ -6,23 +6,26 @@ import { DebugElement } from '@angular/core';
 import { OperationSightingsTableByDatePresentationalComponent } from './operation-sightings-table-by-date-presentational.component';
 
 describe('OperationSightingsTableByDatePresentationalComponent', () => {
-  let component: OperationSightingsTableByDatePresentationalComponent;
-  let fixture: ComponentFixture<OperationSightingsTableByDatePresentationalComponent>;
+    let component: OperationSightingsTableByDatePresentationalComponent;
+    let fixture: ComponentFixture<OperationSightingsTableByDatePresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationSightingsTableByDatePresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [
+                OperationSightingsTableByDatePresentationalComponent,
+            ],
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationSightingsTableByDatePresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationSightingsTableByDatePresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

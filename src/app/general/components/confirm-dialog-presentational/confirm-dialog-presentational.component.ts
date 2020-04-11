@@ -4,7 +4,7 @@ import {
     Input,
     ChangeDetectionStrategy,
     Output,
-    EventEmitter
+    EventEmitter,
 } from '@angular/core';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 
@@ -12,7 +12,7 @@ import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interfa
     selector: 'app-confirm-dialog-presentational',
     templateUrl: './confirm-dialog-presentational.component.html',
     styleUrls: ['./confirm-dialog-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogPresentationalComponent implements OnInit {
     @Input() data: IConfirmDialogData;

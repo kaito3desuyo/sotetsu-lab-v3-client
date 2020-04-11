@@ -8,17 +8,17 @@ const routes: Routes = [
         path: '',
         component: OperationPastTimeComponent,
         resolve: {
-            from: OperationPastTimeResolverService
+            from: OperationPastTimeResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
-            title: '過去の運用情報'
-        }
-    }
+            title: '過去の運用情報',
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class OperationPastTimeRoutingModule {}

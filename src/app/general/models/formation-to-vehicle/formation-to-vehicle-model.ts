@@ -13,7 +13,7 @@ export class FormationToVehicleModel {
             vehicleId: formationToVehicle.vehicle_id,
             carNumber: formationToVehicle.car_number,
             createdAt: formationToVehicle.created_at,
-            updatedAt: formationToVehicle.updated_at
+            updatedAt: formationToVehicle.updated_at,
         };
 
         if (formationToVehicle.formation) {

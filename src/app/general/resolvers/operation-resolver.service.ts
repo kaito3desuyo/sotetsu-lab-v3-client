@@ -5,14 +5,14 @@ import { OperationApiService } from '../api/operation-api.service';
 import { Observable } from 'rxjs';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class OperationResolverService {
     constructor() {}
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class OperationsAllNumbersResolverService
     implements Resolve<{ operationNumber: string }[]> {
@@ -24,7 +24,7 @@ export class OperationsAllNumbersResolverService
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class OperationsAllLatestSightingsResolverService
     implements Resolve<IOperationSighting[]> {

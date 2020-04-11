@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-dashboard-trip-add-form-container',
     templateUrl: './dashboard-trip-add-form-container.component.html',
-    styleUrls: ['./dashboard-trip-add-form-container.component.scss']
+    styleUrls: ['./dashboard-trip-add-form-container.component.scss'],
 })
 export class DashboardTripAddFormContainerComponent {
     calendarsSelectList$: Observable<{ label: string; value: string }[]>;
@@ -26,7 +26,7 @@ export class DashboardTripAddFormContainerComponent {
             'timetable',
             'add',
             params.calendarId,
-            { trip_direction: params.tripDirection }
+            { trip_direction: params.tripDirection },
         ]);
     }
 }

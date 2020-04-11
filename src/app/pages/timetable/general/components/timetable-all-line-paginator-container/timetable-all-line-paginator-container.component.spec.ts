@@ -11,7 +11,7 @@ describe('TimetableAllLinePaginatorContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAllLinePaginatorContainerComponent]
+            declarations: [TimetableAllLinePaginatorContainerComponent],
         }).compileComponents();
     }));
 

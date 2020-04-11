@@ -9,7 +9,7 @@ import { OperationSightingModel } from '../models/operation-sighting/operation-s
 import { ReadFormationDto } from '../models/formation/formation-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class FormationApiService {
     private apiUrl = environment.apiUrl + '/v1/formations';
@@ -26,7 +26,7 @@ export class FormationApiService {
     }): Observable<{ formations: ReadFormationDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { formations: ReadFormationDto[] }) => data));
     }
@@ -36,13 +36,13 @@ export class FormationApiService {
     }): Observable<{ formationNumber: string }[]> {
         return this.http
             .get(this.apiUrl + '/search/numbers', {
-                params: query
+                params: query,
             })
             .pipe(
                 map((data: { formation_number: string }[]) => {
-                    return data.map(result => {
+                    return data.map((result) => {
                         return {
-                            formationNumber: result.formation_number
+                            formationNumber: result.formation_number,
                         };
                     });
                 })
@@ -56,7 +56,7 @@ export class FormationApiService {
     }): Observable<{ formations: ReadFormationDto[] }> {
         return this.http
             .get(this.apiUrl + '/search/by/vehicle', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { formations: ReadFormationDto[] }) => data));
     }
@@ -67,14 +67,14 @@ export class FormationApiService {
         return this.http
             .get(this.apiUrl + '/all/numbers', {
                 params: {
-                    date
-                }
+                    date,
+                },
             })
             .pipe(
                 map((data: { formation_number: string }[]) => {
-                    return data.map(result => {
+                    return data.map((result) => {
                         return {
-                            formationNumber: result.formation_number
+                            formationNumber: result.formation_number,
                         };
                     });
                 })
@@ -84,7 +84,7 @@ export class FormationApiService {
     getFormationsAllLatestSightings(): Observable<IOperationSighting[]> {
         return this.http.get(this.apiUrl + '/all/latest-sightings').pipe(
             map((data: ReadOperationSightingDto[]) => {
-                return data.map(result => {
+                return data.map((result) => {
                     return OperationSightingModel.readOperationSightingDtoImpl(
                         result
                     );

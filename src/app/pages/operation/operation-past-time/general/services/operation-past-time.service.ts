@@ -71,15 +71,15 @@ export class OperationPastTimeService {
         return this.formationApi
             .searchFormations({
                 start_date: start,
-                end_date: end
+                end_date: end,
             })
             .pipe(
-                map(data =>
-                    data.formations.map(o =>
+                map((data) =>
+                    data.formations.map((o) =>
                         FormationModel.readFormationDtoImpl(o)
                     )
                 ),
-                tap(data => {
+                tap((data) => {
                     this._formations$.next(data);
                 }),
                 map(() => null)
@@ -113,10 +113,10 @@ export class OperationPastTimeService {
         return this.operationApi
             .getOperationSightings({
                 start_sighting_time: start,
-                end_sighting_time: end
+                end_sighting_time: end,
             })
             .pipe(
-                tap(data => {
+                tap((data) => {
                     this._operationSightings$.next(data);
                 }),
                 map(() => null)
@@ -145,18 +145,18 @@ export class OperationPastTimeService {
             observers.push(
                 this.calendarApi
                     .searchCalendars({
-                        date: target.format('YYYY-MM-DD')
+                        date: target.format('YYYY-MM-DD'),
                     })
                     .pipe(
-                        map(data =>
-                            data.calendars.map(o =>
+                        map((data) =>
+                            data.calendars.map((o) =>
                                 CalendarModel.readCalendarDtoImpl(o)
                             )
                         ),
-                        map(data => {
+                        map((data) => {
                             return {
                                 date: target,
-                                calendar: data[0]
+                                calendar: data[0],
                             };
                         })
                     )
@@ -164,7 +164,7 @@ export class OperationPastTimeService {
         }
 
         return forkJoin(observers).pipe(
-            tap(data => {
+            tap((data) => {
                 this._calendars$.next(data);
             }),
             map(() => null)

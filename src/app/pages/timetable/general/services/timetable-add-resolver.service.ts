@@ -31,10 +31,10 @@ export class TimetableAddResolverService implements Resolve<Observable<void>> {
                     flatMap(() =>
                         forkJoin([
                             this.timetableEditorService.fetchStations(),
-                            this.timetableEditorService.fetchTripClasses()
+                            this.timetableEditorService.fetchTripClasses(),
                         ])
                     )
-                )
+                ),
         ]).pipe(map(() => null));
     }
 }

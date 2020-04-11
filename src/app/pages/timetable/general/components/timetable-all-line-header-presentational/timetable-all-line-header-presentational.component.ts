@@ -2,7 +2,7 @@ import {
     Component,
     OnInit,
     ChangeDetectionStrategy,
-    Input
+    Input,
 } from '@angular/core';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 
@@ -10,7 +10,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     selector: 'app-timetable-all-line-header-presentational',
     templateUrl: './timetable-all-line-header-presentational.component.html',
     styleUrls: ['./timetable-all-line-header-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableAllLineHeaderPresentationalComponent {
     @Input() calendar: ICalendar;

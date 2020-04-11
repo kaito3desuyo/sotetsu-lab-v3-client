@@ -5,7 +5,7 @@ import { SidenavService } from '../../services/sidenav.service';
     selector: 'app-header-presentational',
     templateUrl: './header-presentational.component.html',
     styleUrls: ['./header-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderPresentationalComponent implements OnInit {
     sidenavState$ = this.sidenavService.getState();
@@ -14,7 +14,7 @@ export class HeaderPresentationalComponent implements OnInit {
     constructor(private sidenavService: SidenavService) {}
 
     ngOnInit() {
-        this.sidenavState$.subscribe(bool => {
+        this.sidenavState$.subscribe((bool) => {
             this.sidenavState = bool;
         });
     }

@@ -20,16 +20,16 @@ import { MatButtonModule } from '@angular/material/button';
         MatInputModule,
         MatSelectModule,
         MatRadioModule,
-        MatButtonModule
+        MatButtonModule,
     ],
     exports: [
         OperationSightingAddFormContainerComponent,
-        OperationSightingAddFormPresentationalComponent
+        OperationSightingAddFormPresentationalComponent,
     ],
     declarations: [
         OperationSightingAddFormContainerComponent,
-        OperationSightingAddFormPresentationalComponent
+        OperationSightingAddFormPresentationalComponent,
     ],
-    providers: [OperationSightingAddFormService]
+    providers: [OperationSightingAddFormService],
 })
 export class OperationSharedModule {}

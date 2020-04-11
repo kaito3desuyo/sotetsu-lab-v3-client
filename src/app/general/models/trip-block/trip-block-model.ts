@@ -7,11 +7,11 @@ export class TripBlockModel {
         const parsed: ITripBlock = {
             id: data.id,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         if (data.trips) {
-            parsed.trips = data.trips.map(trip =>
+            parsed.trips = data.trips.map((trip) =>
                 TripModel.readTripDtoImpl(trip)
             );
         }

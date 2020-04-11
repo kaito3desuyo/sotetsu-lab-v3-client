@@ -11,20 +11,20 @@ const routes: Routes = [
         path: '',
         component: OperationRealTimeComponent,
         resolve: {
-            operationRealTime: OperationRealTimeResolverService
+            operationRealTime: OperationRealTimeResolverService,
         },
         runGuardsAndResolvers: 'always',
         data: {
             title: 'リアルタイム運用情報',
             date: moment()
                 .subtract(moment().hour() < 4 ? 1 : 0)
-                .format('YYYY-MM-DD')
-        }
-    }
+                .format('YYYY-MM-DD'),
+        },
+    },
 ];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+    exports: [RouterModule],
 })
 export class OperationRealTimeRoutingModule {}

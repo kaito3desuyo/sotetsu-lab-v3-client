@@ -6,7 +6,7 @@ import { DashboardResolverService } from './dashboard-resolver.service';
 describe('Service: DashboardResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [DashboardResolverService]
+            providers: [DashboardResolverService],
         });
     });
 

@@ -11,7 +11,7 @@ describe('TimetableAllLineTableContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableAllLineTableContainerComponent]
+            declarations: [TimetableAllLineTableContainerComponent],
         }).compileComponents();
     }));
 

@@ -8,7 +8,7 @@ describe('SidenavContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [SidenavContainerComponent]
+            declarations: [SidenavContainerComponent],
         }).compileComponents();
     }));
 

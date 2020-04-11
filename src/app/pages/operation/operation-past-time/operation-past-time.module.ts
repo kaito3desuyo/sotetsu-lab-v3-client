@@ -30,7 +30,7 @@ import { MatButtonModule } from '@angular/material/button';
         MatInputModule,
         MatTooltipModule,
         MatDatepickerModule,
-        MatButtonModule
+        MatButtonModule,
     ],
     exports: [],
     declarations: [
@@ -38,8 +38,8 @@ import { MatButtonModule } from '@angular/material/button';
         OperationSightingsTableByDateContainerComponent,
         OperationSightingsTableByDatePresentationalComponent,
         OperationSightingsSearchFormContainerComponent,
-        OperationSightingsSearchFormPresentationalComponent
+        OperationSightingsSearchFormPresentationalComponent,
     ],
-    providers: [OperationPastTimeService, OperationPastTimeResolverService]
+    providers: [OperationPastTimeService, OperationPastTimeResolverService],
 })
 export class OperationPastTimeModule {}

@@ -11,7 +11,7 @@ describe('OperationSightingsTableLegendContainerComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationSightingsTableLegendContainerComponent]
+            declarations: [OperationSightingsTableLegendContainerComponent],
         }).compileComponents();
     }));
 

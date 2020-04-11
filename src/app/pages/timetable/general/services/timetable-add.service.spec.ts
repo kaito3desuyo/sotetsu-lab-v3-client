@@ -6,7 +6,7 @@ import { TimetableAddService } from './timetable-add.service';
 describe('Service: TimetableAdd', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableAddService]
+            providers: [TimetableAddService],
         });
     });
 

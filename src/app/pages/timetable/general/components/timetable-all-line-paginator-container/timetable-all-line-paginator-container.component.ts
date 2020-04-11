@@ -6,7 +6,7 @@ import { TimetableAllLineService } from '../../services/timetable-all-line.servi
 @Component({
     selector: 'app-timetable-all-line-paginator-container',
     templateUrl: './timetable-all-line-paginator-container.component.html',
-    styleUrls: ['./timetable-all-line-paginator-container.component.scss']
+    styleUrls: ['./timetable-all-line-paginator-container.component.scss'],
 })
 export class TimetableAllLinePaginatorContainerComponent {
     pageSetting$: Observable<PageEvent>;

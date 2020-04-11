@@ -12,7 +12,7 @@ import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
 @Component({
     selector: 'app-timetable-search-form-container',
     templateUrl: './timetable-search-form-container.component.html',
-    styleUrls: ['./timetable-search-form-container.component.scss']
+    styleUrls: ['./timetable-search-form-container.component.scss'],
 })
 export class TimetableSearchFormContainerComponent {
     calendars$: Observable<ICalendar[]>;
@@ -31,7 +31,7 @@ export class TimetableSearchFormContainerComponent {
         this.calendars$ = this.timetableSearchFormService.getCalendars();
         this.params$ = this.timetableSearchFormService.getParams();
         this.stationsSelectList$ = this.routesAllStationsQuery.selectAll().pipe(
-            map(route => {
+            map((route) => {
                 return this.routesAllStationsService.generateStationSelectList(
                     route
                 );
@@ -47,14 +47,14 @@ export class TimetableSearchFormContainerComponent {
                 form.calendarId,
                 'station',
                 form.stationId,
-                { trip_direction: form.tripDirection }
+                { trip_direction: form.tripDirection },
             ]);
         } else {
             this.router.navigate([
                 'timetable',
                 form.calendarId,
                 'all-line',
-                { trip_direction: form.tripDirection }
+                { trip_direction: form.tripDirection },
             ]);
         }
     }

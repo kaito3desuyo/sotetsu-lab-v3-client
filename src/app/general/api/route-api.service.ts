@@ -7,7 +7,7 @@ import { ReadRouteDto } from '../models/routes/route-dto';
 import { RouteModel } from '../models/routes/route-model';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class RouteApiService {
     private apiUrl = environment.apiUrl + '/v1/routes';
@@ -16,8 +16,8 @@ export class RouteApiService {
 
     getRoutesAllStations(): Observable<any> {
         return this.http.get(this.apiUrl + '/all/stations').pipe(
-            map(data => {
-                return (data as ReadRouteDto[]).map(result => {
+            map((data) => {
+                return (data as ReadRouteDto[]).map((result) => {
                     return RouteModel.readRouteDtoImpl(result);
                 });
             })

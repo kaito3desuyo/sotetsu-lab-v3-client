@@ -11,7 +11,7 @@ describe('OperationSightingsTablePresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationSightingsTablePresentationalComponent]
+            declarations: [OperationSightingsTablePresentationalComponent],
         }).compileComponents();
     }));
 

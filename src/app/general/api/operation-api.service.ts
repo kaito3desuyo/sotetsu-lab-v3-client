@@ -10,7 +10,7 @@ import { ReadOperationDto } from '../models/operation/operation-dto';
 import { ReadTripOperationListDto } from '../models/trip-operation-list/trip-operation-list-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class OperationApiService {
     private apiUrl = environment.apiUrl + '/v1/operations';
@@ -33,7 +33,7 @@ export class OperationApiService {
     }): Observable<{ operations: ReadOperationDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { operations: ReadOperationDto[] }) => data));
     }
@@ -53,7 +53,7 @@ export class OperationApiService {
     }> {
         return this.http
             .get(this.apiUrl + '/search/current-position', {
-                params: query
+                params: query,
             })
             .pipe(
                 map(
@@ -80,13 +80,13 @@ export class OperationApiService {
     }): Observable<{ operationNumber: string }[]> {
         return this.http
             .get(this.apiUrl + '/search/numbers', {
-                params: query
+                params: query,
             })
             .pipe(
                 map((data: { operation_number: string }[]) => {
-                    return data.map(result => {
+                    return data.map((result) => {
                         return {
-                            operationNumber: result.operation_number
+                            operationNumber: result.operation_number,
                         };
                     });
                 })
@@ -95,12 +95,14 @@ export class OperationApiService {
 
     getOperationsAllNumbers(): Observable<{ operationNumber: string }[]> {
         return this.http.get(this.apiUrl + '/all/numbers').pipe(
-            map(data => {
-                return (data as { operation_number: string }[]).map(result => {
-                    return {
-                        operationNumber: result.operation_number
-                    };
-                });
+            map((data) => {
+                return (data as { operation_number: string }[]).map(
+                    (result) => {
+                        return {
+                            operationNumber: result.operation_number,
+                        };
+                    }
+                );
             })
         );
     }
@@ -110,7 +112,7 @@ export class OperationApiService {
     }): Observable<{ operations: ReadOperationDto[] }> {
         return this.http
             .get(this.apiUrlv2 + '/trips', {
-                params
+                params,
             })
             .pipe(map((data: { operations: ReadOperationDto[] }) => data));
     }
@@ -120,13 +122,13 @@ export class OperationApiService {
     }): Observable<{ operationNumber: string }[]> {
         return this.http
             .get(this.apiUrl + '/search/numbers', {
-                params
+                params,
             })
             .pipe(
                 map((data: { operation_number: string }[]) => {
-                    return data.map(result => {
+                    return data.map((result) => {
                         return {
-                            operationNumber: result.operation_number
+                            operationNumber: result.operation_number,
                         };
                     });
                 })
@@ -141,15 +143,15 @@ export class OperationApiService {
             .get(this.apiUrl2, {
                 params: {
                     ...params,
-                    order: 'sighting_time'
-                }
+                    order: 'sighting_time',
+                },
             })
             .pipe(
                 map(
                     (data: {
                         operation_sightings: ReadOperationSightingDto[];
                     }) => {
-                        return data.operation_sightings.map(o =>
+                        return data.operation_sightings.map((o) =>
                             OperationSightingModel.readOperationSightingDtoImpl(
                                 o
                             )
@@ -161,8 +163,8 @@ export class OperationApiService {
 
     getOperationsAllLatestSightings(): Observable<IOperationSighting[]> {
         return this.http.get(this.apiUrl + '/all/latest-sightings').pipe(
-            map(data => {
-                return (data as ReadOperationSightingDto[]).map(result => {
+            map((data) => {
+                return (data as ReadOperationSightingDto[]).map((result) => {
                     return OperationSightingModel.readOperationSightingDtoImpl(
                         result
                     );
@@ -190,7 +192,7 @@ export class OperationApiService {
     }> {
         return this.http
             .get(this.apiUrl3 + '/latest', {
-                params
+                params,
             })
             .pipe(
                 map(

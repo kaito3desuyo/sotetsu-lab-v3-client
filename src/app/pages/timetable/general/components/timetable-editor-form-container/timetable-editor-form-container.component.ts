@@ -10,7 +10,7 @@ import { ITripBlock } from 'src/app/general/models/trip-block/trip-block';
 @Component({
     selector: 'app-timetable-editor-form-container',
     templateUrl: './timetable-editor-form-container.component.html',
-    styleUrls: ['./timetable-editor-form-container.component.scss']
+    styleUrls: ['./timetable-editor-form-container.component.scss'],
 })
 export class TimetableEditorFormContainerComponent {
     tripBlock$: Observable<ITripBlock>;

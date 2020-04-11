@@ -6,7 +6,7 @@ import { OperationRouteDiagramResolverService } from './operation-route-diagram-
 describe('Service: OperationRouteDiagramResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationRouteDiagramResolverService]
+            providers: [OperationRouteDiagramResolverService],
         });
     });
 

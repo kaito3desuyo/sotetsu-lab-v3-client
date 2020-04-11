@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { QueryEntity } from '@datorama/akita';
 import {
     RoutesAllStationsStore,
-    RoutesAllStationsState
+    RoutesAllStationsState,
 } from './routes-all-stations.store';
 
 @Injectable({ providedIn: 'root' })

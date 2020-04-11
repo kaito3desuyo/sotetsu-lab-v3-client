@@ -6,7 +6,7 @@ import { TimetableStationService } from './timetable-station.service';
 describe('Service: TimetableStation', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableStationService]
+            providers: [TimetableStationService],
         });
     });
 

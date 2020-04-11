@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 @Component({
     selector: 'app-operation-table-search-form-container',
     templateUrl: './operation-table-search-form-container.component.html',
-    styleUrls: ['./operation-table-search-form-container.component.scss']
+    styleUrls: ['./operation-table-search-form-container.component.scss'],
 })
 export class OperationTableSearchFormContainerComponent implements OnInit {
     calendars$: Observable<ICalendar[]> = this.operationTableService.calendars$;

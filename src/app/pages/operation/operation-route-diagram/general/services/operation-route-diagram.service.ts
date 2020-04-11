@@ -72,10 +72,10 @@ export class OperationRouteDiagramService {
 
     fetchCalendars(): Observable<void> {
         return this.calendarApi.getCalendars().pipe(
-            map(data =>
-                data.calendars.map(o => CalendarModel.readCalendarDtoImpl(o))
+            map((data) =>
+                data.calendars.map((o) => CalendarModel.readCalendarDtoImpl(o))
             ),
-            tap(calendars => this._calendars$.next(calendars)),
+            tap((calendars) => this._calendars$.next(calendars)),
             map(() => null)
         );
     }
@@ -87,20 +87,20 @@ export class OperationRouteDiagramService {
         }
         return this.operationApi
             .searchOperations({
-                calendar_id: id
+                calendar_id: id,
             })
             .pipe(
-                map(data =>
+                map((data) =>
                     data.operations
-                        .filter(o => o.operation_number !== '100')
+                        .filter((o) => o.operation_number !== '100')
                         .sort(
                             (a, b) =>
                                 Number(a.operation_number) -
                                 Number(b.operation_number)
                         )
-                        .map(o => OperationModel.readOperationDtoImpl(o))
+                        .map((o) => OperationModel.readOperationDtoImpl(o))
                 ),
-                tap(operations => this._operations$.next(operations)),
+                tap((operations) => this._operations$.next(operations)),
                 map(() => null)
             );
     }
@@ -116,15 +116,15 @@ export class OperationRouteDiagramService {
             );
         }
         return this.operationApi.getOperationById(id).pipe(
-            map(data => OperationModel.readOperationDtoImpl(data.operation)),
-            tap(operation => {
+            map((data) => OperationModel.readOperationDtoImpl(data.operation)),
+            tap((operation) => {
                 this._operation$.next(operation);
             }),
-            flatMap(operation => {
+            flatMap((operation) => {
                 return this.calendarApi.getCalendarById(operation.calendarId);
             }),
-            map(data => CalendarModel.readCalendarDtoImpl(data.calendar)),
-            tap(calendar => {
+            map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
+            tap((calendar) => {
                 this._calendar$.next(calendar);
             }),
             map(() => null)
@@ -143,7 +143,7 @@ export class OperationRouteDiagramService {
                     (data: {
                         trip_operation_lists: ReadTripOperationListDto[];
                     }) =>
-                        data.trip_operation_lists.map(result =>
+                        data.trip_operation_lists.map((result) =>
                             TripOperationListModel.readTripOperationListDtoImpl(
                                 result
                             )
@@ -180,18 +180,18 @@ export class OperationRouteDiagramService {
             '武蔵浦和',
             '大宮',
             '指扇',
-            '川越'
+            '川越',
         ];
 
         return this.stationApi.getStations().pipe(
             map((data: { stations: ReadStationDto[] }) =>
-                data.stations.map(result =>
+                data.stations.map((result) =>
                     StationModel.readStationDtoImpl(result)
                 )
             ),
             tap((data: IStation[]) => {
-                const stations = lodashMap(targetStation, stationName =>
-                    find(data, obj => obj.stationName === stationName)
+                const stations = lodashMap(targetStation, (stationName) =>
+                    find(data, (obj) => obj.stationName === stationName)
                 );
                 this._stations$.next(stations);
             }),

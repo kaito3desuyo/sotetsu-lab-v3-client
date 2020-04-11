@@ -6,7 +6,7 @@ import { TimetableSearchFormService } from './timetable-search-form.service';
 describe('Service: TimetableSearchForm', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableSearchFormService]
+            providers: [TimetableSearchFormService],
         });
     });
 

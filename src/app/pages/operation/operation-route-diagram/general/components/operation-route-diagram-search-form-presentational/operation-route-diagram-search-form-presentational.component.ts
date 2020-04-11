@@ -7,7 +7,7 @@ import {
     Output,
     EventEmitter,
     Inject,
-    Injector
+    Injector,
 } from '@angular/core';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import moment from 'moment';
@@ -20,9 +20,9 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
     templateUrl:
         './operation-route-diagram-search-form-presentational.component.html',
     styleUrls: [
-        './operation-route-diagram-search-form-presentational.component.scss'
+        './operation-route-diagram-search-form-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationRouteDiagramSearchFormPresentationalComponent
     extends BaseComponent
@@ -38,14 +38,14 @@ export class OperationRouteDiagramSearchFormPresentationalComponent
     operationSelectList: { label: string; value: string }[] = [];
     searchForm = this.fb.group({
         calendarId: ['', Validators.required],
-        operationId: ['', Validators.required]
+        operationId: ['', Validators.required],
     });
 
     constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
         super(injector);
         this.subscription = this.searchForm
             .get('calendarId')
-            .valueChanges.subscribe(v => {
+            .valueChanges.subscribe((v) => {
                 this.changeCalendarId.emit(v);
                 this.searchForm.get('operationId').reset('');
             });
@@ -53,20 +53,20 @@ export class OperationRouteDiagramSearchFormPresentationalComponent
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.calendars) {
-            this.calendarSelectList = this.calendars.map(o => {
+            this.calendarSelectList = this.calendars.map((o) => {
                 return {
                     label: `${moment(o.startDate, 'YYYY-MM-DD').format(
                         'YYYY年MM月DD日'
                     )} 改正 ${o.calendarName}`,
-                    value: o.id
+                    value: o.id,
                 };
             });
         }
         if (changes.operations) {
-            this.operationSelectList = this.operations.map(o => {
+            this.operationSelectList = this.operations.map((o) => {
                 return {
                     label: `${o.operationNumber}運`,
-                    value: o.id
+                    value: o.id,
                 };
             });
         }

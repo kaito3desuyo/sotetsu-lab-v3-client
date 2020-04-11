@@ -11,7 +11,7 @@ describe('TimetableSearchFormPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [TimetableSearchFormPresentationalComponent]
+            declarations: [TimetableSearchFormPresentationalComponent],
         }).compileComponents();
     }));
 

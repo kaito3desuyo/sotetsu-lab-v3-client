@@ -11,7 +11,7 @@ describe('CalendarCardHeaderPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [CalendarCardHeaderPresentationalComponent]
+            declarations: [CalendarCardHeaderPresentationalComponent],
         }).compileComponents();
     }));
 

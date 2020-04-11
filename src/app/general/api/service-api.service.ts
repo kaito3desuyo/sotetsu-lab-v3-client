@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 import { ReadStationDto } from '../models/station/station-dto';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class ServiceApiService {
     private apiUrl = environment.apiUrl + '/v1/services';
@@ -19,7 +19,7 @@ export class ServiceApiService {
     }): Observable<{ services: ReadServiceDto[] }> {
         return this.http
             .get(this.apiUrl + '/search', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { services: ReadServiceDto[] }) => data));
     }
@@ -32,7 +32,7 @@ export class ServiceApiService {
     ): Observable<{ stations: ReadStationDto[] }> {
         return this.http
             .get(this.apiUrl + '/' + serviceId + '/stations', {
-                params: query
+                params: query,
             })
             .pipe(map((data: { stations: ReadStationDto[] }) => data));
     }

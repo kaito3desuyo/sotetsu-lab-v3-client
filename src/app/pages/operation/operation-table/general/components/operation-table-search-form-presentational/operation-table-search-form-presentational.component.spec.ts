@@ -3,23 +3,24 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { OperationTableSearchFormPresentationalComponent } from './operation-table-search-form-presentational.component';
 
 describe('OperationTableSearchFormPresentationalComponent', () => {
-  let component: OperationTableSearchFormPresentationalComponent;
-  let fixture: ComponentFixture<OperationTableSearchFormPresentationalComponent>;
+    let component: OperationTableSearchFormPresentationalComponent;
+    let fixture: ComponentFixture<OperationTableSearchFormPresentationalComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ OperationTableSearchFormPresentationalComponent ]
-    })
-    .compileComponents();
-  }));
+    beforeEach(async(() => {
+        TestBed.configureTestingModule({
+            declarations: [OperationTableSearchFormPresentationalComponent],
+        }).compileComponents();
+    }));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(OperationTableSearchFormPresentationalComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(
+            OperationTableSearchFormPresentationalComponent
+        );
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 });

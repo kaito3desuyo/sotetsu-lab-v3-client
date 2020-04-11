@@ -11,7 +11,7 @@ describe('DashboardOperationSearchMenuPresentationalComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [DashboardOperationSearchMenuPresentationalComponent]
+            declarations: [DashboardOperationSearchMenuPresentationalComponent],
         }).compileComponents();
     }));
 

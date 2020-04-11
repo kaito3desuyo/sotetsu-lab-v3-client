@@ -14,7 +14,7 @@ export class AgencyModel {
             agencyPhone: data.agency_phone,
             agencyFareUrl: data.agency_fare_url,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         return parsed;

@@ -29,7 +29,7 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         DashboardOperationSearchMenuContainerComponent,
         DashboardOperationSearchMenuPresentationalComponent,
         DashboardTripAddFormContainerComponent,
-        DashboardTripAddFormPresentationalComponent
+        DashboardTripAddFormPresentationalComponent,
     ],
     imports: [
         CommonModule,
@@ -47,8 +47,8 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         MatInputModule,
         DashboardRoutingModule,
         OperationSharedModule,
-        TimetableSharedModule
+        TimetableSharedModule,
     ],
-    providers: [DashboardService, DashboardResolverService]
+    providers: [DashboardService, DashboardResolverService],
 })
 export class DashboardModule {}

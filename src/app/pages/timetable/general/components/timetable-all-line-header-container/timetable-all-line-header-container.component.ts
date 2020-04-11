@@ -6,7 +6,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 @Component({
     selector: 'app-timetable-all-line-header-container',
     templateUrl: './timetable-all-line-header-container.component.html',
-    styleUrls: ['./timetable-all-line-header-container.component.scss']
+    styleUrls: ['./timetable-all-line-header-container.component.scss'],
 })
 export class TimetableAllLineHeaderContainerComponent implements OnInit {
     calendar$: Observable<ICalendar>;

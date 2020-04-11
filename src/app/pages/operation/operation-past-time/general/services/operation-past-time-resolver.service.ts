@@ -20,7 +20,7 @@ export class OperationPastTimeResolverService
         return forkJoin([
             this.operationPastTimeService.fetchCalendars(),
             this.operationPastTimeService.fetchFormations(),
-            this.operationPastTimeService.fetchOperationSightings()
+            this.operationPastTimeService.fetchOperationSightings(),
         ]).pipe(map(() => null));
     }
 }

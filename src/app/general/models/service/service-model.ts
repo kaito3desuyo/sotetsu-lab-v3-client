@@ -8,7 +8,7 @@ export class ServiceModel {
             serviceName: data.service_name,
             serviceDescription: data.service_description,
             createdAt: data.created_at,
-            updatedAt: data.updated_at
+            updatedAt: data.updated_at,
         };
 
         return parsed;

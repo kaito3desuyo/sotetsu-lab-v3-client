@@ -6,7 +6,7 @@ import {
     EventEmitter,
     Inject,
     Injector,
-    Input
+    Input,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
@@ -17,7 +17,7 @@ import { IAgency } from 'src/app/general/interfaces/agency';
     selector: 'app-operation-sighting-add-form-presentational',
     templateUrl: './operation-sighting-add-form-presentational.component.html',
     styleUrls: ['./operation-sighting-add-form-presentational.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingAddFormPresentationalComponent
     extends BaseComponent
@@ -27,7 +27,7 @@ export class OperationSightingAddFormPresentationalComponent
         formationOrVehicleNumber: ['', Validators.required],
         operationNumber: ['', Validators.required],
         timeSetting: ['currentTime', Validators.required],
-        sightingTime: [{ value: '', disabled: true }, Validators.required]
+        sightingTime: [{ value: '', disabled: true }, Validators.required],
     });
 
     @Input() agencies: IAgency[];
@@ -40,16 +40,18 @@ export class OperationSightingAddFormPresentationalComponent
     }
 
     ngOnInit() {
-        this.sightingForm.get('timeSetting').valueChanges.subscribe(change => {
-            switch (this.sightingForm.get('timeSetting').value) {
-                case 'currentTime':
-                    this.sightingForm.get('sightingTime').disable();
-                    break;
-                case 'specifiedTime':
-                    this.sightingForm.get('sightingTime').enable();
-                    break;
-            }
-        });
+        this.sightingForm
+            .get('timeSetting')
+            .valueChanges.subscribe((change) => {
+                switch (this.sightingForm.get('timeSetting').value) {
+                    case 'currentTime':
+                        this.sightingForm.get('sightingTime').disable();
+                        break;
+                    case 'specifiedTime':
+                        this.sightingForm.get('sightingTime').enable();
+                        break;
+                }
+            });
     }
 
     onClickSubmit() {
@@ -58,7 +60,7 @@ export class OperationSightingAddFormPresentationalComponent
             agencyId: '',
             vehicleNumber: '',
             operationNumber: '',
-            timeSetting: 'currentTime'
+            timeSetting: 'currentTime',
         });
     }
 }
