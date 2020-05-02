@@ -1,0 +1,20 @@
+{
+    "name": "sotetsu-lab-v3-client",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "development-client",
+    "workspaceFolder": "/home/sotetsu-lab-v3-client",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+        "angular.ng-template",
+        "cyrilletuzi.angular-schematics",
+        "ms-vscode.vscode-typescript-tslint-plugin",
+        "esbenp.prettier-vscode",
+        "mhutchie.git-graph",
+        "christian-kohler.path-intellisense"
+    ],
+    "shutdownAction": "stopCompose"
+}
