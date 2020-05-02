@@ -1,52 +1,57 @@
 <section
-  class="dashboard my-24"
-  [ngClass.lt-md]="['mx-16']"
-  [ngClass.gt-sm]="['mx-64']"
-  fxLayout="column"
-  fxLayoutGap="24px"
+    class="dashboard my-24"
+    [ngClass.lt-md]="['mx-16']"
+    [ngClass.gt-sm]="['mx-64']"
+    fxLayout="column"
+    fxLayoutGap="24px"
 >
-  <mat-card>
-    <mat-card-title>
-      このサイトは？
-    </mat-card-title>
-    <mat-card-content>
-      <p>
-        Sotetsu Lab.
-        は、神奈川県を走る大手私鉄、相模鉄道に関する情報を提供するWebサービスです。<br />
-        相鉄線を走る車両の1日の動き（これを運用と呼びます）や、全駅における特定車両の発車時刻等の情報を提供しています。
-      </p>
-    </mat-card-content>
-  </mat-card>
+    <mat-card>
+        <mat-card-title>
+            このサイトは？
+        </mat-card-title>
+        <mat-card-content>
+            <p>
+                Sotetsu Lab.
+                は、神奈川県を走る大手私鉄、相模鉄道に関する情報を提供するWebサービスです。<br />
+                相鉄線を走る車両の1日の動き（これを運用と呼びます）や、全駅における特定車両の発車時刻等の情報を提供しています。
+            </p>
+        </mat-card-content>
+    </mat-card>
 
-  <div
-    fxLayout.gt-sm="row"
-    fxLayout.lt-md="column"
-    fxLayoutAlign="center stretch"
-    fxLayoutGap="24px"
-  >
-    <app-dashboard-operation-search-menu-container
-      fxFlex.gt-sm="50%"
-      fxFlex.lt-md="auto"
-    ></app-dashboard-operation-search-menu-container>
-    <app-operation-sighting-add-form-container
-      fxFlex.gt-sm="50%"
-      fxFlex.lt-md="auto"
-    ></app-operation-sighting-add-form-container>
-  </div>
-  <div
-    fxLayout.gt-sm="row"
-    fxLayout.lt-md="column"
-    fxLayoutAlign="center stretch"
-    fxLayoutGap="24px"
-  >
-    <app-timetable-search-form-container
-      fxFlex.gt-sm="50%"
-      fxFlex.lt-md="auto"
-    ></app-timetable-search-form-container>
+    <div
+        fxLayout.gt-sm="row"
+        fxLayout.lt-md="column"
+        fxLayoutAlign="center stretch"
+        fxLayoutGap="24px"
+    >
+        <app-dashboard-operation-search-menu-container
+            fxFlex.gt-sm="50%"
+            fxFlex.lt-md="auto"
+        ></app-dashboard-operation-search-menu-container>
+        <app-operation-sighting-add-form-container
+            fxFlex.gt-sm="50%"
+            fxFlex.lt-md="auto"
+        ></app-operation-sighting-add-form-container>
 
-    <app-dashboard-trip-add-form-container
-      fxFlex.gt-sm="50%"
-      fxFlex.lt-md="auto"
-    ></app-dashboard-trip-add-form-container>
-  </div>
+        <ng-adsense [adSlot]="7813861593"></ng-adsense>
+    </div>
+
+    <div
+        fxLayout.gt-sm="row"
+        fxLayout.lt-md="column"
+        fxLayoutAlign="center stretch"
+        fxLayoutGap="24px"
+    >
+        <app-timetable-search-form-container
+            fxFlex.gt-sm="50%"
+            fxFlex.lt-md="auto"
+        ></app-timetable-search-form-container>
+
+        <app-dashboard-trip-add-form-container
+            fxFlex.gt-sm="50%"
+            fxFlex.lt-md="auto"
+        ></app-dashboard-trip-add-form-container>
+
+        <ng-adsense [adSlot]="9081478323"></ng-adsense>
+    </div>
 </section>

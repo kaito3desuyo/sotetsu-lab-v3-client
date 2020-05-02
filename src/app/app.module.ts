@@ -9,6 +9,7 @@ import { environment } from '../environments/environment';
 import { GeneralModule } from './general/general.module';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
     declarations: [AppComponent],
@@ -22,6 +23,9 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
         environment.production ? [] : AkitaNgDevtools.forRoot(),
         ServiceWorkerModule.register('ngsw-worker.js', {
             enabled: environment.production,
+        }),
+        AdsenseModule.forRoot({
+            adClient: 'ca-pub-8923857677281403',
         }),
     ],
     bootstrap: [AppComponent],

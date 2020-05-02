@@ -30,6 +30,7 @@
     "@datorama/akita": "^4.9.3",
     "lodash-es": "^4.17.15",
     "moment": "^2.24.0",
+    "ng2-adsense": "^8.0.1",
     "ngx-logger": "^4.0.3",
     "qs": "^6.9.1",
     "rxjs": "~6.5.3",
