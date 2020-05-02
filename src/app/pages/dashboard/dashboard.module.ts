@@ -22,6 +22,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { OperationSharedModule } from 'src/app/shared/operation-shared/operation-shared.module';
 import { DashboardService } from './general/services/dashboard.service';
 import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
     declarations: [
@@ -48,6 +49,7 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
         DashboardRoutingModule,
         OperationSharedModule,
         TimetableSharedModule,
+        AdsenseModule,
     ],
     providers: [DashboardService, DashboardResolverService],
 })
