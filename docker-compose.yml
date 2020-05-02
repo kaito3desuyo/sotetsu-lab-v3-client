@@ -1,0 +1,17 @@
+version: '3.7'
+
+networks:
+    development-network:
+
+services:
+    development-client:
+        build:
+            context: .
+        ports:
+            - '4200:4200'
+        command: sh -c "ng serve --host 0.0.0.0 --poll=1000"
+        volumes:
+            - '.:/home/sotetsu-lab-v3-client'
+            - /home/sotetsu-lab-v3-client/node_modules
+        networks: 
+            - development-network
