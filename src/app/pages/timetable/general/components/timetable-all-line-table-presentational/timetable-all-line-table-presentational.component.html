@@ -69,7 +69,7 @@
             </ng-container>
         </tbody>
     </table>
-    <div style="overflow-x: auto">
+    <div style="overflow-x: auto;">
         <table class="trips-table">
             <thead>
                 <tr>
@@ -92,7 +92,7 @@
                 </tr>
                 <tr>
                     <th
-                        style="white-space: nowrap"
+                        style="white-space: nowrap;"
                         *ngFor="let trip of trips"
                         [ngStyle]="{
                             color: trip.tripClass.tripClassColor
@@ -100,7 +100,7 @@
                     >
                         <div fxLayout="row" fxLayoutAlign="center center">
                             <div
-                                style="transform-origin: center"
+                                style="transform-origin: center;"
                                 [ngStyle]="{
                                     transform:
                                         'scale(' +
@@ -135,7 +135,7 @@
                         "
                     >
                         <td
-                            *ngFor="let trip of trips"
+                            *ngFor="let trip of trips; let j = index"
                             class="dia"
                             [ngClass]="[
                                 station.viewMode ===
@@ -145,7 +145,7 @@
                             ]"
                             [ngStyle]="{ color: trip.tripClass.tripClassColor }"
                         >
-                            {{ getTime('arrival', station, trip, i) }}
+                            {{ getTime('arrival', station, trip, i, j) }}
                         </td>
                     </tr>
                     <tr
@@ -159,11 +159,11 @@
                         "
                     >
                         <td
-                            *ngFor="let trip of trips"
+                            *ngFor="let trip of trips; let j = index"
                             class="dia"
                             [ngStyle]="{ color: trip.tripClass.tripClassColor }"
                         >
-                            {{ getTime('departure', station, trip, i) }}
+                            {{ getTime('departure', station, trip, i, j) }}
                         </td>
                     </tr>
                 </ng-container>

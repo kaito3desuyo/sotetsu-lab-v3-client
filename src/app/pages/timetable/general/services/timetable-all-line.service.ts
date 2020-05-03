@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, zip } from 'rxjs';
 import {
     ITimetableStation,
     ETimetableStationViewMode,
@@ -13,13 +13,15 @@ import { ITrip } from 'src/app/general/interfaces/trip';
 import { PageEvent } from '@angular/material/paginator';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { TripBlockModel } from 'src/app/general/models/trip-block/trip-block-model';
-import { concat } from 'lodash-es';
+import { concat, find } from 'lodash-es';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogContainerComponent } from 'src/app/general/components/confirm-dialog-container/confirm-dialog-container.component';
 import { NotificationService } from 'src/app/general/services/notification.service';
+import moment from 'moment';
+import { ITripBlock } from 'src/app/general/models/trip-block/trip-block';
 
 @Injectable()
 export class TimetableAllLineService {
@@ -47,7 +49,15 @@ export class TimetableAllLineService {
         ITimetableStation[]
     > = new BehaviorSubject<ITimetableStation[]>([]);
 
-    private trips: BehaviorSubject<ITrip[]> = new BehaviorSubject<ITrip[]>([]);
+    private _trips$: BehaviorSubject<ITrip[]> = new BehaviorSubject<ITrip[]>(
+        []
+    );
+    trips$: Observable<ITrip[]> = this._trips$.asObservable();
+
+    private _tripBlocks$: BehaviorSubject<ITripBlock[]> = new BehaviorSubject<
+        ITripBlock[]
+    >([]);
+    tripBlocks$: Observable<ITripBlock[]> = this._tripBlocks$.asObservable();
 
     private pageSetting: BehaviorSubject<PageEvent> = new BehaviorSubject<
         PageEvent
@@ -192,12 +202,245 @@ export class TimetableAllLineService {
             );
     }
 
+    /*
     getTrips(): Observable<ITrip[]> {
         return this.trips.asObservable();
     }
+    */
+
+    getTripsSorted(): Observable<ITrip[]> {
+        return zip(this.getStations(), this.tripBlocks$).pipe(
+            map(([stations, tripBlocks]) => {
+                // console.log(stations, tripBlocks);
+
+                const sorted: ITripBlock[] = [];
+                const unsorted: ITripBlock[] = tripBlocks;
+
+                unsorted: for (const unsortedTripBlock of unsorted) {
+                    if (!sorted.length) {
+                        sorted.push(unsortedTripBlock);
+                        continue;
+                    }
+
+                    let count = 0;
+                    unsortedTrip: for (const unsortedTrip of unsortedTripBlock.trips) {
+                        // console.log('unsortedTrip', unsortedTrip.tripNumber);
+
+                        if (
+                            (this.getTripDirectionAsStatic() === '0' &&
+                                count !== 0) ||
+                            (this.getTripDirectionAsStatic() === '1' &&
+                                count !== unsortedTripBlock.trips.length - 1)
+                        ) {
+                            count++;
+                            continue;
+                        }
+
+                        sorted: for (let i = 0; i < sorted.length; i++) {
+                            const latestTripBlock =
+                                sorted[sorted.length - (i + 1)];
+
+                            sortedTrip: for (const latestTrip of latestTripBlock.trips) {
+                                /*
+                                console.log(
+                                    'sortedTrip',
+                                    latestTrip.tripNumber
+                                );
+                                */
+
+                                station: for (const station of stations) {
+                                    const sortTargetTime = find(
+                                        unsortedTrip.times,
+                                        (time) => time.stationId === station.id
+                                    );
+
+                                    if (!sortTargetTime) {
+                                        continue;
+                                    }
+
+                                    const latestTripTime = find(
+                                        latestTrip.times,
+                                        (time) => time.stationId === station.id
+                                    );
+
+                                    if (!latestTripTime) {
+                                        continue;
+                                    }
+
+                                    const format = 'HH:mm:dd';
+
+                                    /*
+                                    console.log(
+                                        'time',
+                                        latestTripTime,
+                                        sortTargetTime
+                                    );
+                                    */
+
+                                    if (
+                                        moment(
+                                            latestTripTime.departureTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.departureDays,
+                                            'days'
+                                        ) >
+                                            moment(
+                                                sortTargetTime.departureTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.departureDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) >
+                                            moment(
+                                                sortTargetTime.departureTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.departureDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.departureTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.departureDays,
+                                            'days'
+                                        ) >
+                                            moment(
+                                                sortTargetTime.arrivalTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.arrivalDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) >
+                                            moment(
+                                                sortTargetTime.arrivalTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.arrivalDays,
+                                                'days'
+                                            )
+                                    ) {
+                                        if (i === sorted.length - 1) {
+                                            sorted.unshift(unsortedTripBlock);
+                                            break sorted;
+                                        }
+
+                                        continue sorted;
+                                    }
+
+                                    if (
+                                        moment(
+                                            latestTripTime.departureTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.departureDays,
+                                            'days'
+                                        ) <=
+                                            moment(
+                                                sortTargetTime.departureTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.departureDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) <=
+                                            moment(
+                                                sortTargetTime.departureTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.departureDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.departureTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.departureDays,
+                                            'days'
+                                        ) <=
+                                            moment(
+                                                sortTargetTime.arrivalTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.arrivalDays,
+                                                'days'
+                                            ) ||
+                                        moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) <=
+                                            moment(
+                                                sortTargetTime.arrivalTime,
+                                                format
+                                            ).add(
+                                                sortTargetTime.arrivalDays,
+                                                'days'
+                                            )
+                                    ) {
+                                        sorted.splice(
+                                            sorted.length - i,
+                                            0,
+                                            unsortedTripBlock
+                                        );
+
+                                        break sorted;
+                                    }
+
+                                    continue;
+                                }
+                            }
+
+                            if (i === sorted.length - 1) {
+                                sorted.unshift(unsortedTripBlock);
+                                break sorted;
+                            }
+                        }
+
+                        count++;
+                    }
+                }
+
+                return sorted;
+            }),
+            map((data) => {
+                let trips: ITrip[] = [];
+                data.forEach((tripBlock) => {
+                    trips = concat(trips, tripBlock.trips);
+                });
+                return trips;
+            })
+        );
+    }
 
     getTripsByPage(): Observable<ITrip[]> {
-        return combineLatest([this.getTrips(), this.getPageSetting()]).pipe(
+        return combineLatest([
+            this.getTripsSorted(),
+            this.getPageSetting(),
+        ]).pipe(
             map(([trips, pageEvent]) => {
                 const pageTrips: ITrip[] = [];
                 trips.forEach((value, index) => {
@@ -215,7 +458,7 @@ export class TimetableAllLineService {
     }
 
     setTrips(trips: ITrip[]): void {
-        this.trips.next(trips);
+        this._trips$.next(trips);
     }
 
     fetchTrips() {
@@ -241,6 +484,7 @@ export class TimetableAllLineService {
                 )
             ),
             tap((data) => {
+                this._tripBlocks$.next(data);
                 let trips: ITrip[] = [];
                 data.forEach((tripBlock) => {
                     trips = concat(trips, tripBlock.trips);
