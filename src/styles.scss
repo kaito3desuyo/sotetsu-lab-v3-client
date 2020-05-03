@@ -53,8 +53,8 @@ $sotetsu-lab-v3-client-primary: mat-palette(
             A100: white,
             A200: white,
             A400: white,
-            A700: white
-        )
+            A700: white,
+        ),
     )
 );
 $sotetsu-lab-v3-client-accent: mat-palette(
@@ -87,8 +87,8 @@ $sotetsu-lab-v3-client-accent: mat-palette(
             A100: $black-87-opacity,
             A200: $black-87-opacity,
             A400: $black-87-opacity,
-            A700: $black-87-opacity
-        )
+            A700: $black-87-opacity,
+        ),
     )
 );
 
@@ -137,4 +137,8 @@ body {
     .mat-sidenav-content {
         height: calc(100vh - 56px) !important;
     }
+}
+
+.adsbygoogle {
+    text-align: center;
 }
