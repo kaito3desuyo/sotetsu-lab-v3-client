@@ -177,6 +177,8 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                         minus1Station.viewMode ===
                             this.staitonViewMode.ONLY_DEPARTURE) ||
                         (mode === 'departure' &&
+                            station.viewMode !==
+                                this.staitonViewMode.DEPARTURE_AND_ARRIVAL &&
                             minus1Station.viewMode ===
                                 this.staitonViewMode.ONLY_DEPARTURE))
                 ) {
