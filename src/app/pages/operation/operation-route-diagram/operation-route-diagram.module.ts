@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { ReactiveFormsModule } from '@angular/forms';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
     imports: [
@@ -31,6 +32,7 @@ import { ReactiveFormsModule } from '@angular/forms';
         MatInputModule,
         AppSharedModule,
         OperationRouteDiagramRoutingModule,
+        AdsenseModule,
     ],
     exports: [],
     declarations: [
