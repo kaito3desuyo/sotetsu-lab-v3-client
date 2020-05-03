@@ -21,6 +21,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSortModule } from '@angular/material/sort';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
     declarations: [
@@ -46,6 +47,7 @@ import { MatSortModule } from '@angular/material/sort';
         MatSortModule,
         OperationRealTimeRoutingModule,
         OperationSharedModule,
+        AdsenseModule,
     ],
     exports: [],
     providers: [OperationRealTimeService, OperationRealTimeResolverService],

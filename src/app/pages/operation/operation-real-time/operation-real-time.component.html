@@ -1,26 +1,49 @@
 <section
-  class="operation-real-time my-24"
-  [ngClass.lt-md]="['mx-16']"
-  [ngClass.gt-sm]="['mx-64']"
-  fxLayout="column"
-  fxLayoutGap="24px"
+    class="operation-real-time my-24"
+    [ngClass.lt-md]="['mx-16']"
+    [ngClass.gt-sm]="['mx-64']"
+    fxLayout="column"
+    fxLayoutGap="24px"
 >
-  <h2 class="mat-h2">リアルタイム運用情報</h2>
-  <app-operation-sightings-control-panel-container></app-operation-sightings-control-panel-container>
-  <div [fxLayout.gt-sm]="'row'" [fxLayout.lt-md]="'column'" fxLayoutGap="64px">
-    <app-operation-sightings-table-by-operation-container
-      [fxFlex.gt-sm]="'calc(50% - 64px)'"
-      [fxFlex.lt-md]="'auto'"
-    ></app-operation-sightings-table-by-operation-container>
-    <app-operation-sightings-table-by-formation-container
-      [fxFlex.gt-sm]="'calc(50% - 64px)'"
-      [fxFlex.lt-md]="'auto'"
-    ></app-operation-sightings-table-by-formation-container>
-  </div>
-  <app-operation-sightings-table-legend-container>
-  </app-operation-sightings-table-legend-container>
-  <app-operation-sighting-add-form-container
-    [date]="date"
-    (submitSighting)="onReceiveSubmitSighting($event)"
-  ></app-operation-sighting-add-form-container>
+    <h2 class="mat-h2">リアルタイム運用情報</h2>
+    <app-operation-sightings-control-panel-container></app-operation-sightings-control-panel-container>
+    <div
+        [fxLayout.gt-sm]="'row'"
+        [fxLayout.lt-md]="'column'"
+        [fxLayoutGap.gt-sm]="'64px'"
+        [fxLayoutGap.lt-md]="'24px'"
+    >
+        <div
+            [fxFlex.gt-sm]="'calc(50% - 64px)'"
+            [fxFlex.lt-md]="'auto'"
+            fxLayout="column"
+            [fxLayoutGap.gt-sm]="'64px'"
+            [fxLayoutGap.lt-md]="'24px'"
+        >
+            <app-operation-sightings-table-by-operation-container></app-operation-sightings-table-by-operation-container>
+            <ng-adsense
+                [adSlot]="8391993434"
+                [display]="'inline-block'"
+            ></ng-adsense>
+        </div>
+        <div
+            [fxFlex.gt-sm]="'calc(50% - 64px)'"
+            [fxFlex.lt-md]="'auto'"
+            fxLayout="column"
+            [fxLayoutGap.gt-sm]="'64px'"
+            [fxLayoutGap.lt-md]="'24px'"
+        >
+            <app-operation-sightings-table-by-formation-container></app-operation-sightings-table-by-formation-container>
+            <ng-adsense
+                [adSlot]="3946316114"
+                [display]="'inline-block'"
+            ></ng-adsense>
+        </div>
+    </div>
+    <app-operation-sightings-table-legend-container>
+    </app-operation-sightings-table-legend-container>
+    <app-operation-sighting-add-form-container
+        [date]="date"
+        (submitSighting)="onReceiveSubmitSighting($event)"
+    ></app-operation-sighting-add-form-container>
 </section>

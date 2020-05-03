@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { AdsenseModule } from 'ng2-adsense';
 
 @NgModule({
     declarations: [
@@ -34,6 +35,7 @@ import { MatButtonModule } from '@angular/material/button';
         MatFormFieldModule,
         MatSelectModule,
         MatButtonModule,
+        AdsenseModule,
     ],
     providers: [OperationTableService, OperationTableResolverService],
 })

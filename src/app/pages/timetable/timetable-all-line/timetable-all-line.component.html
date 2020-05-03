@@ -1,23 +1,25 @@
 <article
-  class="timetable-all-line my-24"
-  [ngClass.lt-md]="['mx-16']"
-  [ngClass.gt-sm]="['mx-64']"
-  fxLayout="column"
-  fxLayoutGap="24px"
+    class="timetable-all-line my-24"
+    [ngClass.lt-md]="['mx-16']"
+    [ngClass.gt-sm]="['mx-64']"
+    fxLayout="column"
+    fxLayoutGap="24px"
 >
-  <h2 class="mat-h2">
-    全線時刻表
-  </h2>
+    <h2 class="mat-h2">
+        全線時刻表
+    </h2>
 
-  <mat-card>
-    <mat-card-title>
-      <app-timetable-all-line-header-container></app-timetable-all-line-header-container>
-    </mat-card-title>
-    <mat-card-content>
-      <app-timetable-all-line-paginator-container></app-timetable-all-line-paginator-container>
-      <app-timetable-all-line-table-container></app-timetable-all-line-table-container>
-    </mat-card-content>
-  </mat-card>
+    <mat-card>
+        <mat-card-title>
+            <app-timetable-all-line-header-container></app-timetable-all-line-header-container>
+        </mat-card-title>
+        <mat-card-content>
+            <app-timetable-all-line-paginator-container></app-timetable-all-line-paginator-container>
+            <app-timetable-all-line-table-container></app-timetable-all-line-table-container>
+        </mat-card-content>
+    </mat-card>
 
-  <app-timetable-search-form-container></app-timetable-search-form-container>
+    <ng-adsense [adSlot]="1363071722"></ng-adsense>
+
+    <app-timetable-search-form-container></app-timetable-search-form-container>
 </article>
