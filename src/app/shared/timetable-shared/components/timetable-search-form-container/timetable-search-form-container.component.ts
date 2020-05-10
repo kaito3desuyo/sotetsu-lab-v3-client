@@ -44,17 +44,21 @@ export class TimetableSearchFormContainerComponent {
         if (form.isSearchStation) {
             this.router.navigate([
                 'timetable',
-                form.calendarId,
                 'station',
-                form.stationId,
-                { trip_direction: form.tripDirection },
+                {
+                    calendar_id: form.calendarId,
+                    station_id: form.stationId,
+                    trip_direction: form.tripDirection,
+                },
             ]);
         } else {
             this.router.navigate([
                 'timetable',
-                form.calendarId,
                 'all-line',
-                { trip_direction: form.tripDirection },
+                {
+                    calendar_id: form.calendarId,
+                    trip_direction: form.tripDirection,
+                },
             ]);
         }
     }

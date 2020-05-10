@@ -1,18 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
-import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { map, tap } from 'rxjs/operators';
-import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
-import { IStation } from 'src/app/general/interfaces/station';
-import { StationApiService } from 'src/app/general/api/station-api.service';
-import { StationModel } from 'src/app/general/models/station/station-model';
-import { ITime } from 'src/app/general/interfaces/time';
-import { TimeApiService } from 'src/app/general/api/time-api.service';
-import { TimeModel } from 'src/app/general/models/time/time-model';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
+import { StationApiService } from 'src/app/general/api/station-api.service';
+import { TimeApiService } from 'src/app/general/api/time-api.service';
+import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { IStation } from 'src/app/general/interfaces/station';
+import { ITime } from 'src/app/general/interfaces/time';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import { OperationSightingModel } from 'src/app/general/models/operation-sighting/operation-sighting-model';
+import { StationModel } from 'src/app/general/models/station/station-model';
+import { TimeModel } from 'src/app/general/models/time/time-model';
 
 @Injectable()
 export class TimetableStationService {
@@ -26,9 +26,7 @@ export class TimetableStationService {
     private _stationId$: BehaviorSubject<string> = new BehaviorSubject<string>(
         null
     );
-    private _station$: BehaviorSubject<IStation> = new BehaviorSubject<
-        IStation
-    >(null);
+
     private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
         IStation[]
     >([]);
