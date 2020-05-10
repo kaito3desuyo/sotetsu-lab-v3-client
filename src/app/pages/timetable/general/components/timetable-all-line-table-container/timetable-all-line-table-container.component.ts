@@ -5,6 +5,7 @@ import { ITimetableStation } from '../../interfaces/timetable-station';
 import { ITrip } from 'src/app/general/interfaces/trip';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
     selector: 'app-timetable-all-line-table-container',
@@ -19,18 +20,22 @@ export class TimetableAllLineTableContainerComponent {
     isGroupingMode$: Observable<boolean>;
     groupingBaseTrip$: Observable<ITrip>;
 
+    pageSettings$: Observable<PageEvent>;
+
     constructor(
         private router: Router,
         private timetableAllLineService: TimetableAllLineService
     ) {
         this.tripDirection$ = this.timetableAllLineService.getTripDirection();
         this.stations$ = this.timetableAllLineService.getStations();
-        this.trips$ = this.timetableAllLineService.getTripsByPage();
+        this.trips$ = this.timetableAllLineService.getTripsSorted();
 
         this.isGroupingMode$ = this.timetableAllLineService
             .getGroupingBaseTrip()
             .pipe(map((data) => (data ? true : false)));
         this.groupingBaseTrip$ = this.timetableAllLineService.getGroupingBaseTrip();
+
+        this.pageSettings$ = this.timetableAllLineService.getPageSetting();
     }
 
     onReceiveClickEdit(blockId: string): void {

@@ -24,9 +24,9 @@ export class TimetableStationComponent extends BaseComponent {
         );
 
         this.subscription = this.route.paramMap.subscribe((params) => {
-            const calendarId = params.get('calendarId');
+            const calendarId = params.get('calendar_id');
             const tripDirection = params.get('trip_direction');
-            const stationId = params.get('stationId');
+            const stationId = params.get('station_id');
 
             this.timetableSearchFormService.updateParams({
                 calendarId,

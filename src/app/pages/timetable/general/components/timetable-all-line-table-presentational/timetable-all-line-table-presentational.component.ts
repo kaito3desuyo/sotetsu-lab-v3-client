@@ -1,18 +1,19 @@
 import {
-    Component,
-    OnInit,
     ChangeDetectionStrategy,
-    Input,
-    Output,
+    Component,
     EventEmitter,
+    Input,
+    OnInit,
+    Output,
 } from '@angular/core';
-import {
-    ITimetableStation,
-    ETimetableStationViewMode,
-} from '../../interfaces/timetable-station';
-import { ITrip } from 'src/app/general/interfaces/trip';
+import { PageEvent } from '@angular/material/paginator';
 import { find, some } from 'lodash-es';
 import moment from 'moment';
+import { ITrip } from 'src/app/general/interfaces/trip';
+import {
+    ETimetableStationViewMode,
+    ITimetableStation,
+} from '../../interfaces/timetable-station';
 
 @Component({
     selector: 'app-timetable-all-line-table-presentational',
@@ -31,6 +32,11 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
     @Input() trips: ITrip[];
     @Input() isGroupingMode: boolean;
     @Input() groupingBaseTrip: ITrip;
+    @Input() pageSettings: PageEvent = {
+        length: 0,
+        pageIndex: 0,
+        pageSize: 10,
+    };
 
     @Output() clickEdit: EventEmitter<string> = new EventEmitter<string>();
     @Output() clickDelete: EventEmitter<ITrip> = new EventEmitter<ITrip>();
@@ -50,7 +56,8 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
         mode: 'arrival' | 'departure',
         station: ITimetableStation,
         trip: ITrip,
-        stationIndex: number
+        stationIndex: number,
+        tripIndex: number
     ) {
         const time = find(trip.times, (o) => {
             return o.stationId === station.id;
@@ -67,6 +74,24 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                         !time.arrivalTime
                     ) {
                         return '↓';
+                    }
+
+                    const minus1Trip = this.trips[tripIndex - 1];
+                    const plus1Time = find(trip.times, (o) => {
+                        return (
+                            o.stationId === this.stations[stationIndex + 1].id
+                        );
+                    });
+                    if (
+                        minus1Trip &&
+                        minus1Trip.tripBlockId === trip.tripBlockId &&
+                        plus1Time &&
+                        some(
+                            minus1Trip.times,
+                            (o) => o.stationId === station.id
+                        )
+                    ) {
+                        return '⬎';
                     }
 
                     if (!time.arrivalTime) {
@@ -134,7 +159,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                     break;
                 }
             }
-            for (let i = stationIndex; i < this.stations.length - 1; i++) {
+            for (let i = stationIndex + 1; i < this.stations.length - 1; i++) {
                 const stationId = this.stations[i].id;
                 if (some(trip.times, (o) => o.stationId === stationId)) {
                     isExistTimeAfterStation = true;
@@ -155,15 +180,37 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                 if (
                     minus1Time &&
                     ((mode === 'arrival' &&
-                        station.viewMode ===
-                            this.staitonViewMode.DEPARTURE_AND_ARRIVAL) ||
+                        minus1Station.viewMode ===
+                            this.staitonViewMode.ONLY_DEPARTURE) ||
                         (mode === 'departure' &&
-                            station.viewMode ===
-                                this.staitonViewMode.ONLY_DEPARTURE &&
+                            station.viewMode !==
+                                this.staitonViewMode.DEPARTURE_AND_ARRIVAL &&
                             minus1Station.viewMode ===
                                 this.staitonViewMode.ONLY_DEPARTURE))
                 ) {
                     return '=';
+                }
+            }
+
+            const plus1Station = this.stations[stationIndex + 1];
+            if (plus1Station) {
+                const minus1Trip = this.trips[tripIndex - 1];
+                const plus1Time = find(trip.times, (o) => {
+                    return o.stationId === plus1Station.id;
+                });
+
+                if (
+                    minus1Trip &&
+                    minus1Trip.tripBlockId === trip.tripBlockId &&
+                    plus1Time &&
+                    some(
+                        minus1Trip.times,
+                        (o) => o.stationId === plus1Station.id
+                    ) &&
+                    plus1Station.viewMode !==
+                        this.staitonViewMode.DEPARTURE_AND_ARRIVAL
+                ) {
+                    return '⬎';
                 }
             }
 
@@ -197,5 +244,17 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
 
     onClickRemoveTripInGroup(trip: ITrip): void {
         this.clickRemoveTripInGroup.emit(trip);
+    }
+
+    isIncludeVisibleColumn(index: number): boolean {
+        return (
+            this.pageSettings.pageIndex * this.pageSettings.pageSize <= index &&
+            index <
+                (this.pageSettings.pageIndex + 1) * this.pageSettings.pageSize
+        );
+    }
+
+    trackByItem(index: number, value: ITrip): string {
+        return value ? value.id : null;
     }
 }

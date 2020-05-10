@@ -69,52 +69,83 @@
             </ng-container>
         </tbody>
     </table>
-    <div style="overflow-x: auto">
+    <div style="overflow-x: auto;">
         <table class="trips-table">
             <thead>
                 <tr>
-                    <th *ngFor="let trip of trips">{{ trip.tripNumber }}</th>
-                </tr>
-                <tr>
-                    <th *ngFor="let trip of trips">
-                        <a
-                            *ngFor="
-                                let tripOperationList of trip.tripOperationLists
-                            "
-                            [routerLink]="[
-                                '/operation/route-diagram',
-                                { operation_id: tripOperationList.operation.id }
-                            ]"
-                        >
-                            {{ tripOperationList.operation.operationNumber }}
-                        </a>
-                    </th>
-                </tr>
-                <tr>
-                    <th
-                        style="white-space: nowrap"
-                        *ngFor="let trip of trips"
-                        [ngStyle]="{
-                            color: trip.tripClass.tripClassColor
-                        }"
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
                     >
-                        <div fxLayout="row" fxLayoutAlign="center center">
-                            <div
-                                style="transform-origin: center"
-                                [ngStyle]="{
-                                    transform:
-                                        'scale(' +
-                                        (trip.tripClass.tripClassName.length >=
-                                        3
-                                            ? 0.5
-                                            : 1) +
-                                        ', 1)'
-                                }"
+                        <th *ngIf="isIncludeVisibleColumn(i)">
+                            {{ trip.tripNumber }}
+                        </th>
+                    </ng-container>
+                </tr>
+                <tr>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <th *ngIf="isIncludeVisibleColumn(i)">
+                            <a
+                                *ngFor="
+                                    let tripOperationList of trip.tripOperationLists
+                                "
+                                [routerLink]="[
+                                    '/operation/route-diagram',
+                                    {
+                                        operation_id:
+                                            tripOperationList.operation.id
+                                    }
+                                ]"
                             >
-                                {{ trip.tripClass.tripClassName }}
+                                {{
+                                    tripOperationList.operation.operationNumber
+                                }}
+                            </a>
+                        </th>
+                    </ng-container>
+                </tr>
+                <tr>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <th
+                            style="white-space: nowrap;"
+                            *ngIf="isIncludeVisibleColumn(i)"
+                            [ngStyle]="{
+                                color: trip.tripClass.tripClassColor
+                            }"
+                        >
+                            <div fxLayout="row" fxLayoutAlign="center center">
+                                <div
+                                    style="transform-origin: center;"
+                                    [ngStyle]="{
+                                        transform:
+                                            'scale(' +
+                                            (trip.tripClass.tripClassName
+                                                .length >= 3
+                                                ? 0.5
+                                                : 1) +
+                                            ', 1)'
+                                    }"
+                                >
+                                    {{ trip.tripClass.tripClassName }}
+                                </div>
                             </div>
-                        </div>
-                    </th>
+                        </th>
+                    </ng-container>
                 </tr>
             </thead>
             <tbody>
@@ -134,19 +165,29 @@
                                     staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
                         "
                     >
-                        <td
-                            *ngFor="let trip of trips"
-                            class="dia"
-                            [ngClass]="[
-                                station.viewMode ===
-                                staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                    ? 'border-bottom'
-                                    : ''
-                            ]"
-                            [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+                        <ng-container
+                            *ngFor="
+                                let trip of trips;
+                                let j = index;
+                                trackBy: trackByItem
+                            "
                         >
-                            {{ getTime('arrival', station, trip, i) }}
-                        </td>
+                            <td
+                                *ngIf="isIncludeVisibleColumn(j)"
+                                class="dia"
+                                [ngClass]="[
+                                    station.viewMode ===
+                                    staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                        ? 'border-bottom'
+                                        : ''
+                                ]"
+                                [ngStyle]="{
+                                    color: trip.tripClass.tripClassColor
+                                }"
+                            >
+                                {{ getTime('arrival', station, trip, i, j) }}
+                            </td>
+                        </ng-container>
                     </tr>
                     <tr
                         [ngClass]="[
@@ -158,85 +199,127 @@
                             station.viewMode === staitonViewMode.ONLY_DEPARTURE
                         "
                     >
-                        <td
-                            *ngFor="let trip of trips"
-                            class="dia"
-                            [ngStyle]="{ color: trip.tripClass.tripClassColor }"
+                        <ng-container
+                            *ngFor="
+                                let trip of trips;
+                                let j = index;
+                                trackBy: trackByItem
+                            "
                         >
-                            {{ getTime('departure', station, trip, i) }}
-                        </td>
+                            <td
+                                *ngIf="isIncludeVisibleColumn(j)"
+                                class="dia"
+                                [ngStyle]="{
+                                    color: trip.tripClass.tripClassColor
+                                }"
+                            >
+                                {{ getTime('departure', station, trip, i, j) }}
+                            </td>
+                        </ng-container>
                     </tr>
                 </ng-container>
             </tbody>
             <tfoot>
                 <tr *ngIf="!groupingBaseTrip">
-                    <td *ngFor="let trip of trips">
-                        <button
-                            mat-icon-button
-                            matTooltip="編集する"
-                            (click)="onClickEdit(trip.tripBlockId)"
-                        >
-                            <mat-icon>edit</mat-icon>
-                        </button>
-                    </td>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <td *ngIf="isIncludeVisibleColumn(i)">
+                            <button
+                                mat-icon-button
+                                matTooltip="編集する"
+                                (click)="onClickEdit(trip.tripBlockId)"
+                            >
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
                 </tr>
                 <tr *ngIf="!groupingBaseTrip">
-                    <td *ngFor="let trip of trips">
-                        <button
-                            mat-icon-button
-                            matTooltip="削除する"
-                            (click)="onClickDelete(trip)"
-                        >
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    </td>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <td *ngIf="isIncludeVisibleColumn(i)">
+                            <button
+                                mat-icon-button
+                                matTooltip="削除する"
+                                (click)="onClickDelete(trip)"
+                            >
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
                 </tr>
                 <tr *ngIf="!groupingBaseTrip">
-                    <td *ngFor="let trip of trips">
-                        <button
-                            mat-icon-button
-                            matTooltip="この列車を基準として列車をグルーピングする"
-                            (click)="onClickGrouping(trip)"
-                        >
-                            <mat-icon>link</mat-icon>
-                        </button>
-                    </td>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <td *ngIf="isIncludeVisibleColumn(i)">
+                            <button
+                                mat-icon-button
+                                matTooltip="この列車を基準として列車をグルーピングする"
+                                (click)="onClickGrouping(trip)"
+                            >
+                                <mat-icon>link</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
                 </tr>
                 <tr *ngIf="groupingBaseTrip">
-                    <td *ngFor="let trip of trips">
-                        <button
-                            *ngIf="trip.id === groupingBaseTrip.id"
-                            mat-icon-button
-                            matTooltip="キャンセル"
-                            (click)="onClickGrouping(null)"
-                        >
-                            <mat-icon>clear</mat-icon>
-                        </button>
-                        <button
-                            *ngIf="
-                                trip.id !== groupingBaseTrip.id &&
-                                trip.tripBlockId !==
-                                    groupingBaseTrip.tripBlockId
-                            "
-                            mat-icon-button
-                            matTooltip="グループに追加する"
-                            (click)="onClickAddTripInGroup(trip)"
-                        >
-                            <mat-icon>add</mat-icon>
-                        </button>
-                        <button
-                            *ngIf="
-                                trip.id !== groupingBaseTrip.id &&
-                                trip.tripBlockId ===
-                                    groupingBaseTrip.tripBlockId
-                            "
-                            mat-icon-button
-                            matTooltip="グループから除外する"
-                            (click)="onClickRemoveTripInGroup(trip)"
-                        >
-                            <mat-icon>remove</mat-icon>
-                        </button>
-                    </td>
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <td *ngIf="isIncludeVisibleColumn(i)">
+                            <button
+                                *ngIf="trip.id === groupingBaseTrip.id"
+                                mat-icon-button
+                                matTooltip="キャンセル"
+                                (click)="onClickGrouping(null)"
+                            >
+                                <mat-icon>clear</mat-icon>
+                            </button>
+                            <button
+                                *ngIf="
+                                    trip.id !== groupingBaseTrip.id &&
+                                    trip.tripBlockId !==
+                                        groupingBaseTrip.tripBlockId
+                                "
+                                mat-icon-button
+                                matTooltip="グループに追加する"
+                                (click)="onClickAddTripInGroup(trip)"
+                            >
+                                <mat-icon>add</mat-icon>
+                            </button>
+                            <button
+                                *ngIf="
+                                    trip.id !== groupingBaseTrip.id &&
+                                    trip.tripBlockId ===
+                                        groupingBaseTrip.tripBlockId
+                                "
+                                mat-icon-button
+                                matTooltip="グループから除外する"
+                                (click)="onClickRemoveTripInGroup(trip)"
+                            >
+                                <mat-icon>remove</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
                 </tr>
             </tfoot>
         </table>

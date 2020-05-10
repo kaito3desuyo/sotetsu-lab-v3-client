@@ -12,25 +12,23 @@ import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-sha
 
 const routes: Routes = [
     {
-        path: ':calendarId/all-line',
+        path: 'all-line',
         component: TimetableAllLineComponent,
         resolve: {
             timetableAllLine: TimetableAllLineTableResolverService,
             from2: TimetableSearchFormResolverService,
         },
-        runGuardsAndResolvers: 'always',
         data: {
             title: '全線時刻表',
         },
     },
     {
-        path: ':calendarId/station/:stationId',
+        path: 'station',
         component: TimetableStationComponent,
         resolve: {
             from: TimetableStationResolverService,
             from2: TimetableSearchFormResolverService,
         },
-        runGuardsAndResolvers: 'always',
         data: {
             title: '駅別時刻表',
         },

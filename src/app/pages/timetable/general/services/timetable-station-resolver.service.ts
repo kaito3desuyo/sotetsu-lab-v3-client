@@ -10,8 +10,8 @@ export class TimetableStationResolverService
     constructor(private timetableStationService: TimetableStationService) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        const calendarId = route.paramMap.get('calendarId');
-        const stationId = route.paramMap.get('stationId');
+        const calendarId = route.paramMap.get('calendar_id');
+        const stationId = route.paramMap.get('station_id');
         const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
         this.timetableStationService.setCalendarId(calendarId);
