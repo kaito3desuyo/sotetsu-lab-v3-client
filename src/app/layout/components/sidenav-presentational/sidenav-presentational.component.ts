@@ -41,12 +41,12 @@ export class SidenavPresentationalComponent extends BaseComponent
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.todaysCalendarId) {
             this.upTimetableLink.next([
-                '/timetable/' + this.todaysCalendarId + '/all-line',
-                { trip_direction: '0' },
+                '/timetable/all-line',
+                { calendar_id: this.todaysCalendarId, trip_direction: '0' },
             ]);
             this.downTimetableLink.next([
-                '/timetable/' + this.todaysCalendarId + '/all-line',
-                { trip_direction: '1' },
+                '/timetable/all-line',
+                { calendar_id: this.todaysCalendarId, trip_direction: '1' },
             ]);
         }
     }
@@ -55,21 +55,21 @@ export class SidenavPresentationalComponent extends BaseComponent
         this.subscription = this.stationId.valueChanges.subscribe((id) => {
             if (id) {
                 this.upTimetableLink.next([
-                    '/timetable/' + this.todaysCalendarId + '/station/' + id,
-                    { trip_direction: '0' },
+                    '/timetable/station',
+                    { calendar_id: this.todaysCalendarId, trip_direction: '0', station_id: id },
                 ]);
                 this.downTimetableLink.next([
-                    '/timetable/' + this.todaysCalendarId + '/station/' + id,
-                    { trip_direction: '1', station_id: id },
+                    '/timetable/station',
+                    { calendar_id: this.todaysCalendarId, trip_direction: '1', station_id: id },
                 ]);
             } else {
                 this.upTimetableLink.next([
-                    '/timetable/' + this.todaysCalendarId + '/all-line',
-                    { trip_direction: '0' },
+                    '/timetable/all-line',
+                    { calendar_id: this.todaysCalendarId, trip_direction: '0' },
                 ]);
                 this.downTimetableLink.next([
-                    '/timetable/' + this.todaysCalendarId + '/all-line',
-                    { trip_direction: '1' },
+                    '/timetable/all-line',
+                    { calendar_id: this.todaysCalendarId, trip_direction: '1' },
                 ]);
             }
         });
