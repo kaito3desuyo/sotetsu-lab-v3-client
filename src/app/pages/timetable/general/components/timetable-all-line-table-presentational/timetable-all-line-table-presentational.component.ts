@@ -159,7 +159,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                     break;
                 }
             }
-            for (let i = stationIndex + 1; i < this.stations.length - 1; i++) {
+            for (let i = stationIndex + 1; i <= this.stations.length - 1; i++) {
                 const stationId = this.stations[i].id;
                 if (some(trip.times, (o) => o.stationId === stationId)) {
                     isExistTimeAfterStation = true;
