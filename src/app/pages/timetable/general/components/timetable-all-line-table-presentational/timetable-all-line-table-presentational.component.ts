@@ -1,18 +1,19 @@
 import {
-    Component,
-    OnInit,
     ChangeDetectionStrategy,
-    Input,
-    Output,
+    Component,
     EventEmitter,
+    Input,
+    OnInit,
+    Output,
 } from '@angular/core';
-import {
-    ITimetableStation,
-    ETimetableStationViewMode,
-} from '../../interfaces/timetable-station';
-import { ITrip } from 'src/app/general/interfaces/trip';
+import { PageEvent } from '@angular/material/paginator';
 import { find, some } from 'lodash-es';
 import moment from 'moment';
+import { ITrip } from 'src/app/general/interfaces/trip';
+import {
+    ETimetableStationViewMode,
+    ITimetableStation,
+} from '../../interfaces/timetable-station';
 
 @Component({
     selector: 'app-timetable-all-line-table-presentational',
@@ -31,6 +32,11 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
     @Input() trips: ITrip[];
     @Input() isGroupingMode: boolean;
     @Input() groupingBaseTrip: ITrip;
+    @Input() pageSettings: PageEvent = {
+        length: 0,
+        pageIndex: 0,
+        pageSize: 10,
+    };
 
     @Output() clickEdit: EventEmitter<string> = new EventEmitter<string>();
     @Output() clickDelete: EventEmitter<ITrip> = new EventEmitter<ITrip>();
@@ -238,5 +244,17 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
 
     onClickRemoveTripInGroup(trip: ITrip): void {
         this.clickRemoveTripInGroup.emit(trip);
+    }
+
+    isIncludeVisibleColumn(index: number): boolean {
+        return (
+            this.pageSettings.pageIndex * this.pageSettings.pageSize <= index &&
+            index <
+                (this.pageSettings.pageIndex + 1) * this.pageSettings.pageSize
+        );
+    }
+
+    trackByItem(index: number, value: ITrip): string {
+        return value ? value.id : null;
     }
 }

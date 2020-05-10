@@ -279,19 +279,103 @@ export class TimetableAllLineService {
 
                                     if (
                                         moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) >
+                                        moment(
+                                            sortTargetTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            sortTargetTime.arrivalDays,
+                                            'days'
+                                        )
+                                    ) {
+                                        if (i === sorted.length - 1) {
+                                            sorted.unshift(unsortedTripBlock);
+                                            break sorted;
+                                        }
+
+                                        continue sorted;
+                                    }
+
+                                    if (
+                                        moment(
+                                            latestTripTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.arrivalDays,
+                                            'days'
+                                        ) <=
+                                        moment(
+                                            sortTargetTime.arrivalTime,
+                                            format
+                                        ).add(
+                                            sortTargetTime.arrivalDays,
+                                            'days'
+                                        )
+                                    ) {
+                                        sorted.splice(
+                                            sorted.length - i,
+                                            0,
+                                            unsortedTripBlock
+                                        );
+
+                                        break sorted;
+                                    }
+
+                                    if (
+                                        moment(
                                             latestTripTime.departureTime,
                                             format
                                         ).add(
                                             latestTripTime.departureDays,
                                             'days'
                                         ) >
-                                            moment(
-                                                sortTargetTime.departureTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.departureDays,
-                                                'days'
-                                            ) ||
+                                        moment(
+                                            sortTargetTime.departureTime,
+                                            format
+                                        ).add(
+                                            sortTargetTime.departureDays,
+                                            'days'
+                                        )
+                                    ) {
+                                        if (i === sorted.length - 1) {
+                                            sorted.unshift(unsortedTripBlock);
+                                            break sorted;
+                                        }
+
+                                        continue sorted;
+                                    }
+
+                                    if (
+                                        moment(
+                                            latestTripTime.departureTime,
+                                            format
+                                        ).add(
+                                            latestTripTime.departureDays,
+                                            'days'
+                                        ) <=
+                                        moment(
+                                            sortTargetTime.departureTime,
+                                            format
+                                        ).add(
+                                            sortTargetTime.departureDays,
+                                            'days'
+                                        )
+                                    ) {
+                                        sorted.splice(
+                                            sorted.length - i,
+                                            0,
+                                            unsortedTripBlock
+                                        );
+
+                                        break sorted;
+                                    }
+
+                                    if (
                                         moment(
                                             latestTripTime.arrivalTime,
                                             format
@@ -311,20 +395,6 @@ export class TimetableAllLineService {
                                             format
                                         ).add(
                                             latestTripTime.departureDays,
-                                            'days'
-                                        ) >
-                                            moment(
-                                                sortTargetTime.arrivalTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.arrivalDays,
-                                                'days'
-                                            ) ||
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
                                             'days'
                                         ) >
                                             moment(
@@ -345,20 +415,6 @@ export class TimetableAllLineService {
 
                                     if (
                                         moment(
-                                            latestTripTime.departureTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.departureDays,
-                                            'days'
-                                        ) <=
-                                            moment(
-                                                sortTargetTime.departureTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.departureDays,
-                                                'days'
-                                            ) ||
-                                        moment(
                                             latestTripTime.arrivalTime,
                                             format
                                         ).add(
@@ -377,20 +433,6 @@ export class TimetableAllLineService {
                                             format
                                         ).add(
                                             latestTripTime.departureDays,
-                                            'days'
-                                        ) <=
-                                            moment(
-                                                sortTargetTime.arrivalTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.arrivalDays,
-                                                'days'
-                                            ) ||
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
                                             'days'
                                         ) <=
                                             moment(
