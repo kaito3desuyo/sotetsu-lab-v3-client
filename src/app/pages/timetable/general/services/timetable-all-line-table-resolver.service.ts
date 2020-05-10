@@ -10,7 +10,7 @@ export class TimetableAllLineTableResolverService
     constructor(private timetableAllLineService: TimetableAllLineService) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        const calendarId = route.paramMap.get('calendarId');
+        const calendarId = route.paramMap.get('calendar_id');
         const tripDirection = route.paramMap.get('trip_direction');
         const blockId = route.paramMap.get('trip_block_id');
 

@@ -24,7 +24,7 @@ export class TimetableAllLineComponent extends BaseComponent {
         );
 
         this.subscription = this.route.paramMap.subscribe((params) => {
-            const calendarId = params.get('calendarId');
+            const calendarId = params.get('calendar_id');
             const tripDirection = params.get('trip_direction');
 
             this.timetableSearchFormService.updateParams({
