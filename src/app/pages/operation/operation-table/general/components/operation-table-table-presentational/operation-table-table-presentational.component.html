@@ -158,11 +158,10 @@
                     <div class="trip-class">
                         <a
                             [routerLink]="[
-                                '/',
-                                'timetable',
-                                calendar.id,
+                                '/timetable',
                                 'all-line',
                                 {
+                                    calendar_id: calendar.id,
                                     trip_direction:
                                         tripOperationList.trip.tripDirection,
                                     trip_block_id:
