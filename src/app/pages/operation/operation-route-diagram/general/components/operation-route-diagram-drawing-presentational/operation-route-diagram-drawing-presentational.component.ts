@@ -42,7 +42,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
 
     visible = true;
 
-    constructor(private cd: ChangeDetectorRef, private router: Router) {}
+    constructor(private cd: ChangeDetectorRef, private router: Router) { }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.tripOperationLists) {
@@ -65,10 +65,9 @@ export class OperationRouteDiagramDrawingPresentationalComponent
 
     navigateTimetable(tripBlockId: string, tripDirection: 0 | 1) {
         this.router.navigate([
-            'timetable',
-            this.calendar.id,
+            '/timetable',
             'all-line',
-            { trip_direction: tripDirection, trip_block_id: tripBlockId },
+            { calendar_id: this.calendar.id, trip_direction: tripDirection, trip_block_id: tripBlockId },
         ]);
     }
 
@@ -109,7 +108,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
                 `${moment(this.calendar.startDate, 'YYYY-MM-DD').format(
                     'YYYY年MM月DD日'
                 )}改正 ${this.calendar.calendarName} ${
-                    this.tripOperationLists[0].operation.operationNumber
+                this.tripOperationLists[0].operation.operationNumber
                 }運 運用行路図`,
                 16,
                 42
