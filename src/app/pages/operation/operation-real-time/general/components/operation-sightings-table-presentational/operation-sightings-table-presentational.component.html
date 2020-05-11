@@ -2,29 +2,18 @@
     <table mat-table matSort [dataSource]="dataSource" [trackBy]="trackByItem">
         <!-- Position Column -->
         <ng-container matColumnDef="operationNumber">
-            <th
-                mat-header-cell
-                *matHeaderCellDef
-                mat-sort-header="rotatedOperationNumber"
-            >
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="rotatedOperationNumber">
                 運用<br />番号
             </th>
             <td mat-cell *matCellDef="let element">
-                <div
-                    class="operation-number-circle"
-                    [ngStyle]="{
+                <div class="operation-number-circle" [ngStyle]="{
                         background: getOperationNumberColor(
                             element.rotatedOperationNumber
                         )
-                    }"
-                >
-                    <ng-container
-                        *ngIf="element.rotatedOperationNumber === null"
-                    >
+                    }">
+                    <ng-container *ngIf="element.rotatedOperationNumber === null">
                         <div fxLayout="row" fxLayoutAlign="center center">
-                            <span
-                                class="unknown"
-                                [ngStyle]="{
+                            <span class="unknown" [ngStyle]="{
                                     'font-weight':
                                         calcDiffTimeToCurrentTime(
                                             element.sightingTime
@@ -37,20 +26,13 @@
                                         ) === 1
                                             ? 'underline'
                                             : 'none'
-                                }"
-                                >不明</span
-                            >
+                                }">不明</span>
                         </div>
                     </ng-container>
-                    <ng-container
-                        *ngIf="element.rotatedOperationNumber !== null"
-                    >
-                        <ng-container
-                            *ngIf="element.rotatedOperationNumber === '100'"
-                        >
+                    <ng-container *ngIf="element.rotatedOperationNumber !== null">
+                        <ng-container *ngIf="element.rotatedOperationNumber === '100'">
                             <div fxLayout="row" fxLayoutAlign="center center">
-                                <span
-                                    [ngStyle]="{
+                                <span [ngStyle]="{
                                         'font-weight':
                                             calcDiffTimeToCurrentTime(
                                                 element.sightingTime
@@ -63,25 +45,17 @@
                                             ) === 1
                                                 ? 'underline'
                                                 : 'none'
-                                    }"
-                                >
+                                    }">
                                     休
                                 </span>
                             </div>
                         </ng-container>
-                        <ng-container
-                            *ngIf="element.rotatedOperationNumber !== '100'"
-                        >
-                            <a
-                                [routerLink]="[
+                        <ng-container *ngIf="element.rotatedOperationNumber !== '100'">
+                            <a [routerLink]="[
                                     '/operation/route-diagram',
                                     { operation_id: element.rotatedOperationId }
-                                ]"
-                                fxLayout="row"
-                                fxLayoutAlign="center center"
-                            >
-                                <span
-                                    [ngStyle]="{
+                                ]" fxLayout="row" fxLayoutAlign="center center">
+                                <span [ngStyle]="{
                                         'font-weight':
                                             calcDiffTimeToCurrentTime(
                                                 element.sightingTime
@@ -94,9 +68,7 @@
                                             ) === 1
                                                 ? 'underline'
                                                 : 'none'
-                                    }"
-                                    *ngIf="mode === 'formation'"
-                                >
+                                    }" *ngIf="mode === 'formation'">
                                     {{ element.rotatedOperationNumber
                                     }}{{
                                         calcDiffTimeToCurrentTime(
@@ -119,18 +91,12 @@
 
         <!-- Name Column -->
         <ng-container matColumnDef="formationNumber">
-            <th
-                mat-header-cell
-                *matHeaderCellDef
-                mat-sort-header="formationNumber"
-            >
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="formationNumber">
                 編成<br />番号
             </th>
             <td mat-cell *matCellDef="let element">
                 <ng-container *ngIf="element.formationNumber === null">
-                    <span
-                        class="unknown"
-                        [ngStyle]="{
+                    <span class="unknown" [ngStyle]="{
                             'font-weight':
                                 calcDiffTimeToCurrentTime(
                                     element.sightingTime
@@ -143,13 +109,10 @@
                                 ) === 1
                                     ? 'underline'
                                     : 'none'
-                        }"
-                        >不明</span
-                    >
+                        }">不明</span>
                 </ng-container>
                 <ng-container *ngIf="element.formationNumber !== null">
-                    <span
-                        [ngStyle]="{
+                    <span [ngStyle]="{
                             'font-weight':
                                 calcDiffTimeToCurrentTime(
                                     element.sightingTime
@@ -162,9 +125,7 @@
                                 ) === 1
                                     ? 'underline'
                                     : 'none'
-                        }"
-                        *ngIf="mode === 'operation'"
-                    >
+                        }" *ngIf="mode === 'operation'">
                         {{ element.formationNumber
                         }}{{
                             calcDiffTimeToCurrentTime(element.sightingTime) !==
@@ -186,32 +147,19 @@
                 現在位置
             </th>
             <td mat-cell *matCellDef="let element">
-                <div
-                    fxLayout="row"
-                    fxLayoutAlign="start center"
-                    fxLayoutGap="24px"
-                    *ngIf="element.trip"
-                ></div>
-                <div
-                    fxLayout="row"
-                    fxLayoutAlign="start center"
-                    fxLayoutGap="16px"
-                    *ngIf="element.trip"
-                >
+                <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="24px" *ngIf="element.trip"></div>
+                <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="16px" *ngIf="element.trip">
                     <div fxFlex="48px">
-                        <a
-                            *ngIf="element.trip.tripNumber"
-                            [routerLink]="[
-                                '/timetable/' + currentCalendarId + '/all-line',
+                        <a *ngIf="element.trip.tripNumber" [routerLink]="[
+                                '/timetable/all-line',
                                 {
+                                    calendar_id: currentCalendarId,
                                     trip_direction: element.trip.tripDirection,
                                     trip_block_id: element.trip.tripBlockId
                                 }
-                            ]"
-                            [ngStyle]="{
+                            ]" [ngStyle]="{
                                 color: element.trip.tripClassColor
-                            }"
-                        >
+                            }">
                             {{ element.trip.tripClassName }}<br />{{
                                 element.trip.tripNumber
                             }}
@@ -232,24 +180,18 @@
 
         <!-- Weight Column -->
         <ng-container matColumnDef="sightingTime">
-            <th
-                mat-header-cell
-                *matHeaderCellDef
-                mat-sort-header="sightingTime"
-            >
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="sightingTime">
                 目撃時刻
             </th>
             <td mat-cell *matCellDef="let element">
-                <span
-                    [ngClass]="[
+                <span [ngClass]="[
                         calcDiffTimeToCurrentTime(element.sightingTime) === 0
                             ? 'today'
                             : '',
                         calcDiffTimeToCurrentTime(element.sightingTime) === 1
                             ? 'yesterday'
                             : ''
-                    ]"
-                >
+                    ]">
                     {{ element.sightingTime | date: 'yyyy/MM/dd HH:mm:ss' }}
                 </span>
             </td>
@@ -261,16 +203,14 @@
                 最終更新時刻
             </th>
             <td mat-cell *matCellDef="let element">
-                <span
-                    [ngClass]="[
+                <span [ngClass]="[
                         calcDiffTimeToCurrentTime(element.updatedAt) === 0
                             ? 'today'
                             : '',
                         calcDiffTimeToCurrentTime(element.updatedAt) === 1
                             ? 'yesterday'
                             : ''
-                    ]"
-                >
+                    ]">
                     {{ element.updatedAt | date: 'yyyy/MM/dd HH:mm:ss' }}
                 </span>
             </td>
