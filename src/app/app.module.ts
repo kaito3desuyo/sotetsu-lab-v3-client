@@ -26,6 +26,7 @@ import { AdsenseModule } from 'ng2-adsense';
         }),
         AdsenseModule.forRoot({
             adClient: 'ca-pub-8923857677281403',
+			fullWidthResponsive: false,
         }),
     ],
     bootstrap: [AppComponent],
