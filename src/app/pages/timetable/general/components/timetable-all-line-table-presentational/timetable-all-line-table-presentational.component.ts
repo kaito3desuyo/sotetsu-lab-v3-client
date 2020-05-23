@@ -63,6 +63,23 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
             return o.stationId === station.id;
         });
 
+        let isExistTimeBeforeStation = false;
+        let isExistTimeAfterStation = false;
+        for (let i = 0; i < stationIndex; i++) {
+            const stationId = this.stations[i].id;
+            if (some(trip.times, (o) => o.stationId === stationId)) {
+                isExistTimeBeforeStation = true;
+                break;
+            }
+        }
+        for (let i = stationIndex + 1; i <= this.stations.length - 1; i++) {
+            const stationId = this.stations[i].id;
+            if (some(trip.times, (o) => o.stationId === stationId)) {
+                isExistTimeAfterStation = true;
+                break;
+            }
+        }
+
         if (time) {
             switch (true) {
                 case mode === 'arrival' &&
@@ -94,7 +111,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                         return '⬎';
                     }
 
-                    if (!time.arrivalTime) {
+                    if (time.departureTime && !time.arrivalTime) {
                         return '‥';
                     }
 
@@ -134,7 +151,7 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                         return '↓';
                     }
 
-                    if (!time.departureTime) {
+                    if (time.arrivalTime && !time.departureTime) {
                         return '‥';
                     }
 
@@ -150,23 +167,6 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
                     return this.formatTime(time.departureTime);
             }
         } else {
-            let isExistTimeBeforeStation = false;
-            let isExistTimeAfterStation = false;
-            for (let i = 0; i < stationIndex; i++) {
-                const stationId = this.stations[i].id;
-                if (some(trip.times, (o) => o.stationId === stationId)) {
-                    isExistTimeBeforeStation = true;
-                    break;
-                }
-            }
-            for (let i = stationIndex + 1; i <= this.stations.length - 1; i++) {
-                const stationId = this.stations[i].id;
-                if (some(trip.times, (o) => o.stationId === stationId)) {
-                    isExistTimeAfterStation = true;
-                    break;
-                }
-            }
-
             if (isExistTimeBeforeStation && isExistTimeAfterStation) {
                 return '|';
             }
