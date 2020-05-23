@@ -1,19 +1,25 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, zip } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    combineLatest,
+    zip,
+    forkJoin,
+} from 'rxjs';
 import {
     ITimetableStation,
     ETimetableStationViewMode,
 } from '../interfaces/timetable-station';
 import { IService } from 'src/app/general/interfaces/service';
 import { ServiceApiService } from 'src/app/general/api/service-api.service';
-import { map, tap, flatMap } from 'rxjs/operators';
+import { map, tap, flatMap, filter } from 'rxjs/operators';
 import { ServiceModel } from 'src/app/general/models/service/service-model';
 import { StationModel } from 'src/app/general/models/station/station-model';
 import { ITrip } from 'src/app/general/interfaces/trip';
 import { PageEvent } from '@angular/material/paginator';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { TripBlockModel } from 'src/app/general/models/trip-block/trip-block-model';
-import { concat, find } from 'lodash-es';
+import { concat, find, some, cloneDeep, uniqBy } from 'lodash-es';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
@@ -22,6 +28,7 @@ import { ConfirmDialogContainerComponent } from 'src/app/general/components/conf
 import { NotificationService } from 'src/app/general/services/notification.service';
 import moment from 'moment';
 import { ITripBlock } from 'src/app/general/models/trip-block/trip-block';
+import { IStation } from 'src/app/general/interfaces/station';
 
 @Injectable()
 export class TimetableAllLineService {
@@ -207,272 +214,223 @@ export class TimetableAllLineService {
         return this.trips.asObservable();
     }
     */
+    private _sortTrips(
+        stations: IStation[],
+        unsorted: ITripBlock[],
+        sorted: ITripBlock[],
+        temp?: ITripBlock[]
+    ) {
+        unsorted: for (const unsortedTripBlock of unsorted) {
+            if (!sorted.length) {
+                sorted.push(unsortedTripBlock);
+                continue;
+            }
+
+            const unsortedTrips =
+                this.getTripDirectionAsStatic() === '1'
+                    ? cloneDeep(unsortedTripBlock.trips).reverse()
+                    : cloneDeep(unsortedTripBlock.trips);
+            unsortedTrip: for (const unsortedTrip of unsortedTrips) {
+                sorted: for (let i = 0; i < sorted.length; i++) {
+                    const latestTripBlock = sorted[sorted.length - (i + 1)];
+
+                    const latestTrips = latestTripBlock.trips;
+
+                    sortedTrip: for (const latestTrip of latestTrips) {
+                        station: for (const station of stations) {
+                            const sortTargetTime = find(
+                                unsortedTrip.times,
+                                (time) => time.stationId === station.id
+                            );
+
+                            if (!sortTargetTime) {
+                                continue;
+                            }
+
+                            const latestTripTime = find(
+                                latestTrip.times,
+                                (time) => time.stationId === station.id
+                            );
+
+                            if (!latestTripTime) {
+                                continue;
+                            }
+
+                            const format = 'HH:mm:dd';
+
+                            if (
+                                moment(latestTripTime.arrivalTime, format).add(
+                                    latestTripTime.arrivalDays,
+                                    'days'
+                                ) >
+                                moment(sortTargetTime.arrivalTime, format).add(
+                                    sortTargetTime.arrivalDays,
+                                    'days'
+                                )
+                            ) {
+                                if (i === sorted.length - 1) {
+                                    sorted.unshift(unsortedTripBlock);
+                                    break sorted;
+                                }
+
+                                continue sorted;
+                            }
+
+                            if (
+                                moment(latestTripTime.arrivalTime, format).add(
+                                    latestTripTime.arrivalDays,
+                                    'days'
+                                ) <=
+                                moment(sortTargetTime.arrivalTime, format).add(
+                                    sortTargetTime.arrivalDays,
+                                    'days'
+                                )
+                            ) {
+                                sorted.splice(
+                                    sorted.length - i,
+                                    0,
+                                    unsortedTripBlock
+                                );
+
+                                break sorted;
+                            }
+
+                            if (
+                                moment(
+                                    latestTripTime.departureTime,
+                                    format
+                                ).add(latestTripTime.departureDays, 'days') >
+                                moment(
+                                    sortTargetTime.departureTime,
+                                    format
+                                ).add(sortTargetTime.departureDays, 'days')
+                            ) {
+                                if (i === sorted.length - 1) {
+                                    sorted.unshift(unsortedTripBlock);
+                                    break sorted;
+                                }
+
+                                continue sorted;
+                            }
+
+                            if (
+                                moment(
+                                    latestTripTime.departureTime,
+                                    format
+                                ).add(latestTripTime.departureDays, 'days') <=
+                                moment(
+                                    sortTargetTime.departureTime,
+                                    format
+                                ).add(sortTargetTime.departureDays, 'days')
+                            ) {
+                                sorted.splice(
+                                    sorted.length - i,
+                                    0,
+                                    unsortedTripBlock
+                                );
+
+                                break sorted;
+                            }
+
+                            if (
+                                moment(latestTripTime.arrivalTime, format).add(
+                                    latestTripTime.arrivalDays,
+                                    'days'
+                                ) >
+                                    moment(
+                                        sortTargetTime.departureTime,
+                                        format
+                                    ).add(
+                                        sortTargetTime.departureDays,
+                                        'days'
+                                    ) ||
+                                moment(
+                                    latestTripTime.departureTime,
+                                    format
+                                ).add(latestTripTime.departureDays, 'days') >
+                                    moment(
+                                        sortTargetTime.arrivalTime,
+                                        format
+                                    ).add(sortTargetTime.arrivalDays, 'days')
+                            ) {
+                                if (i === sorted.length - 1) {
+                                    sorted.unshift(unsortedTripBlock);
+                                    break sorted;
+                                }
+
+                                continue sorted;
+                            }
+
+                            if (
+                                moment(latestTripTime.arrivalTime, format).add(
+                                    latestTripTime.arrivalDays,
+                                    'days'
+                                ) <=
+                                    moment(
+                                        sortTargetTime.departureTime,
+                                        format
+                                    ).add(
+                                        sortTargetTime.departureDays,
+                                        'days'
+                                    ) ||
+                                moment(
+                                    latestTripTime.departureTime,
+                                    format
+                                ).add(latestTripTime.departureDays, 'days') <=
+                                    moment(
+                                        sortTargetTime.arrivalTime,
+                                        format
+                                    ).add(sortTargetTime.arrivalDays, 'days')
+                            ) {
+                                sorted.splice(
+                                    sorted.length - i,
+                                    0,
+                                    unsortedTripBlock
+                                );
+
+                                break sorted;
+                            }
+
+                            continue;
+                        }
+                    }
+
+                    if (i === sorted.length - 1) {
+                        if (temp) {
+                            temp.unshift(unsortedTripBlock);
+                        } else {
+                            sorted.unshift(unsortedTripBlock);
+                        }
+                        break sorted;
+                    }
+                }
+            }
+        }
+    }
 
     getTripsSorted(): Observable<ITrip[]> {
         return zip(this.getStations(), this.tripBlocks$).pipe(
+            filter(([stations, tripBlocks]) => !!stations && !!tripBlocks),
             map(([stations, tripBlocks]) => {
-                // console.log(stations, tripBlocks);
-
                 const sorted: ITripBlock[] = [];
                 const unsorted: ITripBlock[] = tripBlocks;
+                const tempUnsorted: ITripBlock[] = [];
 
-                unsorted: for (const unsortedTripBlock of unsorted) {
-                    if (!sorted.length) {
-                        sorted.push(unsortedTripBlock);
-                        continue;
-                    }
-
-                    let count = 0;
-                    unsortedTrip: for (const unsortedTrip of unsortedTripBlock.trips) {
-                        // console.log('unsortedTrip', unsortedTrip.tripNumber);
-
-                        if (
-                            (this.getTripDirectionAsStatic() === '0' &&
-                                count !== 0) ||
-                            (this.getTripDirectionAsStatic() === '1' &&
-                                count !== unsortedTripBlock.trips.length - 1)
-                        ) {
-                            count++;
-                            continue;
-                        }
-
-                        sorted: for (let i = 0; i < sorted.length; i++) {
-                            const latestTripBlock =
-                                sorted[sorted.length - (i + 1)];
-
-                            sortedTrip: for (const latestTrip of latestTripBlock.trips) {
-                                /*
-                                console.log(
-                                    'sortedTrip',
-                                    latestTrip.tripNumber
-                                );
-                                */
-
-                                station: for (const station of stations) {
-                                    const sortTargetTime = find(
-                                        unsortedTrip.times,
-                                        (time) => time.stationId === station.id
-                                    );
-
-                                    if (!sortTargetTime) {
-                                        continue;
-                                    }
-
-                                    const latestTripTime = find(
-                                        latestTrip.times,
-                                        (time) => time.stationId === station.id
-                                    );
-
-                                    if (!latestTripTime) {
-                                        continue;
-                                    }
-
-                                    const format = 'HH:mm:dd';
-
-                                    /*
-                                    console.log(
-                                        'time',
-                                        latestTripTime,
-                                        sortTargetTime
-                                    );
-                                    */
-
-                                    if (
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
-                                            'days'
-                                        ) >
-                                        moment(
-                                            sortTargetTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            sortTargetTime.arrivalDays,
-                                            'days'
-                                        )
-                                    ) {
-                                        if (i === sorted.length - 1) {
-                                            sorted.unshift(unsortedTripBlock);
-                                            break sorted;
-                                        }
-
-                                        continue sorted;
-                                    }
-
-                                    if (
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
-                                            'days'
-                                        ) <=
-                                        moment(
-                                            sortTargetTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            sortTargetTime.arrivalDays,
-                                            'days'
-                                        )
-                                    ) {
-                                        sorted.splice(
-                                            sorted.length - i,
-                                            0,
-                                            unsortedTripBlock
-                                        );
-
-                                        break sorted;
-                                    }
-
-                                    if (
-                                        moment(
-                                            latestTripTime.departureTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.departureDays,
-                                            'days'
-                                        ) >
-                                        moment(
-                                            sortTargetTime.departureTime,
-                                            format
-                                        ).add(
-                                            sortTargetTime.departureDays,
-                                            'days'
-                                        )
-                                    ) {
-                                        if (i === sorted.length - 1) {
-                                            sorted.unshift(unsortedTripBlock);
-                                            break sorted;
-                                        }
-
-                                        continue sorted;
-                                    }
-
-                                    if (
-                                        moment(
-                                            latestTripTime.departureTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.departureDays,
-                                            'days'
-                                        ) <=
-                                        moment(
-                                            sortTargetTime.departureTime,
-                                            format
-                                        ).add(
-                                            sortTargetTime.departureDays,
-                                            'days'
-                                        )
-                                    ) {
-                                        sorted.splice(
-                                            sorted.length - i,
-                                            0,
-                                            unsortedTripBlock
-                                        );
-
-                                        break sorted;
-                                    }
-
-                                    if (
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
-                                            'days'
-                                        ) >
-                                            moment(
-                                                sortTargetTime.departureTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.departureDays,
-                                                'days'
-                                            ) ||
-                                        moment(
-                                            latestTripTime.departureTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.departureDays,
-                                            'days'
-                                        ) >
-                                            moment(
-                                                sortTargetTime.arrivalTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.arrivalDays,
-                                                'days'
-                                            )
-                                    ) {
-                                        if (i === sorted.length - 1) {
-                                            sorted.unshift(unsortedTripBlock);
-                                            break sorted;
-                                        }
-
-                                        continue sorted;
-                                    }
-
-                                    if (
-                                        moment(
-                                            latestTripTime.arrivalTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.arrivalDays,
-                                            'days'
-                                        ) <=
-                                            moment(
-                                                sortTargetTime.departureTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.departureDays,
-                                                'days'
-                                            ) ||
-                                        moment(
-                                            latestTripTime.departureTime,
-                                            format
-                                        ).add(
-                                            latestTripTime.departureDays,
-                                            'days'
-                                        ) <=
-                                            moment(
-                                                sortTargetTime.arrivalTime,
-                                                format
-                                            ).add(
-                                                sortTargetTime.arrivalDays,
-                                                'days'
-                                            )
-                                    ) {
-                                        sorted.splice(
-                                            sorted.length - i,
-                                            0,
-                                            unsortedTripBlock
-                                        );
-
-                                        break sorted;
-                                    }
-
-                                    continue;
-                                }
-                            }
-
-                            if (i === sorted.length - 1) {
-                                sorted.unshift(unsortedTripBlock);
-                                break sorted;
-                            }
-                        }
-
-                        count++;
-                    }
-                }
+                this._sortTrips(stations, unsorted, sorted, tempUnsorted);
+                this._sortTrips(stations, tempUnsorted, sorted);
 
                 return sorted;
+            }),
+            map((data) => {
+                return uniqBy(data.reverse(), (o) => o.id).reverse();
             }),
             map((data) => {
                 let trips: ITrip[] = [];
                 data.forEach((tripBlock) => {
                     trips = concat(trips, tripBlock.trips);
                 });
+
+                console.log('ソート済み列車数', trips.length);
                 return trips;
             })
         );
@@ -493,7 +451,6 @@ export class TimetableAllLineService {
                         pageTrips.push(value);
                     }
                 });
-
                 return pageTrips;
             })
         );
@@ -527,13 +484,13 @@ export class TimetableAllLineService {
             ),
             tap((data) => {
                 this._tripBlocks$.next(data);
-                let trips: ITrip[] = [];
+
+                let tripsCount = 0;
                 data.forEach((tripBlock) => {
-                    trips = concat(trips, tripBlock.trips);
+                    tripsCount += tripBlock.trips.length;
                 });
-                this.setTrips(trips);
                 this.updatePageSetting({
-                    length: trips.length,
+                    length: tripsCount,
                 });
             })
         );
@@ -580,6 +537,7 @@ export class TimetableAllLineService {
                 case '大和':
                 case 'いずみ野':
                 case '二俣川':
+                case '西谷':
                 case '新宿':
                 case '大宮':
                     return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
@@ -593,6 +551,7 @@ export class TimetableAllLineService {
             switch (stationName) {
                 case '大宮':
                 case '新宿':
+                case '西谷':
                 case '二俣川':
                 case '大和':
                 case 'いずみ野':
@@ -683,7 +642,11 @@ export class TimetableAllLineService {
             if (done) {
                 this.tripApi
                     .addTripToTripBlockById(targetTrip.id, baseTrip.tripBlockId)
-                    .pipe(flatMap(() => this.fetchTrips()))
+                    .pipe(
+                        flatMap(() =>
+                            forkJoin([this.fetchStations(), this.fetchTrips()])
+                        )
+                    )
                     .subscribe(
                         () => {
                             this.setGroupingBaseTrip(null);
@@ -721,7 +684,11 @@ export class TimetableAllLineService {
             if (done) {
                 this.tripApi
                     .removeTripFromTripBlockById(targetTrip.id)
-                    .pipe(flatMap(() => this.fetchTrips()))
+                    .pipe(
+                        flatMap(() =>
+                            forkJoin([this.fetchStations(), this.fetchTrips()])
+                        )
+                    )
                     .subscribe(
                         () => {
                             this.setGroupingBaseTrip(null);
