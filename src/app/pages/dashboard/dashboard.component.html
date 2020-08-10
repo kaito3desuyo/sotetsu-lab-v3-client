@@ -24,40 +24,99 @@
         fxLayoutAlign="center stretch"
         fxLayoutGap="24px"
     >
-        <app-dashboard-operation-search-menu-container
-            fxFlex.gt-sm="33.333%"
+        <div
+            fxLayout.gt-sm="column"
+            fxLayout.lt-md="column"
+            fxLayoutAlign="center stretch"
+            fxLayoutGap="24px"
+            fxFlex.gt-sm="66.666%"
             fxFlex.lt-md="auto"
-        ></app-dashboard-operation-search-menu-container>
-        <app-operation-sighting-add-form-container
-            fxFlex.gt-sm="33.333%"
-            fxFlex.lt-md="auto"
-        ></app-operation-sighting-add-form-container>
+        >
+            <div
+                fxLayout.gt-sm="row"
+                fxLayout.lt-md="column"
+                fxLayoutAlign="center stretch"
+                fxLayoutGap="24px"
+            >
+                <app-dashboard-operation-search-menu-container
+                    fxFlex.gt-sm="50%"
+                    fxFlex.lt-md="auto"
+                ></app-dashboard-operation-search-menu-container>
+
+                <app-operation-sighting-add-form-container
+                    fxFlex.gt-sm="50%"
+                    fxFlex.lt-md="auto"
+                ></app-operation-sighting-add-form-container>
+
+                <!--
+
+                    -->
+            </div>
+
+            <div>
+                <ng-adsense
+                    [adSlot]="7813861593"
+                    [adFormat]="'horizontal'"
+                    [fullWidthResponsive]="false"
+                ></ng-adsense>
+            </div>
+
+            <div
+                fxLayout.gt-sm="row"
+                fxLayout.lt-md="column"
+                fxLayoutAlign="center stretch"
+                fxLayoutGap="24px"
+            >
+                <app-timetable-search-form-container
+                    fxFlex.gt-sm="50%"
+                    fxFlex.lt-md="auto"
+                ></app-timetable-search-form-container>
+
+                <app-dashboard-trip-add-form-container
+                    fxFlex.gt-sm="50%"
+                    fxFlex.lt-md="auto"
+                ></app-dashboard-trip-add-form-container>
+
+                <!--
+                <div
+                    fxLayout.gt-sm="row"
+                    fxLayout.lt-md="column"
+                    fxLayoutAlign="center stretch"
+                    fxLayoutGap="24px"
+                    fxFlex.gt-sm="33.333%"
+                    fxFlex.lt-md="auto"
+                    fxFlexAlign.gt-sm="center"
+                >
+                    <ng-adsense [adSlot]="9081478323"></ng-adsense>
+                </div>
+                -->
+            </div>
+        </div>
 
         <div
+            fxLayout.gt-sm="row"
+            fxLayout.lt-md="column"
+            fxLayoutAlign="center stretch"
+            fxLayoutGap="24px"
             fxFlex.gt-sm="33.333%"
             fxFlex.lt-md="auto"
-            fxFlexAlign.gt-sm="center"
         >
-            <ng-adsense [adSlot]="7813861593"></ng-adsense>
-        </div>
-    </div>
-
-    <div
-        fxLayout.gt-sm="row"
-        fxLayout.lt-md="column"
-        fxLayoutAlign="center stretch"
-        fxLayoutGap="24px"
-    >
-        <app-timetable-search-form-container
-            fxFlex.gt-sm="33.333%"
-            fxFlex.lt-md="auto"
-        ></app-timetable-search-form-container>
-
-        <app-dashboard-trip-add-form-container
-            fxFlex.gt-sm="33.333%"
-            fxFlex.lt-md="auto"
-        ></app-dashboard-trip-add-form-container>
-
+            <mat-card fxFlex="auto">
+                <mat-card-title>
+                    ライブラリ
+                </mat-card-title>
+                <mat-card-subtitle>
+                    相鉄線に関する情報を取り揃えています。
+                </mat-card-subtitle>
+                <mat-card-content fxLayout="column" fxLayoutGap="16px">
+                    <mat-nav-list>
+                        <a mat-list-item routerLink="/library/vehicle">
+                            相鉄の車両
+                        </a>
+                    </mat-nav-list>
+                </mat-card-content>
+            </mat-card>
+            <!--
         <div
             fxFlex.gt-sm="33.333%"
             fxFlex.lt-md="auto"
@@ -65,5 +124,6 @@
         >
             <ng-adsense [adSlot]="9081478323"></ng-adsense>
         </div>
+        --></div>
     </div>
 </section>

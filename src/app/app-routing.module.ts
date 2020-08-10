@@ -23,6 +23,13 @@ const routes: Routes = [
                 (mod) => mod.TimetableModule
             ),
     },
+    {
+        path: 'library',
+        loadChildren: () =>
+            import('./pages/library/library.module').then(
+                (m) => m.LibraryModule
+            ),
+    },
 ];
 
 @NgModule({
