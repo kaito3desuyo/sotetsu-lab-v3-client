@@ -1,0 +1,55 @@
+@import '~@angular/material/theming';
+
+:host {
+    h3,
+    h4,
+    h5 {
+        margin: 0;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    .deep-orange {
+        color: mat-color(mat-palette($mat-deep-orange));
+    }
+
+    .red {
+        color: mat-color(mat-palette($mat-red));
+    }
+
+    .teal {
+        color: mat-color(mat-palette($mat-teal), 400);
+    }
+
+    .blue {
+        color: mat-color(mat-palette($mat-blue), 800);
+    }
+
+    .indigo {
+        color: mat-color(mat-palette($mat-indigo), 900);
+    }
+
+    table.formation {
+        td {
+            white-space: nowrap;
+            padding: 2px 4px;
+
+            &:not(.description) {
+                border-top: 1px solid;
+                border-bottom: 1px solid;
+                border-left: 1px solid;
+                border-right: 1px solid;
+            }
+        }
+
+        td.left-controller {
+            border-left: 3px double !important;
+        }
+
+        td.right-controller {
+            border-right: 3px double !important;
+        }
+    }
+}
