@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -10,9 +10,19 @@ import { GeneralModule } from './general/general.module';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
 import { AdsenseModule } from 'ng2-adsense';
+import { TokenService } from './core/token/token.service';
 
 @NgModule({
     declarations: [AppComponent],
+    providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: (tokenService: TokenService) => () =>
+                tokenService.fetchToken().toPromise(),
+            deps: [TokenService],
+            multi: true,
+        },
+    ],
     imports: [
         BrowserModule,
         AppRoutingModule,
@@ -26,7 +36,7 @@ import { AdsenseModule } from 'ng2-adsense';
         }),
         AdsenseModule.forRoot({
             adClient: 'ca-pub-8923857677281403',
-			fullWidthResponsive: false,
+            fullWidthResponsive: false,
         }),
     ],
     bootstrap: [AppComponent],

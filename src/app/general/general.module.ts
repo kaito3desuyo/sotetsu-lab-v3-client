@@ -17,6 +17,7 @@ import { environment } from 'src/environments/environment';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { MatDatepickerIntl } from '@angular/material/datepicker';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { AuthInterceptor } from './interceptors/auth-interceptor';
 
 @NgModule({
     imports: [
@@ -54,14 +55,12 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
             useClass: ErrorHandlerService,
         },
         { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
-        /* 
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      // 必須：HTTP_INTERCEPTORSが配列であることを示す
-      multi: true
-    }
-    */
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            // 必須：HTTP_INTERCEPTORSが配列であることを示す
+            multi: true,
+        },
     ],
 })
 export class GeneralModule {}

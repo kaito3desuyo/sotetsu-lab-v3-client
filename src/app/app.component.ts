@@ -1,11 +1,11 @@
-import { Component, Inject, Injector, OnInit, OnDestroy } from '@angular/core';
-import { Router, NavigationEnd, NavigationStart } from '@angular/router';
+import { Component, Inject, Injector, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { BaseComponent } from './general/classes/base-component';
 import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
-import { ParamsService } from './state/params';
-import { LoadingService } from './shared/app-shared/loading/loading.service';
 import { SocketService } from './general/services/socket.service';
+import { LoadingService } from './shared/app-shared/loading/loading.service';
+import { ParamsService } from './state/params';
 
 @Component({
     selector: 'app-root',
@@ -33,6 +33,7 @@ export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
                 this.gaService.sendPageView(event.urlAfterRedirects);
             }
         });
+
         this.subscription = this.paramsService.fetch().subscribe();
     }
 

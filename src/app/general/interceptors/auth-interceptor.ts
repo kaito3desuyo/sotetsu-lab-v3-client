@@ -1,30 +1,42 @@
-import { Injectable } from '@angular/core';
 import {
     HttpEvent,
-    HttpInterceptor,
     HttpHandler,
-    HttpRequest
+    HttpHeaders,
+    HttpInterceptor,
+    HttpRequest,
 } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { flatMap, take } from 'rxjs/operators';
+import { TokenService } from 'src/app/core/token/token.service';
+import { TokenState } from 'src/app/core/token/token.store';
 import { environment } from 'src/environments/environment';
-import { LoggerService } from '../services/logger.service';
-/* 
+
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-  // リクエストの変換処理。ここに共通処理を記述。
-  constructor(private logger: LoggerService) {}
+    constructor(private readonly tokenService: TokenService) {}
 
-  intercept(
-    request: HttpRequest<any>,
-    next: HttpHandler
-  ): Observable<HttpEvent<any>> {
-    const authReq = request.clone({
-      url: environment.backendUrl, // https://backend.sotetsu-lab.com/
-      headers: request.headers.set('X-API-URL', request.url),
-      params: request.params.append('url', request.url)
-    });
-    this.logger.debug('リクエスト：' + request.url);
-    return next.handle(authReq);
-  }
+    intercept(
+        request: HttpRequest<any>,
+        next: HttpHandler
+    ): Observable<HttpEvent<any>> {
+        return this.tokenService.getToken().pipe(
+            take(1),
+            flatMap((token) => {
+                const req = request.clone({
+                    url: request.url,
+                    headers: token.accessToken
+                        ? request.headers
+                              .set(
+                                  'Authorization',
+                                  `${token.tokenType} ${token.accessToken}`
+                              )
+                              .set('X-APP-CLIENT-ID', environment.clientId)
+                        : request.headers,
+                });
+
+                return next.handle(req);
+            })
+        );
+    }
 }
-*/
