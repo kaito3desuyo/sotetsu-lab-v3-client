@@ -1,5 +1,10 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { APP_INITIALIZER, NgModule } from '@angular/core';
+import {
+    APP_INITIALIZER,
+    ErrorHandler,
+    NgModule,
+    ɵɵinject,
+} from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -11,6 +16,8 @@ import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
 import { AdsenseModule } from 'ng2-adsense';
 import { TokenService } from './core/token/token.service';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { CustomViewportScroller } from './core/classes/custom-viewport-scroller';
 
 @NgModule({
     declarations: [AppComponent],
@@ -21,6 +28,16 @@ import { TokenService } from './core/token/token.service';
                 tokenService.fetchToken().toPromise(),
             deps: [TokenService],
             multi: true,
+        },
+        {
+            provide: ViewportScroller,
+            useFactory: () =>
+                new CustomViewportScroller(
+                    'content-scroller',
+                    ɵɵinject(DOCUMENT),
+                    window,
+                    ɵɵinject(ErrorHandler)
+                ),
         },
     ],
     imports: [

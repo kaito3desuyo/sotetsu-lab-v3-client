@@ -1,7 +1,11 @@
-import { OnDestroy, Injector } from '@angular/core';
+import { OnDestroy, Injector, Component } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { NotificationService } from '../services/notification.service';
 
+// TODO: Add Angular decorator.
+@Component({
+    template: '',
+})
 export class BaseComponent implements OnDestroy {
     private _subscription: Subscription;
 
