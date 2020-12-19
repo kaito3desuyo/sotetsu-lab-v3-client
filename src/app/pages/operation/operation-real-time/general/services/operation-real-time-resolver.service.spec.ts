@@ -1,6 +1,6 @@
 /* tslint:disable:no-unused-variable */
 
-import { TestBed, async, inject } from '@angular/core/testing';
+import { TestBed, inject, waitForAsync } from '@angular/core/testing';
 import { OperationRealTimeResolverService } from './operation-real-time-resolver.service';
 
 describe('Service: OperationRealTimeResolver', () => {

@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ConfirmDialogPresentationalComponent } from './confirm-dialog-presentational.component';
 
@@ -6,7 +6,7 @@ describe('ConfirmDialogPresentationalComponent', () => {
     let component: ConfirmDialogPresentationalComponent;
     let fixture: ComponentFixture<ConfirmDialogPresentationalComponent>;
 
-    beforeEach(async(() => {
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [ConfirmDialogPresentationalComponent],
         }).compileComponents();

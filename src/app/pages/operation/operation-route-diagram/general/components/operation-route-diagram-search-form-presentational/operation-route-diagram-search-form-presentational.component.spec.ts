@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { OperationRouteDiagramSearchFormPresentationalComponent } from './operation-route-diagram-search-form-presentational.component';
 
@@ -6,7 +6,7 @@ describe('OperationRouteDiagramSearchFormPresentationalComponent', () => {
     let component: OperationRouteDiagramSearchFormPresentationalComponent;
     let fixture: ComponentFixture<OperationRouteDiagramSearchFormPresentationalComponent>;
 
-    beforeEach(async(() => {
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [
                 OperationRouteDiagramSearchFormPresentationalComponent,

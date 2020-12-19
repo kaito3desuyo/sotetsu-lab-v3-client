@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SidenavContainerComponent } from './sidenav-container.component';
 
@@ -6,7 +6,7 @@ describe('SidenavContainerComponent', () => {
     let component: SidenavContainerComponent;
     let fixture: ComponentFixture<SidenavContainerComponent>;
 
-    beforeEach(async(() => {
+    beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
             declarations: [SidenavContainerComponent],
         }).compileComponents();
