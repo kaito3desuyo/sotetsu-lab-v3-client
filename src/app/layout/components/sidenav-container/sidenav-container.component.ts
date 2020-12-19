@@ -3,7 +3,7 @@ import { SidenavService } from '../../services/sidenav.service';
 import { RoutesAllStationsQuery } from 'src/app/general/models/routes/state/routes-all-stations.query';
 import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
 import { map } from 'rxjs/operators';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, NavigationStart } from '@angular/router';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { Observable } from 'rxjs';
 import { ParamsQuery } from 'src/app/state/params';

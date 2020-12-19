@@ -1,11 +1,11 @@
 <mat-sidenav-container>
-  <mat-sidenav #sidenav mode="over" [opened]="sidenavState$ | async">
-    <app-sidenav-presentational
-      [todaysCalendarId]="todaysCalendarId$ | async"
-      [stationsSelectList]="stationsSelectList$ | async"
-    ></app-sidenav-presentational>
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <router-outlet></router-outlet>
-  </mat-sidenav-content>
+    <mat-sidenav #sidenav mode="over" [opened]="sidenavState$ | async">
+        <app-sidenav-presentational
+            [todaysCalendarId]="todaysCalendarId$ | async"
+            [stationsSelectList]="stationsSelectList$ | async"
+        ></app-sidenav-presentational>
+    </mat-sidenav>
+    <mat-sidenav-content id="content-scroller">
+        <router-outlet></router-outlet>
+    </mat-sidenav-content>
 </mat-sidenav-container>
