@@ -48,6 +48,8 @@ export class OperationSightingsTablePresentationalComponent
         switch (operationNumber[0]) {
             case '1':
                 return 'rgba(244, 67, 54, 0.12)';
+            case '2':
+                return 'rgba(255, 193, 7, 0.12)';
             case '4':
                 return 'rgba(139, 195, 74, 0.12)';
             case '5':
