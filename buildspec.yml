@@ -1,17 +1,17 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      nodejs: 10
-  pre_build:
-    commands:
-      - npm install
-  build:
-    commands:
-      - npm run build:${DEPLOY_STAGE}
-  post_build:
-    commands:
-      - aws s3 sync dist/sotetsu-lab-v3-client s3://${BUCKET_NAME} --delete --cache-control "max-age=2592000"
-      - aws s3 cp dist/sotetsu-lab-v3-client/sitemap.xml s3://${BUCKET_NAME}/sitemap.xml --cache-control "max-age=2592000" --content-type "application/xml"
-      - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths '/*'
+    install:
+        runtime-versions:
+            nodejs: 14
+    pre_build:
+        commands:
+            - npm install
+    build:
+        commands:
+            - npm run build:${DEPLOY_STAGE}
+    post_build:
+        commands:
+            - aws s3 sync dist/sotetsu-lab-v3-client s3://${BUCKET_NAME} --delete --cache-control "max-age=2592000"
+            - aws s3 cp dist/sotetsu-lab-v3-client/sitemap.xml s3://${BUCKET_NAME}/sitemap.xml --cache-control "max-age=2592000" --content-type "application/xml"
+            - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths '/*'
