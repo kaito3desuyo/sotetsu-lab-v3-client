@@ -6,6 +6,8 @@ import { ITrip } from 'src/app/general/interfaces/trip';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { PageEvent } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { TimetableCalendarSelectDialogComponent } from '../timetable-calendar-select-dialog/timetable-calendar-select-dialog.component';
 
 @Component({
     selector: 'app-timetable-all-line-table-container',
@@ -24,6 +26,7 @@ export class TimetableAllLineTableContainerComponent {
 
     constructor(
         private router: Router,
+        private dialog: MatDialog,
         private timetableAllLineService: TimetableAllLineService
     ) {
         this.tripDirection$ = this.timetableAllLineService.getTripDirection();
@@ -40,6 +43,26 @@ export class TimetableAllLineTableContainerComponent {
 
     onReceiveClickEdit(blockId: string): void {
         this.router.navigate(['timetable', 'update', blockId]);
+    }
+
+    onReceiveClickCopy(blockId: string): void {
+        const dialogRef = this.dialog.open(
+            TimetableCalendarSelectDialogComponent,
+            {
+                width: '480px',
+                data: {},
+            }
+        );
+
+        dialogRef.afterClosed().subscribe((calendarId) => {
+            if (calendarId) {
+                this.router.navigate([
+                    'timetable',
+                    'copy',
+                    { calendarId, tripBlockId: blockId },
+                ]);
+            }
+        });
     }
 
     onReceiveClickDelete(trip: ITrip): void {

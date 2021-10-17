@@ -48,6 +48,11 @@ import { TimetableStationTableContainerComponent } from './general/components/ti
 import { TimetableStationTablePresentationalComponent } from './general/components/timetable-station-table-presentational/timetable-station-table-presentational.component';
 import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 import { AdsenseModule } from 'ng2-adsense';
+import { TimetableCalendarSelectDialogComponent } from './general/components/timetable-calendar-select-dialog/timetable-calendar-select-dialog.component';
+import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
+import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
+import { TimetableCopyService } from './general/services/timetable-copy.service';
+import { TimetableCopyHeaderContainerComponent } from './general/components/timetable-copy-header-container/timetable-copy-header-container.component';
 
 @NgModule({
     imports: [
@@ -95,6 +100,9 @@ import { AdsenseModule } from 'ng2-adsense';
         TimetableUpdateHeaderContainerComponent,
         TimetableEditorFormContainerComponent,
         TimetableEditorFormPresentationalComponent,
+        TimetableCalendarSelectDialogComponent,
+        TimetableCopyComponent,
+        TimetableCopyHeaderContainerComponent,
     ],
     providers: [
         TimetableAllLineService,
@@ -106,6 +114,8 @@ import { AdsenseModule } from 'ng2-adsense';
         TimetableUpdateService,
         TimetableUpdateResolverService,
         TimetableEditorService,
+        TimetableCopyService,
+        TimetableCopyResolverService,
     ],
 })
 export class TimetableModule {}
