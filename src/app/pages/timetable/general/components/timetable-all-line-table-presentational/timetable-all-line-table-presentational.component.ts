@@ -39,14 +39,13 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
     };
 
     @Output() clickEdit: EventEmitter<string> = new EventEmitter<string>();
+    @Output() clickCopy: EventEmitter<string> = new EventEmitter<string>();
     @Output() clickDelete: EventEmitter<ITrip> = new EventEmitter<ITrip>();
     @Output() clickGrouping: EventEmitter<ITrip> = new EventEmitter<ITrip>();
-    @Output() clickAddTripInGroup: EventEmitter<ITrip> = new EventEmitter<
-        ITrip
-    >();
-    @Output() clickRemoveTripInGroup: EventEmitter<ITrip> = new EventEmitter<
-        ITrip
-    >();
+    @Output()
+    clickAddTripInGroup: EventEmitter<ITrip> = new EventEmitter<ITrip>();
+    @Output()
+    clickRemoveTripInGroup: EventEmitter<ITrip> = new EventEmitter<ITrip>();
 
     constructor() {}
 
@@ -228,6 +227,10 @@ export class TimetableAllLineTablePresentationalComponent implements OnInit {
 
     onClickEdit(blockId: string): void {
         this.clickEdit.emit(blockId);
+    }
+
+    onClickCopy(blockId: string): void {
+        this.clickCopy.emit(blockId);
     }
 
     onClickDelete(trip: ITrip): void {
