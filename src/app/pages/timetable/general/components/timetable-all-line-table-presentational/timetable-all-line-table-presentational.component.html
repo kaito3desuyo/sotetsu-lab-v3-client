@@ -257,6 +257,25 @@
                         <td *ngIf="isIncludeVisibleColumn(i)">
                             <button
                                 mat-icon-button
+                                matTooltip="コピーして新規作成"
+                                (click)="onClickCopy(trip.tripBlockId)"
+                            >
+                                <mat-icon>content_copy</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+                </tr>
+                <tr *ngIf="!groupingBaseTrip">
+                    <ng-container
+                        *ngFor="
+                            let trip of trips;
+                            let i = index;
+                            trackBy: trackByItem
+                        "
+                    >
+                        <td *ngIf="isIncludeVisibleColumn(i)">
+                            <button
+                                mat-icon-button
                                 matTooltip="削除する"
                                 (click)="onClickDelete(trip)"
                             >

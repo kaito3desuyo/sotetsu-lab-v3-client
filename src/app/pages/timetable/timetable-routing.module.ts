@@ -9,6 +9,8 @@ import { TimetableUpdateResolverService } from './general/services/timetable-upd
 import { TimetableStationComponent } from './timetable-station/timetable-station.component';
 import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
 import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-shared/services/timetable-search-form-resolver.service';
+import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
+import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
 
 const routes: Routes = [
     {
@@ -42,6 +44,14 @@ const routes: Routes = [
         data: {
             title: '列車を追加する',
         },
+    },
+    {
+        path: 'copy',
+        component: TimetableCopyComponent,
+        resolve: {
+            from: TimetableCopyResolverService,
+        },
+        data: { title: '列車をコピーして追加する' },
     },
     {
         path: 'update/:blockId',
