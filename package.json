@@ -50,6 +50,8 @@
     "@angular/compiler-cli": "~12.2.11",
     "@angular/language-service": "~12.2.11",
     "@datorama/akita-ngdevtools": "^6.0.1",
+    "@tailwindcss/forms": "^0.3.4",
+    "@tailwindcss/typography": "^0.4.1",
     "@types/jasmine": "~3.6.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/lodash-es": "^4.17.3",
@@ -68,6 +70,7 @@
     "moment-locales-webpack-plugin": "^1.1.0",
     "prettier": "^2.0.4",
     "protractor": "~7.0.0",
+    "tailwindcss": "^2.2.17",
     "ts-node": "~8.3.0",
     "typescript": "^4.3.5",
     "webpack-bundle-analyzer": "^3.6.0"
