@@ -1,6 +1,6 @@
 FROM node:lts
 
-RUN npm i -g @angular/cli
+RUN npm i -g @angular/cli npm-check-updates
 
 RUN mkdir -p /home/sotetsu-lab-v3-client && chown node:node /home/sotetsu-lab-v3-client
 
