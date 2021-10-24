@@ -28,6 +28,7 @@
     "@angular/router": "~12.2.11",
     "@angular/service-worker": "~12.2.11",
     "@datorama/akita": "^4.23.2",
+    "@rx-angular/state": "^1.4.6",
     "lodash-es": "^4.17.15",
     "moment": "^2.24.0",
     "ng2-adsense": "^8.0.1",
