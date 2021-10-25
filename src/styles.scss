@@ -1,6 +1,6 @@
 // Custom Theming for Angular Material
+@use '~@angular/material' as mat;
 // For more information: https://material.angular.io/guide/theming
-@import '~@angular/material/theming';
 @import 'app/general/styles/margin.scss';
 @import 'app/general/styles/padding.scss';
 
@@ -13,17 +13,17 @@ $font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN',
 
 // -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
 //     '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;
-$custom-typography: mat-typography-config($font-family);
+$custom-typography: mat.define-typography-config($font-family);
 
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
-@include mat-core($custom-typography);
+@include mat.core($custom-typography);
 
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
-$sotetsu-lab-v3-client-primary: mat-palette(
+$sotetsu-lab-v3-client-primary: mat.define-palette(
     (
         50: #e0e3eb,
         100: #b3b9cc,
@@ -40,9 +40,9 @@ $sotetsu-lab-v3-client-primary: mat-palette(
         A400: #000afe,
         A700: #0009e5,
         contrast: (
-            50: $black-87-opacity,
-            100: $black-87-opacity,
-            200: $black-87-opacity,
+            50: rgba(black, 0.87),
+            100: rgba(black, 0.87),
+            200: rgba(black, 0.87),
             300: white,
             400: white,
             500: white,
@@ -57,7 +57,7 @@ $sotetsu-lab-v3-client-primary: mat-palette(
         ),
     )
 );
-$sotetsu-lab-v3-client-accent: mat-palette(
+$sotetsu-lab-v3-client-accent: mat.define-palette(
     (
         50: #fdefe7,
         100: #fad7c2,
@@ -74,29 +74,29 @@ $sotetsu-lab-v3-client-accent: mat-palette(
         A400: #ffbfad,
         A700: #ffac93,
         contrast: (
-            50: $black-87-opacity,
-            100: $black-87-opacity,
-            200: $black-87-opacity,
-            300: $black-87-opacity,
-            400: $black-87-opacity,
-            500: $black-87-opacity,
-            600: $black-87-opacity,
-            700: $black-87-opacity,
-            800: $black-87-opacity,
+            50: rgba(black, 0.87),
+            100: rgba(black, 0.87),
+            200: rgba(black, 0.87),
+            300: rgba(black, 0.87),
+            400: rgba(black, 0.87),
+            500: rgba(black, 0.87),
+            600: rgba(black, 0.87),
+            700: rgba(black, 0.87),
+            800: rgba(black, 0.87),
             900: white,
-            A100: $black-87-opacity,
-            A200: $black-87-opacity,
-            A400: $black-87-opacity,
-            A700: $black-87-opacity,
+            A100: rgba(black, 0.87),
+            A200: rgba(black, 0.87),
+            A400: rgba(black, 0.87),
+            A700: rgba(black, 0.87),
         ),
     )
 );
 
 // The warn palette is optional (defaults to red).
-$sotetsu-lab-v3-client-warn: mat-palette($mat-red);
+$sotetsu-lab-v3-client-warn: mat.define-palette(mat.$red-palette);
 
 // Create the theme object (a Sass map containing all of the palettes).
-$sotetsu-lab-v3-client-theme: mat-light-theme(
+$sotetsu-lab-v3-client-theme: mat.define-light-theme(
     $sotetsu-lab-v3-client-primary,
     $sotetsu-lab-v3-client-accent,
     $sotetsu-lab-v3-client-warn
@@ -105,7 +105,7 @@ $sotetsu-lab-v3-client-theme: mat-light-theme(
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
-@include angular-material-theme($sotetsu-lab-v3-client-theme);
+@include mat.all-component-themes($sotetsu-lab-v3-client-theme);
 
 /* You can add global styles to this file, and also import other style files */
 
