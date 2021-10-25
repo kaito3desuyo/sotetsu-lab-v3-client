@@ -2,7 +2,7 @@
     "name": "sotetsu-lab-v3-client",
     "dockerComposeFile": ["../docker-compose.yml"],
     "service": "development-client",
-    "workspaceFolder": "/home/sotetsu-lab-v3-client",
+    "workspaceFolder": "/home/node/sotetsu-lab-v3-client",
     "settings": {
         "terminal.integrated.shell.linux": "/bin/bash"
     },
