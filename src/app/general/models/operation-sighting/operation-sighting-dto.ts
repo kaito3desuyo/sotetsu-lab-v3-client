@@ -1,7 +1,7 @@
 import { ReadOperationDto } from '../operation/operation-dto';
 import { ReadFormationDto } from '../formation/formation-dto';
 
-/* tslint:disable: variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadOperationSightingDto {
     id: string;
     formation_id: string;

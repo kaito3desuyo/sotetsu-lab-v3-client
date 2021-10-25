@@ -1,7 +1,7 @@
 import { ReadTripDto } from '../trip/trip-dto';
 import { ReadStationDto } from '../station/station-dto';
 import { ReadStopDto } from '../stop/stop-dto';
-/* tslint:disable:variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadTimeDto {
     id: string;
     trip_id: string;

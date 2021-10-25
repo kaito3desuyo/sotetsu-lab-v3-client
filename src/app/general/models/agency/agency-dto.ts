@@ -1,4 +1,4 @@
-/* tslint:disable:variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadAgencyDto {
     id: string;
     agency_number: string;

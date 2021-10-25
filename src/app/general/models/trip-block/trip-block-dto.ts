@@ -1,6 +1,6 @@
 import { ReadTripDto, CreateTripDto } from '../trip/trip-dto';
 
-/* tslint:disable: variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadTripBlockDto {
     id: string;
     created_at: string;

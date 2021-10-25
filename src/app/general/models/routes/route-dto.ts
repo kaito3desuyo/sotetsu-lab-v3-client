@@ -1,6 +1,6 @@
 import { ReadRouteStationListDto } from '../route-station-list/route-station-list-dto';
 
-/* tslint:disable: variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadRouteDto {
     id: string;
     agency_id: string;

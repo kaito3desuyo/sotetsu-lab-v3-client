@@ -1,15 +1,15 @@
 FROM node:lts
 
-RUN npm i -g @angular/cli
+RUN npm i -g @angular/cli npm-check-updates
 
-RUN mkdir -p /home/sotetsu-lab-v3-client && chown node:node /home/sotetsu-lab-v3-client
+RUN mkdir -p /home/node/sotetsu-lab-v3-client && chown node:node /home/node/sotetsu-lab-v3-client
 
 USER node
 
 ENV NODE_ENV='development'
 
-WORKDIR /home/sotetsu-lab-v3-client
+WORKDIR /home/node/sotetsu-lab-v3-client
 
-COPY . /home/sotetsu-lab-v3-client
+COPY . /home/node/sotetsu-lab-v3-client
 
 RUN npm i

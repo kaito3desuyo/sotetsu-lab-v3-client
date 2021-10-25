@@ -1,4 +1,4 @@
-@import '~@angular/material/theming';
+@use '~@angular/material' as mat;
 
 :host {
     h3,
@@ -12,23 +12,23 @@
     }
 
     .deep-orange {
-        color: mat-color(mat-palette($mat-deep-orange));
+        color: mat.get-color-from-palette(mat.define-palette(mat.$deep-orange-palette));
     }
 
     .red {
-        color: mat-color(mat-palette($mat-red));
+        color: mat.get-color-from-palette(mat.define-palette(mat.$red-palette));
     }
 
     .teal {
-        color: mat-color(mat-palette($mat-teal), 400);
+        color: mat.get-color-from-palette(mat.define-palette(mat.$teal-palette), 400);
     }
 
     .blue {
-        color: mat-color(mat-palette($mat-blue), 800);
+        color: mat.get-color-from-palette(mat.define-palette(mat.$blue-palette), 800);
     }
 
     .indigo {
-        color: mat-color(mat-palette($mat-indigo), 900);
+        color: mat.get-color-from-palette(mat.define-palette(mat.$indigo-palette), 900);
     }
 
     table.formation {
