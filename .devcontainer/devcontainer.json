@@ -4,7 +4,13 @@
     "service": "development-client",
     "workspaceFolder": "/home/node/sotetsu-lab-v3-client",
     "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": [
+            "source.organizeImports",
+            "source.fixAll.eslint"
+        ]
     },
     "extensions": [
         "angular.ng-template",
