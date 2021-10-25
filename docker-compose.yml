@@ -1,8 +1,5 @@
 version: '3.7'
 
-networks:
-    development-network:
-
 services:
     development-client:
         build:
@@ -12,7 +9,13 @@ services:
         # command: sh -c "ng serve --host 0.0.0.0 --poll=1000"
         tty: true
         volumes:
-            - '.:/home/sotetsu-lab-v3-client'
-            - /home/sotetsu-lab-v3-client/node_modules
+            - .:/home/node/sotetsu-lab-v3-client
+            - nodemodules:/home/node/sotetsu-lab-v3-client/node_modules
         networks:
             - development-network
+
+volumes:
+    nodemodules:
+
+networks:
+    development-network:

@@ -1,8 +1,6 @@
 {
     "name": "sotetsu-lab-v3-client",
-    "dockerComposeFile": [
-        "../docker-compose.yml"
-    ],
+    "dockerComposeFile": ["../docker-compose.yml"],
     "service": "development-client",
     "workspaceFolder": "/home/sotetsu-lab-v3-client",
     "settings": {
@@ -11,7 +9,7 @@
     "extensions": [
         "angular.ng-template",
         "cyrilletuzi.angular-schematics",
-        "ms-vscode.vscode-typescript-tslint-plugin",
+        "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "mhutchie.git-graph",
         "christian-kohler.path-intellisense"
