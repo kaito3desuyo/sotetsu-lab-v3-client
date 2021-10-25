@@ -2,7 +2,7 @@ import { ReadTripDto } from '../trip/trip-dto';
 import { ReadOperationDto } from '../operation/operation-dto';
 import { ReadTimeDto } from '../time/time-dto';
 import { ReadStationDto } from '../station/station-dto';
-/* tslint:disable:variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadTripOperationListDto {
     id: string;
     trip_id: string;

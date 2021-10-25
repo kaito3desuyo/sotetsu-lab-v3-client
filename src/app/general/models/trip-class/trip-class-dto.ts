@@ -1,4 +1,4 @@
-/* tslint:disable:variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadTripClassDto {
     id: string;
     service_id: string;
