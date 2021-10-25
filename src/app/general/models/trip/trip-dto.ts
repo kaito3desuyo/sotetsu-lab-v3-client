@@ -6,7 +6,7 @@ import {
 } from '../trip-operation-list/trip-operation-list-dto';
 import { ReadTripClassDto } from '../trip-class/trip-class-dto';
 import { ReadTripBlockDto } from '../trip-block/trip-block-dto';
-/* tslint:disable:variable-name */
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadTripDto {
     id: string;
     service_id: string;

@@ -1,6 +1,6 @@
 import { ReadFormationDto } from '../formation/formation-dto';
 import { ReadVehicleDto } from '../vehicle/vehicle-dto';
-/* tslint:disable: variable-name*/
+/* eslint-disable @typescript-eslint/naming-convention, no-underscore-dangle, id-denylist, id-match */
 export class ReadFormationToVehicleDto {
     id: string;
     formation_id: string;
