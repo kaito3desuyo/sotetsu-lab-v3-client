@@ -1,14 +1,21 @@
 import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
-import { EntityStore, QueryEntity, StoreConfig } from '@datorama/akita';
+import {
+    EntityState,
+    EntityStore,
+    QueryEntity,
+    StoreConfig,
+} from '@datorama/akita';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
 
+interface CalendarListState extends EntityState<CalendarDetailsDto, string> {}
+
 @Injectable({ providedIn: 'root' })
 @StoreConfig({ name: 'CalendarList', idKey: 'calendarId' })
-export class CalendarListStateStore extends EntityStore<CalendarDetailsDto> {
+export class CalendarListStateStore extends EntityStore<CalendarListState> {
     constructor(private readonly calendarService: CalendarService) {
         super();
     }
@@ -29,7 +36,9 @@ export class CalendarListStateStore extends EntityStore<CalendarDetailsDto> {
 }
 
 @Injectable({ providedIn: 'root' })
-export class CalendarListStateQuery extends QueryEntity<CalendarDetailsDto> {
+export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
+    calendars$ = this.selectAll();
+
     constructor(protected store: CalendarListStateStore) {
         super(store);
     }
