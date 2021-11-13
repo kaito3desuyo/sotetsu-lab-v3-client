@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { FormsModule } from '@angular/forms';
 import { OperationSearchCardService } from './services/operation-search-card.service';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
     declarations: [
@@ -20,6 +21,7 @@ import { OperationSearchCardService } from './services/operation-search-card.ser
     imports: [
         CommonModule,
         FormsModule,
+        RouterModule,
         FlexLayoutModule,
         MatCardModule,
         MatListModule,
