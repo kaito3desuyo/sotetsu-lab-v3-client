@@ -23,6 +23,9 @@ import { OperationSharedModule } from 'src/app/shared/operation-shared/operation
 import { DashboardService } from './general/services/dashboard.service';
 import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 import { AdsenseModule } from 'ng2-adsense';
+import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
+import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard-main-c.component';
+import { DashboardDescriptionPComponent } from './components/dashboard-description-p/dashboard-description-p.component';
 
 @NgModule({
     declarations: [
@@ -31,6 +34,8 @@ import { AdsenseModule } from 'ng2-adsense';
         DashboardOperationSearchMenuPresentationalComponent,
         DashboardTripAddFormContainerComponent,
         DashboardTripAddFormPresentationalComponent,
+        DashboardMainCComponent,
+        DashboardDescriptionPComponent,
     ],
     imports: [
         CommonModule,
@@ -50,6 +55,7 @@ import { AdsenseModule } from 'ng2-adsense';
         OperationSharedModule,
         TimetableSharedModule,
         AdsenseModule,
+        OperationSearchCardModule,
     ],
     providers: [DashboardService, DashboardResolverService],
 })
