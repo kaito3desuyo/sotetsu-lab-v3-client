@@ -96,10 +96,9 @@ export class OperationPostCardService {
                 }
 
                 let sightingTime = dayjs();
-                const timeFormat = 'HH:mm';
                 if (formValue.sightingTime) {
                     const now = dayjs();
-                    const st = dayjs(formValue.sightingTime, timeFormat);
+                    const st = dayjs(formValue.sightingTime, 'HH:mm');
                     if (now.hour() < 4) {
                         sightingTime = st.subtract(
                             st.hour() >= 4 ? 1 : 0,
