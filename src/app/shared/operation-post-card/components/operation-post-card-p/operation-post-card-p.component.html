@@ -11,7 +11,12 @@
                         placeholder="所属会社"
                         formControlName="agencyId"
                     >
-                        <mat-option> 相鉄 </mat-option>
+                        <mat-option
+                            *ngFor="let agency of agencies$ | async"
+                            [value]="agency.agencyId"
+                        >
+                            {{ agency.agencyName }}
+                        </mat-option>
                     </mat-select>
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 </mat-form-field>

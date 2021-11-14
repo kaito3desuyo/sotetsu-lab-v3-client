@@ -2,13 +2,17 @@ import {
     ChangeDetectionStrategy,
     Component,
     EventEmitter,
+    Input,
     Output,
 } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { RxState } from '@rx-angular/state';
+import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
 
-type State = {};
+type State = {
+    agencies: AgencyDetailsDto[];
+};
 
 @Component({
     selector: 'app-operation-post-card-p',
@@ -26,12 +30,20 @@ export class OperationPostCardPComponent {
         sightingTime: [{ value: '', disabled: true }, Validators.required],
     });
 
+    readonly agencies$ = this.state.select('agencies');
+
+    readonly onChangedInputAgencies$ = new EventEmitter<AgencyDetailsDto[]>();
+
+    @Input() set agencies(agencies: AgencyDetailsDto[]) {
+        this.onChangedInputAgencies$.next(agencies);
+    }
     @Output() submitSighting = new EventEmitter<IOperationPostCardForm>();
 
     constructor(
         private readonly fb: FormBuilder,
         private readonly state: RxState<State>
     ) {
+        this.state.connect('agencies', this.onChangedInputAgencies$);
         this.state.hold(
             this.sightingForm.get('timeSetting').valueChanges,
             (timeSetting) => {
