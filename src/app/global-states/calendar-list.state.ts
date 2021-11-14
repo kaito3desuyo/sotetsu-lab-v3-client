@@ -5,7 +5,7 @@ import {
     QueryEntity,
     StoreConfig,
 } from '@datorama/akita';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
@@ -26,7 +26,7 @@ export class CalendarListStateStore extends EntityStore<CalendarListState> {
             .setFilter([
                 {
                     field: 'service.serviceName',
-                    operator: '$eq',
+                    operator: CondOperator.EQUALS,
                     value: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
                 },
             ])
