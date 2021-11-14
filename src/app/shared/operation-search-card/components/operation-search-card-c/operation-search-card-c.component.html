@@ -1,4 +1,5 @@
 <app-operation-search-card-p
     [calendars]="calendars$ | async"
+    [todaysCalendarId]="todaysCalendarId$ | async"
     (clickSearchOperationTable)="onReceiveClickSearchOperationTable($event)"
 ></app-operation-search-card-p>

@@ -17,6 +17,7 @@ import { CustomViewportScroller } from './core/classes/custom-viewport-scroller'
 import { TokenService } from './core/token/token.service';
 import { GeneralModule } from './general/general.module';
 import { CalendarListStateStoreProvider } from './global-states/calendar-list.state';
+import { TodaysCalendarListStateStoreProvider } from './global-states/todays-calendar-list.state';
 import { LayoutModule } from './layout/layout.module';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
 
@@ -31,6 +32,7 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
             multi: true,
         },
         CalendarListStateStoreProvider,
+        TodaysCalendarListStateStoreProvider,
         {
             provide: ViewportScroller,
             useFactory: () =>

@@ -14,4 +14,11 @@ export class CalendarService {
     ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
         return this.calendarQuery.findMany(qb);
     }
+
+    findManyBySpecificDate(
+        qb: RequestQueryBuilder,
+        params: { date: string }
+    ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
+        return this.calendarQuery.findManyBySpecificDate(qb, params);
+    }
 }

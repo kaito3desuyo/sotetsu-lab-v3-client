@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { parse } from 'qs';
@@ -19,9 +19,34 @@ export class CalendarQuery {
     findMany(
         qb: RequestQueryBuilder
     ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
         return this.http
             .get<CalendarModel[]>(this.apiUrl, {
-                params: parse(qb.query()) as any,
+                params: httpParams,
+                observe: 'response',
+            })
+            .pipe(
+                map((res) => {
+                    return Pagination.isApiPaginated(res)
+                        ? Pagination.create(
+                              res.body.map((o) => buildCalendarDetailsDto(o)),
+                              Pagination.getApiPageSettings(res)
+                          )
+                        : res.body.map((o) => buildCalendarDetailsDto(o));
+                })
+            );
+    }
+
+    findManyBySpecificDate(
+        qb: RequestQueryBuilder,
+        params: { date: string }
+    ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<CalendarModel[]>(this.apiUrl + '/as/of/' + params.date, {
+                params: httpParams,
                 observe: 'response',
             })
             .pipe(

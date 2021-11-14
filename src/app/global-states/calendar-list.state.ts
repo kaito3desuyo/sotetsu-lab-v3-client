@@ -21,10 +21,19 @@ export class CalendarListStateStore extends EntityStore<CalendarListState> {
     }
 
     fetch(): Observable<void> {
-        const qb = RequestQueryBuilder.create().sortBy([
-            { field: 'startDate', order: 'ASC' },
-            { field: 'monday', order: 'DESC' },
-        ]);
+        const qb = RequestQueryBuilder.create()
+            .setJoin([{ field: 'service' }])
+            .setFilter([
+                {
+                    field: 'service.serviceName',
+                    operator: '$eq',
+                    value: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
+                },
+            ])
+            .sortBy([
+                { field: 'startDate', order: 'ASC' },
+                { field: 'monday', order: 'DESC' },
+            ]);
 
         return this.calendarService.findMany(qb).pipe(
             tap((data: CalendarDetailsDto[]) => {
