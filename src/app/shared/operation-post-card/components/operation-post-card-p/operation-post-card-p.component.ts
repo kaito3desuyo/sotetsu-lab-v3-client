@@ -61,12 +61,12 @@ export class OperationPostCardPComponent {
 
     onClickSubmit(): void {
         this.submitSighting.emit(this.sightingForm.value);
-        this.sightingForm.reset({
-            agencyId: '',
-            formationOrVehicleNumber: '',
-            operationNumber: '',
-            timeSetting: 'currentTime',
-            sightingTime: '',
-        });
+        // this.sightingForm.reset({
+        //     agencyId: '',
+        //     formationOrVehicleNumber: '',
+        //     operationNumber: '',
+        //     timeSetting: 'currentTime',
+        //     sightingTime: '',
+        // });
     }
 }

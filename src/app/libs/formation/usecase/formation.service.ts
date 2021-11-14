@@ -9,9 +9,10 @@ import { FormationDetailsDto } from './dtos/formation-details.dto';
 export class FormationService {
     constructor(private readonly formationQuery: FormationQuery) {}
 
-    findMany(
-        qb: RequestQueryBuilder
+    findManyBySpeficicDate(
+        qb: RequestQueryBuilder,
+        params: { date: string }
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
-        return this.formationQuery.findMany(qb);
+        return this.formationQuery.findManyBySpeficicDate(qb, params);
     }
 }

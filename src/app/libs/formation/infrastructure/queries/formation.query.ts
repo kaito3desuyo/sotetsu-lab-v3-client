@@ -15,13 +15,14 @@ export class FormationQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany(
-        qb: RequestQueryBuilder
+    findManyBySpeficicDate(
+        qb: RequestQueryBuilder,
+        params: { date: string }
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
         return this.http
-            .get<FormationModel[]>(this.apiUrl, {
+            .get<FormationModel[]>(this.apiUrl + '/as/of/' + params.date, {
                 params: httpParams,
                 observe: 'response',
             })
