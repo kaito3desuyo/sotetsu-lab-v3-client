@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs, { Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { forkJoin, Observable, of } from 'rxjs';
-import { delay, map, mergeMap, take, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
+import { map, mergeMap, take, tap } from 'rxjs/operators';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -16,13 +16,19 @@ dayjs.extend(customParseFormat);
 
 @Injectable()
 export class OperationPostCardService {
+    private readonly _submitOperationSightingEvent = new Subject<void>();
+
     constructor(
+        private readonly socket: SocketService,
         private readonly formationService: FormationService,
         private readonly operationService: OperationService,
         private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery,
-        private readonly operationApi: OperationApiService,
-        private readonly socketService: SocketService
+        private readonly operationApi: OperationApiService
     ) {}
+
+    receiveSubmitOperationSightingEvent(): Observable<void> {
+        return this._submitOperationSightingEvent.asObservable();
+    }
 
     addOperationSighting(formValue: IOperationPostCardForm): Observable<void> {
         return of(null).pipe(
@@ -110,7 +116,6 @@ export class OperationPostCardService {
                 return [formations, operations, sightingTime];
             }),
             mergeMap(([formations, operations, sightingTime]) => {
-                console.log(sightingTime.toISOString());
                 return this.operationApi.addOperationSighting({
                     formationId: formations[0].formationId,
                     operationId: operations[0].operationId,
@@ -118,7 +123,8 @@ export class OperationPostCardService {
                 });
             }),
             tap((result) => {
-                this.socketService.emit('sendSighting', result);
+                this.socket.emit('sendSighting', result);
+                this._submitOperationSightingEvent.next();
             }),
             map(() => null)
         );

@@ -12,6 +12,8 @@ import { OperationPostCardService } from '../../services/operation-post-card.ser
 })
 export class OperationPostCardCComponent {
     readonly agencies$ = this.agencyListStateQuery.agencies$;
+    readonly submitOperationSightingEvent$ =
+        this.operationPostCardService.receiveSubmitOperationSightingEvent();
 
     constructor(
         private readonly logger: NGXLogger,
@@ -24,6 +26,9 @@ export class OperationPostCardCComponent {
         this.operationPostCardService
             .addOperationSighting(formValue)
             .subscribe({
+                complete: () => {
+                    this.notification.open('目撃情報を送信しました', 'OK');
+                },
                 error: (e) => {
                     this.logger.error(e.message);
                     this.notification.open(e.message, 'OK');

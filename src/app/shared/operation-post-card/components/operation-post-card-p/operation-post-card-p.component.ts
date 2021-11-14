@@ -33,9 +33,14 @@ export class OperationPostCardPComponent {
     readonly agencies$ = this.state.select('agencies');
 
     readonly onChangedInputAgencies$ = new EventEmitter<AgencyDetailsDto[]>();
+    readonly onChangedInputSubmitOperationSightingEvent$ =
+        new EventEmitter<void>();
 
     @Input() set agencies(agencies: AgencyDetailsDto[]) {
         this.onChangedInputAgencies$.next(agencies);
+    }
+    @Input() set submitOperationSightingEvent(event: void) {
+        this.onChangedInputSubmitOperationSightingEvent$.next(event);
     }
     @Output() submitSighting = new EventEmitter<IOperationPostCardForm>();
 
@@ -57,16 +62,21 @@ export class OperationPostCardPComponent {
                 }
             }
         );
+        this.state.hold(
+            this.onChangedInputSubmitOperationSightingEvent$,
+            () => {
+                this.sightingForm.reset({
+                    agencyId: '',
+                    formationOrVehicleNumber: '',
+                    operationNumber: '',
+                    timeSetting: 'currentTime',
+                    sightingTime: '',
+                });
+            }
+        );
     }
 
     onClickSubmit(): void {
         this.submitSighting.emit(this.sightingForm.value);
-        // this.sightingForm.reset({
-        //     agencyId: '',
-        //     formationOrVehicleNumber: '',
-        //     operationNumber: '',
-        //     timeSetting: 'currentTime',
-        //     sightingTime: '',
-        // });
     }
 }
