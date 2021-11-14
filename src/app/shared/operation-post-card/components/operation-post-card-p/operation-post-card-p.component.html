@@ -1,0 +1,77 @@
+<mat-card>
+    <mat-card-title> 運用情報を投稿する </mat-card-title>
+    <mat-card-subtitle>
+        各編成の運用充当状況を投稿できます。
+    </mat-card-subtitle>
+    <mat-card-content>
+        <form fxLayout="column" fxLayoutGap="16px" [formGroup]="sightingForm">
+            <div fxLayout="row" fxLayoutGap="16px">
+                <mat-form-field fxFlex="80px">
+                    <mat-select
+                        placeholder="所属会社"
+                        formControlName="agencyId"
+                    >
+                        <mat-option> 相鉄 </mat-option>
+                    </mat-select>
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                </mat-form-field>
+                <mat-form-field fxFlex="auto">
+                    <input
+                        matInput
+                        placeholder="編成番号もしくは車両番号"
+                        formControlName="formationOrVehicleNumber"
+                    />
+                    <mat-hint>
+                        例：相鉄車の場合は「12101」、JR車の場合は「101」「クハE233-7001」
+                    </mat-hint>
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                </mat-form-field>
+            </div>
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="運用番号"
+                    formControlName="operationNumber"
+                />
+                <mat-hint> 休車の場合は'100'を入力 </mat-hint>
+                <mat-error> <strong>必須項目</strong>です </mat-error>
+            </mat-form-field>
+            <mat-radio-group
+                fxLayout="row"
+                fxLayoutGap="16px"
+                formControlName="timeSetting"
+            >
+                <mat-radio-button value="currentTime">
+                    現在時刻
+                </mat-radio-button>
+                <mat-radio-button value="specifiedTime">
+                    指定時刻
+                </mat-radio-button>
+            </mat-radio-group>
+            <mat-form-field>
+                <input
+                    matInput
+                    type="time"
+                    placeholder="目撃時刻"
+                    formControlName="sightingTime"
+                />
+                <mat-hint>
+                    当日分の入力は 04:00 ～ 現時刻（最大：翌03:59）
+                    の範囲で行えます
+                </mat-hint>
+                <mat-error> <strong>必須項目</strong>です </mat-error>
+            </mat-form-field>
+        </form>
+    </mat-card-content>
+    <mat-card-actions align="end">
+        <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            [disabled]="sightingForm.invalid"
+            (click)="onClickSubmit()"
+        >
+            送信
+        </button>
+    </mat-card-actions>
+</mat-card>

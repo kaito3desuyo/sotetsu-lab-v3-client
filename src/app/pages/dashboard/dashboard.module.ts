@@ -26,6 +26,7 @@ import { AdsenseModule } from 'ng2-adsense';
 import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
 import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard-main-c.component';
 import { DashboardDescriptionPComponent } from './components/dashboard-description-p/dashboard-description-p.component';
+import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
 
 @NgModule({
     declarations: [
@@ -56,6 +57,7 @@ import { DashboardDescriptionPComponent } from './components/dashboard-descripti
         TimetableSharedModule,
         AdsenseModule,
         OperationSearchCardModule,
+        OperationPostCardModule,
     ],
     providers: [DashboardService, DashboardResolverService],
 })
