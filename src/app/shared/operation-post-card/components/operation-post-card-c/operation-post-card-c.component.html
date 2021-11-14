@@ -1,3 +1,4 @@
 <app-operation-post-card-p
     [agencies]="agencies$ | async"
+    (submitSighting)="onReceiveSubmitSighting($event)"
 ></app-operation-post-card-p>

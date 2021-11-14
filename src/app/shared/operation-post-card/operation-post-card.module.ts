@@ -10,9 +10,11 @@ import { OperationPostCardPComponent } from './components/operation-post-card-p/
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { OperationPostCardService } from './services/operation-post-card.service';
 
 @NgModule({
     declarations: [OperationPostCardCComponent, OperationPostCardPComponent],
+    providers: [OperationPostCardService],
     imports: [
         CommonModule,
         ReactiveFormsModule,
