@@ -50,12 +50,27 @@ export class RouteStationListStateStore extends EntityStore<RouteStationListStat
                     '埼京線',
                     '川越線',
                 ];
+                const desc = ['新横浜線', '相鉄・JR直通線', '埼京線', '川越線'];
                 this.set(
-                    data.sort(
-                        (a, b) =>
-                            sort.findIndex((rn) => a.routeName === rn) -
-                            sort.findIndex((rn) => b.routeName === rn)
-                    )
+                    data
+                        .map((o) => {
+                            return {
+                                ...o,
+                                routeStationLists: o.routeStationLists.sort(
+                                    (a, b) =>
+                                        desc.some((rn) => o.routeName === rn)
+                                            ? b.stationSequence -
+                                              a.stationSequence
+                                            : a.stationSequence -
+                                              b.stationSequence
+                                ),
+                            };
+                        })
+                        .sort(
+                            (a, b) =>
+                                sort.findIndex((rn) => a.routeName === rn) -
+                                sort.findIndex((rn) => b.routeName === rn)
+                        )
                 );
             }),
             map(() => undefined)
