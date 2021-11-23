@@ -56,6 +56,11 @@ export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarList
 export class TodaysCalendarListStateQuery extends QueryEntity<TodaysCalendarListState> {
     todaysCalendarId$ = this.selectFirst((calendar) => calendar.calendarId);
 
+    get todaysCalendarId() {
+        const list = this.getAll();
+        return list[0].calendarId;
+    }
+
     constructor(protected store: TodaysCalendarListStateStore) {
         super(store);
     }
