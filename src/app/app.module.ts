@@ -18,6 +18,7 @@ import { TokenService } from './core/token/token.service';
 import { GeneralModule } from './general/general.module';
 import { AgencyListStateStoreProvider } from './global-states/agency-list.state';
 import { CalendarListStateStoreProvider } from './global-states/calendar-list.state';
+import { RouteStationListStateStoreProvider } from './global-states/route-station-list.state';
 import { TodaysCalendarListStateStoreProvider } from './global-states/todays-calendar-list.state';
 import { LayoutModule } from './layout/layout.module';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
@@ -35,6 +36,7 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
         AgencyListStateStoreProvider,
         CalendarListStateStoreProvider,
         TodaysCalendarListStateStoreProvider,
+        RouteStationListStateStoreProvider,
         {
             provide: ViewportScroller,
             useFactory: () =>
