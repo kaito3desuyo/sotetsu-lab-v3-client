@@ -1,5 +1,4 @@
 import { Expose, Type } from 'class-transformer';
-import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { RouteStationListDetailsDto } from './route-station-list-details.dto';
 
 export class RouteDetailsDto {
@@ -41,5 +40,5 @@ export class RouteDetailsDto {
 
     @Expose()
     @Type(() => RouteStationListDetailsDto)
-    routeStationLists?: RouteStationListStateStore[];
+    routeStationLists?: RouteStationListDetailsDto[];
 }
