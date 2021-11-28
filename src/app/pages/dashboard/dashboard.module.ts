@@ -29,6 +29,7 @@ import { DashboardDescriptionPComponent } from './components/dashboard-descripti
 import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
 import { TimetablePostCardModule } from 'src/app/shared/timetable-post-card/timetable-post-card.module';
+import { LibraryListCardModule } from 'src/app/shared/library-list-card/library-list-card.module';
 
 @NgModule({
     declarations: [
@@ -62,6 +63,7 @@ import { TimetablePostCardModule } from 'src/app/shared/timetable-post-card/time
         OperationPostCardModule,
         TimetableSearchCardModule,
         TimetablePostCardModule,
+        LibraryListCardModule,
     ],
     providers: [DashboardService, DashboardResolverService],
 })
