@@ -34,6 +34,7 @@
             type="button"
             mat-raised-button
             color="primary"
+            [disabled]="form.invalid"
             (click)="onClickedMoveTimetableAdd$.next()"
         >
             列車情報入力へ移る

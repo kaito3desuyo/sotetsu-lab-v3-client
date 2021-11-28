@@ -4,6 +4,7 @@ import { RxState } from '@rx-angular/state';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { TitleService } from 'src/app/general/services/title.service';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
+import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/services/timetable-search-form.service';
 import { ParamsQuery } from 'src/app/state/params';
@@ -24,7 +25,8 @@ export class DashboardComponent extends BaseComponent {
         private paramsQuery: ParamsQuery,
         private tiletableSearchFormService: TimetableSearchFormService,
         private readonly operationSearchCardService: OperationSearchCardService,
-        private readonly timetableSearchCardService: TimetableSearchCardService
+        private readonly timetableSearchCardService: TimetableSearchCardService,
+        private readonly timetablePostCardService: TimetablePostCardService
     ) {
         super(injector);
 
@@ -73,6 +75,18 @@ export class DashboardComponent extends BaseComponent {
                         },
                     ]);
                 }
+            }
+        );
+
+        this.state.hold(
+            this.timetablePostCardService.receiveMoveTimetableAddEvent(),
+            (state) => {
+                this.router.navigate([
+                    'timetable',
+                    'add',
+                    state.calendarId,
+                    { trip_direction: state.tripDirection },
+                ]);
             }
         );
     }
