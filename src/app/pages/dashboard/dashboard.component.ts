@@ -1,4 +1,4 @@
-import { Component, Inject, Injector, OnInit } from '@angular/core';
+import { Component, Inject, Injector } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { BaseComponent } from 'src/app/general/classes/base-component';
@@ -6,8 +6,6 @@ import { TitleService } from 'src/app/general/services/title.service';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/services/timetable-search-form.service';
-import { ParamsQuery } from 'src/app/state/params';
 
 @Component({
     selector: 'app-dashboard',
@@ -22,8 +20,6 @@ export class DashboardComponent extends BaseComponent {
         private readonly state: RxState<{}>,
         private route: ActivatedRoute,
         private titleService: TitleService,
-        private paramsQuery: ParamsQuery,
-        private tiletableSearchFormService: TimetableSearchFormService,
         private readonly operationSearchCardService: OperationSearchCardService,
         private readonly timetableSearchCardService: TimetableSearchCardService,
         private readonly timetablePostCardService: TimetablePostCardService
@@ -33,14 +29,6 @@ export class DashboardComponent extends BaseComponent {
         this.state.hold(this.route.data, ({ title }) => {
             this.titleService.setTitle(title);
         });
-
-        this.subscription = this.paramsQuery.calendar$.subscribe(
-            (calendarId) => {
-                this.tiletableSearchFormService.updateParams({
-                    calendarId,
-                });
-            }
-        );
 
         this.state.hold(
             this.operationSearchCardService.receiveSearchOperationTableEvent(),
