@@ -28,6 +28,7 @@ import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard
 import { DashboardDescriptionPComponent } from './components/dashboard-description-p/dashboard-description-p.component';
 import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
+import { TimetablePostCardModule } from 'src/app/shared/timetable-post-card/timetable-post-card.module';
 
 @NgModule({
     declarations: [
@@ -60,6 +61,7 @@ import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/
         OperationSearchCardModule,
         OperationPostCardModule,
         TimetableSearchCardModule,
+        TimetablePostCardModule,
     ],
     providers: [DashboardService, DashboardResolverService],
 })
