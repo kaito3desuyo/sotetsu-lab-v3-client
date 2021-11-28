@@ -1,23 +1,27 @@
-import { BrowserModule } from '@angular/platform-browser';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
 import {
     APP_INITIALIZER,
     ErrorHandler,
     NgModule,
     ɵɵinject,
 } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
+import { AdsenseModule } from 'ng2-adsense';
+import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { LayoutModule } from './layout/layout.module';
-import { ServiceWorkerModule } from '@angular/service-worker';
-import { environment } from '../environments/environment';
-import { GeneralModule } from './general/general.module';
-import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
-import { AppSharedModule } from './shared/app-shared/app-shared.module';
-import { AdsenseModule } from 'ng2-adsense';
-import { TokenService } from './core/token/token.service';
-import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { CustomViewportScroller } from './core/classes/custom-viewport-scroller';
+import { TokenService } from './core/token/token.service';
+import { GeneralModule } from './general/general.module';
+import { AgencyListStateStoreProvider } from './global-states/agency-list.state';
+import { CalendarListStateStoreProvider } from './global-states/calendar-list.state';
+import { RouteStationListStateStoreProvider } from './global-states/route-station-list.state';
+import { TodaysCalendarListStateStoreProvider } from './global-states/todays-calendar-list.state';
+import { LayoutModule } from './layout/layout.module';
+import { AppSharedModule } from './shared/app-shared/app-shared.module';
 
 @NgModule({
     declarations: [AppComponent],
@@ -29,6 +33,10 @@ import { CustomViewportScroller } from './core/classes/custom-viewport-scroller'
             deps: [TokenService],
             multi: true,
         },
+        AgencyListStateStoreProvider,
+        CalendarListStateStoreProvider,
+        TodaysCalendarListStateStoreProvider,
+        RouteStationListStateStoreProvider,
         {
             provide: ViewportScroller,
             useFactory: () =>

@@ -1,42 +1,81 @@
-import { Component, Injector, Inject, OnInit } from '@angular/core';
-import { TitleService } from 'src/app/general/services/title.service';
+import { Component, Inject, Injector } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { RxState } from '@rx-angular/state';
 import { BaseComponent } from 'src/app/general/classes/base-component';
-import { ActivatedRoute } from '@angular/router';
-import { TimetableSearchFormService } from 'src/app/shared/timetable-shared/services/timetable-search-form.service';
-import { ParamsQuery } from 'src/app/state/params';
-import { SocketService } from 'src/app/general/services/socket.service';
+import { TitleService } from 'src/app/general/services/title.service';
+import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
+import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
+import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 
 @Component({
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
+    providers: [RxState],
 })
-export class DashboardComponent extends BaseComponent implements OnInit {
+export class DashboardComponent extends BaseComponent {
     constructor(
         @Inject(Injector) injector: Injector,
+        private readonly router: Router,
+        private readonly state: RxState<{}>,
         private route: ActivatedRoute,
         private titleService: TitleService,
-        private paramsQuery: ParamsQuery,
-        private tiletableSearchFormService: TimetableSearchFormService,
-        private socketService: SocketService
+        private readonly operationSearchCardService: OperationSearchCardService,
+        private readonly timetableSearchCardService: TimetableSearchCardService,
+        private readonly timetablePostCardService: TimetablePostCardService
     ) {
         super(injector);
-        this.subscription = this.route.data.subscribe(
-            (data: { title: string }) => {
-                this.titleService.setTitle('');
-            }
-        );
 
-        this.subscription = this.paramsQuery.calendar$.subscribe(
+        this.state.hold(this.route.data, ({ title }) => {
+            this.titleService.setTitle(title);
+        });
+
+        this.state.hold(
+            this.operationSearchCardService.receiveSearchOperationTableEvent(),
             (calendarId) => {
-                this.tiletableSearchFormService.updateParams({
-                    calendarId,
-                });
+                this.router.navigate([
+                    '/operation/table',
+                    { calendar_id: calendarId },
+                ]);
             }
         );
-    }
 
-    async ngOnInit() {
-        this.socketService.on().subscribe((e) => console.log(e));
+        this.state.hold(
+            this.timetableSearchCardService.receiveSearchTimetableEvent(),
+            (state) => {
+                if (state.searchByStation) {
+                    this.router.navigate([
+                        'timetable',
+                        'station',
+                        {
+                            calendar_id: state.calendarId,
+                            station_id: state.stationId,
+                            trip_direction: state.tripDirection,
+                        },
+                    ]);
+                } else {
+                    this.router.navigate([
+                        'timetable',
+                        'all-line',
+                        {
+                            calendar_id: state.calendarId,
+                            trip_direction: state.tripDirection,
+                        },
+                    ]);
+                }
+            }
+        );
+
+        this.state.hold(
+            this.timetablePostCardService.receiveMoveTimetableAddEvent(),
+            (state) => {
+                this.router.navigate([
+                    'timetable',
+                    'add',
+                    state.calendarId,
+                    { trip_direction: state.tripDirection },
+                ]);
+            }
+        );
     }
 }
