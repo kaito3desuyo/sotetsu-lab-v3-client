@@ -40,22 +40,25 @@ import {
     IOperationSightingTableData,
     IOperationCurrentPositionTableData,
 } from '../interfaces/operation-sighting-table';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { OperationRealTimeStateStore } from '../../states/operation-real-time.state';
+import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
-    private _finalUpdateTime$: BehaviorSubject<Moment> = new BehaviorSubject<
-        Moment
-    >(moment());
-    finalUpdateTime$: Observable<
-        Moment
-    > = this._finalUpdateTime$.asObservable();
+    private _finalUpdateTime$: BehaviorSubject<Moment> =
+        new BehaviorSubject<Moment>(moment());
+    finalUpdateTime$: Observable<Moment> =
+        this._finalUpdateTime$.asObservable();
 
-    private _isAutoReloadEnabled$: BehaviorSubject<
-        boolean
-    > = new BehaviorSubject<boolean>(true);
-    isAutoReloadEnabled$: Observable<
-        boolean
-    > = this._isAutoReloadEnabled$.asObservable();
+    private _isAutoReloadEnabled$: BehaviorSubject<boolean> =
+        new BehaviorSubject<boolean>(true);
+    isAutoReloadEnabled$: Observable<boolean> =
+        this._isAutoReloadEnabled$.asObservable();
     get isAutoReloadEnabled() {
         return this._isAutoReloadEnabled$.getValue();
     }
@@ -63,12 +66,10 @@ export class OperationRealTimeService extends BaseService {
         this._isAutoReloadEnabled$.next(bool);
     }
 
-    private _isVisibleCurrentPosition$: BehaviorSubject<
-        boolean
-    > = new BehaviorSubject<boolean>(true);
-    isVisibleCurrentPosition$: Observable<
-        boolean
-    > = this._isVisibleCurrentPosition$.asObservable();
+    private _isVisibleCurrentPosition$: BehaviorSubject<boolean> =
+        new BehaviorSubject<boolean>(true);
+    isVisibleCurrentPosition$: Observable<boolean> =
+        this._isVisibleCurrentPosition$.asObservable();
     set isVisibleCurrentPosition(bool: boolean) {
         this._isVisibleCurrentPosition$.next(bool);
     }
@@ -90,14 +91,12 @@ export class OperationRealTimeService extends BaseService {
     >([]);
     operations$ = this._operations$.asObservable();
 
-    private _formationNumbers$: BehaviorSubject<
-        { formationNumber: string }[]
-    > = new BehaviorSubject<{ formationNumber: string }[]>([]);
+    private _formationNumbers$: BehaviorSubject<{ formationNumber: string }[]> =
+        new BehaviorSubject<{ formationNumber: string }[]>([]);
     formationNumbers$ = this._formationNumbers$.asObservable();
 
-    private _operationNumbers$: BehaviorSubject<
-        { operationNumber: string }[]
-    > = new BehaviorSubject<{ operationNumber: string }[]>([]);
+    private _operationNumbers$: BehaviorSubject<{ operationNumber: string }[]> =
+        new BehaviorSubject<{ operationNumber: string }[]>([]);
     operationNumbers$ = this._operationNumbers$.asObservable();
 
     private _tripClasses$: BehaviorSubject<ITripClass[]> = new BehaviorSubject<
@@ -108,21 +107,20 @@ export class OperationRealTimeService extends BaseService {
     private _operationsCurrentPosition$: BehaviorSubject<
         IOperationCurrentPosition[]
     > = new BehaviorSubject<IOperationCurrentPosition[]>([]);
-    operationsCurrentPosition$ = this._operationsCurrentPosition$.asObservable();
+    operationsCurrentPosition$ =
+        this._operationsCurrentPosition$.asObservable();
 
     private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
         IStation[]
     >([]);
     stations$ = this._stations$.asObservable();
 
-    private _formationSightingsLatest$: BehaviorSubject<
-        IOperationSighting[]
-    > = new BehaviorSubject<IOperationSighting[]>([]);
+    private _formationSightingsLatest$: BehaviorSubject<IOperationSighting[]> =
+        new BehaviorSubject<IOperationSighting[]>([]);
     formationSightingsLatest$ = this._formationSightingsLatest$.asObservable();
 
-    private _operationSightingsLatest$: BehaviorSubject<
-        IOperationSighting[]
-    > = new BehaviorSubject<IOperationSighting[]>([]);
+    private _operationSightingsLatest$: BehaviorSubject<IOperationSighting[]> =
+        new BehaviorSubject<IOperationSighting[]>([]);
     operationSightingsLatest$ = this._operationSightingsLatest$.asObservable();
 
     private _formationTableData$: BehaviorSubject<
@@ -147,17 +145,22 @@ export class OperationRealTimeService extends BaseService {
         private stationApi: StationApiService,
         private paramsQuery: ParamsQuery,
         private notification: NotificationService,
-        private operationSightingAddFormService: OperationSightingAddFormService
+        private operationSightingAddFormService: OperationSightingAddFormService,
+        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
+        private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
+        private readonly operationService: OperationService,
+        private readonly operationSightingService: OperationSightingService
     ) {
         super();
 
-        this.subscription = this.operationSightingAddFormService.sendSightingEvent$.subscribe(
-            () => {
-                this.fetchSightingsLatest()
-                    .pipe(flatMap(() => this.generateTable()))
-                    .subscribe();
-            }
-        );
+        this.subscription =
+            this.operationSightingAddFormService.sendSightingEvent$.subscribe(
+                () => {
+                    this.fetchSightingsLatest()
+                        .pipe(flatMap(() => this.generateTable()))
+                        .subscribe();
+                }
+            );
 
         this.currentCalendarId$ = this.paramsQuery.calendar$;
 
@@ -574,9 +577,11 @@ export class OperationRealTimeService extends BaseService {
                         postedOperationNumber: findSightings.operation
                             ? findSightings.operation.operationNumber
                             : null,
-                        rotatedOperationNumber: findSightings.circulatedOperation
-                            ? findSightings.circulatedOperation.operationNumber
-                            : null,
+                        rotatedOperationNumber:
+                            findSightings.circulatedOperation
+                                ? findSightings.circulatedOperation
+                                      .operationNumber
+                                : null,
                         rotatedOperationId: findSightings.circulatedOperationId,
                         formationNumber:
                             findSightings.formation.formationNumber,
@@ -700,4 +705,57 @@ export class OperationRealTimeService extends BaseService {
             this.generateOperationTableData(),
         ]).pipe(map(() => null));
     }
+
+    // v2
+
+    fetchOperationsV2(): Observable<void> {
+        const qb = new RequestQueryBuilder().setFilter([
+            {
+                field: 'calendarId',
+                operator: CondOperator.EQUALS,
+                value: this.todaysCalendarListStateQuery.todaysCalendarId,
+            },
+        ]);
+
+        return this.operationService.findMany(qb).pipe(
+            tap((data: OperationDetailsDto[]) => {
+                this.operationRealTimeStateStore.setOperations(data);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchOperationSightings(): Observable<void> {
+        const qb = new RequestQueryBuilder().setJoin([
+            { field: 'operation' },
+            { field: 'formation' },
+        ]);
+
+        return this.operationSightingService
+            .findManyLatestGroupByOperation(qb)
+            .pipe(
+                tap((data: OperationSightingDetailsDto[]) =>
+                    this.operationRealTimeStateStore.setOperationSightings(data)
+                ),
+                map(() => undefined)
+            );
+    }
+
+    fetchFormationSightings(): Observable<void> {
+        const qb = new RequestQueryBuilder().setJoin([
+            { field: 'operation' },
+            { field: 'formation' },
+        ]);
+
+        return this.operationSightingService
+            .findManyLatestGroupByFormation(qb)
+            .pipe(
+                tap((data: OperationSightingDetailsDto[]) =>
+                    this.operationRealTimeStateStore.setFormationSightings(data)
+                ),
+                map(() => undefined)
+            );
+    }
+
+    // fetchOperationCurrentPosition(): Observable<void> {}
 }

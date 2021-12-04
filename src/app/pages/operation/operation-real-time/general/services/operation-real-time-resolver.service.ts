@@ -6,7 +6,8 @@ import { flatMap, map, tap } from 'rxjs/operators';
 
 @Injectable()
 export class OperationRealTimeResolverService
-    implements Resolve<Observable<void>> {
+    implements Resolve<Observable<void>>
+{
     constructor(private operationRealTimeService: OperationRealTimeService) {}
 
     resolve(): Observable<void> {
@@ -14,6 +15,9 @@ export class OperationRealTimeResolverService
             this.operationRealTimeService.fetchServices(),
             this.operationRealTimeService.fetchCalendars(),
             this.operationRealTimeService.fetchStations(),
+            this.operationRealTimeService.fetchOperationsV2(),
+            this.operationRealTimeService.fetchOperationSightings(),
+            this.operationRealTimeService.fetchFormationSightings(),
         ]).pipe(
             flatMap(() => {
                 return forkJoin([

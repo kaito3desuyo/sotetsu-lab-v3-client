@@ -4,14 +4,17 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { TitleService } from 'src/app/general/services/title.service';
 import { OperationRealTimeService } from './general/services/operation-real-time.service';
+import { OperationRealTimeStateQuery } from './states/operation-real-time.state';
 
 @Component({
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
     styleUrls: ['./operation-real-time.component.scss'],
 })
-export class OperationRealTimeComponent extends BaseComponent
-    implements OnInit, OnDestroy {
+export class OperationRealTimeComponent
+    extends BaseComponent
+    implements OnInit, OnDestroy
+{
     date: string;
 
     constructor(
@@ -19,7 +22,8 @@ export class OperationRealTimeComponent extends BaseComponent
         private route: ActivatedRoute,
         private socketService: SocketService,
         private titleService: TitleService,
-        private operationRealTimeService: OperationRealTimeService
+        private operationRealTimeService: OperationRealTimeService,
+        private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery
     ) {
         super(injector);
         this.subscription = this.route.data.subscribe(
@@ -28,6 +32,10 @@ export class OperationRealTimeComponent extends BaseComponent
                 this.titleService.setTitle(data.title);
             }
         );
+
+        this.operationRealTimeStateQuery.latestSightings$.subscribe((o) => {
+            console.log(o);
+        });
     }
 
     ngOnInit(): void {
