@@ -22,6 +22,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatSortModule } from '@angular/material/sort';
 import { AdsenseModule } from 'ng2-adsense';
+import {
+    OperationRealTimeStateQuery,
+    OperationRealTimeStateStore,
+} from './states/operation-real-time.state';
 
 @NgModule({
     declarations: [
@@ -50,6 +54,11 @@ import { AdsenseModule } from 'ng2-adsense';
         AdsenseModule,
     ],
     exports: [],
-    providers: [OperationRealTimeService, OperationRealTimeResolverService],
+    providers: [
+        OperationRealTimeService,
+        OperationRealTimeResolverService,
+        OperationRealTimeStateStore,
+        OperationRealTimeStateQuery,
+    ],
 })
 export class OperationRealTimeModule {}
