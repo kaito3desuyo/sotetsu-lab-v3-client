@@ -5,6 +5,7 @@ import { flatMap, groupBy, sortBy, uniqBy } from 'lodash-es';
 import { map } from 'rxjs/operators';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { calculateDayDifference } from '../utils/calculate-day-difference';
 import { circulateOperationNumber } from '../utils/circulate-operation-number';
 import { isExistNewerSightings } from '../utils/is-exist-newer-sightings';
@@ -13,6 +14,14 @@ type OperationRealTimeState = {
     operations: OperationDetailsDto[];
     operationSightings: OperationSightingDetailsDto[];
     formationSightings: OperationSightingDetailsDto[];
+    currentPositions: {
+        operation: OperationDetailsDto;
+        position: {
+            prev: TripOperationListDetailsDto;
+            current: TripOperationListDetailsDto;
+            next: TripOperationListDetailsDto;
+        };
+    }[];
 };
 
 @Injectable()
@@ -23,6 +32,7 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
                 operations: [],
                 operationSightings: [],
                 formationSightings: [],
+                currentPositions: [],
             },
             {
                 name: `OperationRealTime-${guid()}`,
@@ -47,10 +57,26 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
             formationSightings: sightings,
         });
     }
+
+    setCurrentPositions(
+        positions: {
+            operation: OperationDetailsDto;
+            position: {
+                prev: TripOperationListDetailsDto;
+                current: TripOperationListDetailsDto;
+                next: TripOperationListDetailsDto;
+            };
+        }[]
+    ): void {
+        this.update({
+            currentPositions: positions,
+        });
+    }
 }
 
 @Injectable()
 export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
+    operations$ = this.select('operations');
     latestSightings$ = this.select([
         'operations',
         'operationSightings',

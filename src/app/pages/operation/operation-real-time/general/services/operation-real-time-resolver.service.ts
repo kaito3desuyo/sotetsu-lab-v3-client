@@ -15,6 +15,8 @@ export class OperationRealTimeResolverService
             this.operationRealTimeService.fetchServices(),
             this.operationRealTimeService.fetchCalendars(),
             this.operationRealTimeService.fetchStations(),
+
+            // v2
             this.operationRealTimeService.fetchOperationsV2(),
             this.operationRealTimeService.fetchOperationSightings(),
             this.operationRealTimeService.fetchFormationSightings(),
@@ -28,6 +30,9 @@ export class OperationRealTimeResolverService
                     this.operationRealTimeService.fetchTripClasses(),
                     this.operationRealTimeService.fetchOperations(),
                     this.operationRealTimeService.fetchSightingsLatest(),
+
+                    // v2
+                    this.operationRealTimeService.fetchOperationCurrentPosition(),
                 ]);
             }),
             flatMap(() => {

@@ -8,7 +8,7 @@ import {
     forkJoin,
     Subscription,
 } from 'rxjs';
-import { map, tap, flatMap, skip, take } from 'rxjs/operators';
+import { map, tap, flatMap, skip, take, switchMap } from 'rxjs/operators';
 import { find } from 'lodash-es';
 import moment, { Moment } from 'moment';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
@@ -41,7 +41,10 @@ import {
     IOperationCurrentPositionTableData,
 } from '../interfaces/operation-sighting-table';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import { OperationRealTimeStateStore } from '../../states/operation-real-time.state';
+import {
+    OperationRealTimeStateQuery,
+    OperationRealTimeStateStore,
+} from '../../states/operation-real-time.state';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -148,6 +151,7 @@ export class OperationRealTimeService extends BaseService {
         private operationSightingAddFormService: OperationSightingAddFormService,
         private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
         private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
+        private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
         private readonly operationService: OperationService,
         private readonly operationSightingService: OperationSightingService
     ) {
@@ -757,5 +761,25 @@ export class OperationRealTimeService extends BaseService {
             );
     }
 
-    // fetchOperationCurrentPosition(): Observable<void> {}
+    fetchOperationCurrentPosition(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+
+        return this.operationRealTimeStateQuery.operations$.pipe(
+            take(1),
+            switchMap((operations) =>
+                forkJoin(
+                    operations.map((op) =>
+                        this.operationService.findOneWithCurrentPosition(
+                            op.operationId,
+                            qb
+                        )
+                    )
+                )
+            ),
+            tap((data) => {
+                this.operationRealTimeStateStore.setCurrentPositions(data);
+            }),
+            map(() => undefined)
+        );
+    }
 }
