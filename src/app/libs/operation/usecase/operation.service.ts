@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { Pagination } from 'src/app/core/utils/pagination';
-import { TripOperationListDetailsDto } from '../../trip/usecase/dtos/trip-operation-list-details.dto';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
+import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
 import { OperationDetailsDto } from './dtos/operation-details.dto';
 
 @Injectable({ providedIn: 'root' })
@@ -19,14 +19,7 @@ export class OperationService {
     findOneWithCurrentPosition(
         operationId: string,
         qb: RequestQueryBuilder
-    ): Observable<{
-        operation: OperationDetailsDto;
-        position: {
-            prev: TripOperationListDetailsDto;
-            current: TripOperationListDetailsDto;
-            next: TripOperationListDetailsDto;
-        };
-    }> {
+    ): Observable<OperationCurrentPositionDto> {
         return this.operationQuery.findOneWithCurrentPosition(operationId, qb);
     }
 }
