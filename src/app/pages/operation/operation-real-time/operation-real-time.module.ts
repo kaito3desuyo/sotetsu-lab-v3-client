@@ -26,6 +26,11 @@ import {
     OperationRealTimeStateQuery,
     OperationRealTimeStateStore,
 } from './states/operation-real-time.state';
+import { OperationRealTimeMainCComponent } from './components/operation-real-time-main-c/operation-real-time-main-c.component';
+import { OperationRealTimeTablePComponent } from './components/operation-real-time-table-p/operation-real-time-table-p.component';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationRealTimeFormationNumberStylePipe } from './pipes/operation-real-time-formation-number-style.pipe';
+import { OperationRealTimeTimeColorPipe } from './pipes/operation-real-time-time-color.pipe';
 
 @NgModule({
     declarations: [
@@ -37,6 +42,10 @@ import {
         OperationSightingsTableLegendPresentationalComponent,
         OperationSightingsControlPanelContainerComponent,
         OperationSightingsControlPanelPresentationalComponent,
+        OperationRealTimeMainCComponent,
+        OperationRealTimeTablePComponent,
+        OperationRealTimeFormationNumberStylePipe,
+        OperationRealTimeTimeColorPipe,
     ],
     imports: [
         CommonModule,
@@ -52,6 +61,7 @@ import {
         OperationRealTimeRoutingModule,
         OperationSharedModule,
         AdsenseModule,
+        PipesModule,
     ],
     exports: [],
     providers: [

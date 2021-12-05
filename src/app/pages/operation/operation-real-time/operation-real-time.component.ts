@@ -32,10 +32,6 @@ export class OperationRealTimeComponent
                 this.titleService.setTitle(data.title);
             }
         );
-
-        this.operationRealTimeStateQuery.latestSightings$.subscribe((o) => {
-            console.log(o);
-        });
     }
 
     ngOnInit(): void {

@@ -50,6 +50,14 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import dayjs from 'dayjs';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { TripClassQuery } from 'src/app/libs/trip-class/infrastructure/queries/trip-class.query';
+import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 @Injectable()
 export class OperationRealTimeService extends BaseService {
@@ -153,7 +161,9 @@ export class OperationRealTimeService extends BaseService {
         private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
         private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
         private readonly operationService: OperationService,
-        private readonly operationSightingService: OperationSightingService
+        private readonly formationService: FormationService,
+        private readonly operationSightingService: OperationSightingService,
+        private readonly tripClassService: TripClassService
     ) {
         super();
 
@@ -713,13 +723,15 @@ export class OperationRealTimeService extends BaseService {
     // v2
 
     fetchOperationsV2(): Observable<void> {
-        const qb = new RequestQueryBuilder().setFilter([
-            {
-                field: 'calendarId',
-                operator: CondOperator.EQUALS,
-                value: this.todaysCalendarListStateQuery.todaysCalendarId,
-            },
-        ]);
+        const qb = new RequestQueryBuilder()
+            .setFilter([
+                {
+                    field: 'calendarId',
+                    operator: CondOperator.EQUALS,
+                    value: this.todaysCalendarListStateQuery.todaysCalendarId,
+                },
+            ])
+            .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
         return this.operationService.findMany(qb).pipe(
             tap((data: OperationDetailsDto[]) => {
@@ -727,6 +739,23 @@ export class OperationRealTimeService extends BaseService {
             }),
             map(() => undefined)
         );
+    }
+
+    fetchFormationsV2(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+
+        return this.formationService
+            .findManyBySpeficicDate(qb, {
+                date: dayjs()
+                    .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
+                    .format('YYYY-MM-DD'),
+            })
+            .pipe(
+                tap((data: FormationDetailsDto[]) => {
+                    this.operationRealTimeStateStore.setFormations(data);
+                }),
+                map(() => undefined)
+            );
     }
 
     fetchOperationSightings(): Observable<void> {
@@ -778,6 +807,25 @@ export class OperationRealTimeService extends BaseService {
             ),
             tap((data) => {
                 this.operationRealTimeStateStore.setCurrentPositions(data);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchTripClassesV2(): Observable<void> {
+        const qb = new RequestQueryBuilder()
+            .setJoin([{ field: 'service' }])
+            .setFilter([
+                {
+                    field: 'service.serviceName',
+                    operator: CondOperator.EQUALS,
+                    value: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
+                },
+            ]);
+
+        return this.tripClassService.findMany(qb).pipe(
+            tap((data: TripClassDetailsDto[]) => {
+                this.operationRealTimeStateStore.setTripClasses(data);
             }),
             map(() => undefined)
         );

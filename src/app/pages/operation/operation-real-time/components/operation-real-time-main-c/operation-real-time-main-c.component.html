@@ -1,0 +1,50 @@
+<p>operation-real-time-main-c works!</p>
+<div
+    [fxLayout.gt-sm]="'row'"
+    [fxLayout.lt-md]="'column'"
+    [fxLayoutGap.gt-sm]="'64px'"
+    [fxLayoutGap.lt-md]="'24px'"
+>
+    <div
+        [fxFlex.gt-sm]="'calc(50% - 64px)'"
+        [fxFlex.lt-md]="'auto'"
+        fxLayout="column"
+        fxLayoutGap="24px"
+    >
+        <div style="overflow-x: auto" class="mat-elevation-z1">
+            <app-operation-real-time-table-p
+                [mode]="'operation'"
+                [todaysCalendarId]="todaysCalendarId$ | async"
+                [operations]="operations$ | async"
+                [formations]="formations$ | async"
+                [latestSightings]="latestOperationSightings$ | async"
+                [currentPositions]="currentPositions$ | async"
+                [stations]="stations$ | async"
+                [tripClasses]="tripClasses$ | async"
+            ></app-operation-real-time-table-p>
+        </div>
+
+        <ng-adsense [adSlot]="8391993434"></ng-adsense>
+    </div>
+    <div
+        [fxFlex.gt-sm]="'calc(50% - 64px)'"
+        [fxFlex.lt-md]="'auto'"
+        fxLayout="column"
+        fxLayoutGap="24px"
+    >
+        <div style="overflow-x: auto" class="mat-elevation-z1">
+            <app-operation-real-time-table-p
+                [mode]="'formation'"
+                [todaysCalendarId]="todaysCalendarId$ | async"
+                [operations]="operations$ | async"
+                [formations]="formations$ | async"
+                [latestSightings]="latestFormationSightings$ | async"
+                [currentPositions]="currentPositions$ | async"
+                [stations]="stations$ | async"
+                [tripClasses]="tripClasses$ | async"
+            ></app-operation-real-time-table-p>
+        </div>
+
+        <ng-adsense [adSlot]="3946316114"></ng-adsense>
+    </div>
+</div>
