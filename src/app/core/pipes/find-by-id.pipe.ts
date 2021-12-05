@@ -4,7 +4,7 @@ import { Pipe, PipeTransform } from '@angular/core';
     name: 'findById',
 })
 export class FindByIdPipe implements PipeTransform {
-    transform<T>(id: string, array: T[], propertyName: string): T {
-        return array.find((o) => o[propertyName] === id);
+    transform<T>(id: string, setting: { array: T[]; propertyName: string }): T {
+        return setting.array.find((o) => o[setting.propertyName] === id);
     }
 }
