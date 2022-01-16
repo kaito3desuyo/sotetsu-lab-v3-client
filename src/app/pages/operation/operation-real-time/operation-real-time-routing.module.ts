@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Routes } from '@angular/router';
 import { OperationRealTimeComponent } from './operation-real-time.component';
 import { RouterModule } from '@angular/router';
-import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
+import { OperationRealTimeResolverService } from './services/operation-real-time-resolver.service';
 import moment from 'moment';
 
 const routes: Routes = [

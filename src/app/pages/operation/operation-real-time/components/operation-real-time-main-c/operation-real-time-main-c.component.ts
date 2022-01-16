@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { RxState } from '@rx-angular/state';
-import { forkJoin, of, Subject } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { forkJoin, of, Subject, timer } from 'rxjs';
+import { map, skip, switchMap, tap } from 'rxjs/operators';
 import { NotificationService } from 'src/app/general/services/notification.service';
 import { SocketService } from 'src/app/general/services/socket.service';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/services/operation-post-card.service';
-import { OperationRealTimeService } from '../../general/services/operation-real-time.service';
+import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import {
     OperationRealTimeStateQuery,
     OperationRealTimeStateStore,
@@ -62,6 +62,16 @@ export class OperationRealTimeMainCComponent {
         this.state.hold(this.onToggledVisibleCurrentPosition$, (bool) => {
             this.operationRealTimeStateStore.setIsVisibleCurrentPosition(bool);
         });
+
+        // 1分ごとに現在位置を更新
+        this.state.hold(
+            timer(0, 1000 * 60).pipe(
+                skip(1),
+                switchMap(() =>
+                    this.operationRealTimeService.fetchOperationCurrentPosition()
+                )
+            )
+        );
 
         // 自分が運用目撃情報を投稿したとき
         this.state.hold(

@@ -19,15 +19,8 @@ import { OperationRealTimeHeaderPComponent } from './components/operation-real-t
 import { OperationRealTimeLegendPComponent } from './components/operation-real-time-legend-p/operation-real-time-legend-p.component';
 import { OperationRealTimeMainCComponent } from './components/operation-real-time-main-c/operation-real-time-main-c.component';
 import { OperationRealTimeTablePComponent } from './components/operation-real-time-table-p/operation-real-time-table-p.component';
-import { OperationSightingsControlPanelContainerComponent } from './general/components/operation-sightings-control-panel-container/operation-sightings-control-panel-container.component';
-import { OperationSightingsControlPanelPresentationalComponent } from './general/components/operation-sightings-control-panel-presentational/operation-sightings-control-panel-presentational.component';
-import { OperationSightingsTableByFormationContainerComponent } from './general/components/operation-sightings-table-by-formation-container/operation-sightings-table-by-formation-container.component';
-import { OperationSightingsTableByOperationContainerComponent } from './general/components/operation-sightings-table-by-operation-container/operation-sightings-table-by-operation-container.component';
-import { OperationSightingsTableLegendContainerComponent } from './general/components/operation-sightings-table-legend-container/operation-sightings-table-legend-container.component';
-import { OperationSightingsTableLegendPresentationalComponent } from './general/components/operation-sightings-table-legend-presentational/operation-sightings-table-legend-presentational.component';
-import { OperationSightingsTablePresentationalComponent } from './general/components/operation-sightings-table-presentational/operation-sightings-table-presentational.component';
-import { OperationRealTimeResolverService } from './general/services/operation-real-time-resolver.service';
-import { OperationRealTimeService } from './general/services/operation-real-time.service';
+import { OperationRealTimeResolverService } from './services/operation-real-time-resolver.service';
+import { OperationRealTimeService } from './services/operation-real-time.service';
 import { OperationRealTimeRoutingModule } from './operation-real-time-routing.module';
 import { OperationRealTimeComponent } from './operation-real-time.component';
 import { OperationRealTimeFormationNumberStylePipe } from './pipes/operation-real-time-formation-number-style.pipe';
@@ -40,13 +33,6 @@ import {
 @NgModule({
     declarations: [
         OperationRealTimeComponent,
-        OperationSightingsTableByOperationContainerComponent,
-        OperationSightingsTableByFormationContainerComponent,
-        OperationSightingsTablePresentationalComponent,
-        OperationSightingsTableLegendContainerComponent,
-        OperationSightingsTableLegendPresentationalComponent,
-        OperationSightingsControlPanelContainerComponent,
-        OperationSightingsControlPanelPresentationalComponent,
         OperationRealTimeMainCComponent,
         OperationRealTimeTablePComponent,
         OperationRealTimeFormationNumberStylePipe,
