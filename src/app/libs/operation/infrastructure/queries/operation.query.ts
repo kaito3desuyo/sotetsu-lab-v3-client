@@ -5,12 +5,13 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { buildTripOperationListDetailsDto } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list-dto.builder';
-import { TripOperationListModel } from 'src/app/libs/trip/infrastructure/models/trip-operation-list.model';
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
+import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import { buildOperationDetailsDto } from '../builders/operation-dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
+import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
 
 @Injectable({ providedIn: 'root' })
@@ -69,6 +70,31 @@ export class OperationQuery {
                                 data.position.next
                             ),
                         },
+                    };
+                })
+            );
+    }
+
+    findOneWithTrips(
+        operationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<OperationTripsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<OperationTripsModel>(
+                this.apiUrl + '/' + operationId + '/trips',
+                {
+                    params: httpParams,
+                }
+            )
+            .pipe(
+                map((data) => {
+                    return {
+                        operation: buildOperationDetailsDto(data.operation),
+                        trips: data.trips.map((o) =>
+                            buildTripOperationListDetailsDto(o)
+                        ),
                     };
                 })
             );

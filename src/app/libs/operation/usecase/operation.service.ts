@@ -5,6 +5,7 @@ import { Pagination } from 'src/app/core/utils/pagination';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
 import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
 import { OperationDetailsDto } from './dtos/operation-details.dto';
+import { OperationTripsDto } from './dtos/operation-trips.dto';
 
 @Injectable({ providedIn: 'root' })
 export class OperationService {
@@ -21,5 +22,12 @@ export class OperationService {
         qb: RequestQueryBuilder
     ): Observable<OperationCurrentPositionDto> {
         return this.operationQuery.findOneWithCurrentPosition(operationId, qb);
+    }
+
+    findOneWithTrips(
+        operationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<OperationTripsDto> {
+        return this.operationQuery.findOneWithTrips(operationId, qb);
     }
 }
