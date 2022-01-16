@@ -57,6 +57,7 @@ export class OperationRealTimeTablePComponent {
     >();
     readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
     readonly onChangedInputTripClasses$ = new Subject<TripClassDetailsDto[]>();
+    readonly onChangedInputIsVisibleCurrentPosition$ = new Subject<boolean>();
     readonly onChangedMatSort$ = new Subject<Sort>();
 
     @Input() set mode(mode: 'operation' | 'formation') {
@@ -93,6 +94,10 @@ export class OperationRealTimeTablePComponent {
         this.onChangedInputTripClasses$.next(classes);
     }
 
+    @Input() set isVisibleCurrentPosition(bool: boolean) {
+        this.onChangedInputIsVisibleCurrentPosition$.next(bool);
+    }
+
     @ViewChild(MatSort, { static: true }) sort: MatSort;
 
     constructor(private readonly state: RxState<State>) {
@@ -112,26 +117,45 @@ export class OperationRealTimeTablePComponent {
         this.state.connect('tripClasses', this.onChangedInputTripClasses$);
         this.state.connect(
             'displayedColumns',
-            this.onChangedInputMode$.pipe(
-                map((mode) => {
+            combineLatest([
+                this.onChangedInputMode$,
+                this.onChangedInputIsVisibleCurrentPosition$,
+            ]).pipe(
+                map(([mode, isVisibleCurrentPosition]) => {
                     if (mode === 'operation') {
-                        return [
+                        const array = [
                             'operationNumber',
                             'formationNumber',
                             'currentPosition',
                             'sightingTime',
                             'updatedAt',
                         ];
+
+                        if (!isVisibleCurrentPosition) {
+                            return array.filter(
+                                (column) => column !== 'currentPosition'
+                            );
+                        }
+
+                        return array;
                     }
 
                     if (mode === 'formation') {
-                        return [
+                        const array = [
                             'formationNumber',
                             'operationNumber',
                             'currentPosition',
                             'sightingTime',
                             'updatedAt',
                         ];
+
+                        if (!isVisibleCurrentPosition) {
+                            return array.filter(
+                                (column) => column !== 'currentPosition'
+                            );
+                        }
+
+                        return array;
                     }
 
                     return [];

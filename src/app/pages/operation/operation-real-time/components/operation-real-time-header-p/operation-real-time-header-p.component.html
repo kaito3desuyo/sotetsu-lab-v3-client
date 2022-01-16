@@ -1,0 +1,8 @@
+<div fxLayout="column" fxLayoutGap="8px">
+    <h2 class="mat-h2">リアルタイム運用情報</h2>
+    <small>
+        最終更新時刻：{{
+            finalUpdateTime$ | async | date: 'yyyy/MM/dd HH:mm:ss'
+        }}
+    </small>
+</div>

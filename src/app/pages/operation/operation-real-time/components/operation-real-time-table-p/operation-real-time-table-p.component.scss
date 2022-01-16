@@ -3,6 +3,10 @@
         margin: 0;
     }
 
+    .mat-table {
+        width: 100%;
+    }
+
     .mat-cell {
         white-space: nowrap;
     }
@@ -12,9 +16,16 @@
         padding-left: 16px;
     }
 
-    .mat-column-operationNumber,
-    .mat-column-formationNumber {
+    .mat-column-operationNumber {
+        width: 48px;
         min-width: 48px;
+        max-width: 48px;
+    }
+
+    .mat-column-formationNumber {
+        width: 48px;
+        min-width: 48px;
+        max-width: 48px;
     }
 
     .mat-column-currentPosition {

@@ -1,48 +1,22 @@
-import { Component, Inject, Injector, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BaseComponent } from 'src/app/general/classes/base-component';
-import { SocketService } from 'src/app/general/services/socket.service';
+import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/general/services/title.service';
-import { OperationRealTimeService } from './general/services/operation-real-time.service';
-import { OperationRealTimeStateQuery } from './states/operation-real-time.state';
 
 @Component({
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
     styleUrls: ['./operation-real-time.component.scss'],
+    providers: [RxState],
 })
-export class OperationRealTimeComponent
-    extends BaseComponent
-    implements OnInit, OnDestroy
-{
-    date: string;
-
+export class OperationRealTimeComponent {
     constructor(
-        @Inject(Injector) injector: Injector,
-        private route: ActivatedRoute,
-        private socketService: SocketService,
-        private titleService: TitleService,
-        private operationRealTimeService: OperationRealTimeService,
-        private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery
+        private readonly route: ActivatedRoute,
+        private readonly state: RxState<{}>,
+        private readonly titleService: TitleService
     ) {
-        super(injector);
-        this.subscription = this.route.data.subscribe(
-            (data: { date: string; title: string }) => {
-                this.date = data.date;
-                this.titleService.setTitle(data.title);
-            }
-        );
-    }
-
-    ngOnInit(): void {
-        this.operationRealTimeService.startSocketReceive();
-    }
-
-    onReceiveSubmitSighting(result: any): void {
-        this.socketService.emit('sendSighting', result);
-    }
-
-    ngOnDestroy(): void {
-        this.operationRealTimeService.stopSocketReceive();
+        this.state.hold(this.route.data, (data: { title: string }) => {
+            this.titleService.setTitle(data.title);
+        });
     }
 }

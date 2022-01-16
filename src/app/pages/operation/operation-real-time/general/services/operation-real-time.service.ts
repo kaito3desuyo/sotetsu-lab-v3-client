@@ -767,9 +767,14 @@ export class OperationRealTimeService extends BaseService {
         return this.operationSightingService
             .findManyLatestGroupByOperation(qb)
             .pipe(
-                tap((data: OperationSightingDetailsDto[]) =>
-                    this.operationRealTimeStateStore.setOperationSightings(data)
-                ),
+                tap((data: OperationSightingDetailsDto[]) => {
+                    this.operationRealTimeStateStore.setOperationSightings(
+                        data
+                    );
+                }),
+                tap(() => {
+                    this.operationRealTimeStateStore.updateFinalUpdateTime();
+                }),
                 map(() => undefined)
             );
     }
@@ -783,9 +788,14 @@ export class OperationRealTimeService extends BaseService {
         return this.operationSightingService
             .findManyLatestGroupByFormation(qb)
             .pipe(
-                tap((data: OperationSightingDetailsDto[]) =>
-                    this.operationRealTimeStateStore.setFormationSightings(data)
-                ),
+                tap((data: OperationSightingDetailsDto[]) => {
+                    this.operationRealTimeStateStore.setFormationSightings(
+                        data
+                    );
+                }),
+                tap(() => {
+                    this.operationRealTimeStateStore.updateFinalUpdateTime();
+                }),
                 map(() => undefined)
             );
     }
