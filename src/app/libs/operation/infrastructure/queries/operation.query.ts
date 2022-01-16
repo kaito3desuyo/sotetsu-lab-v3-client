@@ -4,9 +4,13 @@ import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
+import { buildTripOperationListDetailsDto } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list-dto.builder';
+import { TripOperationListModel } from 'src/app/libs/trip/infrastructure/models/trip-operation-list.model';
 import { environment } from 'src/environments/environment';
+import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
 import { buildOperationDetailsDto } from '../builders/operation-dto.builder';
+import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationModel } from '../models/operation.model';
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +37,39 @@ export class OperationQuery {
                               Pagination.getApiPageSettings(res)
                           )
                         : res.body.map((o) => buildOperationDetailsDto(o));
+                })
+            );
+    }
+
+    findOneWithCurrentPosition(
+        operationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<OperationCurrentPositionDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<OperationCurrentPositionModel>(
+                this.apiUrl + '/' + operationId + '/current-position',
+                {
+                    params: httpParams,
+                }
+            )
+            .pipe(
+                map((data) => {
+                    return {
+                        operation: buildOperationDetailsDto(data.operation),
+                        position: {
+                            prev: buildTripOperationListDetailsDto(
+                                data.position.prev
+                            ),
+                            current: buildTripOperationListDetailsDto(
+                                data.position.current
+                            ),
+                            next: buildTripOperationListDetailsDto(
+                                data.position.next
+                            ),
+                        },
+                    };
                 })
             );
     }

@@ -6,6 +6,7 @@ import {
     StoreConfig,
 } from '@datorama/akita';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import { flatten, uniqBy } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { RouteDetailsDto } from '../libs/route/usecase/dtos/route-details.dto';
@@ -81,6 +82,16 @@ export class RouteStationListStateStore extends EntityStore<RouteStationListStat
 @Injectable({ providedIn: 'root' })
 export class RouteStationListStateQuery extends QueryEntity<RouteStationListState> {
     routeStations$ = this.selectAll();
+    stations$ = this.selectAll().pipe(
+        map((routes) => {
+            const stations = flatten(
+                routes.map((route) =>
+                    route.routeStationLists.map((rsl) => rsl.station)
+                )
+            );
+            return uniqBy(stations, (o) => o.stationId);
+        })
+    );
 
     constructor(protected store: RouteStationListStateStore) {
         super(store);
