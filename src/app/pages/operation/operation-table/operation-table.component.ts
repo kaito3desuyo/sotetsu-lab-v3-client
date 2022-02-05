@@ -1,9 +1,7 @@
-import { Component, OnInit, Inject, Injector } from '@angular/core';
-import { BaseComponent } from 'src/app/general/classes/base-component';
+import { Component, Inject, Injector } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { BaseComponent } from 'src/app/general/classes/base-component';
 import { TitleService } from 'src/app/general/services/title.service';
-import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 
 @Component({
     selector: 'app-operation-table',
@@ -16,8 +14,7 @@ export class OperationTableComponent extends BaseComponent {
     constructor(
         @Inject(Injector) injector: Injector,
         private route: ActivatedRoute,
-        private titleService: TitleService,
-        private readonly operationService: OperationService
+        private titleService: TitleService
     ) {
         super(injector);
         this.subscription = this.route.data.subscribe(
@@ -28,12 +25,5 @@ export class OperationTableComponent extends BaseComponent {
         this.subscription = this.route.paramMap.subscribe((params) => {
             this.calendarId = params.get('calendar_id');
         });
-
-        this.operationService
-            .findOneWithTrips(
-                'f653fee4-6ecb-470d-96d7-36880c815047',
-                new RequestQueryBuilder()
-            )
-            .subscribe(console.log);
     }
 }

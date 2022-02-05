@@ -18,47 +18,47 @@
             fxLayoutAlign="center start"
             style="overflow-x: visible"
         >
-            <ng-container *ngFor="let operationTrip of operationTrips">
+            <ng-container *ngFor="let operationTrips of allOperationTrips">
                 <ng-container
                     *ngTemplateOutlet="
                         container;
-                        context: { operationTrip: operationTrip }
+                        context: { operationTrips: operationTrips }
                     "
                 ></ng-container>
             </ng-container>
             <div
-                *ngFor="let operationTrip of operationTrips"
+                *ngFor="let operationTrips of allOperationTrips"
                 class="mx-12 blank"
             ></div>
         </div>
     </mat-card-content>
 </mat-card>
 
-<ng-template #container let-operationTrip="operationTrip">
+<ng-template #container let-operationTrips="operationTrips">
     <section class="mx-12">
         <header>
             <h4
                 class="py-8"
                 [ngStyle]="{
                     background: getOperationNumberColor(
-                        operationTrip.operationNumber
+                        operationTrips.operation.operationNumber
                     )
                 }"
             >
                 <a
                     [routerLink]="[
                         '/operation/route-diagram',
-                        { operation_id: operationTrip.id }
+                        { operation_id: operationTrips.operation.operationId }
                     ]"
                 >
-                    {{ operationTrip.operationNumber }}
+                    {{ operationTrips.operation.operationNumber }}
                 </a>
             </h4>
         </header>
         <div role="main">
             <ng-container
                 *ngFor="
-                    let tripOperationList of operationTrip.tripOperationLists;
+                    let tripOperationList of operationTrips.trips;
                     let i = index
                 "
             >
@@ -289,11 +289,10 @@
                 <div
                     *ngIf="
                         tripOperationList.trip.tripDirection ===
-                            (operationTrip?.tripOperationLists)[i + 1]?.trip
+                            (operationTrips?.trips)[i + 1]?.trip
                                 ?.tripDirection &&
                         !tripOperationList.trip.depotIn &&
-                        !(operationTrip?.tripOperationLists)[i + 1]?.trip
-                            ?.depotOut
+                        !(operationTrips?.trips)[i + 1]?.trip?.depotOut
                     "
                 >
                     <ng-container

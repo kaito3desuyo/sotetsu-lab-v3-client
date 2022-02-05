@@ -5,6 +5,7 @@ import { find } from 'lodash-es';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import moment from 'moment';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 
 @Component({
     selector: 'app-operation-table-table-presentational',
@@ -17,6 +18,9 @@ export class OperationTableTablePresentationalComponent {
     @Input() stations: IStation[];
     @Input() tripClasses: ITripClass[];
     @Input() calendar: ICalendar;
+
+    // v2
+    @Input() allOperationTrips: OperationTripsDto[];
 
     constructor() {}
 

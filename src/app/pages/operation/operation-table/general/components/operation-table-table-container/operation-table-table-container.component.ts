@@ -5,6 +5,7 @@ import { OperationTableService } from '../../services/operation-table.service';
 import { IStation } from 'src/app/general/interfaces/station';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { OperationTableStateQuery } from '../../../states/operation-table.state';
 
 @Component({
     selector: 'app-operation-table-table-container',
@@ -17,7 +18,14 @@ export class OperationTableTableContainerComponent {
     tripClasses$: Observable<ITripClass[]>;
     calendar$: Observable<ICalendar>;
 
-    constructor(private operationTableService: OperationTableService) {
+    // v2
+    readonly allOperationTrips$ =
+        this.operationTableStateQuery.allOperationTrips$;
+
+    constructor(
+        private operationTableService: OperationTableService,
+        private readonly operationTableStateQuery: OperationTableStateQuery
+    ) {
         this.operationTrips$ = this.operationTableService.operationTrips$;
         this.stations$ = this.operationTableService.stations$;
         this.tripClasses$ = this.operationTableService.tripClasses$;

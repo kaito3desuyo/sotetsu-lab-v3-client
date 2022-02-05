@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { IOperation } from 'src/app/general/interfaces/operation';
-import { BehaviorSubject, Observable, pipe, of } from 'rxjs';
+import { BehaviorSubject, Observable, pipe, of, forkJoin } from 'rxjs';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
-import { map, tap, flatMap } from 'rxjs/operators';
+import { map, tap, flatMap, take, switchMap } from 'rxjs/operators';
 import { OperationModel } from 'src/app/general/models/operation/operation-model';
 import { IStation } from 'src/app/general/interfaces/station';
 import { StationApiService } from 'src/app/general/api/station-api.service';
@@ -15,6 +15,13 @@ import { ReadServiceDto } from 'src/app/general/models/service/service-dto';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import {
+    OperationTableStateQuery,
+    OperationTableStateStore,
+} from '../../states/operation-table.state';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
 @Injectable()
 export class OperationTableService {
@@ -30,14 +37,12 @@ export class OperationTableService {
     >([]);
     calendars$ = this._calendars$.asObservable();
 
-    private _calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<
-        ICalendar
-    >(null);
+    private _calendar$: BehaviorSubject<ICalendar> =
+        new BehaviorSubject<ICalendar>(null);
     calendar$ = this._calendar$.asObservable();
 
-    private _operationTrips$: BehaviorSubject<
-        IOperation[]
-    > = new BehaviorSubject<IOperation[]>([]);
+    private _operationTrips$: BehaviorSubject<IOperation[]> =
+        new BehaviorSubject<IOperation[]>([]);
     operationTrips$ = this._operationTrips$.asObservable();
 
     private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
@@ -55,7 +60,10 @@ export class OperationTableService {
         private serviceApi: ServiceApiService,
         private operationApi: OperationApiService,
         private stationApi: StationApiService,
-        private tripApi: TripApiService
+        private tripApi: TripApiService,
+        private readonly operationService: OperationService,
+        private readonly operationTableStateStore: OperationTableStateStore,
+        private readonly operationTableStateQuery: OperationTableStateQuery
     ) {}
 
     fetchCalendars(): Observable<ICalendar> {
@@ -98,6 +106,7 @@ export class OperationTableService {
                     );
                 }),
                 tap((data) => {
+                    console.log(data);
                     this._operationTrips$.next(data);
                 }),
                 map(() => null)
@@ -142,5 +151,52 @@ export class OperationTableService {
                 }),
                 map(() => null)
             );
+    }
+
+    // v2
+
+    fetchOperationsByCalendarId(calendarId: string): Observable<void> {
+        const qb = new RequestQueryBuilder()
+            .setFilter({
+                field: 'calendarId',
+                operator: CondOperator.EQUALS,
+                value: calendarId,
+            })
+            .setFilter({
+                field: 'operationNumber',
+                operator: CondOperator.NOT_EQUALS,
+                value: '100',
+            })
+            .sortBy({
+                field: 'operationNumber',
+                order: 'ASC',
+            });
+
+        return this.operationService.findMany(qb).pipe(
+            tap((operations: OperationDetailsDto[]) => {
+                this.operationTableStateStore.setOperations(operations);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchAllOperationTrips(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+
+        return forkJoin(
+            this.operationTableStateQuery.operations.map((operation) =>
+                this.operationService.findOneWithTrips(
+                    operation.operationId,
+                    qb
+                )
+            )
+        ).pipe(
+            tap((allOperationTrips) => {
+                this.operationTableStateStore.setAllOperationTrips(
+                    allOperationTrips
+                );
+            }),
+            map(() => undefined)
+        );
     }
 }
