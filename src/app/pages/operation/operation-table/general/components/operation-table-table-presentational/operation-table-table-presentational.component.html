@@ -5,9 +5,9 @@
                 calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
             ]"
         >
-            <h3>
+            <h3 style="line-height: 1.25">
                 {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
-                改正
+                改正<br />
                 {{ calendar.calendarName }}
             </h3>
         </mat-toolbar>

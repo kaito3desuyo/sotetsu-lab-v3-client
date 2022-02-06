@@ -7,6 +7,7 @@ import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { OperationTableStateQuery } from '../../../states/operation-table.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'app-operation-table-table-container',
@@ -20,8 +21,10 @@ export class OperationTableTableContainerComponent {
     // calendar$: Observable<ICalendar>;
 
     // v2
-    readonly calendar$ = this.calendarListStateQuery.findByCalendarId(
-        this.operationTableStateQuery.calendarId
+    readonly calendar$ = this.operationTableStateQuery.calendarId$.pipe(
+        switchMap((calendarId) =>
+            this.calendarListStateQuery.findByCalendarId(calendarId)
+        )
     );
     readonly allOperationTrips$ =
         this.operationTableStateQuery.allOperationTrips$;

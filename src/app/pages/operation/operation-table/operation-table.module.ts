@@ -19,12 +19,18 @@ import {
     OperationTableStateQuery,
     OperationTableStateStore,
 } from './states/operation-table.state';
+import { OperationTableMainCComponent } from './components/operation-table-main-c/operation-table-main-c.component';
+import { OperationTableHeaderCComponent } from './components/operation-table-header-c/operation-table-header-c.component';
+import { OperationTableHeaderPComponent } from './components/operation-table-header-p/operation-table-header-p.component';
 
 @NgModule({
     declarations: [
         OperationTableComponent,
         OperationTableTableContainerComponent,
         OperationTableTablePresentationalComponent,
+        OperationTableMainCComponent,
+        OperationTableHeaderCComponent,
+        OperationTableHeaderPComponent,
     ],
     imports: [
         CommonModule,

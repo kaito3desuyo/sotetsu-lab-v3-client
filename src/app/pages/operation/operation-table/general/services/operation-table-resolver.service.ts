@@ -16,6 +16,11 @@ export class OperationTableResolverService
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         const calendarId = route.paramMap.get('calendar_id');
+
+        if (!calendarId) {
+            return of(undefined);
+        }
+
         this.operationTableService.calendarId = calendarId;
         this.operationTableStateStore.setCalendarId(calendarId);
 
