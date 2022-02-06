@@ -1,13 +1,5 @@
 <div fxLayout="column" fxLayoutGap="16px">
-    <app-operation-table-table-container
-        *ngIf="(calendarId$ | async) !== null"
-    ></app-operation-table-table-container>
-
-    <div *ngIf="(calendarId$ | async) === null">
-        <p>下の検索フォームからダイヤを選択してください。</p>
-    </div>
-
+    <app-operation-table-table-container></app-operation-table-table-container>
     <ng-adsense [adSlot]="6887340076"></ng-adsense>
-
     <app-operation-search-card-c></app-operation-search-card-c>
 </div>

@@ -1,5 +1,5 @@
 <mat-card>
-    <mat-card-title>
+    <mat-card-title *ngIf="calendar">
         <mat-toolbar
             [ngClass]="[
                 calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
@@ -17,11 +17,12 @@
             fxLayout="row wrap"
             fxLayoutAlign="center start"
             style="overflow-x: visible"
+            *ngIf="calendar"
         >
             <ng-container *ngFor="let operationTrips of allOperationTrips">
                 <ng-container
                     *ngTemplateOutlet="
-                        container;
+                        operationTripsList;
                         context: { operationTrips: operationTrips }
                     "
                 ></ng-container>
@@ -31,18 +32,19 @@
                 class="mx-12 blank"
             ></div>
         </div>
+        <p *ngIf="!calendar">ダイヤを設定して検索してください</p>
     </mat-card-content>
 </mat-card>
 
-<ng-template #container let-operationTrips="operationTrips">
+<ng-template #operationTripsList let-operationTrips="operationTrips">
     <section class="mx-12">
         <header>
             <h4
                 class="py-8"
                 [ngStyle]="{
-                    background: getOperationNumberColor(
+                    background:
                         operationTrips.operation.operationNumber
-                    )
+                        | operationNumberColor
                 }"
             >
                 <a
@@ -55,237 +57,19 @@
                 </a>
             </h4>
         </header>
-        <div role="main">
+        <div>
             <ng-container
                 *ngFor="
                     let tripOperationList of operationTrips.trips;
                     let i = index
                 "
             >
-                <div fxLayout="row" class="row">
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 0"
-                    >
-                        <span
-                            class="kigou"
-                            *ngIf="tripOperationList.trip.depotOut"
-                            >◯</span
-                        >
-                        <span
-                            class="kigou"
-                            *ngIf="!tripOperationList.trip.depotOut"
-                            >┗</span
-                        >
-                    </ng-container>
-
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 1"
-                    >
-                        <span
-                            class="kigou"
-                            *ngIf="tripOperationList.trip.depotIn"
-                            >△</span
-                        >
-                        <span
-                            class="kigou"
-                            *ngIf="!tripOperationList.trip.depotIn"
-                            >┏</span
-                        >
-                    </ng-container>
-
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 0"
-                    >
-                        <span class="station-name">
-                            {{
-                                findStationName(
-                                    tripOperationList.startTime.stationId
-                                )
-                            }}
-                        </span>
-                        <span class="monoscape">
-                            <ng-container
-                                *ngIf="
-                                    tripOperationList.startTime.departureTime
-                                "
-                            >
-                                {{
-                                    convertTimeToDateObject(
-                                        tripOperationList.startTime
-                                            .departureTime
-                                    ) | date: 'HHmm'
-                                }}
-                            </ng-container>
-                            <ng-container
-                                *ngIf="
-                                    !tripOperationList.startTime.departureTime
-                                "
-                            >
-                                &nbsp;&nbsp;&nbsp;&nbsp;
-                            </ng-container>
-                        </span>
-                        <span>→</span>
-                    </ng-container>
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 1"
-                    >
-                        <span class="station-name">
-                            {{
-                                findStationName(
-                                    tripOperationList.endTime.stationId
-                                )
-                            }}
-                        </span>
-                        <span class="monoscape">
-                            <ng-container
-                                *ngIf="tripOperationList.endTime.arrivalTime"
-                            >
-                                {{
-                                    convertTimeToDateObject(
-                                        tripOperationList.endTime.arrivalTime
-                                    ) | date: 'HHmm'
-                                }}
-                            </ng-container>
-                            <ng-container
-                                *ngIf="!tripOperationList.endTime.arrivalTime"
-                            >
-                                &nbsp;&nbsp;&nbsp;&nbsp;
-                            </ng-container>
-                        </span>
-                        <span>←</span>
-                    </ng-container>
-
-                    <div class="trip-class">
-                        <a
-                            [routerLink]="[
-                                '/timetable',
-                                'all-line',
-                                {
-                                    calendar_id: calendar.id,
-                                    trip_direction:
-                                        tripOperationList.trip.tripDirection,
-                                    trip_block_id:
-                                        tripOperationList.trip.tripBlockId
-                                }
-                            ]"
-                        >
-                            <span
-                                class="trip-class-name"
-                                [ngStyle]="{
-                                    color: findTripClassColor(
-                                        tripOperationList.trip.tripClassId
-                                    )
-                                }"
-                                >{{
-                                    findTripClassName(
-                                        tripOperationList.trip.tripClassId
-                                    )
-                                }}</span
-                            >
-                            <span
-                                class="monoscape"
-                                [ngStyle]="{
-                                    color: findTripClassColor(
-                                        tripOperationList.trip.tripClassId
-                                    )
-                                }"
-                                >{{ tripOperationList.trip.tripNumber }}</span
-                            >
-                        </a>
-                    </div>
-
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 0"
-                    >
-                        <span>→</span>
-                        <span class="monoscape">
-                            <ng-container
-                                *ngIf="tripOperationList.endTime.arrivalTime"
-                            >
-                                {{
-                                    convertTimeToDateObject(
-                                        tripOperationList.endTime.arrivalTime
-                                    ) | date: 'HHmm'
-                                }}
-                            </ng-container>
-                            <ng-container
-                                *ngIf="!tripOperationList.endTime.arrivalTime"
-                            >
-                                &nbsp;&nbsp;&nbsp;&nbsp;
-                            </ng-container>
-                        </span>
-                        <span class="station-name">
-                            {{
-                                findStationName(
-                                    tripOperationList.endTime.stationId
-                                )
-                            }}
-                        </span>
-                    </ng-container>
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 1"
-                    >
-                        <span>←</span>
-                        <span class="monoscape">
-                            <ng-container
-                                *ngIf="
-                                    tripOperationList.startTime.departureTime
-                                "
-                            >
-                                {{
-                                    convertTimeToDateObject(
-                                        tripOperationList.startTime
-                                            .departureTime
-                                    ) | date: 'HHmm'
-                                }}
-                            </ng-container>
-                            <ng-container
-                                *ngIf="
-                                    !tripOperationList.startTime.departureTime
-                                "
-                            >
-                                &nbsp;&nbsp;&nbsp;&nbsp;
-                            </ng-container>
-                        </span>
-                        <span class="station-name">
-                            {{
-                                findStationName(
-                                    tripOperationList.startTime.stationId
-                                )
-                            }}
-                        </span>
-                    </ng-container>
-
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 0"
-                    >
-                        <span
-                            class="kigou"
-                            *ngIf="tripOperationList.trip.depotIn"
-                            >△</span
-                        >
-                        <span
-                            class="kigou"
-                            *ngIf="!tripOperationList.trip.depotIn"
-                            >┓</span
-                        >
-                    </ng-container>
-
-                    <ng-container
-                        *ngIf="tripOperationList.trip.tripDirection === 1"
-                    >
-                        <span
-                            class="kigou"
-                            *ngIf="tripOperationList.trip.depotOut"
-                            >◯</span
-                        >
-                        <span
-                            class="kigou"
-                            *ngIf="!tripOperationList.trip.depotOut"
-                            >┛</span
-                        >
-                    </ng-container>
-                </div>
+                <ng-container
+                    *ngTemplateOutlet="
+                        tripRow;
+                        context: { tripOperationList: tripOperationList }
+                    "
+                ></ng-container>
                 <div
                     *ngIf="
                         tripOperationList.trip.tripDirection ===
@@ -320,4 +104,192 @@
             </ng-container>
         </div>
     </section>
+</ng-template>
+
+<ng-template #tripRow let-tripOperationList="tripOperationList">
+    <div fxLayout="row" class="row">
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotOut">◯</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotOut"
+                >┗</span
+            >
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotIn">△</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotIn">┏</span>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.startTime.stationId
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.startTime.departureTime
+                    }
+                "
+            ></ng-container>
+            <span>→</span>
+        </ng-container>
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.endTime.stationId
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.endTime.arrivalTime
+                    }
+                "
+            ></ng-container>
+            <span>←</span>
+        </ng-container>
+
+        <div class="trip-class">
+            <a
+                [routerLink]="[
+                    '/timetable',
+                    'all-line',
+                    {
+                        calendar_id: calendar.id,
+                        trip_direction: tripOperationList.trip.tripDirection,
+                        trip_block_id: tripOperationList.trip.tripBlockId
+                    }
+                ]"
+            >
+                <span
+                    class="trip-class-name"
+                    [ngStyle]="{
+                        color:
+                            tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassColor'
+                                  }
+                    }"
+                    >{{
+                        tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassName'
+                                  }
+                    }}</span
+                >
+                <span
+                    class="monoscape"
+                    [ngStyle]="{
+                        color:
+                            tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassColor'
+                                  }
+                    }"
+                    >{{ tripOperationList.trip.tripNumber }}</span
+                >
+            </a>
+        </div>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span>→</span>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.endTime.arrivalTime
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.endTime.stationId
+                    }
+                "
+            ></ng-container>
+        </ng-container>
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span>←</span>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.startTime.departureTime
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.startTime.stationId
+                    }
+                "
+            ></ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotIn">△</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotIn">┓</span>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotOut">◯</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotOut"
+                >┛</span
+            >
+        </ng-container>
+    </div>
+</ng-template>
+
+<ng-template #stationNameColumn let-stationId="stationId">
+    <span class="station-name">
+        {{
+            stationId
+                | findById
+                    : {
+                          array: stations,
+                          propertyName: 'stationId',
+                          outputPropertyName: 'stationName'
+                      }
+                | operationTableFormatStationName
+        }}
+    </span>
+</ng-template>
+
+<ng-template #timeColumn let-time="time">
+    <span class="monoscape">
+        <ng-container *ngIf="time">
+            {{
+                time
+                    | dayjs
+                        : {
+                              parseFormat: 'HH:mm:ss',
+                              format: 'HHmm'
+                          }
+            }}
+        </ng-container>
+        <ng-container *ngIf="!time">&nbsp;&nbsp;&nbsp;&nbsp;</ng-container>
+    </span>
 </ng-template>
