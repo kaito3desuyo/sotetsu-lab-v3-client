@@ -3,12 +3,14 @@ import { guid, Query, Store } from '@datorama/akita';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 type OperationTableState = {
     calendarId: string;
     operations: OperationDetailsDto[];
     allOperationTrips: OperationTripsDto[];
     stations: StationDetailsDto[];
+    tripClasses: TripClassDetailsDto[];
 };
 
 @Injectable()
@@ -20,6 +22,7 @@ export class OperationTableStateStore extends Store<OperationTableState> {
                 operations: [],
                 allOperationTrips: [],
                 stations: [],
+                tripClasses: [],
             },
             { name: `OperationTable-${guid()}` }
         );
@@ -48,6 +51,12 @@ export class OperationTableStateStore extends Store<OperationTableState> {
             stations,
         });
     }
+
+    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+        this.update({
+            tripClasses,
+        });
+    }
 }
 
 @Injectable()
@@ -56,6 +65,7 @@ export class OperationTableStateQuery extends Query<OperationTableState> {
     readonly operations$ = this.select('operations');
     readonly allOperationTrips$ = this.select('allOperationTrips');
     readonly stations$ = this.select('stations');
+    readonly tripClasses$ = this.select('tripClasses');
 
     get calendarId(): string {
         return this.getValue().calendarId;

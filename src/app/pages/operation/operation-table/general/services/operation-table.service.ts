@@ -24,6 +24,8 @@ import {
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 @Injectable()
 export class OperationTableService {
@@ -65,6 +67,7 @@ export class OperationTableService {
         private tripApi: TripApiService,
         private readonly operationService: OperationService,
         private readonly stationService: StationService,
+        private readonly tripClassService: TripClassService,
         private readonly operationTableStateStore: OperationTableStateStore,
         private readonly operationTableStateQuery: OperationTableStateQuery
     ) {}
@@ -158,16 +161,6 @@ export class OperationTableService {
 
     // v2
 
-    fetchStationsV2(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-        return this.stationService.findMany(qb).pipe(
-            tap((stations: StationDetailsDto[]) =>
-                this.operationTableStateStore.setStations(stations)
-            ),
-            map(() => undefined)
-        );
-    }
-
     fetchOperationsByCalendarId(): Observable<void> {
         const calendarId = this.operationTableStateQuery.calendarId;
         const qb = new RequestQueryBuilder()
@@ -210,6 +203,26 @@ export class OperationTableService {
                     allOperationTrips
                 );
             }),
+            map(() => undefined)
+        );
+    }
+
+    fetchStationsV2(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+        return this.stationService.findMany(qb).pipe(
+            tap((stations: StationDetailsDto[]) =>
+                this.operationTableStateStore.setStations(stations)
+            ),
+            map(() => undefined)
+        );
+    }
+
+    fetchTripClassV2(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+        return this.tripClassService.findMany(qb).pipe(
+            tap((tripClasses: TripClassDetailsDto[]) =>
+                this.operationTableStateStore.setTripClasses(tripClasses)
+            ),
             map(() => undefined)
         );
     }

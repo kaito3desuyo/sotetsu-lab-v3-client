@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { find } from 'lodash-es';
 import moment from 'moment';
-import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 @Component({
     selector: 'app-operation-table-table-presentational',
@@ -13,10 +13,10 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationTableTablePresentationalComponent {
+    @Input() calendar: CalendarDetailsDto;
     @Input() allOperationTrips: OperationTripsDto[];
     @Input() stations: StationDetailsDto[];
-    @Input() tripClasses: ITripClass[];
-    @Input() calendar: CalendarDetailsDto;
+    @Input() tripClasses: TripClassDetailsDto[];
 
     constructor() {}
 
@@ -40,7 +40,7 @@ export class OperationTableTablePresentationalComponent {
         }
         const findObj = find(
             this.tripClasses,
-            (tripClass) => tripClass.id === id
+            (tripClass) => tripClass.tripClassId === id
         );
         return findObj ? this.formatTripClassName(findObj.tripClassName) : '';
     }
@@ -51,7 +51,7 @@ export class OperationTableTablePresentationalComponent {
         }
         const findObj = find(
             this.tripClasses,
-            (tripClass) => tripClass.id === id
+            (tripClass) => tripClass.tripClassId === id
         );
         return findObj ? findObj.tripClassColor : '';
     }
