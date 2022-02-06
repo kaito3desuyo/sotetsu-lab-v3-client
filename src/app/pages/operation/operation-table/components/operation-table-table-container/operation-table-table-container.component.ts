@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { switchMap } from 'rxjs/operators';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { OperationTableStateQuery } from '../../../states/operation-table.state';
+import { OperationTableStateQuery } from '../../states/operation-table.state';
 
 @Component({
     selector: 'app-operation-table-table-container',

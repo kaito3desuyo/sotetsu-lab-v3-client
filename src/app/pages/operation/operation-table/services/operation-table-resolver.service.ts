@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, mergeMap } from 'rxjs/operators';
-import { OperationTableStateStore } from '../../states/operation-table.state';
+import { OperationTableStateStore } from '../states/operation-table.state';
 import { OperationTableService } from './operation-table.service';
 
 @Injectable()

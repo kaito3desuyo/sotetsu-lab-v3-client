@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { OperationTableComponent } from './operation-table.component';
-import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
+import { OperationTableResolverService } from './services/operation-table-resolver.service';
 
 const routes: Routes = [
     {
