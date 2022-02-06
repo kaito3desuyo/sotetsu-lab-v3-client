@@ -1,29 +1,41 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OperationTableRoutingModule } from './operation-table-routing.module';
-import { OperationTableComponent } from './operation-table.component';
-import { OperationTableTableContainerComponent } from './general/components/operation-table-table-container/operation-table-table-container.component';
-import { OperationTableTablePresentationalComponent } from './general/components/operation-table-table-presentational/operation-table-table-presentational.component';
-import { OperationTableService } from './general/services/operation-table.service';
-import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
-import { MatCardModule } from '@angular/material/card';
+import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { OperationTableSearchFormContainerComponent } from './general/components/operation-table-search-form-container/operation-table-search-form-container.component';
-import { OperationTableSearchFormPresentationalComponent } from './general/components/operation-table-search-form-presentational/operation-table-search-form-presentational.component';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { AdsenseModule } from 'ng2-adsense';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
+import { OperationTableHeaderCComponent } from './components/operation-table-header-c/operation-table-header-c.component';
+import { OperationTableHeaderPComponent } from './components/operation-table-header-p/operation-table-header-p.component';
+import { OperationTableMainCComponent } from './components/operation-table-main-c/operation-table-main-c.component';
+import { OperationTableTableContainerComponent } from './components/operation-table-table-container/operation-table-table-container.component';
+import { OperationTableTablePresentationalComponent } from './components/operation-table-table-presentational/operation-table-table-presentational.component';
+import { OperationTableResolverService } from './services/operation-table-resolver.service';
+import { OperationTableService } from './services/operation-table.service';
+import { OperationTableRoutingModule } from './operation-table-routing.module';
+import { OperationTableComponent } from './operation-table.component';
+import { OperationTableFormatStationNamePipe } from './pipes/operation-table-format-station-name.pipe';
+import { OperationTableFormatTripClassNamePipe } from './pipes/operation-table-format-trip-class-name.pipe';
+import {
+    OperationTableStateQuery,
+    OperationTableStateStore,
+} from './states/operation-table.state';
 
 @NgModule({
     declarations: [
         OperationTableComponent,
         OperationTableTableContainerComponent,
         OperationTableTablePresentationalComponent,
-        OperationTableSearchFormContainerComponent,
-        OperationTableSearchFormPresentationalComponent,
+        OperationTableMainCComponent,
+        OperationTableHeaderCComponent,
+        OperationTableHeaderPComponent,
+        OperationTableFormatStationNamePipe,
+        OperationTableFormatTripClassNamePipe,
     ],
     imports: [
         CommonModule,
@@ -36,7 +48,14 @@ import { AdsenseModule } from 'ng2-adsense';
         MatSelectModule,
         MatButtonModule,
         AdsenseModule,
+        OperationSearchCardModule,
+        PipesModule,
     ],
-    providers: [OperationTableService, OperationTableResolverService],
+    providers: [
+        OperationTableService,
+        OperationTableResolverService,
+        OperationTableStateStore,
+        OperationTableStateQuery,
+    ],
 })
 export class OperationTableModule {}

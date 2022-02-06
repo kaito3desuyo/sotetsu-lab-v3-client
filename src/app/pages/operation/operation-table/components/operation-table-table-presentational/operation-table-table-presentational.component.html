@@ -1,0 +1,295 @@
+<mat-card>
+    <mat-card-title *ngIf="calendar">
+        <mat-toolbar
+            [ngClass]="[
+                calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
+            ]"
+        >
+            <h3 style="line-height: 1.25">
+                {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
+                改正<br />
+                {{ calendar.calendarName }}
+            </h3>
+        </mat-toolbar>
+    </mat-card-title>
+    <mat-card-content>
+        <div
+            fxLayout="row wrap"
+            fxLayoutAlign="center start"
+            style="overflow-x: visible"
+            *ngIf="calendar"
+        >
+            <ng-container *ngFor="let operationTrips of allOperationTrips">
+                <ng-container
+                    *ngTemplateOutlet="
+                        operationTripsList;
+                        context: { operationTrips: operationTrips }
+                    "
+                ></ng-container>
+            </ng-container>
+            <div
+                *ngFor="let operationTrips of allOperationTrips"
+                class="mx-12 blank"
+            ></div>
+        </div>
+        <p *ngIf="!calendar">ダイヤを設定して検索してください</p>
+    </mat-card-content>
+</mat-card>
+
+<ng-template #operationTripsList let-operationTrips="operationTrips">
+    <section class="mx-12">
+        <header>
+            <h4
+                class="py-8"
+                [ngStyle]="{
+                    background:
+                        operationTrips.operation.operationNumber
+                        | operationNumberColor
+                }"
+            >
+                <a
+                    [routerLink]="[
+                        '/operation/route-diagram',
+                        { operation_id: operationTrips.operation.operationId }
+                    ]"
+                >
+                    {{ operationTrips.operation.operationNumber }}
+                </a>
+            </h4>
+        </header>
+        <div>
+            <ng-container
+                *ngFor="
+                    let tripOperationList of operationTrips.trips;
+                    let i = index
+                "
+            >
+                <ng-container
+                    *ngTemplateOutlet="
+                        tripRow;
+                        context: { tripOperationList: tripOperationList }
+                    "
+                ></ng-container>
+                <div
+                    *ngIf="
+                        tripOperationList.trip.tripDirection ===
+                            (operationTrips?.trips)[i + 1]?.trip
+                                ?.tripDirection &&
+                        !tripOperationList.trip.depotIn &&
+                        !(operationTrips?.trips)[i + 1]?.trip?.depotOut
+                    "
+                >
+                    <ng-container
+                        *ngIf="tripOperationList.trip.tripDirection === 0"
+                    >
+                        <span class="kigou">┏</span>
+                    </ng-container>
+                    <ng-container
+                        *ngIf="tripOperationList.trip.tripDirection === 1"
+                    >
+                        <span class="kigou">┗</span>
+                    </ng-container>
+                    <span class="kigou">━━━━━━━━━━━━━━━━━━━━━</span>
+                    <ng-container
+                        *ngIf="tripOperationList.trip.tripDirection === 0"
+                    >
+                        <span class="kigou">┛</span>
+                    </ng-container>
+                    <ng-container
+                        *ngIf="tripOperationList.trip.tripDirection === 1"
+                    >
+                        <span class="kigou">┓</span>
+                    </ng-container>
+                </div>
+            </ng-container>
+        </div>
+    </section>
+</ng-template>
+
+<ng-template #tripRow let-tripOperationList="tripOperationList">
+    <div fxLayout="row" class="row">
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotOut">◯</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotOut"
+                >┗</span
+            >
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotIn">△</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotIn">┏</span>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.startTime.stationId
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.startTime.departureTime
+                    }
+                "
+            ></ng-container>
+            <span>→</span>
+        </ng-container>
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.endTime.stationId
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.endTime.arrivalTime
+                    }
+                "
+            ></ng-container>
+            <span>←</span>
+        </ng-container>
+
+        <div class="trip-class">
+            <a
+                [routerLink]="[
+                    '/timetable',
+                    'all-line',
+                    {
+                        calendar_id: calendar.id,
+                        trip_direction: tripOperationList.trip.tripDirection,
+                        trip_block_id: tripOperationList.trip.tripBlockId
+                    }
+                ]"
+            >
+                <span
+                    class="trip-class-name"
+                    [ngStyle]="{
+                        color:
+                            tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassColor'
+                                  }
+                    }"
+                    >{{
+                        tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassName'
+                                  }
+                    }}</span
+                >
+                <span
+                    class="monoscape"
+                    [ngStyle]="{
+                        color:
+                            tripOperationList.trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassColor'
+                                  }
+                    }"
+                    >{{ tripOperationList.trip.tripNumber }}</span
+                >
+            </a>
+        </div>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span>→</span>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.endTime.arrivalTime
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.endTime.stationId
+                    }
+                "
+            ></ng-container>
+        </ng-container>
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span>←</span>
+            <ng-container
+                *ngTemplateOutlet="
+                    timeColumn;
+                    context: {
+                        time: tripOperationList.startTime.departureTime
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    stationNameColumn;
+                    context: {
+                        stationId: tripOperationList.startTime.stationId
+                    }
+                "
+            ></ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 0">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotIn">△</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotIn">┓</span>
+        </ng-container>
+
+        <ng-container *ngIf="tripOperationList.trip.tripDirection === 1">
+            <span class="kigou" *ngIf="tripOperationList.trip.depotOut">◯</span>
+            <span class="kigou" *ngIf="!tripOperationList.trip.depotOut"
+                >┛</span
+            >
+        </ng-container>
+    </div>
+</ng-template>
+
+<ng-template #stationNameColumn let-stationId="stationId">
+    <span class="station-name">
+        {{
+            stationId
+                | findById
+                    : {
+                          array: stations,
+                          propertyName: 'stationId',
+                          outputPropertyName: 'stationName'
+                      }
+                | operationTableFormatStationName
+        }}
+    </span>
+</ng-template>
+
+<ng-template #timeColumn let-time="time">
+    <span class="monoscape">
+        <ng-container *ngIf="time">
+            {{
+                time
+                    | dayjs
+                        : {
+                              parseFormat: 'HH:mm:ss',
+                              format: 'HHmm'
+                          }
+            }}
+        </ng-container>
+        <ng-container *ngIf="!time">&nbsp;&nbsp;&nbsp;&nbsp;</ng-container>
+    </span>
+</ng-template>

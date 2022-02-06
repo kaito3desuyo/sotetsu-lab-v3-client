@@ -1,7 +1,6 @@
-import { Component, Inject, Injector } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
-import { BaseComponent } from 'src/app/general/classes/base-component';
 import { TitleService } from 'src/app/general/services/title.service';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
@@ -13,19 +12,16 @@ import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card
     styleUrls: ['./dashboard.component.scss'],
     providers: [RxState],
 })
-export class DashboardComponent extends BaseComponent {
+export class DashboardComponent {
     constructor(
-        @Inject(Injector) injector: Injector,
         private readonly router: Router,
         private readonly state: RxState<{}>,
-        private route: ActivatedRoute,
-        private titleService: TitleService,
+        private readonly route: ActivatedRoute,
+        private readonly titleService: TitleService,
         private readonly operationSearchCardService: OperationSearchCardService,
         private readonly timetableSearchCardService: TimetableSearchCardService,
         private readonly timetablePostCardService: TimetablePostCardService
     ) {
-        super(injector);
-
         this.state.hold(this.route.data, ({ title }) => {
             this.titleService.setTitle(title);
         });

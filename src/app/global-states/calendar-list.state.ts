@@ -51,6 +51,10 @@ export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
     constructor(protected store: CalendarListStateStore) {
         super(store);
     }
+
+    findByCalendarId(calendarId: string): Observable<CalendarDetailsDto> {
+        return this.selectEntity((e) => e.calendarId === calendarId);
+    }
 }
 
 export const CalendarListStateStoreProvider: Provider = {
