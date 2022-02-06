@@ -20,7 +20,7 @@ export class OperationTableResolverService
         this.operationTableStateStore.setCalendarId(calendarId);
 
         return forkJoin([
-            this.operationTableService.fetchCalendars(),
+            // this.operationTableService.fetchCalendars(),
             // this.operationTableService.fetchOperationTrips(),
             this.operationTableService.fetchStations(),
             this.operationTableService.fetchTripClasses(),

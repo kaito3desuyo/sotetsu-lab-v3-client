@@ -8,8 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AdsenseModule } from 'ng2-adsense';
-import { OperationTableSearchFormContainerComponent } from './general/components/operation-table-search-form-container/operation-table-search-form-container.component';
-import { OperationTableSearchFormPresentationalComponent } from './general/components/operation-table-search-form-presentational/operation-table-search-form-presentational.component';
+import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
 import { OperationTableTableContainerComponent } from './general/components/operation-table-table-container/operation-table-table-container.component';
 import { OperationTableTablePresentationalComponent } from './general/components/operation-table-table-presentational/operation-table-table-presentational.component';
 import { OperationTableResolverService } from './general/services/operation-table-resolver.service';
@@ -26,8 +25,6 @@ import {
         OperationTableComponent,
         OperationTableTableContainerComponent,
         OperationTableTablePresentationalComponent,
-        OperationTableSearchFormContainerComponent,
-        OperationTableSearchFormPresentationalComponent,
     ],
     imports: [
         CommonModule,
@@ -40,6 +37,7 @@ import {
         MatSelectModule,
         MatButtonModule,
         AdsenseModule,
+        OperationSearchCardModule,
     ],
     providers: [
         OperationTableService,
