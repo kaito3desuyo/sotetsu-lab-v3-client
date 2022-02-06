@@ -4,6 +4,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 
 type OperationTableState = {
+    calendarId: string;
     operations: OperationDetailsDto[];
     allOperationTrips: OperationTripsDto[];
 };
@@ -13,11 +14,18 @@ export class OperationTableStateStore extends Store<OperationTableState> {
     constructor() {
         super(
             {
+                calendarId: null,
                 operations: [],
                 allOperationTrips: [],
             },
             { name: `OperationTable-${guid()}` }
         );
+    }
+
+    setCalendarId(calendarId: string): void {
+        this.update({
+            calendarId,
+        });
     }
 
     setOperations(operations: OperationDetailsDto[]): void {
@@ -37,6 +45,10 @@ export class OperationTableStateStore extends Store<OperationTableState> {
 export class OperationTableStateQuery extends Query<OperationTableState> {
     readonly operations$ = this.select('operations');
     readonly allOperationTrips$ = this.select('allOperationTrips');
+
+    get calendarId(): string {
+        return this.getValue().calendarId;
+    }
 
     get operations(): OperationDetailsDto[] {
         return this.getValue().operations;

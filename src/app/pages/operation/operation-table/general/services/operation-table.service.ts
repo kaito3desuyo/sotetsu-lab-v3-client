@@ -155,7 +155,8 @@ export class OperationTableService {
 
     // v2
 
-    fetchOperationsByCalendarId(calendarId: string): Observable<void> {
+    fetchOperationsByCalendarId(): Observable<void> {
+        const calendarId = this.operationTableStateQuery.calendarId;
         const qb = new RequestQueryBuilder()
             .setFilter({
                 field: 'calendarId',
