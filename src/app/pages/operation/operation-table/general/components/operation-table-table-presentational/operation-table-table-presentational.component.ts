@@ -1,11 +1,10 @@
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
-import { IOperation } from 'src/app/general/interfaces/operation';
-import { IStation } from 'src/app/general/interfaces/station';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { find } from 'lodash-es';
-import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import moment from 'moment';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { ITripClass } from 'src/app/general/interfaces/trip-class';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 
 @Component({
     selector: 'app-operation-table-table-presentational',
@@ -14,13 +13,10 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationTableTablePresentationalComponent {
-    @Input() operationTrips: IOperation[];
-    @Input() stations: IStation[];
-    @Input() tripClasses: ITripClass[];
-    @Input() calendar: ICalendar;
-
-    // v2
     @Input() allOperationTrips: OperationTripsDto[];
+    @Input() stations: StationDetailsDto[];
+    @Input() tripClasses: ITripClass[];
+    @Input() calendar: CalendarDetailsDto;
 
     constructor() {}
 
@@ -32,7 +28,9 @@ export class OperationTableTablePresentationalComponent {
         if (!this.stations) {
             return '';
         }
-        const findObj = find(this.stations, (station) => station.id === id);
+        const findObj = this.stations.find(
+            (station) => station.stationId === id
+        );
         return findObj ? this.formatStationName(findObj.stationName) : '';
     }
 

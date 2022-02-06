@@ -22,6 +22,8 @@ import {
     OperationTableStateStore,
 } from '../../states/operation-table.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 
 @Injectable()
 export class OperationTableService {
@@ -62,6 +64,7 @@ export class OperationTableService {
         private stationApi: StationApiService,
         private tripApi: TripApiService,
         private readonly operationService: OperationService,
+        private readonly stationService: StationService,
         private readonly operationTableStateStore: OperationTableStateStore,
         private readonly operationTableStateQuery: OperationTableStateQuery
     ) {}
@@ -154,6 +157,16 @@ export class OperationTableService {
     }
 
     // v2
+
+    fetchStationsV2(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+        return this.stationService.findMany(qb).pipe(
+            tap((stations: StationDetailsDto[]) =>
+                this.operationTableStateStore.setStations(stations)
+            ),
+            map(() => undefined)
+        );
+    }
 
     fetchOperationsByCalendarId(): Observable<void> {
         const calendarId = this.operationTableStateQuery.calendarId;
