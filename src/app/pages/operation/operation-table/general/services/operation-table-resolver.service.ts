@@ -24,7 +24,7 @@ export class OperationTableResolverService
             // this.operationTableService.fetchOperationTrips(),
             this.operationTableService.fetchStations(),
             this.operationTableService.fetchTripClasses(),
-            this.operationTableService.fetchCalendar(),
+            // this.operationTableService.fetchCalendar(),
             // v2
             this.operationTableService
                 .fetchOperationsByCalendarId()
