@@ -19,7 +19,6 @@ export class OperationRouteDiagramResolverService
         this.operationRouteDiagramStateStore.setOperationId(operationId);
         return forkJoin([
             this.operationRouteDiagramService.fetchCalendars(),
-            this.operationRouteDiagramService.fetchStations(),
             this.operationRouteDiagramService.fetchOperationTrips(),
             this.operationRouteDiagramService.fetchStationsV2(),
         ]).pipe(map(() => null));

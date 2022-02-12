@@ -21,13 +21,29 @@ export class FindByIdPipe implements PipeTransform {
         setting: {
             array: T[];
             propertyName: keyof T;
-            outputPropertyName?: never | keyof T;
+            outputPropertyName: 'index';
         }
-    ): T | T[keyof T] {
+    ): number;
+    transform<T>(
+        value: T[keyof T],
+        setting: {
+            array: T[];
+            propertyName: keyof T;
+            outputPropertyName?: never | keyof T | 'index';
+        }
+    ): T | T[keyof T] | number {
         const obj = setting.array.find(
             (o) => o[setting.propertyName] === value
         );
-        return setting.outputPropertyName
+        const idx = setting.array.findIndex(
+            (o) => o[setting.propertyName] === value
+        );
+
+        return setting.outputPropertyName &&
+            setting.outputPropertyName === 'index'
+            ? idx
+            : setting.outputPropertyName &&
+              setting.outputPropertyName !== 'index'
             ? obj[setting.outputPropertyName]
             : obj;
     }

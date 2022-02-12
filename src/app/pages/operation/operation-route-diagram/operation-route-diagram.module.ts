@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { AdsenseModule } from 'ng2-adsense';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
@@ -37,6 +38,7 @@ import {
         AppSharedModule,
         OperationRouteDiagramRoutingModule,
         AdsenseModule,
+        PipesModule,
     ],
     exports: [],
     declarations: [

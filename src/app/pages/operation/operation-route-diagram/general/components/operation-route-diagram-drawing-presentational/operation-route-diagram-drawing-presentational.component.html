@@ -22,7 +22,6 @@
                     height: 100%;
                     max-height: 60vh;
                 "
-                *ngIf="visible"
             >
                 <table>
                     <thead>
@@ -114,20 +113,31 @@
                                             [attr.x]="
                                                 tripOperationList.trip
                                                     .tripDirection === 0
-                                                    ? returnStationIndex(
-                                                          tripOperationList
-                                                              .startTime
-                                                              .stationId
-                                                      ) *
+                                                    ? (tripOperationList
+                                                          .startTime.stationId
+                                                          | findById
+                                                              : {
+                                                                    array: stations,
+                                                                    propertyName:
+                                                                        'stationId',
+                                                                    outputPropertyName:
+                                                                        'index'
+                                                                }) *
                                                           60 +
                                                       60 -
                                                       47.5
                                                     : tripOperationList.trip
                                                           .tripDirection === 1
-                                                    ? returnStationIndex(
-                                                          tripOperationList
-                                                              .endTime.stationId
-                                                      ) *
+                                                    ? (tripOperationList.endTime
+                                                          .stationId
+                                                          | findById
+                                                              : {
+                                                                    array: stations,
+                                                                    propertyName:
+                                                                        'stationId',
+                                                                    outputPropertyName:
+                                                                        'index'
+                                                                }) *
                                                           60 +
                                                       60 -
                                                       47.5
@@ -143,11 +153,14 @@
                                                 "
                                             >
                                                 {{
-                                                    returnTimeString(
-                                                        tripOperationList
-                                                            .startTime
-                                                            .departureTime
-                                                    )
+                                                    tripOperationList.startTime
+                                                        .departureTime
+                                                        | dayjs
+                                                            : {
+                                                                  format: 'HHmm',
+                                                                  parseFormat:
+                                                                      'HH:mm:ss'
+                                                              }
                                                 }}
                                             </ng-container>
                                             <ng-container
@@ -157,10 +170,14 @@
                                                 "
                                             >
                                                 {{
-                                                    returnTimeString(
-                                                        tripOperationList
-                                                            .endTime.arrivalTime
-                                                    )
+                                                    tripOperationList.endTime
+                                                        .arrivalTime
+                                                        | dayjs
+                                                            : {
+                                                                  format: 'HHmm',
+                                                                  parseFormat:
+                                                                      'HH:mm:ss'
+                                                              }
                                                 }}
                                             </ng-container>
                                         </text>
@@ -168,14 +185,26 @@
                                         <text
                                             style="cursor: pointer"
                                             [attr.x]="
-                                                ((returnStationIndex(
-                                                    tripOperationList.startTime
+                                                (((tripOperationList.startTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) +
+                                                    (tripOperationList.endTime
                                                         .stationId
-                                                ) +
-                                                    returnStationIndex(
-                                                        tripOperationList
-                                                            .endTime.stationId
-                                                    )) /
+                                                        | findById
+                                                            : {
+                                                                  array: stations,
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'index'
+                                                              })) /
                                                     2) *
                                                     60 +
                                                 60 -
@@ -200,19 +229,31 @@
 
                                         <line
                                             [attr.x1]="
-                                                returnStationIndex(
-                                                    tripOperationList.startTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.startTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 50 +
                                                 8
                                             "
                                             [attr.x2]="
-                                                returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 50 +
                                                 8
@@ -237,20 +278,31 @@
                                             [attr.x]="
                                                 tripOperationList.trip
                                                     .tripDirection === 0
-                                                    ? returnStationIndex(
-                                                          tripOperationList
-                                                              .endTime.stationId
-                                                      ) *
+                                                    ? (tripOperationList.endTime
+                                                          .stationId
+                                                          | findById
+                                                              : {
+                                                                    array: stations,
+                                                                    propertyName:
+                                                                        'stationId',
+                                                                    outputPropertyName:
+                                                                        'index'
+                                                                }) *
                                                           60 +
                                                       60 +
                                                       12.5
                                                     : tripOperationList.trip
                                                           .tripDirection === 1
-                                                    ? returnStationIndex(
-                                                          tripOperationList
-                                                              .startTime
-                                                              .stationId
-                                                      ) *
+                                                    ? (tripOperationList
+                                                          .startTime.stationId
+                                                          | findById
+                                                              : {
+                                                                    array: stations,
+                                                                    propertyName:
+                                                                        'stationId',
+                                                                    outputPropertyName:
+                                                                        'index'
+                                                                }) *
                                                           60 +
                                                       60 +
                                                       12.5
@@ -266,10 +318,14 @@
                                                 "
                                             >
                                                 {{
-                                                    returnTimeString(
-                                                        tripOperationList
-                                                            .endTime.arrivalTime
-                                                    )
+                                                    tripOperationList.endTime
+                                                        .arrivalTime
+                                                        | dayjs
+                                                            : {
+                                                                  format: 'HHmm',
+                                                                  parseFormat:
+                                                                      'HH:mm:ss'
+                                                              }
                                                 }}
                                             </ng-container>
                                             <ng-container
@@ -279,11 +335,14 @@
                                                 "
                                             >
                                                 {{
-                                                    returnTimeString(
-                                                        tripOperationList
-                                                            .startTime
-                                                            .departureTime
-                                                    )
+                                                    tripOperationList.startTime
+                                                        .departureTime
+                                                        | dayjs
+                                                            : {
+                                                                  format: 'HHmm',
+                                                                  parseFormat:
+                                                                      'HH:mm:ss'
+                                                              }
                                                 }}
                                             </ng-container>
                                         </text>
@@ -293,10 +352,16 @@
                                                 tripOperationList.trip.depotOut
                                             "
                                             [attr.cx]="
-                                                returnStationIndex(
-                                                    tripOperationList.startTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.startTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 60 -
                                                 2
@@ -312,30 +377,48 @@
                                                 tripOperationList.trip.depotIn
                                             "
                                             [attr.points]="
-                                                returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 60 -
                                                 2 +
                                                 ',' +
                                                 (30 + i * 40 - 12) +
                                                 ' ' +
-                                                (returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                ((tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                     60 -
                                                     10) +
                                                 ',' +
                                                 (30 + i * 40 + 1) +
                                                 ' ' +
-                                                (returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                ((tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                     60 +
                                                     6) +
@@ -352,19 +435,31 @@
                                                 !tripOperationList.trip.depotIn
                                             "
                                             [attr.x1]="
-                                                returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 50 +
                                                 8
                                             "
                                             [attr.x2]="
-                                                returnStationIndex(
-                                                    tripOperationList.endTime
-                                                        .stationId
-                                                ) *
+                                                (tripOperationList.endTime
+                                                    .stationId
+                                                    | findById
+                                                        : {
+                                                              array: stations,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'index'
+                                                          }) *
                                                     60 +
                                                 50 +
                                                 8
@@ -445,16 +540,24 @@
                     <text
                         [attr.x]="
                             tripOperationList.trip.tripDirection === 0
-                                ? returnStationIndex(
-                                      tripOperationList.startTime.stationId
-                                  ) *
+                                ? (tripOperationList.startTime.stationId
+                                      | findById
+                                          : {
+                                                array: stations,
+                                                propertyName: 'stationId',
+                                                outputPropertyName: 'index'
+                                            }) *
                                       60 +
                                   60 -
                                   47.5
                                 : tripOperationList.trip.tripDirection === 1
-                                ? returnStationIndex(
-                                      tripOperationList.endTime.stationId
-                                  ) *
+                                ? (tripOperationList.endTime.stationId
+                                      | findById
+                                          : {
+                                                array: stations,
+                                                propertyName: 'stationId',
+                                                outputPropertyName: 'index'
+                                            }) *
                                       60 +
                                   60 -
                                   47.5
@@ -467,18 +570,24 @@
                             *ngIf="tripOperationList.trip.tripDirection === 0"
                         >
                             {{
-                                returnTimeString(
-                                    tripOperationList.startTime.departureTime
-                                )
+                                tripOperationList.startTime.departureTime
+                                    | dayjs
+                                        : {
+                                              format: 'HHmm',
+                                              parseFormat: 'HH:mm:ss'
+                                          }
                             }}
                         </ng-container>
                         <ng-container
                             *ngIf="tripOperationList.trip.tripDirection === 1"
                         >
                             {{
-                                returnTimeString(
-                                    tripOperationList.endTime.arrivalTime
-                                )
+                                tripOperationList.endTime.arrivalTime
+                                    | dayjs
+                                        : {
+                                              format: 'HHmm',
+                                              parseFormat: 'HH:mm:ss'
+                                          }
                             }}
                         </ng-container>
                     </text>
@@ -486,12 +595,20 @@
                     <text
                         style="cursor: pointer"
                         [attr.x]="
-                            ((returnStationIndex(
-                                tripOperationList.startTime.stationId
-                            ) +
-                                returnStationIndex(
-                                    tripOperationList.endTime.stationId
-                                )) /
+                            (((tripOperationList.startTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) +
+                                (tripOperationList.endTime.stationId
+                                    | findById
+                                        : {
+                                              array: stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'index'
+                                          })) /
                                 2) *
                                 60 +
                             60 -
@@ -511,17 +628,25 @@
 
                     <line
                         [attr.x1]="
-                            returnStationIndex(
-                                tripOperationList.startTime.stationId
-                            ) *
+                            (tripOperationList.startTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             50 +
                             8
                         "
                         [attr.x2]="
-                            returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            (tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             50 +
                             8
@@ -544,16 +669,24 @@
                     <text
                         [attr.x]="
                             tripOperationList.trip.tripDirection === 0
-                                ? returnStationIndex(
-                                      tripOperationList.endTime.stationId
-                                  ) *
+                                ? (tripOperationList.endTime.stationId
+                                      | findById
+                                          : {
+                                                array: stations,
+                                                propertyName: 'stationId',
+                                                outputPropertyName: 'index'
+                                            }) *
                                       60 +
                                   60 +
                                   12.5
                                 : tripOperationList.trip.tripDirection === 1
-                                ? returnStationIndex(
-                                      tripOperationList.startTime.stationId
-                                  ) *
+                                ? (tripOperationList.startTime.stationId
+                                      | findById
+                                          : {
+                                                array: stations,
+                                                propertyName: 'stationId',
+                                                outputPropertyName: 'index'
+                                            }) *
                                       60 +
                                   60 +
                                   12.5
@@ -566,18 +699,24 @@
                             *ngIf="tripOperationList.trip.tripDirection === 0"
                         >
                             {{
-                                returnTimeString(
-                                    tripOperationList.endTime.arrivalTime
-                                )
+                                tripOperationList.endTime.arrivalTime
+                                    | dayjs
+                                        : {
+                                              format: 'HHmm',
+                                              parseFormat: 'HH:mm:ss'
+                                          }
                             }}
                         </ng-container>
                         <ng-container
                             *ngIf="tripOperationList.trip.tripDirection === 1"
                         >
                             {{
-                                returnTimeString(
-                                    tripOperationList.startTime.departureTime
-                                )
+                                tripOperationList.startTime.departureTime
+                                    | dayjs
+                                        : {
+                                              format: 'HHmm',
+                                              parseFormat: 'HH:mm:ss'
+                                          }
                             }}
                         </ng-container>
                     </text>
@@ -585,9 +724,13 @@
                     <circle
                         *ngIf="tripOperationList.trip.depotOut"
                         [attr.cx]="
-                            returnStationIndex(
-                                tripOperationList.startTime.stationId
-                            ) *
+                            (tripOperationList.startTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             60 -
                             2
@@ -601,27 +744,39 @@
                     <polygon
                         *ngIf="tripOperationList.trip.depotIn"
                         [attr.points]="
-                            returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            (tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             60 -
                             2 +
                             ',' +
                             (160 + i * 40 - 12) +
                             ' ' +
-                            (returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            ((tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                                 60 -
                                 10) +
                             ',' +
                             (160 + i * 40 + 1) +
                             ' ' +
-                            (returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            ((tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                                 60 +
                                 6) +
@@ -636,17 +791,25 @@
                     <line
                         *ngIf="!tripOperationList.trip.depotIn"
                         [attr.x1]="
-                            returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            (tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             50 +
                             8
                         "
                         [attr.x2]="
-                            returnStationIndex(
-                                tripOperationList.endTime.stationId
-                            ) *
+                            (tripOperationList.endTime.stationId
+                                | findById
+                                    : {
+                                          array: stations,
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'index'
+                                      }) *
                                 60 +
                             50 +
                             8

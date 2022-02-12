@@ -1,13 +1,10 @@
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
     ElementRef,
     EventEmitter,
     Input,
-    OnChanges,
     Output,
-    SimpleChanges,
     ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -27,9 +24,7 @@ import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OperationRouteDiagramDrawingPresentationalComponent
-    implements OnChanges
-{
+export class OperationRouteDiagramDrawingPresentationalComponent {
     @Input() calendar: CalendarDetailsDto;
     @Input() operation: OperationDetailsDto;
     @Input() tripOperationLists: TripOperationListDetailsDto[];
@@ -42,30 +37,13 @@ export class OperationRouteDiagramDrawingPresentationalComponent
 
     @ViewChild('svgElement') svgElement: ElementRef;
 
-    visible = true;
-
-    constructor(private cd: ChangeDetectorRef, private router: Router) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.tripOperationLists) {
-            this.visible = false;
-            this.cd.detectChanges();
-            this.visible = true;
-            this.cd.detectChanges();
-        }
-    }
-
-    returnTimeString(str: string) {
-        return moment(str, 'HH:mm:ss').format('HHmm');
-    }
-
-    returnStationIndex(id: string) {
-        return findIndex(this.stations, (obj) => {
-            return obj.stationId === id;
-        });
-    }
+    constructor(private router: Router) {}
 
     navigateTimetable(tripBlockId: string, tripDirection: 0 | 1) {
+        this.clickNavigateTimetable.next({
+            tripBlockId: tripBlockId,
+            tripDirection: tripDirection,
+        });
         this.router.navigate([
             '/timetable',
             'all-line',

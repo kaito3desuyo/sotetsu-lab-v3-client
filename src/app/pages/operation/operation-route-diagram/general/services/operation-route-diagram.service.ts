@@ -1,29 +1,23 @@
 import { Injectable } from '@angular/core';
+import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import { sortBy } from 'lodash-es';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import { TripOperationListApiService } from 'src/app/general/api/trip-operation-list-api.service';
-import { map, tap, flatMap } from 'rxjs/operators';
-import { ReadTripOperationListDto } from 'src/app/general/models/trip-operation-list/trip-operation-list-dto';
-import { TripOperationListModel } from 'src/app/general/models/trip-operation-list/trip-operation-list-model';
-import { IStation } from 'src/app/general/interfaces/station';
-import { StationApiService } from 'src/app/general/api/station-api.service';
-import { ReadStationDto } from 'src/app/general/models/station/station-dto';
-import { StationModel } from 'src/app/general/models/station/station-model';
-import { map as lodashMap, find, omit, sortBy } from 'lodash-es';
-import { OperationApiService } from 'src/app/general/api/operation-api.service';
+import { map, tap } from 'rxjs/operators';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
-import { OperationModel } from 'src/app/general/models/operation/operation-model';
-import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { OperationApiService } from 'src/app/general/api/operation-api.service';
+import { StationApiService } from 'src/app/general/api/station-api.service';
+import { TripOperationListApiService } from 'src/app/general/api/trip-operation-list-api.service';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { IOperation } from 'src/app/general/interfaces/operation';
+import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { OperationModel } from 'src/app/general/models/operation/operation-model';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { StationService } from 'src/app/libs/station/usecase/station.service';
 import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
 } from '../../states/operation-route-diagram.state';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
-import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 
 @Injectable()
 export class OperationRouteDiagramService {
@@ -49,23 +43,6 @@ export class OperationRouteDiagramService {
         IOperation[]
     >([]);
     operations$ = this._operations$.asObservable();
-
-    private _calendar$: BehaviorSubject<ICalendar> =
-        new BehaviorSubject<ICalendar>(null);
-    calendar$ = this._calendar$.asObservable();
-
-    private _operation$: BehaviorSubject<IOperation> =
-        new BehaviorSubject<IOperation>(null);
-    operation$ = this._operation$.asObservable();
-
-    private _tripOperationLists$: BehaviorSubject<ITripOperationList[]> =
-        new BehaviorSubject<ITripOperationList[]>([]);
-    tripOperationLists$ = this._tripOperationLists$.asObservable();
-
-    private _stations$: BehaviorSubject<IStation[]> = new BehaviorSubject<
-        IStation[]
-    >([]);
-    stations$ = this._stations$.asObservable();
 
     constructor(
         private tripOperationListApi: TripOperationListApiService,
@@ -113,108 +90,11 @@ export class OperationRouteDiagramService {
             );
     }
 
-    fetchOperationAndCalender(): Observable<void> {
-        const id = this._operationId$.getValue();
-        if (!id) {
-            return of(null).pipe(
-                tap(() => {
-                    this._operation$.next(null);
-                    this._calendar$.next(null);
-                })
-            );
-        }
-        return this.operationApi.getOperationById(id).pipe(
-            map((data) => OperationModel.readOperationDtoImpl(data.operation)),
-            tap((operation) => {
-                this._operation$.next(operation);
-            }),
-            flatMap((operation) => {
-                return this.calendarApi.getCalendarById(operation.calendarId);
-            }),
-            map((data) => CalendarModel.readCalendarDtoImpl(data.calendar)),
-            tap((calendar) => {
-                this._calendar$.next(calendar);
-            }),
-            map(() => null)
-        );
-    }
-
-    fetchTripOperationLists(): Observable<void> {
-        const id = this._operationId$.getValue();
-        if (!id) {
-            return of(null).pipe(tap(() => this._tripOperationLists$.next([])));
-        }
-        return this.tripOperationListApi
-            .searchTripOperationLists({ operation_id: id })
-            .pipe(
-                map(
-                    (data: {
-                        trip_operation_lists: ReadTripOperationListDto[];
-                    }) =>
-                        data.trip_operation_lists.map((result) =>
-                            TripOperationListModel.readTripOperationListDtoImpl(
-                                result
-                            )
-                        )
-                ),
-                tap((data: ITripOperationList[]) => {
-                    this._tripOperationLists$.next(data);
-                }),
-                map(() => null)
-            );
-    }
-
-    fetchStations(): Observable<void> {
-        const targetStation = [
-            '厚木',
-            '海老名',
-            'かしわ台',
-            '相模大塚',
-            '大和',
-            '瀬谷',
-            '湘南台',
-            'いずみ野',
-            '二俣川',
-            '西谷',
-            '星川',
-            '西横浜',
-            '横浜',
-            '羽沢横浜国大',
-            '大崎',
-            '新宿',
-            '池袋',
-            '板橋',
-            '赤羽',
-            '武蔵浦和',
-            '大宮',
-            '指扇',
-            '川越',
-        ];
-
-        return this.stationApi.getStations().pipe(
-            map((data: { stations: ReadStationDto[] }) =>
-                data.stations.map((result) =>
-                    StationModel.readStationDtoImpl(result)
-                )
-            ),
-            tap((data: IStation[]) => {
-                const stations = lodashMap(targetStation, (stationName) =>
-                    find(data, (obj) => obj.stationName === stationName)
-                );
-                this._stations$.next(stations);
-            }),
-            map(() => null)
-        );
-    }
-
     // v2
 
     fetchOperationTrips(): Observable<void> {
         const operationId = this.operationRouteDiagramStateQuery.operationId;
-        const qb = new RequestQueryBuilder().setJoin([
-            { field: 'calendar' },
-            { field: 'tripOperationLists.trip.tripClass' },
-        ]);
+        const qb = new RequestQueryBuilder().setJoin([{ field: 'calendar' }]);
 
         return this.operationService.findOneWithTrips(operationId, qb).pipe(
             tap((operationTrips) => {
