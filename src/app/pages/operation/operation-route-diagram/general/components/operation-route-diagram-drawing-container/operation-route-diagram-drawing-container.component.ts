@@ -1,10 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { OperationRouteDiagramService } from '../../services/operation-route-diagram.service';
-import { Observable } from 'rxjs';
-import { IStation } from 'src/app/general/interfaces/station';
-import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
-import { IOperation } from 'src/app/general/interfaces/operation';
+import { Component } from '@angular/core';
+import { OperationRouteDiagramStateQuery } from '../../../states/operation-route-diagram.state';
 
 @Component({
     selector: 'app-operation-route-diagram-drawing-container',
@@ -12,17 +7,13 @@ import { IOperation } from 'src/app/general/interfaces/operation';
     styleUrls: ['./operation-route-diagram-drawing-container.component.scss'],
 })
 export class OperationRouteDiagramDrawingContainerComponent {
-    stations$: Observable<IStation[]>;
-    tripOperationLists$: Observable<ITripOperationList[]>;
-    calendar$: Observable<ICalendar>;
-    operation$: Observable<IOperation>;
+    readonly calendar$ = this.operationRouteDiagramStateQuery.calendar$;
+    readonly operation$ = this.operationRouteDiagramStateQuery.operation$;
+    readonly tripOperationLists$ =
+        this.operationRouteDiagramStateQuery.tripOperationLists$;
+    readonly stations$ = this.operationRouteDiagramStateQuery.stations$;
 
     constructor(
-        private operationRouteDiagramService: OperationRouteDiagramService
-    ) {
-        this.stations$ = this.operationRouteDiagramService.stations$;
-        this.tripOperationLists$ = this.operationRouteDiagramService.tripOperationLists$;
-        this.calendar$ = this.operationRouteDiagramService.calendar$;
-        this.operation$ = this.operationRouteDiagramService.operation$;
-    }
+        private readonly operationRouteDiagramStateQuery: OperationRouteDiagramStateQuery
+    ) {}
 }

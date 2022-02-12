@@ -5,9 +5,9 @@
                 calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
             ]"
         >
-            <h3>
+            <h3 style="line-height: 1.25">
                 {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
-                改正
+                改正<br />
                 {{ calendar.calendarName }}
                 {{ operation.operationNumber }}運
             </h3>
@@ -16,7 +16,12 @@
     <mat-card-content>
         <div fxLayout="column" fxLayoutGap="24px">
             <div
-                style="overflow: auto; width: auto; height: 100%; max-height: 60vh"
+                style="
+                    overflow: auto;
+                    width: auto;
+                    height: 100%;
+                    max-height: 60vh;
+                "
                 *ngIf="visible"
             >
                 <table>
@@ -384,10 +389,14 @@
             </div>
         </div>
 
-        <div style="display: none;">
+        <div style="display: none">
             <svg
-                style="background-color: white; font-family: -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI',
-                '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif;"
+                style="
+                    background-color: white;
+                    font-family: -apple-system, BlinkMacSystemFont, Roboto,
+                        'Yu Gothic UI', '游ゴシック体', YuGothic,
+                        'Yu Gothic Medium', sans-serif;
+                "
                 #svgElement
                 [attr.width]="50 + stations.length * 60 + 10 + 'px'"
                 [attr.height]="tripOperationLists.length * 40 + 160 - 20 + 'px'"
