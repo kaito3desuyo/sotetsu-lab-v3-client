@@ -11,12 +11,14 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
-import { OperationRouteDiagramDrawingContainerComponent } from './general/components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
-import { OperationRouteDiagramDrawingPresentationalComponent } from './general/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
-import { OperationRouteDiagramSearchFormContainerComponent } from './general/components/operation-route-diagram-search-form-container/operation-route-diagram-search-form-container.component';
-import { OperationRouteDiagramSearchFormPresentationalComponent } from './general/components/operation-route-diagram-search-form-presentational/operation-route-diagram-search-form-presentational.component';
-import { OperationRouteDiagramResolverService } from './general/services/operation-route-diagram-resolver.service';
-import { OperationRouteDiagramService } from './general/services/operation-route-diagram.service';
+import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
+import { OperationRouteDiagramDrawingContainerComponent } from './components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
+import { OperationRouteDiagramDrawingPresentationalComponent } from './components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
+import { OperationRouteDiagramHeaderCComponent } from './components/operation-route-diagram-header-c/operation-route-diagram-header-c.component';
+import { OperationRouteDiagramHeaderPComponent } from './components/operation-route-diagram-header-p/operation-route-diagram-header-p.component';
+import { OperationRouteDiagramMainCComponent } from './components/operation-route-diagram-main-c/operation-route-diagram-main-c.component';
+import { OperationRouteDiagramResolverService } from './services/operation-route-diagram-resolver.service';
+import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramRoutingModule } from './operation-route-diagram-routing.module';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
 import {
@@ -39,14 +41,16 @@ import {
         OperationRouteDiagramRoutingModule,
         AdsenseModule,
         PipesModule,
+        OperationSearchCardModule,
     ],
     exports: [],
     declarations: [
         OperationRouteDiagramComponent,
         OperationRouteDiagramDrawingContainerComponent,
         OperationRouteDiagramDrawingPresentationalComponent,
-        OperationRouteDiagramSearchFormContainerComponent,
-        OperationRouteDiagramSearchFormPresentationalComponent,
+        OperationRouteDiagramHeaderCComponent,
+        OperationRouteDiagramHeaderPComponent,
+        OperationRouteDiagramMainCComponent,
     ],
     providers: [
         OperationRouteDiagramService,

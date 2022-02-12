@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { OperationRouteDiagramStateQuery } from '../../../states/operation-route-diagram.state';
+import { OperationRouteDiagramStateQuery } from '../../states/operation-route-diagram.state';
 
 @Component({
     selector: 'app-operation-route-diagram-drawing-container',

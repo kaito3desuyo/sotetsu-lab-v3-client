@@ -8,7 +8,6 @@ import {
     ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { findIndex } from 'lodash-es';
 import moment from 'moment';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';

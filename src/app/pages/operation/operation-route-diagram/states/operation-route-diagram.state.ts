@@ -12,7 +12,14 @@ type OperationRouteDiagramState = {
 @Injectable()
 export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagramState> {
     constructor() {
-        super({}, { name: `OperationRouteDiagram-${guid()}` });
+        super(
+            {
+                operationId: null,
+                operationTrips: null,
+                stations: [],
+            },
+            { name: `OperationRouteDiagram-${guid()}` }
+        );
     }
 
     setOperationId(operationId: string): void {
@@ -37,13 +44,13 @@ export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagram
 @Injectable()
 export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagramState> {
     readonly operation$ = this.select(
-        (state) => state.operationTrips.operation
+        (state) => state.operationTrips?.operation
     );
     readonly calendar$ = this.select(
-        (state) => state.operationTrips.operation.calendar
+        (state) => state.operationTrips?.operation.calendar
     );
     readonly tripOperationLists$ = this.select(
-        (state) => state.operationTrips.trips
+        (state) => state.operationTrips?.trips
     );
     readonly stations$ = this.select('stations');
 

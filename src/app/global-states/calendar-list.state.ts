@@ -48,6 +48,10 @@ export class CalendarListStateStore extends EntityStore<CalendarListState> {
 export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
     calendars$ = this.selectAll();
 
+    get calendars(): CalendarDetailsDto[] {
+        return this.getAll();
+    }
+
     constructor(protected store: CalendarListStateStore) {
         super(store);
     }

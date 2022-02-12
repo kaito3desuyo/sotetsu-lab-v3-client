@@ -44,10 +44,10 @@ export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarList
                     .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap((data: CalendarDetailsDto[]) => {
-                    this.set(data);
+                tap((calendars: CalendarDetailsDto[]) => {
+                    this.set(calendars);
                 }),
-                map(() => null)
+                map(() => undefined)
             );
     }
 }

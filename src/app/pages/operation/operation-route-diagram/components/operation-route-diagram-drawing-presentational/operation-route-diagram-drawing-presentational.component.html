@@ -1,5 +1,5 @@
 <mat-card>
-    <mat-card-title>
+    <mat-card-title *ngIf="calendar && operation">
         <mat-toolbar
             [ngClass]="[
                 calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
@@ -14,7 +14,7 @@
         </mat-toolbar>
     </mat-card-title>
     <mat-card-content>
-        <div fxLayout="column" fxLayoutGap="24px">
+        <div *ngIf="calendar && operation" fxLayout="column" fxLayoutGap="24px">
             <div
                 style="
                     overflow: auto;
@@ -484,7 +484,7 @@
             </div>
         </div>
 
-        <div style="display: none">
+        <div *ngIf="calendar && operation" style="display: none">
             <svg
                 style="
                     background-color: white;
@@ -823,5 +823,9 @@
                 </g>
             </svg>
         </div>
+
+        <p *ngIf="!calendar || !operation">
+            ダイヤと運用番号を設定して検索してください
+        </p>
     </mat-card-content>
 </mat-card>

@@ -19,7 +19,8 @@ import { GeneralModule } from './general/general.module';
 import { AgencyListStateStoreProvider } from './global-states/agency-list.state';
 import { CalendarListStateStoreProvider } from './global-states/calendar-list.state';
 import { RouteStationListStateStoreProvider } from './global-states/route-station-list.state';
-import { TodaysCalendarListStateStoreProvider } from './global-states/todays-calendar-list.state';
+import { TodaysCalendarListStateStore } from './global-states/todays-calendar-list.state';
+import { TodaysOperationListStateStore } from './global-states/todays-operation-list.state';
 import { LayoutModule } from './layout/layout.module';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
 
@@ -35,8 +36,26 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
         },
         AgencyListStateStoreProvider,
         CalendarListStateStoreProvider,
-        TodaysCalendarListStateStoreProvider,
         RouteStationListStateStoreProvider,
+        {
+            provide: APP_INITIALIZER,
+            useFactory:
+                (
+                    todaysCalendarListStateStore: TodaysCalendarListStateStore,
+                    todaysOperationListStateStore: TodaysOperationListStateStore
+                ) =>
+                () => {
+                    return Promise.resolve()
+                        .then(() =>
+                            todaysCalendarListStateStore.fetch().toPromise()
+                        )
+                        .then(() =>
+                            todaysOperationListStateStore.fetch().toPromise()
+                        );
+                },
+            deps: [TodaysCalendarListStateStore, TodaysOperationListStateStore],
+            multi: true,
+        },
         {
             provide: ViewportScroller,
             useFactory: () =>

@@ -1,6 +1,10 @@
 <app-operation-search-card-p
     fxFlex="auto"
+    [calendarId]="calendarId$ | async"
+    [operationId]="operationId$ | async"
     [calendars]="calendars$ | async"
-    [todaysCalendarId]="todaysCalendarId$ | async"
-    (clickSearchOperationTable)="onReceiveClickSearchOperationTable($event)"
+    [operations]="operations$ | async"
+    (selectCalendarId)="onReceiveSelectCalendarId($event)"
+    (selectOperationId)="onReceiveSelectOperationId($event)"
+    (clickSearch)="onReceiveClickSearch()"
 ></app-operation-search-card-p>

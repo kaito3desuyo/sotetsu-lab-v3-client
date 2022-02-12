@@ -37,6 +37,16 @@ export class DashboardComponent {
         );
 
         this.state.hold(
+            this.operationSearchCardService.receiveSearchOperationRouteDiagramEvent(),
+            (operationId) => {
+                this.router.navigate([
+                    '/operation/route-diagram',
+                    { operation_id: operationId },
+                ]);
+            }
+        );
+
+        this.state.hold(
             this.timetableSearchCardService.receiveSearchTimetableEvent(),
             (state) => {
                 if (state.searchByStation) {
