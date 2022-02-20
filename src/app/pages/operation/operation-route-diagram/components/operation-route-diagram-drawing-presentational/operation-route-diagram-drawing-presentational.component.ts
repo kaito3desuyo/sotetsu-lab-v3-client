@@ -1,22 +1,18 @@
 import {
-    Component,
     ChangeDetectionStrategy,
+    Component,
+    ElementRef,
+    EventEmitter,
     Input,
     Output,
-    EventEmitter,
     ViewChild,
-    ElementRef,
-    SimpleChanges,
-    ChangeDetectorRef,
-    OnChanges,
 } from '@angular/core';
-import { IStation } from 'src/app/general/interfaces/station';
-import { ITripOperationList } from 'src/app/general/interfaces/trip-operation-list';
-import { findIndex } from 'lodash-es';
-import moment from 'moment';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { Router } from '@angular/router';
-import { IOperation } from 'src/app/general/interfaces/operation';
+import moment from 'moment';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 
 @Component({
     selector: 'app-operation-route-diagram-drawing-presentational',
@@ -27,12 +23,12 @@ import { IOperation } from 'src/app/general/interfaces/operation';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OperationRouteDiagramDrawingPresentationalComponent
-    implements OnChanges {
-    @Input() stations: IStation[];
-    @Input() tripOperationLists: ITripOperationList[];
-    @Input() calendar: ICalendar;
-    @Input() operation: IOperation;
+export class OperationRouteDiagramDrawingPresentationalComponent {
+    @Input() calendar: CalendarDetailsDto;
+    @Input() operation: OperationDetailsDto;
+    @Input() tripOperationLists: TripOperationListDetailsDto[];
+    @Input() stations: StationDetailsDto[];
+
     @Output() clickNavigateTimetable: EventEmitter<{
         tripBlockId: string;
         tripDirection: 0 | 1;
@@ -40,34 +36,21 @@ export class OperationRouteDiagramDrawingPresentationalComponent
 
     @ViewChild('svgElement') svgElement: ElementRef;
 
-    visible = true;
-
-    constructor(private cd: ChangeDetectorRef, private router: Router) { }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.tripOperationLists) {
-            this.visible = false;
-            this.cd.detectChanges();
-            this.visible = true;
-            this.cd.detectChanges();
-        }
-    }
-
-    returnTimeString(str: string) {
-        return moment(str, 'HH:mm:ss').format('HHmm');
-    }
-
-    returnStationIndex(id: string) {
-        return findIndex(this.stations, (obj) => {
-            return obj.id === id;
-        });
-    }
+    constructor(private router: Router) {}
 
     navigateTimetable(tripBlockId: string, tripDirection: 0 | 1) {
+        this.clickNavigateTimetable.next({
+            tripBlockId: tripBlockId,
+            tripDirection: tripDirection,
+        });
         this.router.navigate([
             '/timetable',
             'all-line',
-            { calendar_id: this.calendar.id, trip_direction: tripDirection, trip_block_id: tripBlockId },
+            {
+                calendar_id: this.calendar.calendarId,
+                trip_direction: tripDirection,
+                trip_block_id: tripBlockId,
+            },
         ]);
     }
 
@@ -108,7 +91,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
                 `${moment(this.calendar.startDate, 'YYYY-MM-DD').format(
                     'YYYY年MM月DD日'
                 )}改正 ${this.calendar.calendarName} ${
-                this.tripOperationLists[0].operation.operationNumber
+                    this.operation.operationNumber
                 }運 運用行路図`,
                 16,
                 42
@@ -125,7 +108,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent
                 '_' +
                 this.calendar.calendarName +
                 '_' +
-                this.tripOperationLists[0].operation.operationNumber +
+                this.operation.operationNumber +
                 '運' +
                 '_' +
                 '運用行路図.png';

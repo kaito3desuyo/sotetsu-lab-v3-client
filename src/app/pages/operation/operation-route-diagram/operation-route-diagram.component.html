@@ -1,17 +1,13 @@
-<article
-    class="operation-route-diagram my-24"
-    [ngClass.lt-md]="['mx-16']"
-    [ngClass.gt-sm]="['mx-64']"
+<main
     fxLayout="column"
-    fxLayoutGap="24px"
+    fxLayoutGap="16px"
+    [ngClass.lt-md]="['p-16']"
+    [ngClass.gt-sm]="['p-64']"
 >
-    <h2 class="mat-h2">運用行路図</h2>
-
-    <app-operation-route-diagram-drawing-container
-        *ngIf="operationId"
-    ></app-operation-route-diagram-drawing-container>
-
-    <ng-adsense [adSlot]="6189336070"></ng-adsense>
-
-    <app-operation-route-diagram-search-form-container></app-operation-route-diagram-search-form-container>
-</article>
+    <header>
+        <app-operation-route-diagram-header-c></app-operation-route-diagram-header-c>
+    </header>
+    <div>
+        <app-operation-route-diagram-main-c></app-operation-route-diagram-main-c>
+    </div>
+</main>

@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 
 export class OperationDetailsDto {
     @Expose({ name: 'id' })
@@ -15,4 +16,8 @@ export class OperationDetailsDto {
 
     @Expose()
     updatedAt?: string;
+
+    @Expose()
+    @Type(() => CalendarDetailsDto)
+    calendar?: CalendarDetailsDto;
 }

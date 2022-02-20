@@ -1,7 +1,7 @@
 <mat-card fxLayout="column" fxFlex="auto">
     <mat-card-title>運用情報</mat-card-title>
     <mat-card-subtitle> 相鉄線の運用情報を検索できます。 </mat-card-subtitle>
-    <mat-card-content>
+    <mat-card-content fxFlex="auto">
         <mat-nav-list>
             <h3 mat-subheader>目撃情報</h3>
             <a mat-list-item routerLink="/operation/real-time">
@@ -12,10 +12,14 @@
             </a>
         </mat-nav-list>
         <mat-list>
-            <h3 mat-subheader>運用表</h3>
-            <mat-list-item>
+            <h3 mat-subheader>運用表／運用行路図</h3>
+            <mat-list-item style="margin-top: 8px">
                 <mat-form-field fxFlex="auto">
-                    <mat-select placeholder="ダイヤ" [(ngModel)]="calendarId">
+                    <mat-select
+                        placeholder="ダイヤ"
+                        [(ngModel)]="_calendarId"
+                        (valueChange)="onSelectedCalendarId$.next($event)"
+                    >
                         <mat-option
                             *ngFor="let calendar of calendars$ | async"
                             [value]="calendar.calendarId"
@@ -28,6 +32,23 @@
                     </mat-select>
                 </mat-form-field>
             </mat-list-item>
+            <mat-list-item style="margin-top: 8px">
+                <mat-form-field fxFlex="auto">
+                    <mat-select
+                        placeholder="運用番号"
+                        [(ngModel)]="_operationId"
+                        (valueChange)="onSelectedOperationId$.next($event)"
+                    >
+                        <mat-option [value]="null">選択しない</mat-option>
+                        <mat-option
+                            *ngFor="let operation of operations$ | async"
+                            [value]="operation.operationId"
+                        >
+                            {{ operation.operationNumber }}運
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </mat-list-item>
         </mat-list>
     </mat-card-content>
     <mat-card-actions align="end">
@@ -35,7 +56,7 @@
             type="button"
             mat-raised-button
             color="primary"
-            (click)="clickSearchOperationTable.emit(calendarId)"
+            (click)="onClickedSearch$.next()"
         >
             検索
         </button>
