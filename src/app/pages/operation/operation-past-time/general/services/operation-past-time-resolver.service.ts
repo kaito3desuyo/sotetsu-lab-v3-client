@@ -4,18 +4,22 @@ import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import moment from 'moment';
+import { OperationPastTimeStateStore } from '../../states/operation-past-time.state';
 
 @Injectable()
 export class OperationPastTimeResolverService
-    implements Resolve<Observable<void>> {
-    constructor(private operationPastTimeService: OperationPastTimeService) {}
+    implements Resolve<Observable<void>>
+{
+    constructor(
+        private operationPastTimeService: OperationPastTimeService,
+        private readonly operationPastTimeStateStore: OperationPastTimeStateStore
+    ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        this.operationPastTimeService.referenceDate = moment(
-            route.paramMap.get('reference_date'),
-            'YYYY-MM-DD'
+        this.operationPastTimeStateStore.setReferenceDate(
+            route.paramMap.get('reference_date')
         );
-        this.operationPastTimeService.days = +route.paramMap.get('days');
+        this.operationPastTimeStateStore.setDays(+route.paramMap.get('days'));
 
         return forkJoin([
             this.operationPastTimeService.fetchCalendars(),

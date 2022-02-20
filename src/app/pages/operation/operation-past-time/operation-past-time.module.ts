@@ -17,6 +17,10 @@ import { RouterModule } from '@angular/router';
 import { OperationPastTimeRoutingModule } from './operation-past-time-routing.module';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatButtonModule } from '@angular/material/button';
+import {
+    OperationPastTimeStateQuery,
+    OperationPastTimeStateStore,
+} from './states/operation-past-time.state';
 
 @NgModule({
     imports: [
@@ -40,6 +44,11 @@ import { MatButtonModule } from '@angular/material/button';
         OperationSightingsSearchFormContainerComponent,
         OperationSightingsSearchFormPresentationalComponent,
     ],
-    providers: [OperationPastTimeService, OperationPastTimeResolverService],
+    providers: [
+        OperationPastTimeService,
+        OperationPastTimeResolverService,
+        OperationPastTimeStateStore,
+        OperationPastTimeStateQuery,
+    ],
 })
 export class OperationPastTimeModule {}

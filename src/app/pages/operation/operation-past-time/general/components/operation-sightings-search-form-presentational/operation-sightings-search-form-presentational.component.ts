@@ -20,7 +20,8 @@ import moment, { Moment } from 'moment';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsSearchFormPresentationalComponent
-    implements OnChanges {
+    implements OnChanges
+{
     searchForm: FormGroup = this.fb.group({
         referenceDate: [null, Validators.required],
         days: [
@@ -30,7 +31,7 @@ export class OperationSightingsSearchFormPresentationalComponent
     });
     maxDate = moment();
 
-    @Input() referenceDate: Moment;
+    @Input() referenceDate: string;
     @Input() days: number;
     @Output() clickSearch: EventEmitter<{
         referenceDate: Moment;
@@ -44,7 +45,9 @@ export class OperationSightingsSearchFormPresentationalComponent
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.referenceDate) {
-            this.searchForm.get('referenceDate').setValue(this.referenceDate);
+            this.searchForm
+                .get('referenceDate')
+                .setValue(moment(this.referenceDate, 'YYYY-MM-DD'));
         }
         if (changes.days) {
             this.searchForm.get('days').setValue(this.days);
@@ -52,6 +55,7 @@ export class OperationSightingsSearchFormPresentationalComponent
     }
 
     onClickSearch(): void {
+        console.log(this.searchForm.value);
         this.clickSearch.emit(this.searchForm.value);
     }
 }

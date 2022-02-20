@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { Moment } from 'moment';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Moment } from 'moment';
+import { OperationPastTimeStateQuery } from '../../../states/operation-past-time.state';
 import { OperationPastTimeService } from '../../services/operation-past-time.service';
 
 @Component({
@@ -10,16 +10,14 @@ import { OperationPastTimeService } from '../../services/operation-past-time.ser
     styleUrls: ['./operation-sightings-search-form-container.component.scss'],
 })
 export class OperationSightingsSearchFormContainerComponent {
-    referenceDate$: Observable<Moment>;
-    days$: Observable<number>;
+    readonly referenceDate$ = this.operationPastTimeStateQuery.referenceDate$;
+    readonly days$ = this.operationPastTimeStateQuery.days$;
 
     constructor(
         private router: Router,
-        private operationPastTimeService: OperationPastTimeService
-    ) {
-        this.referenceDate$ = this.operationPastTimeService.referenceDate$;
-        this.days$ = this.operationPastTimeService.days$;
-    }
+        private operationPastTimeService: OperationPastTimeService,
+        private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
+    ) {}
 
     onReceiveClickSearch(params: {
         referenceDate: Moment;

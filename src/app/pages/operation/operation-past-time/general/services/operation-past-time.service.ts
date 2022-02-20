@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of, forkJoin, zip } from 'rxjs';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { tap, map, take } from 'rxjs/operators';
-import { Moment } from 'moment';
+import moment, { Moment } from 'moment';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { IFormation } from 'src/app/general/interfaces/formation';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
@@ -11,50 +11,39 @@ import { cloneDeep } from 'lodash-es';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
+import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class OperationPastTimeService {
-    private _referenceDate$: BehaviorSubject<Moment> = new BehaviorSubject<
-        Moment
-    >(null);
-    referenceDate$: Observable<Moment> = this._referenceDate$.asObservable();
-    set referenceDate(date: Moment) {
-        this._referenceDate$.next(date);
-    }
-
-    private _days$: BehaviorSubject<number> = new BehaviorSubject<number>(null);
-    days$: Observable<number> = this._days$.asObservable();
-    set days(days: number) {
-        this._days$.next(days);
-    }
-
     private _calendars$: BehaviorSubject<
         { date: Moment; calendar: ICalendar }[]
     > = new BehaviorSubject<{ date: Moment; calendar: ICalendar }[]>(null);
-    calendars$: Observable<
-        { date: Moment; calendar: ICalendar }[]
-    > = this._calendars$.asObservable();
+    calendars$: Observable<{ date: Moment; calendar: ICalendar }[]> =
+        this._calendars$.asObservable();
 
     private _formations$: BehaviorSubject<IFormation[]> = new BehaviorSubject<
         IFormation[]
     >([]);
     formations$: Observable<IFormation[]> = this._formations$.asObservable();
 
-    private _operationSightings$: BehaviorSubject<
-        IOperationSighting[]
-    > = new BehaviorSubject<IOperationSighting[]>([]);
-    operationSightings$: Observable<
-        IOperationSighting[]
-    > = this._operationSightings$.asObservable();
+    private _operationSightings$: BehaviorSubject<IOperationSighting[]> =
+        new BehaviorSubject<IOperationSighting[]>([]);
+    operationSightings$: Observable<IOperationSighting[]> =
+        this._operationSightings$.asObservable();
 
     constructor(
         private calendarApi: CalendarApiService,
         private formationApi: FormationApiService,
-        private operationApi: OperationApiService
+        private operationApi: OperationApiService,
+        private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
     ) {}
 
     fetchFormations(): Observable<void> {
-        if (!this._referenceDate$.getValue() || !this._days$.getValue()) {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
             return of(null).pipe(
                 tap(() => {
                     this._formations$.next([]);
@@ -62,10 +51,9 @@ export class OperationPastTimeService {
             );
         }
 
-        const referenceDate = cloneDeep(this._referenceDate$.getValue());
-        const start = referenceDate.format('YYYY-MM-DD');
-        const end = referenceDate
-            .add(this._days$.getValue() - 1, 'days')
+        const start = dayjs(referenceDate, 'YYYY-MM-DD').format('YYYY-MM-DD');
+        const end = dayjs(referenceDate, 'YYYY-MM-DD')
+            .add(days - 1, 'days')
             .format('YYYY-MM-DD');
 
         return this.formationApi
@@ -87,7 +75,10 @@ export class OperationPastTimeService {
     }
 
     fetchOperationSightings(): Observable<void> {
-        if (!this._referenceDate$.getValue() || !this._days$.getValue()) {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
             return of(null).pipe(
                 tap(() => {
                     this._operationSightings$.next([]);
@@ -95,19 +86,18 @@ export class OperationPastTimeService {
             );
         }
 
-        const referenceDate = cloneDeep(this._referenceDate$.getValue());
-        const start = referenceDate
+        const start = dayjs(referenceDate, 'YYYY-MM-DD')
             .hour(4)
             .minute(0)
             .second(0)
             .millisecond(0)
             .toISOString();
-        const end = referenceDate
+        const end = dayjs(referenceDate, 'YYYY-MM-DD')
             .hour(4)
             .minute(0)
             .second(0)
             .millisecond(0)
-            .add(this._days$.getValue(), 'days')
+            .add(days, 'days')
             .toISOString();
 
         return this.operationApi
@@ -124,7 +114,10 @@ export class OperationPastTimeService {
     }
 
     fetchCalendars(): Observable<void> {
-        if (!this._referenceDate$.getValue() || !this._days$.getValue()) {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
             return of(null).pipe(
                 tap(() => {
                     this._calendars$.next([]);
@@ -132,15 +125,13 @@ export class OperationPastTimeService {
             );
         }
 
-        const days = this._days$.getValue();
         const observers: Observable<{
             date: Moment;
             calendar: ICalendar;
         }>[] = [];
 
         for (let i = 0; i < days; i++) {
-            const referenceDate = cloneDeep(this._referenceDate$.getValue());
-            const target = referenceDate.add(i, 'days');
+            const target = moment(referenceDate, 'YYYY-MM-DD').add(i, 'days');
 
             observers.push(
                 this.calendarApi
