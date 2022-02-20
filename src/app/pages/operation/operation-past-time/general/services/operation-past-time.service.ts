@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { FormationApiService } from 'src/app/general/api/formation-api.service';
-import { OperationApiService } from 'src/app/general/api/operation-api.service';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import {
     OperationPastTimeStateQuery,
     OperationPastTimeStateStore,
@@ -15,57 +14,12 @@ import {
 
 @Injectable()
 export class OperationPastTimeService {
-    private _operationSightings$: BehaviorSubject<IOperationSighting[]> =
-        new BehaviorSubject<IOperationSighting[]>([]);
-    operationSightings$: Observable<IOperationSighting[]> =
-        this._operationSightings$.asObservable();
-
     constructor(
-        private formationApi: FormationApiService,
-        private operationApi: OperationApiService,
         private readonly formationService: FormationService,
+        private readonly operationSightingService: OperationSightingService,
         private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
         private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
     ) {}
-
-    fetchOperationSightings(): Observable<void> {
-        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
-        const days = this.operationPastTimeStateQuery.days;
-
-        if (!referenceDate || !days) {
-            return of(null).pipe(
-                tap(() => {
-                    this._operationSightings$.next([]);
-                })
-            );
-        }
-
-        const start = dayjs(referenceDate, 'YYYY-MM-DD')
-            .hour(4)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .toISOString();
-        const end = dayjs(referenceDate, 'YYYY-MM-DD')
-            .hour(4)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .add(days, 'days')
-            .toISOString();
-
-        return this.operationApi
-            .getOperationSightings({
-                start_sighting_time: start,
-                end_sighting_time: end,
-            })
-            .pipe(
-                tap((data) => {
-                    this._operationSightings$.next(data);
-                }),
-                map(() => null)
-            );
-    }
 
     // v2
 
@@ -95,5 +49,49 @@ export class OperationPastTimeService {
                 }),
                 map(() => undefined)
             );
+    }
+
+    fetchOperationSightingsV2(): Observable<void> {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
+            // this.operationPastTimeStateStore.setFormations([]);
+            return of(null);
+        }
+
+        const start = dayjs(referenceDate, 'YYYY-MM-DD')
+            .hour(4)
+            .minute(0)
+            .second(0)
+            .millisecond(0)
+            .toISOString();
+        const end = dayjs(referenceDate, 'YYYY-MM-DD')
+            .hour(4)
+            .minute(0)
+            .second(0)
+            .millisecond(0)
+            .add(days, 'days')
+            .toISOString();
+
+        const qb = new RequestQueryBuilder()
+            .setFilter([
+                {
+                    field: 'sightingTime',
+                    operator: CondOperator.BETWEEN,
+                    value: [start, end],
+                },
+            ])
+            .setJoin([{ field: 'operation' }])
+            .sortBy([{ field: 'sightingTime', order: 'ASC' }]);
+
+        return this.operationSightingService.findMany(qb).pipe(
+            tap((sightings: OperationSightingDetailsDto[]) => {
+                this.operationPastTimeStateStore.setOperationSightings(
+                    sightings
+                );
+            }),
+            map(() => undefined)
+        );
     }
 }

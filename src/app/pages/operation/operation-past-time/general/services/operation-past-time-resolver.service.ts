@@ -10,7 +10,7 @@ export class OperationPastTimeResolverService
     implements Resolve<Observable<void>>
 {
     constructor(
-        private operationPastTimeService: OperationPastTimeService,
+        private readonly operationPastTimeService: OperationPastTimeService,
         private readonly operationPastTimeStateStore: OperationPastTimeStateStore
     ) {}
 
@@ -21,8 +21,8 @@ export class OperationPastTimeResolverService
         this.operationPastTimeStateStore.setDays(+route.paramMap.get('days'));
 
         return forkJoin([
-            this.operationPastTimeService.fetchOperationSightings(),
             this.operationPastTimeService.fetchFormationsV2(),
+            this.operationPastTimeService.fetchOperationSightingsV2(),
         ]).pipe(map(() => null));
     }
 }
