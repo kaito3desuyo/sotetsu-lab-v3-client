@@ -21,6 +21,7 @@ import {
     OperationPastTimeStateQuery,
     OperationPastTimeStateStore,
 } from './states/operation-past-time.state';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 
 @NgModule({
     imports: [
@@ -35,6 +36,7 @@ import {
         MatTooltipModule,
         MatDatepickerModule,
         MatButtonModule,
+        PipesModule,
     ],
     exports: [],
     declarations: [

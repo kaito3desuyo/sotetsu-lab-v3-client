@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
-import { OperationPastTimeService } from '../../services/operation-past-time.service';
-import { Observable, zip } from 'rxjs';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { Component } from '@angular/core';
+import dayjs from 'dayjs';
+import { combineLatest, forkJoin, Observable } from 'rxjs';
+import { map, mergeMap, take } from 'rxjs/operators';
 import { IFormation } from 'src/app/general/interfaces/formation';
-import { Moment } from 'moment';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { OperationPastTimeStateQuery } from '../../../states/operation-past-time.state';
+import { OperationPastTimeService } from '../../services/operation-past-time.service';
 
 @Component({
     selector: 'app-operation-sightings-table-by-date-container',
@@ -14,11 +16,39 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 export class OperationSightingsTableByDateContainerComponent {
     formations$: Observable<IFormation[]>;
     operationSightings$: Observable<IOperationSighting[]>;
-    calendars$: Observable<{ date: Moment; calendar: ICalendar }[]>;
+    readonly calendars$ = combineLatest([
+        this.operationPastTimeStateQuery.referenceDate$,
+        this.operationPastTimeStateQuery.days$,
+    ]).pipe(
+        map(([referenceDate, days]) => {
+            if (!referenceDate || !days) return [];
+            const dates = [];
+            const base = dayjs(referenceDate, 'YYYY-MM-DD');
+            for (let i = 0; i < days; i++) {
+                const date = base.add(i, 'days');
+                dates.push(date.format('YYYY-MM-DD'));
+            }
+            return dates;
+        }),
+        mergeMap((dates) => {
+            return forkJoin(
+                dates.map((date) =>
+                    this.calendarListStateQuery.selectByDate(date).pipe(
+                        take(1),
+                        map((calendar) => ({ date, calendar }))
+                    )
+                )
+            );
+        })
+    );
 
-    constructor(private operationPastTimeService: OperationPastTimeService) {
+    constructor(
+        private operationPastTimeService: OperationPastTimeService,
+        private readonly calendarListStateQuery: CalendarListStateQuery,
+        private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
+    ) {
         this.formations$ = this.operationPastTimeService.formations$;
-        this.operationSightings$ = this.operationPastTimeService.operationSightings$;
-        this.calendars$ = this.operationPastTimeService.calendars$;
+        this.operationSightings$ =
+            this.operationPastTimeService.operationSightings$;
     }
 }

@@ -11,6 +11,7 @@ import { groupBy, forIn } from 'lodash-es';
 import moment, { Moment } from 'moment';
 import { IFormation } from 'src/app/general/interfaces/formation';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 
 @Component({
     selector: 'app-operation-sightings-table-by-date-presentational',
@@ -22,11 +23,12 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationSightingsTableByDatePresentationalComponent
-    implements OnChanges {
+    implements OnChanges
+{
     @Input() formations: IFormation[];
     @Input() operationSightings: IOperationSighting[];
     @Input() dates: Moment[];
-    @Input() calendars: { date: Moment; calendar: ICalendar }[];
+    @Input() calendars: { date: string; calendar: CalendarDetailsDto }[];
 
     groupedByDate = {};
 

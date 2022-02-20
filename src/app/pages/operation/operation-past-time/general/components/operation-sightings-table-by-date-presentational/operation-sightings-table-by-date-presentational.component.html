@@ -20,7 +20,14 @@
                     <thead>
                         <tr>
                             <th *ngFor="let calendar of calendars">
-                                {{ calendar.date.format('MM/DD') }}<br />
+                                {{
+                                    calendar.date
+                                        | dayjs
+                                            : {
+                                                  format: 'MM/DD',
+                                                  parseFormat: 'YYYY/MM/DD'
+                                              }
+                                }}<br />
                                 <small>{{
                                     calendar.calendar.calendarName
                                 }}</small>
@@ -34,7 +41,7 @@
                                     *ngIf="
                                         groupedByDate[formation.id] &&
                                         groupedByDate[formation.id][
-                                            calendar.date.format('YYYY-MM-DD')
+                                            calendar.date
                                         ]
                                     "
                                 >
@@ -47,21 +54,18 @@
                                             *ngFor="
                                                 let sighting of groupedByDate[
                                                     formation.id
-                                                ][
-                                                    calendar.date.format(
-                                                        'YYYY-MM-DD'
-                                                    )
-                                                ];
+                                                ][calendar.date];
                                                 let i = index
                                             "
                                         >
                                             <div
                                                 class="operation-number-circle"
                                                 [ngStyle]="{
-                                                    background: getOperationNumberColor(
-                                                        sighting?.operation
-                                                            ?.operationNumber
-                                                    )
+                                                    background:
+                                                        getOperationNumberColor(
+                                                            sighting?.operation
+                                                                ?.operationNumber
+                                                        )
                                                 }"
                                                 [matTooltip]="
                                                     convertMoment(
@@ -82,9 +86,7 @@
                                                         fxLayout="row"
                                                         fxLayoutAlign="center center"
                                                     >
-                                                        <span>
-                                                            休
-                                                        </span>
+                                                        <span> 休 </span>
                                                     </div>
                                                 </ng-container>
                                                 <ng-container

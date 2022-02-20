@@ -22,7 +22,6 @@ export class OperationPastTimeResolverService
         this.operationPastTimeStateStore.setDays(+route.paramMap.get('days'));
 
         return forkJoin([
-            this.operationPastTimeService.fetchCalendars(),
             this.operationPastTimeService.fetchFormations(),
             this.operationPastTimeService.fetchOperationSightings(),
         ]).pipe(map(() => null));

@@ -6,6 +6,7 @@ import {
     StoreConfig,
 } from '@datorama/akita';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import dayjs from 'dayjs';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
@@ -56,8 +57,18 @@ export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
         super(store);
     }
 
-    findByCalendarId(calendarId: string): Observable<CalendarDetailsDto> {
+    selectByCalendarId(calendarId: string): Observable<CalendarDetailsDto> {
         return this.selectEntity((e) => e.calendarId === calendarId);
+    }
+
+    selectByDate(date: string): Observable<CalendarDetailsDto> {
+        const format = 'YYYY-MM-DD';
+        const targetDate = dayjs(date, format);
+        return this.selectEntity(
+            (e) =>
+                dayjs(e.startDate, format).isSameOrBefore(targetDate) &&
+                dayjs(e.endDate, format).isSameOrAfter(targetDate)
+        );
     }
 }
 

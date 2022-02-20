@@ -1,27 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, BehaviorSubject, of, forkJoin, zip } from 'rxjs';
-import { OperationApiService } from 'src/app/general/api/operation-api.service';
-import { tap, map, take } from 'rxjs/operators';
-import moment, { Moment } from 'moment';
-import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { IFormation } from 'src/app/general/interfaces/formation';
-import { FormationApiService } from 'src/app/general/api/formation-api.service';
-import { FormationModel } from 'src/app/general/models/formation/formation-model';
-import { cloneDeep } from 'lodash-es';
-import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
-import { ICalendar } from 'src/app/general/interfaces/calendar';
-import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
-import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
 import dayjs from 'dayjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { FormationApiService } from 'src/app/general/api/formation-api.service';
+import { OperationApiService } from 'src/app/general/api/operation-api.service';
+import { IFormation } from 'src/app/general/interfaces/formation';
+import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
+import { FormationModel } from 'src/app/general/models/formation/formation-model';
+import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
 
 @Injectable()
 export class OperationPastTimeService {
-    private _calendars$: BehaviorSubject<
-        { date: Moment; calendar: ICalendar }[]
-    > = new BehaviorSubject<{ date: Moment; calendar: ICalendar }[]>(null);
-    calendars$: Observable<{ date: Moment; calendar: ICalendar }[]> =
-        this._calendars$.asObservable();
-
     private _formations$: BehaviorSubject<IFormation[]> = new BehaviorSubject<
         IFormation[]
     >([]);
@@ -33,7 +22,6 @@ export class OperationPastTimeService {
         this._operationSightings$.asObservable();
 
     constructor(
-        private calendarApi: CalendarApiService,
         private formationApi: FormationApiService,
         private operationApi: OperationApiService,
         private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
@@ -111,54 +99,5 @@ export class OperationPastTimeService {
                 }),
                 map(() => null)
             );
-    }
-
-    fetchCalendars(): Observable<void> {
-        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
-        const days = this.operationPastTimeStateQuery.days;
-
-        if (!referenceDate || !days) {
-            return of(null).pipe(
-                tap(() => {
-                    this._calendars$.next([]);
-                })
-            );
-        }
-
-        const observers: Observable<{
-            date: Moment;
-            calendar: ICalendar;
-        }>[] = [];
-
-        for (let i = 0; i < days; i++) {
-            const target = moment(referenceDate, 'YYYY-MM-DD').add(i, 'days');
-
-            observers.push(
-                this.calendarApi
-                    .searchCalendars({
-                        date: target.format('YYYY-MM-DD'),
-                    })
-                    .pipe(
-                        map((data) =>
-                            data.calendars.map((o) =>
-                                CalendarModel.readCalendarDtoImpl(o)
-                            )
-                        ),
-                        map((data) => {
-                            return {
-                                date: target,
-                                calendar: data[0],
-                            };
-                        })
-                    )
-            );
-        }
-
-        return forkJoin(observers).pipe(
-            tap((data) => {
-                this._calendars$.next(data);
-            }),
-            map(() => null)
-        );
     }
 }
