@@ -1,8 +1,7 @@
 import { Component } from '@angular/core';
 import dayjs from 'dayjs';
-import { combineLatest, forkJoin, Observable } from 'rxjs';
+import { combineLatest, forkJoin, Observable, of } from 'rxjs';
 import { map, mergeMap, take } from 'rxjs/operators';
-import { IFormation } from 'src/app/general/interfaces/formation';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { OperationPastTimeStateQuery } from '../../../states/operation-past-time.state';
@@ -14,7 +13,7 @@ import { OperationPastTimeService } from '../../services/operation-past-time.ser
     styleUrls: ['./operation-sightings-table-by-date-container.component.scss'],
 })
 export class OperationSightingsTableByDateContainerComponent {
-    formations$: Observable<IFormation[]>;
+    formations$ = this.operationPastTimeStateQuery.formations$;
     operationSightings$: Observable<IOperationSighting[]>;
     readonly calendars$ = combineLatest([
         this.operationPastTimeStateQuery.referenceDate$,
@@ -31,6 +30,7 @@ export class OperationSightingsTableByDateContainerComponent {
             return dates;
         }),
         mergeMap((dates) => {
+            if (!dates.length) return of([]);
             return forkJoin(
                 dates.map((date) =>
                     this.calendarListStateQuery.selectByDate(date).pipe(
@@ -47,7 +47,6 @@ export class OperationSightingsTableByDateContainerComponent {
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
     ) {
-        this.formations$ = this.operationPastTimeService.formations$;
         this.operationSightings$ =
             this.operationPastTimeService.operationSightings$;
     }

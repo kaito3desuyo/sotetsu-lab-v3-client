@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
-import { OperationPastTimeService } from './operation-past-time.service';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
-import { Observable, forkJoin } from 'rxjs';
+import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import moment from 'moment';
 import { OperationPastTimeStateStore } from '../../states/operation-past-time.state';
+import { OperationPastTimeService } from './operation-past-time.service';
 
 @Injectable()
 export class OperationPastTimeResolverService
@@ -22,8 +21,8 @@ export class OperationPastTimeResolverService
         this.operationPastTimeStateStore.setDays(+route.paramMap.get('days'));
 
         return forkJoin([
-            this.operationPastTimeService.fetchFormations(),
             this.operationPastTimeService.fetchOperationSightings(),
+            this.operationPastTimeService.fetchFormationsV2(),
         ]).pipe(map(() => null));
     }
 }

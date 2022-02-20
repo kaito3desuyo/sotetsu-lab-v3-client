@@ -37,4 +37,34 @@ export class FormationQuery {
                 })
             );
     }
+
+    findManyBySpecificPeriod(
+        qb: RequestQueryBuilder,
+        params: { startDate: string; endDate: string }
+    ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<FormationModel[]>(
+                this.apiUrl +
+                    '/from/' +
+                    params.startDate +
+                    '/to/' +
+                    params.endDate,
+                {
+                    params: httpParams,
+                    observe: 'response',
+                }
+            )
+            .pipe(
+                map((res) => {
+                    return Pagination.isApiPaginated(res)
+                        ? Pagination.create(
+                              res.body.map((o) => buildFormationDetailsDto(o)),
+                              Pagination.getApiPageSettings(res)
+                          )
+                        : res.body.map((o) => buildFormationDetailsDto(o));
+                })
+            );
+    }
 }

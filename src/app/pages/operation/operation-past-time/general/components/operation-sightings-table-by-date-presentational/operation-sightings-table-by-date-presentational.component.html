@@ -39,8 +39,8 @@
                             <td *ngFor="let calendar of calendars">
                                 <ng-container
                                     *ngIf="
-                                        groupedByDate[formation.id] &&
-                                        groupedByDate[formation.id][
+                                        groupedByDate[formation.formationId] &&
+                                        groupedByDate[formation.formationId][
                                             calendar.date
                                         ]
                                     "
@@ -53,7 +53,7 @@
                                         <ng-container
                                             *ngFor="
                                                 let sighting of groupedByDate[
-                                                    formation.id
+                                                    formation.formationId
                                                 ][calendar.date];
                                                 let i = index
                                             "

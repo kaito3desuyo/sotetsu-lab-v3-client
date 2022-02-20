@@ -12,6 +12,7 @@ import moment, { Moment } from 'moment';
 import { IFormation } from 'src/app/general/interfaces/formation';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 
 @Component({
     selector: 'app-operation-sightings-table-by-date-presentational',
@@ -25,7 +26,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 export class OperationSightingsTableByDatePresentationalComponent
     implements OnChanges
 {
-    @Input() formations: IFormation[];
+    @Input() formations: FormationDetailsDto[];
     @Input() operationSightings: IOperationSighting[];
     @Input() dates: Moment[];
     @Input() calendars: { date: string; calendar: CalendarDetailsDto }[];

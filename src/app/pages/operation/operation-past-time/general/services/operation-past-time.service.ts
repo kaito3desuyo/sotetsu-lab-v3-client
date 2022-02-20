@@ -1,21 +1,20 @@
 import { Injectable } from '@angular/core';
+import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { FormationApiService } from 'src/app/general/api/formation-api.service';
 import { OperationApiService } from 'src/app/general/api/operation-api.service';
-import { IFormation } from 'src/app/general/interfaces/formation';
 import { IOperationSighting } from 'src/app/general/interfaces/operation-sighting';
-import { FormationModel } from 'src/app/general/models/formation/formation-model';
-import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import {
+    OperationPastTimeStateQuery,
+    OperationPastTimeStateStore,
+} from '../../states/operation-past-time.state';
 
 @Injectable()
 export class OperationPastTimeService {
-    private _formations$: BehaviorSubject<IFormation[]> = new BehaviorSubject<
-        IFormation[]
-    >([]);
-    formations$: Observable<IFormation[]> = this._formations$.asObservable();
-
     private _operationSightings$: BehaviorSubject<IOperationSighting[]> =
         new BehaviorSubject<IOperationSighting[]>([]);
     operationSightings$: Observable<IOperationSighting[]> =
@@ -24,43 +23,10 @@ export class OperationPastTimeService {
     constructor(
         private formationApi: FormationApiService,
         private operationApi: OperationApiService,
+        private readonly formationService: FormationService,
+        private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
         private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
     ) {}
-
-    fetchFormations(): Observable<void> {
-        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
-        const days = this.operationPastTimeStateQuery.days;
-
-        if (!referenceDate || !days) {
-            return of(null).pipe(
-                tap(() => {
-                    this._formations$.next([]);
-                })
-            );
-        }
-
-        const start = dayjs(referenceDate, 'YYYY-MM-DD').format('YYYY-MM-DD');
-        const end = dayjs(referenceDate, 'YYYY-MM-DD')
-            .add(days - 1, 'days')
-            .format('YYYY-MM-DD');
-
-        return this.formationApi
-            .searchFormations({
-                start_date: start,
-                end_date: end,
-            })
-            .pipe(
-                map((data) =>
-                    data.formations.map((o) =>
-                        FormationModel.readFormationDtoImpl(o)
-                    )
-                ),
-                tap((data) => {
-                    this._formations$.next(data);
-                }),
-                map(() => null)
-            );
-    }
 
     fetchOperationSightings(): Observable<void> {
         const referenceDate = this.operationPastTimeStateQuery.referenceDate;
@@ -98,6 +64,36 @@ export class OperationPastTimeService {
                     this._operationSightings$.next(data);
                 }),
                 map(() => null)
+            );
+    }
+
+    // v2
+
+    fetchFormationsV2(): Observable<void> {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
+            this.operationPastTimeStateStore.setFormations([]);
+            return of(null);
+        }
+
+        const format = 'YYYY-MM-DD';
+        const refDate = dayjs(referenceDate, format);
+        const start = refDate.format(format);
+        const end = refDate.add(days - 1, 'days').format(format);
+        const qb = new RequestQueryBuilder();
+
+        return this.formationService
+            .findManyBySpecificPeriod(qb, {
+                startDate: start,
+                endDate: end,
+            })
+            .pipe(
+                tap((formations: FormationDetailsDto[]) => {
+                    this.operationPastTimeStateStore.setFormations(formations);
+                }),
+                map(() => undefined)
             );
     }
 }
