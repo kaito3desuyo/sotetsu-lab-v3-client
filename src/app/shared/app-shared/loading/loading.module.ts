@@ -8,7 +8,6 @@ import { LoadingService } from './loading.service';
 @NgModule({
     imports: [CommonModule, MatProgressSpinnerModule, MatProgressBarModule],
     declarations: [LoadingComponent],
-    entryComponents: [LoadingComponent],
-    providers: [LoadingService],
+    providers: [LoadingService]
 })
 export class LoadingModule {}

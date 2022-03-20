@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
-import { isString } from 'class-validator';
 import dayjs from 'dayjs';
-import { groupBy } from 'lodash-es';
+import { groupBy, isString } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
