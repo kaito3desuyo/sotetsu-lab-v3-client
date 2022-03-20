@@ -11,6 +11,14 @@ export class OperationSightingService {
         private readonly operationSightingQuery: OperationSightingQuery
     ) {}
 
+    findMany(
+        qb: RequestQueryBuilder
+    ): Observable<
+        Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
+    > {
+        return this.operationSightingQuery.findMany(qb);
+    }
+
     findManyLatestGroupByFormation(
         qb: RequestQueryBuilder
     ): Observable<

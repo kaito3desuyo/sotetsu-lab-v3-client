@@ -15,6 +15,34 @@ export class OperationSightingQuery {
 
     constructor(private readonly http: HttpClient) {}
 
+    findMany(
+        qb: RequestQueryBuilder
+    ): Observable<
+        Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
+    > {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<OperationSightingModel[]>(this.apiUrl, {
+                params: httpParams,
+                observe: 'response',
+            })
+            .pipe(
+                map((res) => {
+                    return Pagination.isApiPaginated(res)
+                        ? Pagination.create(
+                              res.body.map((o) =>
+                                  buildOperationSightingDetailsDto(o)
+                              ),
+                              Pagination.getApiPageSettings(res)
+                          )
+                        : res.body.map((o) =>
+                              buildOperationSightingDetailsDto(o)
+                          );
+                })
+            );
+    }
+
     findManyLatestGroupByOperation(
         qb: RequestQueryBuilder
     ): Observable<

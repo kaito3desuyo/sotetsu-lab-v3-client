@@ -1,17 +1,13 @@
-<section
-    class="operation-past-time my-24"
-    [ngClass.lt-md]="['mx-16']"
-    [ngClass.gt-sm]="['mx-64']"
+<main
     fxLayout="column"
-    fxLayoutGap="24px"
+    fxLayoutGap="16px"
+    [ngClass.lt-md]="['p-16']"
+    [ngClass.gt-sm]="['p-64']"
 >
     <header>
-        <h2 class="mat-h2 m-0">
-            過去の運用情報
-        </h2>
+        <app-operation-past-time-header-c></app-operation-past-time-header-c>
     </header>
-    <div role="main" fxLayout="column" fxLayoutGap="16px">
-        <app-operation-sightings-search-form-container></app-operation-sightings-search-form-container>
-        <app-operation-sightings-table-by-date-container></app-operation-sightings-table-by-date-container>
+    <div>
+        <app-operation-past-time-main-c></app-operation-past-time-main-c>
     </div>
-</section>
+</main>

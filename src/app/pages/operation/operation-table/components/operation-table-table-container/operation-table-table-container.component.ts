@@ -11,7 +11,7 @@ import { OperationTableStateQuery } from '../../states/operation-table.state';
 export class OperationTableTableContainerComponent {
     readonly calendar$ = this.operationTableStateQuery.calendarId$.pipe(
         switchMap((calendarId) =>
-            this.calendarListStateQuery.findByCalendarId(calendarId)
+            this.calendarListStateQuery.selectByCalendarId(calendarId)
         )
     );
     readonly allOperationTrips$ =

@@ -9,7 +9,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let formation of formations">
+                        <tr
+                            *ngFor="
+                                let formation of formations;
+                                trackBy: 'formationNumber' | trackBy
+                            "
+                        >
                             <td>{{ formation.formationNumber }}</td>
                         </tr>
                     </tbody>
@@ -19,8 +24,20 @@
                 <table>
                     <thead>
                         <tr>
-                            <th *ngFor="let calendar of calendars">
-                                {{ calendar.date.format('MM/DD') }}<br />
+                            <th
+                                *ngFor="
+                                    let calendar of calendars;
+                                    trackBy: 'date' | trackBy
+                                "
+                            >
+                                {{
+                                    calendar.date
+                                        | dayjs
+                                            : {
+                                                  format: 'MM/DD',
+                                                  parseFormat: 'YYYY/MM/DD'
+                                              }
+                                }}<br />
                                 <small>{{
                                     calendar.calendar.calendarName
                                 }}</small>
@@ -28,14 +45,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let formation of formations">
-                            <td *ngFor="let calendar of calendars">
+                        <tr
+                            *ngFor="
+                                let formation of formations;
+                                trackBy: 'formationNumber' | trackBy
+                            "
+                        >
+                            <td
+                                *ngFor="
+                                    let calendar of calendars;
+                                    trackBy: 'date' | trackBy
+                                "
+                            >
                                 <ng-container
                                     *ngIf="
-                                        groupedByDate[formation.id] &&
-                                        groupedByDate[formation.id][
-                                            calendar.date.format('YYYY-MM-DD')
-                                        ]
+                                        operationSightings[
+                                            formation.formationId
+                                        ] &&
+                                        operationSightings[
+                                            formation.formationId
+                                        ][calendar.date]
                                     "
                                 >
                                     <div
@@ -45,36 +74,34 @@
                                     >
                                         <ng-container
                                             *ngFor="
-                                                let sighting of groupedByDate[
-                                                    formation.id
-                                                ][
-                                                    calendar.date.format(
-                                                        'YYYY-MM-DD'
-                                                    )
-                                                ];
-                                                let i = index
+                                                let sighting of operationSightings[
+                                                    formation.formationId
+                                                ][calendar.date];
+                                                let i = index;
+                                                trackBy: 'operationSightingId'
+                                                    | trackBy
                                             "
                                         >
                                             <div
                                                 class="operation-number-circle"
                                                 [ngStyle]="{
-                                                    background: getOperationNumberColor(
-                                                        sighting?.operation
-                                                            ?.operationNumber
-                                                    )
+                                                    background:
+                                                        sighting.operation
+                                                            .operationNumber
+                                                        | operationNumberColor
                                                 }"
                                                 [matTooltip]="
-                                                    convertMoment(
-                                                        sighting?.sightingTime
-                                                    ).format(
-                                                        '目撃：YYYY/MM/DD HH:mm:ss'
-                                                    )
+                                                    sighting.sightingTime
+                                                        | dayjs
+                                                            : {
+                                                                  format: '目撃：YYYY/MM/DD HH:mm:ss'
+                                                              }
                                                 "
                                             >
                                                 <ng-container
                                                     *ngIf="
-                                                        sighting?.operation
-                                                            ?.operationNumber ===
+                                                        sighting.operation
+                                                            .operationNumber ===
                                                         '100'
                                                     "
                                                 >
@@ -82,15 +109,13 @@
                                                         fxLayout="row"
                                                         fxLayoutAlign="center center"
                                                     >
-                                                        <span>
-                                                            休
-                                                        </span>
+                                                        <span> 休 </span>
                                                     </div>
                                                 </ng-container>
                                                 <ng-container
                                                     *ngIf="
-                                                        sighting?.operation
-                                                            ?.operationNumber !==
+                                                        sighting.operation
+                                                            .operationNumber !==
                                                         '100'
                                                     "
                                                 >
@@ -99,9 +124,7 @@
                                                             '/operation/route-diagram',
                                                             {
                                                                 operation_id:
-                                                                    sighting
-                                                                        ?.operation
-                                                                        ?.id
+                                                                    sighting.operationId
                                                             }
                                                         ]"
                                                         fxLayout="row"
@@ -110,8 +133,8 @@
                                                         <span>
                                                             {{
                                                                 sighting
-                                                                    ?.operation
-                                                                    ?.operationNumber
+                                                                    .operation
+                                                                    .operationNumber
                                                             }}
                                                         </span>
                                                     </a>
