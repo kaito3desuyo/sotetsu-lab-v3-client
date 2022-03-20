@@ -47,7 +47,9 @@
                     <a
                         *ngIf="
                             !!element.operationSighting?.circulatedOperation
-                                ?.operationNumber
+                                ?.operationNumber &&
+                            element.operationSighting.circulatedOperation
+                                .operationNumber !== '100'
                         "
                         [routerLink]="[
                             '/operation',
@@ -65,11 +67,8 @@
                             "
                         >
                             {{
-                                (element.operationSighting.circulatedOperation
-                                    .operationNumber !== '100'
-                                    ? element.operationSighting
-                                          .circulatedOperation.operationNumber
-                                    : '休') +
+                                element.operationSighting.circulatedOperation
+                                    .operationNumber +
                                     ((element
                                         | operationRealTimeFormationNumberStyle)[
                                         'font-weight'
@@ -79,6 +78,23 @@
                             }}
                         </span>
                     </a>
+
+                    <div
+                        *ngIf="
+                            !!element.operationSighting?.circulatedOperation
+                                ?.operationNumber &&
+                            element.operationSighting.circulatedOperation
+                                .operationNumber === '100'
+                        "
+                    >
+                        <span
+                            [ngStyle]="
+                                element | operationRealTimeFormationNumberStyle
+                            "
+                        >
+                            休
+                        </span>
+                    </div>
 
                     <div
                         *ngIf="
