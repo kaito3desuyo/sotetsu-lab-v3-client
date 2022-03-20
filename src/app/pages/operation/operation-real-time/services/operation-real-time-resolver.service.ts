@@ -15,13 +15,13 @@ export class OperationRealTimeResolverService
             // v2
             this.operationRealTimeService.fetchOperationsV2(),
             this.operationRealTimeService.fetchFormationsV2(),
-            this.operationRealTimeService.fetchOperationSightings(),
-            this.operationRealTimeService.fetchFormationSightings(),
             this.operationRealTimeService.fetchTripClassesV2(),
         ]).pipe(
             mergeMap(() => {
                 return forkJoin([
                     // v2
+                    this.operationRealTimeService.fetchOperationSightings(),
+                    this.operationRealTimeService.fetchFormationSightings(),
                     this.operationRealTimeService.fetchOperationCurrentPosition(),
                 ]);
             }),
