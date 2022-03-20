@@ -1,0 +1,19 @@
+<div fxLayout="column" fxLayoutGap="16px">
+    <div>
+        <app-operation-sightings-search-form-presentational
+            [referenceDate]="referenceDate$ | async"
+            [days]="days$ | async"
+            (clickSearch)="onReceiveClickSearch($event)"
+        ></app-operation-sightings-search-form-presentational>
+    </div>
+    <div>
+        <app-operation-sightings-table-by-date-presentational
+            [formations]="formations$ | async"
+            [operationSightings]="operationSightings$ | async"
+            [calendars]="calendars$ | async"
+        ></app-operation-sightings-table-by-date-presentational>
+    </div>
+    <div>
+        <app-operation-search-card-c></app-operation-search-card-c>
+    </div>
+</div>

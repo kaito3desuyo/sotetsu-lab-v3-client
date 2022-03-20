@@ -22,6 +22,10 @@ import {
     OperationPastTimeStateStore,
 } from './states/operation-past-time.state';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationPastTimeHeaderCComponent } from './general/components/operation-past-time-header-c/operation-past-time-header-c.component';
+import { OperationPastTimeMainCComponent } from './general/components/operation-past-time-main-c/operation-past-time-main-c.component';
+import { OperationPastTimeHeaderPComponent } from './general/components/operation-past-time-header-p/operation-past-time-header-p.component';
+import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
 
 @NgModule({
     imports: [
@@ -37,6 +41,7 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
         MatDatepickerModule,
         MatButtonModule,
         PipesModule,
+        OperationSearchCardModule,
     ],
     exports: [],
     declarations: [
@@ -45,6 +50,9 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
         OperationSightingsTableByDatePresentationalComponent,
         OperationSightingsSearchFormContainerComponent,
         OperationSightingsSearchFormPresentationalComponent,
+        OperationPastTimeHeaderCComponent,
+        OperationPastTimeMainCComponent,
+        OperationPastTimeHeaderPComponent,
     ],
     providers: [
         OperationPastTimeService,
