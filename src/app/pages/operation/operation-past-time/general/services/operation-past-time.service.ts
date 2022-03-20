@@ -27,6 +27,14 @@ export class OperationPastTimeService {
     // v2
 
     fetchCalendarByDate(): Observable<void> {
+        const referenceDate = this.operationPastTimeStateQuery.referenceDate;
+        const days = this.operationPastTimeStateQuery.days;
+
+        if (!referenceDate || !days) {
+            this.operationPastTimeStateStore.setCalendars([]);
+            return of(null);
+        }
+
         const qb = new RequestQueryBuilder();
         return this.operationPastTimeStateQuery.selectDates().pipe(
             take(1),
