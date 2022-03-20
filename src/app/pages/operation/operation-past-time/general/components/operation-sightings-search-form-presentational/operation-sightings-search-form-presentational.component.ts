@@ -1,14 +1,14 @@
 import {
-    Component,
     ChangeDetectionStrategy,
-    Output,
+    Component,
     EventEmitter,
     Input,
-    OnChanges,
-    SimpleChanges,
+    Output,
 } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RxState } from '@rx-angular/state';
 import moment, { Moment } from 'moment';
+import { Subject } from 'rxjs';
 
 @Component({
     selector: 'app-operation-sightings-search-form-presentational',
@@ -18,21 +18,28 @@ import moment, { Moment } from 'moment';
         './operation-sightings-search-form-presentational.component.scss',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [RxState],
 })
-export class OperationSightingsSearchFormPresentationalComponent
-    implements OnChanges
-{
-    searchForm: FormGroup = this.fb.group({
+export class OperationSightingsSearchFormPresentationalComponent {
+    readonly searchForm: FormGroup = this.fb.group({
         referenceDate: [null, Validators.required],
         days: [
             null,
             [Validators.required, Validators.min(1), Validators.max(30)],
         ],
     });
-    maxDate = moment();
+    readonly maxDate = moment();
 
-    @Input() referenceDate: string;
-    @Input() days: number;
+    readonly onChangedInputReferenceDate$ = new Subject<string>();
+    readonly onChangedInputDays$ = new Subject<number>();
+
+    @Input() set referenceDate(date: string) {
+        this.onChangedInputReferenceDate$.next(date);
+    }
+    @Input() set days(days: number) {
+        this.onChangedInputDays$.next(days);
+    }
+
     @Output() clickSearch: EventEmitter<{
         referenceDate: Moment;
         days: number;
@@ -41,21 +48,19 @@ export class OperationSightingsSearchFormPresentationalComponent
         days: number;
     }>();
 
-    constructor(private fb: FormBuilder) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.referenceDate) {
+    constructor(private fb: FormBuilder, private readonly state: RxState<{}>) {
+        this.state.hold(this.onChangedInputReferenceDate$, (date) => {
             this.searchForm
                 .get('referenceDate')
-                .setValue(moment(this.referenceDate, 'YYYY-MM-DD'));
-        }
-        if (changes.days) {
-            this.searchForm.get('days').setValue(this.days);
-        }
+                .setValue(moment(date, 'YYYY-MM-DD'));
+        });
+
+        this.state.hold(this.onChangedInputDays$, (days) => {
+            this.searchForm.get('days').setValue(days);
+        });
     }
 
     onClickSearch(): void {
-        console.log(this.searchForm.value);
         this.clickSearch.emit(this.searchForm.value);
     }
 }
