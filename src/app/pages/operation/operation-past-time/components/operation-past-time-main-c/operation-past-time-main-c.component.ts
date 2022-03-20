@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Moment } from 'moment';
-import { OperationPastTimeStateQuery } from '../../../states/operation-past-time.state';
+import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
 
 @Component({
     selector: 'app-operation-past-time-main-c',

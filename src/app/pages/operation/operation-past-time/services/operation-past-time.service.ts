@@ -12,7 +12,7 @@ import { OperationSightingService } from 'src/app/libs/operation-sighting/usecas
 import {
     OperationPastTimeStateQuery,
     OperationPastTimeStateStore,
-} from '../../states/operation-past-time.state';
+} from '../states/operation-past-time.state';
 
 @Injectable()
 export class OperationPastTimeService {

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { OperationPastTimeStateStore } from '../../states/operation-past-time.state';
+import { OperationPastTimeStateStore } from '../states/operation-past-time.state';
 import { OperationPastTimeService } from './operation-past-time.service';
 
 @Injectable()
