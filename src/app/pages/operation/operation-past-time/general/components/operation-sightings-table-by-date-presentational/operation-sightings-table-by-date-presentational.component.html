@@ -9,7 +9,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let formation of formations">
+                        <tr
+                            *ngFor="
+                                let formation of formations;
+                                trackBy: 'formationNumber' | trackBy
+                            "
+                        >
                             <td>{{ formation.formationNumber }}</td>
                         </tr>
                     </tbody>
@@ -19,7 +24,12 @@
                 <table>
                     <thead>
                         <tr>
-                            <th *ngFor="let calendar of calendars">
+                            <th
+                                *ngFor="
+                                    let calendar of calendars;
+                                    trackBy: 'date' | trackBy
+                                "
+                            >
                                 {{
                                     calendar.date
                                         | dayjs
@@ -35,8 +45,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let formation of formations">
-                            <td *ngFor="let calendar of calendars">
+                        <tr
+                            *ngFor="
+                                let formation of formations;
+                                trackBy: 'formationNumber' | trackBy
+                            "
+                        >
+                            <td
+                                *ngFor="
+                                    let calendar of calendars;
+                                    trackBy: 'date' | trackBy
+                                "
+                            >
                                 <ng-container
                                     *ngIf="
                                         operationSightings[
@@ -57,7 +77,9 @@
                                                 let sighting of operationSightings[
                                                     formation.formationId
                                                 ][calendar.date];
-                                                let i = index
+                                                let i = index;
+                                                trackBy: 'operationSightingId'
+                                                    | trackBy
                                             "
                                         >
                                             <div
