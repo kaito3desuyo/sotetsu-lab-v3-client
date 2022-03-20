@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
-import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, mergeMap, take, tap } from 'rxjs/operators';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -15,6 +17,7 @@ import {
 @Injectable()
 export class OperationPastTimeService {
     constructor(
+        private readonly calendarService: CalendarService,
         private readonly formationService: FormationService,
         private readonly operationSightingService: OperationSightingService,
         private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
@@ -22,6 +25,33 @@ export class OperationPastTimeService {
     ) {}
 
     // v2
+
+    fetchCalendarByDate(): Observable<void> {
+        const qb = new RequestQueryBuilder();
+        return this.operationPastTimeStateQuery.selectDates().pipe(
+            take(1),
+            mergeMap((dates) => {
+                return forkJoin(
+                    dates.map((date) =>
+                        this.calendarService
+                            .findManyBySpecificDate(qb, { date })
+                            .pipe(
+                                map((calendars: CalendarDetailsDto[]) => {
+                                    return {
+                                        date,
+                                        calendar: calendars[0],
+                                    };
+                                })
+                            )
+                    )
+                );
+            }),
+            tap((calendars) => {
+                this.operationPastTimeStateStore.setCalendars(calendars);
+            }),
+            map(() => undefined)
+        );
+    }
 
     fetchFormationsV2(): Observable<void> {
         const referenceDate = this.operationPastTimeStateQuery.referenceDate;

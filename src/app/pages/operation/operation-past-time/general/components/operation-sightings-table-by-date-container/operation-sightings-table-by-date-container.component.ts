@@ -7,8 +7,7 @@ import { OperationPastTimeStateQuery } from '../../../states/operation-past-time
     styleUrls: ['./operation-sightings-table-by-date-container.component.scss'],
 })
 export class OperationSightingsTableByDateContainerComponent {
-    readonly calendars$ =
-        this.operationPastTimeStateQuery.selectCalendarsFilteredByDates();
+    readonly calendars$ = this.operationPastTimeStateQuery.calendars$;
     readonly formations$ = this.operationPastTimeStateQuery.formations$;
     readonly operationSightings$ =
         this.operationPastTimeStateQuery.selectOperationSightingsGroupedByDate();

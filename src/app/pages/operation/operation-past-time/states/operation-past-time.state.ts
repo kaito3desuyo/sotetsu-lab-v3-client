@@ -3,9 +3,8 @@ import { guid, Query, Store } from '@datorama/akita';
 import { isString } from 'class-validator';
 import dayjs from 'dayjs';
 import { groupBy } from 'lodash-es';
-import { forkJoin, Observable, of } from 'rxjs';
-import { map, mergeMap, take } from 'rxjs/operators';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -13,6 +12,7 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 type OperationPastTimeState = {
     referenceDate: string;
     days: number;
+    calendars: { date: string; calendar: CalendarDetailsDto }[];
     formations: FormationDetailsDto[];
     operationSightings: OperationSightingDetailsDto[];
 };
@@ -24,6 +24,7 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
             {
                 referenceDate: null,
                 days: null,
+                calendars: [],
                 formations: [],
                 operationSightings: [],
             },
@@ -40,6 +41,17 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
     setDays(days: number): void {
         this.update({
             days,
+        });
+    }
+
+    setCalendars(
+        calendars: {
+            date: string;
+            calendar: CalendarDetailsDto;
+        }[]
+    ): void {
+        this.update({
+            calendars,
         });
     }
 
@@ -60,6 +72,7 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
 export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
     readonly referenceDate$ = this.select('referenceDate');
     readonly days$ = this.select('days');
+    readonly calendars$ = this.select('calendars');
     readonly formations$ = this.select('formations');
 
     get referenceDate(): string {
@@ -70,16 +83,11 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
         return this.getValue().days;
     }
 
-    constructor(
-        protected readonly store: OperationPastTimeStateStore,
-        private readonly calendarListStateQuery: CalendarListStateQuery
-    ) {
+    constructor(protected readonly store: OperationPastTimeStateStore) {
         super(store);
     }
 
-    selectCalendarsFilteredByDates(): Observable<
-        { date: string; calendar: CalendarDetailsDto }[]
-    > {
+    selectDates(): Observable<string[]> {
         return this.select(['referenceDate', 'days']).pipe(
             map(({ referenceDate, days }) => {
                 if (!referenceDate || !days) return [];
@@ -90,22 +98,6 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
                     dates.push(date.format('YYYY-MM-DD'));
                 }
                 return dates;
-            }),
-            mergeMap((dates) => {
-                if (!dates.length) {
-                    return of<{ date: string; calendar: CalendarDetailsDto }[]>(
-                        []
-                    );
-                }
-
-                return forkJoin(
-                    dates.map((date) =>
-                        this.calendarListStateQuery.selectByDate(date).pipe(
-                            take(1),
-                            map((calendar) => ({ date, calendar }))
-                        )
-                    )
-                );
             })
         );
     }
