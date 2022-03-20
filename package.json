@@ -27,7 +27,7 @@
     "@angular/platform-browser-dynamic": "~13.3.0",
     "@angular/router": "~13.3.0",
     "@angular/service-worker": "~13.3.0",
-    "@datorama/akita": "^6.2.4",
+    "@datorama/akita": "^7.1.1",
     "@nestjsx/crud-request": "^4.6.2",
     "@rx-angular/state": "^1.4.6",
     "class-transformer": "^0.4.0",
