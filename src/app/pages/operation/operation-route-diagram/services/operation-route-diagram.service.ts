@@ -65,6 +65,7 @@ export class OperationRouteDiagramService {
             '武蔵浦和',
             '大宮',
             '指扇',
+            '南古谷',
             '川越',
         ];
 
