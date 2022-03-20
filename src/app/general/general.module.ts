@@ -52,7 +52,6 @@ import { ErrorHandlerService } from './services/error-handler.service';
         ConfirmDialogContainerComponent,
         ConfirmDialogPresentationalComponent,
     ],
-    entryComponents: [ConfirmDialogContainerComponent],
     providers: [
         {
             provide: MatPaginatorIntl,
@@ -75,6 +74,6 @@ import { ErrorHandlerService } from './services/error-handler.service';
             // 必須：HTTP_INTERCEPTORSが配列であることを示す
             multi: true,
         },
-    ],
+    ]
 })
 export class GeneralModule {}

@@ -1,0 +1,87 @@
+<div fxLayout="column" fxLayoutGap="16px">
+    <div>
+        <app-operation-real-time-control-panel-p
+            [isEnableAutoReload]="isEnableAutoReload$ | async"
+            [isVisibleCurrentPosition]="isVisibleCurrentPosition$ | async"
+            (toggleAutoReload)="onToggledAutoReload$.next($event)"
+            (toggleVisibleCurrentPosition)="
+                onToggledVisibleCurrentPosition$.next($event)
+            "
+        ></app-operation-real-time-control-panel-p>
+    </div>
+    <div>
+        <ng-adsense
+            [adSlot]="4807362830"
+            [adFormat]="'horizontal'"
+        ></ng-adsense>
+    </div>
+    <div
+        [fxLayout.gt-sm]="'row'"
+        [fxLayout.lt-md]="'column'"
+        [fxLayoutGap.gt-sm]="'64px'"
+        [fxLayoutGap.lt-md]="'16px'"
+    >
+        <div
+            [fxFlex.gt-sm]="'calc(50% - 64px)'"
+            [fxFlex.lt-md]="'auto'"
+            fxLayout="column"
+            fxLayoutGap="16px"
+        >
+            <div
+                fxLayout="column"
+                style="overflow-x: auto"
+                class="mat-elevation-z1"
+            >
+                <app-operation-real-time-table-p
+                    [mode]="'operation'"
+                    [todaysCalendarId]="todaysCalendarId$ | async"
+                    [operations]="operations$ | async"
+                    [formations]="formations$ | async"
+                    [latestSightings]="latestOperationSightings$ | async"
+                    [currentPositions]="currentPositions$ | async"
+                    [stations]="stations$ | async"
+                    [tripClasses]="tripClasses$ | async"
+                    [isVisibleCurrentPosition]="
+                        isVisibleCurrentPosition$ | async
+                    "
+                ></app-operation-real-time-table-p>
+            </div>
+
+            <ng-adsense [adSlot]="8391993434"></ng-adsense>
+        </div>
+        <div
+            [fxFlex.gt-sm]="'calc(50% - 64px)'"
+            [fxFlex.lt-md]="'auto'"
+            fxLayout="column"
+            fxLayoutGap="16px"
+        >
+            <div
+                fxLayout="column"
+                style="overflow-x: auto"
+                class="mat-elevation-z1"
+            >
+                <app-operation-real-time-table-p
+                    [mode]="'formation'"
+                    [todaysCalendarId]="todaysCalendarId$ | async"
+                    [operations]="operations$ | async"
+                    [formations]="formations$ | async"
+                    [latestSightings]="latestFormationSightings$ | async"
+                    [currentPositions]="currentPositions$ | async"
+                    [stations]="stations$ | async"
+                    [tripClasses]="tripClasses$ | async"
+                    [isVisibleCurrentPosition]="
+                        isVisibleCurrentPosition$ | async
+                    "
+                ></app-operation-real-time-table-p>
+            </div>
+
+            <ng-adsense [adSlot]="3946316114"></ng-adsense>
+        </div>
+    </div>
+    <div>
+        <app-operation-real-time-legend-p></app-operation-real-time-legend-p>
+    </div>
+    <div>
+        <app-operation-post-card-c></app-operation-post-card-c>
+    </div>
+</div>

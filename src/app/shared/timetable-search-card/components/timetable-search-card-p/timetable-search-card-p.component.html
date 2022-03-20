@@ -1,0 +1,63 @@
+<mat-card fxLayout="column" fxFlex="auto">
+    <mat-card-title>時刻表</mat-card-title>
+    <mat-card-subtitle>相鉄線の時刻表を検索できます。</mat-card-subtitle>
+    <mat-card-content>
+        <form fxLayout="column" fxLayoutGap="16px" [formGroup]="form">
+            <mat-form-field fxFlex="auto">
+                <mat-select placeholder="ダイヤ" formControlName="calendarId">
+                    <mat-option
+                        *ngFor="let calendar of calendars$ | async"
+                        [value]="calendar.calendarId"
+                    >
+                        {{
+                            calendar.startDate
+                                | dayjs: { format: 'YYYY年MM月DD日改正 ' }
+                        }}{{ calendar.calendarName }}</mat-option
+                    >
+                </mat-select>
+                <mat-error *ngIf="form.get('calendarId')">
+                    <strong>必須項目</strong>です
+                </mat-error>
+            </mat-form-field>
+            <mat-radio-group
+                fxLayout="row"
+                fxLayoutGap="16px"
+                formControlName="tripDirection"
+            >
+                <mat-radio-button value="0">上り</mat-radio-button>
+                <mat-radio-button value="1">下り</mat-radio-button>
+            </mat-radio-group>
+            <mat-slide-toggle formControlName="searchByStation">
+                駅を指定して検索する
+            </mat-slide-toggle>
+            <mat-form-field fxFlex="auto">
+                <mat-select placeholder="駅名" formControlName="stationId">
+                    <mat-optgroup
+                        *ngFor="let rsl of routeStationLists$ | async"
+                        [label]="rsl.routeName"
+                    >
+                        <mat-option
+                            *ngFor="let rsl2 of rsl.routeStationLists"
+                            [value]="rsl2.station.stationId"
+                        >
+                            {{ rsl2.station.stationName }}
+                        </mat-option>
+                    </mat-optgroup>
+                </mat-select>
+                <mat-error *ngIf="form.get('stationId')">
+                    <strong>必須項目</strong>です
+                </mat-error>
+            </mat-form-field>
+        </form>
+    </mat-card-content>
+    <mat-card-actions align="end">
+        <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            (click)="onClickedSearch$.next()"
+        >
+            検索
+        </button>
+    </mat-card-actions>
+</mat-card>

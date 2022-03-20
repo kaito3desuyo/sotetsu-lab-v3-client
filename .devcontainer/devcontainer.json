@@ -7,10 +7,7 @@
         "terminal.integrated.shell.linux": "/bin/bash",
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": [
-            "source.organizeImports",
-            "source.fixAll.eslint"
-        ]
+        "editor.codeActionsOnSave": ["source.fixAll.eslint"]
     },
     "extensions": [
         "angular.ng-template",

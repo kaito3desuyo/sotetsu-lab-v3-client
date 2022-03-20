@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { OperationPastTimeComponent } from './operation-past-time.component';
-import { OperationPastTimeResolverService } from './general/services/operation-past-time-resolver.service';
+import { OperationPastTimeResolverService } from './services/operation-past-time-resolver.service';
 
 const routes: Routes = [
     {

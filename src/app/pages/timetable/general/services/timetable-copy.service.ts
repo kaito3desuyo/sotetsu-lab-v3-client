@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { omit } from 'lodash';
+import { omit } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';

@@ -1,0 +1,445 @@
+<table
+    mat-table
+    matSort
+    [dataSource]="dataSource"
+    [trackBy]="
+        (mode$ | async) === 'operation'
+            ? ('operation.operationNumber' | trackBy)
+            : ('formation.formationNumber' | trackBy)
+    "
+    (matSortChange)="onChangedMatSort$.next($event)"
+>
+    <ng-container matColumnDef="operationNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            運用<br />番号
+        </th>
+        <td mat-cell *matCellDef="let element">
+            <ng-container *ngIf="(mode$ | async) === 'operation'">
+                <div
+                    class="operation-number-circle"
+                    [ngStyle]="{
+                        background:
+                            element.operation.operationNumber
+                            | operationNumberColor
+                    }"
+                >
+                    <a
+                        [routerLink]="[
+                            '/operation',
+                            'route-diagram',
+                            { operation_id: element.operation.operationId }
+                        ]"
+                    >
+                        {{ element.operation.operationNumber }}
+                    </a>
+                </div>
+            </ng-container>
+
+            <ng-container *ngIf="(mode$ | async) === 'formation'">
+                <div
+                    class="operation-number-circle"
+                    [ngStyle]="{
+                        background:
+                            element.operationSighting?.circulatedOperation
+                                ?.operationNumber | operationNumberColor
+                    }"
+                >
+                    <a
+                        *ngIf="
+                            !!element.operationSighting?.circulatedOperation
+                                ?.operationNumber
+                        "
+                        [routerLink]="[
+                            '/operation',
+                            'route-diagram',
+                            {
+                                operation_id:
+                                    element.operationSighting
+                                        .circulatedOperationId
+                            }
+                        ]"
+                    >
+                        <span
+                            [ngStyle]="
+                                element | operationRealTimeFormationNumberStyle
+                            "
+                        >
+                            {{
+                                (element.operationSighting.circulatedOperation
+                                    .operationNumber !== '100'
+                                    ? element.operationSighting
+                                          .circulatedOperation.operationNumber
+                                    : '休') +
+                                    ((element
+                                        | operationRealTimeFormationNumberStyle)[
+                                        'font-weight'
+                                    ] !== '700'
+                                        ? '?'
+                                        : '')
+                            }}
+                        </span>
+                    </a>
+
+                    <div
+                        *ngIf="
+                            !element.operationSighting?.circulatedOperation
+                                ?.operationNumber
+                        "
+                    >
+                        <span
+                            [ngStyle]="
+                                element | operationRealTimeFormationNumberStyle
+                            "
+                        >
+                            不明
+                        </span>
+                    </div>
+                </div>
+            </ng-container>
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="formationNumber">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            編成<br />番号
+        </th>
+        <td mat-cell *matCellDef="let element">
+            <ng-container *ngIf="(mode$ | async) === 'operation'">
+                <span
+                    [ngStyle]="element | operationRealTimeFormationNumberStyle"
+                >
+                    <ng-container
+                        *ngIf="
+                            !!element.operationSighting?.formation
+                                .formationNumber
+                        "
+                    >
+                        {{
+                            element.operationSighting.formation
+                                .formationNumber +
+                                ((element
+                                    | operationRealTimeFormationNumberStyle)[
+                                    'font-weight'
+                                ] !== '700'
+                                    ? '?'
+                                    : '')
+                        }}
+                    </ng-container>
+                    <ng-container
+                        *ngIf="
+                            !element.operationSighting?.formation
+                                .formationNumber
+                        "
+                    >
+                        不明
+                    </ng-container>
+                </span>
+            </ng-container>
+
+            <ng-container *ngIf="(mode$ | async) === 'formation'">
+                {{ element.formation.formationNumber }}
+            </ng-container>
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="currentPosition">
+        <th mat-header-cell *matHeaderCellDef>現在位置</th>
+        <td mat-cell *matCellDef="let element">
+            <ng-container
+                *ngIf="
+                    element.currentPosition?.position?.prev &&
+                    !element.currentPosition?.position?.current &&
+                    !element.currentPosition?.position?.next
+                "
+            >
+                <!-- 入庫済み -->
+                <div
+                    fxlayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="16px"
+                >
+                    <div fxFlex="48px"></div>
+                    <div fxFlex="72px">
+                        <p>
+                            {{
+                                (
+                                    element.currentPosition.position.prev
+                                        .endTime.stationId
+                                    | findById
+                                        : {
+                                              array: (stations$ | async),
+                                              propertyName: 'stationId'
+                                          }
+                                ).stationName
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.prev.endTime
+                                    .arrivalTime
+                            }}
+                        </p>
+                    </div>
+                    <div>
+                        <mat-icon>arrow_forward</mat-icon>
+                    </div>
+                    <div fxFlex="72px">
+                        <p>入庫済</p>
+                        <p>△</p>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-container
+                *ngIf="
+                    !element.currentPosition?.position?.prev &&
+                    element.currentPosition?.position?.current &&
+                    !element.currentPosition?.position?.next
+                "
+            >
+                <!-- 走行中 -->
+                <div
+                    fxlayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="16px"
+                >
+                    <div fxFlex="48px">
+                        <a
+                            [routerLink]="[
+                                '/timetable',
+                                'all-line',
+                                {
+                                    calendar_id: todaysCalendarId$ | async,
+                                    trip_direction:
+                                        element.currentPosition.position.current
+                                            .trip.tripDirection,
+                                    trip_block_id:
+                                        element.currentPosition.position.current
+                                            .trip.tripBlockId
+                                }
+                            ]"
+                            [ngStyle]="{
+                                color: (
+                                    element.currentPosition.position.current
+                                        .trip.tripClassId
+                                    | findById
+                                        : {
+                                              array: (tripClasses$ | async),
+                                              propertyName: 'tripClassId'
+                                          }
+                                ).tripClassColor
+                            }"
+                        >
+                            {{
+                                (
+                                    element.currentPosition.position.current
+                                        .trip.tripClassId
+                                    | findById
+                                        : {
+                                              array: (tripClasses$ | async),
+                                              propertyName: 'tripClassId'
+                                          }
+                                ).tripClassName
+                            }}<br />
+                            {{
+                                element.currentPosition.position.current.trip
+                                    .tripNumber
+                            }}
+                        </a>
+                    </div>
+                    <div fxFlex="72px">
+                        <p>
+                            {{
+                                (
+                                    element.currentPosition.position.current
+                                        .startTime.stationId
+                                    | findById
+                                        : {
+                                              array: (stations$ | async),
+                                              propertyName: 'stationId'
+                                          }
+                                ).stationName
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.current
+                                    .startTime.departureTime
+                            }}
+                        </p>
+                    </div>
+                    <div>
+                        <mat-icon>arrow_forward</mat-icon>
+                    </div>
+                    <div fxFlex="72px">
+                        <p>
+                            {{
+                                (
+                                    element.currentPosition.position.current
+                                        .endTime.stationId
+                                    | findById
+                                        : {
+                                              array: (stations$ | async),
+                                              propertyName: 'stationId'
+                                          }
+                                ).stationName
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.current.endTime
+                                    .arrivalTime
+                            }}
+                        </p>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-container
+                *ngIf="
+                    element.currentPosition?.position?.prev &&
+                    !element.currentPosition?.position?.current &&
+                    element.currentPosition?.position?.next
+                "
+            >
+                <!-- 間隙時間 -->
+                <div
+                    fxlayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="16px"
+                >
+                    <div fxFlex="48px"></div>
+                    <div fxFlex="72px">
+                        <p>
+                            {{
+                                (
+                                    element.currentPosition.position.prev
+                                        .endTime.stationId
+                                    | findById
+                                        : {
+                                              array: (stations$ | async),
+                                              propertyName: 'stationId'
+                                          }
+                                ).stationName
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.prev.endTime
+                                    .arrivalTime
+                            }}
+                        </p>
+                    </div>
+                    <div>
+                        <mat-icon>arrow_forward</mat-icon>
+                    </div>
+                    <div fxFlex="72px">
+                        <p>
+                            <ng-container
+                                *ngIf="
+                                    element.currentPosition.position.prev.trip
+                                        .depotIn
+                                "
+                            >
+                                一時入庫
+                            </ng-container>
+                            <ng-container
+                                *ngIf="
+                                    !element.currentPosition.position.prev.trip
+                                        .depotIn
+                                "
+                            >
+                                停車中
+                            </ng-container>
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.next.startTime
+                                    .departureTime
+                            }}
+                        </p>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-container
+                *ngIf="
+                    !element.currentPosition?.position?.prev &&
+                    !element.currentPosition?.position?.current &&
+                    element.currentPosition?.position?.next
+                "
+            >
+                <!-- 出庫前 -->
+                <div
+                    fxlayout="row"
+                    fxLayoutAlign="start center"
+                    fxLayoutGap="16px"
+                >
+                    <div fxFlex="48px"></div>
+                    <div fxFlex="72px">
+                        <p>出庫前</p>
+                        <p>〇</p>
+                    </div>
+                    <div>
+                        <mat-icon>arrow_forward</mat-icon>
+                    </div>
+                    <div fxFlex="72px">
+                        <p>
+                            {{
+                                (
+                                    element.currentPosition.position.next
+                                        .startTime.stationId
+                                    | findById
+                                        : {
+                                              array: (stations$ | async),
+                                              propertyName: 'stationId'
+                                          }
+                                ).stationName
+                            }}
+                        </p>
+                        <p>
+                            {{
+                                element.currentPosition.position.next.startTime
+                                    .departureTime
+                            }}
+                        </p>
+                    </div>
+                </div>
+            </ng-container>
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="sightingTime">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>目撃時刻</th>
+        <td
+            mat-cell
+            *matCellDef="let element"
+            [ngStyle]="
+                element.operationSighting?.sightingTime
+                    | operationRealTimeTimeColor
+            "
+        >
+            {{
+                element.operationSighting?.sightingTime
+                    | dayjs: { format: 'YYYY/MM/DD HH:mm:ss' }
+            }}
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="updatedAt">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>最終更新時刻</th>
+        <td
+            mat-cell
+            *matCellDef="let element"
+            [ngStyle]="
+                element.operationSighting?.updatedAt
+                    | operationRealTimeTimeColor
+            "
+        >
+            {{
+                element.operationSighting?.updatedAt
+                    | dayjs: { format: 'YYYY/MM/DD HH:mm:ss' }
+            }}
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns$ | async"></tr>
+</table>

@@ -1,0 +1,18 @@
+<div fxLayout="column" fxLayoutGap="16px">
+    <div>
+        <mat-slide-toggle
+            [checked]="isEnableAutoReload"
+            (change)="toggleAutoReload.emit($event.checked)"
+        >
+            自動更新する
+        </mat-slide-toggle>
+    </div>
+    <div>
+        <mat-slide-toggle
+            [checked]="isVisibleCurrentPosition"
+            (change)="toggleVisibleCurrentPosition.emit($event.checked)"
+        >
+            現在位置を表示する
+        </mat-slide-toggle>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+:host {
+    .mat-list,
+    .mat-nav-list {
+        margin-left: -16px;
+        margin-right: -16px;
+    }
+
+    .mat-card-actions {
+        margin: 0;
+        padding: 0;
+    }
+}
