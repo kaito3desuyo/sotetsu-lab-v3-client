@@ -72,6 +72,7 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
 @Injectable()
 export class TimetableStationStateQuery extends Query<TimetableStationState> {
     readonly calendarId$ = this.select('calendarId');
+    readonly stationId$ = this.select('stationId');
     readonly stationName$ = this.select(['stationId', 'stations']).pipe(
         map(({ stationId, stations }) => {
             return stations.find((o) => o.stationId === stationId)?.stationName;
@@ -122,13 +123,13 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
                     .unix();
 
             // 比較する時刻が同一で、発着どちらかの時刻がnullのtripは先に表示する
-            if (
-                diff === 0 &&
-                (b.times[0].departureTime === null ||
-                    b.times[0].arrivalTime === null)
-            ) {
-                return 1;
-            }
+            // if (
+            //     diff === 0 &&
+            //     (b.times[0].departureTime === null ||
+            //         b.times[0].arrivalTime === null)
+            // ) {
+            //     return 1;
+            // }
 
             return diff;
         });
