@@ -59,6 +59,8 @@ import {
 } from './timetable-station/states/timetable-station.state';
 import { TimetableStationComponent } from './timetable-station/timetable-station.component';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
+import { TimetableStationHeaderPComponent } from './timetable-station/components/timetable-station-header-p/timetable-station-header-p.component';
+import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
 
 @NgModule({
     imports: [
@@ -85,6 +87,7 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         TimetableSharedModule,
         AdsenseModule,
         PipesModule,
+        TimetableSearchCardModule,
     ],
     declarations: [
         TimetableAllLineComponent,
@@ -111,6 +114,7 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         TimetableStationTablePComponent,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
+        TimetableStationHeaderPComponent,
     ],
     providers: [
         TimetableAllLineService,
