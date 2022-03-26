@@ -36,4 +36,21 @@ export class StationQuery {
                 })
             );
     }
+
+    findOne(
+        stationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<StationDetailsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<StationModel>(this.apiUrl + '/' + stationId, {
+                params: httpParams,
+            })
+            .pipe(
+                map((data) => {
+                    return buildStationDetailsDto(data);
+                })
+            );
+    }
 }

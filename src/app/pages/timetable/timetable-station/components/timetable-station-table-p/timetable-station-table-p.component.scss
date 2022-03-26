@@ -1,0 +1,77 @@
+:host {
+    mat-toolbar {
+        width: calc(100% + 32px);
+        height: 48px;
+        margin-top: -16px;
+        margin-left: -16px;
+        margin-right: -16px;
+
+        h3 {
+            font-size: 16px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.87);
+        }
+    }
+
+    mat-card-content {
+        overflow-x: scroll;
+
+        table {
+            width: auto;
+            border-collapse: collapse;
+            tr {
+                &:nth-child(odd) {
+                    th,
+                    td {
+                        background: white;
+                    }
+                }
+                &:nth-child(even) {
+                    th,
+                    td {
+                        background: #eeeeee;
+                    }
+                }
+            }
+            th {
+                min-width: 48px;
+                position: sticky;
+                left: 0;
+            }
+            td {
+                padding-left: 8px;
+                padding-right: 8px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+                min-width: 180px;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .weekday {
+        background: rgb(66, 139, 202);
+    }
+
+    .holiday {
+        background: rgb(217, 83, 79);
+    }
+
+    .hour {
+        font-size: 24px;
+    }
+
+    .minute {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+
+    .underbar {
+        text-decoration: underline;
+    }
+
+    .none {
+        text-decoration: none;
+    }
+}

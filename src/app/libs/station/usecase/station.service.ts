@@ -14,4 +14,11 @@ export class StationService {
     ): Observable<Pagination<StationDetailsDto> | StationDetailsDto[]> {
         return this.stationQuery.findMany(qb);
     }
+
+    findOne(
+        stationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<StationDetailsDto> {
+        return this.stationQuery.findOne(stationId, qb);
+    }
 }

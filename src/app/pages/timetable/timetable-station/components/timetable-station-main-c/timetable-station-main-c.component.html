@@ -1,0 +1,10 @@
+<div fxLayout="column" fxLayoutGap="16px">
+    <app-timetable-station-table-p
+        [calendar]="calendar$ | async"
+        [stationName]="stationName$ | async"
+        [tripDirection]="tripDirection$ | async"
+        [tripClasses]="tripClasses$ | async"
+        [stations]="stations$ | async"
+        [timetableData]="timetableData$ | async"
+    ></app-timetable-station-table-p>
+</div>
