@@ -4,6 +4,9 @@ import { max } from 'lodash-es';
 import { Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { OperationSightingWithCirculatedDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-with-circulated.dto';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
@@ -19,6 +22,9 @@ type State = {
         hour: string;
         trips: TripDetailsDto[];
     }[];
+    operations: OperationDetailsDto[];
+    formations: FormationDetailsDto[];
+    latestSightings: OperationSightingWithCirculatedDto[];
 };
 
 @Component({
@@ -35,6 +41,9 @@ export class TimetableStationTablePComponent {
     readonly tripClasses$ = this.state.select('tripClasses');
     readonly stations$ = this.state.select('stations');
     readonly timetableData$ = this.state.select('timetableData');
+    readonly operations$ = this.state.select('operations');
+    readonly formations$ = this.state.select('formations');
+    readonly latestSightings$ = this.state.select('latestSightings');
     readonly maxColumnsCount$ = this.state
         .select('timetableData')
         .pipe(map((data) => max(data.map((o) => o.trips.length))));
@@ -55,6 +64,11 @@ export class TimetableStationTablePComponent {
             trips: TripDetailsDto[];
         }[]
     >();
+    readonly onChangedInputOperations$ = new Subject<OperationDetailsDto[]>();
+    readonly onChangedInputFormations$ = new Subject<FormationDetailsDto[]>();
+    readonly onChangedInputLatestSightings$ = new Subject<
+        OperationSightingWithCirculatedDto[]
+    >();
 
     @Input() set calendar(calendar: CalendarDetailsDto) {
         this.onChangedInputCalendar$.next(calendar);
@@ -71,7 +85,6 @@ export class TimetableStationTablePComponent {
     @Input() set stations(stations: StationDetailsDto[]) {
         this.onChangedInputStations$.next(stations);
     }
-
     @Input() set timetableData(
         data: {
             day: number;
@@ -81,6 +94,17 @@ export class TimetableStationTablePComponent {
     ) {
         this.onChangedInputTimetableData$.next(data);
     }
+    @Input() set operations(operations: OperationDetailsDto[]) {
+        this.onChangedInputOperations$.next(operations);
+    }
+    @Input() set formations(formations: FormationDetailsDto[]) {
+        this.onChangedInputFormations$.next(formations);
+    }
+    @Input() set latestSightings(
+        sightings: OperationSightingWithCirculatedDto[]
+    ) {
+        this.onChangedInputLatestSightings$.next(sightings);
+    }
 
     constructor(private readonly state: RxState<State>) {
         this.state.connect('calendar', this.onChangedInputCalendar$);
@@ -89,5 +113,11 @@ export class TimetableStationTablePComponent {
         this.state.connect('tripClasses', this.onChangedInputTripClasses$);
         this.state.connect('stations', this.onChangedInputStations$);
         this.state.connect('timetableData', this.onChangedInputTimetableData$);
+        this.state.connect('operations', this.onChangedInputOperations$);
+        this.state.connect('formations', this.onChangedInputFormations$);
+        this.state.connect(
+            'latestSightings',
+            this.onChangedInputLatestSightings$
+        );
     }
 }

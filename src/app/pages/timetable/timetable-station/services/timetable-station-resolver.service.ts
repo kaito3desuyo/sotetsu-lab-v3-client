@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
 import { TimetableStationService } from './timetable-station.service';
-import { map } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { TimetableStationStateStore } from '../../timetable-station/states/timetable-station.state';
 
 @Injectable()
@@ -27,6 +27,17 @@ export class TimetableStationResolverService
             this.timetableStationService.fetchTripsV2(),
             this.timetableStationService.fetchTripClassesV2(),
             this.timetableStationService.fetchStationsV2(),
-        ]).pipe(map(() => null));
+            this.timetableStationService.fetchOperationsV2(),
+            this.timetableStationService.fetchFormationsV2(),
+        ]).pipe(
+            mergeMap(() => {
+                return forkJoin([
+                    // v2
+                    this.timetableStationService.fetchOperationSightings(),
+                    this.timetableStationService.fetchFormationSightings(),
+                ]);
+            }),
+            map(() => null)
+        );
     }
 }

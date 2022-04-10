@@ -3,9 +3,13 @@ import { guid, Query, Store } from '@datorama/akita';
 import dayjs from 'dayjs';
 import { map } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { findLatestAndCirculateOperationSighting } from 'src/app/pages/operation/operation-real-time/utils/find-latest-and-circulate-operation-sighting';
 
 type TimetableStationState = {
     calendarId: CalendarDetailsDto['calendarId'];
@@ -14,6 +18,10 @@ type TimetableStationState = {
     trips: TripDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     stations: StationDetailsDto[];
+    operations: OperationDetailsDto[];
+    formations: FormationDetailsDto[];
+    operationSightings: OperationSightingDetailsDto[];
+    formationSightings: OperationSightingDetailsDto[];
 };
 
 @Injectable()
@@ -27,6 +35,10 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
                 trips: [],
                 tripClasses: [],
                 stations: [],
+                operations: [],
+                formations: [],
+                operationSightings: [],
+                formationSightings: [],
             },
             { name: `TimetableStation-${guid()}` }
         );
@@ -67,6 +79,30 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
             stations,
         });
     }
+
+    setOperations(operations: OperationDetailsDto[]): void {
+        this.update({
+            operations,
+        });
+    }
+
+    setFormations(formations: FormationDetailsDto[]): void {
+        this.update({
+            formations,
+        });
+    }
+
+    setOperationSightings(sightings: OperationSightingDetailsDto[]): void {
+        this.update({
+            operationSightings: sightings,
+        });
+    }
+
+    setFormationSightings(sightings: OperationSightingDetailsDto[]): void {
+        this.update({
+            formationSightings: sightings,
+        });
+    }
 }
 
 @Injectable()
@@ -86,6 +122,16 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
     );
     readonly tripClasses$ = this.select('tripClasses');
     readonly stations$ = this.select('stations');
+    readonly operations$ = this.select('operations');
+    readonly formations$ = this.select('formations');
+    readonly latestSightings$ = this.select([
+        'operations',
+        'operationSightings',
+        'formationSightings',
+    ]).pipe(
+        map(findLatestAndCirculateOperationSighting),
+        map((data) => data.operationSightings)
+    );
 
     get stationId(): StationDetailsDto['stationId'] {
         return this.getValue().stationId;

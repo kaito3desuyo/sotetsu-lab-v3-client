@@ -20,6 +20,10 @@ export class TimetableStationMainCComponent {
     readonly tripClasses$ = this.timetableStationStateQuery.tripClasses$;
     readonly stations$ = this.timetableStationStateQuery.stations$;
     readonly timetableData$ = this.timetableStationStateQuery.timetableData$;
+    readonly operations$ = this.timetableStationStateQuery.operations$;
+    readonly formations$ = this.timetableStationStateQuery.formations$;
+    readonly latestSightings$ =
+        this.timetableStationStateQuery.latestSightings$;
 
     constructor(
         private readonly state: RxState<{}>,
@@ -50,5 +54,7 @@ export class TimetableStationMainCComponent {
                 this.timetableSearchCardStateStore.setStationId(stationId);
             }
         );
+
+        this.state.hold(this.latestSightings$, console.log);
     }
 }

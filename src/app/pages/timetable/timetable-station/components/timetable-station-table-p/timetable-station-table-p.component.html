@@ -34,7 +34,7 @@
                 <td
                     *ngFor="let trip of item.trips; trackBy: 'tripId' | trackBy"
                 >
-                    <div fxLayout="row">
+                    <div fxLayout="row" fxLayoutGap="8px">
                         <div
                             class="minute"
                             fxLayout="row"
@@ -113,54 +113,115 @@
                                 }}
                             </a>
                         </div>
-                        <div fxLayout="column">
-                            <div>
-                                <small>{{ trip.tripNumber }}</small>
-                            </div>
-                            <div>
-                                <span
-                                    [ngStyle]="{
-                                        color:
-                                            trip.tripClassId
-                                            | findById
-                                                : {
-                                                      array:
-                                                          tripClasses$ | async,
-                                                      propertyName:
-                                                          'tripClassId',
-                                                      outputPropertyName:
-                                                          'tripClassColor'
-                                                  }
-                                    }"
-                                >
-                                    {{
-                                        trip.tripClassId
-                                            | findById
-                                                : {
-                                                      array:
-                                                          tripClasses$ | async,
-                                                      propertyName:
-                                                          'tripClassId',
-                                                      outputPropertyName:
-                                                          'tripClassName'
-                                                  }
-                                    }}
-                                </span>
-                            </div>
-                            <div>
-                                <span>
-                                    {{
-                                        trip
-                                            | timetableStationFindLastStopStation
-                                            | findById
-                                                : {
-                                                      array: stations$ | async,
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName'
-                                                  }
-                                    }}
-                                </span>
+                        <div fxLayout="column" fxFlex="auto">
+                            <div
+                                fxLayout="row"
+                                fxLayoutAlign="space-between center"
+                                fxLayoutGap="8px"
+                            >
+                                <div fxLayout="column">
+                                    <div>
+                                        <small>{{ trip.tripNumber }}</small>
+                                    </div>
+                                    <div>
+                                        <span
+                                            [ngStyle]="{
+                                                color:
+                                                    trip.tripClassId
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  tripClasses$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassColor'
+                                                          }
+                                            }"
+                                        >
+                                            {{
+                                                trip.tripClassId
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  tripClasses$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassName'
+                                                          }
+                                            }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            {{
+                                                trip
+                                                    | timetableStationFindLastStopStation
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  stations$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'stationName'
+                                                          }
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div fxLayout="column" fxFlex="48px">
+                                    <div>
+                                        <span>
+                                            {{
+                                                trip.tripOperationLists[0]
+                                                    .operationId
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  operations$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'operationId',
+                                                              outputPropertyName:
+                                                                  'operationNumber'
+                                                          }
+                                            }}運
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            {{
+                                                (trip.tripOperationLists[0]
+                                                    .operationId
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  latestSightings$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'circulatedOperationId',
+                                                              outputPropertyName:
+                                                                  'formationId'
+                                                          }
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  formations$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'formationId',
+                                                              outputPropertyName:
+                                                                  'formationNumber'
+                                                          }) ?? '不明'
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div fxLayout="column">
                                 <div
