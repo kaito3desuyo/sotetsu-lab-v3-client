@@ -54,7 +54,5 @@ export class TimetableStationMainCComponent {
                 this.timetableSearchCardStateStore.setStationId(stationId);
             }
         );
-
-        this.state.hold(this.latestSightings$, console.log);
     }
 }
