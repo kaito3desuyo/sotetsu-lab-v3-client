@@ -1,4 +1,4 @@
-FROM node:lts
+FROM node:14
 
 RUN npm i -g @angular/cli npm-check-updates
 
