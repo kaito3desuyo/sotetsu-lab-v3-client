@@ -7,10 +7,10 @@ import { TimetableAddResolverService } from './general/services/timetable-add-re
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
 import { TimetableStationComponent } from './timetable-station/timetable-station.component';
-import { TimetableStationResolverService } from './general/services/timetable-station-resolver.service';
 import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-shared/services/timetable-search-form-resolver.service';
 import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
 import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
+import { TimetableStationResolverService } from './timetable-station/services/timetable-station-resolver.service';
 
 const routes: Routes = [
     {

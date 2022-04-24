@@ -1,12 +1,12 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import dayjs from 'dayjs';
+import { calculateDayCountFromToday } from 'src/app/core/utils/calculate-day-count-from-today';
 
 @Pipe({
     name: 'operationRealTimeTimeColor',
 })
 export class OperationRealTimeTimeColorPipe implements PipeTransform {
     transform(dateTime: string): { [key: string]: string } {
-        const dayCount = this._calculateDayCountFromToday(dateTime);
+        const dayCount = calculateDayCountFromToday(dateTime);
 
         return {
             color:
@@ -16,20 +16,5 @@ export class OperationRealTimeTimeColorPipe implements PipeTransform {
                     ? '#4caf50'
                     : 'initial',
         };
-    }
-
-    private _calculateDayCountFromToday(dateTime: string): number {
-        const target = dayjs(dateTime).subtract(
-            dayjs(dateTime).hour() < 4 ? 1 : 0,
-            'days'
-        );
-        const now = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
-
-        return now
-            .hour(0)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .diff(target.hour(0).minute(0).second(0).millisecond(0), 'days');
     }
 }

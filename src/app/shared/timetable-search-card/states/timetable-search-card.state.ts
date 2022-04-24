@@ -1,39 +1,65 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form';
 
-type TimetableSearchCardState = {
-    currentState: ITimetableSearchCardForm;
-};
+type TimetableSearchCardState = ITimetableSearchCardForm & {};
 
 @Injectable()
 export class TimetableSearchCardStateStore extends Store<TimetableSearchCardState> {
     constructor() {
         super(
             {
-                currentState: null,
+                calendarId: null,
+                tripDirection: 0,
+                searchByStation: false,
+                stationId: null,
             },
             { name: `TimetableSearchCard-${guid()}` }
         );
     }
 
-    updateCurrentState(state: Partial<ITimetableSearchCardForm>): void {
+    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
         this.update({
-            currentState: {
-                ...this.getValue().currentState,
-                ...state,
-            },
+            calendarId,
+        });
+    }
+
+    setTripDirection(tripDirection: TripDetailsDto['tripDirection']): void {
+        this.update({
+            tripDirection,
+        });
+    }
+
+    enableSearchByStation(): void {
+        this.update({
+            searchByStation: true,
+        });
+    }
+
+    disableSearchByStation(): void {
+        this.update({
+            searchByStation: true,
+        });
+    }
+
+    setStationId(stationId: StationDetailsDto['stationId']): void {
+        this.update({
+            stationId,
         });
     }
 }
 
 @Injectable()
 export class TimetableSearchCardStateQuery extends Query<TimetableSearchCardState> {
-    readonly currentState$ = this.select('currentState');
-
-    get currentState(): ITimetableSearchCardForm {
-        return this.getValue().currentState;
-    }
+    readonly formState$ = this.select([
+        'calendarId',
+        'tripDirection',
+        'searchByStation',
+        'stationId',
+    ]);
 
     constructor(protected store: TimetableSearchCardStateStore) {
         super(store);

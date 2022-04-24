@@ -32,19 +32,34 @@ export class FindByIdPipe implements PipeTransform {
             outputPropertyName?: never | keyof T | 'index';
         }
     ): T | T[keyof T] | number {
+        if (!value || !setting.array || !setting.propertyName) return undefined;
+
+        if (!setting.outputPropertyName) {
+            const obj = setting.array.find(
+                (o) => o[setting.propertyName] === value
+            );
+
+            if (!obj) return undefined;
+
+            return obj;
+        }
+
+        if (setting.outputPropertyName === 'index') {
+            const idx = setting.array.findIndex(
+                (o) => o[setting.propertyName] === value
+            );
+
+            if (idx === -1) return undefined;
+
+            return idx;
+        }
+
         const obj = setting.array.find(
             (o) => o[setting.propertyName] === value
         );
-        const idx = setting.array.findIndex(
-            (o) => o[setting.propertyName] === value
-        );
 
-        return setting.outputPropertyName &&
-            setting.outputPropertyName === 'index'
-            ? idx
-            : setting.outputPropertyName &&
-              setting.outputPropertyName !== 'index'
-            ? obj[setting.outputPropertyName]
-            : obj;
+        if (!obj) return undefined;
+
+        return obj[setting.outputPropertyName];
     }
 }

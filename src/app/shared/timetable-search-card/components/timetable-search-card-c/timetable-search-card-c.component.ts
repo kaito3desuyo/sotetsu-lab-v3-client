@@ -14,7 +14,7 @@ export class TimetableSearchCardCComponent {
     readonly calendars$ = this.calendarListStateQuery.calendars$;
     readonly routeStationLists$ =
         this.routeStationListStateQuery.routeStations$;
-    readonly currentState$ = this.timetableSearchCardStateQuery.currentState$;
+    readonly currentState$ = this.timetableSearchCardStateQuery.formState$;
 
     constructor(
         private readonly calendarListStateQuery: CalendarListStateQuery,

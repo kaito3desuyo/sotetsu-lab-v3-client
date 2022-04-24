@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import dayjs from 'dayjs';
+import { calculateDayCountFromToday } from 'src/app/core/utils/calculate-day-count-from-today';
 import { IOperationRealTimeTableData } from '../interfaces/operation-real-time-table-data.interface';
 
 @Pipe({
@@ -11,9 +11,7 @@ export class OperationRealTimeFormationNumberStylePipe
     transform(element: IOperationRealTimeTableData): { [key: string]: string } {
         const dayCount =
             element.operationSighting &&
-            this._calculateDayCountFromToday(
-                element.operationSighting.sightingTime
-            );
+            calculateDayCountFromToday(element.operationSighting.sightingTime);
 
         const color =
             !element.operationSighting ||
@@ -28,20 +26,5 @@ export class OperationRealTimeFormationNumberStylePipe
             ['font-weight']: fontWeight,
             ['text-decoration']: textDecoration,
         };
-    }
-
-    private _calculateDayCountFromToday(dateTime: string): number {
-        const target = dayjs(dateTime).subtract(
-            dayjs(dateTime).hour() < 4 ? 1 : 0,
-            'days'
-        );
-        const now = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
-
-        return now
-            .hour(0)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .diff(target.hour(0).minute(0).second(0).millisecond(0), 'days');
     }
 }
