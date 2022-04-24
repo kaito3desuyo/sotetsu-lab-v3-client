@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import dayjs from 'dayjs';
 import { map } from 'rxjs/operators';
+import { findLatestAndCirculateOperationSighting } from 'src/app/core/utils/find-latest-and-circulate-operation-sighting';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -9,7 +10,6 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { findLatestAndCirculateOperationSighting } from 'src/app/pages/operation/operation-real-time/utils/find-latest-and-circulate-operation-sighting';
 
 type TimetableStationState = {
     calendarId: CalendarDetailsDto['calendarId'];

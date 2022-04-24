@@ -8,7 +8,7 @@ import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { findLatestAndCirculateOperationSighting } from '../utils/find-latest-and-circulate-operation-sighting';
+import { findLatestAndCirculateOperationSighting } from '../../../../core/utils/find-latest-and-circulate-operation-sighting';
 
 type OperationRealTimeState = {
     operations: OperationDetailsDto[];
