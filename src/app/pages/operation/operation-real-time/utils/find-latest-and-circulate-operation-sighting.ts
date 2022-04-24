@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
-import { flatMap, groupBy, sortBy, uniqBy } from 'lodash-es';
+import { flatMap, get, groupBy, sortBy, uniqBy } from 'lodash-es';
 import { calculateDayCountFromToday } from 'src/app/core/utils/calculate-day-count-from-today';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingWithCirculatedDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-with-circulated.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { circulateOperationNumber } from 'src/app/pages/operation/operation-real-time/utils/circulate-operation-number';
-import { isExistNewerSightings } from 'src/app/pages/operation/operation-real-time/utils/is-exist-newer-sightings';
 
 export function findLatestAndCirculateOperationSighting({
     operations,
@@ -87,4 +86,19 @@ export function findLatestAndCirculateOperationSighting({
         operationSightings: operationFlatted,
         formationSightings: formationFlatted,
     };
+}
+
+function isExistNewerSightings(
+    target: OperationSightingDetailsDto,
+    array: OperationSightingDetailsDto[],
+    path: string
+): boolean {
+    return array.some((o) => {
+        return (
+            get(target, path) === get(o, path) &&
+            (dayjs(target.sightingTime).isBefore(dayjs(o.sightingTime)) ||
+                (dayjs(target.sightingTime).isSame(o.sightingTime) &&
+                    dayjs(target.updatedAt).isBefore(dayjs(o.updatedAt))))
+        );
+    });
 }
