@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import { flatMap, groupBy, sortBy, uniqBy } from 'lodash-es';
+import { calculateDayCountFromToday } from 'src/app/core/utils/calculate-day-count-from-today';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingWithCirculatedDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-with-circulated.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
-import { calculateDayDifference } from 'src/app/pages/operation/operation-real-time/utils/calculate-day-difference';
 import { circulateOperationNumber } from 'src/app/pages/operation/operation-real-time/utils/circulate-operation-number';
 import { isExistNewerSightings } from 'src/app/pages/operation/operation-real-time/utils/is-exist-newer-sightings';
 
@@ -34,7 +34,7 @@ export function findLatestAndCirculateOperationSighting({
                 currentOperationNumber !== null
                     ? circulateOperationNumber(
                           currentOperationNumber,
-                          calculateDayDifference(o.sightingTime)
+                          calculateDayCountFromToday(o.sightingTime)
                       )
                     : currentOperationNumber;
             const circulatedOperation = circulatedOperationNumber
