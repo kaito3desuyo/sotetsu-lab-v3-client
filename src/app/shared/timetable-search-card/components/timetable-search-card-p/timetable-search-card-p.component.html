@@ -24,8 +24,8 @@
                 fxLayoutGap="16px"
                 formControlName="tripDirection"
             >
-                <mat-radio-button value="0">上り</mat-radio-button>
-                <mat-radio-button value="1">下り</mat-radio-button>
+                <mat-radio-button [value]="0">上り</mat-radio-button>
+                <mat-radio-button [value]="1">下り</mat-radio-button>
             </mat-radio-group>
             <mat-slide-toggle formControlName="searchByStation">
                 駅を指定して検索する
@@ -55,6 +55,7 @@
             type="button"
             mat-raised-button
             color="primary"
+            [disabled]="form.invalid"
             (click)="onClickedSearch$.next()"
         >
             検索

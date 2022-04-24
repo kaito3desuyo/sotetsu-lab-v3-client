@@ -26,10 +26,10 @@ type State = {
 })
 export class TimetableSearchCardPComponent {
     readonly form = this.fb.group({
-        calendarId: ['', Validators.required],
-        tripDirection: ['0', Validators.required],
+        calendarId: [null, Validators.required],
+        tripDirection: [0, Validators.required],
         searchByStation: [false, Validators.required],
-        stationId: [{ value: '', disabled: true }, Validators.required],
+        stationId: [{ value: null, disabled: true }, Validators.required],
     });
 
     readonly calendars$ = this.state.select('calendars');

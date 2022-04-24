@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
+import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 
 export class StationDetailsDto {
     @Expose({ name: 'id' })
@@ -35,4 +36,8 @@ export class StationDetailsDto {
     @Expose()
     @Type(() => RouteStationListDetailsDto)
     routeStationLists?: RouteStationListDetailsDto[];
+
+    @Expose()
+    @Type(() => TimeDetailsDto)
+    times?: TimeDetailsDto[];
 }
