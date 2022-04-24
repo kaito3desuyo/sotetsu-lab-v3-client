@@ -12,8 +12,14 @@ export function circulateOperationNumber(number: string, days: number) {
                 break;
             case '2':
                 circulated = circulated + 1;
-                if (String(circulated).slice(-1) === '5') {
-                    circulated = circulated - 4;
+                if (String(circulated).slice(-1) === '7') {
+                    circulated = circulated - 6;
+                }
+                break;
+            case '4':
+                circulated = circulated + 1;
+                if (String(circulated).slice(-1) === '4') {
+                    circulated = circulated - 3;
                 }
                 break;
             case '7':

@@ -1,4 +1,6 @@
-FROM node:lts
+FROM node:16
+
+ENV NODE_ENV='development'
 
 RUN npm i -g @angular/cli npm-check-updates
 
@@ -6,10 +8,10 @@ RUN mkdir -p /home/node/sotetsu-lab-v3-client && chown node:node /home/node/sote
 
 USER node
 
-ENV NODE_ENV='development'
-
 WORKDIR /home/node/sotetsu-lab-v3-client
 
-COPY . /home/node/sotetsu-lab-v3-client
+COPY --chown=node:node ./package*.json ./
 
 RUN npm i
+
+COPY --chown=node:node . .
