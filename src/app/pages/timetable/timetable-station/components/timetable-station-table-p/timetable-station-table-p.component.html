@@ -222,6 +222,23 @@
                                                               outputPropertyName:
                                                                   'formationNumber'
                                                           }) ?? '不明'
+                                            }}{{
+                                                (trip.tripOperationLists[0]
+                                                    .operationId
+                                                    | findById
+                                                        : {
+                                                              array:
+                                                                  latestSightings$
+                                                                  | async,
+                                                              propertyName:
+                                                                  'circulatedOperationId',
+                                                              outputPropertyName:
+                                                                  'sightingTime'
+                                                          }
+                                                    | calculateDayCountFromToday) !==
+                                                0
+                                                    ? '?'
+                                                    : ''
                                             }}
                                         </span>
                                     </div>

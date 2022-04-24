@@ -6,6 +6,7 @@ import { FindByIdPipe } from './find-by-id.pipe';
 import { TrackByPipe } from './track-by.pipe';
 import { MaxByPipe } from './max-by.pipe';
 import { MinByPipe } from './min-by.pipe';
+import { CalculateDayCountFromTodayPipe } from './calculate-day-count-from-today.pipe';
 
 @NgModule({
     declarations: [
@@ -15,6 +16,7 @@ import { MinByPipe } from './min-by.pipe';
         TrackByPipe,
         MaxByPipe,
         MinByPipe,
+        CalculateDayCountFromTodayPipe,
     ],
     imports: [CommonModule],
     exports: [
@@ -24,6 +26,7 @@ import { MinByPipe } from './min-by.pipe';
         TrackByPipe,
         MaxByPipe,
         MinByPipe,
+        CalculateDayCountFromTodayPipe,
     ],
 })
 export class PipesModule {}
