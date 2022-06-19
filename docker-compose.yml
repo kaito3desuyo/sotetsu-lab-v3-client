@@ -4,6 +4,7 @@ services:
     development-client:
         build:
             context: .
+            target: development-base
         ports:
             - '4200:4200'
         command: sh -c "ng serve --host 0.0.0.0 --poll=1000"
