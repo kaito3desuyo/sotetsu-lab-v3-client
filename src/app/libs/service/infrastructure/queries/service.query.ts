@@ -4,9 +4,12 @@ import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
+import { buildStationDetailsDto } from 'src/app/libs/station/infrastructure/builders/station-dto.builder';
 import { environment } from 'src/environments/environment';
 import { ServiceDetailsDto } from '../../usecase/dtos/service-details.dto';
+import { ServiceStationsDto } from '../../usecase/dtos/service-stations.dto';
 import { buildServiceDetailsDto } from '../builders/service-dto.builder';
+import { ServiceStationsModel } from '../models/service-stations.model';
 import { ServiceModel } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +36,29 @@ export class ServiceQuery {
                               Pagination.getApiPageSettings(res)
                           )
                         : res.body.map((o) => buildServiceDetailsDto(o));
+                })
+            );
+    }
+
+    findOneWithStations(
+        serviceId: ServiceDetailsDto['serviceId'],
+        qb: RequestQueryBuilder
+    ): Observable<ServiceStationsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<ServiceStationsModel>(
+                this.apiUrl + '/' + serviceId + '/stations',
+                { params: httpParams }
+            )
+            .pipe(
+                map((data) => {
+                    return {
+                        service: buildServiceDetailsDto(data.service),
+                        stations: data.stations.map((o) =>
+                            buildStationDetailsDto(o)
+                        ),
+                    };
                 })
             );
     }

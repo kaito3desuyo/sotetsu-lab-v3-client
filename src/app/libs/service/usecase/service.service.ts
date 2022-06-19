@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { ServiceQuery } from '../infrastructure/queries/service.query';
 import { ServiceDetailsDto } from './dtos/service-details.dto';
+import { ServiceStationsDto } from './dtos/service-stations.dto';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceService {
@@ -13,5 +14,12 @@ export class ServiceService {
         qb: RequestQueryBuilder
     ): Observable<Pagination<ServiceDetailsDto> | ServiceDetailsDto[]> {
         return this.serviceQuery.findMany(qb);
+    }
+
+    findOneWithTrips(
+        serviceId: string,
+        qb: RequestQueryBuilder
+    ): Observable<ServiceStationsDto> {
+        return this.serviceQuery.findOneWithStations(serviceId, qb);
     }
 }
