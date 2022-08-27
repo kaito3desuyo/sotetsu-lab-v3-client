@@ -1,28 +1,22 @@
-import { Routes, RouterModule } from '@angular/router';
-import { TimetableAllLineComponent } from './timetable-all-line/timetable-all-line.component';
 import { NgModule } from '@angular/core';
-import { TimetableAllLineTableResolverService } from './general/services/timetable-all-line-table-resolver.service';
-import { TimetableAddComponent } from './timetable-add/timetable-add.component';
-import { TimetableAddResolverService } from './general/services/timetable-add-resolver.service';
-import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
-import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
-import { TimetableStationComponent } from './timetable-station/timetable-station.component';
+import { RouterModule, Routes } from '@angular/router';
 import { TimetableSearchFormResolverService } from 'src/app/shared/timetable-shared/services/timetable-search-form-resolver.service';
-import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
+import { TimetableAddResolverService } from './general/services/timetable-add-resolver.service';
 import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
+import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
+import { TimetableAddComponent } from './timetable-add/timetable-add.component';
+import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
 import { TimetableStationResolverService } from './timetable-station/services/timetable-station-resolver.service';
+import { TimetableStationComponent } from './timetable-station/timetable-station.component';
+import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 
 const routes: Routes = [
     {
         path: 'all-line',
-        component: TimetableAllLineComponent,
-        resolve: {
-            timetableAllLine: TimetableAllLineTableResolverService,
-            from2: TimetableSearchFormResolverService,
-        },
-        data: {
-            title: '全線時刻表',
-        },
+        loadChildren: () =>
+            import('./timetable-all-line/timetable-all-line.module').then(
+                (mod) => mod.TimetableAllLineModule
+            ),
     },
     {
         path: 'station',

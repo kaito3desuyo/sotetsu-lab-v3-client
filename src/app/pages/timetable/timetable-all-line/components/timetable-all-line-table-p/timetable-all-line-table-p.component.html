@@ -1,0 +1,424 @@
+<mat-card>
+    <mat-card-title>
+        <mat-toolbar
+            [ngClass]="[
+                (calendar$ | async).sunday && (calendar$ | async).saturday
+                    ? 'holiday'
+                    : 'weekday'
+            ]"
+        >
+            <h3 style="line-height: 1.25">
+                {{ (calendar$ | async).startDate | date: 'yyyy年MM月dd日' }}
+                改正<br />
+                {{ (calendar$ | async).calendarName }}
+                {{
+                    (tripDirection$ | async) === 0
+                        ? '上り'
+                        : (tripDirection$ | async) === 1
+                        ? '下り'
+                        : ''
+                }}時刻表
+            </h3>
+        </mat-toolbar>
+    </mat-card-title>
+    <mat-card-content>
+        <mat-paginator
+            [length]="(pageSettings$ | async).length"
+            [pageIndex]="(pageSettings$ | async).pageIndex"
+            [pageSize]="(pageSettings$ | async).pageSize"
+            [pageSizeOptions]="[10, 20, 50, 100]"
+            (page)="onPaged$.next($event)"
+        ></mat-paginator>
+
+        <div fxLayout="row">
+            <div fxFlexAlign="start">
+                <table class="stations-table" fxFlex="0 0 128px">
+                    <thead>
+                        <tr>
+                            <th colspan="2">列車番号</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">運用番号</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2">種別</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container
+                            *ngFor="
+                                let station of stations$ | async;
+                                let i = index;
+                                trackBy: 'stationId' | trackBy
+                            "
+                        >
+                            <tr
+                                [ngClass]="[
+                                    station.borderSetting ? 'border-bottom' : ''
+                                ]"
+                                *ngIf="
+                                    station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                    ((tripDirection$ | async) === 0 &&
+                                        station.viewMode ===
+                                            staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                    ((tripDirection$ | async) === 1 &&
+                                        station.viewMode ===
+                                            staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                "
+                            >
+                                <td
+                                    class="station-name"
+                                    [rowSpan]="
+                                        station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                            ? 2
+                                            : 1
+                                    "
+                                >
+                                    {{ station.stationName }}
+                                </td>
+                                <td
+                                    [ngClass]="[
+                                        station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                            ? 'border-bottom'
+                                            : ''
+                                    ]"
+                                >
+                                    着
+                                </td>
+                            </tr>
+                            <tr
+                                [ngClass]="[
+                                    station.borderSetting ? 'border-bottom' : ''
+                                ]"
+                                *ngIf="
+                                    station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                    station.viewMode ===
+                                        staitonViewMode.ONLY_DEPARTURE
+                                "
+                            >
+                                <td
+                                    class="station-name"
+                                    *ngIf="
+                                        station.viewMode ===
+                                        staitonViewMode.ONLY_DEPARTURE
+                                    "
+                                >
+                                    {{ station.stationName }}
+                                </td>
+                                <td>発</td>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+            <div fxFlexAlign="start" style="overflow-x: auto">
+                <table class="trips-table">
+                    <thead>
+                        <tr>
+                            <ng-container
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <th>
+                                    {{ trip.tripNumber }}
+                                </th>
+                            </ng-container>
+                        </tr>
+                        <tr>
+                            <ng-container
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <th>
+                                    <a
+                                        *ngFor="
+                                            let tripOperationList of trip.tripOperationLists
+                                        "
+                                        [routerLink]="[
+                                            '/operation/route-diagram',
+                                            {
+                                                operation_id:
+                                                    tripOperationList.operationId
+                                            }
+                                        ]"
+                                    >
+                                        {{
+                                            tripOperationList.operation
+                                                .operationNumber
+                                        }}
+                                    </a>
+                                </th>
+                            </ng-container>
+                        </tr>
+                        <tr>
+                            <ng-container
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <th
+                                    style="white-space: nowrap"
+                                    [ngStyle]="{
+                                        color: trip.tripClass.tripClassColor
+                                    }"
+                                >
+                                    <div
+                                        fxLayout="row"
+                                        fxLayoutAlign="center center"
+                                    >
+                                        <div
+                                            style="transform-origin: center"
+                                            [ngStyle]="{
+                                                transform:
+                                                    'scale(' +
+                                                    (trip.tripClass
+                                                        .tripClassName.length >=
+                                                    3
+                                                        ? 0.5
+                                                        : 1) +
+                                                    ', 1)'
+                                            }"
+                                        >
+                                            {{ trip.tripClass.tripClassName }}
+                                        </div>
+                                    </div>
+                                </th>
+                            </ng-container>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container
+                            *ngFor="
+                                let station of stations$ | async;
+                                let i = index;
+                                trackBy: 'stationId' | trackBy
+                            "
+                        >
+                            <tr
+                                [ngClass]="[
+                                    station.borderSetting ? 'border-bottom' : ''
+                                ]"
+                                *ngIf="
+                                    station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                    ((tripDirection$ | async) === 0 &&
+                                        station.viewMode ===
+                                            staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                    ((tripDirection$ | async) === 1 &&
+                                        station.viewMode ===
+                                            staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                "
+                            >
+                                <ng-container
+                                    *ngFor="
+                                        let trip of trips$ | async;
+                                        let j = index;
+                                        trackBy: 'tripId' | trackBy
+                                    "
+                                >
+                                    <td
+                                        class="dia"
+                                        [ngClass]="[
+                                            station.viewMode ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                                ? 'border-bottom'
+                                                : ''
+                                        ]"
+                                        [ngStyle]="{
+                                            color: trip.tripClass.tripClassColor
+                                        }"
+                                    >
+                                        {{
+                                            {station, trip} | timetableAllLineGetTime: {mode: 'arrival', stations: stations$ | async, trips: trips$ | async}
+                                        }}
+                                    </td>
+                                </ng-container>
+                            </tr>
+                            <tr
+                                [ngClass]="[
+                                    station.borderSetting ? 'border-bottom' : ''
+                                ]"
+                                *ngIf="
+                                    station.viewMode ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                    station.viewMode ===
+                                        staitonViewMode.ONLY_DEPARTURE
+                                "
+                            >
+                                <ng-container
+                                    *ngFor="
+                                        let trip of trips$ | async;
+                                        let j = index
+                                    "
+                                >
+                                    <td
+                                        class="dia"
+                                        [ngStyle]="{
+                                            color: trip.tripClass.tripClassColor
+                                        }"
+                                    >
+                                        {{
+                                            {station, trip} | timetableAllLineGetTime: {mode: 'departure', stations: stations$ | async, trips: trips$ | async}
+                                        }}
+                                    </td>
+                                </ng-container>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+
+                    <tfoot *ngIf="(isEnableGroupingMode$ | async) === false">
+                        <tr>
+                            <td
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <button
+                                    mat-icon-button
+                                    matTooltip="編集する"
+                                    (click)="onClickedEditButton$.next(trip)"
+                                >
+                                    <mat-icon>edit</mat-icon>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <button
+                                    mat-icon-button
+                                    matTooltip="コピーして新規作成"
+                                    (click)="onClickedCopyButton$.next(trip)"
+                                >
+                                    <mat-icon>content_copy</mat-icon>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <button
+                                    mat-icon-button
+                                    matTooltip="削除する(荒らし対策のため当分の間無効化しています)"
+                                    [disabled]="true"
+                                    (click)="onClickedDeleteButton$.next(trip)"
+                                >
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <button
+                                    mat-icon-button
+                                    matTooltip="この列車を基準として列車をグルーピングする"
+                                    (click)="
+                                        onClickedGroupingButton$.next(trip)
+                                    "
+                                >
+                                    <mat-icon>link</mat-icon>
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+
+                    <tfoot *ngIf="(isEnableGroupingMode$ | async) === true">
+                        <tr>
+                            <td
+                                *ngFor="
+                                    let trip of trips$ | async;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy
+                                "
+                            >
+                                <button
+                                    *ngIf="
+                                        trip.tripId === groupingBaseTrip.tripId
+                                    "
+                                    mat-icon-button
+                                    matTooltip="キャンセル"
+                                    (click)="
+                                        onClickedGroupingButton$.next(undefined)
+                                    "
+                                >
+                                    <mat-icon>clear</mat-icon>
+                                </button>
+
+                                <button
+                                    *ngIf="
+                                        trip.tripId !==
+                                            groupingBaseTrip.tripId &&
+                                        trip.tripBlockId !==
+                                            groupingBaseTrip.tripBlockId
+                                    "
+                                    mat-icon-button
+                                    matTooltip="グループに追加する"
+                                    (click)="
+                                        onClickedAddTripInGroup$.next({
+                                            base: groupingBaseTrip,
+                                            target: trip
+                                        })
+                                    "
+                                >
+                                    <mat-icon>add</mat-icon>
+                                </button>
+
+                                <button
+                                    *ngIf="
+                                        trip.tripId !==
+                                            groupingBaseTrip.tripId &&
+                                        trip.tripBlockId ===
+                                            groupingBaseTrip.tripBlockId
+                                    "
+                                    mat-icon-button
+                                    matTooltip="グループから除外する"
+                                    (click)="
+                                        onClickedDeleteTripInGroup$.next({
+                                            base: groupingBaseTrip,
+                                            target: trip
+                                        })
+                                    "
+                                >
+                                    <mat-icon>remove</mat-icon>
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

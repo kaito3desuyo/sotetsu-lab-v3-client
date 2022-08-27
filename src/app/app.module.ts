@@ -19,6 +19,7 @@ import { GeneralModule } from './general/general.module';
 import { AgencyListStateStoreProvider } from './global-states/agency-list.state';
 import { CalendarListStateStoreProvider } from './global-states/calendar-list.state';
 import { RouteStationListStateStoreProvider } from './global-states/route-station-list.state';
+import { ServiceListStateStoreProvider } from './global-states/service-list.state';
 import { TodaysCalendarListStateStore } from './global-states/todays-calendar-list.state';
 import { TodaysOperationListStateStore } from './global-states/todays-operation-list.state';
 import { LayoutModule } from './layout/layout.module';
@@ -37,6 +38,7 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
         AgencyListStateStoreProvider,
         CalendarListStateStoreProvider,
         RouteStationListStateStoreProvider,
+        ServiceListStateStoreProvider,
         {
             provide: APP_INITIALIZER,
             useFactory:

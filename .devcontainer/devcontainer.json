@@ -3,19 +3,15 @@
     "dockerComposeFile": ["../docker-compose.yml"],
     "service": "development-client",
     "workspaceFolder": "/home/node/sotetsu-lab-v3-client",
-    "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash",
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": ["source.fixAll.eslint"]
-    },
+    "settings": {},
     "extensions": [
         "angular.ng-template",
         "cyrilletuzi.angular-schematics",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "mhutchie.git-graph",
-        "christian-kohler.path-intellisense"
+        "christian-kohler.path-intellisense",
+        "vivaxy.vscode-conventional-commits"
     ],
     "shutdownAction": "stopCompose"
 }

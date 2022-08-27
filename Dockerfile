@@ -1,17 +1,41 @@
-FROM node:16
+ARG BASE_IMAGE="node:14"
+ARG APP_NAME="sotetsu-lab-v3-client"
 
-ENV NODE_ENV='development'
+FROM ${BASE_IMAGE} as base
 
+################################################################################
+
+FROM base as install-dependencies
+
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends fonts-noto fonts-noto-cjk \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+ENV NODE_ENV="development"
 RUN npm i -g @angular/cli npm-check-updates
-
-RUN mkdir -p /home/node/sotetsu-lab-v3-client && chown node:node /home/node/sotetsu-lab-v3-client
-
 USER node
 
-WORKDIR /home/node/sotetsu-lab-v3-client
+################################################################################
 
+FROM install-dependencies as ci-base
+
+################################################################################
+
+FROM install-dependencies as development-base
+
+ARG APP_NAME
+RUN mkdir /home/node/${APP_NAME}
+WORKDIR /home/node/${APP_NAME}
 COPY --chown=node:node ./package*.json ./
-
-RUN npm i
-
+RUN npm ci
 COPY --chown=node:node . .
+
+################################################################################
+
+FROM development-base as production-build
+
+RUN npm run build:prod -- --output-path=./dist/build-by-docker
+
+################################################################################
+
+# TODO: production-hosting
