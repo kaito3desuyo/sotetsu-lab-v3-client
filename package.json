@@ -34,7 +34,7 @@
     "class-validator": "^0.13.1",
     "dayjs": "^1.11.0",
     "lodash-es": "^4.17.15",
-    "moment": "^2.29.1",
+    "moment": "^2.29.4",
     "ng2-adsense": "^10.1.0",
     "ngx-logger": "^5.0.9",
     "qs": "^6.10.1",
