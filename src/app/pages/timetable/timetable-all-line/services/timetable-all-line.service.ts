@@ -83,12 +83,6 @@ export class TimetableAllLineService {
                         .map((tripBlock) => tripBlock.trips.length)
                         .reduce((a, b) => a + b),
                 });
-
-                if (tripBlockId) {
-                    this.timetableAllLineStateStore.updatePageSettings({
-                        pageIndex: 0,
-                    });
-                }
             }),
             map(() => null)
         );
