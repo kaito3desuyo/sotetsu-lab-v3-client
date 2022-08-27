@@ -38,6 +38,8 @@ export class TimetableAllLineService {
     fetchTripBlocksV2(): Observable<void> {
         const calendarId = this.timetableAllLineStateQuery.calendarId;
         const tripDirection = this.timetableAllLineStateQuery.tripDirection;
+        const tripBlockId = this.timetableAllLineStateQuery.tripBlockId;
+
         const qb = new RequestQueryBuilder()
             .setJoin([
                 { field: 'trips' },
@@ -46,18 +48,28 @@ export class TimetableAllLineService {
                 { field: 'trips.tripOperationLists.operation' },
                 { field: 'trips.tripClass' },
             ])
-            .setFilter([
-                {
-                    field: 'trips.calendarId',
-                    operator: CondOperator.EQUALS,
-                    value: calendarId,
-                },
-                {
-                    field: 'trips.tripDirection',
-                    operator: CondOperator.EQUALS,
-                    value: tripDirection,
-                },
-            ])
+            .setFilter(
+                tripBlockId
+                    ? [
+                          {
+                              field: 'id',
+                              operator: CondOperator.EQUALS,
+                              value: tripBlockId,
+                          },
+                      ]
+                    : [
+                          {
+                              field: 'trips.calendarId',
+                              operator: CondOperator.EQUALS,
+                              value: calendarId,
+                          },
+                          {
+                              field: 'trips.tripDirection',
+                              operator: CondOperator.EQUALS,
+                              value: tripDirection,
+                          },
+                      ]
+            )
             .sortBy([
                 { field: 'trips.times.departureDays', order: 'ASC' },
                 { field: 'trips.times.departureTime', order: 'ASC' },
@@ -71,6 +83,12 @@ export class TimetableAllLineService {
                         .map((tripBlock) => tripBlock.trips.length)
                         .reduce((a, b) => a + b),
                 });
+
+                if (tripBlockId) {
+                    this.timetableAllLineStateStore.updatePageSettings({
+                        pageIndex: 0,
+                    });
+                }
             }),
             map(() => null)
         );
