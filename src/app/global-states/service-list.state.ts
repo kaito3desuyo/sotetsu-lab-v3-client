@@ -40,6 +40,10 @@ export class ServiceListStateStore extends EntityStore<ServiceListState> {
 export class ServiceListStateQuery extends QueryEntity<ServiceListState> {
     serviceId$ = this.selectFirst((service) => service.serviceId);
 
+    get serviceId(): ServiceDetailsDto['serviceId'] {
+        return this.getAll()[0].serviceId;
+    }
+
     constructor(protected store: ServiceListStateStore) {
         super(store);
     }

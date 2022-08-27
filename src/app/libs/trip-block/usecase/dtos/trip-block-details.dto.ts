@@ -3,7 +3,7 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 
 export class TripBlockDetailsDto {
     @Expose({ name: 'id' })
-    id: string;
+    tripBlockId: string;
 
     @Expose()
     createdAt?: string;

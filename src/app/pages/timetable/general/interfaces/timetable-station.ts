@@ -5,9 +5,11 @@ export interface ITimetableStation extends IStation {
     borderSetting?: boolean;
 }
 
-export enum ETimetableStationViewMode {
-    ONLY_DEPARTURE = 0,
-    ONLY_INBOUND_ARRIVAL = 1,
-    ONLY_OUTBOUND_ARRIVAL = 2,
-    DEPARTURE_AND_ARRIVAL = 3,
-}
+export const ETimetableStationViewMode = {
+    ONLY_DEPARTURE: 0,
+    ONLY_INBOUND_ARRIVAL: 1,
+    ONLY_OUTBOUND_ARRIVAL: 2,
+    DEPARTURE_AND_ARRIVAL: 3,
+} as const;
+export type ETimetableStationViewMode =
+    typeof ETimetableStationViewMode[keyof typeof ETimetableStationViewMode];
