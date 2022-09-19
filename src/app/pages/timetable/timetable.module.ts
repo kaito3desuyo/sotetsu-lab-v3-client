@@ -24,7 +24,6 @@ import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable
 import { TimetableAddHeaderContainerComponent } from './general/components/timetable-add-header-container/timetable-add-header-container.component';
 import { TimetableAddModeSelectContainerComponent } from './general/components/timetable-add-mode-select-container/timetable-add-mode-select-container.component';
 import { TimetableAddModeSelectPresentationalComponent } from './general/components/timetable-add-mode-select-presentational/timetable-add-mode-select-presentational.component';
-import { TimetableCalendarSelectDialogComponent } from './general/components/timetable-calendar-select-dialog/timetable-calendar-select-dialog.component';
 import { TimetableCopyHeaderContainerComponent } from './general/components/timetable-copy-header-container/timetable-copy-header-container.component';
 import { TimetableEditorFormContainerComponent } from './general/components/timetable-editor-form-container/timetable-editor-form-container.component';
 import { TimetableEditorFormPresentationalComponent } from './general/components/timetable-editor-form-presentational/timetable-editor-form-presentational.component';
@@ -92,7 +91,6 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         TimetableUpdateHeaderContainerComponent,
         TimetableEditorFormContainerComponent,
         TimetableEditorFormPresentationalComponent,
-        TimetableCalendarSelectDialogComponent,
         TimetableCopyComponent,
         TimetableCopyHeaderContainerComponent,
         TimetableStationHeaderCComponent,
