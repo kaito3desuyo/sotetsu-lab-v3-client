@@ -7,8 +7,9 @@ import {
 } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import { RxState, stateful } from '@rx-angular/state';
-import { Subject, zip } from 'rxjs';
+import { combineLatest, Subject } from 'rxjs';
 import { map, pluck } from 'rxjs/operators';
+import { areArrayValuesEqual } from 'src/app/core/utils/are-array-values-equal';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
@@ -43,20 +44,17 @@ export class TimetableAllLineTablePComponent {
 
     readonly calendar$ = this.state.select('calendar');
     readonly tripDirection$ = this.state.select('tripDirection');
-    readonly stations$ = zip(
+    readonly stations$ = combineLatest([
         this.tripDirection$,
-        this.state.select('stations')
-    ).pipe(
+        this.state.select('stations'),
+    ]).pipe(
         stateful(
             map(([tripDirection, stations]) => {
                 return stations.map((o) => ({
                     ...o,
-                    viewMode: this._getViewMode(
-                        o.stationName,
-                        tripDirection as 0 | 1
-                    ),
+                    viewMode: this._getViewMode(o, tripDirection as 0 | 1),
                     borderSetting: this._getBorderSetting(
-                        o.stationName,
+                        o,
                         tripDirection as 0 | 1
                     ),
                 }));
@@ -161,67 +159,222 @@ export class TimetableAllLineTablePComponent {
     }
 
     private _getViewMode(
-        stationName: string,
+        station: StationDetailsDto,
         tripDirection: 0 | 1
     ): ETimetableStationViewMode {
         if (tripDirection === 0) {
-            switch (stationName) {
-                case '大和':
-                case 'いずみ野':
-                case '二俣川':
-                case '西谷':
-                case '新宿':
-                case '大宮':
-                    return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
-                case '横浜':
-                case '川越':
-                    return ETimetableStationViewMode.ONLY_INBOUND_ARRIVAL;
-                default:
-                    return ETimetableStationViewMode.ONLY_DEPARTURE;
+            const departureAndArrival = [
+                { routeName: ['川越線', '埼京線'], stationName: '大宮' },
+                { routeName: ['埼京線'], stationName: '新宿' },
+                {
+                    routeName: ['埼京線', '相鉄・JR直通線', 'りんかい線'],
+                    stationName: '大崎',
+                },
+                {
+                    routeName: ['三田線', '南北線', '目黒線'],
+                    stationName: '目黒',
+                },
+                {
+                    routeName: ['副都心線'],
+                    stationName: '新宿三丁目',
+                },
+                { routeName: ['副都心線', '東横線'], stationName: '渋谷' },
+                {
+                    routeName: ['東横線', '目黒線', '東急新横浜線'],
+                    stationName: '日吉',
+                },
+                {
+                    routeName: ['東横線', 'みなとみらい線'],
+                    stationName: '横浜',
+                },
+                { routeName: ['本線', '相鉄新横浜線'], stationName: '西谷' },
+                { routeName: ['本線', 'いずみ野線'], stationName: '二俣川' },
+                { routeName: ['いずみ野線'], stationName: 'いずみ野' },
+                { routeName: ['本線'], stationName: '大和' },
+            ];
+
+            if (
+                departureAndArrival.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
             }
+
+            const onlyInboundArrival = [
+                { routeName: ['川越線'], stationName: '川越' },
+                { routeName: ['三田線'], stationName: '西高島平' },
+                { routeName: ['埼玉高速鉄道線'], stationName: '浦和美園' },
+                { routeName: ['有楽町線', '副都心線'], stationName: '和光市' },
+                { routeName: ['本線'], stationName: '横浜' },
+            ];
+
+            if (
+                onlyInboundArrival.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return ETimetableStationViewMode.ONLY_INBOUND_ARRIVAL;
+            }
+
+            return ETimetableStationViewMode.ONLY_DEPARTURE;
         } else if (tripDirection === 1) {
-            switch (stationName) {
-                case '大宮':
-                case '新宿':
-                case '西谷':
-                case '二俣川':
-                case '大和':
-                case 'いずみ野':
-                    return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
-                case '海老名':
-                case '湘南台':
-                case '厚木':
-                    return ETimetableStationViewMode.ONLY_OUTBOUND_ARRIVAL;
-                default:
-                    return ETimetableStationViewMode.ONLY_DEPARTURE;
+            const departureAndArrival = [
+                { routeName: ['川越線', '埼京線'], stationName: '大宮' },
+                { routeName: ['埼京線'], stationName: '新宿' },
+                {
+                    routeName: ['埼京線', '相鉄・JR直通線', 'りんかい線'],
+                    stationName: '大崎',
+                },
+                {
+                    routeName: ['三田線', '南北線', '目黒線'],
+                    stationName: '目黒',
+                },
+                {
+                    routeName: ['副都心線'],
+                    stationName: '新宿三丁目',
+                },
+                { routeName: ['副都心線', '東横線'], stationName: '渋谷' },
+                {
+                    routeName: ['東横線', '目黒線', '東急新横浜線'],
+                    stationName: '日吉',
+                },
+                {
+                    routeName: ['東横線', 'みなとみらい線'],
+                    stationName: '横浜',
+                },
+                { routeName: ['本線', '相鉄新横浜線'], stationName: '西谷' },
+                { routeName: ['本線', 'いずみ野線'], stationName: '二俣川' },
+                { routeName: ['いずみ野線'], stationName: 'いずみ野' },
+                { routeName: ['本線'], stationName: '大和' },
+            ];
+
+            if (
+                departureAndArrival.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
             }
+
+            const onlyOutboundArrival = [
+                { routeName: ['りんかい線'], stationName: '新木場' },
+                { routeName: ['有楽町線'], stationName: '新木場' },
+                { routeName: ['みなとみらい線'], stationName: '元町・中華街' },
+                { routeName: ['いずみ野線'], stationName: '湘南台' },
+                { routeName: ['本線'], stationName: '海老名' },
+                { routeName: ['厚木線'], stationName: '厚木' },
+            ];
+
+            if (
+                onlyOutboundArrival.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return ETimetableStationViewMode.ONLY_OUTBOUND_ARRIVAL;
+            }
+
+            return ETimetableStationViewMode.ONLY_DEPARTURE;
         } else {
             return null;
         }
     }
 
     private _getBorderSetting(
-        stationName: string,
+        station: StationDetailsDto,
         tripDirection: 0 | 1
     ): boolean {
         if (tripDirection === 0) {
-            switch (stationName) {
-                case '厚木':
-                case '希望ヶ丘':
-                case '横浜':
-                    return true;
-                default:
-                    return false;
+            const target = [
+                { routeName: ['三田線'], stationName: '西高島平' },
+                { routeName: ['埼玉高速鉄道線'], stationName: '浦和美園' },
+                { routeName: ['有楽町線', '副都心線'], stationName: '和光市' },
+                { routeName: ['副都心線'], stationName: '千川' },
+                { routeName: ['東横線'], stationName: '綱島' },
+                { routeName: ['本線'], stationName: '横浜' },
+                { routeName: ['本線'], stationName: '希望ヶ丘' },
+                { routeName: ['厚木線'], stationName: '厚木' },
+            ];
+
+            if (
+                target.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return true;
             }
+
+            return false;
         } else if (tripDirection === 1) {
-            switch (stationName) {
-                case '羽沢横浜国大':
-                case '湘南台':
-                case '海老名':
-                    return true;
-                default:
-                    return false;
+            const target = [
+                { routeName: ['相鉄・JR直通線'], stationName: '武蔵小杉' },
+                { routeName: ['りんかい線'], stationName: '新木場' },
+                { routeName: ['三田線'], stationName: '三田' },
+                { routeName: ['目黒線'], stationName: '奥沢' },
+                { routeName: ['有楽町線'], stationName: '新木場' },
+                {
+                    routeName: ['相鉄新横浜線', '相鉄・JR直通線'],
+                    stationName: '羽沢横浜国大',
+                },
+                {
+                    routeName: ['みなとみらい線'],
+                    stationName: '元町・中華街',
+                },
+                { routeName: ['いずみ野線'], stationName: '湘南台' },
+                { routeName: ['本線'], stationName: '海老名' },
+            ];
+
+            if (
+                target.some(
+                    (o) =>
+                        station.stationName === o.stationName &&
+                        areArrayValuesEqual(
+                            station.routeStationLists.map(
+                                (rsl) => rsl.route.routeName
+                            ),
+                            o.routeName
+                        )
+                )
+            ) {
+                return true;
             }
+
+            return false;
         } else {
             return false;
         }

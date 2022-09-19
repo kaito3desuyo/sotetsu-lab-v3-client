@@ -26,6 +26,7 @@ import {
 } from './states/timetable-all-line.state';
 import { TimetableAllLineRoutingModule } from './timetable-all-line-routing.module';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
+import { TimetableAllLineGetStationNumberingPipe } from './pipes/timetable-all-line-get-station-numbering.pipe';
 
 @NgModule({
     imports: [
@@ -52,6 +53,7 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         TimetableAllLineTableCComponent,
         TimetableAllLineTablePComponent,
         TimetableAllLineGetTimePipe,
+        TimetableAllLineGetStationNumberingPipe,
     ],
     providers: [
         TimetableAllLineService,

@@ -112,7 +112,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
             )
                 .reverse()
                 .map((o) => o.trips)
-                .reduce((a, b) => [...a, ...b])
+                .reduce((a, b) => [...a, ...b], [])
                 .filter((_, i) => {
                     return (
                         pageSettings.pageIndex * pageSettings.pageSize <= i &&

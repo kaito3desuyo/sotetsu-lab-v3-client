@@ -25,9 +25,16 @@ export class TimetableAllLineService {
 
     fetchStationsV2(): Observable<void> {
         const serviceId = this.serviceListStateQuery.serviceId;
-        const qb = new RequestQueryBuilder();
+        const qb = new RequestQueryBuilder().setJoin([
+            {
+                field: 'operatingSystems.route.routeStationLists.station.routeStationLists',
+            },
+            {
+                field: 'operatingSystems.route.routeStationLists.station.routeStationLists.route',
+            },
+        ]);
 
-        return this.serviceService.findOneWithTrips(serviceId, qb).pipe(
+        return this.serviceService.findOneWithStations(serviceId, qb).pipe(
             tap((data) => {
                 this.timetableAllLineStateStore.setStations(data.stations);
             }),
@@ -81,7 +88,7 @@ export class TimetableAllLineService {
                 this.timetableAllLineStateStore.updatePageSettings({
                     length: data
                         .map((tripBlock) => tripBlock.trips.length)
-                        .reduce((a, b) => a + b),
+                        .reduce((a, b) => a + b, 0),
                 });
             }),
             map(() => null)

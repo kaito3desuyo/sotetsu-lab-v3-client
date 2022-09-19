@@ -16,7 +16,7 @@ export class ServiceService {
         return this.serviceQuery.findMany(qb);
     }
 
-    findOneWithTrips(
+    findOneWithStations(
         serviceId: string,
         qb: RequestQueryBuilder
     ): Observable<ServiceStationsDto> {

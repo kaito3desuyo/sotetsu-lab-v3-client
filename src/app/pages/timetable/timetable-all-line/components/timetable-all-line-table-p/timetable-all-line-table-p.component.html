@@ -32,7 +32,7 @@
 
         <div fxLayout="row">
             <div fxFlexAlign="start">
-                <table class="stations-table" fxFlex="0 0 128px">
+                <table class="stations-table" fxFlex="0 0 192px">
                     <thead>
                         <tr>
                             <th colspan="2">列車番号</th>
@@ -76,6 +76,15 @@
                                             : 1
                                     "
                                 >
+                                    <span
+                                        class="mat-caption"
+                                        style="line-height: 1"
+                                    >
+                                        {{
+                                            station
+                                                | timetableAllLineGetStationNumbering
+                                        }}
+                                    </span>
                                     {{ station.stationName }}
                                 </td>
                                 <td
@@ -107,6 +116,15 @@
                                         staitonViewMode.ONLY_DEPARTURE
                                     "
                                 >
+                                    <span
+                                        class="mat-caption"
+                                        style="line-height: 1"
+                                    >
+                                        {{
+                                            station
+                                                | timetableAllLineGetStationNumbering
+                                        }}
+                                    </span>
                                     {{ station.stationName }}
                                 </td>
                                 <td>発</td>
