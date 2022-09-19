@@ -4,7 +4,7 @@ import { guid, Query, Store } from '@datorama/akita';
 import dayjs from 'dayjs';
 import { cloneDeep } from 'lodash-es';
 import { map } from 'rxjs/operators';
-import { uniqueBy } from 'src/app/core/utils/unique-by';
+import { arrayUniqueBy } from 'src/app/core/utils/array-unique-by';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
@@ -106,7 +106,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
             const sortedStations =
                 tripDirection === 0 ? [...stations].reverse() : stations;
 
-            const sortedTrips = uniqueBy(
+            const sortedTrips = arrayUniqueBy(
                 this._sortTrips(sortedStations, tripBlocks).reverse(),
                 'tripBlockId'
             )

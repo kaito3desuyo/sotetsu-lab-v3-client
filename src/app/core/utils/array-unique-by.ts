@@ -1,6 +1,6 @@
-export function uniqueBy<T>(args: T[], key?: keyof T): T[] {
+export function arrayUniqueBy<T>(array: T[], key?: keyof T): T[] {
     const valueSet = new Set();
-    return args.filter((arg) => {
+    return array.filter((arg) => {
         const value = key ? arg[key] : arg;
         if (valueSet.has(value)) {
             return false;
