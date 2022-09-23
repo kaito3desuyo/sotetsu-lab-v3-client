@@ -29,7 +29,7 @@
     "@angular/service-worker": "^14.2.3",
     "@datorama/akita": "^7.1.1",
     "@nestjsx/crud-request": "^4.6.2",
-    "@rx-angular/state": "^1.4.6",
+    "@rx-angular/state": "^1.7.0",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "dayjs": "^1.11.0",
