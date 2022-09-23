@@ -16,9 +16,9 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import 'moment/locale/ja';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
-import { CustomPaginator } from './classes/custom-paginator';
-import { AuthInterceptor } from './interceptors/auth-interceptor';
+import { AuthInterceptor } from '../core/interceptors/auth-interceptor';
 import { ErrorHandlerService } from '../core/services/error-handler.service';
+import { CustomPaginator } from './classes/custom-paginator';
 
 @NgModule({
     imports: [

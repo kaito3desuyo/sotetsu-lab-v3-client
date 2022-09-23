@@ -2,10 +2,12 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
-import { filter } from 'rxjs/operators';
+import { interval } from 'rxjs';
+import { filter, map, switchMap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
-import { SocketService } from './core/services/socket.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
+import { SocketService } from './core/services/socket.service';
+import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
 
 @Component({
@@ -22,7 +24,9 @@ export class AppComponent implements OnInit, OnDestroy {
         private readonly appUpdateService: AppUpdateService,
         private readonly socketService: SocketService,
         private readonly gaService: GoogleAnalyticsService,
-        private readonly loadingService: LoadingService
+        private readonly loadingService: LoadingService,
+        private readonly tokenStateStore: TokenStateStore,
+        private readonly tokenStateQuery: TokenStateQuery
     ) {
         this.state.hold(
             this.router.events.pipe(
@@ -44,6 +48,14 @@ export class AppComponent implements OnInit, OnDestroy {
                     ev.urlAfterRedirects
                 );
             }
+        );
+
+        this.state.hold(
+            interval(1000 * 10).pipe(
+                map(() => this.tokenStateQuery.isExpired),
+                filter((bool) => !!bool),
+                switchMap(() => this.tokenStateStore.fetch())
+            )
         );
     }
 

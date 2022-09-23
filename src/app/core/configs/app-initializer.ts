@@ -11,6 +11,7 @@ export const AppInitializerProvider: Provider = {
     provide: APP_INITIALIZER,
     useFactory:
         (
+            tokenStateStore: TokenStateStore,
             agencyListStateStore: AgencyListStateStore,
             calendarListStateStore: CalendarListStateStore,
             routeStationListStateStore: RouteStationListStateStore,
@@ -19,6 +20,8 @@ export const AppInitializerProvider: Provider = {
             todaysOperationListStateStore: TodaysOperationListStateStore
         ) =>
         async () => {
+            await tokenStateStore.fetch().toPromise();
+
             await Promise.all([
                 agencyListStateStore.fetch().toPromise(),
                 calendarListStateStore.fetch().toPromise(),
@@ -30,6 +33,7 @@ export const AppInitializerProvider: Provider = {
             await todaysOperationListStateStore.fetch().toPromise();
         },
     deps: [
+        TokenStateStore,
         AgencyListStateStore,
         CalendarListStateStore,
         RouteStationListStateStore,
