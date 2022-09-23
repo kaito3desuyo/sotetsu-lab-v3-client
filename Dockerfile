@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="node:14"
+ARG BASE_IMAGE="node:16"
 ARG APP_NAME="sotetsu-lab-v3-client"
 
 FROM ${BASE_IMAGE} as base
@@ -27,7 +27,7 @@ ARG APP_NAME
 RUN mkdir /home/node/${APP_NAME}
 WORKDIR /home/node/${APP_NAME}
 COPY --chown=node:node ./package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 COPY --chown=node:node . .
 
 ################################################################################
