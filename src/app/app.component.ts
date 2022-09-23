@@ -1,7 +1,7 @@
 import { Component, Inject, Injector, OnDestroy, OnInit } from '@angular/core';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import { AppUpdateService } from './core/services/app-update.service';
 import { BaseComponent } from './general/classes/base-component';
-import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
 import { SocketService } from './general/services/socket.service';
 import { LoadingService } from './shared/app-shared/loading/loading.service';

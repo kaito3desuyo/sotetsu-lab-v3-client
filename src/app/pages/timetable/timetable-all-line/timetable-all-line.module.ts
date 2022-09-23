@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
+import { ConfirmDialogModule } from 'src/app/shared/confirm-dialog/confirm-dialog.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
 import { TimetableAllLineHeaderCComponent } from './components/timetable-all-line-header-c/timetable-all-line-header-c.component';
 import { TimetableAllLineHeaderPComponent } from './components/timetable-all-line-header-p/timetable-all-line-header-p.component';
@@ -28,21 +29,6 @@ import { TimetableAllLineRoutingModule } from './timetable-all-line-routing.modu
 import { TimetableAllLineComponent } from './timetable-all-line.component';
 
 @NgModule({
-    imports: [
-        CommonModule,
-        FlexLayoutModule,
-        MatCardModule,
-        MatPaginatorModule,
-        MatToolbarModule,
-        MatTooltipModule,
-        MatButtonModule,
-        MatIconModule,
-        TimetableAllLineRoutingModule,
-        AppSharedModule,
-        AdsenseModule,
-        PipesModule,
-        TimetableSearchCardModule,
-    ],
     declarations: [
         TimetableAllLineComponent,
         TimetableAllLineHeaderCComponent,
@@ -58,6 +44,22 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         TimetableAllLineResolverService,
         TimetableAllLineStateStore,
         TimetableAllLineStateQuery,
+    ],
+    imports: [
+        CommonModule,
+        FlexLayoutModule,
+        MatCardModule,
+        MatPaginatorModule,
+        MatToolbarModule,
+        MatTooltipModule,
+        MatButtonModule,
+        MatIconModule,
+        TimetableAllLineRoutingModule,
+        AppSharedModule,
+        AdsenseModule,
+        PipesModule,
+        TimetableSearchCardModule,
+        ConfirmDialogModule,
     ],
 })
 export class TimetableAllLineModule {}

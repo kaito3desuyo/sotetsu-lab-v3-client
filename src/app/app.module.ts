@@ -24,6 +24,7 @@ import { TodaysCalendarListStateStore } from './global-states/todays-calendar-li
 import { TodaysOperationListStateStore } from './global-states/todays-operation-list.state';
 import { LayoutModule } from './layout/layout.module';
 import { AppSharedModule } from './shared/app-shared/app-shared.module';
+import { ConfirmDialogModule } from './shared/confirm-dialog/confirm-dialog.module';
 
 @NgModule({
     declarations: [AppComponent],
@@ -84,6 +85,7 @@ import { AppSharedModule } from './shared/app-shared/app-shared.module';
             adClient: 'ca-pub-8923857677281403',
             fullWidthResponsive: false,
         }),
+        ConfirmDialogModule,
     ],
     bootstrap: [AppComponent],
 })

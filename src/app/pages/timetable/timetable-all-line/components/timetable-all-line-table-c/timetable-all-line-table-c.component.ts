@@ -6,11 +6,11 @@ import { RxState } from '@rx-angular/state';
 import { Subject } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
-import { ConfirmDialogContainerComponent } from 'src/app/general/components/confirm-dialog-container/confirm-dialog-container.component';
 import { NotificationService } from 'src/app/general/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
+import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { TimetableAllLineService } from '../../services/timetable-all-line.service';
 import {
     TimetableAllLineStateQuery,
@@ -50,6 +50,7 @@ export class TimetableAllLineTableCComponent {
         private readonly router: Router,
         private readonly state: RxState<{}>,
         private readonly notification: NotificationService,
+        private readonly confirmDialogService: ConfirmDialogService,
         private readonly timetableAllLineService: TimetableAllLineService,
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly timetableAllLineStateStore: TimetableAllLineStateStore,
@@ -76,19 +77,16 @@ export class TimetableAllLineTableCComponent {
             });
         });
         this.state.hold(this.onClickedDeleteButton$, (trip) => {
-            const dialogRef = this.dialog.open(
-                ConfirmDialogContainerComponent,
-                {
-                    width: '480px',
-                    data: {
-                        title: '列車を削除する',
-                        text: `${trip.tripNumber}列車を削除しますか？この操作は元に戻すことができません。`,
-                        cancelButtonText: 'キャンセル',
-                        goButtonText: '削除する',
-                        goButtonColor: 'warn',
-                    },
-                }
-            );
+            const dialogRef = this.confirmDialogService.open({
+                width: '480px',
+                data: {
+                    title: '列車を削除する',
+                    html: `<p>${trip.tripNumber}列車を削除しますか？この操作は元に戻すことができません。</p>`,
+                    cancelButtonText: 'キャンセル',
+                    goButtonText: '削除する',
+                    goButtonColor: 'warn',
+                },
+            });
 
             dialogRef.afterClosed().subscribe((done) => {
                 if (!done) return;
@@ -113,19 +111,16 @@ export class TimetableAllLineTableCComponent {
             });
         });
         this.state.hold(this.onClickedAddTripInGroup$, ({ base, target }) => {
-            const dialogRef = this.dialog.open(
-                ConfirmDialogContainerComponent,
-                {
-                    width: '480px',
-                    data: {
-                        title: 'グループに追加する',
-                        text: `${target.tripNumber}列車を${base.tripNumber}列車が所属するグループに追加しますか？`,
-                        cancelButtonText: 'キャンセル',
-                        goButtonText: '追加する',
-                        goButtonColor: 'primary',
-                    },
-                }
-            );
+            const dialogRef = this.confirmDialogService.open({
+                width: '480px',
+                data: {
+                    title: 'グループに追加する',
+                    html: `<p>${target.tripNumber}列車を${base.tripNumber}列車が所属するグループに追加しますか？</p>`,
+                    cancelButtonText: 'キャンセル',
+                    goButtonText: '追加する',
+                    goButtonColor: 'primary',
+                },
+            });
 
             dialogRef.afterClosed().subscribe((done) => {
                 if (done) {
@@ -156,19 +151,16 @@ export class TimetableAllLineTableCComponent {
         this.state.hold(
             this.onClickedDeleteTripInGroup$,
             ({ base, target }) => {
-                const dialogRef = this.dialog.open(
-                    ConfirmDialogContainerComponent,
-                    {
-                        width: '480px',
-                        data: {
-                            title: 'グループから除外する',
-                            text: `${target.tripNumber}列車を${base.tripNumber}列車が所属するグループから除外しますか？`,
-                            cancelButtonText: 'キャンセル',
-                            goButtonText: '除外する',
-                            goButtonColor: 'warn',
-                        },
-                    }
-                );
+                const dialogRef = this.confirmDialogService.open({
+                    width: '480px',
+                    data: {
+                        title: 'グループから除外する',
+                        html: `<p>${target.tripNumber}列車を${base.tripNumber}列車が所属するグループから除外しますか？</p>`,
+                        cancelButtonText: 'キャンセル',
+                        goButtonText: '除外する',
+                        goButtonColor: 'warn',
+                    },
+                });
 
                 dialogRef.afterClosed().subscribe((done) => {
                     if (done) {

@@ -33,6 +33,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "dayjs": "^1.11.5",
+    "just-extend": "^6.1.1",
     "lodash-es": "^4.17.21",
     "moment": "^2.29.4",
     "ng2-adsense": "^11.0.0",
