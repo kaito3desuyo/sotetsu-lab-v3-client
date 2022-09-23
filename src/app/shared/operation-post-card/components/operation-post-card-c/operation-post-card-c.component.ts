@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
-import { NotificationService } from 'src/app/general/services/notification.service';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
 import { OperationPostCardService } from '../../services/operation-post-card.service';

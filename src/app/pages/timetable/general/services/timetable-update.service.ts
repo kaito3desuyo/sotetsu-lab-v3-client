@@ -6,7 +6,7 @@ import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
 import { TimetableEditorService } from './timetable-editor.service';
-import { NotificationService } from 'src/app/general/services/notification.service';
+import { NotificationService } from 'src/app/core/services/notification.service';
 
 @Injectable()
 export class TimetableUpdateService {

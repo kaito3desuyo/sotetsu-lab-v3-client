@@ -10,9 +10,9 @@ import {
     ReadTripBlockDto,
 } from 'src/app/general/models/trip-block/trip-block-dto';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
-import { NotificationService } from 'src/app/general/services/notification.service';
 import { UpdateTripOperationListDto } from 'src/app/general/models/trip-operation-list/trip-operation-list-dto';
 import { TripOperationListApiService } from 'src/app/general/api/trip-operation-list-api.service';
+import { NotificationService } from 'src/app/core/services/notification.service';
 
 @Injectable()
 export class TimetableAddService {
@@ -24,9 +24,8 @@ export class TimetableAddService {
         this._subscription.add(sub);
     }
 
-    isSaveTripsIndividually$: BehaviorSubject<boolean> = new BehaviorSubject<
-        boolean
-    >(false);
+    isSaveTripsIndividually$: BehaviorSubject<boolean> =
+        new BehaviorSubject<boolean>(false);
     serviceId$: BehaviorSubject<string> = new BehaviorSubject<string>(null);
     calendar$: BehaviorSubject<ICalendar> = new BehaviorSubject<ICalendar>(
         null
@@ -52,7 +51,8 @@ export class TimetableAddService {
                         value
                     )
                 );
-                const isSaveTripsIndividually = this.getIsSaveTripsIndividuallyAsStatic();
+                const isSaveTripsIndividually =
+                    this.getIsSaveTripsIndividuallyAsStatic();
 
                 let blocks = [];
                 if (isSaveTripsIndividually) {

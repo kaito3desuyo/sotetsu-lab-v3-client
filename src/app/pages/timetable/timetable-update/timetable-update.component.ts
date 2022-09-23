@@ -1,5 +1,5 @@
 import { Component, OnInit, Injector, Inject } from '@angular/core';
-import { TitleService } from 'src/app/general/services/title.service';
+import { TitleService } from 'src/app/core/services/title.service';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { TimetableUpdateService } from '../general/services/timetable-update.service';

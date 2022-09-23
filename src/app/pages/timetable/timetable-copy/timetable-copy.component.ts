@@ -1,7 +1,7 @@
 import { Component, Inject, Injector, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from 'src/app/general/classes/base-component';
-import { TitleService } from 'src/app/general/services/title.service';
+import { TitleService } from 'src/app/core/services/title.service';
 import { TimetableCopyService } from '../general/services/timetable-copy.service';
 
 @Component({

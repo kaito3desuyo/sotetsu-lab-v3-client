@@ -65,12 +65,3 @@ export class TodaysCalendarListStateQuery extends QueryEntity<TodaysCalendarList
         super(store);
     }
 }
-
-export const TodaysCalendarListStateStoreProvider: Provider = {
-    provide: APP_INITIALIZER,
-    useFactory:
-        (todaysCalendarListStateStore: TodaysCalendarListStateStore) => () =>
-            todaysCalendarListStateStore.fetch().toPromise(),
-    deps: [TodaysCalendarListStateStore],
-    multi: true,
-};

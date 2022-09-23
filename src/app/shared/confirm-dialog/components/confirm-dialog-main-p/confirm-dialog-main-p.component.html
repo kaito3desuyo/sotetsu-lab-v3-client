@@ -1,0 +1,21 @@
+<div fxLayout="column" fxLayoutGap="24px">
+    <div [innerHTML]="data?.html"></div>
+    <div fxLayout="row" fxLayoutAlign="end center" fxLayoutGap="24px">
+        <button
+            #cancelButton
+            mat-button
+            [color]="data?.cancelButtonColor"
+            (click)="clickButton.emit(false)"
+        >
+            {{ data?.cancelButtonText }}
+        </button>
+        <button
+            #goButton
+            mat-raised-button
+            [color]="data?.goButtonColor"
+            (click)="clickButton.emit(true)"
+        >
+            {{ data?.goButtonText }}
+        </button>
+    </div>
+</div>

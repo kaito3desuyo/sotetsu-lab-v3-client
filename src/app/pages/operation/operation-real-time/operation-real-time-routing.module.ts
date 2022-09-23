@@ -1,10 +1,7 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Routes } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { OperationRealTimeComponent } from './operation-real-time.component';
-import { RouterModule } from '@angular/router';
 import { OperationRealTimeResolverService } from './services/operation-real-time-resolver.service';
-import moment from 'moment';
 
 const routes: Routes = [
     {
@@ -16,9 +13,6 @@ const routes: Routes = [
         runGuardsAndResolvers: 'always',
         data: {
             title: 'リアルタイム運用情報',
-            date: moment()
-                .subtract(moment().hour() < 4 ? 1 : 0)
-                .format('YYYY-MM-DD'),
         },
     },
 ];

@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
     EntityState,
     EntityStore,
@@ -71,11 +71,3 @@ export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
         );
     }
 }
-
-export const CalendarListStateStoreProvider: Provider = {
-    provide: APP_INITIALIZER,
-    useFactory: (calendarListStateStore: CalendarListStateStore) => () =>
-        calendarListStateStore.fetch().toPromise(),
-    deps: [CalendarListStateStore],
-    multi: true,
-};
