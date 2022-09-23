@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { environment } from 'src/environments/environment';
+import { NGXLogger } from 'ngx-logger';
 import { Observable, Subject } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
     providedIn: 'root',
@@ -11,20 +11,20 @@ export class SocketService {
     private readonly url = environment.socketUrl;
     private conn: WebSocket;
 
-    constructor(private readonly logger: LoggerService) {}
+    constructor(private readonly logger: NGXLogger) {}
 
     connect(): void {
-        this.logger.debug('Connected to WebSocket server');
         const conn = new WebSocket(this.url);
         this.conn = conn;
         this.conn.onmessage = (ev: MessageEvent<unknown>) => {
             this._ev$.next(ev);
         };
+        this.logger.log('SocketService: Connected to WebSocket server');
     }
 
     disconnect(): void {
-        this.logger.debug('Disconnected to WebSocket server');
         this.conn.close();
+        this.logger.log('SocketService: Disconnected to WebSocket server');
     }
 
     emit(action: string, data: unknown): void {

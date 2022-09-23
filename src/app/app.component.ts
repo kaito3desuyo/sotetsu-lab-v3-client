@@ -3,7 +3,7 @@ import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { AppUpdateService } from './core/services/app-update.service';
 import { BaseComponent } from './general/classes/base-component';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
-import { SocketService } from './general/services/socket.service';
+import { SocketService } from './core/services/socket.service';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
 
 @Component({
