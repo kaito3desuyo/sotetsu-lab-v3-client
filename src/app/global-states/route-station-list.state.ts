@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
     EntityState,
     EntityStore,
@@ -97,12 +97,3 @@ export class RouteStationListStateQuery extends QueryEntity<RouteStationListStat
         super(store);
     }
 }
-
-export const RouteStationListStateStoreProvider: Provider = {
-    provide: APP_INITIALIZER,
-    useFactory:
-        (routeStationListStateStore: RouteStationListStateStore) => () =>
-            routeStationListStateStore.fetch().toPromise(),
-    deps: [RouteStationListStateStore],
-    multi: true,
-};
