@@ -11,6 +11,9 @@ dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
+gtag('js', new Date());
+gtag('config', environment.analytics.id, { send_page_view: false });
+
 if (environment.production) {
     enableProdMode();
 }
