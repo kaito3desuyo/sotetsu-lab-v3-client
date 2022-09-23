@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { isEqual } from 'lodash-es';
+import { areArrayValuesEqual } from './are-array-values-equal';
 
 const headerName = [
     'x-item-count',
@@ -37,10 +37,8 @@ export class Pagination<T> {
     }
 
     static isApiPaginated<Model>(res: HttpResponse<Model[]>): boolean {
-        return isEqual(
-            res.headers
-                .keys()
-                .filter((header) => headerName.some((h) => h === header)),
+        return areArrayValuesEqual(
+            res.headers.keys().filter((header) => headerName.includes(header)),
             headerName
         );
     }
