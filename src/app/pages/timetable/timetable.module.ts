@@ -38,19 +38,6 @@ import { TimetableUpdateService } from './general/services/timetable-update.serv
 import { TimetableAddComponent } from './timetable-add/timetable-add.component';
 import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
 import { TimetableRoutingModule } from './timetable-routing.module';
-import { TimetableStationHeaderCComponent } from './timetable-station/components/timetable-station-header-c/timetable-station-header-c.component';
-import { TimetableStationHeaderPComponent } from './timetable-station/components/timetable-station-header-p/timetable-station-header-p.component';
-import { TimetableStationMainCComponent } from './timetable-station/components/timetable-station-main-c/timetable-station-main-c.component';
-import { TimetableStationTablePComponent } from './timetable-station/components/timetable-station-table-p/timetable-station-table-p.component';
-import { TimetableStationFindLastStopStationPipe } from './timetable-station/pipes/timetable-station-find-last-stop-station.pipe';
-import { TimetableStationFindOtherTripsInSameTripBlockPipe } from './timetable-station/pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
-import { TimetableStationResolverService } from './timetable-station/services/timetable-station-resolver.service';
-import { TimetableStationService } from './timetable-station/services/timetable-station.service';
-import {
-    TimetableStationStateQuery,
-    TimetableStationStateStore,
-} from './timetable-station/states/timetable-station.state';
-import { TimetableStationComponent } from './timetable-station/timetable-station.component';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 
 @NgModule({
@@ -82,7 +69,6 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         CalendarSelectDialogModule,
     ],
     declarations: [
-        TimetableStationComponent,
         TimetableAddComponent,
         TimetableUpdateComponent,
         TimetableAddHeaderContainerComponent,
@@ -93,18 +79,8 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         TimetableEditorFormPresentationalComponent,
         TimetableCopyComponent,
         TimetableCopyHeaderContainerComponent,
-        TimetableStationHeaderCComponent,
-        TimetableStationMainCComponent,
-        TimetableStationTablePComponent,
-        TimetableStationFindLastStopStationPipe,
-        TimetableStationFindOtherTripsInSameTripBlockPipe,
-        TimetableStationHeaderPComponent,
     ],
     providers: [
-        TimetableStationService,
-        TimetableStationResolverService,
-        TimetableStationStateStore,
-        TimetableStationStateQuery,
         TimetableAddService,
         TimetableAddResolverService,
         TimetableUpdateService,
