@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandler, Injectable } from '@angular/core';
 import ErrorStackParser from 'error-stack-parser';
 import { NGXLogger } from 'ngx-logger';
@@ -9,15 +10,26 @@ export class ErrorHandlerService implements ErrorHandler {
     constructor(private readonly logger: NGXLogger) {}
 
     handleError<T extends Error>(error: T): void {
-        this.logger.error(
-            error.name,
-            error.message,
-            '\n',
-            JSON.stringify(
-                { stack: ErrorStackParser.parse(error) },
-                undefined,
-                2
-            )
-        );
+        if (error instanceof HttpErrorResponse) {
+            this.logger.error(
+                error.name,
+                error.message,
+                '\n',
+                JSON.stringify({ ...error }, undefined, 2)
+            );
+        }
+
+        if (error instanceof Error) {
+            this.logger.error(
+                error.name,
+                error.message,
+                '\n',
+                JSON.stringify(
+                    { ...error, stack: ErrorStackParser.parse(error) },
+                    undefined,
+                    2
+                )
+            );
+        }
     }
 }
