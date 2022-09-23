@@ -1,6 +1,6 @@
 import { OnDestroy, Injector, Component } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { NotificationService } from '../services/notification.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 // TODO: Add Angular decorator.
 @Component({

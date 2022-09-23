@@ -2,11 +2,11 @@ import { Injectable } from '@angular/core';
 import { omit } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarApiService } from 'src/app/general/api/calendar-api.service';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { CalendarModel } from 'src/app/general/models/calendar/calendar-model';
-import { NotificationService } from 'src/app/general/services/notification.service';
 import { TimetableEditorService } from './timetable-editor.service';
 
 @Injectable()
