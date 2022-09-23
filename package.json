@@ -35,7 +35,7 @@
     "dayjs": "^1.11.0",
     "lodash-es": "^4.17.15",
     "moment": "^2.29.1",
-    "ng2-adsense": "^10.1.0",
+    "ng2-adsense": "^11.0.0",
     "ngx-logger": "^5.0.9",
     "qs": "^6.10.1",
     "reflect-metadata": "^0.1.13",
