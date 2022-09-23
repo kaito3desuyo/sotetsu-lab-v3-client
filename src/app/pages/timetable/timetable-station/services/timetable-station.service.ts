@@ -3,7 +3,6 @@ import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -27,12 +26,11 @@ export class TimetableStationService {
         private readonly stationService: StationService,
         private readonly tripService: TripService,
         private readonly tripClassService: TripClassService,
-        private readonly timetableStationStateStore: TimetableStationStateStore,
-        private readonly timetableStationStateQuery: TimetableStationStateQuery,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
         private readonly operationService: OperationService,
         private readonly formationService: FormationService,
-        private readonly operationSightingService: OperationSightingService
+        private readonly operationSightingService: OperationSightingService,
+        private readonly timetableStationStateStore: TimetableStationStateStore,
+        private readonly timetableStationStateQuery: TimetableStationStateQuery
     ) {}
 
     // v2
