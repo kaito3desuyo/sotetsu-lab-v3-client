@@ -10,7 +10,7 @@ import {
     Inject,
     Injector,
 } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { ICalendar } from 'src/app/general/interfaces/calendar';
 import { ITimetableSearchForm } from '../../interfaces/timetable-search-form';
 import { BaseComponent } from 'src/app/general/classes/base-component';
@@ -38,7 +38,7 @@ export class TimetableSearchFormPresentationalComponent extends BaseComponent
     }[];
     @Output() searchTimetable: EventEmitter<any> = new EventEmitter<any>();
 
-    constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+    constructor(@Inject(Injector) injector: Injector, private fb: UntypedFormBuilder) {
         super(injector);
         if (this.searchTimetableForm.get('isSearchStation')) {
             this.subscription = this.searchTimetableForm

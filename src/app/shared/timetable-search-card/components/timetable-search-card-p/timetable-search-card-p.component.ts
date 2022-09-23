@@ -5,7 +5,7 @@ import {
     Input,
     Output,
 } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { RxState } from '@rx-angular/state';
 import { Subject } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -59,7 +59,7 @@ export class TimetableSearchCardPComponent {
     @Output() clickSearch = new EventEmitter<ITimetableSearchCardForm>();
 
     constructor(
-        private readonly fb: FormBuilder,
+        private readonly fb: UntypedFormBuilder,
         private readonly state: RxState<State>
     ) {
         this.state.connect('calendars', this.onChangedInputCalendars$);

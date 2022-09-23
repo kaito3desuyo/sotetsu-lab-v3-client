@@ -8,7 +8,7 @@ import {
     Injector,
     Input,
 } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 import { IOperationSightingAddForm } from 'src/app/shared/operation-shared/interfaces/operation-sighting-add-form';
 import { IAgency } from 'src/app/general/interfaces/agency';
@@ -35,7 +35,7 @@ export class OperationSightingAddFormPresentationalComponent
         IOperationSightingAddForm
     > = new EventEmitter<IOperationSightingAddForm>();
 
-    constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+    constructor(@Inject(Injector) injector: Injector, private fb: UntypedFormBuilder) {
         super(injector);
     }
 

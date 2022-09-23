@@ -5,7 +5,7 @@ import {
     Input,
     Output,
 } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { RxState } from '@rx-angular/state';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
@@ -45,7 +45,7 @@ export class OperationPostCardPComponent {
     @Output() submitSighting = new EventEmitter<IOperationPostCardForm>();
 
     constructor(
-        private readonly fb: FormBuilder,
+        private readonly fb: UntypedFormBuilder,
         private readonly state: RxState<State>
     ) {
         this.state.connect('agencies', this.onChangedInputAgencies$);

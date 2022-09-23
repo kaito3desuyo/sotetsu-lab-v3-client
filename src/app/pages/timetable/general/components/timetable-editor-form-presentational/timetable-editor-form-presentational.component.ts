@@ -8,7 +8,7 @@ import {
     ChangeDetectorRef,
 } from '@angular/core';
 import { IStation } from 'src/app/general/interfaces/station';
-import { FormGroup, FormBuilder, FormArray, Validators } from '@angular/forms';
+import { UntypedFormGroup, UntypedFormBuilder, UntypedFormArray, Validators } from '@angular/forms';
 import { IOperation } from 'src/app/general/interfaces/operation';
 import { ITripClass } from 'src/app/general/interfaces/trip-class';
 import { find, sortBy } from 'lodash-es';
@@ -29,7 +29,7 @@ import moment from 'moment';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableEditorFormPresentationalComponent implements OnInit {
-    tripForm: FormArray = this.fb.array([]);
+    tripForm: UntypedFormArray = this.fb.array([]);
     tripCount = 0;
 
     @Input() tripBlock: ITripBlock;
@@ -42,7 +42,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
         ITimetableTripForm[]
     >();
 
-    constructor(private fb: FormBuilder, private cd: ChangeDetectorRef) {}
+    constructor(private fb: UntypedFormBuilder, private cd: ChangeDetectorRef) {}
 
     ngOnInit(): void {
         this.formInitialize();
@@ -73,7 +73,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
         this.tripForm.removeAt(index);
     }
 
-    generateTrip(trip?: ITrip): FormGroup {
+    generateTrip(trip?: ITrip): UntypedFormGroup {
         if (trip) {
             return this.fb.group({
                 id: [trip.id],
@@ -117,7 +117,7 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
         }
     }
 
-    generateTime(station: IStation, time?: ITime): FormGroup {
+    generateTime(station: IStation, time?: ITime): UntypedFormGroup {
         if (time) {
             return this.fb.group({
                 id: [time.id],
@@ -161,14 +161,14 @@ export class TimetableEditorFormPresentationalComponent implements OnInit {
         }
     }
 
-    getTime(stationId: string, form: FormArray): FormGroup {
+    getTime(stationId: string, form: UntypedFormArray): UntypedFormGroup {
         return find(
             form.controls,
             (ctls) => ctls.get('stationId').value === stationId
-        ) as FormGroup;
+        ) as UntypedFormGroup;
     }
 
-    changeStopType(event: MatRadioChange, form: FormGroup): void {
+    changeStopType(event: MatRadioChange, form: UntypedFormGroup): void {
         switch (event.value) {
             case 'stop':
             case 'passing':
