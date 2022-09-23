@@ -138,7 +138,6 @@
       }
     }
   },
-  "defaultProject": "sotetsu-lab-v3-client",
   "cli": {
     "schematicCollections": [
       "@angular-eslint/schematics"
