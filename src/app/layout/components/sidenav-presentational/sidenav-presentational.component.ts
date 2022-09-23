@@ -8,7 +8,7 @@ import {
     OnChanges,
     SimpleChanges,
 } from '@angular/core';
-import { FormControl, FormBuilder } from '@angular/forms';
+import { UntypedFormControl, UntypedFormBuilder } from '@angular/forms';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 
@@ -20,7 +20,7 @@ import { BaseComponent } from 'src/app/general/classes/base-component';
 })
 export class SidenavPresentationalComponent extends BaseComponent
     implements OnInit, OnChanges {
-    stationId: FormControl = this.fb.control('');
+    stationId: UntypedFormControl = this.fb.control('');
     upTimetableLink: BehaviorSubject<
         [string, { [key: string]: any }]
     > = new BehaviorSubject<[string, { [key: string]: any }]>(null);
@@ -34,7 +34,7 @@ export class SidenavPresentationalComponent extends BaseComponent
         stations: { label: string; value: string }[];
     }[];
 
-    constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+    constructor(@Inject(Injector) injector: Injector, private fb: UntypedFormBuilder) {
         super(injector);
     }
 

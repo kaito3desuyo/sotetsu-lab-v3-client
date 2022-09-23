@@ -7,7 +7,7 @@ import {
     Inject,
     Injector,
 } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { UntypedFormBuilder } from '@angular/forms';
 import { BaseComponent } from 'src/app/general/classes/base-component';
 
 @Component({
@@ -23,7 +23,7 @@ export class TimetableAddModeSelectPresentationalComponent extends BaseComponent
         boolean
     > = new EventEmitter<boolean>();
 
-    constructor(@Inject(Injector) injector: Injector, private fb: FormBuilder) {
+    constructor(@Inject(Injector) injector: Injector, private fb: UntypedFormBuilder) {
         super(injector);
         this.subscription = this.isSaveTripsIndividually.valueChanges.subscribe(
             (bool) => {

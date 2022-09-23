@@ -5,7 +5,7 @@ import {
     Input,
     Output,
 } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { RxState } from '@rx-angular/state';
 import moment, { Moment } from 'moment';
 import { Subject } from 'rxjs';
@@ -21,7 +21,7 @@ import { Subject } from 'rxjs';
     providers: [RxState],
 })
 export class OperationSightingsSearchFormPresentationalComponent {
-    readonly searchForm: FormGroup = this.fb.group({
+    readonly searchForm: UntypedFormGroup = this.fb.group({
         referenceDate: [null, Validators.required],
         days: [
             null,
@@ -48,7 +48,7 @@ export class OperationSightingsSearchFormPresentationalComponent {
         days: number;
     }>();
 
-    constructor(private fb: FormBuilder, private readonly state: RxState<{}>) {
+    constructor(private fb: UntypedFormBuilder, private readonly state: RxState<{}>) {
         this.state.hold(this.onChangedInputReferenceDate$, (date) => {
             this.searchForm
                 .get('referenceDate')
