@@ -5,7 +5,6 @@ import { AppUpdateService } from './general/services/app-update.service';
 import { GoogleAnalyticsService } from './general/services/google-analytics.service';
 import { SocketService } from './general/services/socket.service';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
-import { ParamsService } from './state/params';
 
 @Component({
     selector: 'app-root',
@@ -18,7 +17,6 @@ export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
         private router: Router,
         private gaService: GoogleAnalyticsService,
         private appUpdateService: AppUpdateService,
-        private paramsService: ParamsService,
         private loadingService: LoadingService,
         private socketService: SocketService
     ) {
@@ -33,8 +31,6 @@ export class AppComponent extends BaseComponent implements OnInit, OnDestroy {
                 this.gaService.sendPageView(event.urlAfterRedirects);
             }
         });
-
-        this.subscription = this.paramsService.fetch().subscribe();
     }
 
     ngOnInit(): void {

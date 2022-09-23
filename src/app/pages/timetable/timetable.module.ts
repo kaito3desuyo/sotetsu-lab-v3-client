@@ -20,7 +20,6 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { CalendarSelectDialogModule } from 'src/app/shared/calendar-select-dialog/calendar-select-dialog.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
-import { TimetableSharedModule } from 'src/app/shared/timetable-shared/timetable-shared.module';
 import { TimetableAddHeaderContainerComponent } from './general/components/timetable-add-header-container/timetable-add-header-container.component';
 import { TimetableAddModeSelectContainerComponent } from './general/components/timetable-add-mode-select-container/timetable-add-mode-select-container.component';
 import { TimetableAddModeSelectPresentationalComponent } from './general/components/timetable-add-mode-select-presentational/timetable-add-mode-select-presentational.component';
@@ -62,7 +61,6 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         MatSlideToggleModule,
         MatTooltipModule,
         MatDialogModule,
-        TimetableSharedModule,
         AdsenseModule,
         PipesModule,
         TimetableSearchCardModule,
