@@ -187,7 +187,11 @@ export class TimetableAllLineTablePComponent {
                     routeName: ['東横線', 'みなとみらい線'],
                     stationName: '横浜',
                 },
-                { routeName: ['本線', '相鉄新横浜線'], stationName: '西谷' },
+                {
+                    routeName: ['本線', '新横浜線'],
+                    //  routeName: ['本線', '相鉄新横浜線'],
+                    stationName: '西谷',
+                },
                 { routeName: ['本線', 'いずみ野線'], stationName: '二俣川' },
                 { routeName: ['いずみ野線'], stationName: 'いずみ野' },
                 { routeName: ['本線'], stationName: '大和' },
@@ -257,7 +261,11 @@ export class TimetableAllLineTablePComponent {
                     routeName: ['東横線', 'みなとみらい線'],
                     stationName: '横浜',
                 },
-                { routeName: ['本線', '相鉄新横浜線'], stationName: '西谷' },
+                {
+                    routeName: ['本線', '新横浜線'],
+                    // routeName: ['本線', '相鉄新横浜線'],
+                    stationName: '西谷',
+                },
                 { routeName: ['本線', 'いずみ野線'], stationName: '二俣川' },
                 { routeName: ['いずみ野線'], stationName: 'いずみ野' },
                 { routeName: ['本線'], stationName: '大和' },
@@ -348,7 +356,8 @@ export class TimetableAllLineTablePComponent {
                 { routeName: ['目黒線'], stationName: '奥沢' },
                 { routeName: ['有楽町線'], stationName: '新木場' },
                 {
-                    routeName: ['相鉄新横浜線', '相鉄・JR直通線'],
+                    routeName: ['新横浜線', '相鉄・JR直通線'],
+                    // routeName: ['相鉄新横浜線', '相鉄・JR直通線'],
                     stationName: '羽沢横浜国大',
                 },
                 {

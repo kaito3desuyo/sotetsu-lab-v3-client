@@ -1,14 +1,16 @@
 version: 0.2
 
+env:
+    git-credential-helper: yes
+
 phases:
     install:
         runtime-versions:
-            nodejs: 14
-    pre_build:
-        commands:
-            - npm install
+            nodejs: 16
     build:
         commands:
+            - git checkout $(git describe --tags --abbrev=0)
+            - npm ci --legacy-peer-deps
             - npm run build:${DEPLOY_STAGE}
     post_build:
         commands:
