@@ -147,7 +147,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                 continue;
             }
 
-            const unsortedTrips = cloneDeep(unsortedTripBlock.trips).reverse();
+            const unsortedTrips = [...unsortedTripBlock.trips].reverse();
 
             unsortedTrip: for (const unsortedTrip of unsortedTrips) {
                 sorted: for (let i = sorted.length - 1; i >= 0; i--) {
