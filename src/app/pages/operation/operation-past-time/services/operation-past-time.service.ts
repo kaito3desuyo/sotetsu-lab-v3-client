@@ -3,6 +3,7 @@ import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, mergeMap, take, tap } from 'rxjs/operators';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -17,6 +18,7 @@ import {
 @Injectable()
 export class OperationPastTimeService {
     constructor(
+        private readonly agencyListStateQuery: AgencyListStateQuery,
         private readonly calendarService: CalendarService,
         private readonly formationService: FormationService,
         private readonly operationSightingService: OperationSightingService,
@@ -83,7 +85,18 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((formations: FormationDetailsDto[]) => {
-                    this.operationPastTimeStateStore.setFormations(formations);
+                    const agencies = this.agencyListStateQuery.agencies;
+                    this.operationPastTimeStateStore.setFormations(
+                        [...formations].sort(
+                            (a, b) =>
+                                agencies.findIndex(
+                                    (v) => v.agencyId === a.agencyId
+                                ) -
+                                agencies.findIndex(
+                                    (v) => v.agencyId === b.agencyId
+                                )
+                        )
+                    );
                 }),
                 map(() => undefined)
             );
