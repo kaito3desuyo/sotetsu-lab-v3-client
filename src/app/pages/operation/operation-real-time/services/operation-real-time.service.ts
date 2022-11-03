@@ -3,6 +3,7 @@ import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
 import { forkJoin, Observable } from 'rxjs';
 import { map, switchMap, take, tap } from 'rxjs/operators';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
@@ -20,6 +21,7 @@ import {
 @Injectable()
 export class OperationRealTimeService {
     constructor(
+        private readonly agencyListStateQuery: AgencyListStateQuery,
         private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
         private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
         private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
@@ -43,8 +45,8 @@ export class OperationRealTimeService {
             .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
         return this.operationService.findMany(qb).pipe(
-            tap((data: OperationDetailsDto[]) => {
-                this.operationRealTimeStateStore.setOperations(data);
+            tap((operations: OperationDetailsDto[]) => {
+                this.operationRealTimeStateStore.setOperations(operations);
             }),
             map(() => undefined)
         );
@@ -60,8 +62,19 @@ export class OperationRealTimeService {
                     .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap((data: FormationDetailsDto[]) => {
-                    this.operationRealTimeStateStore.setFormations(data);
+                tap((formations: FormationDetailsDto[]) => {
+                    const agencies = this.agencyListStateQuery.agencies;
+                    this.operationRealTimeStateStore.setFormations(
+                        [...formations].sort(
+                            (a, b) =>
+                                agencies.findIndex(
+                                    (v) => v.agencyId === a.agencyId
+                                ) -
+                                agencies.findIndex(
+                                    (v) => v.agencyId === b.agencyId
+                                )
+                        )
+                    );
                 }),
                 map(() => undefined)
             );
@@ -76,9 +89,9 @@ export class OperationRealTimeService {
         return this.operationSightingService
             .findManyLatestGroupByOperation(qb)
             .pipe(
-                tap((data: OperationSightingDetailsDto[]) => {
+                tap((sightings: OperationSightingDetailsDto[]) => {
                     this.operationRealTimeStateStore.setOperationSightings(
-                        data
+                        sightings
                     );
                 }),
                 tap(() => {
@@ -97,9 +110,9 @@ export class OperationRealTimeService {
         return this.operationSightingService
             .findManyLatestGroupByFormation(qb)
             .pipe(
-                tap((data: OperationSightingDetailsDto[]) => {
+                tap((sightings: OperationSightingDetailsDto[]) => {
                     this.operationRealTimeStateStore.setFormationSightings(
-                        data
+                        sightings
                     );
                 }),
                 tap(() => {
@@ -143,8 +156,8 @@ export class OperationRealTimeService {
             ]);
 
         return this.tripClassService.findMany(qb).pipe(
-            tap((data: TripClassDetailsDto[]) => {
-                this.operationRealTimeStateStore.setTripClasses(data);
+            tap((tripClasses: TripClassDetailsDto[]) => {
+                this.operationRealTimeStateStore.setTripClasses(tripClasses);
             }),
             map(() => undefined)
         );
