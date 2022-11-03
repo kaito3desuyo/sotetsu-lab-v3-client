@@ -45,7 +45,7 @@ export class TimetableAllLineTablePComponent {
     readonly calendar$ = this.state.select('calendar');
     readonly tripDirection$ = this.state.select('tripDirection');
     readonly stations$ = combineLatest([
-        this.tripDirection$,
+        this.state.select('tripDirection'),
         this.state.select('stations'),
     ]).pipe(
         stateful(
@@ -61,7 +61,21 @@ export class TimetableAllLineTablePComponent {
             })
         )
     );
-    readonly trips$ = this.state.select('trips');
+    readonly trips$ = combineLatest([
+        this.state.select('trips'),
+        this.state.select('pageSettings'),
+    ]).pipe(
+        stateful(
+            map(([trips, pageSettings]) => {
+                return trips.filter((_, i) => {
+                    return (
+                        pageSettings.pageIndex * pageSettings.pageSize <= i &&
+                        i < (pageSettings.pageIndex + 1) * pageSettings.pageSize
+                    );
+                });
+            })
+        )
+    );
     readonly pageSettings$ = this.state.select('pageSettings');
     readonly isEnableGroupingMode$ = this.state.select(
         pluck('groupingBaseTrip'),
