@@ -11,57 +11,47 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
     private readonly _staitonViewMode: typeof ETimetableStationViewMode =
         ETimetableStationViewMode;
 
-    transform(
-        {
-            station,
-            trip,
-        }: {
-            station: StationDetailsDto & {
-                viewMode?: ETimetableStationViewMode;
-                borderSetting?: boolean;
-            };
-            trip: TripDetailsDto;
-        },
-        {
-            mode,
-            stations,
-            trips,
-        }: {
-            mode: 'arrival' | 'departure';
-            stations: (StationDetailsDto & {
-                viewMode?: ETimetableStationViewMode;
-                borderSetting?: boolean;
-            })[];
-            trips: TripDetailsDto[];
-        }
-    ): string {
-        return this._getTime({ station, trip }, { mode, stations, trips });
+    transform({
+        mode,
+        station,
+        trip,
+        stations,
+        trips,
+    }: {
+        mode: 'arrival' | 'departure';
+        station: StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        };
+        trip: TripDetailsDto;
+        stations: (StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        })[];
+        trips: TripDetailsDto[];
+    }): string {
+        return this._getTime({ mode, station, trip, stations, trips });
     }
 
-    private _getTime(
-        {
-            station,
-            trip,
-        }: {
-            station: StationDetailsDto & {
-                viewMode?: ETimetableStationViewMode;
-                borderSetting?: boolean;
-            };
-            trip: TripDetailsDto;
-        },
-        {
-            mode,
-            stations,
-            trips,
-        }: {
-            mode: 'arrival' | 'departure';
-            stations: (StationDetailsDto & {
-                viewMode?: ETimetableStationViewMode;
-                borderSetting?: boolean;
-            })[];
-            trips: TripDetailsDto[];
-        }
-    ): string {
+    private _getTime({
+        mode,
+        station,
+        trip,
+        stations,
+        trips,
+    }: {
+        mode: 'arrival' | 'departure';
+        station: StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        };
+        trip: TripDetailsDto;
+        stations: (StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        })[];
+        trips: TripDetailsDto[];
+    }): string {
         const time = trip.times.find((o) => {
             return o.stationId === station.stationId;
         });
@@ -234,5 +224,40 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
             time = '-' + time;
         }
         return timeString ? time : '';
+    }
+}
+
+@Pipe({
+    name: 'timetableAllLineGetTimeAndTrackBy',
+})
+export class TimetableAllLineGetTimeAndTrackByPipe implements PipeTransform {
+    constructor(private basePipe: TimetableAllLineGetTimePipe) {}
+
+    transform({
+        mode,
+        station,
+        stations,
+        trips,
+    }: {
+        mode: 'arrival' | 'departure';
+        station: StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        };
+        stations: (StationDetailsDto & {
+            viewMode?: ETimetableStationViewMode;
+            borderSetting?: boolean;
+        })[];
+        trips: TripDetailsDto[];
+    }): (index: number, trip: TripDetailsDto) => string {
+        return (index: number, trip: TripDetailsDto) => {
+            return this.basePipe.transform({
+                mode,
+                station,
+                trip,
+                stations,
+                trips,
+            });
+        };
     }
 }

@@ -14,6 +14,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableStationViewMode } from '../../../general/interfaces/timetable-station';
+import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-time.pipe';
 
 type State = {
     calendar: CalendarDetailsDto;
@@ -32,7 +33,7 @@ type State = {
         '../../../../../../assets/fonts/DiaPro-web/DiaPro.css',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
+    providers: [RxState, TimetableAllLineGetTimePipe],
 })
 export class TimetableAllLineTablePComponent {
     readonly staitonViewMode: typeof ETimetableStationViewMode =
@@ -133,7 +134,10 @@ export class TimetableAllLineTablePComponent {
         target: TripDetailsDto;
     }>();
 
-    constructor(private readonly state: RxState<State>) {
+    constructor(
+        private readonly state: RxState<State>,
+        private pipe: TimetableAllLineGetTimePipe
+    ) {
         this.state.set({
             pageSettings: {
                 pageIndex: 0,

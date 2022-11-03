@@ -18,7 +18,10 @@ import { TimetableAllLineMainCComponent } from './components/timetable-all-line-
 import { TimetableAllLineTableCComponent } from './components/timetable-all-line-table-c/timetable-all-line-table-c.component';
 import { TimetableAllLineTablePComponent } from './components/timetable-all-line-table-p/timetable-all-line-table-p.component';
 import { TimetableAllLineGetStationNumberingPipe } from './pipes/timetable-all-line-get-station-numbering.pipe';
-import { TimetableAllLineGetTimePipe } from './pipes/timetable-all-line-get-time.pipe';
+import {
+    TimetableAllLineGetTimeAndTrackByPipe,
+    TimetableAllLineGetTimePipe,
+} from './pipes/timetable-all-line-get-time.pipe';
 import { TimetableAllLineResolverService } from './services/timetable-all-line-resolver.service';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import {
@@ -37,6 +40,7 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         TimetableAllLineTableCComponent,
         TimetableAllLineTablePComponent,
         TimetableAllLineGetTimePipe,
+        TimetableAllLineGetTimeAndTrackByPipe,
         TimetableAllLineGetStationNumberingPipe,
     ],
     providers: [
