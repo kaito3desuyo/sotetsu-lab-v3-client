@@ -100,9 +100,8 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
         'tripDirection',
         'stations',
         'tripBlocks',
-        'pageSettings',
     ]).pipe(
-        map(({ tripDirection, stations, tripBlocks, pageSettings }) => {
+        map(({ tripDirection, stations, tripBlocks }) => {
             const sortedStations =
                 tripDirection === 0 ? [...stations].reverse() : stations;
 
@@ -112,13 +111,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
             )
                 .reverse()
                 .map((o) => o.trips)
-                .reduce((a, b) => [...a, ...b], [])
-                .filter((_, i) => {
-                    return (
-                        pageSettings.pageIndex * pageSettings.pageSize <= i &&
-                        i < (pageSettings.pageIndex + 1) * pageSettings.pageSize
-                    );
-                });
+                .reduce((a, b) => [...a, ...b], []);
 
             return sortedTrips;
         })
@@ -155,9 +148,10 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
             }
 
             const unsortedTrips = cloneDeep(unsortedTripBlock.trips).reverse();
+
             unsortedTrip: for (const unsortedTrip of unsortedTrips) {
-                sorted: for (let i = 0; i < sorted.length; i++) {
-                    const latestTripBlock = sorted[sorted.length - (i + 1)];
+                sorted: for (let i = sorted.length - 1; i >= 0; i--) {
+                    const latestTripBlock = sorted[i];
                     const latestTrips = latestTripBlock.trips;
 
                     sortedTrip: for (const latestTrip of latestTrips) {
@@ -200,7 +194,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeArrivalTime >
                                 sortTargetTripTimeArrivalTime
                             ) {
-                                if (i === sorted.length - 1) {
+                                if (i === 0) {
                                     sorted.unshift(unsortedTripBlock);
                                     break sorted;
                                 }
@@ -212,12 +206,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeArrivalTime <=
                                 sortTargetTripTimeArrivalTime
                             ) {
-                                sorted.splice(
-                                    sorted.length - i,
-                                    0,
-                                    unsortedTripBlock
-                                );
-
+                                sorted.splice(i + 1, 0, unsortedTripBlock);
                                 break sorted;
                             }
 
@@ -225,7 +214,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeDepartureTime >
                                 sortTargetTripTimeDepartureTime
                             ) {
-                                if (i === sorted.length - 1) {
+                                if (i === 0) {
                                     sorted.unshift(unsortedTripBlock);
                                     break sorted;
                                 }
@@ -237,12 +226,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeDepartureTime <=
                                 sortTargetTripTimeDepartureTime
                             ) {
-                                sorted.splice(
-                                    sorted.length - i,
-                                    0,
-                                    unsortedTripBlock
-                                );
-
+                                sorted.splice(i + 1, 0, unsortedTripBlock);
                                 break sorted;
                             }
 
@@ -252,7 +236,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeDepartureTime >
                                     sortTargetTripTimeArrivalTime
                             ) {
-                                if (i === sorted.length - 1) {
+                                if (i === 0) {
                                     sorted.unshift(unsortedTripBlock);
                                     break sorted;
                                 }
@@ -266,12 +250,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                                 latestTripTimeDepartureTime <=
                                     sortTargetTripTimeArrivalTime
                             ) {
-                                sorted.splice(
-                                    sorted.length - i,
-                                    0,
-                                    unsortedTripBlock
-                                );
-
+                                sorted.splice(i + 1, 0, unsortedTripBlock);
                                 break sorted;
                             }
 
@@ -279,7 +258,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                         }
                     }
 
-                    if (i === sorted.length - 1) {
+                    if (i === 0) {
                         sorted.unshift(unsortedTripBlock);
                         break sorted;
                     }
