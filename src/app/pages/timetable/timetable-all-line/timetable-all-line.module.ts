@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LetModule } from '@rx-angular/template';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
@@ -30,6 +31,8 @@ import {
 } from './states/timetable-all-line.state';
 import { TimetableAllLineRoutingModule } from './timetable-all-line-routing.module';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
+import { TimetableAllLineGetViewModePipe } from './pipes/timetable-all-line-get-view-mode.pipe';
+import { TimetableAllLineGetBorderSettingPipe } from './pipes/timetable-all-line-get-border-setting.pipe';
 
 @NgModule({
     declarations: [
@@ -42,6 +45,8 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         TimetableAllLineGetTimePipe,
         TimetableAllLineGetTimeAndTrackByPipe,
         TimetableAllLineGetStationNumberingPipe,
+        TimetableAllLineGetViewModePipe,
+        TimetableAllLineGetBorderSettingPipe,
     ],
     providers: [
         TimetableAllLineService,
@@ -58,6 +63,7 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         MatTooltipModule,
         MatButtonModule,
         MatIconModule,
+        LetModule,
         TimetableAllLineRoutingModule,
         AppSharedModule,
         AdsenseModule,
