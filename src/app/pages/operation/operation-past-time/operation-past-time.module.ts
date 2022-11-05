@@ -24,6 +24,7 @@ import {
     OperationPastTimeStateQuery,
     OperationPastTimeStateStore,
 } from './states/operation-past-time.state';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
 
 @NgModule({
     imports: [
@@ -37,6 +38,7 @@ import {
         MatInputModule,
         MatTooltipModule,
         MatDatepickerModule,
+        MatMomentDateModule,
         MatButtonModule,
         PipesModule,
         OperationSearchCardModule,

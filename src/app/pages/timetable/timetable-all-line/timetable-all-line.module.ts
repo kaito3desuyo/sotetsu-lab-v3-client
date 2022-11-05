@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LetModule } from '@rx-angular/template';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
@@ -18,7 +19,10 @@ import { TimetableAllLineMainCComponent } from './components/timetable-all-line-
 import { TimetableAllLineTableCComponent } from './components/timetable-all-line-table-c/timetable-all-line-table-c.component';
 import { TimetableAllLineTablePComponent } from './components/timetable-all-line-table-p/timetable-all-line-table-p.component';
 import { TimetableAllLineGetStationNumberingPipe } from './pipes/timetable-all-line-get-station-numbering.pipe';
-import { TimetableAllLineGetTimePipe } from './pipes/timetable-all-line-get-time.pipe';
+import {
+    TimetableAllLineGetTimeAndTrackByPipe,
+    TimetableAllLineGetTimePipe,
+} from './pipes/timetable-all-line-get-time.pipe';
 import { TimetableAllLineResolverService } from './services/timetable-all-line-resolver.service';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import {
@@ -27,6 +31,8 @@ import {
 } from './states/timetable-all-line.state';
 import { TimetableAllLineRoutingModule } from './timetable-all-line-routing.module';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
+import { TimetableAllLineGetViewModePipe } from './pipes/timetable-all-line-get-view-mode.pipe';
+import { TimetableAllLineGetBorderSettingPipe } from './pipes/timetable-all-line-get-border-setting.pipe';
 
 @NgModule({
     declarations: [
@@ -37,7 +43,10 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         TimetableAllLineTableCComponent,
         TimetableAllLineTablePComponent,
         TimetableAllLineGetTimePipe,
+        TimetableAllLineGetTimeAndTrackByPipe,
         TimetableAllLineGetStationNumberingPipe,
+        TimetableAllLineGetViewModePipe,
+        TimetableAllLineGetBorderSettingPipe,
     ],
     providers: [
         TimetableAllLineService,
@@ -54,6 +63,7 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
         MatTooltipModule,
         MatButtonModule,
         MatIconModule,
+        LetModule,
         TimetableAllLineRoutingModule,
         AppSharedModule,
         AdsenseModule,

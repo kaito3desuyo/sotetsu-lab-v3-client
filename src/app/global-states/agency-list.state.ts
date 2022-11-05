@@ -21,17 +21,7 @@ export class AgencyListStateStore extends EntityStore<AgencyListState> {
     }
 
     fetch(): Observable<void> {
-        const qb = RequestQueryBuilder.create()
-            .setFilter({
-                field: 'agencyOfficialName',
-                operator: CondOperator.EQUALS,
-                value: '相模鉄道株式会社',
-            })
-            .setOr({
-                field: 'agencyOfficialName',
-                operator: CondOperator.EQUALS,
-                value: '東日本旅客鉄道株式会社',
-            });
+        const qb = RequestQueryBuilder.create();
 
         return this.agencyService.findMany(qb).pipe(
             tap((data: AgencyDetailsDto[]) => {
@@ -45,6 +35,10 @@ export class AgencyListStateStore extends EntityStore<AgencyListState> {
 @Injectable({ providedIn: 'root' })
 export class AgencyListStateQuery extends QueryEntity<AgencyListState> {
     agencies$ = this.selectAll();
+
+    get agencies(): AgencyDetailsDto[] {
+        return this.getAll();
+    }
 
     constructor(protected store: AgencyListStateStore) {
         super(store);
