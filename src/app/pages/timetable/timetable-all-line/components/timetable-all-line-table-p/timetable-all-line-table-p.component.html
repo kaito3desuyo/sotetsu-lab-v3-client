@@ -1,464 +1,586 @@
-<mat-card>
-    <mat-card-title>
-        <mat-toolbar
-            [ngClass]="[
-                (calendar$ | async).sunday && (calendar$ | async).saturday
-                    ? 'holiday'
-                    : 'weekday'
-            ]"
-        >
-            <h3 style="line-height: 1.25">
-                {{ (calendar$ | async).startDate | date: 'yyyy年MM月dd日' }}
-                改正<br />
-                {{ (calendar$ | async).calendarName }}
-                {{
-                    (tripDirection$ | async) === 0
-                        ? '上り'
-                        : (tripDirection$ | async) === 1
-                        ? '下り'
-                        : ''
-                }}時刻表
-            </h3>
-        </mat-toolbar>
-    </mat-card-title>
-    <mat-card-content>
-        <mat-paginator
-            [length]="(pageSettings$ | async).length"
-            [pageIndex]="(pageSettings$ | async).pageIndex"
-            [pageSize]="(pageSettings$ | async).pageSize"
-            [pageSizeOptions]="[10, 20, 50, 100]"
-            (page)="onPaged$.next($event)"
-        ></mat-paginator>
+<ng-container *rxLet="vm$; let vm">
+    <mat-card>
+        <mat-card-title>
+            <mat-toolbar
+                [ngClass]="[
+                    vm.calendar.sunday && vm.calendar.saturday
+                        ? 'holiday'
+                        : 'weekday'
+                ]"
+            >
+                <h3 style="line-height: 1.25">
+                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
+                    改正<br />
+                    {{ vm.calendar.calendarName }}
+                    {{
+                        vm.tripDirection === 0
+                            ? '上り'
+                            : vm.tripDirection === 1
+                            ? '下り'
+                            : ''
+                    }}時刻表
+                </h3>
+            </mat-toolbar>
+        </mat-card-title>
+        <mat-card-content>
+            <mat-paginator
+                [length]="vm.pageSettings.length"
+                [pageIndex]="vm.pageSettings.pageIndex"
+                [pageSize]="vm.pageSettings.pageSize"
+                [pageSizeOptions]="[10, 20, 50, 100]"
+                (page)="onPaged$.next($event)"
+            ></mat-paginator>
 
-        <div fxLayout="row">
-            <div fxFlexAlign="start">
-                <table class="stations-table" fxFlex="0 0 192px">
-                    <thead>
-                        <tr>
-                            <th colspan="2">列車番号</th>
-                        </tr>
-                        <tr>
-                            <th colspan="2">運用番号</th>
-                        </tr>
-                        <tr>
-                            <th colspan="2">種別</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <ng-container
-                            *ngFor="
-                                let station of stations$ | async;
-                                let i = index;
-                                trackBy: 'stationId' | trackBy
-                            "
-                        >
-                            <tr
-                                [ngClass]="[
-                                    station.borderSetting ? 'border-bottom' : ''
-                                ]"
-                                *ngIf="
-                                    station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                    ((tripDirection$ | async) === 0 &&
-                                        station.viewMode ===
-                                            staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
-                                    ((tripDirection$ | async) === 1 &&
-                                        station.viewMode ===
-                                            staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+            <div fxLayout="row">
+                <div fxFlexAlign="start">
+                    <table class="stations-table">
+                        <thead>
+                            <tr>
+                                <th colspan="2">列車番号</th>
+                            </tr>
+                            <tr>
+                                <th colspan="2">運用番号</th>
+                            </tr>
+                            <tr>
+                                <th colspan="2">種別</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container
+                                *ngFor="
+                                    let station of vm.stations;
+                                    let i = index;
+                                    trackBy: 'stationId' | trackBy
                                 "
                             >
-                                <td
-                                    class="station-name"
-                                    [rowSpan]="
-                                        station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                            ? 2
-                                            : 1
-                                    "
-                                >
-                                    <span
-                                        class="mat-caption"
-                                        style="line-height: 1"
-                                    >
-                                        {{
-                                            station
-                                                | timetableAllLineGetStationNumbering
-                                        }}
-                                    </span>
-                                    {{ station.stationName }}
-                                </td>
-                                <td
+                                <tr
                                     [ngClass]="[
-                                        station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                        (({
+                                            station,
+                                            tripDirection: vm.tripDirection
+                                        } | timetableAllLineGetBorderSetting) === true
                                             ? 'border-bottom'
-                                            : ''
+                                            : '')
                                     ]"
-                                >
-                                    着
-                                </td>
-                            </tr>
-                            <tr
-                                [ngClass]="[
-                                    station.borderSetting ? 'border-bottom' : ''
-                                ]"
-                                *ngIf="
-                                    station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                    station.viewMode ===
-                                        staitonViewMode.ONLY_DEPARTURE
-                                "
-                            >
-                                <td
-                                    class="station-name"
                                     *ngIf="
-                                        station.viewMode ===
-                                        staitonViewMode.ONLY_DEPARTURE
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        (vm.tripDirection === 0 &&
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                        (vm.tripDirection === 1 &&
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
                                     "
                                 >
-                                    <span
-                                        class="mat-caption"
-                                        style="line-height: 1"
+                                    <td
+                                        class="station-name"
+                                        [rowSpan]="
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                                ? 2
+                                                : 1
+                                        "
                                     >
-                                        {{
-                                            station
-                                                | timetableAllLineGetStationNumbering
-                                        }}
-                                    </span>
-                                    {{ station.stationName }}
-                                </td>
-                                <td>発</td>
-                            </tr>
-                        </ng-container>
-                    </tbody>
-                </table>
-            </div>
-            <div fxFlexAlign="start" style="overflow-x: auto">
-                <table class="trips-table">
-                    <thead>
-                        <tr>
-                            <ng-container
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: 'tripNumber' | trackBy
-                                "
-                            >
-                                <th>
-                                    {{ trip.tripNumber }}
-                                </th>
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <ng-container
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: 'tripOperationLists[0].operationId'
-                                        | trackBy
-                                "
-                            >
-                                <th>
-                                    <a
-                                        [routerLink]="[
-                                            '/operation/route-diagram',
-                                            {
-                                                operation_id:
-                                                    trip.tripOperationLists[0]
-                                                        .operationId
-                                            }
-                                        ]"
-                                    >
-                                        {{
-                                            trip.tripOperationLists[0].operation
-                                                .operationNumber
-                                        }}
-                                    </a>
-                                </th>
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <ng-container
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: 'tripClassId' | trackBy
-                                "
-                            >
-                                <th
-                                    style="white-space: nowrap"
-                                    [ngStyle]="{
-                                        color: trip.tripClass.tripClassColor
-                                    }"
-                                >
-                                    <div
-                                        fxLayout="row"
-                                        fxLayoutAlign="center center"
-                                    >
-                                        <div
-                                            style="transform-origin: center"
+                                        <span
+                                            class="mat-caption"
+                                            style="
+                                                display: inline-block;
+                                                line-height: 1;
+                                                margin-right: 4px;
+                                            "
+                                        >
+                                            {{
+                                                station
+                                                    | timetableAllLineGetStationNumbering
+                                            }}
+                                        </span>
+
+                                        <span
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: right;
+                                            "
                                             [ngStyle]="{
                                                 transform:
                                                     'scale(' +
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? 4 /
+                                                          station.stationName
+                                                              .length
+                                                        : 1) +
+                                                    ', 1)',
+                                                marginLeft:
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? (station.stationName
+                                                              .length -
+                                                              4) *
+                                                          16 *
+                                                          -1
+                                                        : 0) + 'px'
+                                            }"
+                                        >
+                                            {{ station.stationName }}
+                                        </span>
+                                    </td>
+                                    <td
+                                        [ngClass]="[
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                                ? 'border-bottom'
+                                                : ''
+                                        ]"
+                                    >
+                                        着
+                                    </td>
+                                </tr>
+                                <tr
+                                    [ngClass]="[
+                                        (({
+                                            station,
+                                            tripDirection: vm.tripDirection
+                                        } | timetableAllLineGetBorderSetting) === true
+                                            ? 'border-bottom'
+                                            : '')
+                                    ]"
+                                    *ngIf="
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.ONLY_DEPARTURE
+                                    "
+                                >
+                                    <td
+                                        class="station-name"
+                                        *ngIf="
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.ONLY_DEPARTURE
+                                        "
+                                    >
+                                        <span
+                                            class="mat-caption"
+                                            style="
+                                                display: inline-block;
+                                                line-height: 1;
+                                                margin-right: 4px;
+                                            "
+                                        >
+                                            {{
+                                                station
+                                                    | timetableAllLineGetStationNumbering
+                                            }}
+                                        </span>
+
+                                        <span
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: right;
+                                            "
+                                            [ngStyle]="{
+                                                transform:
+                                                    'scale(' +
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? 4 /
+                                                          station.stationName
+                                                              .length
+                                                        : 1) +
+                                                    ', 1)',
+                                                marginLeft:
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? (station.stationName
+                                                              .length -
+                                                              4) *
+                                                          16 *
+                                                          -1
+                                                        : 0) + 'px'
+                                            }"
+                                        >
+                                            {{ station.stationName }}
+                                        </span>
+                                    </td>
+                                    <td>発</td>
+                                </tr>
+                            </ng-container>
+                        </tbody>
+                    </table>
+                </div>
+                <div fxFlexAlign="start" style="overflow-x: auto">
+                    <table class="trips-table">
+                        <thead>
+                            <tr>
+                                <ng-container
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: 'tripNumber' | trackBy
+                                    "
+                                >
+                                    <th>
+                                        <span
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: center;
+                                                margin: -9999px;
+                                            "
+                                            [ngStyle]="{
+                                                transform:
+                                                    'scale(' +
+                                                    (trip.tripNumber.length > 3
+                                                        ? 3 /
+                                                          trip.tripNumber.length
+                                                        : 1) +
+                                                    ', 1)'
+                                            }"
+                                        >
+                                            {{ trip.tripNumber }}
+                                        </span>
+                                    </th>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <ng-container
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: 'tripOperationLists[0].operationId'
+                                            | trackBy
+                                    "
+                                >
+                                    <th>
+                                        <a
+                                            [routerLink]="[
+                                                '/operation/route-diagram',
+                                                {
+                                                    operation_id:
+                                                        trip
+                                                            .tripOperationLists[0]
+                                                            .operationId
+                                                }
+                                            ]"
+                                        >
+                                            {{
+                                                trip.tripOperationLists[0]
+                                                    .operation.operationNumber
+                                            }}
+                                        </a>
+                                    </th>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <ng-container
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: 'tripClassId' | trackBy
+                                    "
+                                >
+                                    <th>
+                                        <span
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: center;
+                                                margin: -9999px;
+                                            "
+                                            [ngStyle]="{
+                                                color: trip.tripClass
+                                                    .tripClassColor,
+                                                transform:
+                                                    'scale(' +
                                                     (trip.tripClass
-                                                        .tripClassName.length >=
-                                                    3
-                                                        ? 0.5
+                                                        .tripClassName.length >
+                                                    2
+                                                        ? 2 /
+                                                          trip.tripClass
+                                                              .tripClassName
+                                                              .length
                                                         : 1) +
                                                     ', 1)'
                                             }"
                                         >
                                             {{ trip.tripClass.tripClassName }}
-                                        </div>
-                                    </div>
-                                </th>
-                            </ng-container>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <ng-container
-                            *ngFor="
-                                let station of stations$ | async;
-                                let i = index;
-                                trackBy: 'stationId' | trackBy
-                            "
-                        >
-                            <tr
-                                [ngClass]="[
-                                    station.borderSetting ? 'border-bottom' : ''
-                                ]"
-                                *ngIf="
-                                    station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                    ((tripDirection$ | async) === 0 &&
-                                        station.viewMode ===
-                                            staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
-                                    ((tripDirection$ | async) === 1 &&
-                                        station.viewMode ===
-                                            staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                        </span>
+                                    </th>
+                                </ng-container>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container
+                                *ngFor="
+                                    let station of vm.stations;
+                                    let i = index;
+                                    trackBy: 'stationId' | trackBy
                                 "
                             >
-                                <ng-container
-                                    *ngFor="
-                                        let trip of trips$ | async;
-                                        let j = index;
-                                        trackBy: {
-                                            mode: 'arrival',
+                                <tr
+                                    [ngClass]="[
+                                        (({
                                             station,
-                                            stations: stations$ | async,
-                                            trips: trips$ | async
-                                        } | timetableAllLineGetTimeAndTrackBy
+                                            tripDirection: vm.tripDirection
+                                        } | timetableAllLineGetBorderSetting) === true
+                                            ? 'border-bottom'
+                                            : '')
+                                    ]"
+                                    *ngIf="
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        (vm.tripDirection === 0 &&
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                        (vm.tripDirection === 1 &&
+                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
                                     "
                                 >
-                                    <td
-                                        class="dia"
-                                        [ngClass]="[
-                                            station.viewMode ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                                ? 'border-bottom'
-                                                : ''
-                                        ]"
-                                        [ngStyle]="{
-                                            color: trip.tripClass.tripClassColor
-                                        }"
-                                    >
-                                        {{
-                                            {
+                                    <ng-container
+                                        *ngFor="
+                                            let trip of vm.trips;
+                                            let j = index;
+                                            trackBy: {
+                                                tripDirection: vm.tripDirection,
                                                 mode: 'arrival',
-                                                station,
-                                                trip,
-                                                stations: stations$ | async,
-                                                trips: trips$ | async
-                                            } | timetableAllLineGetTime
-                                        }}
-                                    </td>
-                                </ng-container>
-                            </tr>
-                            <tr
-                                [ngClass]="[
-                                    station.borderSetting ? 'border-bottom' : ''
-                                ]"
-                                *ngIf="
-                                    station.viewMode ===
-                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                    station.viewMode ===
-                                        staitonViewMode.ONLY_DEPARTURE
-                                "
-                            >
-                                <ng-container
-                                    *ngFor="
-                                        let trip of trips$ | async;
-                                        let j = index;
-                                        trackBy: {
-                                            mode: 'departure',
-                                            station,
-                                            stations: stations$ | async,
-                                            trips: trips$ | async
-                                        } | timetableAllLineGetTimeAndTrackBy
-                                    "
-                                >
-                                    <td
-                                        class="dia"
-                                        [ngStyle]="{
-                                            color: trip.tripClass.tripClassColor
-                                        }"
+                                                station: station,
+                                                stations: vm.stations,
+                                                trips: vm.trips
+                                            }
+                                                | timetableAllLineGetTimeAndTrackBy
+                                        "
                                     >
-                                        {{
-                                            {
+                                        <td
+                                            class="dia"
+                                            [ngClass]="[
+                                                ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                                    ? 'border-bottom'
+                                                    : ''
+                                            ]"
+                                            [ngStyle]="{
+                                                color: trip.tripClass
+                                                    .tripClassColor
+                                            }"
+                                        >
+                                            {{
+                                                {
+                                                    tripDirection:
+                                                        vm.tripDirection,
+                                                    mode: 'arrival',
+                                                    station: station,
+                                                    trip: trip,
+                                                    stations: vm.stations,
+                                                    trips: vm.trips
+                                                } | timetableAllLineGetTime
+                                            }}
+                                        </td>
+                                    </ng-container>
+                                </tr>
+                                <tr
+                                    [ngClass]="[
+                                        (({
+                                            station,
+                                            tripDirection: vm.tripDirection
+                                        } | timetableAllLineGetBorderSetting) === true
+                                            ? 'border-bottom'
+                                            : '')
+                                    ]"
+                                    *ngIf="
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.ONLY_DEPARTURE
+                                    "
+                                >
+                                    <ng-container
+                                        *ngFor="
+                                            let trip of vm.trips;
+                                            let j = index;
+                                            trackBy: {
+                                                tripDirection: vm.tripDirection,
                                                 mode: 'departure',
-                                                station,
-                                                trip,
-                                                stations: stations$ | async,
-                                                trips: trips$ | async
-                                            } | timetableAllLineGetTime
-                                        }}
-                                    </td>
-                                </ng-container>
+                                                station: station,
+                                                stations: vm.stations,
+                                                trips: vm.trips
+                                            }
+                                                | timetableAllLineGetTimeAndTrackBy
+                                        "
+                                    >
+                                        <td
+                                            class="dia"
+                                            [ngStyle]="{
+                                                color: trip.tripClass
+                                                    .tripClassColor
+                                            }"
+                                        >
+                                            {{
+                                                {
+                                                    tripDirection:
+                                                        vm.tripDirection,
+                                                    mode: 'departure',
+                                                    station: station,
+                                                    trip: trip,
+                                                    stations: vm.stations,
+                                                    trips: vm.trips
+                                                } | timetableAllLineGetTime
+                                            }}
+                                        </td>
+                                    </ng-container>
+                                </tr>
+                            </ng-container>
+                        </tbody>
+
+                        <tfoot *ngIf="!vm.groupingBaseTrip">
+                            <tr>
+                                <td
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: undefined | trackBy
+                                    "
+                                >
+                                    <button
+                                        mat-icon-button
+                                        matTooltip="編集する"
+                                        (click)="
+                                            onClickedEditButton$.next(trip)
+                                        "
+                                    >
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                </td>
                             </tr>
-                        </ng-container>
-                    </tbody>
 
-                    <tfoot *ngIf="(isEnableGroupingMode$ | async) === false">
-                        <tr>
-                            <td
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: undefined | trackBy
-                                "
-                            >
-                                <button
-                                    mat-icon-button
-                                    matTooltip="編集する"
-                                    (click)="onClickedEditButton$.next(trip)"
-                                >
-                                    <mat-icon>edit</mat-icon>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: undefined | trackBy
-                                "
-                            >
-                                <button
-                                    mat-icon-button
-                                    matTooltip="コピーして新規作成"
-                                    (click)="onClickedCopyButton$.next(trip)"
-                                >
-                                    <mat-icon>content_copy</mat-icon>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: undefined | trackBy
-                                "
-                            >
-                                <button
-                                    mat-icon-button
-                                    matTooltip="削除する(荒らし対策のため当分の間無効化しています)"
-                                    [disabled]="true"
-                                    (click)="onClickedDeleteButton$.next(trip)"
-                                >
-                                    <mat-icon>delete</mat-icon>
-                                </button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: undefined | trackBy
-                                "
-                            >
-                                <button
-                                    mat-icon-button
-                                    matTooltip="この列車を基準として列車をグルーピングする"
-                                    (click)="
-                                        onClickedGroupingButton$.next(trip)
+                            <tr>
+                                <td
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: undefined | trackBy
                                     "
                                 >
-                                    <mat-icon>link</mat-icon>
-                                </button>
-                            </td>
-                        </tr>
-                    </tfoot>
+                                    <button
+                                        mat-icon-button
+                                        matTooltip="コピーして新規作成"
+                                        (click)="
+                                            onClickedCopyButton$.next(trip)
+                                        "
+                                    >
+                                        <mat-icon>content_copy</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
 
-                    <tfoot *ngIf="(isEnableGroupingMode$ | async) === true">
-                        <tr>
-                            <td
-                                *ngFor="
-                                    let trip of trips$ | async;
-                                    let i = index;
-                                    trackBy: undefined | trackBy
-                                "
-                            >
-                                <button
-                                    *ngIf="
-                                        trip.tripId === groupingBaseTrip.tripId
-                                    "
-                                    mat-icon-button
-                                    matTooltip="キャンセル"
-                                    (click)="
-                                        onClickedGroupingButton$.next(undefined)
+                            <tr>
+                                <td
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: undefined | trackBy
                                     "
                                 >
-                                    <mat-icon>clear</mat-icon>
-                                </button>
+                                    <button
+                                        mat-icon-button
+                                        matTooltip="削除する(荒らし対策のため当分の間無効化しています)"
+                                        [disabled]="true"
+                                        (click)="
+                                            onClickedDeleteButton$.next(trip)
+                                        "
+                                    >
+                                        <mat-icon>delete</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
 
-                                <button
-                                    *ngIf="
-                                        trip.tripId !==
-                                            groupingBaseTrip.tripId &&
-                                        trip.tripBlockId !==
-                                            groupingBaseTrip.tripBlockId
-                                    "
-                                    mat-icon-button
-                                    matTooltip="グループに追加する"
-                                    (click)="
-                                        onClickedAddTripInGroup$.next({
-                                            base: groupingBaseTrip,
-                                            target: trip
-                                        })
+                            <tr>
+                                <td
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: undefined | trackBy
                                     "
                                 >
-                                    <mat-icon>add</mat-icon>
-                                </button>
+                                    <button
+                                        mat-icon-button
+                                        matTooltip="この列車を基準として列車をグルーピングする"
+                                        (click)="
+                                            onClickedGroupingButton$.next(trip)
+                                        "
+                                    >
+                                        <mat-icon>link</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
 
-                                <button
-                                    *ngIf="
-                                        trip.tripId !==
-                                            groupingBaseTrip.tripId &&
-                                        trip.tripBlockId ===
-                                            groupingBaseTrip.tripBlockId
-                                    "
-                                    mat-icon-button
-                                    matTooltip="グループから除外する"
-                                    (click)="
-                                        onClickedDeleteTripInGroup$.next({
-                                            base: groupingBaseTrip,
-                                            target: trip
-                                        })
+                        <tfoot *ngIf="!!vm.groupingBaseTrip">
+                            <tr>
+                                <td
+                                    *ngFor="
+                                        let trip of vm.trips;
+                                        let i = index;
+                                        trackBy: undefined | trackBy
                                     "
                                 >
-                                    <mat-icon>remove</mat-icon>
-                                </button>
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                                    <button
+                                        *ngIf="
+                                            trip.tripId ===
+                                            vm.groupingBaseTrip.tripId
+                                        "
+                                        mat-icon-button
+                                        matTooltip="キャンセル"
+                                        (click)="
+                                            onClickedGroupingButton$.next(
+                                                undefined
+                                            )
+                                        "
+                                    >
+                                        <mat-icon>clear</mat-icon>
+                                    </button>
+
+                                    <button
+                                        *ngIf="
+                                            trip.tripId !==
+                                                vm.groupingBaseTrip.tripId &&
+                                            trip.tripBlockId !==
+                                                vm.groupingBaseTrip.tripBlockId
+                                        "
+                                        mat-icon-button
+                                        matTooltip="グループに追加する"
+                                        (click)="
+                                            onClickedAddTripInGroup$.next({
+                                                base: vm.groupingBaseTrip,
+                                                target: trip
+                                            })
+                                        "
+                                    >
+                                        <mat-icon>add</mat-icon>
+                                    </button>
+
+                                    <button
+                                        *ngIf="
+                                            trip.tripId !==
+                                                vm.groupingBaseTrip.tripId &&
+                                            trip.tripBlockId ===
+                                                vm.groupingBaseTrip.tripBlockId
+                                        "
+                                        mat-icon-button
+                                        matTooltip="グループから除外する"
+                                        (click)="
+                                            onClickedDeleteTripInGroup$.next({
+                                                base: vm.groupingBaseTrip,
+                                                target: trip
+                                            })
+                                        "
+                                    >
+                                        <mat-icon>remove</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
-        </div>
-    </mat-card-content>
-</mat-card>
+        </mat-card-content>
+    </mat-card>
+</ng-container>

@@ -39,30 +39,41 @@
 
     .stations-table {
         border: 1px solid #e0e0e0;
+        white-space: nowrap;
+
         th {
             border: 1px solid #e0e0e0;
         }
 
-        .station-name {
-            padding-left: 4px;
-            padding-right: 4px;
-            text-align: right;
-        }
+        tr {
+            & > th:first-child,
+            & > td:first-child {
+                padding-left: 4px;
+            }
 
+            & > th + th,
+            & > td + td {
+                padding-left: 4px;
+            }
+
+            & > th:last-child,
+            & > td:last-child {
+                padding-right: 4px;
+            }
+
+            & > td.station-name {
+                padding: 0 4px;
+                text-align: right;
+            }
+        }
+    
         .border-top {
             border-top: 1px solid #e0e0e0;
         }
+
         .border-bottom {
             border-bottom: 1px solid #e0e0e0;
         }
-        /*
-        td {
-        border-top: 1px solid transparent;
-        border-bottom: 1px solid transparent;
-        border-left: 1px solid #e0e0e0;
-        border-right: 1px solid #e0e0e0;
-        }
-        */
     }
 
     .trips-table {
@@ -71,12 +82,14 @@
 
         th,
         td {
-            min-width: 48px;
-            max-width: 48px;
+            width: 40px;
+            min-width: 40px;
+            max-width: 40px;
             text-align: center;
             border-left: 1px solid #e0e0e0;
             border-right: 1px solid #e0e0e0;
         }
+        
         .border-bottom {
             border-bottom: 1px solid #e0e0e0;
         }
