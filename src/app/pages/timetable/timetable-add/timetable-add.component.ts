@@ -1,27 +1,22 @@
-import { Component, OnInit, Inject, Injector } from '@angular/core';
-import { TitleService } from 'src/app/core/services/title.service';
+import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BaseComponent } from 'src/app/general/classes/base-component';
-import { TimetableAddService } from '../general/services/timetable-add.service';
+import { RxState } from '@rx-angular/state';
+import { TitleService } from 'src/app/core/services/title.service';
 
 @Component({
     selector: 'app-timetable-add',
     templateUrl: './timetable-add.component.html',
     styleUrls: ['./timetable-add.component.scss'],
+    providers: [RxState],
 })
-export class TimetableAddComponent extends BaseComponent {
+export class TimetableAddComponent {
     constructor(
-        @Inject(Injector) injector: Injector,
-        private titleService: TitleService,
-        private route: ActivatedRoute,
-        private timetableAddService: TimetableAddService
+        private readonly route: ActivatedRoute,
+        private readonly state: RxState<{}>,
+        private readonly titleService: TitleService
     ) {
-        super(injector);
-        this.subscription = this.route.data.subscribe(
-            (data: { title: string }) => {
-                this.titleService.setTitle(data.title);
-            }
-        );
-        this.subscription = this.timetableAddService.receiveSaveEvent();
+        this.state.hold(this.route.data, ({ title }) => {
+            this.titleService.setTitle(title);
+        });
     }
 }
