@@ -1,0 +1,56 @@
+:host {
+    mat-card-title {
+        margin-bottom: 16px;
+    }
+
+    mat-toolbar {
+        width: calc(100% + 32px);
+        height: 48px;
+        margin-top: -16px;
+        margin-left: -16px;
+        margin-right: -16px;
+
+        h3 {
+            font-size: 16px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.87);
+        }
+    }
+
+    .weekday {
+        background: rgb(66, 139, 202);
+    }
+
+    .holiday {
+        background: rgb(217, 83, 79);
+    }
+
+    div.mode-select {
+        background: #eeeeee;
+        padding: 16px;
+
+        p {
+            margin: 0
+        }
+    }
+
+    table {
+        border-collapse: collapse;
+
+        th {
+            text-align: right;
+            white-space: nowrap;
+
+            &:first-child {
+                position: sticky;
+                left: 0px;
+                z-index: 9999;
+            }
+        }
+
+        th, td {
+            background: white;
+            padding: 4px 8px
+        }
+    }
+}

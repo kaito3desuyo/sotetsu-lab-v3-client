@@ -1,0 +1,15 @@
+<app-timetable-edit-form-p
+    [serviceId]="serviceId$ | async"
+    [calendarId]="calendarId$ | async"
+    [calendar]="calendar$ | async"
+    [mode]="mode$ | async"
+    [tripDirection]="tripDirection$ | async"
+    [stations]="stations$ | async"
+    [operations]="operations$ | async"
+    [tripClasses]="tripClasses$ | async"
+    [submittedEvent$]="submittedEvent$"
+    (clickSubmit)="onReceiveClickSubmit($event)"
+    (toggleIsSaveTripsIndividually)="
+        onReceiveToggleIsSaveTripsIndividually($event)
+    "
+></app-timetable-edit-form-p>

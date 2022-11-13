@@ -3,6 +3,7 @@
   "version": "2.0.10",
   "scripts": {
     "ng": "ng",
+    "dev": "ng serve --host 0.0.0.0",
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
@@ -87,5 +88,8 @@
   "akitaCli": {
     "customFolderName": "true",
     "template": "angular"
+  },
+  "volta": {
+    "node": "16.17.1"
   }
 }

@@ -246,12 +246,14 @@
                                     *ngFor="
                                         let trip of vm.trips;
                                         let i = index;
-                                        trackBy: 'tripOperationLists[0].operationId'
-                                            | trackBy
+                                        trackBy: 'tripOperationLists' | trackBy
                                     "
                                 >
                                     <th>
                                         <a
+                                            *ngIf="
+                                                trip.tripOperationLists.length
+                                            "
                                             [routerLink]="[
                                                 '/operation/route-diagram',
                                                 {
