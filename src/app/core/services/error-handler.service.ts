@@ -11,25 +11,14 @@ export class ErrorHandlerService implements ErrorHandler {
 
     handleError<T extends Error>(error: T): void {
         if (error instanceof HttpErrorResponse) {
-            this.logger.error(
-                error.name,
-                error.message,
-                '\n',
-                JSON.stringify({ ...error }, undefined, 2)
-            );
+            this.logger.error(error.name, error.message, { ...error });
         }
 
         if (error instanceof Error) {
-            this.logger.error(
-                error.name,
-                error.message,
-                '\n',
-                JSON.stringify(
-                    { ...error, stack: ErrorStackParser.parse(error) },
-                    undefined,
-                    2
-                )
-            );
+            this.logger.error(error.name, error.message, {
+                ...error,
+                stack: ErrorStackParser.parse(error),
+            });
         }
     }
 }
