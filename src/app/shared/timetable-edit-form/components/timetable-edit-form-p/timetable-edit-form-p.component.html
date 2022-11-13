@@ -1,0 +1,401 @@
+<ng-container *rxLet="vm$; let vm">
+    <mat-card>
+        <mat-card-title>
+            <mat-toolbar
+                [ngClass]="[
+                    vm.calendar.sunday && vm.calendar.saturday
+                        ? 'holiday'
+                        : 'weekday'
+                ]"
+            >
+                <h3 style="line-height: 1.25">
+                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
+                    改正<br />
+                    {{ vm.calendar.calendarName }}
+                    {{
+                        vm.tripDirection === 0
+                            ? '上り'
+                            : vm.tripDirection === 1
+                            ? '下り'
+                            : ''
+                    }}時刻表
+                </h3>
+            </mat-toolbar>
+        </mat-card-title>
+        <mat-card-content>
+            <div fxLayout="column" fxLayoutGap="16px">
+                <div class="mode-select" fxLayout="column" fxLayoutGap="16px">
+                    <p>
+                        デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
+                        途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
+                        <br />
+                        分割・併合・直通がない列車を複数同時に保存する（グループを作成せず、単一列車に単一グループを割り当てる）場合は、以下のトグルをONにしてください。
+                    </p>
+                    <mat-slide-toggle
+                        (change)="toggleIsSaveTripsIndividually.emit($event)"
+                    >
+                        列車個別保存モード
+                    </mat-slide-toggle>
+                </div>
+                <form [formGroup]="form" (ngSubmit)="onClickedSubmit$.next()">
+                    <div style="overflow-x: auto">
+                        <table>
+                            <tr>
+                                <th></th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let i = index
+                                        "
+                                    >
+                                        <td>
+                                            <div
+                                                fxLayout="row"
+                                                fxLayoutAlign="end center"
+                                                fxLayoutGap="16px"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    mat-icon-button
+                                                    (click)="
+                                                        onClickedRemove$.next(i)
+                                                    "
+                                                    [disabled]="
+                                                        tripsForm.controls
+                                                            .length === 1 &&
+                                                        i === 0
+                                                    "
+                                                >
+                                                    <mat-icon>remove</mat-icon>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    mat-icon-button
+                                                    [disabled]="
+                                                        i !==
+                                                        tripsForm.controls
+                                                            .length -
+                                                            1
+                                                    "
+                                                    (click)="
+                                                        onClickedAdd$.next()
+                                                    "
+                                                >
+                                                    <mat-icon>add</mat-icon>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <th>列車番号</th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let i = index
+                                        "
+                                    >
+                                        <td [formGroup]="tripForm">
+                                            <mat-form-field style="width: 100%">
+                                                <mat-label>列車番号</mat-label>
+                                                <input
+                                                    matInput
+                                                    formControlName="tripNumber"
+                                                />
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <th>運用番号</th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let i = index
+                                        "
+                                    >
+                                        <td [formGroup]="tripForm">
+                                            <mat-form-field style="width: 100%">
+                                                <mat-label>運用番号</mat-label>
+                                                <mat-select
+                                                    formControlName="operationId"
+                                                >
+                                                    <mat-option
+                                                        *ngFor="
+                                                            let operation of vm.operations
+                                                        "
+                                                        [value]="
+                                                            operation.operationId
+                                                        "
+                                                    >
+                                                        {{
+                                                            operation.operationNumber
+                                                        }}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <th>種別</th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let i = index
+                                        "
+                                    >
+                                        <td [formGroup]="tripForm">
+                                            <mat-form-field style="width: 100%">
+                                                <mat-label>種別</mat-label>
+                                                <mat-select
+                                                    formControlName="tripClassId"
+                                                >
+                                                    <mat-option
+                                                        *ngFor="
+                                                            let tripClass of vm.tripClasses
+                                                        "
+                                                        [value]="
+                                                            tripClass.tripClassId
+                                                        "
+                                                    >
+                                                        {{
+                                                            tripClass.tripClassName
+                                                        }}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <th>入出庫</th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let i = index
+                                        "
+                                    >
+                                        <td [formGroup]="tripForm">
+                                            <div
+                                                fxLayout="row"
+                                                fxLayoutAlign="center center"
+                                                fxLayoutGap="16px"
+                                            >
+                                                <mat-checkbox
+                                                    formControlName="depotIn"
+                                                >
+                                                    入庫
+                                                </mat-checkbox>
+                                                <mat-checkbox
+                                                    formControlName="depotOut"
+                                                >
+                                                    出庫
+                                                </mat-checkbox>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                            <tr>
+                                <th>駅時刻</th>
+                                <ng-container
+                                    *ngFor="
+                                        let tripForm of tripsForm.controls;
+                                        let i = index
+                                    "
+                                >
+                                    <td></td>
+                                </ng-container>
+                            </tr>
+                            <tr
+                                *ngFor="
+                                    let station of vm.stations;
+                                    let i = index;
+                                    trackBy: 'stationId' | trackBy
+                                "
+                            >
+                                <th>
+                                    <span
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: right;
+                                        "
+                                        [ngStyle]="{
+                                            transform:
+                                                'scale(' +
+                                                (station.stationName.length > 4
+                                                    ? 4 /
+                                                      station.stationName.length
+                                                    : 1) +
+                                                ', 1)',
+                                            marginLeft:
+                                                (station.stationName.length > 4
+                                                    ? (station.stationName
+                                                          .length -
+                                                          4) *
+                                                      16 *
+                                                      -1
+                                                    : 0) + 'px'
+                                        }"
+                                    >
+                                        {{ station.stationName }}
+                                    </span>
+                                </th>
+                                <ng-container formArrayName="trips">
+                                    <ng-container
+                                        *ngFor="
+                                            let tripForm of tripsForm.controls;
+                                            let j = index
+                                        "
+                                    >
+                                        <td
+                                            [formGroup]="
+                                                tripForm.get('times').at(i)
+                                            "
+                                        >
+                                            <div
+                                                fxLayout="column"
+                                                fxLayoutGap="16px"
+                                            >
+                                                <div>
+                                                    <mat-radio-group
+                                                        fxLayout="row"
+                                                        fxLayoutAlign="center center"
+                                                        fxLayoutGap="16px"
+                                                        formControlName="stopType"
+                                                    >
+                                                        <mat-radio-button
+                                                            [value]="
+                                                                constants
+                                                                    .timetableEditForm
+                                                                    .stopTypeEnum
+                                                                    .STOP
+                                                            "
+                                                        >
+                                                            停
+                                                        </mat-radio-button>
+                                                        <mat-radio-button
+                                                            [value]="
+                                                                constants
+                                                                    .timetableEditForm
+                                                                    .stopTypeEnum
+                                                                    .PASS
+                                                            "
+                                                        >
+                                                            通
+                                                        </mat-radio-button>
+                                                        <mat-radio-button
+                                                            [value]="
+                                                                constants
+                                                                    .timetableEditForm
+                                                                    .stopTypeEnum
+                                                                    .NOT_GOING_THROUGH
+                                                            "
+                                                        >
+                                                            経由なし
+                                                        </mat-radio-button>
+                                                    </mat-radio-group>
+                                                </div>
+                                                <div
+                                                    fxLayout="row"
+                                                    fxLayoutGap="8px"
+                                                >
+                                                    <mat-form-field
+                                                        fxFlex="64px"
+                                                    >
+                                                        <mat-label
+                                                            >着</mat-label
+                                                        >
+                                                        <input
+                                                            type="time"
+                                                            matInput
+                                                            formControlName="arrivalTime"
+                                                        />
+                                                    </mat-form-field>
+                                                    <mat-form-field
+                                                        fxFlex="64px"
+                                                    >
+                                                        <mat-label
+                                                            >発</mat-label
+                                                        >
+                                                        <input
+                                                            type="time"
+                                                            matInput
+                                                            formControlName="departureTime"
+                                                        />
+                                                    </mat-form-field>
+                                                    <mat-form-field
+                                                        fxFlex="64px"
+                                                    >
+                                                        <mat-label
+                                                            >番線</mat-label
+                                                        >
+                                                        <mat-select
+                                                            formControlName="stopId"
+                                                        >
+                                                            <mat-option
+                                                                [value]="null"
+                                                            >
+                                                                選択しない
+                                                            </mat-option>
+                                                            <mat-option
+                                                                *ngFor="
+                                                                    let stop of station.stops
+                                                                "
+                                                                [value]="
+                                                                    stop.stopId
+                                                                "
+                                                            >
+                                                                {{
+                                                                    stop.stopName
+                                                                }}
+                                                            </mat-option>
+                                                        </mat-select>
+                                                    </mat-form-field>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+                                </ng-container>
+                            </tr>
+                        </table>
+                    </div>
+                    <div
+                        style="margin-top: 16px"
+                        fxLayout="row"
+                        fxLayoutAlign="center"
+                        fxLayoutGap="24px"
+                    >
+                        <button
+                            type="button"
+                            mat-button
+                            color="primary"
+                            (click)="onClickedClear$.next()"
+                        >
+                            クリア
+                        </button>
+                        <button
+                            type="submit"
+                            mat-raised-button
+                            color="primary"
+                            fxFlex="128px"
+                            [disabled]="form.invalid"
+                        >
+                            保存する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</ng-container>
