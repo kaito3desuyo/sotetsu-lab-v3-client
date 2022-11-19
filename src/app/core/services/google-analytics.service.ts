@@ -14,7 +14,7 @@ export class GoogleAnalyticsService {
      * GAの使用可否をチェック
      */
     private _useGA(): boolean {
-        return typeof gtag !== undefined && environment.production;
+        return typeof gtag !== undefined && !!environment.production;
     }
 
     /**
