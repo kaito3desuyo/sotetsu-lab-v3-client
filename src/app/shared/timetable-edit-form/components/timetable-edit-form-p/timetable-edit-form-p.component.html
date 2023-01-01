@@ -24,7 +24,14 @@
         </mat-card-title>
         <mat-card-content>
             <div fxLayout="column" fxLayoutGap="16px">
-                <div class="mode-select" fxLayout="column" fxLayoutGap="16px">
+                <div
+                    *ngIf="
+                        vm.mode !== constants.timetableEditForm.modeEnum.UPDATE
+                    "
+                    class="mode-select"
+                    fxLayout="column"
+                    fxLayoutGap="16px"
+                >
                     <p>
                         デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
                         途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />

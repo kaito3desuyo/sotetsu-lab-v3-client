@@ -1,18 +1,13 @@
-<article
-    class="timetable-copy my-24"
-    [ngClass.lt-md]="['mx-16']"
-    [ngClass.gt-sm]="['mx-64']"
+<main
     fxLayout="column"
-    fxLayoutGap="24px"
+    fxLayoutGap="16px"
+    [ngClass.lt-md]="['p-16']"
+    [ngClass.gt-sm]="['p-64']"
 >
-    <h2 class="mat-h2">列車をコピーして追加する</h2>
-
-    <mat-card>
-        <mat-card-title>
-            <app-timetable-copy-header-container></app-timetable-copy-header-container>
-        </mat-card-title>
-        <mat-card-content>
-            <app-timetable-editor-form-container></app-timetable-editor-form-container>
-        </mat-card-content>
-    </mat-card>
-</article>
+    <header>
+        <app-timetable-copy-header-c></app-timetable-copy-header-c>
+    </header>
+    <section>
+        <app-timetable-copy-main-c></app-timetable-copy-main-c>
+    </section>
+</main>

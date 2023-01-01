@@ -1,17 +1,18 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { CreateTripBlockDto } from 'src/app/libs/trip-block/usecase/dtos/create-trip-block.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
 import {
     TimetableEditFormStateQuery,
     TimetableEditFormStateStore,
@@ -30,7 +31,6 @@ export class TimetableEditFormService {
     ) {}
 
     createTripBlocks(trips: CreateTripDto[]): Observable<void> {
-        const mode = this.timetableEditFormStateQuery.mode;
         const isSaveTripsIndividually =
             this.timetableEditFormStateQuery.isSaveTripsIndividually;
         const qb = new RequestQueryBuilder();
@@ -39,15 +39,9 @@ export class TimetableEditFormService {
             ? trips.map((trip) => ({ tripBlockId: undefined, trips: [trip] }))
             : [{ tripBlockId: undefined, trips }];
 
-        switch (mode) {
-            case ETimetableEditFormMode.ADD:
-            case ETimetableEditFormMode.COPY:
-                return this.tripBlockService
-                    .createMany(qb, tripBlocks)
-                    .pipe(map(() => undefined));
-            default:
-                return of(undefined);
-        }
+        return this.tripBlockService
+            .createMany(qb, tripBlocks)
+            .pipe(map(() => undefined));
     }
 
     fetchStations(): Observable<void> {
@@ -119,6 +113,37 @@ export class TimetableEditFormService {
         return this.tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.timetableEditFormStateStore.setTripClasses(tripClasses);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchTripBlocks(): Observable<void> {
+        const tripBlockId = this.timetableEditFormStateQuery.tripBlockId;
+        const qb = RequestQueryBuilder.create()
+            .setJoin([
+                { field: 'trips' },
+                { field: 'trips.times' },
+                { field: 'trips.tripOperationLists' },
+            ])
+            .setFilter([
+                {
+                    field: 'id',
+                    operator: CondOperator.EQUALS,
+                    value: tripBlockId,
+                },
+            ])
+            .sortBy([
+                { field: 'trips.times.departureDays', order: 'ASC' },
+                { field: 'trips.times.departureTime', order: 'ASC' },
+            ]);
+
+        return this.tripBlockService.findMany(qb).pipe(
+            tap((tripBlocks: TripBlockDetailsDto[]) => {
+                this.timetableEditFormStateStore.setTripDirection(
+                    tripBlocks[0].trips[0].tripDirection as ETripDirection
+                );
+                this.timetableEditFormStateStore.setTripBlocks(tripBlocks);
             }),
             map(() => undefined)
         );
