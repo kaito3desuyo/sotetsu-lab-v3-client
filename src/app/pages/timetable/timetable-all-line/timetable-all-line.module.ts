@@ -33,6 +33,7 @@ import { TimetableAllLineRoutingModule } from './timetable-all-line-routing.modu
 import { TimetableAllLineComponent } from './timetable-all-line.component';
 import { TimetableAllLineGetViewModePipe } from './pipes/timetable-all-line-get-view-mode.pipe';
 import { TimetableAllLineGetBorderSettingPipe } from './pipes/timetable-all-line-get-border-setting.pipe';
+import { CalendarSelectDialogModule } from 'src/app/shared/calendar-select-dialog/calendar-select-dialog.module';
 
 @NgModule({
     declarations: [
@@ -70,6 +71,7 @@ import { TimetableAllLineGetBorderSettingPipe } from './pipes/timetable-all-line
         PipesModule,
         TimetableSearchCardModule,
         ConfirmDialogModule,
+        CalendarSelectDialogModule,
     ],
 })
 export class TimetableAllLineModule {}

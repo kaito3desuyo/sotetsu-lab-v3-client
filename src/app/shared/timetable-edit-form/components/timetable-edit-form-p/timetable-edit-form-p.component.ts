@@ -20,6 +20,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
+import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
@@ -120,7 +121,9 @@ export class TimetableEditFormPComponent {
         this.onChangedInputSubmittedEvent$.next(ev);
     }
 
-    @Output() clickSubmit = new EventEmitter<CreateTripDto[]>();
+    @Output() clickSubmit = new EventEmitter<
+        CreateTripDto[] | ReplaceTripDto[]
+    >();
     @Output() toggleIsSaveTripsIndividually =
         new EventEmitter<MatSlideToggleChange>();
 
@@ -181,7 +184,11 @@ export class TimetableEditFormPComponent {
 
         this.state.hold(
             this.state.select('mode').pipe(
-                filter((mode) => mode === ETimetableEditFormMode.COPY),
+                filter(
+                    (mode) =>
+                        mode === ETimetableEditFormMode.COPY ||
+                        mode === ETimetableEditFormMode.UPDATE
+                ),
                 switchMap(() =>
                     this.state.select(
                         selectSlice([
@@ -263,7 +270,8 @@ export class TimetableEditFormPComponent {
                     ]
                 ),
                 operationId: [
-                    this.state.get('mode') === ETimetableEditFormMode.UPDATE
+                    this.state.get('mode') === ETimetableEditFormMode.UPDATE &&
+                    trip.tripOperationLists.length
                         ? trip.tripOperationLists[0].operationId
                         : '',
                 ],
@@ -314,8 +322,12 @@ export class TimetableEditFormPComponent {
                         ? ETimetableEditFormStopType.PASS
                         : ETimetableEditFormStopType.STOP) as ETimetableEditFormStopType,
                 ],
-                arrivalTime: [time.arrivalTime],
-                departureTime: [time.departureTime],
+                arrivalTime: [
+                    dayjs(time.arrivalTime, 'HH:mm:ss').format('HH:mm'),
+                ],
+                departureTime: [
+                    dayjs(time.departureTime, 'HH:mm:ss').format('HH:mm'),
+                ],
             });
         }
 
@@ -417,6 +429,7 @@ export class TimetableEditFormPComponent {
                 this._add();
                 return;
             case ETimetableEditFormMode.COPY:
+            case ETimetableEditFormMode.UPDATE:
                 for (const trip of this.state.get('trips')) {
                     this._add(trip);
                 }
@@ -440,7 +453,9 @@ export class TimetableEditFormPComponent {
             );
 
             return plainToClass(
-                CreateTripDto,
+                this.state.get('mode') === ETimetableEditFormMode.UPDATE
+                    ? ReplaceTripDto
+                    : CreateTripDto,
                 {
                     ...trip,
                     times: times.map((time, index, arr) => {

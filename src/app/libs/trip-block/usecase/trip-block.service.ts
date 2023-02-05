@@ -5,6 +5,7 @@ import { Pagination } from 'src/app/core/utils/pagination';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
 import { CreateTripBlockDto } from './dtos/create-trip-block.dto';
+import { ReplaceTripBlockDto } from './dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
 
 @Injectable({ providedIn: 'root' })
@@ -25,5 +26,13 @@ export class TripBlockService {
         body: CreateTripBlockDto[]
     ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
         return this.tripBlockCommand.createMany(qb, body);
+    }
+
+    replaceOne(
+        qb: RequestQueryBuilder,
+        tripBlockId: string,
+        body: ReplaceTripBlockDto
+    ): Observable<TripBlockDetailsDto> {
+        return this.tripBlockCommand.replaceOne(qb, tripBlockId, body);
     }
 }

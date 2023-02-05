@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -9,6 +9,7 @@ import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
+import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { TimetableEditFormService } from '../../services/timetable-edit-form.service';
 import { ETimetableEditFormMode } from '../../special/enums/timetable-edit-form.enum';
@@ -51,11 +52,39 @@ export class TimetableEditFormCComponent {
         private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery
     ) {}
 
-    async onReceiveClickSubmit(trips: CreateTripDto[]): Promise<void> {
+    async onReceiveClickSubmit(
+        trips: CreateTripDto[] | ReplaceTripDto[]
+    ): Promise<void> {
+        const isCreateTripDto = (_: unknown): _ is CreateTripDto[] => {
+            return (
+                this.timetableEditFormStateQuery.mode ===
+                    ETimetableEditFormMode.ADD ||
+                this.timetableEditFormStateQuery.mode ===
+                    ETimetableEditFormMode.COPY
+            );
+        };
+
+        const isReplaceTripDto = (_: unknown): _ is ReplaceTripDto[] => {
+            return (
+                this.timetableEditFormStateQuery.mode ===
+                ETimetableEditFormMode.UPDATE
+            );
+        };
+
+        const fn = (
+            trips: CreateTripDto[] | ReplaceTripDto[]
+        ): Observable<void> => {
+            if (isCreateTripDto(trips)) {
+                return this.timetableEditFormService.createTripBlocks(trips);
+            } else if (isReplaceTripDto(trips)) {
+                return this.timetableEditFormService.replaceTripBlock(trips);
+            }
+        };
+
         this.loading.open();
 
         const result = await tryCatchAsync(
-            this.timetableEditFormService.createTripBlocks(trips),
+            fn(trips),
             (e) => e as HttpErrorResponse
         );
 

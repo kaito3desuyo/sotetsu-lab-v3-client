@@ -12,7 +12,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { LetModule } from '@rx-angular/template';
+import { ForModule, LetModule } from '@rx-angular/template';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { TimetableEditFormCComponent } from './components/timetable-edit-form-c/timetable-edit-form-c.component';
 import { TimetableEditFormPComponent } from './components/timetable-edit-form-p/timetable-edit-form-p.component';
@@ -44,6 +44,7 @@ import {
         MatSlideToggleModule,
         MatIconModule,
         LetModule,
+        ForModule,
         PipesModule,
     ],
     exports: [TimetableEditFormCComponent],

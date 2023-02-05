@@ -11,7 +11,7 @@ import { Subject } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { ETimetableStationViewMode } from '../../../general/interfaces/timetable-station';
+import { ETimetableAllLineStationViewMode } from '../../interfaces/timetable-all-line.interface';
 
 type State = {
     calendar: CalendarDetailsDto;
@@ -33,8 +33,8 @@ type State = {
     providers: [RxState],
 })
 export class TimetableAllLineTablePComponent {
-    readonly staitonViewMode: typeof ETimetableStationViewMode =
-        ETimetableStationViewMode;
+    readonly staitonViewMode: typeof ETimetableAllLineStationViewMode =
+        ETimetableAllLineStationViewMode;
 
     readonly vm$ = this.state.select();
 

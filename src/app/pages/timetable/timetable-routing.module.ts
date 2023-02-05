@@ -1,7 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
-import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 
 const routes: Routes = [
     {
@@ -33,14 +31,11 @@ const routes: Routes = [
             ),
     },
     {
-        path: 'update/:blockId',
-        component: TimetableUpdateComponent,
-        resolve: {
-            from: TimetableUpdateResolverService,
-        },
-        data: {
-            title: '列車を編集する',
-        },
+        path: 'update',
+        loadChildren: () =>
+            import('./timetable-update/timetable-update.module').then(
+                (mod) => mod.TimetableUpdateModule
+            ),
     },
 ];
 
