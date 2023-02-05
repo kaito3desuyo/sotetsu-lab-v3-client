@@ -5,15 +5,20 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { arrayUniqueBy } from 'src/app/core/utils/array-unique-by';
+import { TimetableAllLineUtil } from 'src/app/pages/timetable/timetable-all-line/utils/timetable-all-line.util';
 
 type State = {
     calendarId: string;
+    tripBlockId: string;
     mode: ETimetableEditFormMode;
     tripDirection: ETripDirection;
     stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
+    tripBlocks: TripBlockDetailsDto[];
     isSaveTripsIndividually: boolean;
 };
 
@@ -23,19 +28,25 @@ export class TimetableEditFormStateStore extends Store<State> {
         super(
             {
                 calendarId: null,
+                tripBlockId: null,
                 mode: null,
                 tripDirection: null,
                 stations: [],
                 operations: [],
                 tripClasses: [],
+                tripBlocks: [],
                 isSaveTripsIndividually: false,
             },
             { name: `TimetableEditForm-${guid()}` }
         );
     }
 
-    setCalendarId(calendarId: string) {
+    setCalendarId(calendarId: string): void {
         this.update({ calendarId });
+    }
+
+    setTripBlockId(tripBlockId: string): void {
+        this.update({ tripBlockId });
     }
 
     setMode(mode: ETimetableEditFormMode): void {
@@ -58,6 +69,10 @@ export class TimetableEditFormStateStore extends Store<State> {
         this.update({ tripClasses });
     }
 
+    setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
+        this.update({ tripBlocks });
+    }
+
     setIsSaveTripsIndividually(bool: boolean): void {
         this.update({ isSaveTripsIndividually: bool });
     }
@@ -77,9 +92,36 @@ export class TimetableEditFormStateQuery extends Query<State> {
     );
     readonly operations$ = this.select('operations');
     readonly tripClasses$ = this.select('tripClasses');
+    readonly trips$ = this.select([
+        'tripDirection',
+        'stations',
+        'tripBlocks',
+    ]).pipe(
+        map(({ tripDirection, stations, tripBlocks }) => {
+            const sortedStations =
+                tripDirection === 0 ? [...stations].reverse() : stations;
+
+            const sortedTrips = arrayUniqueBy(
+                TimetableAllLineUtil.sortTrips(
+                    sortedStations,
+                    tripBlocks
+                ).reverse(),
+                'tripBlockId'
+            )
+                .reverse()
+                .map((o) => o.trips)
+                .reduce((a, b) => [...a, ...b], []);
+
+            return sortedTrips;
+        })
+    );
 
     get calendarId(): string {
         return this.getValue().calendarId;
+    }
+
+    get tripBlockId(): string {
+        return this.getValue().tripBlockId;
     }
 
     get mode(): ETimetableEditFormMode {

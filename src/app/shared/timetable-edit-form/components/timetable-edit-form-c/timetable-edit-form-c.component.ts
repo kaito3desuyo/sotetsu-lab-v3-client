@@ -1,15 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { NGXLogger } from 'ngx-logger';
 import { Subject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
+import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { TimetableEditFormService } from '../../services/timetable-edit-form.service';
+import { ETimetableEditFormMode } from '../../special/enums/timetable-edit-form.enum';
 import {
     TimetableEditFormStateQuery,
     TimetableEditFormStateStore,
@@ -33,12 +35,14 @@ export class TimetableEditFormCComponent {
     readonly stations$ = this.timetableEditFormStateQuery.stations$;
     readonly operations$ = this.timetableEditFormStateQuery.operations$;
     readonly tripClasses$ = this.timetableEditFormStateQuery.tripClasses$;
+    readonly trips$ = this.timetableEditFormStateQuery.trips$;
 
     private readonly _submittedEvent$ = new Subject<void>();
     readonly submittedEvent$ = this._submittedEvent$.asObservable();
 
     constructor(
-        private readonly logger: NGXLogger,
+        private readonly loading: LoadingService,
+        private readonly error: ErrorHandlerService,
         private readonly notification: NotificationService,
         private readonly serviceListStateQuery: ServiceListStateQuery,
         private readonly calendarListStateQuery: CalendarListStateQuery,
@@ -48,19 +52,34 @@ export class TimetableEditFormCComponent {
     ) {}
 
     async onReceiveClickSubmit(trips: CreateTripDto[]): Promise<void> {
+        this.loading.open();
+
         const result = await tryCatchAsync(
             this.timetableEditFormService.createTripBlocks(trips),
             (e) => e as HttpErrorResponse
         );
 
+        this.loading.close();
+
         if (result.isFailure()) {
             const e = result.error;
-            this.logger.error(e.message, e.error);
+            this.error.handleError(e);
             this.notification.open(e.message, 'OK');
             return;
         }
 
-        this.notification.open('列車を追加しました', 'OK');
+        const message = () => {
+            switch (this.timetableEditFormStateQuery.mode) {
+                case ETimetableEditFormMode.ADD:
+                    return '列車を追加しました';
+                case ETimetableEditFormMode.COPY:
+                    return '列車をコピーして追加しました';
+                case ETimetableEditFormMode.UPDATE:
+                    return '列車を更新しました';
+            }
+        };
+
+        this.notification.open(message(), 'OK');
         this._submittedEvent$.next();
     }
 

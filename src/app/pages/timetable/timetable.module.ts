@@ -21,16 +21,12 @@ import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { CalendarSelectDialogModule } from 'src/app/shared/calendar-select-dialog/calendar-select-dialog.module';
 import { TimetableEditFormModule } from 'src/app/shared/timetable-edit-form/timetable-edit-form.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
-import { TimetableCopyHeaderContainerComponent } from './general/components/timetable-copy-header-container/timetable-copy-header-container.component';
 import { TimetableEditorFormContainerComponent } from './general/components/timetable-editor-form-container/timetable-editor-form-container.component';
 import { TimetableEditorFormPresentationalComponent } from './general/components/timetable-editor-form-presentational/timetable-editor-form-presentational.component';
 import { TimetableUpdateHeaderContainerComponent } from './general/components/timetable-update-header-container/timetable-update-header-container.component';
-import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
-import { TimetableCopyService } from './general/services/timetable-copy.service';
 import { TimetableEditorService } from './general/services/timetable-editor.service';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
 import { TimetableUpdateService } from './general/services/timetable-update.service';
-import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
 import { TimetableRoutingModule } from './timetable-routing.module';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 
@@ -67,15 +63,11 @@ import { TimetableUpdateComponent } from './timetable-update/timetable-update.co
         TimetableUpdateHeaderContainerComponent,
         TimetableEditorFormContainerComponent,
         TimetableEditorFormPresentationalComponent,
-        TimetableCopyComponent,
-        TimetableCopyHeaderContainerComponent,
     ],
     providers: [
         TimetableUpdateService,
         TimetableUpdateResolverService,
         TimetableEditorService,
-        TimetableCopyService,
-        TimetableCopyResolverService,
     ],
 })
 export class TimetableModule {}

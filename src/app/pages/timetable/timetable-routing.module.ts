@@ -1,8 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { TimetableCopyResolverService } from './general/services/timetable-copy-resolver.service';
 import { TimetableUpdateResolverService } from './general/services/timetable-update-resolver.service';
-import { TimetableCopyComponent } from './timetable-copy/timetable-copy.component';
 import { TimetableUpdateComponent } from './timetable-update/timetable-update.component';
 
 const routes: Routes = [
@@ -29,11 +27,10 @@ const routes: Routes = [
     },
     {
         path: 'copy',
-        component: TimetableCopyComponent,
-        resolve: {
-            from: TimetableCopyResolverService,
-        },
-        data: { title: '列車をコピーして追加する' },
+        loadChildren: () =>
+            import('./timetable-copy/timetable-copy.module').then(
+                (mod) => mod.TimetableCopyModule
+            ),
     },
     {
         path: 'update/:blockId',

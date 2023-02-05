@@ -1,26 +1,21 @@
-import { Component, Inject, Injector, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { BaseComponent } from 'src/app/general/classes/base-component';
+import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
-import { TimetableCopyService } from '../general/services/timetable-copy.service';
 
 @Component({
     templateUrl: './timetable-copy.component.html',
     styleUrls: ['./timetable-copy.component.scss'],
+    providers: [RxState],
 })
-export class TimetableCopyComponent extends BaseComponent {
+export class TimetableCopyComponent {
     constructor(
-        @Inject(Injector) injector: Injector,
-        private titleService: TitleService,
-        private route: ActivatedRoute,
-        private timetableCopyService: TimetableCopyService
+        private readonly route: ActivatedRoute,
+        private readonly state: RxState<{}>,
+        private readonly titleService: TitleService
     ) {
-        super(injector);
-        this.subscription = this.route.data.subscribe(
-            (data: { title: string }) => {
-                this.titleService.setTitle(data.title);
-            }
-        );
-        this.subscription = this.timetableCopyService.receiveSaveEvent();
+        this.state.hold(this.route.data, ({ title }) => {
+            this.titleService.setTitle(title);
+        });
     }
 }

@@ -20,6 +20,8 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
+import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
+import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     ITimetableEditForm,
     ITimetableEditFormTrip,
@@ -40,10 +42,12 @@ type State = {
     stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
+    trips: TripDetailsDto[];
 };
 
 const constants = {
     timetableEditForm: {
+        modeEnum: ETimetableEditFormMode,
         stopTypeEnum: ETimetableEditFormStopType,
     },
 } as const;
@@ -82,6 +86,7 @@ export class TimetableEditFormPComponent {
     readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
     readonly onChangedInputOperations$ = new Subject<OperationDetailsDto[]>();
     readonly onChangedInputTripClasses$ = new Subject<TripClassDetailsDto[]>();
+    readonly onChangedInputTrips$ = new Subject<TripDetailsDto[]>();
     readonly onChangedInputSubmittedEvent$ = new Subject<Observable<void>>();
 
     @Input() set serviceId(serviceId: string) {
@@ -107,6 +112,9 @@ export class TimetableEditFormPComponent {
     }
     @Input() set tripClasses(tripClasses: TripClassDetailsDto[]) {
         this.onChangedInputTripClasses$.next(tripClasses);
+    }
+    @Input() set trips(trips: TripDetailsDto[]) {
+        this.onChangedInputTrips$.next(trips);
     }
     @Input() set submittedEvent$(ev: Observable<void>) {
         this.onChangedInputSubmittedEvent$.next(ev);
@@ -150,6 +158,7 @@ export class TimetableEditFormPComponent {
             'tripClasses',
             this.onChangedInputTripClasses$.asObservable()
         );
+        this.state.connect('trips', this.onChangedInputTrips$.asObservable());
 
         this.state.hold(
             this.state.select('mode').pipe(
@@ -167,6 +176,28 @@ export class TimetableEditFormPComponent {
             ),
             () => {
                 this._add();
+            }
+        );
+
+        this.state.hold(
+            this.state.select('mode').pipe(
+                filter((mode) => mode === ETimetableEditFormMode.COPY),
+                switchMap(() =>
+                    this.state.select(
+                        selectSlice([
+                            'serviceId',
+                            'calendarId',
+                            'tripDirection',
+                            'stations',
+                            'trips',
+                        ])
+                    )
+                )
+            ),
+            ({ trips }) => {
+                for (const trip of trips) {
+                    this._add(trip);
+                }
             }
         );
 
@@ -190,12 +221,55 @@ export class TimetableEditFormPComponent {
             this.onChangedInputSubmittedEvent$.pipe(mergeMap((ob) => ob)),
             () => {
                 this._onReceiveClickClear();
-                this.cd.markForCheck();
+                this.cd.detectChanges();
             }
         );
     }
 
-    private _generateTripFormGroup(): ITimetableEditFormTrip {
+    private _generateTripFormGroup(
+        trip?: TripDetailsDto
+    ): ITimetableEditFormTrip {
+        if (trip) {
+            return this.fb.group({
+                tripId: [trip.tripId],
+                serviceId: [this.state.get('serviceId'), [Validators.required]],
+                tripNumber: [trip.tripNumber, [Validators.required]],
+                tripClassId: [trip.tripClassId, [Validators.required]],
+                tripName: [''],
+                tripDirection: [
+                    this.state.get('tripDirection'),
+                    [Validators.required],
+                ],
+                tripBlockId: [trip.tripBlockId],
+                depotIn: [trip.depotIn],
+                depotOut: [trip.depotOut],
+                calendarId: [
+                    this.state.get('calendarId'),
+                    [Validators.required],
+                ],
+                extraCalendarId: [null],
+                times: this.fb.array(
+                    this.state.get('stations').map((station) =>
+                        this._generateTripTimeFormGroup(
+                            station,
+                            trip.times.find(
+                                (o) => o.stationId === station.stationId
+                            )
+                        )
+                    ),
+                    [
+                        TimetableEditFormValidator.stopsStationCountShouldBeGreaterAndEqualThanTwo,
+                        TimetableEditFormValidator.stopTimesShouldBeLaterThanPrevStopTimes,
+                    ]
+                ),
+                operationId: [
+                    this.state.get('mode') === ETimetableEditFormMode.UPDATE
+                        ? trip.tripOperationLists[0].operationId
+                        : '',
+                ],
+            });
+        }
+
         return this.fb.group({
             tripId: [null],
             serviceId: [this.state.get('serviceId'), [Validators.required]],
@@ -225,8 +299,26 @@ export class TimetableEditFormPComponent {
     }
 
     private _generateTripTimeFormGroup(
-        station: StationDetailsDto
+        station: StationDetailsDto,
+        time?: TimeDetailsDto
     ): ITimetableEditFormTripTime {
+        if (time) {
+            return this.fb.group({
+                timeId: [time.timeId],
+                tripId: [time.tripId],
+                stationId: [station.stationId, [Validators.required]],
+                stopId: [time.stopId],
+                // stopSequence: [null],
+                stopType: [
+                    (time.pickupType === 1 && time.dropoffType === 1
+                        ? ETimetableEditFormStopType.PASS
+                        : ETimetableEditFormStopType.STOP) as ETimetableEditFormStopType,
+                ],
+                arrivalTime: [time.arrivalTime],
+                departureTime: [time.departureTime],
+            });
+        }
+
         return this.fb.group({
             timeId: [null],
             tripId: [null],
@@ -241,37 +333,31 @@ export class TimetableEditFormPComponent {
         });
     }
 
-    private _changeStopType(
-        stopType: ETimetableEditFormStopType,
-        form: ITimetableEditFormTripTime
+    private _changeDisabledStateWhenChangeStopType(
+        tripTimesForm: FormArray<ITimetableEditFormTripTime>,
+        unsubscribeIndex: number
     ): void {
-        switch (stopType) {
-            case ETimetableEditFormStopType.STOP:
-            case ETimetableEditFormStopType.PASS:
-                form.get('stopId').enable();
-                form.get('arrivalTime').enable();
-                form.get('departureTime').enable();
-                return;
-            case ETimetableEditFormStopType.NOT_GOING_THROUGH:
-                form.get('stopId').disable();
-                form.get('arrivalTime').disable();
-                form.get('departureTime').disable();
-                return;
-        }
-    }
+        const changeDisabledState = (
+            stopType: ETimetableEditFormStopType,
+            form: ITimetableEditFormTripTime
+        ) => {
+            switch (stopType) {
+                case ETimetableEditFormStopType.STOP:
+                case ETimetableEditFormStopType.PASS:
+                    form.get('stopId').enable();
+                    form.get('arrivalTime').enable();
+                    form.get('departureTime').enable();
+                    return;
+                case ETimetableEditFormStopType.NOT_GOING_THROUGH:
+                    form.get('stopId').disable();
+                    form.get('arrivalTime').disable();
+                    form.get('departureTime').disable();
+                    return;
+            }
+        };
 
-    private _add(): void {
-        const tripsForm = this.form.get(
-            'trips'
-        ) as FormArray<ITimetableEditFormTrip>;
-        const addingIndex = tripsForm.controls.length;
-        const newTripForm = this._generateTripFormGroup();
-        const newTripTimesForm = newTripForm.get(
-            'times'
-        ) as FormArray<ITimetableEditFormTripTime>;
-
-        for (const form of newTripTimesForm.controls) {
-            this._changeStopType(form.get('stopType').value, form);
+        for (const form of tripTimesForm.controls) {
+            changeDisabledState(form.get('stopType').value, form);
 
             this.state.hold(
                 form
@@ -280,14 +366,30 @@ export class TimetableEditFormPComponent {
                         takeUntil(
                             this._unsubscriber$
                                 .asObservable()
-                                .pipe(filter((index) => index === addingIndex))
+                                .pipe(
+                                    filter(
+                                        (index) => index === unsubscribeIndex
+                                    )
+                                )
                         )
                     ),
                 (stopType) => {
-                    this._changeStopType(stopType, form);
+                    changeDisabledState(stopType, form);
                 }
             );
         }
+    }
+
+    private _add(trip?: TripDetailsDto): void {
+        const tripsForm = this.form.get(
+            'trips'
+        ) as FormArray<ITimetableEditFormTrip>;
+        const newTripForm = this._generateTripFormGroup(trip);
+
+        this._changeDisabledStateWhenChangeStopType(
+            newTripForm.get('times') as FormArray<ITimetableEditFormTripTime>,
+            tripsForm.controls.length
+        );
 
         tripsForm.push(newTripForm);
     }
@@ -310,9 +412,15 @@ export class TimetableEditFormPComponent {
 
         tripsForm.clear();
 
-        if (this.state.get('mode') === ETimetableEditFormMode.ADD) {
-            this._add();
-            return;
+        switch (this.state.get('mode')) {
+            case ETimetableEditFormMode.ADD:
+                this._add();
+                return;
+            case ETimetableEditFormMode.COPY:
+                for (const trip of this.state.get('trips')) {
+                    this._add(trip);
+                }
+                return;
         }
     }
 
