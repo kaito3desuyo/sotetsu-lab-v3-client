@@ -7,12 +7,14 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { CreateTripBlockDto } from 'src/app/libs/trip-block/usecase/dtos/create-trip-block.dto';
+import { ReplaceTripBlockDto } from 'src/app/libs/trip-block/usecase/dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
+import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import {
     TimetableEditFormStateQuery,
     TimetableEditFormStateStore,
@@ -41,6 +43,20 @@ export class TimetableEditFormService {
 
         return this.tripBlockService
             .createMany(qb, tripBlocks)
+            .pipe(map(() => undefined));
+    }
+
+    replaceTripBlock(trips: ReplaceTripDto[]): Observable<void> {
+        const tripBlockId = this.timetableEditFormStateQuery.tripBlockId;
+        const qb = new RequestQueryBuilder();
+
+        const tripBlock: ReplaceTripBlockDto = {
+            tripBlockId,
+            trips,
+        };
+
+        return this.tripBlockService
+            .replaceOne(qb, tripBlockId, tripBlock)
             .pipe(map(() => undefined));
     }
 

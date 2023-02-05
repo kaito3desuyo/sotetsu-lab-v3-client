@@ -3,7 +3,7 @@ import { areArrayValuesEqual } from 'src/app/core/utils/are-array-values-equal';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { ETimetableStationViewMode } from '../../general/interfaces/timetable-station';
+import { ETimetableAllLineStationViewMode } from '../interfaces/timetable-all-line.interface';
 
 function sortTrips(
     stations: StationDetailsDto[],
@@ -175,7 +175,8 @@ function getTime({
     if (time) {
         switch (true) {
             case mode === 'arrival' &&
-                viewMode === ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL:
+                viewMode ===
+                    ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL:
                 if (
                     time.pickupType === 1 &&
                     time.dropoffType === 1 &&
@@ -216,7 +217,7 @@ function getTime({
                 }
                 return _formatTime(time.arrivalTime);
             case mode === 'departure' &&
-                viewMode === ETimetableStationViewMode.ONLY_DEPARTURE:
+                viewMode === ETimetableAllLineStationViewMode.ONLY_DEPARTURE:
                 if (
                     time.pickupType === 1 &&
                     time.dropoffType === 1 &&
@@ -231,7 +232,8 @@ function getTime({
 
                 return _formatTime(time.departureTime);
             case mode === 'departure' &&
-                viewMode === ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL:
+                viewMode ===
+                    ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL:
                 if (
                     time.pickupType === 1 &&
                     time.dropoffType === 1 &&
@@ -296,10 +298,11 @@ function getTime({
                 minus1Time &&
                 minus1BorderSetting === false &&
                 minus1StationViewMode !==
-                    ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL &&
+                    ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL &&
                 !(
                     mode === 'departure' &&
-                    viewMode === ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL
+                    viewMode ===
+                        ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL
                 )
             ) {
                 return '=';
@@ -325,11 +328,12 @@ function getTime({
                     (o) => o.stationId === plus1Station.stationId
                 ) &&
                 plus1StationViewMode !==
-                    ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL &&
+                    ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL &&
                 plus1Time &&
                 !(
                     mode === 'arrival' &&
-                    viewMode === ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL
+                    viewMode ===
+                        ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL
                 )
             ) {
                 return '⬎';
@@ -343,7 +347,7 @@ function getTime({
 function getViewMode(
     station: StationDetailsDto,
     tripDirection: 0 | 1
-): ETimetableStationViewMode {
+): ETimetableAllLineStationViewMode {
     if (tripDirection === 0) {
         const departureAndArrival = [
             { routeName: ['川越線', '埼京線'], stationName: '大宮' },
@@ -391,7 +395,7 @@ function getViewMode(
                     )
             )
         ) {
-            return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
+            return ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL;
         }
 
         const onlyInboundArrival = [
@@ -414,10 +418,10 @@ function getViewMode(
                     )
             )
         ) {
-            return ETimetableStationViewMode.ONLY_INBOUND_ARRIVAL;
+            return ETimetableAllLineStationViewMode.ONLY_INBOUND_ARRIVAL;
         }
 
-        return ETimetableStationViewMode.ONLY_DEPARTURE;
+        return ETimetableAllLineStationViewMode.ONLY_DEPARTURE;
     } else if (tripDirection === 1) {
         const departureAndArrival = [
             { routeName: ['川越線', '埼京線'], stationName: '大宮' },
@@ -465,7 +469,7 @@ function getViewMode(
                     )
             )
         ) {
-            return ETimetableStationViewMode.DEPARTURE_AND_ARRIVAL;
+            return ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL;
         }
 
         const onlyOutboundArrival = [
@@ -489,10 +493,10 @@ function getViewMode(
                     )
             )
         ) {
-            return ETimetableStationViewMode.ONLY_OUTBOUND_ARRIVAL;
+            return ETimetableAllLineStationViewMode.ONLY_OUTBOUND_ARRIVAL;
         }
 
-        return ETimetableStationViewMode.ONLY_DEPARTURE;
+        return ETimetableAllLineStationViewMode.ONLY_DEPARTURE;
     } else {
         return null;
     }

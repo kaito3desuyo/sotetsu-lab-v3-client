@@ -51,9 +51,10 @@
                                 <th></th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let i = index
+                                            let i = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td>
@@ -100,9 +101,10 @@
                                 <th>列車番号</th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let i = index
+                                            let i = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td [formGroup]="tripForm">
@@ -121,9 +123,10 @@
                                 <th>運用番号</th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let i = index
+                                            let i = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td [formGroup]="tripForm">
@@ -133,8 +136,9 @@
                                                     formControlName="operationId"
                                                 >
                                                     <mat-option
-                                                        *ngFor="
-                                                            let operation of vm.operations
+                                                        *rxFor="
+                                                            let operation of vm.operations;
+                                                            strategy: 'userBlocking'
                                                         "
                                                         [value]="
                                                             operation.operationId
@@ -154,9 +158,10 @@
                                 <th>種別</th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let i = index
+                                            let i = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td [formGroup]="tripForm">
@@ -166,8 +171,9 @@
                                                     formControlName="tripClassId"
                                                 >
                                                     <mat-option
-                                                        *ngFor="
-                                                            let tripClass of vm.tripClasses
+                                                        *rxFor="
+                                                            let tripClass of vm.tripClasses;
+                                                            strategy: 'userBlocking'
                                                         "
                                                         [value]="
                                                             tripClass.tripClassId
@@ -187,9 +193,10 @@
                                 <th>入出庫</th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let i = index
+                                            let i = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td [formGroup]="tripForm">
@@ -216,19 +223,21 @@
                             <tr>
                                 <th>駅時刻</th>
                                 <ng-container
-                                    *ngFor="
+                                    *rxFor="
                                         let tripForm of tripsForm.controls;
-                                        let i = index
+                                        let i = index;
+                                        strategy: 'normal'
                                     "
                                 >
                                     <td></td>
                                 </ng-container>
                             </tr>
                             <tr
-                                *ngFor="
+                                *rxFor="
                                     let station of vm.stations;
                                     let i = index;
-                                    trackBy: 'stationId' | trackBy
+                                    trackBy: 'stationId' | trackBy;
+                                    strategy: 'normal'
                                 "
                             >
                                 <th>
@@ -260,9 +269,10 @@
                                 </th>
                                 <ng-container formArrayName="trips">
                                     <ng-container
-                                        *ngFor="
+                                        *rxFor="
                                             let tripForm of tripsForm.controls;
-                                            let j = index
+                                            let j = index;
+                                            strategy: 'normal'
                                         "
                                     >
                                         <td
@@ -356,8 +366,9 @@
                                                                 選択しない
                                                             </mat-option>
                                                             <mat-option
-                                                                *ngFor="
-                                                                    let stop of station.stops
+                                                                *rxFor="
+                                                                    let stop of station.stops;
+                                                                    strategy: 'userBlocking'
                                                                 "
                                                                 [value]="
                                                                     stop.stopId

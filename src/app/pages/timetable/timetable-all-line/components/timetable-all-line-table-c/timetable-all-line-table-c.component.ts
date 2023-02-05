@@ -62,7 +62,14 @@ export class TimetableAllLineTableCComponent {
             this.timetableAllLineStateStore.setPageSettings(pageSettings);
         });
         this.state.hold(this.onClickedEditButton$, (trip) => {
-            this.router.navigate(['timetable', 'update', trip.tripBlockId]);
+            this.router.navigate([
+                'timetable',
+                'update',
+                {
+                    calendarId: trip.calendarId,
+                    tripBlockId: trip.tripBlockId,
+                },
+            ]);
         });
         this.state.hold(this.onClickedCopyButton$, (trip) => {
             const dialogRef = this.calendarSelectDialogService.open();

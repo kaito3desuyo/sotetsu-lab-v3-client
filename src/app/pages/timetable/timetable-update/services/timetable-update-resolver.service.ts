@@ -7,7 +7,9 @@ import { ETimetableEditFormMode } from 'src/app/shared/timetable-edit-form/speci
 import { TimetableEditFormStateStore } from 'src/app/shared/timetable-edit-form/states/timetable-edit-form.state';
 
 @Injectable()
-export class TimetableCopyResolverService implements Resolve<Observable<void>> {
+export class TimetableUpdateResolverService
+    implements Resolve<Observable<void>>
+{
     constructor(
         private readonly timetableEditFormService: TimetableEditFormService,
         private readonly timetableEditFormStateStore: TimetableEditFormStateStore
@@ -19,7 +21,7 @@ export class TimetableCopyResolverService implements Resolve<Observable<void>> {
 
         this.timetableEditFormStateStore.setCalendarId(calendarId);
         this.timetableEditFormStateStore.setTripBlockId(tripBlockId);
-        this.timetableEditFormStateStore.setMode(ETimetableEditFormMode.COPY);
+        this.timetableEditFormStateStore.setMode(ETimetableEditFormMode.UPDATE);
 
         return forkJoin([
             this.timetableEditFormService.fetchTripBlocks(),
