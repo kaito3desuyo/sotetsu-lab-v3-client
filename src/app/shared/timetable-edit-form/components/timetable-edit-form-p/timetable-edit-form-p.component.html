@@ -8,7 +8,7 @@
                         : 'weekday'
                 ]"
             >
-                <h3 style="line-height: 1.25">
+                <h3 class="!tw-leading-5">
                     {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
                     改正<br />
                     {{ vm.calendar.calendarName }}
@@ -23,16 +23,14 @@
             </mat-toolbar>
         </mat-card-title>
         <mat-card-content>
-            <div fxLayout="column" fxLayoutGap="16px">
+            <div class="tw-flex tw-flex-col tw-gap-4">
                 <div
                     *ngIf="
                         vm.mode !== constants.timetableEditForm.modeEnum.UPDATE
                     "
-                    class="mode-select"
-                    fxLayout="column"
-                    fxLayoutGap="16px"
+                    class="tw-flex tw-flex-col tw-gap-4 tw-bg-grey-200 tw-p-4"
                 >
-                    <p>
+                    <p class="tw-m-0">
                         デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
                         途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
                         <br />
@@ -44,8 +42,12 @@
                         列車個別保存モード
                     </mat-slide-toggle>
                 </div>
-                <form [formGroup]="form" (ngSubmit)="onClickedSubmit$.next()">
-                    <div style="overflow-x: auto">
+                <form
+                    class="tw-flex tw-flex-col tw-gap-4"
+                    [formGroup]="form"
+                    (ngSubmit)="onClickedSubmit$.next()"
+                >
+                    <div class="tw-overflow-x-auto">
                         <table>
                             <tr>
                                 <th></th>
@@ -59,9 +61,7 @@
                                     >
                                         <td>
                                             <div
-                                                fxLayout="row"
-                                                fxLayoutAlign="end center"
-                                                fxLayoutGap="16px"
+                                                class="tw-flex tw-flex-row tw-justify-end tw-gap-4"
                                             >
                                                 <button
                                                     type="button"
@@ -108,7 +108,7 @@
                                         "
                                     >
                                         <td [formGroup]="tripForm">
-                                            <mat-form-field style="width: 100%">
+                                            <mat-form-field class="tw-w-full">
                                                 <mat-label>列車番号</mat-label>
                                                 <input
                                                     matInput
@@ -130,7 +130,7 @@
                                         "
                                     >
                                         <td [formGroup]="tripForm">
-                                            <mat-form-field style="width: 100%">
+                                            <mat-form-field class="tw-w-full">
                                                 <mat-label>運用番号</mat-label>
                                                 <mat-select
                                                     formControlName="operationId"
@@ -165,7 +165,7 @@
                                         "
                                     >
                                         <td [formGroup]="tripForm">
-                                            <mat-form-field style="width: 100%">
+                                            <mat-form-field class="tw-w-full">
                                                 <mat-label>種別</mat-label>
                                                 <mat-select
                                                     formControlName="tripClassId"
@@ -201,9 +201,7 @@
                                     >
                                         <td [formGroup]="tripForm">
                                             <div
-                                                fxLayout="row"
-                                                fxLayoutAlign="center center"
-                                                fxLayoutGap="16px"
+                                                class="tw-flex tw-flex-row tw-justify-center tw-gap-4"
                                             >
                                                 <mat-checkbox
                                                     formControlName="depotIn"
@@ -281,14 +279,11 @@
                                             "
                                         >
                                             <div
-                                                fxLayout="column"
-                                                fxLayoutGap="16px"
+                                                class="tw-flex tw-flex-col tw-gap-4"
                                             >
                                                 <div>
                                                     <mat-radio-group
-                                                        fxLayout="row"
-                                                        fxLayoutAlign="center center"
-                                                        fxLayoutGap="16px"
+                                                        class="tw-flex tw-flex-row tw-gap-4"
                                                         formControlName="stopType"
                                                     >
                                                         <mat-radio-button
@@ -324,15 +319,15 @@
                                                     </mat-radio-group>
                                                 </div>
                                                 <div
-                                                    fxLayout="row"
-                                                    fxLayoutGap="8px"
+                                                    class="tw-flex tw-flex-row tw-gap-2"
                                                 >
+                                                    <div></div>
                                                     <mat-form-field
-                                                        fxFlex="64px"
+                                                        class="tw-w-16"
                                                     >
-                                                        <mat-label
-                                                            >着</mat-label
-                                                        >
+                                                        <mat-label>
+                                                            着
+                                                        </mat-label>
                                                         <input
                                                             type="time"
                                                             matInput
@@ -340,11 +335,11 @@
                                                         />
                                                     </mat-form-field>
                                                     <mat-form-field
-                                                        fxFlex="64px"
+                                                        class="tw-w-16"
                                                     >
-                                                        <mat-label
-                                                            >発</mat-label
-                                                        >
+                                                        <mat-label>
+                                                            発
+                                                        </mat-label>
                                                         <input
                                                             type="time"
                                                             matInput
@@ -352,11 +347,11 @@
                                                         />
                                                     </mat-form-field>
                                                     <mat-form-field
-                                                        fxFlex="64px"
+                                                        class="tw-w-16"
                                                     >
-                                                        <mat-label
-                                                            >番線</mat-label
-                                                        >
+                                                        <mat-label>
+                                                            番線
+                                                        </mat-label>
                                                         <mat-select
                                                             formControlName="stopId"
                                                         >
@@ -388,12 +383,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div
-                        style="margin-top: 16px"
-                        fxLayout="row"
-                        fxLayoutAlign="center"
-                        fxLayoutGap="24px"
-                    >
+                    <div class="tw-flex tw-flex-row tw-justify-center tw-gap-6">
                         <button
                             type="button"
                             mat-button
@@ -404,9 +394,9 @@
                         </button>
                         <button
                             type="submit"
+                            class="tw-w-32"
                             mat-raised-button
                             color="primary"
-                            fxFlex="128px"
                             [disabled]="form.invalid"
                         >
                             保存する

@@ -1,17 +1,22 @@
 {
-    "name": "sotetsu-lab-v3-client",
-    "dockerComposeFile": ["../docker-compose.yml"],
-    "service": "development-client",
-    "workspaceFolder": "/home/node/sotetsu-lab-v3-client",
-    "settings": {},
-    "extensions": [
+  "name": "sotetsu-lab-v3-client",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "development-client",
+  "workspaceFolder": "/home/node/sotetsu-lab-v3-client",
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": [
         "angular.ng-template",
         "cyrilletuzi.angular-schematics",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "mhutchie.git-graph",
         "christian-kohler.path-intellisense",
-        "vivaxy.vscode-conventional-commits"
-    ],
-    "shutdownAction": "stopCompose"
+        "vivaxy.vscode-conventional-commits",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "shutdownAction": "stopCompose"
 }

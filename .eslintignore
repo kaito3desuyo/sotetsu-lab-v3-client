@@ -1,3 +1,4 @@
 .angular
 dist
 src/assets
+tailwind.config.js
