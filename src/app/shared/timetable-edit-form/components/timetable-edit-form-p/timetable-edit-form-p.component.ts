@@ -7,7 +7,7 @@ import {
     Output,
 } from '@angular/core';
 import { FormArray, FormBuilder, Validators } from '@angular/forms';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatLegacySlideToggleChange as MatSlideToggleChange } from '@angular/material/legacy-slide-toggle';
 import { RxState, selectSlice } from '@rx-angular/state';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
