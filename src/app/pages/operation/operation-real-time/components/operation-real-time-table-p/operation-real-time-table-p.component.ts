@@ -5,7 +5,7 @@ import {
     ViewChild,
 } from '@angular/core';
 import { MatSort, Sort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
 import { RxState } from '@rx-angular/state';
 import { combineLatest, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';

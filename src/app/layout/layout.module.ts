@@ -6,15 +6,15 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterModule } from '@angular/router';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
+import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
+import { MatLegacyMenuModule as MatMenuModule } from '@angular/material/legacy-menu';
 import { HeaderContainerComponent } from './components/header-container/header-container.component';
 import { HeaderPresentationalComponent } from './components/header-presentational/header-presentational.component';
 import { SidenavContainerComponent } from './components/sidenav-container/sidenav-container.component';
 import { SidenavPresentationalComponent } from './components/sidenav-presentational/sidenav-presentational.component';
-import { MatListModule } from '@angular/material/list';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatLegacyListModule as MatListModule } from '@angular/material/legacy-list';
+import { MatLegacyFormFieldModule as MatFormFieldModule } from '@angular/material/legacy-form-field';
+import { MatLegacySelectModule as MatSelectModule } from '@angular/material/legacy-select';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
