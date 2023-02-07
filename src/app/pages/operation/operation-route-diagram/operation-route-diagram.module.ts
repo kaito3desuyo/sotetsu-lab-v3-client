@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
 import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
@@ -17,10 +16,10 @@ import { OperationRouteDiagramDrawingPresentationalComponent } from './component
 import { OperationRouteDiagramHeaderCComponent } from './components/operation-route-diagram-header-c/operation-route-diagram-header-c.component';
 import { OperationRouteDiagramHeaderPComponent } from './components/operation-route-diagram-header-p/operation-route-diagram-header-p.component';
 import { OperationRouteDiagramMainCComponent } from './components/operation-route-diagram-main-c/operation-route-diagram-main-c.component';
-import { OperationRouteDiagramResolverService } from './services/operation-route-diagram-resolver.service';
-import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramRoutingModule } from './operation-route-diagram-routing.module';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
+import { OperationRouteDiagramResolverService } from './services/operation-route-diagram-resolver.service';
+import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
@@ -30,7 +29,6 @@ import {
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        FlexLayoutModule,
         MatCardModule,
         MatToolbarModule,
         MatButtonModule,
