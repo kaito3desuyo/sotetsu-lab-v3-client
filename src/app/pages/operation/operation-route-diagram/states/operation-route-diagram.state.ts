@@ -70,23 +70,26 @@ export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagram
     private _filterTargetStations(
         stations: StationDetailsDto[]
     ): StationDetailsDto[] {
-        return targetStations.map(({ routeName, stationName }) => {
-            const targetSet = new Set(routeName);
+        return targetStations
+            .map(({ routeName, stationName }) => {
+                const targetSet = new Set(routeName);
 
-            return stations.find((s) => {
-                const dataSet = new Set(
-                    s.routeStationLists.map((rsl) => rsl.route.routeName)
-                );
+                return stations.find((s) => {
+                    const dataSet = new Set(
+                        s.routeStationLists.map((rsl) => rsl.route.routeName)
+                    );
 
-                const differenceSet = new Set(
-                    [...dataSet].filter((x) => !targetSet.has(x))
-                );
+                    const differenceSet = new Set(
+                        [...dataSet].filter((x) => !targetSet.has(x))
+                    );
 
-                return (
-                    differenceSet.size === 0 && s.stationName === stationName
-                );
-            });
-        });
+                    return (
+                        differenceSet.size === 0 &&
+                        s.stationName === stationName
+                    );
+                });
+            })
+            .filter((o) => !!o);
     }
 }
 
@@ -107,6 +110,18 @@ const targetStations = [
     {
         routeName: ['新横浜線', '相鉄・JR直通線'],
         stationName: '羽沢横浜国大',
+    },
+    {
+        routeName: ['新横浜線'],
+        stationName: '新横浜',
+    },
+    {
+        routeName: ['新横浜線', '東急新横浜線'],
+        stationName: '新横浜',
+    },
+    {
+        routeName: ['相鉄・JR直通線', '埼京線'],
+        stationName: '大崎',
     },
     {
         routeName: ['相鉄・JR直通線', '埼京線', 'りんかい線'],
