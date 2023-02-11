@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
+import { OperationRouteDiagramNavigateTimetable } from '../interfaces/operation-route-diagram.interface';
 import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
@@ -12,6 +13,9 @@ import {
 
 @Injectable()
 export class OperationRouteDiagramService {
+    private _navigateTimetable$ =
+        new Subject<OperationRouteDiagramNavigateTimetable>();
+
     constructor(
         private readonly serviceService: ServiceService,
         private readonly operationService: OperationService,
@@ -58,5 +62,13 @@ export class OperationRouteDiagramService {
             }),
             map(() => undefined)
         );
+    }
+
+    receiveNavigateTimetableEvent(): Observable<OperationRouteDiagramNavigateTimetable> {
+        return this._navigateTimetable$.asObservable();
+    }
+
+    emitNavigateTimetableEvent(ev: OperationRouteDiagramNavigateTimetable) {
+        this._navigateTimetable$.next(ev);
     }
 }

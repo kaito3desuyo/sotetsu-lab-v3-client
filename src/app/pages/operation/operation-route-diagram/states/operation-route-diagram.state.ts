@@ -43,19 +43,22 @@ export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagram
 
 @Injectable()
 export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagramState> {
-    readonly operation$ = this.select(
-        (state) => state.operationTrips?.operation
-    );
     readonly calendar$ = this.select(
         (state) => state.operationTrips?.operation.calendar
     );
-    readonly tripOperationLists$ = this.select(
-        (state) => state.operationTrips?.trips
+    readonly operation$ = this.select(
+        (state) => state.operationTrips?.operation
     );
     readonly stations$ = this.select((state) =>
         this._filterTargetStations(state.stations)
     );
+    readonly tripOperationLists$ = this.select(
+        (state) => state.operationTrips?.trips
+    );
 
+    get calendarId(): string {
+        return this.getValue().operationTrips?.operation.calendarId;
+    }
     get operationId(): string {
         return this.getValue().operationId;
     }

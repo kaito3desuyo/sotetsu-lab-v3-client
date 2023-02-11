@@ -3,4 +3,5 @@
     [tripOperationLists]="tripOperationLists$ | async"
     [calendar]="calendar$ | async"
     [operation]="operation$ | async"
+    (clickNavigateTimetable)="onReceiveClickNavigateTimetable($event)"
 ></app-operation-route-diagram-drawing-presentational>

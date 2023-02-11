@@ -7,12 +7,32 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import { Router } from '@angular/router';
-import moment from 'moment';
+import {
+    RxRenderStrategiesConfig,
+    RX_RENDER_STRATEGIES_CONFIG,
+} from '@rx-angular/cdk/render-strategies';
+import { RxState } from '@rx-angular/state';
+import dayjs from 'dayjs';
+import { saveAs } from 'file-saver';
+import { Subject } from 'rxjs';
+import { debounceTime, take } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+
+const COMPONENT_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
+    primaryStrategy: 'normal',
+    patchZone: false,
+};
+
+type State = {
+    calendar: CalendarDetailsDto;
+    operation: OperationDetailsDto;
+    stations: StationDetailsDto[];
+    tripOperationLists: TripOperationListDetailsDto[];
+    inprocessDownloadImage: boolean;
+};
 
 @Component({
     selector: 'app-operation-route-diagram-drawing-presentational',
@@ -22,57 +42,139 @@ import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip
         './operation-route-diagram-drawing-presentational.component.scss',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: RX_RENDER_STRATEGIES_CONFIG,
+            useValue: COMPONENT_RX_ANGULAR_CONFIG,
+        },
+        RxState,
+    ],
 })
 export class OperationRouteDiagramDrawingPresentationalComponent {
-    @Input() calendar: CalendarDetailsDto;
-    @Input() operation: OperationDetailsDto;
-    @Input() tripOperationLists: TripOperationListDetailsDto[];
-    @Input() stations: StationDetailsDto[];
+    readonly vm$ = this.state.select();
+
+    private get _calendar() {
+        return this.state.get('calendar');
+    }
+
+    private get _operation() {
+        return this.state.get('operation');
+    }
+
+    readonly onChangedInputCalendar$ = new Subject<CalendarDetailsDto>();
+    readonly onChangedInputOperation$ = new Subject<OperationDetailsDto>();
+    readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
+    readonly onChangedInputTripOperationLists$ = new Subject<
+        TripOperationListDetailsDto[]
+    >();
+
+    readonly onChangedViewChildSvgElement$ = new Subject<ElementRef>();
+
+    @Input() set calendar(calendar: CalendarDetailsDto) {
+        this.onChangedInputCalendar$.next(calendar);
+    }
+    @Input() set operation(operation: OperationDetailsDto) {
+        this.onChangedInputOperation$.next(operation);
+    }
+    @Input() set stations(stations: StationDetailsDto[]) {
+        this.onChangedInputStations$.next(stations);
+    }
+    @Input() set tripOperationLists(
+        tripOpeartionLists: TripOperationListDetailsDto[]
+    ) {
+        this.onChangedInputTripOperationLists$.next(tripOpeartionLists);
+    }
 
     @Output() clickNavigateTimetable: EventEmitter<{
         tripBlockId: string;
         tripDirection: 0 | 1;
     }> = new EventEmitter();
 
-    @ViewChild('svgElement') svgElement: ElementRef;
+    @ViewChild('svgElement') set svgElement(elRef: ElementRef) {
+        if (elRef) {
+            this.onChangedViewChildSvgElement$.next(elRef);
+        }
+    }
 
-    constructor(private router: Router) {}
+    constructor(private readonly state: RxState<State>) {
+        this.state.connect(
+            'calendar',
+            this.onChangedInputCalendar$.asObservable()
+        );
+        this.state.connect(
+            'operation',
+            this.onChangedInputOperation$.asObservable()
+        );
+        this.state.connect(
+            'stations',
+            this.onChangedInputStations$.asObservable()
+        );
+        this.state.connect(
+            'tripOperationLists',
+            this.onChangedInputTripOperationLists$.asObservable()
+        );
+    }
 
     navigateTimetable(tripBlockId: string, tripDirection: 0 | 1) {
         this.clickNavigateTimetable.next({
             tripBlockId: tripBlockId,
             tripDirection: tripDirection,
         });
-        this.router.navigate([
-            '/timetable',
-            'all-line',
-            {
-                calendar_id: this.calendar.calendarId,
-                trip_direction: tripDirection,
-                trip_block_id: tripBlockId,
-            },
-        ]);
     }
 
-    svgToPng() {
-        const canvas = document.createElement('canvas');
-        canvas.width = this.svgElement.nativeElement.width.baseVal.value;
-        canvas.height =
-            this.svgElement.nativeElement.height.baseVal.value + 64 + 16;
-        const ctx = canvas.getContext('2d');
-        const image = new Image();
+    async downloadAsPng() {
+        const name = `${dayjs(this._calendar.startDate, 'YYYY-MM-DD').format(
+            'YYYY年MM月DD日'
+        )}改正 ${this._calendar.calendarName} ${
+            this._operation.operationNumber
+        }運 運用行路図`;
 
-        image.onload = () => {
-            // SVGデータをPNG形式に変換する
-            ctx.fillStyle =
-                this.calendar.sunday || this.calendar.saturday
-                    ? 'rgb(217, 83, 79)'
-                    : 'rgb(66, 139, 202)';
+        const font =
+            "24px -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI', '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif";
+
+        const color =
+            this._calendar.sunday || this._calendar.saturday
+                ? 'rgb(217, 83, 79)'
+                : 'rgb(66, 139, 202)';
+
+        const getSvgUrl = (svgElementRef: ElementRef) => {
+            const svgText = new XMLSerializer().serializeToString(
+                svgElementRef.nativeElement
+            );
+            const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
+            const svgUrl = URL.createObjectURL(svgBlob);
+            return svgUrl;
+        };
+
+        const svgUrlToImageElement = async (svgUrl: string) => {
+            const image = new Image();
+            image.src = svgUrl;
+            await new Promise((resolve) => {
+                image.onload = () => {
+                    resolve(undefined);
+                };
+            });
+            return image;
+        };
+
+        const createCanvasElement = (image: HTMLImageElement) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height + 64 + 16;
+            const ctx = canvas.getContext('2d');
+
+            // header
+            ctx.fillStyle = color;
             ctx.fillRect(0, 0, image.width, 64);
-
+            ctx.font = font;
             ctx.fillStyle = 'white';
-            ctx.fillRect(0, 64, image.width, 16);
+            ctx.fillText(name, 16, 42);
 
+            // base
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 64, image.width, image.height + 64 + 16);
+
+            // svg
             ctx.drawImage(
                 image,
                 0,
@@ -85,44 +187,25 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
                 image.height
             );
 
-            ctx.font = `24px -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI', '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif`;
-            ctx.fillStyle = 'white';
-            ctx.fillText(
-                `${moment(this.calendar.startDate, 'YYYY-MM-DD').format(
-                    'YYYY年MM月DD日'
-                )}改正 ${this.calendar.calendarName} ${
-                    this.operation.operationNumber
-                }運 運用行路図`,
-                16,
-                42
-            );
+            return canvas;
+        };
 
-            const dataUrl = canvas.toDataURL();
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download =
-                moment(this.calendar.startDate, 'YYYY-MM-DD').format(
-                    'YYYY年MM月DD日'
-                ) +
-                '改正' +
-                '_' +
-                this.calendar.calendarName +
-                '_' +
-                this.operation.operationNumber +
-                '運' +
-                '_' +
-                '運用行路図.png';
-            link.click();
-        };
-        image.onerror = (e) => {
-            console.error(e);
-        };
-        // SVGデータを取り出す
-        const svgData = new XMLSerializer().serializeToString(
-            this.svgElement.nativeElement
-        );
-        image.src =
-            'data:image/svg+xml;charset=utf-8;base64,' +
-            btoa(unescape(encodeURIComponent(svgData)));
+        this.state.set({
+            inprocessDownloadImage: true,
+        });
+
+        const svgElementRef = await this.onChangedViewChildSvgElement$
+            .asObservable()
+            .pipe(debounceTime(100), take(1))
+            .toPromise();
+        const svgUrl = getSvgUrl(svgElementRef);
+        const image = await svgUrlToImageElement(svgUrl);
+        URL.revokeObjectURL(svgUrl);
+        const canvas = createCanvasElement(image);
+        saveAs(canvas.toDataURL(), `${name.replace(/ /g, '_')}.png`);
+
+        this.state.set({
+            inprocessDownloadImage: false,
+        });
     }
 }

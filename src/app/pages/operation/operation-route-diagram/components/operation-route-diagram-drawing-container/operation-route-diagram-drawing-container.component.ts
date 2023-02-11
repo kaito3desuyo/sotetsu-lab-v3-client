@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
+import { OperationRouteDiagramService } from '../../services/operation-route-diagram.service';
 import { OperationRouteDiagramStateQuery } from '../../states/operation-route-diagram.state';
 
 @Component({
@@ -14,6 +16,13 @@ export class OperationRouteDiagramDrawingContainerComponent {
     readonly stations$ = this.operationRouteDiagramStateQuery.stations$;
 
     constructor(
+        private readonly operationRouteDiagramService: OperationRouteDiagramService,
         private readonly operationRouteDiagramStateQuery: OperationRouteDiagramStateQuery
     ) {}
+
+    onReceiveClickNavigateTimetable(
+        ev: OperationRouteDiagramNavigateTimetable
+    ): void {
+        this.operationRouteDiagramService.emitNavigateTimetableEvent(ev);
+    }
 }
