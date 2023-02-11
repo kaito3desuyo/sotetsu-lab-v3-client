@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { sortBy } from 'lodash-es';
-import { Observable, of } from 'rxjs';
+import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { Observable, of, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { ServiceService } from 'src/app/libs/service/usecase/service.service';
+import { OperationRouteDiagramNavigateTimetable } from '../interfaces/operation-route-diagram.interface';
 import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
@@ -13,9 +13,13 @@ import {
 
 @Injectable()
 export class OperationRouteDiagramService {
+    private _navigateTimetable$ =
+        new Subject<OperationRouteDiagramNavigateTimetable>();
+
     constructor(
+        private readonly serviceService: ServiceService,
         private readonly operationService: OperationService,
-        private readonly stationService: StationService,
+        private readonly serviceListStateQuery: ServiceListStateQuery,
         private readonly operationRouteDiagramStateStore: OperationRouteDiagramStateStore,
         private readonly operationRouteDiagramStateQuery: OperationRouteDiagramStateQuery
     ) {}
@@ -42,53 +46,29 @@ export class OperationRouteDiagramService {
     }
 
     fetchStationsV2(): Observable<void> {
-        const targetStation = [
-            '厚木',
-            '海老名',
-            'かしわ台',
-            '相模大塚',
-            '大和',
-            '瀬谷',
-            '湘南台',
-            'いずみ野',
-            '二俣川',
-            '西谷',
-            '星川',
-            '西横浜',
-            '横浜',
-            '羽沢横浜国大',
-            '大崎',
-            '新宿',
-            '池袋',
-            '板橋',
-            '赤羽',
-            '武蔵浦和',
-            '大宮',
-            '指扇',
-            '南古谷',
-            '川越',
-        ];
-
-        const qb = new RequestQueryBuilder().setFilter([
+        const serviceId = this.serviceListStateQuery.serviceId;
+        const qb = new RequestQueryBuilder().setJoin([
             {
-                field: 'stationName',
-                operator: CondOperator.IN,
-                value: targetStation,
+                field: 'operatingSystems.route.routeStationLists.station.routeStationLists',
+            },
+            {
+                field: 'operatingSystems.route.routeStationLists.station.routeStationLists.route',
             },
         ]);
 
-        return this.stationService.findMany(qb).pipe(
-            tap((stations: StationDetailsDto[]) => {
-                this.operationRouteDiagramStateStore.setStations(
-                    sortBy(stations, [
-                        (station) =>
-                            targetStation.findIndex(
-                                (target) => station.stationName === target
-                            ),
-                    ])
-                );
+        return this.serviceService.findOneWithStations(serviceId, qb).pipe(
+            tap((data) => {
+                this.operationRouteDiagramStateStore.setStations(data.stations);
             }),
             map(() => undefined)
         );
+    }
+
+    receiveNavigateTimetableEvent(): Observable<OperationRouteDiagramNavigateTimetable> {
+        return this._navigateTimetable$.asObservable();
+    }
+
+    emitNavigateTimetableEvent(ev: OperationRouteDiagramNavigateTimetable) {
+        this._navigateTimetable$.next(ev);
     }
 }

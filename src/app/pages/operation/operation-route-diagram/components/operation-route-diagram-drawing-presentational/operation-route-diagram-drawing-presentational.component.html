@@ -1,637 +1,260 @@
-<mat-card>
-    <mat-card-title *ngIf="calendar && operation">
-        <mat-toolbar
-            [ngClass]="[
-                calendar.sunday && calendar.saturday ? 'holiday' : 'weekday'
-            ]"
-        >
-            <h3 style="line-height: 1.25">
-                {{ calendar.startDate | date: 'yyyy年MM月dd日' }}
-                改正<br />
-                {{ calendar.calendarName }}
-                {{ operation.operationNumber }}運
-            </h3>
-        </mat-toolbar>
-    </mat-card-title>
-    <mat-card-content>
-        <div *ngIf="calendar && operation" fxLayout="column" fxLayoutGap="24px">
+<ng-container *rxLet="vm$; let vm">
+    <mat-card>
+        <mat-card-title *rxIf="vm.calendar && vm.operation">
+            <mat-toolbar
+                [ngClass]="[
+                    vm.calendar.sunday && vm.calendar.saturday
+                        ? 'holiday'
+                        : 'weekday'
+                ]"
+            >
+                <h3 class="!tw-leading-5">
+                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
+                    改正<br />
+                    {{ vm.calendar.calendarName }}
+                    {{ vm.operation.operationNumber }}運
+                </h3>
+            </mat-toolbar>
+        </mat-card-title>
+        <mat-card-content>
             <div
-                style="
-                    overflow: auto;
-                    width: auto;
-                    height: 100%;
-                    max-height: 60vh;
-                "
+                *rxIf="vm.calendar && vm.operation"
+                class="tw-flex tw-flex-col tw-gap-6"
             >
-                <table>
-                    <thead>
-                        <tr>
-                            <td>
-                                <svg
-                                    [attr.width]="
-                                        50 + stations.length * 60 + 10 + 'px'
-                                    "
-                                    [attr.height]="120 + 'px'"
-                                >
-                                    <g
-                                        font-size="16"
-                                        *ngFor="
-                                            let station of stations;
-                                            let i = index
-                                        "
-                                    >
-                                        <text
-                                            [attr.x]="
-                                                i * 60 +
-                                                ',' +
-                                                i * 60 +
-                                                ',' +
-                                                i * 60 +
-                                                ',' +
-                                                i * 60 +
-                                                ',' +
-                                                i * 60 +
-                                                ',' +
-                                                i * 60
-                                            "
-                                            y="16, 16, 16, 16, 16, 16"
-                                            dx="50, 50, 50, 50, 50, 50"
-                                            dy="0, 20, 40, 60, 80, 100"
-                                            fill="black"
-                                        >
-                                            {{
-                                                station.stationName
-                                                    | padding: { num: 6 }
-                                            }}
-                                        </text>
-                                    </g>
-                                </svg>
-                            </td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <svg
-                                    [attr.width]="
-                                        50 + stations.length * 60 + 10 + 'px'
-                                    "
-                                    [attr.height]="
-                                        tripOperationLists.length * 40 +
-                                        15 +
-                                        'px'
-                                    "
-                                >
-                                    <g
-                                        font-size="16"
-                                        *ngFor="
-                                            let station of stations;
-                                            let i = index
-                                        "
-                                    >
-                                        <line
-                                            [attr.x1]="i * 60 + 50 + 8"
-                                            [attr.x2]="i * 60 + 50 + 8"
-                                            y1="0"
-                                            [attr.y2]="
-                                                0 +
-                                                tripOperationLists.length *
-                                                    (40 + 16)
-                                            "
-                                            stroke="black"
-                                            stroke-dasharray="10 7"
-                                            stroke-opacity="0.12"
-                                        ></line>
-                                    </g>
-                                    <g
-                                        *ngFor="
-                                            let tripOperationList of tripOperationLists;
-                                            let i = index
-                                        "
-                                    >
-                                        <text
-                                            [attr.x]="
-                                                tripOperationList.trip
-                                                    .tripDirection === 0
-                                                    ? (tripOperationList
-                                                          .startTime.stationId
-                                                          | findById
-                                                              : {
-                                                                    array: stations,
-                                                                    propertyName:
-                                                                        'stationId',
-                                                                    outputPropertyName:
-                                                                        'index'
-                                                                }) *
-                                                          60 +
-                                                      60 -
-                                                      47.5
-                                                    : tripOperationList.trip
-                                                          .tripDirection === 1
-                                                    ? (tripOperationList.endTime
-                                                          .stationId
-                                                          | findById
-                                                              : {
-                                                                    array: stations,
-                                                                    propertyName:
-                                                                        'stationId',
-                                                                    outputPropertyName:
-                                                                        'index'
-                                                                }) *
-                                                          60 +
-                                                      60 -
-                                                      47.5
-                                                    : 0
-                                            "
-                                            [attr.y]="30 + i * 40"
-                                            fill="black"
-                                        >
-                                            <ng-container
-                                                *ngIf="
-                                                    tripOperationList.trip
-                                                        .tripDirection === 0
-                                                "
-                                            >
-                                                {{
-                                                    tripOperationList.startTime
-                                                        .departureTime
-                                                        | dayjs
-                                                            : {
-                                                                  format: 'HHmm',
-                                                                  parseFormat:
-                                                                      'HH:mm:ss'
-                                                              }
-                                                }}
-                                            </ng-container>
-                                            <ng-container
-                                                *ngIf="
-                                                    tripOperationList.trip
-                                                        .tripDirection === 1
-                                                "
-                                            >
-                                                {{
-                                                    tripOperationList.endTime
-                                                        .arrivalTime
-                                                        | dayjs
-                                                            : {
-                                                                  format: 'HHmm',
-                                                                  parseFormat:
-                                                                      'HH:mm:ss'
-                                                              }
-                                                }}
-                                            </ng-container>
-                                        </text>
-
-                                        <text
-                                            style="cursor: pointer"
-                                            [attr.x]="
-                                                (((tripOperationList.startTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) +
-                                                    (tripOperationList.endTime
-                                                        .stationId
-                                                        | findById
-                                                            : {
-                                                                  array: stations,
-                                                                  propertyName:
-                                                                      'stationId',
-                                                                  outputPropertyName:
-                                                                      'index'
-                                                              })) /
-                                                    2) *
-                                                    60 +
-                                                60 -
-                                                18
-                                            "
-                                            [attr.y]="30 + i * 40 - 10"
-                                            fill="black"
-                                            (click)="
-                                                navigateTimetable(
-                                                    tripOperationList.trip
-                                                        .tripBlockId,
-                                                    tripOperationList.trip
-                                                        .tripDirection
-                                                )
-                                            "
-                                        >
-                                            {{
-                                                tripOperationList.trip
-                                                    .tripNumber
-                                            }}
-                                        </text>
-
-                                        <line
-                                            [attr.x1]="
-                                                (tripOperationList.startTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                50 +
-                                                8
-                                            "
-                                            [attr.x2]="
-                                                (tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                50 +
-                                                8
-                                            "
-                                            [attr.y1]="i * 40 + 30 - 5"
-                                            [attr.y2]="i * 40 + 30 - 5"
-                                            dy="16"
-                                            [attr.stroke]="
-                                                tripOperationList.trip.tripClass
-                                                    .tripClassColor
-                                            "
-                                            [attr.stroke-dasharray]="
-                                                tripOperationList.trip.tripClass
-                                                    .tripClassName === '回送'
-                                                    ? '5 3'
-                                                    : ''
-                                            "
-                                            stroke-width="2px"
-                                        ></line>
-
-                                        <text
-                                            [attr.x]="
-                                                tripOperationList.trip
-                                                    .tripDirection === 0
-                                                    ? (tripOperationList.endTime
-                                                          .stationId
-                                                          | findById
-                                                              : {
-                                                                    array: stations,
-                                                                    propertyName:
-                                                                        'stationId',
-                                                                    outputPropertyName:
-                                                                        'index'
-                                                                }) *
-                                                          60 +
-                                                      60 +
-                                                      12.5
-                                                    : tripOperationList.trip
-                                                          .tripDirection === 1
-                                                    ? (tripOperationList
-                                                          .startTime.stationId
-                                                          | findById
-                                                              : {
-                                                                    array: stations,
-                                                                    propertyName:
-                                                                        'stationId',
-                                                                    outputPropertyName:
-                                                                        'index'
-                                                                }) *
-                                                          60 +
-                                                      60 +
-                                                      12.5
-                                                    : 0
-                                            "
-                                            [attr.y]="30 + i * 40"
-                                            fill="black"
-                                        >
-                                            <ng-container
-                                                *ngIf="
-                                                    tripOperationList.trip
-                                                        .tripDirection === 0
-                                                "
-                                            >
-                                                {{
-                                                    tripOperationList.endTime
-                                                        .arrivalTime
-                                                        | dayjs
-                                                            : {
-                                                                  format: 'HHmm',
-                                                                  parseFormat:
-                                                                      'HH:mm:ss'
-                                                              }
-                                                }}
-                                            </ng-container>
-                                            <ng-container
-                                                *ngIf="
-                                                    tripOperationList.trip
-                                                        .tripDirection === 1
-                                                "
-                                            >
-                                                {{
-                                                    tripOperationList.startTime
-                                                        .departureTime
-                                                        | dayjs
-                                                            : {
-                                                                  format: 'HHmm',
-                                                                  parseFormat:
-                                                                      'HH:mm:ss'
-                                                              }
-                                                }}
-                                            </ng-container>
-                                        </text>
-
-                                        <circle
-                                            *ngIf="
-                                                tripOperationList.trip.depotOut
-                                            "
-                                            [attr.cx]="
-                                                (tripOperationList.startTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                60 -
-                                                2
-                                            "
-                                            [attr.cy]="30 + i * 40 - 5"
-                                            r="8"
-                                            stroke="black"
-                                            fill="white"
-                                            stroke-width="2px"
-                                        ></circle>
-                                        <polygon
-                                            *ngIf="
-                                                tripOperationList.trip.depotIn
-                                            "
-                                            [attr.points]="
-                                                (tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                60 -
-                                                2 +
-                                                ',' +
-                                                (30 + i * 40 - 12) +
-                                                ' ' +
-                                                ((tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                    60 -
-                                                    10) +
-                                                ',' +
-                                                (30 + i * 40 + 1) +
-                                                ' ' +
-                                                ((tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                    60 +
-                                                    6) +
-                                                ',' +
-                                                (30 + i * 40 + 1)
-                                            "
-                                            stroke="black"
-                                            fill="white"
-                                            stroke-width="2px"
-                                        ></polygon>
-
-                                        <line
-                                            *ngIf="
-                                                !tripOperationList.trip.depotIn
-                                            "
-                                            [attr.x1]="
-                                                (tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                50 +
-                                                8
-                                            "
-                                            [attr.x2]="
-                                                (tripOperationList.endTime
-                                                    .stationId
-                                                    | findById
-                                                        : {
-                                                              array: stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'index'
-                                                          }) *
-                                                    60 +
-                                                50 +
-                                                8
-                                            "
-                                            [attr.y1]="i * 40 + 30 - 5"
-                                            [attr.y2]="(i + 1) * 40 + 30 - 5"
-                                            dy="16"
-                                            stroke="black"
-                                            stroke-width="1px"
-                                        ></line>
-                                    </g>
-                                </svg>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <button mat-raised-button color="primary" (click)="svgToPng()">
-                    画像としてダウンロードする
-                </button>
-            </div>
-        </div>
-
-        <div *ngIf="calendar && operation" style="display: none">
-            <svg
-                style="
-                    background-color: white;
-                    font-family: -apple-system, BlinkMacSystemFont, Roboto,
-                        'Yu Gothic UI', '游ゴシック体', YuGothic,
-                        'Yu Gothic Medium', sans-serif;
-                "
-                #svgElement
-                [attr.width]="50 + stations.length * 60 + 10 + 'px'"
-                [attr.height]="tripOperationLists.length * 40 + 160 - 20 + 'px'"
-            >
-                <g
-                    font-size="16"
-                    *ngFor="let station of stations; let i = index"
-                >
-                    <text
-                        [attr.x]="
-                            i * 60 +
-                            ',' +
-                            i * 60 +
-                            ',' +
-                            i * 60 +
-                            ',' +
-                            i * 60 +
-                            ',' +
-                            i * 60 +
-                            ',' +
-                            i * 60
-                        "
-                        y="16, 16, 16, 16, 16, 16"
-                        dx="50, 50, 50, 50, 50, 50"
-                        dy="0, 20, 40, 60, 80, 100"
-                        fill="black"
+                <div class="tw-h-full tw-max-h-[60vh] tw-overflow-auto">
+                    <div
+                        class="tw-sticky tw-top-0 tw-z-10 tw-w-fit tw-bg-white"
                     >
-                        {{ station.stationName | padding: { num: 6 } }}
-                    </text>
-                    <line
-                        [attr.x1]="i * 60 + 50 + 8"
-                        [attr.x2]="i * 60 + 50 + 8"
-                        y1="130"
-                        [attr.y2]="130 + tripOperationLists.length * (40 + 16)"
-                        stroke="black"
-                        stroke-dasharray="10 7"
-                        stroke-opacity="0.12"
-                    ></line>
-                </g>
-                <g
-                    *ngFor="
-                        let tripOperationList of tripOperationLists;
-                        let i = index
+                        <svg
+                            [attr.width]="
+                                50 + vm.stations.length * 60 + 10 + 'px'
+                            "
+                            [attr.height]="120 + 'px'"
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="stations"
+                            ></ng-container>
+                        </svg>
+                    </div>
+                    <div>
+                        <svg
+                            [attr.width]="
+                                50 + vm.stations.length * 60 + 10 + 'px'
+                            "
+                            [attr.height]="
+                                vm.tripOperationLists.length * 40 + 15 + 'px'
+                            "
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    stationsBar;
+                                    context: { offset: 0 }
+                                "
+                            ></ng-container>
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    trips;
+                                    context: { offset: 0 }
+                                "
+                            ></ng-container>
+                        </svg>
+                    </div>
+                </div>
+                <div class="tw-hidden" *rxIf="vm.inprocessDownloadImage">
+                    <svg
+                        style="
+                            font-family: -apple-system, BlinkMacSystemFont,
+                                Roboto, 'Yu Gothic UI', '游ゴシック体', YuGothic,
+                                'Yu Gothic Medium', sans-serif;
+                        "
+                        #svgElement
+                        [attr.width]="50 + vm.stations.length * 60 + 10 + 'px'"
+                        [attr.height]="
+                            vm.tripOperationLists.length * 40 + 160 - 20 + 'px'
+                        "
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="stations"
+                        ></ng-container>
+                        <ng-container
+                            *ngTemplateOutlet="
+                                stationsBar;
+                                context: { offset: 130 }
+                            "
+                        ></ng-container>
+                        <ng-container
+                            *ngTemplateOutlet="trips; context: { offset: 130 }"
+                        ></ng-container>
+                    </svg>
+                </div>
+                <div>
+                    <button
+                        mat-raised-button
+                        color="primary"
+                        (click)="downloadAsPng()"
+                    >
+                        画像としてダウンロードする
+                    </button>
+                </div>
+            </div>
+
+            <p *rxIf="!vm.calendar || !vm.operation">
+                ダイヤと運用番号を設定して検索してください
+            </p>
+        </mat-card-content>
+    </mat-card>
+
+    <ng-template #stations>
+        <svg>
+            <g
+                font-size="16"
+                *rxFor="
+                    let station of vm.stations;
+                    let i = index;
+                    trackBy: 'stationId' | trackBy;
+                    strategy: 'normal'
+                "
+            >
+                <text
+                    [attr.x]="
+                        i * 60 +
+                        ',' +
+                        i * 60 +
+                        ',' +
+                        i * 60 +
+                        ',' +
+                        i * 60 +
+                        ',' +
+                        i * 60 +
+                        ',' +
+                        i * 60
                     "
+                    y="16, 16, 16, 16, 16, 16"
+                    dx="50, 50, 50, 50, 50, 50"
+                    dy="0, 20, 40, 60, 80, 100"
+                    fill="black"
                 >
-                    <text
-                        [attr.x]="
-                            tripOperationList.trip.tripDirection === 0
-                                ? (tripOperationList.startTime.stationId
-                                      | findById
-                                          : {
-                                                array: stations,
-                                                propertyName: 'stationId',
-                                                outputPropertyName: 'index'
-                                            }) *
-                                      60 +
-                                  60 -
-                                  47.5
-                                : tripOperationList.trip.tripDirection === 1
-                                ? (tripOperationList.endTime.stationId
-                                      | findById
-                                          : {
-                                                array: stations,
-                                                propertyName: 'stationId',
-                                                outputPropertyName: 'index'
-                                            }) *
-                                      60 +
-                                  60 -
-                                  47.5
-                                : 0
-                        "
-                        [attr.y]="160 + i * 40"
-                        fill="black"
-                    >
-                        <ng-container
-                            *ngIf="tripOperationList.trip.tripDirection === 0"
-                        >
-                            {{
-                                tripOperationList.startTime.departureTime
-                                    | dayjs
-                                        : {
-                                              format: 'HHmm',
-                                              parseFormat: 'HH:mm:ss'
-                                          }
-                            }}
-                        </ng-container>
-                        <ng-container
-                            *ngIf="tripOperationList.trip.tripDirection === 1"
-                        >
-                            {{
-                                tripOperationList.endTime.arrivalTime
-                                    | dayjs
-                                        : {
-                                              format: 'HHmm',
-                                              parseFormat: 'HH:mm:ss'
-                                          }
-                            }}
-                        </ng-container>
-                    </text>
+                    {{ station.stationName | padding: { num: 6 } }}
+                </text>
+            </g>
+        </svg>
+    </ng-template>
 
-                    <text
-                        style="cursor: pointer"
-                        [attr.x]="
-                            (((tripOperationList.startTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'index'
-                                      }) +
-                                (tripOperationList.endTime.stationId
+    <ng-template #stationsBar let-offset="offset">
+        <svg>
+            <g
+                font-size="16"
+                *rxFor="
+                    let station of vm.stations;
+                    let i = index;
+                    trackBy: 'stationId' | trackBy;
+                    strategy: 'normal'
+                "
+            >
+                <line
+                    [attr.x1]="i * 60 + 50 + 8"
+                    [attr.x2]="i * 60 + 50 + 8"
+                    [attr.y1]="offset"
+                    [attr.y2]="
+                        offset + vm.tripOperationLists.length * (40 + 16)
+                    "
+                    stroke="black"
+                    stroke-dasharray="10 7"
+                    stroke-opacity="0.12"
+                ></line>
+            </g>
+        </svg>
+    </ng-template>
+
+    <ng-template #trips let-offset="offset">
+        <svg>
+            <g
+                *rxFor="
+                    let tripOperationList of vm.tripOperationLists;
+                    let i = index;
+                    trackBy: 'tripOperationListId' | trackBy;
+                    strategy: 'normal'
+                "
+            >
+                <ng-template
+                    #time
+                    let-type="type"
+                    let-stationIndex="stationIndex"
+                    let-time="time"
+                >
+                    <svg>
+                        <text
+                            [attr.x]="
+                                stationIndex
+                                    ? stationIndex * 60 +
+                                      60 +
+                                      (type === 'left'
+                                          ? -47.5
+                                          : type === 'right'
+                                          ? 12.5
+                                          : 0)
+                                    : 0
+                            "
+                            [attr.y]="offset + 30 + i * 40"
+                            fill="black"
+                        >
+                            {{
+                                time
+                                    | dayjs
+                                        : {
+                                              format: 'HHmm',
+                                              parseFormat: 'HH:mm:ss'
+                                          }
+                            }}
+                        </text>
+                    </svg>
+                </ng-template>
+
+                <ng-template #tripNumber>
+                    <svg>
+                        <text
+                            class="tw-cursor-pointer"
+                            [attr.x]="
+                                (((tripOperationList.startTime.stationId
                                     | findById
                                         : {
-                                              array: stations,
+                                              array: vm.stations,
                                               propertyName: 'stationId',
                                               outputPropertyName: 'index'
-                                          })) /
-                                2) *
-                                60 +
-                            60 -
-                            18
-                        "
-                        [attr.y]="160 + i * 40 - 10"
-                        fill="black"
-                        (click)="
-                            navigateTimetable(
-                                tripOperationList.trip.tripBlockId,
-                                tripOperationList.trip.tripDirection
-                            )
-                        "
-                    >
-                        {{ tripOperationList.trip.tripNumber }}
-                    </text>
+                                          }) +
+                                    (tripOperationList.endTime.stationId
+                                        | findById
+                                            : {
+                                                  array: vm.stations,
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName: 'index'
+                                              })) /
+                                    2) *
+                                    60 +
+                                60 -
+                                18
+                            "
+                            [attr.y]="offset + 30 + i * 40 - 10"
+                            fill="black"
+                            (click)="
+                                navigateTimetable(
+                                    tripOperationList.trip.tripBlockId,
+                                    tripOperationList.trip.tripDirection
+                                )
+                            "
+                        >
+                            {{ tripOperationList.trip.tripNumber }}
+                        </text>
+                    </svg>
+                </ng-template>
 
+                <ng-template #line>
                     <line
                         [attr.x1]="
                             (tripOperationList.startTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -643,7 +266,7 @@
                             (tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -651,8 +274,8 @@
                             50 +
                             8
                         "
-                        [attr.y1]="i * 40 + 160 - 5"
-                        [attr.y2]="i * 40 + 160 - 5"
+                        [attr.y1]="i * 40 + offset + 30 - 5"
+                        [attr.y2]="i * 40 + offset + 30 - 5"
                         dy="16"
                         [attr.stroke]="
                             tripOperationList.trip.tripClass.tripClassColor
@@ -665,69 +288,19 @@
                         "
                         stroke-width="2px"
                     ></line>
+                </ng-template>
 
-                    <text
-                        [attr.x]="
-                            tripOperationList.trip.tripDirection === 0
-                                ? (tripOperationList.endTime.stationId
-                                      | findById
-                                          : {
-                                                array: stations,
-                                                propertyName: 'stationId',
-                                                outputPropertyName: 'index'
-                                            }) *
-                                      60 +
-                                  60 +
-                                  12.5
-                                : tripOperationList.trip.tripDirection === 1
-                                ? (tripOperationList.startTime.stationId
-                                      | findById
-                                          : {
-                                                array: stations,
-                                                propertyName: 'stationId',
-                                                outputPropertyName: 'index'
-                                            }) *
-                                      60 +
-                                  60 +
-                                  12.5
-                                : 0
-                        "
-                        [attr.y]="160 + i * 40"
-                        fill="black"
-                    >
-                        <ng-container
-                            *ngIf="tripOperationList.trip.tripDirection === 0"
-                        >
-                            {{
-                                tripOperationList.endTime.arrivalTime
-                                    | dayjs
-                                        : {
-                                              format: 'HHmm',
-                                              parseFormat: 'HH:mm:ss'
-                                          }
-                            }}
-                        </ng-container>
-                        <ng-container
-                            *ngIf="tripOperationList.trip.tripDirection === 1"
-                        >
-                            {{
-                                tripOperationList.startTime.departureTime
-                                    | dayjs
-                                        : {
-                                              format: 'HHmm',
-                                              parseFormat: 'HH:mm:ss'
-                                          }
-                            }}
-                        </ng-container>
-                    </text>
-
+                <ng-template #depot>
                     <circle
-                        *ngIf="tripOperationList.trip.depotOut"
+                        *rxIf="
+                            tripOperationList.trip.depotOut;
+                            strategy: 'normal'
+                        "
                         [attr.cx]="
                             (tripOperationList.startTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -735,19 +308,23 @@
                             60 -
                             2
                         "
-                        [attr.cy]="160 + i * 40 - 5"
+                        [attr.cy]="offset + 30 + i * 40 - 5"
                         r="8"
                         stroke="black"
                         fill="white"
                         stroke-width="2px"
                     ></circle>
+
                     <polygon
-                        *ngIf="tripOperationList.trip.depotIn"
+                        *rxIf="
+                            tripOperationList.trip.depotIn;
+                            strategy: 'normal'
+                        "
                         [attr.points]="
                             (tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -755,12 +332,12 @@
                             60 -
                             2 +
                             ',' +
-                            (160 + i * 40 - 12) +
+                            (offset + 30 + i * 40 - 12) +
                             ' ' +
                             ((tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -768,12 +345,12 @@
                                 60 -
                                 10) +
                             ',' +
-                            (160 + i * 40 + 1) +
+                            (offset + 30 + i * 40 + 1) +
                             ' ' +
                             ((tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -781,20 +358,21 @@
                                 60 +
                                 6) +
                             ',' +
-                            (160 + i * 40 + 1)
+                            (offset + 30 + i * 40 + 1)
                         "
                         stroke="black"
                         fill="white"
                         stroke-width="2px"
                     ></polygon>
+                </ng-template>
 
+                <ng-template #connector>
                     <line
-                        *ngIf="!tripOperationList.trip.depotIn"
                         [attr.x1]="
                             (tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -806,7 +384,7 @@
                             (tripOperationList.endTime.stationId
                                 | findById
                                     : {
-                                          array: stations,
+                                          array: vm.stations,
                                           propertyName: 'stationId',
                                           outputPropertyName: 'index'
                                       }) *
@@ -814,18 +392,110 @@
                             50 +
                             8
                         "
-                        [attr.y1]="i * 40 + 160 - 5"
-                        [attr.y2]="(i + 1) * 40 + 160 - 5"
+                        [attr.y1]="i * 40 + offset + 30 - 5"
+                        [attr.y2]="(i + 1) * 40 + offset + 30 - 5"
                         dy="16"
                         stroke="black"
                         stroke-width="1px"
                     ></line>
-                </g>
-            </svg>
-        </div>
+                </ng-template>
 
-        <p *ngIf="!calendar || !operation">
-            ダイヤと運用番号を設定して検索してください
-        </p>
-    </mat-card-content>
-</mat-card>
+                <ng-container
+                    *rxIf="
+                        tripOperationList.trip.tripDirection === 0;
+                        strategy: 'normal'
+                    "
+                >
+                    <ng-container
+                        *ngTemplateOutlet="
+                            time;
+                            context: {
+                                type: 'left',
+                                stationIndex:
+                                    (tripOperationList.startTime.stationId
+                                    | findById
+                                        : {
+                                              array: vm.stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'index'
+                                          }),
+                                time: tripOperationList.startTime.departureTime
+                            }
+                        "
+                    ></ng-container>
+
+                    <ng-container
+                        *ngTemplateOutlet="
+                            time;
+                            context: {
+                                type: 'right',
+                                stationIndex:
+                                    (tripOperationList.endTime.stationId
+                                    | findById
+                                        : {
+                                              array: vm.stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'index'
+                                          }),
+                                time: tripOperationList.endTime.arrivalTime
+                            }
+                        "
+                    ></ng-container>
+                </ng-container>
+
+                <ng-container
+                    *rxIf="
+                        tripOperationList.trip.tripDirection === 1;
+                        strategy: 'normal'
+                    "
+                >
+                    <ng-container
+                        *ngTemplateOutlet="
+                            time;
+                            context: {
+                                type: 'left',
+                                stationIndex:
+                                    (tripOperationList.endTime.stationId
+                                    | findById
+                                        : {
+                                              array: vm.stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'index'
+                                          }),
+                                time: tripOperationList.endTime.arrivalTime
+                            }
+                        "
+                    ></ng-container>
+
+                    <ng-container
+                        *ngTemplateOutlet="
+                            time;
+                            context: {
+                                type: 'right',
+                                stationIndex:
+                                    (tripOperationList.startTime.stationId
+                                    | findById
+                                        : {
+                                              array: vm.stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'index'
+                                          }),
+                                time: tripOperationList.startTime.departureTime
+                            }
+                        "
+                    ></ng-container>
+                </ng-container>
+
+                <ng-container *ngTemplateOutlet="tripNumber"></ng-container>
+
+                <ng-container *ngTemplateOutlet="line"></ng-container>
+
+                <ng-container *ngTemplateOutlet="depot"></ng-container>
+
+                <ng-container *rxIf="!tripOperationList.trip.depotIn">
+                    <ng-container *ngTemplateOutlet="connector"></ng-container>
+                </ng-container>
+            </g>
+        </svg>
+    </ng-template>
+</ng-container>
