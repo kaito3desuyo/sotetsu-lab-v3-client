@@ -42,31 +42,18 @@ export class RouteStationListStateStore extends EntityStore<RouteStationListStat
 
         return this.routeService.findMany(qb).pipe(
             tap((data: RouteDetailsDto[]) => {
-                const sort = [
-                    '本線',
-                    'いずみ野線',
-                    '厚木線',
-                    '新横浜線',
-                    '相鉄・JR直通線',
-                    '埼京線',
-                    '川越線',
-                ];
-                const desc = ['新横浜線', '相鉄・JR直通線', '埼京線', '川越線'];
                 this.set(
-                    data
-                        .map((o) => {
-                            return {
-                                ...o,
-                                routeStationLists: o.routeStationLists.sort(
-                                    (a, b) =>
-                                        desc.some((rn) => o.routeName === rn)
-                                            ? b.stationSequence -
-                                              a.stationSequence
-                                            : a.stationSequence -
-                                              b.stationSequence
-                                ),
-                            };
-                        })
+                    Array.from(data)
+                        .map((o) => ({
+                            ...o,
+                            routeStationLists: Array.from(
+                                o.routeStationLists
+                            ).sort((a, b) =>
+                                desc.some((rn) => o.routeName === rn)
+                                    ? b.stationSequence - a.stationSequence
+                                    : a.stationSequence - b.stationSequence
+                            ),
+                        }))
                         .sort(
                             (a, b) =>
                                 sort.findIndex((rn) => a.routeName === rn) -
@@ -97,3 +84,38 @@ export class RouteStationListStateQuery extends QueryEntity<RouteStationListStat
         super(store);
     }
 }
+
+const sort = [
+    '本線',
+    'いずみ野線',
+    '厚木線',
+    '新横浜線',
+
+    '東急新横浜線',
+    'みなとみらい線',
+    '東横線',
+    '副都心線',
+    '有楽町線',
+    '東上本線',
+
+    '目黒線',
+    '南北線',
+    '埼玉高速鉄道線',
+    '三田線',
+
+    'りんかい線',
+    '相鉄・JR直通線',
+    '埼京線',
+    '川越線',
+];
+
+const desc = [
+    'みなとみらい線',
+    '東横線',
+    '副都心線',
+    '有楽町線',
+    '目黒線',
+    '相鉄・JR直通線',
+    '埼京線',
+    '川越線',
+];

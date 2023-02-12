@@ -2,7 +2,7 @@
     <mat-sidenav #sidenav mode="over" [opened]="sidenavState$ | async">
         <app-sidenav-presentational
             [todaysCalendarId]="todaysCalendarId$ | async"
-            [stationsSelectList]="stationsSelectList$ | async"
+            [routeStations]="routeStations$ | async"
         ></app-sidenav-presentational>
     </mat-sidenav>
     <mat-sidenav-content id="content-scroller">
