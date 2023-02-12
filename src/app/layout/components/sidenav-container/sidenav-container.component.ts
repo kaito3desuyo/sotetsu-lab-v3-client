@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
-import { filter, map } from 'rxjs/operators';
-import { RoutesAllStationsQuery } from 'src/app/general/models/routes/state/routes-all-stations.query';
-import { RoutesAllStationsService } from 'src/app/general/models/routes/state/routes-all-stations.service';
+import { filter } from 'rxjs/operators';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { SidenavService } from '../../services/sidenav.service';
 
@@ -14,24 +13,17 @@ import { SidenavService } from '../../services/sidenav.service';
     providers: [RxState],
 })
 export class SidenavContainerComponent {
+    readonly sidenavState$ = this.sidenavService.getState();
     readonly todaysCalendarId$ =
         this.todaysCalendarListStateQuery.todaysCalendarId$;
-    readonly stationsSelectList$ = this.routesAllStationsQuery
-        .selectAll()
-        .pipe(
-            map((routes) =>
-                this.routesAllStationsService.generateStationSelectList(routes)
-            )
-        );
-    readonly sidenavState$ = this.sidenavService.getState();
+    readonly routeStations$ = this.routeStationListStateQuery.routeStations$;
 
     constructor(
         private readonly router: Router,
         private readonly state: RxState<{}>,
         private readonly sidenavService: SidenavService,
         private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
-        private readonly routesAllStationsQuery: RoutesAllStationsQuery,
-        private readonly routesAllStationsService: RoutesAllStationsService
+        private readonly routeStationListStateQuery: RouteStationListStateQuery
     ) {
         this.state.hold(
             this.router.events.pipe(
