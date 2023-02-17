@@ -483,8 +483,10 @@
                                 >
                                     <button
                                         mat-icon-button
-                                        matTooltip="削除する(荒らし対策のため当分の間無効化しています)"
-                                        [disabled]="true"
+                                        matTooltip="削除する"
+                                        [disabled]="
+                                            isFeatureDate(vm.calendar.startDate)
+                                        "
                                         (click)="
                                             onClickedDeleteButton$.next(trip)
                                         "
