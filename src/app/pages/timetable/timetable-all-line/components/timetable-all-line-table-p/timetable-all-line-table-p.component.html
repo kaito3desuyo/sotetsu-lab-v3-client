@@ -269,6 +269,13 @@
                                                     .operation.operationNumber
                                             }}
                                         </a>
+                                        <span
+                                            *ngIf="
+                                                !trip.tripOperationLists.length
+                                            "
+                                        >
+                                            不明
+                                        </span>
                                     </th>
                                 </ng-container>
                             </tr>
