@@ -323,10 +323,14 @@ export class TimetableEditFormPComponent {
                         : ETimetableEditFormStopType.STOP) as ETimetableEditFormStopType,
                 ],
                 arrivalTime: [
-                    dayjs(time.arrivalTime, 'HH:mm:ss').format('HH:mm'),
+                    time.arrivalTime
+                        ? dayjs(time.arrivalTime, 'HH:mm:ss').format('HH:mm')
+                        : null,
                 ],
                 departureTime: [
-                    dayjs(time.departureTime, 'HH:mm:ss').format('HH:mm'),
+                    time.departureTime
+                        ? dayjs(time.departureTime, 'HH:mm:ss').format('HH:mm')
+                        : null,
                 ],
             });
         }
@@ -459,6 +463,8 @@ export class TimetableEditFormPComponent {
                 {
                     ...trip,
                     times: times.map((time, index, arr) => {
+                        console.log(time.arrivalTime);
+
                         const arrivalTime =
                             time.arrivalTime && index !== 0
                                 ? dayjs(time.arrivalTime, 'HH:mm')
