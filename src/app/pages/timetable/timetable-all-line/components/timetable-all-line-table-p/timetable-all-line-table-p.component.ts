@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
 import { RxState } from '@rx-angular/state';
+import dayjs from 'dayjs';
 import { Subject } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -126,5 +127,9 @@ export class TimetableAllLineTablePComponent {
                 this.clickDeleteTripInGroup.emit({ base, target });
             }
         );
+    }
+
+    isFeatureDate(date: string): boolean {
+        return dayjs() > dayjs(date, 'YYYY-MM-DD');
     }
 }
