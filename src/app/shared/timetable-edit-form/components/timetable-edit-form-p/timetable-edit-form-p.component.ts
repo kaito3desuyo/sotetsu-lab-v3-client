@@ -240,7 +240,12 @@ export class TimetableEditFormPComponent {
             return this.fb.group({
                 tripId: [trip.tripId],
                 serviceId: [this.state.get('serviceId'), [Validators.required]],
-                tripNumber: [trip.tripNumber, [Validators.required]],
+                tripNumber: [
+                    trip.tripNumber,
+                    [
+                        /* Validators.required */
+                    ],
+                ],
                 tripClassId: [trip.tripClassId, [Validators.required]],
                 tripName: [''],
                 tripDirection: [
@@ -281,7 +286,12 @@ export class TimetableEditFormPComponent {
         return this.fb.group({
             tripId: [null],
             serviceId: [this.state.get('serviceId'), [Validators.required]],
-            tripNumber: ['', [Validators.required]],
+            tripNumber: [
+                '',
+                [
+                    /* Validators.required */
+                ],
+            ],
             tripClassId: ['', [Validators.required]],
             tripName: [''],
             tripDirection: [
@@ -451,6 +461,7 @@ export class TimetableEditFormPComponent {
         ) as FormArray<ITimetableEditFormTrip>;
 
         const dto = tripsForm.value.map((trip) => {
+            console.log(trip);
             const times = trip.times.filter(
                 (o) =>
                     o.stopType !== ETimetableEditFormStopType.NOT_GOING_THROUGH
@@ -462,6 +473,7 @@ export class TimetableEditFormPComponent {
                     : CreateTripDto,
                 {
                     ...trip,
+                    tripNumber: trip.tripNumber || '不明',
                     times: times.map((time, index, arr) => {
                         console.log(time.arrivalTime);
 
