@@ -225,7 +225,11 @@ export class TimetableEditFormPComponent {
         });
 
         this.state.hold(
-            this.onChangedInputSubmittedEvent$.pipe(mergeMap((ob) => ob)),
+            this.onChangedInputSubmittedEvent$.pipe(
+                mergeMap((ob) => ob),
+                mergeMap(() => this.state.select('mode')),
+                filter((mode) => mode !== ETimetableEditFormMode.UPDATE)
+            ),
             () => {
                 this._onReceiveClickClear();
                 this.cd.detectChanges();
@@ -461,7 +465,6 @@ export class TimetableEditFormPComponent {
         ) as FormArray<ITimetableEditFormTrip>;
 
         const dto = tripsForm.value.map((trip) => {
-            console.log(trip);
             const times = trip.times.filter(
                 (o) =>
                     o.stopType !== ETimetableEditFormStopType.NOT_GOING_THROUGH
@@ -473,10 +476,9 @@ export class TimetableEditFormPComponent {
                     : CreateTripDto,
                 {
                     ...trip,
+                    tripId: trip.tripId ?? undefined,
                     tripNumber: trip.tripNumber || '不明',
                     times: times.map((time, index, arr) => {
-                        console.log(time.arrivalTime);
-
                         const arrivalTime =
                             time.arrivalTime && index !== 0
                                 ? dayjs(time.arrivalTime, 'HH:mm')
@@ -488,6 +490,7 @@ export class TimetableEditFormPComponent {
 
                         return {
                             ...time,
+                            timeId: time.timeId ?? undefined,
                             stopSequence: index + 1,
                             pickupType:
                                 time.stopType ===

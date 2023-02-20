@@ -38,8 +38,8 @@ export class TimetableEditFormCComponent {
     readonly tripClasses$ = this.timetableEditFormStateQuery.tripClasses$;
     readonly trips$ = this.timetableEditFormStateQuery.trips$;
 
-    private readonly _submittedEvent$ = new Subject<void>();
-    readonly submittedEvent$ = this._submittedEvent$.asObservable();
+    readonly submittedEvent$ =
+        this.timetableEditFormService.receiveSubmittedEvent();
 
     constructor(
         private readonly loading: LoadingService,
@@ -109,7 +109,7 @@ export class TimetableEditFormCComponent {
         };
 
         this.notification.open(message(), 'OK');
-        this._submittedEvent$.next();
+        this.timetableEditFormService.emitSubmittedEvent();
     }
 
     onReceiveToggleIsSaveTripsIndividually(ev: MatSlideToggleChange) {
