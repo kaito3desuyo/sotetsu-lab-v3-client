@@ -225,7 +225,11 @@ export class TimetableEditFormPComponent {
         });
 
         this.state.hold(
-            this.onChangedInputSubmittedEvent$.pipe(mergeMap((ob) => ob)),
+            this.onChangedInputSubmittedEvent$.pipe(
+                mergeMap((ob) => ob),
+                mergeMap(() => this.state.select('mode')),
+                filter((mode) => mode !== ETimetableEditFormMode.UPDATE)
+            ),
             () => {
                 this._onReceiveClickClear();
                 this.cd.detectChanges();

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -22,6 +22,8 @@ import {
 
 @Injectable()
 export class TimetableEditFormService {
+    private _submittedEvent$ = new Subject<void>();
+
     constructor(
         private readonly serviceService: ServiceService,
         private readonly operationService: OperationService,
@@ -163,5 +165,13 @@ export class TimetableEditFormService {
             }),
             map(() => undefined)
         );
+    }
+
+    receiveSubmittedEvent(): Observable<void> {
+        return this._submittedEvent$.asObservable();
+    }
+
+    emitSubmittedEvent(): void {
+        this._submittedEvent$.next();
     }
 }
