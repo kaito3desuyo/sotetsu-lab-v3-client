@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import get from 'just-safe-get';
 
 @Pipe({
     name: 'findById',
@@ -34,19 +35,9 @@ export class FindByIdPipe implements PipeTransform {
     ): T | T[keyof T] | number {
         if (!value || !setting.array || !setting.propertyName) return undefined;
 
-        if (!setting.outputPropertyName) {
-            const obj = setting.array.find(
-                (o) => o[setting.propertyName] === value
-            );
-
-            if (!obj) return undefined;
-
-            return obj;
-        }
-
         if (setting.outputPropertyName === 'index') {
             const idx = setting.array.findIndex(
-                (o) => o[setting.propertyName] === value
+                (o) => get(o, String(setting.propertyName)) === value
             );
 
             if (idx === -1) return undefined;
@@ -55,11 +46,13 @@ export class FindByIdPipe implements PipeTransform {
         }
 
         const obj = setting.array.find(
-            (o) => o[setting.propertyName] === value
+            (o) => get(o, String(setting.propertyName)) === value
         );
 
         if (!obj) return undefined;
 
-        return obj[setting.outputPropertyName];
+        return setting.outputPropertyName
+            ? get(obj, String(setting.outputPropertyName))
+            : obj;
     }
 }

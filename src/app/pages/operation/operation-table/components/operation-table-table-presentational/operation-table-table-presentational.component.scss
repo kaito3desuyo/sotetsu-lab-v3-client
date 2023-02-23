@@ -1,59 +1,6 @@
-:host {
-    section {
-        width: 299px;
-    }
-    h4 {
-        text-align: center;
-    }
-    span.kigou {
-        font-size: 13px;
-    }
-    span.monoscape {
+:host {   
+    .monoscape {
         font-size: 13px;
         font-feature-settings: 'hwid' on;
-    }
-    span.station-name {
-        width: 5em;
-        font-size: 13px;
-        // font-feature-settings: initial;
-        text-align: center;
-    }
-    .trip-class {
-        width: 5em;
-        text-align: center;
-    }
-    span.trip-class-name {
-        width: 2em;
-        font-size: 13px;
-        font-feature-settings: initial;
-        text-align: center;
-    }
-    div.row {
-        line-height: 1.5em;
-    }
-
-    .blank {
-        width: 299px;
-        height: 0;
-    }
-
-    .mat-toolbar {
-        width: calc(100% + 32px);
-        height: 48px;
-        margin-top: -16px;
-        margin-left: -16px;
-        margin-right: -16px;
-
-        h3 {
-            font-size: 16px;
-            margin: 0;
-            color: rgba(255, 255, 255, 0.87);
-        }
-    }
-    .weekday {
-        background: rgb(66, 139, 202);
-    }
-    .holiday {
-        background: rgb(217, 83, 79);
     }
 }

@@ -42,6 +42,14 @@ export class OperationQuery {
             );
     }
 
+    findAllOperationNumbers(calendarId: string): Observable<string[]> {
+        return this.http.get<string[]>(this.apiUrl + '/numbers', {
+            params: {
+                calendarId,
+            },
+        });
+    }
+
     findOneWithCurrentPosition(
         operationId: string,
         qb: RequestQueryBuilder
