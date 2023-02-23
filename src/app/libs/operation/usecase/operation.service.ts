@@ -17,6 +17,10 @@ export class OperationService {
         return this.operationQuery.findMany(qb);
     }
 
+    findAllOperationNumbers(calendarId: string): Observable<string[]> {
+        return this.operationQuery.findAllOperationNumbers(calendarId);
+    }
+
     findOneWithCurrentPosition(
         operationId: string,
         qb: RequestQueryBuilder

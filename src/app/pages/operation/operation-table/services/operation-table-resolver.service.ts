@@ -28,13 +28,11 @@ export class OperationTableResolverService
                 forkJoin([
                     this.operationTableService.fetchStationsV2(),
                     this.operationTableService.fetchTripClassV2(),
-                    this.operationTableService.fetchOperationsByCalendarId(),
+                    this.operationTableService.fetchAllOperationNumbers(),
+                    this.operationTableService.fetchAllOperationTrips(),
                 ])
             ),
-            mergeMap(() =>
-                forkJoin([this.operationTableService.fetchAllOperationTrips()])
-            ),
-            map(() => null)
+            map(() => undefined)
         );
     }
 }

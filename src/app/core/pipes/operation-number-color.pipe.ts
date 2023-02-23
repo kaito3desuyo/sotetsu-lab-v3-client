@@ -13,6 +13,14 @@ export class OperationNumberColorPipe implements PipeTransform {
             return 'rgba(0, 0, 0, 0.12)';
         }
 
+        if (operationNumber.includes('G')) {
+            return 'rgba(26, 35, 126, 0.12)';
+        }
+
+        if (operationNumber.includes('K')) {
+            return 'rgba(183, 28, 28, 0.12)';
+        }
+
         switch (operationNumber[0]) {
             case '1':
                 return 'rgba(244, 67, 54, 0.12)';

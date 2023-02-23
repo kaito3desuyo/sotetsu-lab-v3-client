@@ -8,7 +8,8 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 type OperationTableState = {
     calendarId: string;
     operations: OperationDetailsDto[];
-    allOperationTrips: OperationTripsDto[];
+    operationNumbers: string[];
+    operationTrips: OperationTripsDto[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
 };
@@ -20,7 +21,8 @@ export class OperationTableStateStore extends Store<OperationTableState> {
             {
                 calendarId: null,
                 operations: [],
-                allOperationTrips: [],
+                operationNumbers: [],
+                operationTrips: [],
                 stations: [],
                 tripClasses: [],
             },
@@ -40,9 +42,15 @@ export class OperationTableStateStore extends Store<OperationTableState> {
         });
     }
 
-    setAllOperationTrips(allOperationTrips: OperationTripsDto[]): void {
+    setOperationNumbers(numbers: string[]): void {
         this.update({
-            allOperationTrips,
+            operationNumbers: numbers,
+        });
+    }
+
+    setOperationTrips(operationTrips: OperationTripsDto[]): void {
+        this.update({
+            operationTrips,
         });
     }
 
@@ -63,7 +71,8 @@ export class OperationTableStateStore extends Store<OperationTableState> {
 export class OperationTableStateQuery extends Query<OperationTableState> {
     readonly calendarId$ = this.select('calendarId');
     readonly operations$ = this.select('operations');
-    readonly allOperationTrips$ = this.select('allOperationTrips');
+    readonly operationNumbers$ = this.select('operationNumbers');
+    readonly operationTrips$ = this.select('operationTrips');
     readonly stations$ = this.select('stations');
     readonly tripClasses$ = this.select('tripClasses');
 

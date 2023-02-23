@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { forkJoin, Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -25,7 +25,17 @@ export class OperationTableService {
 
     // v2
 
-    fetchOperationsByCalendarId(): Observable<void> {
+    fetchAllOperationNumbers(): Observable<void> {
+        const calendarId = this.operationTableStateQuery.calendarId;
+        return this.operationService.findAllOperationNumbers(calendarId).pipe(
+            tap((numbers) => {
+                this.operationTableStateStore.setOperationNumbers(numbers);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchAllOperationTrips(): Observable<void> {
         const calendarId = this.operationTableStateQuery.calendarId;
         const qb = new RequestQueryBuilder()
             .setFilter({
@@ -37,35 +47,21 @@ export class OperationTableService {
                 field: 'operationNumber',
                 operator: CondOperator.NOT_EQUALS,
                 value: '100',
-            })
-            .sortBy({
-                field: 'operationNumber',
-                order: 'ASC',
             });
 
         return this.operationService.findMany(qb).pipe(
-            tap((operations: OperationDetailsDto[]) => {
-                this.operationTableStateStore.setOperations(operations);
-            }),
-            map(() => undefined)
-        );
-    }
-
-    fetchAllOperationTrips(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
-        return forkJoin(
-            this.operationTableStateQuery.operations.map((operation) =>
-                this.operationService.findOneWithTrips(
-                    operation.operationId,
-                    qb
+            mergeMap((operations: OperationDetailsDto[]) =>
+                forkJoin(
+                    operations.map((operation) =>
+                        this.operationService.findOneWithTrips(
+                            operation.operationId,
+                            new RequestQueryBuilder()
+                        )
+                    )
                 )
-            )
-        ).pipe(
-            tap((allOperationTrips) => {
-                this.operationTableStateStore.setAllOperationTrips(
-                    allOperationTrips
-                );
+            ),
+            tap((operationTrips) => {
+                this.operationTableStateStore.setOperationTrips(operationTrips);
             }),
             map(() => undefined)
         );
