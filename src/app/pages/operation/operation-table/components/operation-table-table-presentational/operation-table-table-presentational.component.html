@@ -278,59 +278,40 @@
                 </span>
             </ng-container>
 
-            <div class="tw-w-[6em] tw-text-center">
-                <a
-                    [routerLink]="[
-                        '/timetable',
-                        'all-line',
-                        {
-                            calendar_id: vm.calendar.calendarId,
-                            trip_direction:
-                                tripOperationList.trip.tripDirection,
-                            trip_block_id: tripOperationList.trip.tripBlockId
-                        }
-                    ]"
-                >
-                    <span
-                        class="tw-w-[2em] tw-text-center"
-                        [ngStyle]="{
-                            color:
-                                tripOperationList.trip.tripClassId
-                                | findById
-                                    : {
-                                          array: vm.tripClasses,
-                                          propertyName: 'tripClassId',
-                                          outputPropertyName: 'tripClassColor'
-                                      }
-                        }"
-                    >
-                        {{
-                            tripOperationList.trip.tripClassId
-                                | findById
-                                    : {
-                                          array: vm.tripClasses,
-                                          propertyName: 'tripClassId',
-                                          outputPropertyName: 'tripClassName'
-                                      }
-                                | operationTableFormatTripClassName
-                        }}
-                    </span>
-                    <span
-                        [ngStyle]="{
-                            color:
-                                tripOperationList.trip.tripClassId
-                                | findById
-                                    : {
-                                          array: vm.tripClasses,
-                                          propertyName: 'tripClassId',
-                                          outputPropertyName: 'tripClassColor'
-                                      }
-                        }"
-                    >
-                        {{ tripOperationList.trip.tripNumber }}
-                    </span>
-                </a>
-            </div>
+            <a
+                class="tw-w-[8em] tw-text-center"
+                [ngStyle]="{
+                    color:
+                        tripOperationList.trip.tripClassId
+                        | findById
+                            : {
+                                  array: vm.tripClasses,
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassColor'
+                              }
+                }"
+                [routerLink]="[
+                    '/timetable',
+                    'all-line',
+                    {
+                        calendar_id: vm.calendar.calendarId,
+                        trip_direction: tripOperationList.trip.tripDirection,
+                        trip_block_id: tripOperationList.trip.tripBlockId
+                    }
+                ]"
+            >
+                {{
+                    tripOperationList.trip.tripClassId
+                        | findById
+                            : {
+                                  array: vm.tripClasses,
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassName'
+                              }
+                        | operationTableFormatTripClassName
+                }}
+                {{ tripOperationList.trip.tripNumber }}
+            </a>
 
             <ng-container
                 *rxIf="
@@ -458,7 +439,7 @@
     </ng-template>
 
     <ng-template #stationNameColumn let-stationId="stationId">
-        <span class="tw-w-[5em] tw-text-center">
+        <span class="tw-w-[6em] tw-text-center">
             {{
                 stationId
                     | findById
