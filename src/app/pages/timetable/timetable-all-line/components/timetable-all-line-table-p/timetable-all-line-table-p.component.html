@@ -2,13 +2,14 @@
     <mat-card>
         <mat-card-title>
             <mat-toolbar
+                class="!tw-h-[48px]"
                 [ngClass]="[
                     vm.calendar.sunday && vm.calendar.saturday
                         ? 'holiday'
                         : 'weekday'
                 ]"
             >
-                <h3 style="line-height: 1.25">
+                <h3 class="!tw-text-[16px] !tw-leading-5 !tw-text-white">
                     {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
                     改正<br />
                     {{ vm.calendar.calendarName }}
@@ -22,7 +23,7 @@
                 </h3>
             </mat-toolbar>
         </mat-card-title>
-        <mat-card-content>
+        <mat-card-content class="!tw-p-4">
             <mat-paginator
                 [length]="vm.pageSettings.length"
                 [pageIndex]="vm.pageSettings.pageIndex"
@@ -31,424 +32,490 @@
                 (page)="onPaged$.next($event)"
             ></mat-paginator>
 
-            <div fxLayout="row">
-                <div fxFlexAlign="start">
-                    <table class="stations-table">
-                        <thead>
-                            <tr>
-                                <th colspan="2">列車番号</th>
-                            </tr>
-                            <tr>
-                                <th colspan="2">運用番号</th>
-                            </tr>
-                            <tr>
-                                <th colspan="2">種別</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div
+                class="tw-h-[70vh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+            >
+                <table>
+                    <thead>
+                        <tr class="tw-sticky tw-top-0 tw-z-20 tw-h-6">
+                            <th
+                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                colspan="2"
+                            >
+                                <span class="tw-sticky">列車番号</span>
+                            </th>
                             <ng-container
-                                *ngFor="
-                                    let station of vm.stations;
+                                *rxFor="
+                                    let trip of vm.trips;
                                     let i = index;
-                                    trackBy: 'stationId' | trackBy
+                                    trackBy: 'tripNumber' | trackBy;
+                                    strategy: 'normal'
                                 "
                             >
-                                <tr
-                                    [ngClass]="[
-                                        (({
-                                            station,
-                                            tripDirection: vm.tripDirection
-                                        } | timetableAllLineGetBorderSetting) === true
-                                            ? 'border-bottom'
-                                            : '')
-                                    ]"
-                                    *ngIf="
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                        (vm.tripDirection === 0 &&
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                                staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
-                                        (vm.tripDirection === 1 &&
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                                staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
-                                    "
+                                <th
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
                                 >
-                                    <td
-                                        class="station-name"
-                                        [rowSpan]="
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                                ? 2
-                                                : 1
+                                    <span
+                                        class="tw-relative"
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: center;
+                                            margin: -9999px;
                                         "
+                                        [ngStyle]="{
+                                            transform:
+                                                'scale(' +
+                                                (trip.tripNumber.length > 3
+                                                    ? 3 / trip.tripNumber.length
+                                                    : 1) +
+                                                ', 1)'
+                                        }"
                                     >
-                                        <span
-                                            class="mat-caption"
-                                            style="
-                                                display: inline-block;
-                                                line-height: 1;
-                                                margin-right: 4px;
-                                            "
-                                        >
-                                            {{
-                                                station
-                                                    | timetableAllLineGetStationNumbering
-                                            }}
-                                        </span>
-
-                                        <span
-                                            style="
-                                                display: inline-block;
-                                                transform-origin: right;
-                                            "
-                                            [ngStyle]="{
-                                                transform:
-                                                    'scale(' +
-                                                    (station.stationName
-                                                        .length > 4
-                                                        ? 4 /
-                                                          station.stationName
-                                                              .length
-                                                        : 1) +
-                                                    ', 1)',
-                                                marginLeft:
-                                                    (station.stationName
-                                                        .length > 4
-                                                        ? (station.stationName
-                                                              .length -
-                                                              4) *
-                                                          16 *
-                                                          -1
-                                                        : 0) + 'px'
-                                            }"
-                                        >
-                                            {{ station.stationName }}
-                                        </span>
-                                    </td>
-                                    <td
-                                        [ngClass]="[
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                                ? 'border-bottom'
-                                                : ''
+                                        {{ trip.tripNumber }}
+                                    </span>
+                                </th>
+                            </ng-container>
+                        </tr>
+                        <tr class="tw-sticky tw-top-6 tw-z-20 tw-h-6">
+                            <th
+                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                colspan="2"
+                            >
+                                <span class="tw-sticky">運用番号</span>
+                            </th>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripOperationLists[0].operation.operationNumber'
+                                        | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
+                                <th
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                >
+                                    <a
+                                        class="tw-relative"
+                                        *rxIf="
+                                            trip.tripOperationLists.length;
+                                            strategy: 'immediate'
+                                        "
+                                        [routerLink]="[
+                                            '/operation/route-diagram',
+                                            {
+                                                operation_id:
+                                                    trip.tripOperationLists[0]
+                                                        .operationId
+                                            }
                                         ]"
                                     >
-                                        着
-                                    </td>
-                                </tr>
-                                <tr
-                                    [ngClass]="[
-                                        (({
-                                            station,
-                                            tripDirection: vm.tripDirection
-                                        } | timetableAllLineGetBorderSetting) === true
-                                            ? 'border-bottom'
-                                            : '')
-                                    ]"
-                                    *ngIf="
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.ONLY_DEPARTURE
+                                        {{
+                                            trip.tripOperationLists[0].operation
+                                                .operationNumber
+                                        }}
+                                    </a>
+                                    <span
+                                        class="tw-relative"
+                                        *rxIf="
+                                            !trip.tripOperationLists.length;
+                                            strategy: 'immediate'
+                                        "
+                                    >
+                                        不明
+                                    </span>
+                                </th>
+                            </ng-container>
+                        </tr>
+                        <tr class="tw-sticky tw-top-12 tw-z-20 tw-h-6">
+                            <th
+                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                colspan="2"
+                            >
+                                <span class="tw-sticky">種別</span>
+                            </th>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripClass.tripClassName'
+                                        | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
+                                <th
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                >
+                                    <span
+                                        class="tw-relative"
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: center;
+                                            margin: -9999px;
+                                        "
+                                        [ngStyle]="{
+                                            color: trip.tripClass
+                                                .tripClassColor,
+                                            transform:
+                                                'scale(' +
+                                                (trip.tripClass.tripClassName
+                                                    .length > 2
+                                                    ? 2 /
+                                                      trip.tripClass
+                                                          .tripClassName.length
+                                                    : 1) +
+                                                ', 1)'
+                                        }"
+                                    >
+                                        {{ trip.tripClass.tripClassName }}
+                                    </span>
+                                </th>
+                            </ng-container>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container
+                            *rxFor="
+                                let station of vm.stations;
+                                let i = index;
+                                trackBy: 'stationId' | trackBy;
+                                strategy: 'normal'
+                            "
+                        >
+                            <tr
+                                class="tw-h-6"
+                                *rxIf="
+                                ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                    staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                (vm.tripDirection === 0 &&
+                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                        staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                (vm.tripDirection === 1 &&
+                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                        staitonViewMode.ONLY_OUTBOUND_ARRIVAL);
+                                strategy: 'immediate'
+                            "
+                            >
+                                <td
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-w-[134px] tw-min-w-[134px] tw-bg-white !tw-px-1 tw-text-right before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    [ngClass]="{
+                                        'before:tw-border-b':
+                                            ({
+                                                station: station,
+                                                tripDirection: vm.tripDirection
+                                            }
+                                                | timetableAllLineGetBorderSetting) ===
+                                                true ||
+                                            (vm.tripDirection === 0 &&
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetViewMode) ===
+                                                    staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                            (vm.tripDirection === 1 &&
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetViewMode) ===
+                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                    }"
+                                    [rowSpan]="
+                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
+                                    staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                        ? 2
+                                        : 1
+                                "
+                                >
+                                    <span
+                                        class="tw-relative tw-text-[10px]"
+                                        style="
+                                            display: inline-block;
+                                            line-height: 1;
+                                            margin-right: 4px;
+                                        "
+                                    >
+                                        {{
+                                            station
+                                                | timetableAllLineGetStationNumbering
+                                        }}
+                                    </span>
+
+                                    <span
+                                        class="tw-relative"
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: right;
+                                        "
+                                        [ngStyle]="{
+                                            transform:
+                                                'scale(' +
+                                                (station.stationName.length > 4
+                                                    ? 4 /
+                                                      station.stationName.length
+                                                    : 1) +
+                                                ', 1)',
+                                            marginLeft:
+                                                (station.stationName.length > 4
+                                                    ? (station.stationName
+                                                          .length -
+                                                          4) *
+                                                      16 *
+                                                      -1
+                                                    : 0) + 'px'
+                                        }"
+                                    >
+                                        {{ station.stationName }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="tw-sticky tw-left-[134px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 tw-bg-white !tw-px-1 tw-text-center before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    [ngClass]="{
+                                        'before:tw-border-b':
+                                            ({
+                                                station: station,
+                                                tripDirection: vm.tripDirection
+                                            }
+                                                | timetableAllLineGetBorderSetting) ===
+                                                true ||
+                                            ({
+                                                station: station,
+                                                tripDirection: vm.tripDirection
+                                            } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                            (vm.tripDirection === 0 &&
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetViewMode) ===
+                                                    staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                            (vm.tripDirection === 1 &&
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetViewMode) ===
+                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                    }"
+                                >
+                                    <span class="tw-relative">着</span>
+                                </td>
+
+                                <ng-container
+                                    *rxFor="
+                                        let trip of vm.trips;
+                                        let j = index;
+                                        trackBy: {
+                                            tripDirection: vm.tripDirection,
+                                            mode: 'arrival',
+                                            station: station,
+                                            stations: vm.stations,
+                                            trip: trip,
+                                            trips: vm.trips
+                                        } | timetableAllLineGetTimeAndTrackBy;
+                                        strategy: 'normal'
                                     "
                                 >
                                     <td
-                                        class="station-name"
-                                        *ngIf="
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.ONLY_DEPARTURE
-                                        "
-                                    >
-                                        <span
-                                            class="mat-caption"
-                                            style="
-                                                display: inline-block;
-                                                line-height: 1;
-                                                margin-right: 4px;
-                                            "
-                                        >
-                                            {{
-                                                station
-                                                    | timetableAllLineGetStationNumbering
-                                            }}
-                                        </span>
-
-                                        <span
-                                            style="
-                                                display: inline-block;
-                                                transform-origin: right;
-                                            "
-                                            [ngStyle]="{
-                                                transform:
-                                                    'scale(' +
-                                                    (station.stationName
-                                                        .length > 4
-                                                        ? 4 /
-                                                          station.stationName
-                                                              .length
-                                                        : 1) +
-                                                    ', 1)',
-                                                marginLeft:
-                                                    (station.stationName
-                                                        .length > 4
-                                                        ? (station.stationName
-                                                              .length -
-                                                              4) *
-                                                          16 *
-                                                          -1
-                                                        : 0) + 'px'
-                                            }"
-                                        >
-                                            {{ station.stationName }}
-                                        </span>
-                                    </td>
-                                    <td>発</td>
-                                </tr>
-                            </ng-container>
-                        </tbody>
-                    </table>
-                </div>
-                <div fxFlexAlign="start" style="overflow-x: auto">
-                    <table class="trips-table">
-                        <thead>
-                            <tr>
-                                <ng-container
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: 'tripNumber' | trackBy
-                                    "
-                                >
-                                    <th>
-                                        <span
-                                            style="
-                                                display: inline-block;
-                                                transform-origin: center;
-                                                margin: -9999px;
-                                            "
-                                            [ngStyle]="{
-                                                transform:
-                                                    'scale(' +
-                                                    (trip.tripNumber.length > 3
-                                                        ? 3 /
-                                                          trip.tripNumber.length
-                                                        : 1) +
-                                                    ', 1)'
-                                            }"
-                                        >
-                                            {{ trip.tripNumber }}
-                                        </span>
-                                    </th>
-                                </ng-container>
-                            </tr>
-                            <tr>
-                                <ng-container
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: 'tripOperationLists' | trackBy
-                                    "
-                                >
-                                    <th>
-                                        <a
-                                            *ngIf="
-                                                trip.tripOperationLists.length
-                                            "
-                                            [routerLink]="[
-                                                '/operation/route-diagram',
-                                                {
-                                                    operation_id:
-                                                        trip
-                                                            .tripOperationLists[0]
-                                                            .operationId
+                                        class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        [ngClass]="{
+                                            'tw-border-b':
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
                                                 }
-                                            ]"
-                                        >
-                                            {{
-                                                trip.tripOperationLists[0]
-                                                    .operation.operationNumber
-                                            }}
-                                        </a>
-                                        <span
-                                            *ngIf="
-                                                !trip.tripOperationLists.length
-                                            "
-                                        >
-                                            不明
-                                        </span>
-                                    </th>
-                                </ng-container>
-                            </tr>
-                            <tr>
-                                <ng-container
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: 'tripClassId' | trackBy
-                                    "
-                                >
-                                    <th>
-                                        <span
-                                            style="
-                                                display: inline-block;
-                                                transform-origin: center;
-                                                margin: -9999px;
-                                            "
-                                            [ngStyle]="{
-                                                color: trip.tripClass
-                                                    .tripClassColor,
-                                                transform:
-                                                    'scale(' +
-                                                    (trip.tripClass
-                                                        .tripClassName.length >
-                                                    2
-                                                        ? 2 /
-                                                          trip.tripClass
-                                                              .tripClassName
-                                                              .length
-                                                        : 1) +
-                                                    ', 1)'
-                                            }"
-                                        >
-                                            {{ trip.tripClass.tripClassName }}
-                                        </span>
-                                    </th>
-                                </ng-container>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <ng-container
-                                *ngFor="
-                                    let station of vm.stations;
-                                    let i = index;
-                                    trackBy: 'stationId' | trackBy
-                                "
-                            >
-                                <tr
-                                    [ngClass]="[
-                                        (({
-                                            station,
-                                            tripDirection: vm.tripDirection
-                                        } | timetableAllLineGetBorderSetting) === true
-                                            ? 'border-bottom'
-                                            : '')
-                                    ]"
-                                    *ngIf="
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                        (vm.tripDirection === 0 &&
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                                staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
-                                        (vm.tripDirection === 1 &&
-                                            ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                                staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
-                                    "
-                                >
-                                    <ng-container
-                                        *ngFor="
-                                            let trip of vm.trips;
-                                            let j = index;
-                                            trackBy: {
+                                                    | timetableAllLineGetBorderSetting) ===
+                                                    true ||
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetViewMode) ===
+                                                    staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                                (vm.tripDirection === 0 &&
+                                                    ({
+                                                        station: station,
+                                                        tripDirection:
+                                                            vm.tripDirection
+                                                    }
+                                                        | timetableAllLineGetViewMode) ===
+                                                        staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                                (vm.tripDirection === 1 &&
+                                                    ({
+                                                        station: station,
+                                                        tripDirection:
+                                                            vm.tripDirection
+                                                    }
+                                                        | timetableAllLineGetViewMode) ===
+                                                        staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                        }"
+                                        [ngStyle]="{
+                                            color: trip.tripClass.tripClassColor
+                                        }"
+                                    >
+                                        {{
+                                            {
                                                 tripDirection: vm.tripDirection,
                                                 mode: 'arrival',
                                                 station: station,
+                                                trip: trip,
                                                 stations: vm.stations,
                                                 trips: vm.trips
-                                            }
-                                                | timetableAllLineGetTimeAndTrackBy
-                                        "
-                                    >
-                                        <td
-                                            class="dia"
-                                            [ngClass]="[
-                                                ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                                staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                                    ? 'border-bottom'
-                                                    : ''
-                                            ]"
-                                            [ngStyle]="{
-                                                color: trip.tripClass
-                                                    .tripClassColor
-                                            }"
-                                        >
-                                            {{
-                                                {
-                                                    tripDirection:
-                                                        vm.tripDirection,
-                                                    mode: 'arrival',
-                                                    station: station,
-                                                    trip: trip,
-                                                    stations: vm.stations,
-                                                    trips: vm.trips
-                                                } | timetableAllLineGetTime
-                                            }}
-                                        </td>
-                                    </ng-container>
-                                </tr>
-                                <tr
-                                    [ngClass]="[
-                                        (({
-                                            station,
-                                            tripDirection: vm.tripDirection
-                                        } | timetableAllLineGetBorderSetting) === true
-                                            ? 'border-bottom'
-                                            : '')
-                                    ]"
-                                    *ngIf="
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                            staitonViewMode.ONLY_DEPARTURE
+                                            } | timetableAllLineGetTime
+                                        }}
+                                    </td>
+                                </ng-container>
+                            </tr>
+                            <tr
+                                class="tw-h-6"
+                                *rxIf="
+                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
+                                    strategy: 'immediate'
+                                "
+                            >
+                                <td
+                                    class="tw-sticky tw-left-0 tw-z-0 tw-w-[134px] tw-min-w-[134px] tw-bg-white !tw-px-1 tw-text-right before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    [ngClass]="{
+                                        'before:tw-border-b':
+                                            {
+                                                station: station,
+                                                tripDirection: vm.tripDirection
+                                            } | timetableAllLineGetBorderSetting
+                                    }"
+                                    *rxIf="
+                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
+                                        strategy: 'immediate'
                                     "
                                 >
-                                    <ng-container
-                                        *ngFor="
-                                            let trip of vm.trips;
-                                            let j = index;
-                                            trackBy: {
+                                    <span
+                                        class="tw-relative tw-text-[10px]"
+                                        style="
+                                            display: inline-block;
+                                            line-height: 1;
+                                            margin-right: 4px;
+                                        "
+                                    >
+                                        {{
+                                            station
+                                                | timetableAllLineGetStationNumbering
+                                        }}
+                                    </span>
+
+                                    <span
+                                        class="tw-relative"
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: right;
+                                        "
+                                        [ngStyle]="{
+                                            transform:
+                                                'scale(' +
+                                                (station.stationName.length > 4
+                                                    ? 4 /
+                                                      station.stationName.length
+                                                    : 1) +
+                                                ', 1)',
+                                            marginLeft:
+                                                (station.stationName.length > 4
+                                                    ? (station.stationName
+                                                          .length -
+                                                          4) *
+                                                      16 *
+                                                      -1
+                                                    : 0) + 'px'
+                                        }"
+                                    >
+                                        {{ station.stationName }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="tw-sticky tw-left-[134px] tw-z-0 tw-bg-white !tw-px-1 tw-text-center before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    [ngClass]="{
+                                        'before:tw-border-b':
+                                            {
+                                                station: station,
+                                                tripDirection: vm.tripDirection
+                                            } | timetableAllLineGetBorderSetting
+                                    }"
+                                >
+                                    <span class="tw-relative">発</span>
+                                </td>
+
+                                <ng-container
+                                    *rxFor="
+                                        let trip of vm.trips;
+                                        let j = index;
+                                        trackBy: {
+                                            tripDirection: vm.tripDirection,
+                                            mode: 'departure',
+                                            station: station,
+                                            stations: vm.stations,
+                                            trip: trip,
+                                            trips: vm.trips
+                                        } | timetableAllLineGetTimeAndTrackBy;
+                                        strategy: 'normal'
+                                    "
+                                >
+                                    <td
+                                        class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        [ngClass]="{
+                                            'tw-border-b':
+                                                ({
+                                                    station: station,
+                                                    tripDirection:
+                                                        vm.tripDirection
+                                                }
+                                                    | timetableAllLineGetBorderSetting) ===
+                                                true
+                                        }"
+                                        [ngStyle]="{
+                                            color: trip.tripClass.tripClassColor
+                                        }"
+                                    >
+                                        {{
+                                            {
                                                 tripDirection: vm.tripDirection,
                                                 mode: 'departure',
                                                 station: station,
+                                                trip: trip,
                                                 stations: vm.stations,
                                                 trips: vm.trips
-                                            }
-                                                | timetableAllLineGetTimeAndTrackBy
-                                        "
-                                    >
-                                        <td
-                                            class="dia"
-                                            [ngStyle]="{
-                                                color: trip.tripClass
-                                                    .tripClassColor
-                                            }"
-                                        >
-                                            {{
-                                                {
-                                                    tripDirection:
-                                                        vm.tripDirection,
-                                                    mode: 'departure',
-                                                    station: station,
-                                                    trip: trip,
-                                                    stations: vm.stations,
-                                                    trips: vm.trips
-                                                } | timetableAllLineGetTime
-                                            }}
-                                        </td>
-                                    </ng-container>
-                                </tr>
-                            </ng-container>
-                        </tbody>
+                                            } | timetableAllLineGetTime
+                                        }}
+                                    </td>
+                                </ng-container>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td
+                                colspan="2"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                            ></td>
 
-                        <tfoot *ngIf="!vm.groupingBaseTrip">
-                            <tr>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
                                 <td
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: undefined | trackBy
-                                    "
+                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
                                 >
                                     <button
+                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                         mat-icon-button
                                         matTooltip="編集する"
                                         (click)="
@@ -458,17 +525,27 @@
                                         <mat-icon>edit</mat-icon>
                                     </button>
                                 </td>
-                            </tr>
+                            </ng-container>
+                        </tr>
+                        <tr>
+                            <td
+                                colspan="2"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                            ></td>
 
-                            <tr>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
                                 <td
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: undefined | trackBy
-                                    "
+                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
                                 >
                                     <button
+                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                         mat-icon-button
                                         matTooltip="コピーして新規作成"
                                         (click)="
@@ -478,17 +555,27 @@
                                         <mat-icon>content_copy</mat-icon>
                                     </button>
                                 </td>
-                            </tr>
+                            </ng-container>
+                        </tr>
+                        <tr>
+                            <td
+                                colspan="2"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                            ></td>
 
-                            <tr>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
                                 <td
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: undefined | trackBy
-                                    "
+                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
                                 >
                                     <button
+                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                         mat-icon-button
                                         matTooltip="削除する"
                                         [disabled]="
@@ -501,96 +588,126 @@
                                         <mat-icon>delete</mat-icon>
                                     </button>
                                 </td>
-                            </tr>
+                            </ng-container>
+                        </tr>
+                        <tr>
+                            <td
+                                colspan="2"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                            ></td>
 
-                            <tr>
+                            <ng-container
+                                *rxFor="
+                                    let trip of vm.trips;
+                                    let i = index;
+                                    trackBy: 'tripId' | trackBy;
+                                    strategy: 'normal'
+                                "
+                            >
                                 <td
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: undefined | trackBy
-                                    "
+                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
                                 >
-                                    <button
-                                        mat-icon-button
-                                        matTooltip="この列車を基準として列車をグルーピングする"
-                                        (click)="
-                                            onClickedGroupingButton$.next(trip)
+                                    <ng-container
+                                        *rxIf="
+                                            !vm.groupingBaseTrip;
+                                            strategy: 'normal'
                                         "
                                     >
-                                        <mat-icon>link</mat-icon>
-                                    </button>
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="この列車を基準として列車をグルーピングする"
+                                            (click)="
+                                                onClickedGroupingButton$.next(
+                                                    trip
+                                                )
+                                            "
+                                        >
+                                            <mat-icon>link</mat-icon>
+                                        </button>
+                                    </ng-container>
+
+                                    <ng-container
+                                        *rxIf="
+                                            vm.groupingBaseTrip;
+                                            strategy: 'normal'
+                                        "
+                                    >
+                                        <button
+                                            *rxIf="
+                                                vm.groupingBaseTrip &&
+                                                    trip.tripId ===
+                                                        vm.groupingBaseTrip
+                                                            .tripId;
+                                                strategy: 'immediate'
+                                            "
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="キャンセル"
+                                            (click)="
+                                                onClickedGroupingButton$.next(
+                                                    undefined
+                                                )
+                                            "
+                                        >
+                                            <mat-icon>clear</mat-icon>
+                                        </button>
+
+                                        <button
+                                            *rxIf="
+                                                vm.groupingBaseTrip &&
+                                                    trip.tripId !==
+                                                        vm.groupingBaseTrip
+                                                            .tripId &&
+                                                    trip.tripBlockId !==
+                                                        vm.groupingBaseTrip
+                                                            .tripBlockId;
+                                                strategy: 'immediate'
+                                            "
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="グループに追加する"
+                                            (click)="
+                                                onClickedAddTripInGroup$.next({
+                                                    base: vm.groupingBaseTrip,
+                                                    target: trip
+                                                })
+                                            "
+                                        >
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+
+                                        <button
+                                            *rxIf="
+                                                vm.groupingBaseTrip &&
+                                                    trip.tripId !==
+                                                        vm.groupingBaseTrip
+                                                            .tripId &&
+                                                    trip.tripBlockId ===
+                                                        vm.groupingBaseTrip
+                                                            .tripBlockId;
+                                                strategy: 'immediate'
+                                            "
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="グループから除外する"
+                                            (click)="
+                                                onClickedDeleteTripInGroup$.next(
+                                                    {
+                                                        base: vm.groupingBaseTrip,
+                                                        target: trip
+                                                    }
+                                                )
+                                            "
+                                        >
+                                            <mat-icon>remove</mat-icon>
+                                        </button>
+                                    </ng-container>
                                 </td>
-                            </tr>
-                        </tfoot>
-
-                        <tfoot *ngIf="!!vm.groupingBaseTrip">
-                            <tr>
-                                <td
-                                    *ngFor="
-                                        let trip of vm.trips;
-                                        let i = index;
-                                        trackBy: undefined | trackBy
-                                    "
-                                >
-                                    <button
-                                        *ngIf="
-                                            trip.tripId ===
-                                            vm.groupingBaseTrip.tripId
-                                        "
-                                        mat-icon-button
-                                        matTooltip="キャンセル"
-                                        (click)="
-                                            onClickedGroupingButton$.next(
-                                                undefined
-                                            )
-                                        "
-                                    >
-                                        <mat-icon>clear</mat-icon>
-                                    </button>
-
-                                    <button
-                                        *ngIf="
-                                            trip.tripId !==
-                                                vm.groupingBaseTrip.tripId &&
-                                            trip.tripBlockId !==
-                                                vm.groupingBaseTrip.tripBlockId
-                                        "
-                                        mat-icon-button
-                                        matTooltip="グループに追加する"
-                                        (click)="
-                                            onClickedAddTripInGroup$.next({
-                                                base: vm.groupingBaseTrip,
-                                                target: trip
-                                            })
-                                        "
-                                    >
-                                        <mat-icon>add</mat-icon>
-                                    </button>
-
-                                    <button
-                                        *ngIf="
-                                            trip.tripId !==
-                                                vm.groupingBaseTrip.tripId &&
-                                            trip.tripBlockId ===
-                                                vm.groupingBaseTrip.tripBlockId
-                                        "
-                                        mat-icon-button
-                                        matTooltip="グループから除外する"
-                                        (click)="
-                                            onClickedDeleteTripInGroup$.next({
-                                                base: vm.groupingBaseTrip,
-                                                target: trip
-                                            })
-                                        "
-                                    >
-                                        <mat-icon>remove</mat-icon>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                            </ng-container>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </mat-card-content>
     </mat-card>

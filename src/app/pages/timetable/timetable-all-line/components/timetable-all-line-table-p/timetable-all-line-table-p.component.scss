@@ -1,106 +1,13 @@
 :host {
-    mat-toolbar {
-        width: calc(100% + 32px);
-        height: 48px;
-        margin-top: -16px;
-        margin-left: -16px;
-        margin-right: -16px;
-
-        h3 {
-            font-size: 16px;
-            margin: 0;
-            color: rgba(255, 255, 255, 0.87);
-        }
-    }
-
-    .weekday {
-        background: rgb(66, 139, 202);
-    }
-
-    .holiday {
-        background: rgb(217, 83, 79);
-    }
-
-    table,
-    tr,
-    th,
-    td {
-        margin: 0;
-        padding: 0;
+    table {
+        font-size: 16px;
+        line-height: 1;
+        white-space: nowrap;
         border-collapse: collapse;
     }
 
-    th,
-    td {
-        font-size: 16px;
-        height: 24px;
-        line-height: 1;
-    }
-
-    .stations-table {
-        border: 1px solid #e0e0e0;
-        white-space: nowrap;
-
-        th {
-            border: 1px solid #e0e0e0;
-        }
-
-        tr {
-            & > th:first-child,
-            & > td:first-child {
-                padding-left: 4px;
-            }
-
-            & > th + th,
-            & > td + td {
-                padding-left: 4px;
-            }
-
-            & > th:last-child,
-            & > td:last-child {
-                padding-right: 4px;
-            }
-
-            & > td.station-name {
-                padding: 0 4px;
-                text-align: right;
-            }
-        }
-    
-        .border-top {
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .border-bottom {
-            border-bottom: 1px solid #e0e0e0;
-        }
-    }
-
-    .trips-table {
-        table-layout: fixed;
-        border: 1px solid #e0e0e0;
-
-        th,
-        td {
-            width: 40px;
-            min-width: 40px;
-            max-width: 40px;
-            text-align: center;
-            border-left: 1px solid #e0e0e0;
-            border-right: 1px solid #e0e0e0;
-        }
-        
-        .border-bottom {
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        th {
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        tfoot {
-            border-top: 1px solid #e0e0e0;
-        }
+    ::ng-deep.mat-mdc-icon-button .mat-mdc-button-touch-target {
+        width: 36px !important;
+        height: 36px !important;
     }
 }

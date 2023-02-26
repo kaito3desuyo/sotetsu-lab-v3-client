@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
-import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
-import { MatLegacyPaginatorModule as MatPaginatorModule } from '@angular/material/legacy-paginator';
-import { MatLegacyTooltipModule as MatTooltipModule } from '@angular/material/legacy-tooltip';
+import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
@@ -57,14 +58,15 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
     ],
     imports: [
         CommonModule,
-        FlexLayoutModule,
+        LetModule,
+        ForModule,
+        IfModule,
         MatCardModule,
         MatPaginatorModule,
         MatToolbarModule,
         MatTooltipModule,
         MatButtonModule,
         MatIconModule,
-        LetModule,
         TimetableAllLineRoutingModule,
         AppSharedModule,
         AdsenseModule,
