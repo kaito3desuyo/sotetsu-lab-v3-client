@@ -361,6 +361,14 @@ function getViewMode(
                 stationName: '目黒',
             },
             {
+                routeName: ['東上本線'],
+                stationName: '川越市',
+            },
+            {
+                routeName: ['東上本線', '副都心線', '有楽町線'],
+                stationName: '和光市',
+            },
+            {
                 routeName: ['副都心線'],
                 stationName: '新宿三丁目',
             },
@@ -402,7 +410,7 @@ function getViewMode(
             { routeName: ['川越線'], stationName: '川越' },
             { routeName: ['三田線'], stationName: '西高島平' },
             { routeName: ['埼玉高速鉄道線'], stationName: '浦和美園' },
-            { routeName: ['有楽町線', '副都心線'], stationName: '和光市' },
+            { routeName: ['東上本線'], stationName: '小川町' },
             { routeName: ['本線'], stationName: '横浜' },
         ];
 
@@ -433,6 +441,14 @@ function getViewMode(
             {
                 routeName: ['三田線', '南北線', '目黒線'],
                 stationName: '目黒',
+            },
+            {
+                routeName: ['東上本線'],
+                stationName: '川越市',
+            },
+            {
+                routeName: ['東上本線', '副都心線', '有楽町線'],
+                stationName: '和光市',
             },
             {
                 routeName: ['副都心線'],
@@ -508,10 +524,11 @@ function getBorderSetting(
 ): boolean {
     if (tripDirection === 0) {
         const target = [
+            { routeName: ['りんかい線'], stationName: '大井町' },
             { routeName: ['三田線'], stationName: '西高島平' },
             { routeName: ['埼玉高速鉄道線'], stationName: '浦和美園' },
-            { routeName: ['有楽町線', '副都心線'], stationName: '和光市' },
-            { routeName: ['副都心線'], stationName: '千川' },
+            { routeName: ['東上本線'], stationName: '小川町' },
+            { routeName: ['有楽町線', '副都心線'], stationName: '地下鉄成増' },
             { routeName: ['東横線'], stationName: '綱島' },
             { routeName: ['本線'], stationName: '横浜' },
             { routeName: ['本線'], stationName: '希望ヶ丘' },
@@ -540,6 +557,7 @@ function getBorderSetting(
             { routeName: ['りんかい線'], stationName: '新木場' },
             { routeName: ['三田線'], stationName: '三田' },
             { routeName: ['目黒線'], stationName: '奥沢' },
+            { routeName: ['東上本線'], stationName: '池袋' },
             { routeName: ['有楽町線'], stationName: '新木場' },
             {
                 routeName: ['新横浜線', '相鉄・JR直通線'],
