@@ -39,7 +39,7 @@
                     <thead>
                         <tr class="tw-sticky tw-top-0 tw-z-20 tw-h-6">
                             <th
-                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 colspan="2"
                             >
                                 <span class="tw-sticky">列車番号</span>
@@ -49,11 +49,12 @@
                                     let trip of vm.trips;
                                     let i = index;
                                     trackBy: 'tripNumber' | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: false
                                 "
                             >
                                 <th
-                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 >
                                     <span
                                         class="tw-relative"
@@ -78,7 +79,7 @@
                         </tr>
                         <tr class="tw-sticky tw-top-6 tw-z-20 tw-h-6">
                             <th
-                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 colspan="2"
                             >
                                 <span class="tw-sticky">運用番号</span>
@@ -89,17 +90,19 @@
                                     let i = index;
                                     trackBy: 'tripOperationLists[0].operation.operationNumber'
                                         | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: false
                                 "
                             >
                                 <th
-                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 >
                                     <a
                                         class="tw-relative"
                                         *rxIf="
                                             trip.tripOperationLists.length;
-                                            strategy: 'immediate'
+                                            strategy: 'immediate';
+                                            patchZone: false
                                         "
                                         [routerLink]="[
                                             '/operation/route-diagram',
@@ -119,7 +122,8 @@
                                         class="tw-relative"
                                         *rxIf="
                                             !trip.tripOperationLists.length;
-                                            strategy: 'immediate'
+                                            strategy: 'immediate';
+                                            patchZone: false
                                         "
                                     >
                                         不明
@@ -129,7 +133,7 @@
                         </tr>
                         <tr class="tw-sticky tw-top-12 tw-z-20 tw-h-6">
                             <th
-                                class="tw-sticky tw-left-0 tw-z-30 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 colspan="2"
                             >
                                 <span class="tw-sticky">種別</span>
@@ -140,11 +144,12 @@
                                     let i = index;
                                     trackBy: 'tripClass.tripClassName'
                                         | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: false
                                 "
                             >
                                 <th
-                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-[-1px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-top-[-0.5px] before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                 >
                                     <span
                                         class="tw-relative"
@@ -179,7 +184,8 @@
                                 let station of vm.stations;
                                 let i = index;
                                 trackBy: 'stationId' | trackBy;
-                                strategy: 'normal'
+                                strategy: 'normal';
+                                patchZone: false
                             "
                         >
                             <tr
@@ -193,13 +199,14 @@
                                 (vm.tripDirection === 1 &&
                                     ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
                                         staitonViewMode.ONLY_OUTBOUND_ARRIVAL);
-                                strategy: 'immediate'
+                                strategy: 'immediate';
+                                patchZone: false
                             "
                             >
                                 <td
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-w-[134px] tw-min-w-[134px] tw-bg-white !tw-px-1 tw-text-right before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-w-[134px] tw-min-w-[134px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                     [ngClass]="{
-                                        'before:tw-border-b':
+                                        'tw-border-b before:tw-border-b':
                                             ({
                                                 station: station,
                                                 tripDirection: vm.tripDirection
@@ -272,9 +279,9 @@
                                     </span>
                                 </td>
                                 <td
-                                    class="tw-sticky tw-left-[134px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 tw-bg-white !tw-px-1 tw-text-center before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-sticky tw-left-[142px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 !tw-px-1 tw-text-center before:tw-absolute before:tw-top-0 before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                     [ngClass]="{
-                                        'before:tw-border-b':
+                                        'tw-border-b before:tw-border-b':
                                             ({
                                                 station: station,
                                                 tripDirection: vm.tripDirection
@@ -319,7 +326,8 @@
                                             trip: trip,
                                             trips: vm.trips
                                         } | timetableAllLineGetTimeAndTrackBy;
-                                        strategy: 'normal'
+                                        strategy: 'normal';
+                                        patchZone: false
                                     "
                                 >
                                     <td
@@ -379,13 +387,14 @@
                                 *rxIf="
                                     ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
                                     ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
-                                    strategy: 'immediate'
+                                    strategy: 'immediate';
+                                    patchZone: false
                                 "
                             >
                                 <td
-                                    class="tw-sticky tw-left-0 tw-z-0 tw-w-[134px] tw-min-w-[134px] tw-bg-white !tw-px-1 tw-text-right before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-0 tw-w-[134px] tw-min-w-[134px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                     [ngClass]="{
-                                        'before:tw-border-b':
+                                        'tw-border-b before:tw-border-b':
                                             {
                                                 station: station,
                                                 tripDirection: vm.tripDirection
@@ -393,7 +402,8 @@
                                     }"
                                     *rxIf="
                                         ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
-                                        strategy: 'immediate'
+                                        strategy: 'immediate';
+                                        patchZone: false
                                     "
                                 >
                                     <span
@@ -438,9 +448,9 @@
                                     </span>
                                 </td>
                                 <td
-                                    class="tw-sticky tw-left-[134px] tw-z-0 tw-bg-white !tw-px-1 tw-text-center before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                    class="tw-sticky tw-left-[142px] tw-z-0 tw-border-0 tw-border-solid !tw-px-1 tw-text-center before:tw-absolute before:tw-top-0 before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                                     [ngClass]="{
-                                        'before:tw-border-b':
+                                        'tw-border-b before:tw-border-b':
                                             {
                                                 station: station,
                                                 tripDirection: vm.tripDirection
@@ -462,7 +472,8 @@
                                             trip: trip,
                                             trips: vm.trips
                                         } | timetableAllLineGetTimeAndTrackBy;
-                                        strategy: 'normal'
+                                        strategy: 'normal';
+                                        patchZone: false
                                     "
                                 >
                                     <td
@@ -500,7 +511,7 @@
                         <tr>
                             <td
                                 colspan="2"
-                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                             ></td>
 
                             <ng-container
@@ -508,7 +519,8 @@
                                     let trip of vm.trips;
                                     let i = index;
                                     trackBy: 'tripId' | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: true
                                 "
                             >
                                 <td
@@ -530,7 +542,7 @@
                         <tr>
                             <td
                                 colspan="2"
-                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                             ></td>
 
                             <ng-container
@@ -538,7 +550,8 @@
                                     let trip of vm.trips;
                                     let i = index;
                                     trackBy: 'tripId' | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: true
                                 "
                             >
                                 <td
@@ -560,7 +573,7 @@
                         <tr>
                             <td
                                 colspan="2"
-                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                             ></td>
 
                             <ng-container
@@ -568,7 +581,8 @@
                                     let trip of vm.trips;
                                     let i = index;
                                     trackBy: 'tripId' | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: true
                                 "
                             >
                                 <td
@@ -593,7 +607,7 @@
                         <tr>
                             <td
                                 colspan="2"
-                                class="tw-sticky tw-left-0 tw-z-10 tw-bg-white before:tw-absolute before:tw-top-[-1px] before:tw-left-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-[calc(100%_-_0.5px)] before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-b before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                             ></td>
 
                             <ng-container
@@ -601,16 +615,18 @@
                                     let trip of vm.trips;
                                     let i = index;
                                     trackBy: 'tripId' | trackBy;
-                                    strategy: 'normal'
+                                    strategy: 'normal';
+                                    patchZone: false
                                 "
                             >
                                 <td
-                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                    class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-b tw-border-solid tw-border-grey-300 tw-text-center"
                                 >
                                     <ng-container
                                         *rxIf="
                                             !vm.groupingBaseTrip;
-                                            strategy: 'normal'
+                                            strategy: 'normal';
+                                            patchZone: true
                                         "
                                     >
                                         <button
@@ -630,7 +646,8 @@
                                     <ng-container
                                         *rxIf="
                                             vm.groupingBaseTrip;
-                                            strategy: 'normal'
+                                            strategy: 'normal';
+                                            patchZone: true
                                         "
                                     >
                                         <button
@@ -639,7 +656,8 @@
                                                     trip.tripId ===
                                                         vm.groupingBaseTrip
                                                             .tripId;
-                                                strategy: 'immediate'
+                                                strategy: 'immediate';
+                                                patchZone: true
                                             "
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                             mat-icon-button
@@ -662,7 +680,8 @@
                                                     trip.tripBlockId !==
                                                         vm.groupingBaseTrip
                                                             .tripBlockId;
-                                                strategy: 'immediate'
+                                                strategy: 'immediate';
+                                                patchZone: true
                                             "
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                             mat-icon-button
@@ -686,7 +705,8 @@
                                                     trip.tripBlockId ===
                                                         vm.groupingBaseTrip
                                                             .tripBlockId;
-                                                strategy: 'immediate'
+                                                strategy: 'immediate';
+                                                patchZone: true
                                             "
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                             mat-icon-button
