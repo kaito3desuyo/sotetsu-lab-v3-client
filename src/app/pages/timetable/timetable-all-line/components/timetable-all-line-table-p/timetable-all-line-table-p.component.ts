@@ -5,7 +5,7 @@ import {
     Input,
     Output,
 } from '@angular/core';
-import { LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { Subject } from 'rxjs';
