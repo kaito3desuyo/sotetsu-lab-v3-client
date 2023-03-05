@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
+import { MatCardModule } from '@angular/material/card';
+import { MatRippleModule } from '@angular/material/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
+import { LetModule } from '@rx-angular/template/let';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
@@ -25,12 +28,15 @@ import { TimetableStationComponent } from './timetable-station.component';
     imports: [
         TimetableStationRoutingModule,
         CommonModule,
-        FlexLayoutModule,
         MatCardModule,
         MatToolbarModule,
+        MatRippleModule,
         AdsenseModule,
         PipesModule,
         TimetableSearchCardModule,
+        LetModule,
+        ForModule,
+        IfModule,
     ],
     declarations: [
         TimetableStationComponent,
