@@ -163,16 +163,24 @@
                                                 .tripClassColor,
                                             transform:
                                                 'scale(' +
-                                                (trip.tripClass.tripClassName
-                                                    .length > 2
+                                                ((
+                                                    trip.tripClass.tripClassName
+                                                    | antiBrackets
+                                                ).length > 2
                                                     ? 2 /
-                                                      trip.tripClass
-                                                          .tripClassName.length
+                                                      (
+                                                          trip.tripClass
+                                                              .tripClassName
+                                                          | antiBrackets
+                                                      ).length
                                                     : 1) +
                                                 ', 1)'
                                         }"
                                     >
-                                        {{ trip.tripClass.tripClassName }}
+                                        {{
+                                            trip.tripClass.tripClassName
+                                                | antiBrackets
+                                        }}
                                     </span>
                                 </th>
                             </ng-container>
