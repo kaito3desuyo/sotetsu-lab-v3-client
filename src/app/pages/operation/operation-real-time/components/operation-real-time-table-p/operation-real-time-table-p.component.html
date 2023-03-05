@@ -254,7 +254,7 @@
                                               array: (tripClasses$ | async),
                                               propertyName: 'tripClassId'
                                           }
-                                ).tripClassName
+                                ).tripClassName | antiBrackets
                             }}<br />
                             {{
                                 element.currentPosition.position.current.trip
