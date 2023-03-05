@@ -25,6 +25,7 @@ type State = {
     operations: OperationDetailsDto[];
     formations: FormationDetailsDto[];
     latestSightings: OperationSightingWithCirculatedDto[];
+    maxColumnsCount: number;
 };
 
 @Component({
@@ -35,18 +36,7 @@ type State = {
     providers: [RxState],
 })
 export class TimetableStationTablePComponent {
-    readonly calendar$ = this.state.select('calendar');
-    readonly stationName$ = this.state.select('stationName');
-    readonly tripDirection$ = this.state.select('tripDirection');
-    readonly tripClasses$ = this.state.select('tripClasses');
-    readonly stations$ = this.state.select('stations');
-    readonly timetableData$ = this.state.select('timetableData');
-    readonly operations$ = this.state.select('operations');
-    readonly formations$ = this.state.select('formations');
-    readonly latestSightings$ = this.state.select('latestSightings');
-    readonly maxColumnsCount$ = this.state
-        .select('timetableData')
-        .pipe(map((data) => max(data.map((o) => o.trips.length))));
+    readonly vm$ = this.state.select();
 
     readonly onChangedInputCalendar$ = new Subject<CalendarDetailsDto>();
     readonly onChangedInputStationName$ = new Subject<
@@ -118,6 +108,12 @@ export class TimetableStationTablePComponent {
         this.state.connect(
             'latestSightings',
             this.onChangedInputLatestSightings$
+        );
+        this.state.connect(
+            'maxColumnsCount',
+            this.state
+                .select('timetableData')
+                .pipe(map((data) => max(data.map((o) => o.trips.length))))
         );
     }
 }
