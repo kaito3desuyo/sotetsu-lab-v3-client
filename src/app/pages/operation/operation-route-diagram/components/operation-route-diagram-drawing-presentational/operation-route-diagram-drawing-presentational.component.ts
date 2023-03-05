@@ -7,10 +7,6 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import {
-    RxRenderStrategiesConfig,
-    RX_RENDER_STRATEGIES_CONFIG,
-} from '@rx-angular/cdk/render-strategies';
 import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
@@ -20,11 +16,6 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
-
-const COMPONENT_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
-    primaryStrategy: 'normal',
-    patchZone: false,
-};
 
 type State = {
     calendar: CalendarDetailsDto;
@@ -42,13 +33,7 @@ type State = {
         './operation-route-diagram-drawing-presentational.component.scss',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [
-        {
-            provide: RX_RENDER_STRATEGIES_CONFIG,
-            useValue: COMPONENT_RX_ANGULAR_CONFIG,
-        },
-        RxState,
-    ],
+    providers: [RxState],
 })
 export class OperationRouteDiagramDrawingPresentationalComponent {
     readonly vm$ = this.state.select();
