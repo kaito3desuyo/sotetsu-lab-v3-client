@@ -229,10 +229,11 @@
                                                   propertyName: 'stationId',
                                                   outputPropertyName: 'index'
                                               })) /
-                                    2) *
-                                    60 +
-                                60 -
-                                18
+                                    2 +
+                                    1) *
+                                    60 -
+                                (tripOperationList.trip.tripNumber.length / 2) *
+                                    9
                             "
                             [attr.y]="offset + 30 + i * 40 - 10"
                             fill="black"
