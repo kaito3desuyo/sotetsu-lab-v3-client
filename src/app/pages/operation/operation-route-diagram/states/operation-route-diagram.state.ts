@@ -155,6 +155,26 @@ const targetStations = [
         stationName: '千川',
     },
     {
+        routeName: ['副都心線', '有楽町線', '西武有楽町線'],
+        stationName: '小竹向原',
+    },
+    {
+        routeName: ['池袋線'],
+        stationName: '池袋',
+    },
+    {
+        routeName: ['池袋線', '西武有楽町線'],
+        stationName: '練馬',
+    },
+    {
+        routeName: ['池袋線'],
+        stationName: '保谷',
+    },
+    {
+        routeName: ['池袋線'],
+        stationName: '飯能',
+    },
+    {
         routeName: ['東上本線'],
         stationName: '池袋',
     },
@@ -217,6 +237,10 @@ const targetStations = [
     {
         routeName: ['りんかい線'],
         stationName: '新木場',
+    },
+    {
+        routeName: ['りんかい線'],
+        stationName: '東京テレポート',
     },
     {
         routeName: ['相鉄・JR直通線', '埼京線'],
