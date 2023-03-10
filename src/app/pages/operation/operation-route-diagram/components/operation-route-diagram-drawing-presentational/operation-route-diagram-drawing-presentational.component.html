@@ -134,7 +134,11 @@
                     dy="0, 20, 40, 60, 80, 100"
                     fill="black"
                 >
-                    {{ station.stationName | padding: { num: 6 } }}
+                    {{
+                        station.stationName
+                            | operationRouteDiagramFormatStationName
+                            | padding: { num: 6 }
+                    }}
                 </text>
             </g>
         </svg>

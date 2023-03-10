@@ -27,6 +27,7 @@ import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
 } from './states/operation-route-diagram.state';
+import { OperationRouteDiagramFormatStationNamePipe } from './pipes/operation-route-diagram-format-station-name.pipe';
 
 @NgModule({
     imports: [
@@ -55,6 +56,7 @@ import {
         OperationRouteDiagramHeaderCComponent,
         OperationRouteDiagramHeaderPComponent,
         OperationRouteDiagramMainCComponent,
+        OperationRouteDiagramFormatStationNamePipe,
     ],
     providers: [
         OperationRouteDiagramService,
