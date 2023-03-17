@@ -11,7 +11,7 @@ import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
 import { Subject } from 'rxjs';
-import { debounceTime, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -181,8 +181,9 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
 
         const svgElementRef = await this.onChangedViewChildSvgElement$
             .asObservable()
-            .pipe(debounceTime(100), take(1))
+            .pipe(take(2))
             .toPromise();
+
         const svgUrl = getSvgUrl(svgElementRef);
         const image = await svgUrlToImageElement(svgUrl);
         URL.revokeObjectURL(svgUrl);
