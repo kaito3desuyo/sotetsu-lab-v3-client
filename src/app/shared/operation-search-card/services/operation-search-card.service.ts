@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable, Subject } from 'rxjs';
+import { forkJoin, Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -64,9 +64,22 @@ export class OperationSearchCardService {
             },
         ]);
 
-        return this.operationService.findMany(qb).pipe(
-            tap((operations: OperationDetailsDto[]) => {
-                this.operationSearchCardStateStore.setOperations(operations);
+        return forkJoin([
+            this.operationService.findMany(qb),
+            this.operationService.findAllOperationNumbers(calendarId),
+        ]).pipe(
+            tap(([operations, numbers]) => {
+                if (!Array.isArray(operations) || !Array.isArray(numbers)) {
+                    return;
+                }
+
+                const sorted = [...operations].sort(
+                    (a, b) =>
+                        numbers.findIndex((n) => n === a.operationNumber) -
+                        numbers.findIndex((n) => n === b.operationNumber)
+                );
+
+                this.operationSearchCardStateStore.setOperations(sorted);
             }),
             map(() => undefined)
         );
