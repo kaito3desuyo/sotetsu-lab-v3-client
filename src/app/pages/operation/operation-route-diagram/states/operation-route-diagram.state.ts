@@ -207,12 +207,24 @@ const targetStations = [
         stationName: '武蔵小山',
     },
     {
+        routeName: ['目黒線'],
+        stationName: '大岡山',
+    },
+    {
         routeName: ['目黒線', '南北線', '三田線'],
         stationName: '目黒',
     },
     {
         routeName: ['南北線', '三田線'],
         stationName: '白金高輪',
+    },
+    {
+        routeName: ['南北線'],
+        stationName: '市ケ谷',
+    },
+    {
+        routeName: ['南北線'],
+        stationName: '駒込',
     },
     {
         routeName: ['南北線', '埼玉高速鉄道線'],
