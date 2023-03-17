@@ -68,11 +68,7 @@ export class OperationSearchCardService {
             this.operationService.findMany(qb),
             this.operationService.findAllOperationNumbers(calendarId),
         ]).pipe(
-            tap(([operations, numbers]) => {
-                if (!Array.isArray(operations) || !Array.isArray(numbers)) {
-                    return;
-                }
-
+            tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
                 const sorted = [...operations].sort(
                     (a, b) =>
                         numbers.findIndex((n) => n === a.operationNumber) -
