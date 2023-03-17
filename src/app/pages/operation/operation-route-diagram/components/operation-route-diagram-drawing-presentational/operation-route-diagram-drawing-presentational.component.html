@@ -112,7 +112,8 @@
                     let station of vm.stations;
                     let i = index;
                     trackBy: 'stationId' | trackBy;
-                    strategy: 'normal'
+                    strategy: 'immediate';
+                    patchZone: false
                 "
             >
                 <text
@@ -152,7 +153,8 @@
                     let station of vm.stations;
                     let i = index;
                     trackBy: 'stationId' | trackBy;
-                    strategy: 'normal'
+                    strategy: 'immediate';
+                    patchZone: false
                 "
             >
                 <line
@@ -177,7 +179,8 @@
                     let tripOperationList of vm.tripOperationLists;
                     let i = index;
                     trackBy: 'tripOperationListId' | trackBy;
-                    strategy: 'normal'
+                    strategy: 'immediate';
+                    patchZone: false
                 "
             >
                 <ng-template
@@ -299,7 +302,8 @@
                     <circle
                         *rxIf="
                             tripOperationList.trip.depotOut;
-                            strategy: 'normal'
+                            strategy: 'immediate';
+                            patchZone: false
                         "
                         [attr.cx]="
                             (tripOperationList.startTime.stationId
@@ -323,7 +327,8 @@
                     <polygon
                         *rxIf="
                             tripOperationList.trip.depotIn;
-                            strategy: 'normal'
+                            strategy: 'immediate';
+                            patchZone: false
                         "
                         [attr.points]="
                             (tripOperationList.endTime.stationId
@@ -408,7 +413,8 @@
                 <ng-container
                     *rxIf="
                         tripOperationList.trip.tripDirection === 0;
-                        strategy: 'normal'
+                        strategy: 'immediate';
+                        patchZone: false
                     "
                 >
                     <ng-container
@@ -451,7 +457,8 @@
                 <ng-container
                     *rxIf="
                         tripOperationList.trip.tripDirection === 1;
-                        strategy: 'normal'
+                        strategy: 'immediate';
+                        patchZone: false
                     "
                 >
                     <ng-container
