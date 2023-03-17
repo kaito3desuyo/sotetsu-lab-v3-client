@@ -34,6 +34,7 @@ export class OperationRealTimeService {
     // v2
 
     fetchOperationsV2(): Observable<void> {
+        const calendarId = this.todaysCalendarListStateQuery.todaysCalendarId;
         const qb = new RequestQueryBuilder()
             .setFilter([
                 {
@@ -44,9 +45,18 @@ export class OperationRealTimeService {
             ])
             .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
-        return this.operationService.findMany(qb).pipe(
-            tap((operations: OperationDetailsDto[]) => {
-                this.operationRealTimeStateStore.setOperations(operations);
+        return forkJoin([
+            this.operationService.findMany(qb),
+            this.operationService.findAllOperationNumbers(calendarId),
+        ]).pipe(
+            tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
+                const sorted = [...operations].sort(
+                    (a, b) =>
+                        numbers.findIndex((n) => n === a.operationNumber) -
+                        numbers.findIndex((n) => n === b.operationNumber)
+                );
+
+                this.operationRealTimeStateStore.setOperations(sorted);
             }),
             map(() => undefined)
         );
