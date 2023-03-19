@@ -1,8 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { ForModule } from '@rx-angular/template/for';
 import { IfModule } from '@rx-angular/template/if';
 import { LetModule } from '@rx-angular/template/let';
@@ -40,8 +38,6 @@ import {
         CommonModule,
         ReactiveFormsModule,
         OperationTableRoutingModule,
-        MatCardModule,
-        MatToolbarModule,
         AdsenseModule,
         OperationSearchCardModule,
         PipesModule,

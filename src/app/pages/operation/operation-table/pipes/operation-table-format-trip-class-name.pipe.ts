@@ -5,10 +5,16 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class OperationTableFormatTripClassNamePipe implements PipeTransform {
     transform(tripClassName: string): string {
-        if (tripClassName.length === 4) {
-            return tripClassName[0] + tripClassName[2];
+        if (tripClassNameMap.has(tripClassName)) {
+            return tripClassNameMap.get(tripClassName);
         }
 
         return tripClassName;
     }
 }
+
+const tripClassNameMap = new Map<string, string>([
+    ['F快速急行', 'F快急'],
+    ['快速急行', '快急'],
+    ['各駅停車', '各停'],
+]);

@@ -1,447 +1,334 @@
-<ng-container *rxLet="vm$; let vm">
-    <mat-card>
-        <mat-card-title *rxIf="vm.calendar">
-            <mat-toolbar
-                class="!tw-h-[48px]"
-                [ngClass]="[
-                    vm.calendar.sunday && vm.calendar.saturday
-                        ? 'holiday'
-                        : 'weekday'
-                ]"
-            >
-                <h3 class="!tw-text-[16px] !tw-leading-5 !tw-text-white">
-                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
-                    改正<br />
-                    {{ vm.calendar.calendarName }}
-                </h3>
-            </mat-toolbar>
-        </mat-card-title>
-        <mat-card-content class="!tw-p-4">
-            <div
-                class="tw-flex tw-flex-row tw-flex-wrap tw-justify-center tw-gap-x-4 tw-overflow-x-visible"
-                *rxIf="vm.calendar"
-            >
-                <ng-container
-                    *rxFor="
-                        let operationNumber of vm.operationNumbers;
-                        trackBy: 'this' | trackBy;
-                        strategy: 'normal'
-                    "
-                >
-                    <ng-container
-                        *ngTemplateOutlet="
-                            operationTripsList;
-                            context: {
-                                operationNumber: operationNumber
-                            }
-                        "
-                    ></ng-container>
-                </ng-container>
-
-                <div
-                    *rxFor="
-                        let operationNumber of vm.operationNumbers;
-                        trackBy: 'this' | trackBy;
-                        strategy: 'normal'
-                    "
-                    class="tw-h-0 tw-w-[312px]"
-                ></div>
-            </div>
-            <p *rxIf="!vm.calendar">ダイヤを設定して検索してください</p>
-        </mat-card-content>
-    </mat-card>
-
-    <ng-template #operationTripsList let-operationNumber="operationNumber">
-        <section
-            *rxLet="
-                operationNumber
-                    | findById
-                        : {
-                              array: vm.operationTrips,
-                              propertyName: 'operation.operationNumber'
-                          };
-                let operationTrips;
-                strategy: 'immediate'
-            "
-            class="tw-w-[312px]"
+<ng-container *rxLet="vm$; let vm; strategy: 'immediate'; patchZone: false">
+    <article class="tw-bg-white tw-shadow-md">
+        <header
+            class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
+            [ngClass]="[
+                vm.calendar.sunday && vm.calendar.saturday
+                    ? 'holiday'
+                    : 'weekday'
+            ]"
         >
-            <header>
-                <h4
-                    class="tw-my-0 tw-py-2 tw-text-center"
-                    [ngStyle]="{
-                        background: operationNumber | operationNumberColor
-                    }"
-                >
-                    <a
-                        [routerLink]="[
-                            '/operation/route-diagram',
-                            {
-                                operation_id:
-                                    operationTrips.operation.operationId
-                            }
-                        ]"
-                    >
-                        {{ operationNumber }}
-                    </a>
-                </h4>
-            </header>
-            <div class="monoscape tw-py-4">
-                <ng-container
-                    *rxFor="
-                        let tripOperationList of operationTrips.trips;
-                        let i = index;
-                        trackBy: 'tripOperationListId' | trackBy;
-                        strategy: 'immediate'
+            <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
+                {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
+                改正<br />
+                {{ vm.calendar.calendarName }}
+            </h3>
+        </header>
+        <section
+            class="tw-flex tw-flex-row tw-flex-wrap tw-justify-center tw-gap-x-4 tw-overflow-x-visible tw-p-4"
+        >
+            <div
+                class="tw-my-4"
+                *rxFor="
+                    let operationNumber of vm.operationNumbers;
+                    trackBy: 'this' | trackBy;
+                    strategy: 'normal';
+                    patchZone: false
+                "
+            >
+                <table
+                    class="monoscape tw-w-[300px] tw-border-collapse tw-whitespace-nowrap tw-text-center tw-text-[13px] [&_td]:tw-p-0"
+                    *rxLet="
+                        operationNumber
+                            | findById
+                                : {
+                                      array: vm.operationTrips,
+                                      propertyName: 'operation.operationNumber'
+                                  };
+                        let operationTrips;
+                        strategy: 'immediate';
+                        patchZone: false
                     "
                 >
-                    <ng-container
-                        *ngTemplateOutlet="
-                            tripRow;
-                            context: { tripOperationList: tripOperationList }
-                        "
-                    ></ng-container>
-                    <div
-                        *rxIf="
-                            tripOperationList.trip.tripDirection ===
-                                (operationTrips?.trips)[i + 1]?.trip
-                                    ?.tripDirection &&
-                                !tripOperationList.trip.depotIn &&
-                                !(operationTrips?.trips)[i + 1]?.trip?.depotOut;
-                            strategy: 'immediate'
-                        "
-                    >
+                    <thead>
+                        <tr>
+                            <td colspan="9">
+                                <div
+                                    class="tw-mb-4 tw-py-2 tw-text-base tw-font-bold"
+                                    [ngStyle]="{
+                                        background:
+                                            operationNumber
+                                            | operationNumberColor
+                                    }"
+                                >
+                                    <a
+                                        [routerLink]="[
+                                            '/operation/route-diagram',
+                                            {
+                                                operation_id:
+                                                    operationTrips.operation
+                                                        .operationId
+                                            }
+                                        ]"
+                                    >
+                                        {{ operationNumber }}
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <ng-container
-                            *rxIf="
-                                tripOperationList.trip.tripDirection === 0;
-                                strategy: 'immediate'
+                            *rxFor="
+                                let tripOperationList of operationTrips.trips;
+                                let i = index;
+                                trackBy: 'tripOperationListId' | trackBy;
+                                strategy: 'normal';
+                                patchZone: false
                             "
                         >
-                            <span>┏</span>
-                        </ng-container>
+                            <tr>
+                                <td class="tw-w-4">
+                                    {{
+                                        tripOperationList.trip.tripDirection ===
+                                        0
+                                            ? tripOperationList.trip.depotOut
+                                                ? '◯'
+                                                : '┗'
+                                            : tripOperationList.trip
+                                                  .tripDirection === 1
+                                            ? tripOperationList.trip.depotIn
+                                                ? '△'
+                                                : '┏'
+                                            : ''
+                                    }}
+                                </td>
+                                <td class="tw-w-12 tw-max-w-[3rem]">
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            stationNameColumn;
+                                            context: {
+                                                stationId:
+                                                    tripOperationList.trip
+                                                        .tripDirection === 0
+                                                        ? tripOperationList
+                                                              .startTime
+                                                              .stationId
+                                                        : tripOperationList.trip
+                                                              .tripDirection ===
+                                                          1
+                                                        ? tripOperationList
+                                                              .endTime.stationId
+                                                        : null
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            timeColumn;
+                                            context: {
+                                                time:
+                                                    tripOperationList.trip
+                                                        .tripDirection === 0
+                                                        ? tripOperationList
+                                                              .startTime
+                                                              .departureTime
+                                                        : tripOperationList.trip
+                                                              .tripDirection ===
+                                                          1
+                                                        ? tripOperationList
+                                                              .endTime
+                                                              .arrivalTime
+                                                        : null
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            arrowColumn;
+                                            context: {
+                                                tripClassId:
+                                                    tripOperationList.trip
+                                                        .tripClassId,
+                                                tripDirection:
+                                                    tripOperationList.trip
+                                                        .tripDirection
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    <a
+                                        [ngStyle]="{
+                                            color:
+                                                tripOperationList.trip
+                                                    .tripClassId
+                                                | findById
+                                                    : {
+                                                          array: vm.tripClasses,
+                                                          propertyName:
+                                                              'tripClassId',
+                                                          outputPropertyName:
+                                                              'tripClassColor'
+                                                      }
+                                        }"
+                                        [routerLink]="[
+                                            '/timetable',
+                                            'all-line',
+                                            {
+                                                calendar_id:
+                                                    vm.calendar.calendarId,
+                                                trip_direction:
+                                                    tripOperationList.trip
+                                                        .tripDirection,
+                                                trip_block_id:
+                                                    tripOperationList.trip
+                                                        .tripBlockId
+                                            }
+                                        ]"
+                                    >
+                                        {{
+                                            tripOperationList.trip.tripClassId
+                                                | findById
+                                                    : {
+                                                          array: vm.tripClasses,
+                                                          propertyName:
+                                                              'tripClassId',
+                                                          outputPropertyName:
+                                                              'tripClassName'
+                                                      }
+                                                | antiBrackets
+                                                | operationTableFormatTripClassName
+                                        }}
+                                        {{ tripOperationList.trip.tripNumber }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            arrowColumn;
+                                            context: {
+                                                tripClassId:
+                                                    tripOperationList.trip
+                                                        .tripClassId,
+                                                tripDirection:
+                                                    tripOperationList.trip
+                                                        .tripDirection
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            timeColumn;
+                                            context: {
+                                                time:
+                                                    tripOperationList.trip
+                                                        .tripDirection === 0
+                                                        ? tripOperationList
+                                                              .endTime
+                                                              .arrivalTime
+                                                        : tripOperationList.trip
+                                                              .tripDirection ===
+                                                          1
+                                                        ? tripOperationList
+                                                              .startTime
+                                                              .departureTime
+                                                        : null
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td class="tw-w-12 tw-max-w-[3rem]">
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            stationNameColumn;
+                                            context: {
+                                                stationId:
+                                                    tripOperationList.trip
+                                                        .tripDirection === 0
+                                                        ? tripOperationList
+                                                              .endTime.stationId
+                                                        : tripOperationList.trip
+                                                              .tripDirection ===
+                                                          1
+                                                        ? tripOperationList
+                                                              .startTime
+                                                              .stationId
+                                                        : null
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td class="tw-w-4">
+                                    {{
+                                        tripOperationList.trip.tripDirection ===
+                                        0
+                                            ? tripOperationList.trip.depotIn
+                                                ? '△'
+                                                : '┓'
+                                            : tripOperationList.trip
+                                                  .tripDirection === 1
+                                            ? tripOperationList.trip.depotOut
+                                                ? '◯'
+                                                : '┛'
+                                            : ''
+                                    }}
+                                </td>
+                            </tr>
+                            <tr
+                                *rxIf="
+                                    tripOperationList.trip.tripDirection ===
+                                        (operationTrips?.trips)[i + 1]?.trip
+                                            ?.tripDirection &&
+                                        !tripOperationList.trip.depotIn &&
+                                        !(operationTrips?.trips)[i + 1]?.trip
+                                            ?.depotOut;
+                                    strategy: 'immediate';
+                                    patchZone: false
+                                "
+                            >
+                                <td class="tw-w-4">
+                                    {{
+                                        tripOperationList.trip.tripDirection ===
+                                        0
+                                            ? '┏'
+                                            : tripOperationList.trip
+                                                  .tripDirection === 1
+                                            ? '┗'
+                                            : ''
+                                    }}
+                                </td>
 
-                        <ng-container
-                            *rxIf="
-                                tripOperationList.trip.tripDirection === 1;
-                                strategy: 'immediate'
-                            "
-                        >
-                            <span>┗</span>
-                        </ng-container>
+                                <td colspan="7">━━━━━━━━━━━━━━━━━━━━━</td>
 
-                        <span>━━━━━━━━━━━━━━━━━━━━━━</span>
-
-                        <ng-container
-                            *rxIf="
-                                tripOperationList.trip.tripDirection === 0;
-                                strategy: 'immediate'
-                            "
-                        >
-                            <span>┛</span>
+                                <td class="tw-w-4">
+                                    {{
+                                        tripOperationList.trip.tripDirection ===
+                                        0
+                                            ? '┛'
+                                            : tripOperationList.trip
+                                                  .tripDirection === 1
+                                            ? '┓'
+                                            : ''
+                                    }}
+                                </td>
+                            </tr>
                         </ng-container>
-
-                        <ng-container
-                            *rxIf="
-                                tripOperationList.trip.tripDirection === 1;
-                                strategy: 'immediate'
-                            "
-                        >
-                            <span>┓</span>
-                        </ng-container>
-                    </div>
-                </ng-container>
+                    </tbody>
+                </table>
             </div>
+
+            <div
+                *rxFor="
+                    let operationNumber of vm.operationNumbers;
+                    trackBy: 'this' | trackBy;
+                    strategy: 'normal';
+                    patchZone: false
+                "
+                class="tw-h-0 tw-w-[300px]"
+            ></div>
         </section>
-    </ng-template>
-
-    <ng-template #tripRow let-tripOperationList="tripOperationList">
-        <div class="tw-flex tw-flex-row tw-leading-5">
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 0;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    *rxIf="
-                        tripOperationList.trip.depotOut;
-                        strategy: 'immediate'
-                    "
-                >
-                    ◯
-                </span>
-                <span
-                    *rxIf="
-                        !tripOperationList.trip.depotOut;
-                        strategy: 'immediate'
-                    "
-                >
-                    ┗
-                </span>
-            </ng-container>
-
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 1;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    *rxIf="
-                        tripOperationList.trip.depotIn;
-                        strategy: 'immediate'
-                    "
-                >
-                    △
-                </span>
-                <span
-                    *rxIf="
-                        !tripOperationList.trip.depotIn;
-                        strategy: 'immediate'
-                    "
-                >
-                    ┏
-                </span>
-            </ng-container>
-
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 0;
-                    strategy: 'immediate'
-                "
-            >
-                <ng-container
-                    *ngTemplateOutlet="
-                        stationNameColumn;
-                        context: {
-                            stationId: tripOperationList.startTime.stationId
-                        }
-                    "
-                ></ng-container>
-                <ng-container
-                    *ngTemplateOutlet="
-                        timeColumn;
-                        context: {
-                            time: tripOperationList.startTime.departureTime
-                        }
-                    "
-                ></ng-container>
-                <span
-                    [ngStyle]="{
-                        color:
-                            tripOperationList.trip.tripClassId
-                            | findById
-                                : {
-                                      array: vm.tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor'
-                                  }
-                    }"
-                >
-                    ➡
-                </span>
-            </ng-container>
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 1;
-                    strategy: 'immediate'
-                "
-            >
-                <ng-container
-                    *ngTemplateOutlet="
-                        stationNameColumn;
-                        context: {
-                            stationId: tripOperationList.endTime.stationId
-                        }
-                    "
-                ></ng-container>
-                <ng-container
-                    *ngTemplateOutlet="
-                        timeColumn;
-                        context: {
-                            time: tripOperationList.endTime.arrivalTime
-                        }
-                    "
-                ></ng-container>
-                <span
-                    [ngStyle]="{
-                        color:
-                            tripOperationList.trip.tripClassId
-                            | findById
-                                : {
-                                      array: vm.tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor'
-                                  }
-                    }"
-                >
-                    ⬅
-                </span>
-            </ng-container>
-
-            <a
-                class="tw-w-[8em] tw-text-center"
-                [ngStyle]="{
-                    color:
-                        tripOperationList.trip.tripClassId
-                        | findById
-                            : {
-                                  array: vm.tripClasses,
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassColor'
-                              }
-                }"
-                [routerLink]="[
-                    '/timetable',
-                    'all-line',
-                    {
-                        calendar_id: vm.calendar.calendarId,
-                        trip_direction: tripOperationList.trip.tripDirection,
-                        trip_block_id: tripOperationList.trip.tripBlockId
-                    }
-                ]"
-            >
-                {{
-                    tripOperationList.trip.tripClassId
-                        | findById
-                            : {
-                                  array: vm.tripClasses,
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassName'
-                              }
-                        | antiBrackets
-                        | operationTableFormatTripClassName
-                }}
-                {{ tripOperationList.trip.tripNumber }}
-            </a>
-
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 0;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    [ngStyle]="{
-                        color:
-                            tripOperationList.trip.tripClassId
-                            | findById
-                                : {
-                                      array: vm.tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor'
-                                  }
-                    }"
-                >
-                    ➡
-                </span>
-                <ng-container
-                    *ngTemplateOutlet="
-                        timeColumn;
-                        context: {
-                            time: tripOperationList.endTime.arrivalTime
-                        }
-                    "
-                ></ng-container>
-                <ng-container
-                    *ngTemplateOutlet="
-                        stationNameColumn;
-                        context: {
-                            stationId: tripOperationList.endTime.stationId
-                        }
-                    "
-                ></ng-container>
-            </ng-container>
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 1;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    [ngStyle]="{
-                        color:
-                            tripOperationList.trip.tripClassId
-                            | findById
-                                : {
-                                      array: vm.tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor'
-                                  }
-                    }"
-                >
-                    ⬅
-                </span>
-                <ng-container
-                    *ngTemplateOutlet="
-                        timeColumn;
-                        context: {
-                            time: tripOperationList.startTime.departureTime
-                        }
-                    "
-                ></ng-container>
-                <ng-container
-                    *ngTemplateOutlet="
-                        stationNameColumn;
-                        context: {
-                            stationId: tripOperationList.startTime.stationId
-                        }
-                    "
-                ></ng-container>
-            </ng-container>
-
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 0;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    *rxIf="
-                        tripOperationList.trip.depotIn;
-                        strategy: 'immediate'
-                    "
-                >
-                    △
-                </span>
-                <span
-                    *rxIf="
-                        !tripOperationList.trip.depotIn;
-                        strategy: 'immediate'
-                    "
-                >
-                    ┓
-                </span>
-            </ng-container>
-
-            <ng-container
-                *rxIf="
-                    tripOperationList.trip.tripDirection === 1;
-                    strategy: 'immediate'
-                "
-            >
-                <span
-                    *rxIf="
-                        tripOperationList.trip.depotOut;
-                        strategy: 'immediate'
-                    "
-                >
-                    ◯
-                </span>
-                <span
-                    *rxIf="
-                        !tripOperationList.trip.depotOut;
-                        strategy: 'immediate'
-                    "
-                >
-                    ┛
-                </span>
-            </ng-container>
-        </div>
-    </ng-template>
+    </article>
 
     <ng-template #stationNameColumn let-stationId="stationId">
-        <span class="tw-w-[6em] tw-text-center">
-            {{
+        <div
+            *rxLet="
                 stationId
                     | findById
                         : {
@@ -449,26 +336,64 @@
                               propertyName: 'stationId',
                               outputPropertyName: 'stationName'
                           }
-                    | operationTableFormatStationName
-            }}
-        </span>
+                    | operationTableFormatStationName;
+                let stationName;
+                strategy: 'immediate';
+                patchZone: false
+            "
+            [ngStyle]="{
+                transform:
+                    'scaleX(' +
+                    (stationName.length > 3 ? 3 / stationName.length : 1) +
+                    ')',
+                margin:
+                    '0 ' +
+                    (stationName.length > 3
+                        ? (stationName.length - 3) * 8 * -1
+                        : 0) +
+                    'px'
+            }"
+        >
+            {{ stationName }}
+        </div>
     </ng-template>
 
     <ng-template #timeColumn let-time="time">
-        <span>
-            <ng-container *rxIf="time; strategy: 'immediate'">
-                {{
-                    time
-                        | dayjs
-                            : {
-                                  parseFormat: 'HH:mm:ss',
-                                  format: 'HHmm'
-                              }
-                }}
-            </ng-container>
-            <ng-container *rxIf="!time; strategy: 'immediate'">
-                ????
-            </ng-container>
+        {{
+            time
+                ? (time
+                  | dayjs
+                      : {
+                            parseFormat: 'HH:mm:ss',
+                            format: 'HHmm'
+                        })
+                : '????'
+        }}
+    </ng-template>
+
+    <ng-template
+        #arrowColumn
+        let-tripClassId="tripClassId"
+        let-tripDirection="tripDirection"
+    >
+        <span
+            *rxLet="
+                tripClassId
+                    | findById
+                        : {
+                              array: vm.tripClasses,
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassColor'
+                          };
+                let tripClassColor;
+                strategy: 'immediate';
+                patchZone: false
+            "
+            [ngStyle]="{
+                color: tripClassColor
+            }"
+        >
+            {{ tripDirection === 0 ? '➡' : tripDirection === 1 ? '⬅' : '' }}
         </span>
     </ng-template>
 </ng-container>
