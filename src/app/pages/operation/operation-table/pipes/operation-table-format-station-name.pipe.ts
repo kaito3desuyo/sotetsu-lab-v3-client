@@ -5,12 +5,19 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class OperationTableFormatStationNamePipe implements PipeTransform {
     transform(stationName: string): string {
+        if (stationNameMap.has(stationName)) {
+            return stationNameMap.get(stationName);
+        }
+
         if (stationName.length === 2) {
             return stationName[0] + '　' + stationName[1];
-        } else if (stationName === '羽沢横浜国大') {
-            return '羽沢横国';
-        } else {
-            return stationName;
         }
+
+        return stationName;
     }
 }
+
+const stationNameMap = new Map<string, string>([
+    ['羽沢横浜国大', '羽沢横国'],
+    ['元町・中華街', '元町中華'],
+]);
