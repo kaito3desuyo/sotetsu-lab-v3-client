@@ -1,18 +1,16 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs, { Dayjs } from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { map, mergeMap, take, tap } from 'rxjs/operators';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { OperationApiService } from 'src/app/general/api/operation-api.service';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { IOperationPostCardForm } from '../interfaces/operation-post-card-form.interface';
-dayjs.extend(customParseFormat);
 
 @Injectable()
 export class OperationPostCardService {
@@ -22,8 +20,8 @@ export class OperationPostCardService {
         private readonly socket: SocketService,
         private readonly formationService: FormationService,
         private readonly operationService: OperationService,
-        private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery,
-        private readonly operationApi: OperationApiService
+        private readonly operationSightingService: OperationSightingService,
+        private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery
     ) {}
 
     receiveSubmitOperationSightingEvent(): Observable<void> {
@@ -31,7 +29,7 @@ export class OperationPostCardService {
     }
 
     addOperationSighting(formValue: IOperationPostCardForm): Observable<void> {
-        return of(null).pipe(
+        return of(undefined).pipe(
             mergeMap(() =>
                 this.todaysCalendarListQuery.todaysCalendarId$.pipe(take(1))
             ),
@@ -115,7 +113,8 @@ export class OperationPostCardService {
                 return [formations, operations, sightingTime];
             }),
             mergeMap(([formations, operations, sightingTime]) => {
-                return this.operationApi.addOperationSighting({
+                const qb = new RequestQueryBuilder();
+                return this.operationSightingService.createOne(qb, {
                     formationId: formations[0].formationId,
                     operationId: operations[0].operationId,
                     sightingTime: sightingTime.toISOString(),
@@ -125,7 +124,7 @@ export class OperationPostCardService {
                 this.socket.emit('sendSighting', result);
                 this._submitOperationSightingEvent.next();
             }),
-            map(() => null)
+            map(() => undefined)
         );
     }
 }
