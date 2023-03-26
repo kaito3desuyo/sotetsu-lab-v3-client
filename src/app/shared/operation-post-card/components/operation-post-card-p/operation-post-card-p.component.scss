@@ -1,6 +1,4 @@
 :host {
-    .mat-card-actions {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+    display: flex;
+    flex-grow: 1;
 }

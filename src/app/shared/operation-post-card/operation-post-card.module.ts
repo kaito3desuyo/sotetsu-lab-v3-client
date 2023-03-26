@@ -1,15 +1,16 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
-import { MatLegacyInputModule as MatInputModule } from '@angular/material/legacy-input';
-import { MatLegacyRadioModule as MatRadioModule } from '@angular/material/legacy-radio';
-import { MatLegacyFormFieldModule as MatFormFieldModule } from '@angular/material/legacy-form-field';
+import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
+import { LetModule } from '@rx-angular/template/let';
 import { OperationPostCardCComponent } from './components/operation-post-card-c/operation-post-card-c.component';
 import { OperationPostCardPComponent } from './components/operation-post-card-p/operation-post-card-p.component';
-import { MatLegacySelectModule as MatSelectModule } from '@angular/material/legacy-select';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
 import { OperationPostCardService } from './services/operation-post-card.service';
 
 @NgModule({
@@ -18,13 +19,14 @@ import { OperationPostCardService } from './services/operation-post-card.service
     imports: [
         CommonModule,
         ReactiveFormsModule,
-        FlexLayoutModule,
         MatFormFieldModule,
-        MatCardModule,
         MatInputModule,
         MatRadioModule,
         MatSelectModule,
         MatButtonModule,
+        LetModule,
+        ForModule,
+        IfModule,
     ],
     exports: [OperationPostCardCComponent],
 })

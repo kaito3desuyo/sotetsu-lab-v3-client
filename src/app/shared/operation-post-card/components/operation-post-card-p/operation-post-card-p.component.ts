@@ -30,6 +30,7 @@ export class OperationPostCardPComponent {
         sightingTime: [{ value: '', disabled: true }, Validators.required],
     });
 
+    readonly vm$ = this.state.select();
     readonly agencies$ = this.state.select('agencies');
 
     readonly onChangedInputAgencies$ = new EventEmitter<AgencyDetailsDto[]>();
