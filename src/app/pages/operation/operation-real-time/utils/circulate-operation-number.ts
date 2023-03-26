@@ -1,11 +1,28 @@
 export function circulateOperationNumber(number: string, days: number): string {
     let circulated = number;
 
-    for (let i = 0; i < days; i++) {
+    daysLoop: for (let i = 0; i < days; i++) {
         switch (circulated.slice(-1)) {
             case 'G':
+                switch (circulated.slice(0, 1)) {
+                    case '9':
+                        circulated =
+                            String(Number(circulated.replace('G', '')) + 1) +
+                            'G';
+                        if (circulated.slice(-2, -1) === '6') {
+                            circulated =
+                                String(
+                                    Number(circulated.replace('G', '')) - 5
+                                ) + 'G';
+                        }
+                        continue daysLoop;
+                    default:
+                        circulated = null;
+                        break daysLoop;
+                }
             case 'K':
-                return null;
+                circulated = null;
+                break daysLoop;
         }
 
         switch (circulated.slice(0, 1)) {
@@ -14,40 +31,38 @@ export function circulateOperationNumber(number: string, days: number): string {
                 if (circulated.slice(-1) === '6') {
                     circulated = String(Number(circulated) - 5);
                 }
-                break;
+                continue daysLoop;
             case '5':
                 if (circulated.slice(-1) === '0') {
-                    return null;
+                    continue daysLoop;
                 }
                 circulated = String(Number(circulated) + 1);
                 if (circulated.slice(-1) === '0') {
                     circulated = String(Number(circulated) - 9);
                 }
-                break;
+                continue daysLoop;
             case '6':
                 if (circulated.slice(-1) === '0') {
-                    return null;
+                    continue daysLoop;
                 }
                 circulated = String(Number(circulated) + 1);
                 if (circulated.slice(-1) === '0') {
                     circulated = String(Number(circulated) - 9);
                 }
-                break;
+                continue daysLoop;
             case '7':
                 if (Number(circulated.slice(-1)) >= 4) {
-                    return null;
+                    circulated = null;
+                    break daysLoop;
                 }
                 circulated = String(Number(circulated) + 1);
                 if (circulated.slice(-1) === '4') {
                     circulated = String(Number(circulated) - 4);
                 }
-                break;
-            case '8':
-            case '9':
-                return null;
-
+                continue daysLoop;
             default:
-                return null;
+                circulated = null;
+                break daysLoop;
         }
     }
 
