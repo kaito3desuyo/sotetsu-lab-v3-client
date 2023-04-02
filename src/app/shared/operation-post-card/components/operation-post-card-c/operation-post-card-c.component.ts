@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { NGXLogger } from 'ngx-logger';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
