@@ -1,27 +1,37 @@
-<mat-card fxLayout="column" fxFlex="auto">
-    <mat-card-title>運用情報</mat-card-title>
-    <mat-card-subtitle> 相鉄線の運用情報を検索できます。 </mat-card-subtitle>
-    <mat-card-content fxFlex="auto">
-        <mat-nav-list>
-            <h3 mat-subheader>目撃情報</h3>
-            <a mat-list-item routerLink="/operation/real-time">
-                リアルタイム運用情報
-            </a>
-            <a mat-list-item routerLink="/operation/past-time">
-                過去の運用情報
-            </a>
-        </mat-nav-list>
-        <mat-list>
-            <h3 mat-subheader>運用表／運用行路図</h3>
-            <mat-list-item style="margin-top: 8px">
-                <mat-form-field fxFlex="auto">
+<ng-container *rxLet="vm$; let vm; strategy: 'immediate'; patchZone: true">
+    <article
+        class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+    >
+        <header>
+            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">運用情報</h2>
+            <p class="tw-m-0 tw-text-sm tw-text-grey-700">
+                相鉄線の運用情報を検索できます。
+            </p>
+        </header>
+        <section class="tw-flex-grow">
+            <div
+                class="tw-flex tw-flex-col [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal [&>*]:tw-mx-[-16px] [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100"
+            >
+                <h3>目撃情報</h3>
+                <a matRipple routerLink="/operation/real-time">
+                    リアルタイム運用情報
+                </a>
+                <a matRipple routerLink="/operation/past-time">
+                    過去の運用情報
+                </a>
+                <h3>運用表／運用行路図</h3>
+                <mat-form-field>
+                    <mat-label>ダイヤ</mat-label>
                     <mat-select
-                        placeholder="ダイヤ"
                         [(ngModel)]="_calendarId"
                         (valueChange)="onSelectedCalendarId$.next($event)"
                     >
                         <mat-option
-                            *ngFor="let calendar of calendars$ | async"
+                            *rxFor="
+                                let calendar of vm.calendars;
+                                strategy: 'userBlocking';
+                                patchZone: true
+                            "
                             [value]="calendar.calendarId"
                         >
                             {{
@@ -31,34 +41,36 @@
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-            </mat-list-item>
-            <mat-list-item style="margin-top: 8px">
-                <mat-form-field fxFlex="auto">
+                <mat-form-field>
+                    <mat-label>運用番号</mat-label>
                     <mat-select
-                        placeholder="運用番号"
                         [(ngModel)]="_operationId"
                         (valueChange)="onSelectedOperationId$.next($event)"
                     >
                         <mat-option [value]="null">選択しない</mat-option>
                         <mat-option
-                            *ngFor="let operation of operations$ | async"
+                            *rxFor="
+                                let operation of vm.operations;
+                                strategy: 'userBlocking';
+                                patchZone: true
+                            "
                             [value]="operation.operationId"
                         >
                             {{ operation.operationNumber }}運
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
-            </mat-list-item>
-        </mat-list>
-    </mat-card-content>
-    <mat-card-actions align="end">
-        <button
-            type="button"
-            mat-raised-button
-            color="primary"
-            (click)="onClickedSearch$.next()"
-        >
-            検索
-        </button>
-    </mat-card-actions>
-</mat-card>
+            </div>
+        </section>
+        <footer class="tw-flex tw-flex-row tw-justify-end">
+            <button
+                type="button"
+                color="primary"
+                mat-raised-button
+                (click)="onClickedSearch$.next()"
+            >
+                検索
+            </button>
+        </footer>
+    </article>
+</ng-container>

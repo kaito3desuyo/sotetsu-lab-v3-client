@@ -28,10 +28,7 @@ export class OperationSearchCardPComponent {
     _calendarId: CalendarDetailsDto['calendarId'] = null;
     _operationId: OperationDetailsDto['operationId'] = null;
 
-    readonly calendarId$ = this.state.select('calendarId');
-    readonly operationId$ = this.state.select('operationId');
-    readonly calendars$ = this.state.select('calendars');
-    readonly operations$ = this.state.select('operations');
+    readonly vm$ = this.state.select();
 
     readonly onChangedInputCalendarId$ = new Subject<
         CalendarDetailsDto['calendarId']
@@ -75,15 +72,27 @@ export class OperationSearchCardPComponent {
     >();
 
     constructor(private readonly state: RxState<State>) {
-        this.state.connect('calendarId', this.onChangedInputCalendarId$);
-        this.state.connect('operationId', this.onChangedInputOperationId$);
-        this.state.connect('calendars', this.onChangedInputCalendars$);
-        this.state.connect('operations', this.onChangedInputOperations$);
+        this.state.connect(
+            'calendarId',
+            this.onChangedInputCalendarId$.asObservable()
+        );
+        this.state.connect(
+            'operationId',
+            this.onChangedInputOperationId$.asObservable()
+        );
+        this.state.connect(
+            'calendars',
+            this.onChangedInputCalendars$.asObservable()
+        );
+        this.state.connect(
+            'operations',
+            this.onChangedInputOperations$.asObservable()
+        );
 
-        this.state.hold(this.calendarId$, (calendarId) => {
+        this.state.hold(this.state.select('calendarId'), (calendarId) => {
             this._calendarId = calendarId;
         });
-        this.state.hold(this.operationId$, (operationId) => {
+        this.state.hold(this.state.select('operationId'), (operationId) => {
             this._operationId = operationId;
         });
 

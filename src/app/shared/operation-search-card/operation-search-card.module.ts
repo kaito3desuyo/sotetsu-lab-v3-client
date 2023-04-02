@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
-import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
-import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
-import { MatLegacyListModule as MatListModule } from '@angular/material/legacy-list';
-import { MatLegacySelectModule as MatSelectModule } from '@angular/material/legacy-select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatRippleModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { RouterModule } from '@angular/router';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
+import { LetModule } from '@rx-angular/template/let';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { OperationSearchCardCComponent } from './components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardPComponent } from './components/operation-search-card-p/operation-search-card-p.component';
@@ -30,12 +32,14 @@ import {
         CommonModule,
         FormsModule,
         RouterModule,
-        FlexLayoutModule,
-        MatCardModule,
-        MatListModule,
+        MatFormFieldModule,
         MatSelectModule,
         MatButtonModule,
+        MatRippleModule,
         PipesModule,
+        LetModule,
+        ForModule,
+        IfModule,
     ],
     exports: [OperationSearchCardCComponent],
 })
