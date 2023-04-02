@@ -11,7 +11,6 @@ import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
 import { Subject } from 'rxjs';
-import { take } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -22,7 +21,6 @@ type State = {
     operation: OperationDetailsDto;
     stations: StationDetailsDto[];
     tripOperationLists: TripOperationListDetailsDto[];
-    inprocessDownloadImage: boolean;
 };
 
 @Component({
@@ -75,11 +73,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         tripDirection: 0 | 1;
     }> = new EventEmitter();
 
-    @ViewChild('svgElement') set svgElement(elRef: ElementRef) {
-        if (elRef) {
-            this.onChangedViewChildSvgElement$.next(elRef);
-        }
-    }
+    @ViewChild('svgElement') svgElement: ElementRef;
 
     constructor(private readonly state: RxState<State>) {
         this.state.connect(
@@ -175,23 +169,10 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
             return canvas;
         };
 
-        this.state.set({
-            inprocessDownloadImage: true,
-        });
-
-        const svgElementRef = await this.onChangedViewChildSvgElement$
-            .asObservable()
-            .pipe(take(2))
-            .toPromise();
-
-        const svgUrl = getSvgUrl(svgElementRef);
+        const svgUrl = getSvgUrl(this.svgElement);
         const image = await svgUrlToImageElement(svgUrl);
         URL.revokeObjectURL(svgUrl);
         const canvas = createCanvasElement(image);
         saveAs(canvas.toDataURL(), `${name.replace(/ /g, '_')}.png`);
-
-        this.state.set({
-            inprocessDownloadImage: false,
-        });
     }
 }
