@@ -3,7 +3,7 @@ import { guid, Query, Store } from '@datorama/akita';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form';
+import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form.interface';
 
 type TimetableSearchCardState = ITimetableSearchCardForm & {};
 

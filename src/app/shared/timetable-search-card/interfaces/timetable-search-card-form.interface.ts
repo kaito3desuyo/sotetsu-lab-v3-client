@@ -3,8 +3,8 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 export interface ITimetableSearchCardForm {
-    calendarId: CalendarDetailsDto['calendarId'];
-    tripDirection: TripDetailsDto['tripDirection'];
-    searchByStation: boolean;
-    stationId: StationDetailsDto['stationId'];
+    calendarId?: CalendarDetailsDto['calendarId'];
+    tripDirection?: TripDetailsDto['tripDirection'];
+    searchByStation?: boolean;
+    stationId?: StationDetailsDto['stationId'];
 }
