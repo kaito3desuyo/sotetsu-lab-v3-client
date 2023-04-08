@@ -1,64 +1,96 @@
-<mat-card fxLayout="column" fxFlex="auto">
-    <mat-card-title>時刻表</mat-card-title>
-    <mat-card-subtitle>相鉄線の時刻表を検索できます。</mat-card-subtitle>
-    <mat-card-content>
-        <form fxLayout="column" fxLayoutGap="16px" [formGroup]="form">
-            <mat-form-field fxFlex="auto">
-                <mat-select placeholder="ダイヤ" formControlName="calendarId">
-                    <mat-option
-                        *ngFor="let calendar of calendars$ | async"
-                        [value]="calendar.calendarId"
-                    >
-                        {{
-                            calendar.startDate
-                                | dayjs: { format: 'YYYY年MM月DD日改正 ' }
-                        }}{{ calendar.calendarName }}</mat-option
-                    >
-                </mat-select>
-                <mat-error *ngIf="form.get('calendarId')">
-                    <strong>必須項目</strong>です
-                </mat-error>
-            </mat-form-field>
-            <mat-radio-group
-                fxLayout="row"
-                fxLayoutGap="16px"
-                formControlName="tripDirection"
-            >
-                <mat-radio-button [value]="0">上り</mat-radio-button>
-                <mat-radio-button [value]="1">下り</mat-radio-button>
-            </mat-radio-group>
-            <mat-slide-toggle formControlName="searchByStation">
-                駅を指定して検索する
-            </mat-slide-toggle>
-            <mat-form-field fxFlex="auto">
-                <mat-select placeholder="駅名" formControlName="stationId">
-                    <mat-optgroup
-                        *ngFor="let rsl of routeStationLists$ | async"
-                        [label]="rsl.routeName"
-                    >
+<ng-container *rxLet="vm$; let vm; strategy: 'immediate'; patchZone: true">
+    <article
+        class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+    >
+        <header>
+            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">時刻表</h2>
+            <p class="tw-m-0 tw-text-sm tw-text-grey-700">
+                相鉄線の時刻表を検索できます。
+            </p>
+        </header>
+        <section class="tw-flex-grow">
+            <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+                <mat-form-field appearance="fill">
+                    <mat-label>ダイヤ</mat-label>
+                    <mat-select formControlName="calendarId">
                         <mat-option
-                            *ngFor="let rsl2 of rsl.routeStationLists"
-                            [value]="rsl2.station.stationId"
+                            *rxFor="
+                                let calendar of vm.calendars;
+                                strategy: 'userBlocking';
+                                patchZone: true
+                            "
+                            [value]="calendar.calendarId"
                         >
-                            {{ rsl2.station.stationName }}
-                        </mat-option>
-                    </mat-optgroup>
-                </mat-select>
-                <mat-error *ngIf="form.get('stationId')">
-                    <strong>必須項目</strong>です
-                </mat-error>
-            </mat-form-field>
-        </form>
-    </mat-card-content>
-    <mat-card-actions align="end">
-        <button
-            type="button"
-            mat-raised-button
-            color="primary"
-            [disabled]="form.invalid"
-            (click)="onClickedSearch$.next()"
-        >
-            検索
-        </button>
-    </mat-card-actions>
-</mat-card>
+                            {{
+                                calendar.startDate
+                                    | dayjs: { format: 'YYYY年MM月DD日改正 ' }
+                            }}{{ calendar.calendarName }}</mat-option
+                        >
+                    </mat-select>
+                    <mat-error
+                        *rxIf="
+                            form.get('calendarId');
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
+                    >
+                        <strong>必須項目</strong>です
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-radio-group
+                    class="tw-flex tw-flex-row tw-gap-4"
+                    formControlName="tripDirection"
+                >
+                    <mat-radio-button [value]="0">上り</mat-radio-button>
+                    <mat-radio-button [value]="1">下り</mat-radio-button>
+                </mat-radio-group>
+
+                <mat-slide-toggle formControlName="searchByStation">
+                    駅を指定して検索する
+                </mat-slide-toggle>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>駅名</mat-label>
+                    <mat-select formControlName="stationId">
+                        <mat-optgroup
+                            *rxFor="
+                                let rsl of vm.routeStationLists;
+                                strategy: 'userBlocking';
+                                patchZone: true
+                            "
+                            [label]="rsl.routeName"
+                        >
+                            <mat-option
+                                *ngFor="let rsl2 of rsl.routeStationLists"
+                                [value]="rsl2.station.stationId"
+                            >
+                                {{ rsl2.station.stationName }}
+                            </mat-option>
+                        </mat-optgroup>
+                    </mat-select>
+                    <mat-error
+                        *rxIf="
+                            form.get('stationId');
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
+                    >
+                        <strong>必須項目</strong>です
+                    </mat-error>
+                </mat-form-field>
+            </form>
+        </section>
+        <footer class="tw-flex tw-flex-row tw-justify-end">
+            <button
+                type="button"
+                color="primary"
+                mat-raised-button
+                [disabled]="form.invalid"
+                (click)="onClickedSearch$.next()"
+            >
+                検索
+            </button>
+        </footer>
+    </article>
+</ng-container>

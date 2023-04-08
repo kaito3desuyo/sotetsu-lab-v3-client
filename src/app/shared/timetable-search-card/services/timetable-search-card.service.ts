@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form';
+import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form.interface';
 
 @Injectable()
 export class TimetableSearchCardService {
