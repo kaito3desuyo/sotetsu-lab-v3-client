@@ -1,43 +1,61 @@
-<mat-card fxLayout="column" fxFlex="auto">
-    <mat-card-title> 列車を追加 </mat-card-title>
-    <mat-card-subtitle>列車データを追加できます。</mat-card-subtitle>
-    <mat-card-content fxFlex="auto">
-        <form fxLayout="column" fxLayoutGap="16px" [formGroup]="form">
-            <mat-form-field fxFlex="auto">
-                <mat-select placeholder="ダイヤ" formControlName="calendarId">
-                    <mat-option
-                        *ngFor="let calendar of calendars$ | async"
-                        [value]="calendar.calendarId"
+<ng-container *rxLet="vm$; let vm; strategy: 'immediate'; patchZone: true">
+    <article
+        class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+    >
+        <header>
+            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">列車を追加</h2>
+            <p class="tw-m-0 tw-text-sm tw-text-grey-700">
+                列車データを追加できます。
+            </p>
+        </header>
+        <section class="tw-flex-grow">
+            <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+                <mat-form-field appearance="fill">
+                    <mat-label>ダイヤ</mat-label>
+                    <mat-select formControlName="calendarId">
+                        <mat-option
+                            *rxFor="
+                                let calendar of vm.calendars;
+                                strategy: 'userBlocking';
+                                patchZone: false
+                            "
+                            [value]="calendar.calendarId"
+                        >
+                            {{
+                                calendar.startDate
+                                    | dayjs: { format: 'YYYY年MM月DD日改正 ' }
+                            }}{{ calendar.calendarName }}</mat-option
+                        >
+                    </mat-select>
+                    <mat-error
+                        *rxIf="
+                            form.get('calendarId');
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
                     >
-                        {{
-                            calendar.startDate
-                                | dayjs: { format: 'YYYY年MM月DD日改正 ' }
-                        }}{{ calendar.calendarName }}</mat-option
-                    >
-                </mat-select>
-                <mat-error *ngIf="form.get('calendarId')">
-                    <strong>必須項目</strong>です
-                </mat-error>
-            </mat-form-field>
-            <mat-radio-group
-                fxLayout="row"
-                fxLayoutGap="16px"
-                formControlName="tripDirection"
+                        <strong>必須項目</strong>です
+                    </mat-error>
+                </mat-form-field>
+                <mat-radio-group
+                    class="tw-flex tw-flex-row tw-gap-4"
+                    formControlName="tripDirection"
+                >
+                    <mat-radio-button value="0">上り</mat-radio-button>
+                    <mat-radio-button value="1">下り</mat-radio-button>
+                </mat-radio-group>
+            </form>
+        </section>
+        <footer class="tw-flex tw-flex-row tw-justify-end">
+            <button
+                type="button"
+                color="primary"
+                mat-raised-button
+                [disabled]="form.invalid"
+                (click)="onClickedMoveTimetableAdd$.next()"
             >
-                <mat-radio-button value="0">上り</mat-radio-button>
-                <mat-radio-button value="1">下り</mat-radio-button>
-            </mat-radio-group>
-        </form>
-    </mat-card-content>
-    <mat-card-actions align="end">
-        <button
-            type="button"
-            mat-raised-button
-            color="primary"
-            [disabled]="form.invalid"
-            (click)="onClickedMoveTimetableAdd$.next()"
-        >
-            列車情報入力へ移る
-        </button>
-    </mat-card-actions>
-</mat-card>
+                列車情報入力へ移る
+            </button>
+        </footer>
+    </article>
+</ng-container>
