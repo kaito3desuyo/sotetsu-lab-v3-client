@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { AdsenseModule } from 'ng2-adsense';
-import { LibraryListCardCComponent } from 'src/app/shared/library-list-card/components/library-list-card-c/library-list-card-c.component';
-import { OperationPostCardCComponent } from 'src/app/shared/operation-post-card/components/operation-post-card-c/operation-post-card-c.component';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
-import { TimetablePostCardCComponent } from 'src/app/shared/timetable-post-card/components/timetable-post-card-c/timetable-post-card-c.component';
-import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
+import LIBRARY_LIST_CARD_DECLARATIONS from 'src/app/shared/library-list-card/library-list-card.declaration';
+import OPERATION_POST_CARD_DECLARATIONS from 'src/app/shared/operation-post-card/operation-post-card.declaration';
+import OPERATION_SEARCH_CARD_DECLARATIONS from 'src/app/shared/operation-search-card/operation-search-card.declaration';
+import TIMETABLE_POST_CARD_DECLARATIONS from 'src/app/shared/timetable-post-card/timetable-post-card.declaration';
+import TIMETABLE_SEARCH_CARD_DECLARATIONS from 'src/app/shared/timetable-search-card/timetable-search-card.declaration';
 import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashboard-description-p.component';
 
 @Component({
@@ -16,12 +16,12 @@ import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashb
         AdsenseModule,
         //
         DashboardDescriptionPComponent,
-        //
-        OperationSearchCardCComponent,
-        OperationPostCardCComponent,
-        TimetableSearchCardCComponent,
-        TimetablePostCardCComponent,
-        LibraryListCardCComponent,
+
+        OPERATION_SEARCH_CARD_DECLARATIONS,
+        OPERATION_POST_CARD_DECLARATIONS,
+        TIMETABLE_SEARCH_CARD_DECLARATIONS,
+        TIMETABLE_POST_CARD_DECLARATIONS,
+        LIBRARY_LIST_CARD_DECLARATIONS,
     ],
 })
 export class DashboardMainCComponent {}

@@ -2,13 +2,13 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
-import { OPERATION_POST_CARD_PROVIDERS } from 'src/app/shared/operation-post-card/operation-post-card.provider';
-import { OPERATION_SEARCH_CARD_PROVIDERS } from 'src/app/shared/operation-search-card/operation-search-card.provider';
+import OPERATION_POST_CARD_PROVIDERS from 'src/app/shared/operation-post-card/operation-post-card.provider';
+import OPERATION_SEARCH_CARD_PROVIDERS from 'src/app/shared/operation-search-card/operation-search-card.provider';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
-import { TIMETABLE_POST_CARD_PROVIDERS } from 'src/app/shared/timetable-post-card/timetable-post-card.provider';
+import TIMETABLE_POST_CARD_PROVIDERS from 'src/app/shared/timetable-post-card/timetable-post-card.provider';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TIMETABLE_SEARCH_CARD_PROVIDERS } from 'src/app/shared/timetable-search-card/timetable-search-card.provider';
+import TIMETABLE_SEARCH_CARD_PROVIDERS from 'src/app/shared/timetable-search-card/timetable-search-card.provider';
 import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard-main-c.component';
 
 @Component({

@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
-import { LibraryListCardCComponent } from './components/library-list-card-c/library-list-card-c.component';
+import LIBRARY_LIST_CARD_DECLARATIONS from './library-list-card.declaration';
 
 @NgModule({
-    imports: [LibraryListCardCComponent],
-    exports: [LibraryListCardCComponent],
+    imports: [...LIBRARY_LIST_CARD_DECLARATIONS],
+    exports: [...LIBRARY_LIST_CARD_DECLARATIONS],
 })
 export class LibraryListCardModule {}
