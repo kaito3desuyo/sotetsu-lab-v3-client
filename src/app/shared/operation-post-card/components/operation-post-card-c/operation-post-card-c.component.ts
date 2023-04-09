@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -6,24 +7,27 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
 import { OperationPostCardService } from '../../services/operation-post-card.service';
+import { OperationPostCardPComponent } from '../operation-post-card-p/operation-post-card-p.component';
 
 @Component({
+    standalone: true,
     selector: 'app-operation-post-card-c',
     templateUrl: './operation-post-card-c.component.html',
     styleUrls: ['./operation-post-card-c.component.scss'],
+    imports: [CommonModule, OperationPostCardPComponent],
 })
 export class OperationPostCardCComponent {
+    private readonly loading = inject(LoadingService);
+    private readonly error = inject(ErrorHandlerService);
+    private readonly notification = inject(NotificationService);
+    private readonly agencyListStateQuery = inject(AgencyListStateQuery);
+    private readonly operationPostCardService = inject(
+        OperationPostCardService
+    );
+
     readonly agencies$ = this.agencyListStateQuery.agencies$;
     readonly submitOperationSightingEvent$ =
         this.operationPostCardService.receiveSubmitOperationSightingEvent();
-
-    constructor(
-        private readonly loading: LoadingService,
-        private readonly error: ErrorHandlerService,
-        private readonly notification: NotificationService,
-        private readonly agencyListStateQuery: AgencyListStateQuery,
-        private readonly operationPostCardService: OperationPostCardService
-    ) {}
 
     async onReceiveSubmitSighting(
         formValue: IOperationPostCardForm

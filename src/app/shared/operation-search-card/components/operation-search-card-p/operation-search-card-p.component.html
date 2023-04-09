@@ -30,7 +30,7 @@
                             *rxFor="
                                 let calendar of vm.calendars;
                                 strategy: 'userBlocking';
-                                patchZone: true
+                                patchZone: false
                             "
                             [value]="calendar.calendarId"
                         >
@@ -52,7 +52,7 @@
                             *rxFor="
                                 let operation of vm.operations;
                                 strategy: 'userBlocking';
-                                patchZone: true
+                                patchZone: false
                             "
                             [value]="operation.operationId"
                         >

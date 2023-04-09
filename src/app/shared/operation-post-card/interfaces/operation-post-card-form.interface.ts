@@ -1,7 +1,7 @@
 export interface IOperationPostCardForm {
-    agencyId: string;
-    formationOrVehicleNumber: string;
-    operationNumber: string;
-    timeSetting: 'currentTime' | 'specifiedTime';
+    agencyId?: string;
+    formationOrVehicleNumber?: string;
+    operationNumber?: string;
+    timeSetting?: string;
     sightingTime?: string;
 }

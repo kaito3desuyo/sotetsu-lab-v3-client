@@ -1,18 +1,10 @@
 import { NgModule } from '@angular/core';
-import { TimetableSearchCardCComponent } from './components/timetable-search-card-c/timetable-search-card-c.component';
-import { TimetableSearchCardService } from './services/timetable-search-card.service';
-import {
-    TimetableSearchCardStateQuery,
-    TimetableSearchCardStateStore,
-} from './states/timetable-search-card.state';
+import { TIMETABLE_SEARCH_CARD_DECLARATIONS } from './timetable-search-card.declaration';
+import { TIMETABLE_SEARCH_CARD_PROVIDERS } from './timetable-search-card.provider';
 
 @NgModule({
-    providers: [
-        TimetableSearchCardService,
-        TimetableSearchCardStateStore,
-        TimetableSearchCardStateQuery,
-    ],
-    imports: [TimetableSearchCardCComponent],
-    exports: [TimetableSearchCardCComponent],
+    providers: TIMETABLE_SEARCH_CARD_PROVIDERS,
+    imports: TIMETABLE_SEARCH_CARD_DECLARATIONS,
+    exports: TIMETABLE_SEARCH_CARD_DECLARATIONS,
 })
 export class TimetableSearchCardModule {}

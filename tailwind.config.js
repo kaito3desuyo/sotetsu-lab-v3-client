@@ -10,9 +10,34 @@ module.exports = {
             white: colors.common.white,
             black: colors.common.black,
         },
-        extend: {},
+        extend: {
+            gridTemplateAreas: {
+                'dashboard-full': [
+                    'description description description',
+                    'operation-search-card operation-post-card library-list-card',
+                    'adsense adsense library-list-card',
+                    'timetable-search-card timetable-post-card library-list-card',
+                ],
+                'dashboard-medium': [
+                    'description description',
+                    'operation-search-card operation-post-card',
+                    'adsense adsense',
+                    'timetable-search-card timetable-post-card',
+                    'library-list-card library-list-card',
+                ],
+                'dashboard-slim': [
+                    'description',
+                    'operation-search-card',
+                    'operation-post-card',
+                    'adsense',
+                    'timetable-search-card',
+                    'timetable-post-card',
+                    'library-list-card',
+                ],
+            },
+        },
     },
-    plugins: [],
+    plugins: [require('@savvywombat/tailwindcss-grid-areas')],
     corePlugins: {
         preflight: false,
     },
