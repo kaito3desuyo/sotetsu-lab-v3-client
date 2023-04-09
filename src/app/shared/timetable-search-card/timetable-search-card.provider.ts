@@ -5,8 +5,10 @@ import {
     TimetableSearchCardStateQuery,
 } from './states/timetable-search-card.state';
 
-export const TIMETABLE_SEARCH_CARD_PROVIDERS: Provider[] = [
+const TIMETABLE_SEARCH_CARD_PROVIDERS: Provider[] = [
     TimetableSearchCardService,
     TimetableSearchCardStateStore,
     TimetableSearchCardStateQuery,
 ];
+
+export default TIMETABLE_SEARCH_CARD_PROVIDERS;

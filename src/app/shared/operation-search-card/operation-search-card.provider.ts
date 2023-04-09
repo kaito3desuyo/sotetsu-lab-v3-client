@@ -5,8 +5,10 @@ import {
     OperationSearchCardStateQuery,
 } from './states/operation-search-card.state';
 
-export const OPERATION_SEARCH_CARD_PROVIDERS: Provider[] = [
+const OPERATION_SEARCH_CARD_PROVIDERS: Provider[] = [
     OperationSearchCardService,
     OperationSearchCardStateStore,
     OperationSearchCardStateQuery,
 ];
+
+export default OPERATION_SEARCH_CARD_PROVIDERS;
