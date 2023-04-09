@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
 import { switchMap } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -8,25 +9,34 @@ import {
     OperationSearchCardStateQuery,
     OperationSearchCardStateStore,
 } from '../../states/operation-search-card.state';
+import { OperationSearchCardPComponent } from '../operation-search-card-p/operation-search-card-p.component';
 
 @Component({
+    standalone: true,
     selector: 'app-operation-search-card-c',
     templateUrl: './operation-search-card-c.component.html',
     styleUrls: ['./operation-search-card-c.component.scss'],
     providers: [RxState],
+    imports: [CommonModule, OperationSearchCardPComponent],
 })
 export class OperationSearchCardCComponent {
+    private readonly state = inject(RxState);
+    private readonly operationSearchCardService = inject(
+        OperationSearchCardService
+    );
+    private readonly operationSearchCardStateStore = inject(
+        OperationSearchCardStateStore
+    );
+    private readonly operationSearchCardStateQuery = inject(
+        OperationSearchCardStateQuery
+    );
+
     readonly calendarId$ = this.operationSearchCardStateQuery.calendarId$;
     readonly operationId$ = this.operationSearchCardStateQuery.operationId$;
     readonly calendars$ = this.operationSearchCardStateQuery.calendars$;
     readonly operations$ = this.operationSearchCardStateQuery.operations$;
 
-    constructor(
-        private readonly state: RxState<{}>,
-        private readonly operationSearchCardService: OperationSearchCardService,
-        private readonly operationSearchCardStateStore: OperationSearchCardStateStore,
-        private readonly operationSearchCardStateQuery: OperationSearchCardStateQuery
-    ) {
+    constructor() {
         this.state.hold(
             this.calendarId$.pipe(
                 switchMap(() =>

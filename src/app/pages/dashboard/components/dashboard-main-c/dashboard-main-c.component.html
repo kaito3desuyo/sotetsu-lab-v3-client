@@ -1,45 +1,43 @@
 <div
-    [gdAreas.lt-md]="
-        'description | operation-search-card | operation-post-card | adsense | timetable-search-card | timetable-post-card | library-list-card'
-    "
-    [gdAreas.gt-sm]="
-        'description description description | operation-search-card operation-post-card library-list-card | adsense adsense library-list-card | timetable-search-card timetable-post-card library-list-card'
-    "
-    gdGap="16px"
-    [gdColumns.lt-md]="'100%'"
-    [gdColumns.gt-sm]="'1fr 1fr 1fr'"
-    [gdRows.lt-md]="'auto'"
-    [gdRows.gt-sm]="'auto auto auto'"
+    class="tw-grid tw-auto-cols-fr tw-gap-4 tw-grid-areas-dashboard-slim md:tw-grid-areas-dashboard-medium xl:tw-grid-areas-dashboard-full"
 >
-    <div gdArea="description" fxLayout="column">
+    <div class="tw-grid-in-description">
         <app-dashboard-description-p
-            fxFlex="auto"
+            class="tw-h-full tw-w-full"
         ></app-dashboard-description-p>
     </div>
-    <div gdArea="operation-search-card" fxLayout="column">
+
+    <div class="tw-grid-in-operation-search-card">
         <app-operation-search-card-c
-            fxFlex="auto"
+            class="tw-h-full tw-w-full"
         ></app-operation-search-card-c>
     </div>
-    <div gdArea="operation-post-card" fxLayout="column">
-        <app-operation-post-card-c fxFlex="auto"></app-operation-post-card-c>
+
+    <div class="tw-grid-in-operation-post-card">
+        <app-operation-post-card-c
+            class="tw-h-full tw-w-full"
+        ></app-operation-post-card-c>
     </div>
-    <div gdArea="timetable-search-card" fxLayout="column">
+
+    <div class="tw-grid-in-timetable-search-card">
         <app-timetable-search-card-c
-            fxFlex="auto"
+            class="tw-h-full tw-w-full"
         ></app-timetable-search-card-c>
     </div>
-    <div gdArea="timetable-post-card" fxLayout="column">
-        <app-timetable-post-card-c fxFlex="auto"></app-timetable-post-card-c>
+
+    <div class="tw-grid-in-timetable-post-card">
+        <app-timetable-post-card-c
+            class="tw-h-full tw-w-full"
+        ></app-timetable-post-card-c>
     </div>
-    <div gdArea="library-list-card" fxLayout="column">
-        <app-library-list-card-c fxFlex="auto"></app-library-list-card-c>
+
+    <div class="tw-grid-in-library-list-card">
+        <app-library-list-card-c
+            class="tw-h-full tw-w-full"
+        ></app-library-list-card-c>
     </div>
-    <div gdArea="adsense">
-        <ng-adsense
-            [adSlot]="7813861593"
-            [adFormat]="'horizontal'"
-            [fullWidthResponsive]="false"
-        ></ng-adsense>
+
+    <div class="tw-grid-in-adsense">
+        <ng-adsense [adSlot]="7813861593"></ng-adsense>
     </div>
 </div>

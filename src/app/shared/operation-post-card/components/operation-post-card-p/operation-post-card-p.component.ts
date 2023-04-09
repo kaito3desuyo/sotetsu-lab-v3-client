@@ -1,12 +1,23 @@
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     EventEmitter,
     Input,
     Output,
+    inject,
 } from '@angular/core';
-import { UntypedFormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { RxState } from '@rx-angular/state';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
+import { LetModule } from '@rx-angular/template/let';
+import { Subject } from 'rxjs';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
 
@@ -15,14 +26,30 @@ type State = {
 };
 
 @Component({
+    standalone: true,
     selector: 'app-operation-post-card-p',
     templateUrl: './operation-post-card-p.component.html',
     styleUrls: ['./operation-post-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RxState],
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatRadioModule,
+        MatSelectModule,
+        MatButtonModule,
+        LetModule,
+        ForModule,
+        IfModule,
+    ],
 })
 export class OperationPostCardPComponent {
-    readonly sightingForm = this.fb.group({
+    private readonly fb = inject(FormBuilder);
+    private readonly state = inject<RxState<State>>(RxState);
+
+    readonly sightingForm = this.fb.nonNullable.group({
         agencyId: ['', Validators.required],
         formationOrVehicleNumber: ['', Validators.required],
         operationNumber: ['', Validators.required],
@@ -31,11 +58,12 @@ export class OperationPostCardPComponent {
     });
 
     readonly vm$ = this.state.select();
-    readonly agencies$ = this.state.select('agencies');
 
     readonly onChangedInputAgencies$ = new EventEmitter<AgencyDetailsDto[]>();
     readonly onChangedInputSubmitOperationSightingEvent$ =
         new EventEmitter<void>();
+
+    readonly onSubmittedSighting$ = new Subject<void>();
 
     @Input() set agencies(agencies: AgencyDetailsDto[]) {
         this.onChangedInputAgencies$.next(agencies);
@@ -43,13 +71,15 @@ export class OperationPostCardPComponent {
     @Input() set submitOperationSightingEvent(event: void) {
         this.onChangedInputSubmitOperationSightingEvent$.next(event);
     }
+
     @Output() submitSighting = new EventEmitter<IOperationPostCardForm>();
 
-    constructor(
-        private readonly fb: UntypedFormBuilder,
-        private readonly state: RxState<State>
-    ) {
-        this.state.connect('agencies', this.onChangedInputAgencies$);
+    constructor() {
+        this.state.connect(
+            'agencies',
+            this.onChangedInputAgencies$.asObservable()
+        );
+
         this.state.hold(
             this.sightingForm.get('timeSetting').valueChanges,
             (timeSetting) => {
@@ -63,8 +93,9 @@ export class OperationPostCardPComponent {
                 }
             }
         );
+
         this.state.hold(
-            this.onChangedInputSubmitOperationSightingEvent$,
+            this.onChangedInputSubmitOperationSightingEvent$.asObservable(),
             () => {
                 this.sightingForm.reset({
                     agencyId: '',
@@ -75,9 +106,9 @@ export class OperationPostCardPComponent {
                 });
             }
         );
-    }
 
-    onClickSubmit(): void {
-        this.submitSighting.emit(this.sightingForm.value);
+        this.state.hold(this.onSubmittedSighting$.asObservable(), () => {
+            this.submitSighting.emit(this.sightingForm.value);
+        });
     }
 }

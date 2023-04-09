@@ -23,14 +23,24 @@
                                 *rxFor="
                                     let agency of vm.agencies;
                                     strategy: 'userBlocking';
-                                    patchZone: true
+                                    patchZone: false
                                 "
                                 [value]="agency.agencyId"
                             >
                                 {{ agency.agencyName }}
                             </mat-option>
                         </mat-select>
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
+                        <mat-error
+                            *rxIf="
+                                sightingForm
+                                    .get('agencyId')
+                                    .hasError('required');
+                                strategy: 'userBlocking';
+                                patchZone: false
+                            "
+                        >
+                            <strong>必須項目</strong>です
+                        </mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="fill" class="tw-flex-grow">
@@ -40,7 +50,17 @@
                             formControlName="formationOrVehicleNumber"
                         />
                         <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
+                        <mat-error
+                            *rxIf="
+                                sightingForm
+                                    .get('formationOrVehicleNumber')
+                                    .hasError('required');
+                                strategy: 'userBlocking';
+                                patchZone: false
+                            "
+                        >
+                            <strong>必須項目</strong>です
+                        </mat-error>
                     </mat-form-field>
                 </div>
 
@@ -48,7 +68,17 @@
                     <mat-label>運用番号</mat-label>
                     <input matInput formControlName="operationNumber" />
                     <mat-hint> 休車の場合は'100'を入力 </mat-hint>
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                    <mat-error
+                        *rxIf="
+                            sightingForm
+                                .get('operationNumber')
+                                .hasError('required');
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
+                    >
+                        <strong>必須項目</strong>です
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-radio-group
@@ -73,7 +103,17 @@
                     <mat-hint>
                         当日分の入力は 04:00 ～ 現時刻（最大：翌03:59）まで
                     </mat-hint>
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                    <mat-error
+                        *rxIf="
+                            sightingForm
+                                .get('sightingTime')
+                                .hasError('required');
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
+                    >
+                        <strong>必須項目</strong>です
+                    </mat-error>
                 </mat-form-field>
             </form>
         </section>
@@ -83,7 +123,7 @@
                 color="primary"
                 mat-raised-button
                 [disabled]="sightingForm.invalid"
-                (click)="onClickSubmit()"
+                (click)="onSubmittedSighting$.next()"
             >
                 送信
             </button>

@@ -1,12 +1,24 @@
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     EventEmitter,
     Input,
     Output,
+    inject,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatRippleModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { RouterModule } from '@angular/router';
 import { RxState } from '@rx-angular/state';
+import { ForModule } from '@rx-angular/template/for';
+import { IfModule } from '@rx-angular/template/if';
+import { LetModule } from '@rx-angular/template/let';
 import { Subject } from 'rxjs';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
@@ -18,13 +30,29 @@ type State = {
 };
 
 @Component({
+    standalone: true,
     selector: 'app-operation-search-card-p',
     templateUrl: './operation-search-card-p.component.html',
     styleUrls: ['./operation-search-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RxState],
+    imports: [
+        CommonModule,
+        FormsModule,
+        RouterModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        MatButtonModule,
+        MatRippleModule,
+        PipesModule,
+        LetModule,
+        ForModule,
+        IfModule,
+    ],
 })
 export class OperationSearchCardPComponent {
+    private readonly state = inject<RxState<State>>(RxState);
+
     _calendarId: CalendarDetailsDto['calendarId'] = null;
     _operationId: OperationDetailsDto['operationId'] = null;
 
@@ -71,7 +99,7 @@ export class OperationSearchCardPComponent {
         CalendarDetailsDto['calendarId']
     >();
 
-    constructor(private readonly state: RxState<State>) {
+    constructor() {
         this.state.connect(
             'calendarId',
             this.onChangedInputCalendarId$.asObservable()
@@ -95,14 +123,13 @@ export class OperationSearchCardPComponent {
         this.state.hold(this.state.select('operationId'), (operationId) => {
             this._operationId = operationId;
         });
-
-        this.state.hold(this.onSelectedCalendarId$, (event) => {
+        this.state.hold(this.onSelectedCalendarId$.asObservable(), (event) => {
             this.selectCalendarId.emit(event);
         });
-        this.state.hold(this.onSelectedOperationId$, (event) => {
+        this.state.hold(this.onSelectedOperationId$.asObservable(), (event) => {
             this.selectOperationId.emit(event);
         });
-        this.state.hold(this.onClickedSearch$, () => {
+        this.state.hold(this.onClickedSearch$.asObservable(), () => {
             this.clickSearch.emit();
         });
     }
