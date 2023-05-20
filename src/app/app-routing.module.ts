@@ -26,8 +26,8 @@ const routes: Routes = [
     {
         path: 'library',
         loadChildren: () =>
-            import('./pages/library/library.module').then(
-                (m) => m.LibraryModule
+            import('./pages/library/library.route').then(
+                (mod) => mod.LIBRARY_ROUTES
             ),
     },
 ];

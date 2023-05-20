@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { LetModule } from '@rx-angular/template/let';
 
 @Component({
@@ -7,6 +8,6 @@ import { LetModule } from '@rx-angular/template/let';
     templateUrl: './library-list-card-p.component.html',
     styleUrls: ['./library-list-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [LetModule],
+    imports: [RouterModule, LetModule],
 })
 export class LibraryListCardPComponent {}
