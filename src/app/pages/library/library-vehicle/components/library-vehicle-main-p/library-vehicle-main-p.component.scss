@@ -12,7 +12,9 @@
     }
 
     .deep-orange {
-        color: mat.get-color-from-palette(mat.define-palette(mat.$deep-orange-palette));
+        color: mat.get-color-from-palette(
+            mat.define-palette(mat.$deep-orange-palette)
+        );
     }
 
     .red {
@@ -20,15 +22,24 @@
     }
 
     .teal {
-        color: mat.get-color-from-palette(mat.define-palette(mat.$teal-palette), 400);
+        color: mat.get-color-from-palette(
+            mat.define-palette(mat.$teal-palette),
+            400
+        );
     }
 
     .blue {
-        color: mat.get-color-from-palette(mat.define-palette(mat.$blue-palette), 800);
+        color: mat.get-color-from-palette(
+            mat.define-palette(mat.$blue-palette),
+            800
+        );
     }
 
     .indigo {
-        color: mat.get-color-from-palette(mat.define-palette(mat.$indigo-palette), 900);
+        color: mat.get-color-from-palette(
+            mat.define-palette(mat.$indigo-palette),
+            900
+        );
     }
 
     table.formation {
