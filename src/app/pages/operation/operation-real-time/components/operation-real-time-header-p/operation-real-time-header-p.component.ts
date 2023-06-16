@@ -1,5 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    Input,
+    inject,
+} from '@angular/core';
 import { RxState } from '@rx-angular/state';
+import { PushModule } from '@rx-angular/template/push';
 import { Dayjs } from 'dayjs';
 import { Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -9,13 +16,17 @@ type State = {
 };
 
 @Component({
+    standalone: true,
     selector: 'app-operation-real-time-header-p',
     templateUrl: './operation-real-time-header-p.component.html',
     styleUrls: ['./operation-real-time-header-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [CommonModule, PushModule],
     providers: [RxState],
 })
 export class OperationRealTimeHeaderPComponent {
+    private readonly state = inject<RxState<State>>(RxState);
+
     readonly finalUpdateTime$ = this.state
         .select('finalUpdateTime')
         .pipe(map((time) => time.toDate()));
@@ -26,10 +37,10 @@ export class OperationRealTimeHeaderPComponent {
         this.onChangedInputFinalUpdateTime$.next(time);
     }
 
-    constructor(private readonly state: RxState<State>) {
+    constructor() {
         this.state.connect(
             'finalUpdateTime',
-            this.onChangedInputFinalUpdateTime$
+            this.onChangedInputFinalUpdateTime$.asObservable()
         );
     }
 }

@@ -1,0 +1,164 @@
+<table class="tw-flex-1 tw-border-collapse tw-bg-white">
+    <thead>
+        <tr
+            class="tw-h-16 [&>th:first-child]:tw-pl-6 [&>th:last-child]:tw-pr-6 [&>th+th]:tw-pl-4"
+        >
+            <ng-container
+                *rxFor="
+                    let column of displayedColumns;
+                    strategy: 'immediate';
+                    patchZone: false;
+                    trackBy: 'this' | trackBy
+                "
+            >
+                <th
+                    class="tw-p-0 tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
+                >
+                    {{ operationRealTimeTableColumnLabel[column] }}
+                </th>
+            </ng-container>
+        </tr>
+    </thead>
+    <tbody>
+        <ng-container
+            *rxFor="
+                let row of data;
+                strategy: 'normal';
+                patchZone: false;
+                trackBy: trackByKey | trackBy
+            "
+        >
+            <tr
+                class="tw-h-12 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6 [&>td+td]:tw-pl-4"
+            >
+                <ng-container
+                    *rxFor="
+                        let column of displayedColumns;
+                        strategy: 'immediate';
+                        patchZone: false;
+                        trackBy: 'this' | trackBy
+                    "
+                >
+                    <td
+                        class="tw-border-0 tw-border-t tw-border-solid tw-border-t-grey-300 tw-p-0"
+                    >
+                        <ng-container
+                            *rxIf="
+                                column ===
+                                    operationRealTimeTableColumn.OPERATION_NUMBER;
+                                strategy: 'immediate';
+                                patchZone: false
+                            "
+                        >
+                            <app-operation-number-link
+                                [operation]="
+                                    row.operation ||
+                                    row.operationSighting?.circulatedOperation
+                                "
+                                [dayCountFromToday]="
+                                    primaryKey !==
+                                    operationRealTimeTableColumn.OPERATION_NUMBER
+                                        ? (row.operationSighting?.sightingTime
+                                          | calculateDayCountFromToday)
+                                        : undefined
+                                "
+                            ></app-operation-number-link>
+                        </ng-container>
+
+                        <ng-container
+                            *rxIf="
+                                column ===
+                                    operationRealTimeTableColumn.FORMATION_NUMBER;
+                                strategy: 'immediate';
+                                patchZone: false
+                            "
+                        >
+                            <app-formation-number-link
+                                [formation]="
+                                    row.formation ||
+                                    row.operationSighting?.formation
+                                "
+                                [dayCountFromToday]="
+                                    primaryKey !==
+                                    operationRealTimeTableColumn.FORMATION_NUMBER
+                                        ? (row.operationSighting?.sightingTime
+                                          | calculateDayCountFromToday)
+                                        : undefined
+                                "
+                            ></app-formation-number-link>
+                        </ng-container>
+
+                        <ng-container
+                            *rxIf="
+                                column ===
+                                    operationRealTimeTableColumn.CURRENT_POSITION;
+                                strategy: 'immediate';
+                                patchZone: false
+                            "
+                        >
+                            <app-current-position-link
+                                [todaysCalendarId]="todaysCalendarId"
+                                [stations]="stations"
+                                [tripClasses]="tripClasses"
+                                [currentPosition]="row.currentPosition"
+                            ></app-current-position-link>
+                        </ng-container>
+
+                        <ng-container
+                            *rxIf="
+                                column ===
+                                    operationRealTimeTableColumn.SIGHTING_TIME;
+                                strategy: 'immediate';
+                                patchZone: false
+                            "
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    time;
+                                    context: {
+                                        time: row.operationSighting
+                                            ?.sightingTime
+                                    }
+                                "
+                            ></ng-container>
+                        </ng-container>
+
+                        <ng-container
+                            *rxIf="
+                                column ===
+                                    operationRealTimeTableColumn.UPDATED_AT;
+                                strategy: 'immediate';
+                                patchZone: false
+                            "
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    time;
+                                    context: {
+                                        time: row.operationSighting?.updatedAt
+                                    }
+                                "
+                            ></ng-container>
+                        </ng-container>
+                    </td>
+                </ng-container>
+            </tr>
+        </ng-container>
+    </tbody>
+</table>
+
+<ng-template #time let-time="time">
+    <span
+        class="tw-text-sm tw-leading-none"
+        [ngStyle]="{
+            color:
+                (time | calculateDayCountFromToday) === 0
+                    ? '#f44336'
+                    : (time | calculateDayCountFromToday) === 1
+                    ? '#4caf50'
+                    : 'initial'
+        }"
+    >
+        {{ time | dayjs : { format: 'YYYY/MM/DD HH:mm:ss' } }}
+    </span>
+</ng-template>

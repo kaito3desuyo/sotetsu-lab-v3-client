@@ -1,72 +1,58 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
-import { forkJoin, of, Subject, timer } from 'rxjs';
-import { map, skip, switchMap, tap } from 'rxjs/operators';
+import { AdsenseModule } from 'ng2-adsense';
+import { forkJoin, interval, of } from 'rxjs';
+import { filter, switchMap, tap } from 'rxjs/operators';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/services/operation-post-card.service';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
-import {
-    OperationRealTimeStateQuery,
-    OperationRealTimeStateStore,
-} from '../../states/operation-real-time.state';
+import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
+import { OperationRealTimeControlPanelCComponent } from '../operation-real-time-control-panel-c/operation-real-time-control-panel-c.component';
+import { OperationRealTimeLegendPComponent } from '../operation-real-time-legend-p/operation-real-time-legend-p.component';
+import { OperationRealTimeNewTableByFormationCComponent } from '../operation-real-time-new-table-by-formation-c/operation-real-time-new-table-by-formation-c.component';
+import { OperationRealTimeNewTableByOperationCComponent } from '../operation-real-time-new-table-by-operation-c/operation-real-time-new-table-by-operation-c.component';
 
 @Component({
+    standalone: true,
     selector: 'app-operation-real-time-main-c',
     templateUrl: './operation-real-time-main-c.component.html',
     styleUrls: ['./operation-real-time-main-c.component.scss'],
+    imports: [
+        CommonModule,
+        AdsenseModule,
+        OperationPostCardModule,
+        OperationRealTimeControlPanelCComponent,
+        OperationRealTimeNewTableByOperationCComponent,
+        OperationRealTimeNewTableByFormationCComponent,
+        OperationRealTimeLegendPComponent,
+    ],
     providers: [RxState],
 })
 export class OperationRealTimeMainCComponent {
-    readonly operations$ = this.operationRealTimeStateQuery.operations$;
-    readonly formations$ = this.operationRealTimeStateQuery.formations$;
-    readonly latestOperationSightings$ =
-        this.operationRealTimeStateQuery.latestSightings$.pipe(
-            map((o) => o.operationSightings)
-        );
-    readonly latestFormationSightings$ =
-        this.operationRealTimeStateQuery.latestSightings$.pipe(
-            map((o) => o.formationSightings)
-        );
-    readonly currentPositions$ =
-        this.operationRealTimeStateQuery.currentPositions$;
-    readonly todaysCalendarId$ =
-        this.todaysCalendarListStateQuery.todaysCalendarId$;
-    readonly stations$ = this.routeStationListStateQuery.stations$;
-    readonly tripClasses$ = this.operationRealTimeStateQuery.tripClasses$;
-    readonly isEnableAutoReload$ =
-        this.operationRealTimeStateQuery.isEnableAutoReload$;
-    readonly isVisibleCurrentPosition$ =
-        this.operationRealTimeStateQuery.isVisibleCurrentPosition$;
+    private readonly notification = inject(NotificationService);
+    private readonly state = inject(RxState);
+    private readonly socketService = inject(SocketService);
+    private readonly operationRealTimeService = inject(
+        OperationRealTimeService
+    );
+    private readonly operationPostCardService = inject(
+        OperationPostCardService
+    );
+    private readonly operationRealTimeStateQuery = inject(
+        OperationRealTimeStateQuery
+    );
 
-    readonly onToggledAutoReload$ = new Subject<boolean>();
-    readonly onToggledVisibleCurrentPosition$ = new Subject<boolean>();
-
-    constructor(
-        private readonly notification: NotificationService,
-        private readonly state: RxState<{}>,
-        private readonly socketService: SocketService,
-        private readonly operationRealTimeService: OperationRealTimeService,
-        private readonly operationPostCardService: OperationPostCardService,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
-        private readonly routeStationListStateQuery: RouteStationListStateQuery,
-        private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
-        private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery
-    ) {
-        this.state.hold(this.onToggledAutoReload$, (bool) => {
-            this.operationRealTimeStateStore.setIsEnableAutoReload(bool);
-        });
-
-        this.state.hold(this.onToggledVisibleCurrentPosition$, (bool) => {
-            this.operationRealTimeStateStore.setIsVisibleCurrentPosition(bool);
-        });
-
+    constructor() {
         // 1分ごとに現在位置を更新
         this.state.hold(
-            timer(0, 1000 * 60).pipe(
-                skip(1),
+            interval(1000 * 60).pipe(
+                switchMap(
+                    () => this.operationRealTimeStateQuery.isEnableAutoReload$
+                ),
+                filter((bool) => !!bool),
                 switchMap(() =>
                     this.operationRealTimeService.fetchOperationCurrentPosition()
                 )
