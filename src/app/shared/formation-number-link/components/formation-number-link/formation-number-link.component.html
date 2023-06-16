@@ -1,0 +1,19 @@
+<ng-container *rxIf="!!formation">
+    <span
+        [ngClass]="{
+            'tw-font-bold': dayCountFromToday === 0,
+            'tw-underline': dayCountFromToday === 1
+        }"
+    >
+        {{
+            formation.formationNumber +
+                (dayCountFromToday !== undefined && dayCountFromToday !== 0
+                    ? '?'
+                    : '')
+        }}
+    </span>
+</ng-container>
+
+<ng-container *rxIf="!formation">
+    <span class="tw-text-grey-600">不明</span>
+</ng-container>
