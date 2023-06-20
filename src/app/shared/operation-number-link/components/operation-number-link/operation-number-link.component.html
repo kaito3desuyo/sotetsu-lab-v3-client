@@ -1,0 +1,53 @@
+<ng-container *rxIf="!!operation">
+    <div
+        class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-sm tw-opacity-100"
+    >
+        <div
+            class="tw-flex tw-h-full tw-w-full tw-rounded-full"
+            [ngStyle]="{
+                'background-color':
+                    operation.operationNumber | operationNumberColor
+            }"
+        >
+            <a
+                *rxIf="operation.operationNumber !== '100'"
+                matRipple
+                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
+                [ngClass]="{
+                    'tw-font-bold': dayCountFromToday === 0,
+                    'tw-underline': dayCountFromToday === 1
+                }"
+                [routerLink]="[
+                    '/operation',
+                    'route-diagram',
+                    {
+                        operation_id: operation.operationId
+                    }
+                ]"
+            >
+                {{
+                    operation.operationNumber +
+                        (dayCountFromToday !== undefined &&
+                        dayCountFromToday !== 0
+                            ? '?'
+                            : '')
+                }}
+            </a>
+
+            <div
+                *rxIf="operation.operationNumber === '100'"
+                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black tw-no-underline"
+            >
+                休
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-container *rxIf="!operation">
+    <div
+        class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-text-sm tw-text-grey-600"
+    >
+        不明
+    </div>
+</ng-container>

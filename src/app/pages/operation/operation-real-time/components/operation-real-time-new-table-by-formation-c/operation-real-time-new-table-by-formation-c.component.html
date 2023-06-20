@@ -1,0 +1,10 @@
+<app-operation-real-time-new-table-p
+    class="tw-flex"
+    [primaryKey]="operationRealTimeTableColumn.FORMATION_NUMBER"
+    [trackByKey]="'formation.formationId'"
+    [displayedColumns]="displayedColumns$ | push"
+    [data]="data$ | push"
+    [todaysCalendarId]="todaysCalendarId$ | push"
+    [stations]="stations$ | push"
+    [tripClasses]="tripClasses$ | push"
+></app-operation-real-time-new-table-p>

@@ -1,27 +1,53 @@
-<mat-card class="mat-elevation-z1">
-    <mat-card-title> 凡例 </mat-card-title>
-    <mat-card-content>
-        <dl>
-            <div fxLayout="row">
-                <dt fxFlex="48px" style="font-weight: 700">太字</dt>
-                <dd class="ml-0">本日中に目撃された情報</dd>
+<article
+    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+>
+    <header>
+        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">凡例</h2>
+    </header>
+    <section class="tw-flex-grow">
+        <dl class="tw-m-0 tw-flex tw-flex-col tw-gap-1 tw-text-sm">
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <dt
+                    class="tw-flex-none tw-basis-12 tw-whitespace-nowrap"
+                    style="font-weight: 700"
+                >
+                    太字
+                </dt>
+                <dd class="tw-ml-0">本日中に目撃された情報</dd>
             </div>
-            <div fxLayout="row">
-                <dt fxFlex="48px" style="text-decoration: underline">下線</dt>
-                <dd class="ml-0">昨日に目撃された情報</dd>
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <dt
+                    class="tw-flex-none tw-basis-12 tw-whitespace-nowrap"
+                    style="text-decoration: underline"
+                >
+                    下線
+                </dt>
+                <dd class="tw-ml-0">昨日に目撃された情報</dd>
             </div>
-            <div>
-                <dt fxFlex="48px" class="today">赤字</dt>
-                <dd class="ml-0">本日中に目撃・更新された情報</dd>
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <dt
+                    class="tw-flex-none tw-basis-12 tw-whitespace-nowrap tw-text-red-500"
+                >
+                    赤字
+                </dt>
+                <dd class="tw-ml-0">本日中に目撃・更新された情報</dd>
             </div>
-            <div>
-                <dt fxFlex="48px" class="yesterday">緑字</dt>
-                <dd class="ml-0">昨日に目撃・更新された情報</dd>
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <dt
+                    class="tw-flex-none tw-basis-12 tw-whitespace-nowrap tw-text-green-500"
+                >
+                    緑字
+                </dt>
+                <dd class="tw-ml-0">昨日に目撃・更新された情報</dd>
             </div>
-            <div fxLayout="row">
-                <dt fxFlex="48px">〇〇?</dt>
-                <dd class="ml-0">順送り済み情報の推測される編成・運用番号</dd>
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <dt class="tw-flex-none tw-basis-12 tw-whitespace-nowrap">
+                    〇〇?
+                </dt>
+                <dd class="tw-ml-0">
+                    順送り済み情報の推測される編成・運用番号
+                </dd>
             </div>
         </dl>
-    </mat-card-content>
-</mat-card>
+    </section>
+</article>

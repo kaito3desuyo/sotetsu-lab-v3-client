@@ -5,8 +5,8 @@ const routes: Routes = [
     {
         path: 'real-time',
         loadChildren: () =>
-            import('./operation-real-time/operation-real-time.module').then(
-                (mod) => mod.OperationRealTimeModule
+            import('./operation-real-time/operation-real-time.route').then(
+                (mod) => mod.OPERATION_REAL_TIME_ROUTES
             ),
     },
     {

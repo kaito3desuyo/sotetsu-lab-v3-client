@@ -1,0 +1,8 @@
+<app-operation-real-time-control-panel-p
+    [isEnableAutoReload]="isEnableAutoReload$ | push"
+    [isVisibleCurrentPosition]="isVisibleCurrentPosition$ | push"
+    (toggleAutoReload)="onToggledAutoReload$.next($event)"
+    (toggleVisibleCurrentPosition)="
+        onToggledVisibleCurrentPosition$.next($event)
+    "
+></app-operation-real-time-control-panel-p>
