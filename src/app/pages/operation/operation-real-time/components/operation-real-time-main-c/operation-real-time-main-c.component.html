@@ -1,13 +1,6 @@
-<div fxLayout="column" fxLayoutGap="16px">
+<div class="tw-flex tw-flex-col tw-gap-4">
     <div>
-        <app-operation-real-time-control-panel-p
-            [isEnableAutoReload]="isEnableAutoReload$ | async"
-            [isVisibleCurrentPosition]="isVisibleCurrentPosition$ | async"
-            (toggleAutoReload)="onToggledAutoReload$.next($event)"
-            (toggleVisibleCurrentPosition)="
-                onToggledVisibleCurrentPosition$.next($event)
-            "
-        ></app-operation-real-time-control-panel-p>
+        <app-operation-real-time-control-panel-c></app-operation-real-time-control-panel-c>
     </div>
     <div>
         <ng-adsense
@@ -15,68 +8,27 @@
             [adFormat]="'horizontal'"
         ></ng-adsense>
     </div>
-    <div
-        [fxLayout.gt-sm]="'row'"
-        [fxLayout.lt-md]="'column'"
-        [fxLayoutGap.gt-sm]="'64px'"
-        [fxLayoutGap.lt-md]="'16px'"
-    >
-        <div
-            [fxFlex.gt-sm]="'calc(50% - 64px)'"
-            [fxFlex.lt-md]="'auto'"
-            fxLayout="column"
-            fxLayoutGap="16px"
-        >
-            <div
-                fxLayout="column"
-                style="overflow-x: auto"
-                class="mat-elevation-z1"
-            >
-                <app-operation-real-time-table-p
-                    [mode]="'operation'"
-                    [todaysCalendarId]="todaysCalendarId$ | async"
-                    [operations]="operations$ | async"
-                    [formations]="formations$ | async"
-                    [latestSightings]="latestOperationSightings$ | async"
-                    [currentPositions]="currentPositions$ | async"
-                    [stations]="stations$ | async"
-                    [tripClasses]="tripClasses$ | async"
-                    [isVisibleCurrentPosition]="
-                        isVisibleCurrentPosition$ | async
-                    "
-                ></app-operation-real-time-table-p>
-            </div>
 
+    <div class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-gap-16">
+        <div
+            class="tw-overflow-x-auto tw-shadow-md md:tw-flex-1 md:tw-self-start [&_div]:tw-flex"
+        >
+            <app-operation-real-time-new-table-by-operation-c></app-operation-real-time-new-table-by-operation-c>
+        </div>
+
+        <div class="md:tw-hidden">
             <ng-adsense [adSlot]="8391993434"></ng-adsense>
         </div>
-        <div
-            [fxFlex.gt-sm]="'calc(50% - 64px)'"
-            [fxFlex.lt-md]="'auto'"
-            fxLayout="column"
-            fxLayoutGap="16px"
-        >
-            <div
-                fxLayout="column"
-                style="overflow-x: auto"
-                class="mat-elevation-z1"
-            >
-                <app-operation-real-time-table-p
-                    [mode]="'formation'"
-                    [todaysCalendarId]="todaysCalendarId$ | async"
-                    [operations]="operations$ | async"
-                    [formations]="formations$ | async"
-                    [latestSightings]="latestFormationSightings$ | async"
-                    [currentPositions]="currentPositions$ | async"
-                    [stations]="stations$ | async"
-                    [tripClasses]="tripClasses$ | async"
-                    [isVisibleCurrentPosition]="
-                        isVisibleCurrentPosition$ | async
-                    "
-                ></app-operation-real-time-table-p>
-            </div>
 
-            <ng-adsense [adSlot]="3946316114"></ng-adsense>
+        <div
+            class="tw-overflow-x-auto tw-shadow-md md:tw-flex-1 md:tw-self-start"
+        >
+            <app-operation-real-time-new-table-by-formation-c></app-operation-real-time-new-table-by-formation-c>
         </div>
+    </div>
+
+    <div>
+        <ng-adsense [adSlot]="3946316114"></ng-adsense>
     </div>
     <div>
         <app-operation-real-time-legend-p></app-operation-real-time-legend-p>

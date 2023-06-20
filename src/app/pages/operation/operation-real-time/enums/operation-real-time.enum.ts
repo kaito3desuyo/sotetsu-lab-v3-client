@@ -9,8 +9,8 @@ export type OperationRealTimeTableColumn =
     (typeof OperationRealTimeTableColumn)[keyof typeof OperationRealTimeTableColumn];
 
 export const OperationRealTimeTableColumnLabel = {
-    [OperationRealTimeTableColumn.OPERATION_NUMBER]: '運用番号',
-    [OperationRealTimeTableColumn.FORMATION_NUMBER]: '編成番号',
+    [OperationRealTimeTableColumn.OPERATION_NUMBER]: '運用',
+    [OperationRealTimeTableColumn.FORMATION_NUMBER]: '編成',
     [OperationRealTimeTableColumn.CURRENT_POSITION]: '現在位置',
     [OperationRealTimeTableColumn.SIGHTING_TIME]: '目撃時刻',
     [OperationRealTimeTableColumn.UPDATED_AT]: '最終更新',

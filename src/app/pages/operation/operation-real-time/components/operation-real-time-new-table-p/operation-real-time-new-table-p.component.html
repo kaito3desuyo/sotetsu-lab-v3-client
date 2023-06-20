@@ -1,4 +1,4 @@
-<table class="tw-border-collapse tw-bg-white tw-shadow-md">
+<table class="tw-flex-1 tw-border-collapse tw-bg-white">
     <thead>
         <tr
             class="tw-h-16 [&>th:first-child]:tw-pl-6 [&>th:last-child]:tw-pr-6 [&>th+th]:tw-pl-4"
@@ -12,7 +12,7 @@
                 "
             >
                 <th
-                    class="tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
+                    class="tw-p-0 tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
                 >
                     {{ operationRealTimeTableColumnLabel[column] }}
                 </th>
@@ -23,7 +23,7 @@
         <ng-container
             *rxFor="
                 let row of data;
-                strategy: 'immediate';
+                strategy: 'normal';
                 patchZone: false;
                 trackBy: trackByKey | trackBy
             "
@@ -149,6 +149,7 @@
 
 <ng-template #time let-time="time">
     <span
+        class="tw-text-sm tw-leading-none"
         [ngStyle]="{
             color:
                 (time | calculateDayCountFromToday) === 0

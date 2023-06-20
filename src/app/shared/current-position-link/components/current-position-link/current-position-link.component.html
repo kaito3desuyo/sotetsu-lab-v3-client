@@ -11,9 +11,9 @@
     let-tripClasses="tripClasses"
 >
     <div
-        class="tw-flex tw-flex-row tw-items-center tw-gap-4 tw-text-sm tw-leading-4"
+        class="tw-flex tw-flex-row tw-items-center tw-gap-4 tw-text-xs tw-leading-4"
     >
-        <div class="tw-flex tw-w-16">
+        <div class="tw-flex tw-w-12">
             <ng-container
                 *rxIf="!!trip; strategy: 'immediate'; patchZone: false"
             >
@@ -53,7 +53,7 @@
                 </a>
             </ng-container>
         </div>
-        <div class="tw-flex tw-w-24">
+        <div class="tw-flex tw-w-20">
             <ng-container
                 *rxIf="!!leftTime; strategy: 'immediate'; patchZone: false"
             >
@@ -99,7 +99,7 @@
         <div class="tw-flex tw-flex-row tw-items-center">
             <mat-icon class="tw-leading-[normal]">arrow_forward</mat-icon>
         </div>
-        <div class="tw-flex tw-w-24">
+        <div class="tw-flex tw-w-20">
             <ng-container
                 *rxIf="!!rightTime; strategy: 'immediate'; patchZone: false"
             >

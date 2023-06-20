@@ -1,6 +1,6 @@
 <ng-container *rxIf="!!operation">
     <div
-        class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-opacity-100"
+        class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-sm tw-opacity-100"
     >
         <div
             class="tw-flex tw-h-full tw-w-full tw-rounded-full"
@@ -12,7 +12,7 @@
             <a
                 *rxIf="operation.operationNumber !== '100'"
                 matRipple
-                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-sm tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
+                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
                 [ngClass]="{
                     'tw-font-bold': dayCountFromToday === 0,
                     'tw-underline': dayCountFromToday === 1
@@ -36,7 +36,7 @@
 
             <div
                 *rxIf="operation.operationNumber === '100'"
-                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-sm tw-text-black tw-no-underline"
+                class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black tw-no-underline"
             >
                 休
             </div>
@@ -45,5 +45,9 @@
 </ng-container>
 
 <ng-container *rxIf="!operation">
-    <span class="tw-text-grey-600">不明</span>
+    <div
+        class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-text-sm tw-text-grey-600"
+    >
+        不明
+    </div>
 </ng-container>

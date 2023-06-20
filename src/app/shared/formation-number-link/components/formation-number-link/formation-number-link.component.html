@@ -1,5 +1,6 @@
 <ng-container *rxIf="!!formation">
     <span
+        class="tw-text-sm"
         [ngClass]="{
             'tw-font-bold': dayCountFromToday === 0,
             'tw-underline': dayCountFromToday === 1
@@ -15,5 +16,5 @@
 </ng-container>
 
 <ng-container *rxIf="!formation">
-    <span class="tw-text-grey-600">不明</span>
+    <span class="tw-text-sm tw-text-grey-600">不明</span>
 </ng-container>
