@@ -134,7 +134,7 @@
 
                     <ng-container
                         *rxIf="
-                            !!leftTime &&
+                            !leftTime ||
                                 leftTime.stationId !== rightTime.stationId;
                             strategy: 'immediate';
                             patchZone: false
@@ -154,7 +154,9 @@
                     {{ rightTime[rightTimeKey] }}
                 </p>
             </ng-container>
-            <ng-container *rxIf="!rightTime">
+            <ng-container
+                *rxIf="!rightTime; strategy: 'immediate'; patchZone: false"
+            >
                 <p class="tw-m-0">
                     <ng-container
                         *rxIf="
@@ -181,8 +183,12 @@
 </ng-template>
 
 <!-- 出庫前の場合 -->
-<ng-container *rxIf="isBeforeDepotOut$">
-    <ng-container *rxLet="context$; let context">
+<ng-container
+    *rxIf="isBeforeDepotOut$; strategy: 'immediate'; patchZone: false"
+>
+    <ng-container
+        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
+    >
         <ng-container
             *ngTemplateOutlet="container; context: context"
         ></ng-container>
@@ -190,8 +196,10 @@
 </ng-container>
 
 <!-- 走行中の場合 -->
-<ng-container *rxIf="isRunning$">
-    <ng-container *rxLet="context$; let context">
+<ng-container *rxIf="isRunning$; strategy: 'immediate'; patchZone: false">
+    <ng-container
+        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
+    >
         <ng-container
             *ngTemplateOutlet="container; context: context"
         ></ng-container>
@@ -199,8 +207,10 @@
 </ng-container>
 
 <!-- 間隙時間の場合 -->
-<ng-container *rxIf="isGapTime$">
-    <ng-container *rxLet="context$; let context">
+<ng-container *rxIf="isGapTime$; strategy: 'immediate'; patchZone: false">
+    <ng-container
+        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
+    >
         <ng-container
             *ngTemplateOutlet="container; context: context"
         ></ng-container>
@@ -208,8 +218,10 @@
 </ng-container>
 
 <!-- 入庫済みの場合 -->
-<ng-container *rxIf="isAfterDepotIn$">
-    <ng-container *rxLet="context$; let context">
+<ng-container *rxIf="isAfterDepotIn$; strategy: 'immediate'; patchZone: false">
+    <ng-container
+        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
+    >
         <ng-container
             *ngTemplateOutlet="container; context: context"
         ></ng-container>
