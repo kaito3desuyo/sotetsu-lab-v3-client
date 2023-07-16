@@ -136,6 +136,10 @@ const targetStations = [
     },
     {
         routeName: ['東横線', '目黒線'],
+        stationName: '元住吉',
+    },
+    {
+        routeName: ['東横線', '目黒線'],
         stationName: '武蔵小杉',
     },
     {
@@ -217,6 +221,10 @@ const targetStations = [
     {
         routeName: ['南北線', '三田線'],
         stationName: '白金高輪',
+    },
+    {
+        routeName: ['南北線'],
+        stationName: '麻布十番',
     },
     {
         routeName: ['南北線'],
