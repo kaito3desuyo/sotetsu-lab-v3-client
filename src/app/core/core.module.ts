@@ -1,6 +1,5 @@
-import { DOCUMENT, ViewportScroller } from '@angular/common';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { ErrorHandler, NgModule, ɵɵinject } from '@angular/core';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { ErrorHandler, NgModule } from '@angular/core';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatLegacySnackBarModule as MatSnackBarModule } from '@angular/material/legacy-snack-bar';
 import { MatPaginatorIntl } from '@angular/material/paginator';
@@ -9,15 +8,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import {
-    RxRenderStrategiesConfig,
     RX_RENDER_STRATEGIES_CONFIG,
+    RxRenderStrategiesConfig,
 } from '@rx-angular/cdk/render-strategies';
 import { AdsenseModule } from 'ng2-adsense';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
 import { ConfirmDialogModule } from '../shared/confirm-dialog/confirm-dialog.module';
 import { CustomPaginator } from './classes/custom-paginator';
-import { CustomViewportScroller } from './classes/custom-viewport-scroller';
 import { AppInitializerProvider } from './configs/app-initializer';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { ErrorHandlerService } from './services/error-handler.service';
@@ -65,16 +63,16 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             provide: MatPaginatorIntl,
             useClass: CustomPaginator,
         },
-        {
-            provide: ViewportScroller,
-            useFactory: () =>
-                new CustomViewportScroller(
-                    'content-scroller',
-                    ɵɵinject(DOCUMENT),
-                    window,
-                    ɵɵinject(ErrorHandler)
-                ),
-        },
+        // {
+        //     provide: ViewportScroller,
+        //     useFactory: () =>
+        //         new CustomViewportScroller(
+        //             'content-scroller',
+        //             ɵɵinject(DOCUMENT),
+        //             window,
+        //             ɵɵinject(ErrorHandler)
+        //         ),
+        // },
         {
             provide: RX_RENDER_STRATEGIES_CONFIG,
             useValue: CUSTOM_RX_ANGULAR_CONFIG,

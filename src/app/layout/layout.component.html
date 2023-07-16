@@ -1,2 +1,26 @@
-<app-header-container></app-header-container>
-<app-sidenav-container></app-sidenav-container>
+<app-header
+    class="tw-sticky tw-top-0 tw-z-30 tw-block tw-shadow-md"
+    (clickButton)="toggle()"
+></app-header>
+
+<app-sidenav
+    class="tw-fixed tw-top-0 tw-z-20 tw-block tw-h-screen tw-w-64 tw-pt-12 tw-shadow-md md:tw-pt-16"
+    [@openClose]="isOpen ? 'open' : 'close'"
+>
+</app-sidenav>
+
+<div
+    *rxIf="
+        isVisibled;
+        strategy: 'userBlocking';
+        patchZone: true;
+        renderCallback: visibled$
+    "
+    class="tw-fixed tw-top-0 tw-z-10 tw-h-screen tw-w-screen"
+    [@openClose]="isOpen ? 'shadow' : 'clear'"
+    (click)="toggle()"
+></div>
+
+<div class="tw-relative tw-z-0 tw-h-full tw-w-full">
+    <router-outlet></router-outlet>
+</div>

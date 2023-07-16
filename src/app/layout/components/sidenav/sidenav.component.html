@@ -1,0 +1,51 @@
+<nav class="tw-h-full tw-w-full tw-bg-white">
+    <div
+        class="tw-flex tw-flex-col [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100"
+    >
+        <a matRipple routerLink="/"> TOP </a>
+        <h3>時刻表</h3>
+        <mat-form-field>
+            <mat-label>駅名</mat-label>
+            <mat-select [formControl]="stationId">
+                <mat-option [value]="null"> 選択しない（全線検索） </mat-option>
+                <mat-optgroup
+                    *rxFor="
+                        let route of routeStations$ | push;
+                        strategy: 'userBlocking';
+                        patchZone: false
+                    "
+                    [label]="route.routeName"
+                >
+                    <mat-option
+                        *rxFor="
+                            let rsl of route.routeStationLists;
+                            strategy: 'userBlocking';
+                            patchZone: false
+                        "
+                        [value]="rsl.stationId"
+                    >
+                        {{ rsl.station.stationName }}
+                    </mat-option>
+                </mat-optgroup>
+            </mat-select>
+        </mat-form-field>
+        <a matRipple [routerLink]="upTimetableLink$ | push"> 上り </a>
+        <a matRipple [routerLink]="downTimetableLink$ | push"> 下り </a>
+        <h3>運用情報</h3>
+        <a matRipple routerLink="/operation/real-time">
+            リアルタイム運用情報
+        </a>
+        <a matRipple routerLink="/operation/past-time"> 過去の運用情報 </a>
+        <a
+            matRipple
+            [routerLink]="[
+                '/operation/table',
+                { calendar_id: todaysCalendarId$ | push }
+            ]"
+        >
+            運用表
+        </a>
+        <h3>ライブラリ</h3>
+        <a matRipple routerLink="/library/vehicle"> 相鉄の車両 </a>
+    </div>
+</nav>
