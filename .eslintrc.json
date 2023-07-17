@@ -33,6 +33,17 @@
             }
         },
         {
+            "files": ["*.spec.ts"],
+            "extends": ["plugin:jest-dom/recommended"],
+            "rules": {}
+        },
+        {
+            "files": ["*.js"],
+            "parserOptions": {
+                "ecmaVersion": "latest"
+            }
+        }
+        {
             "files": ["*.html"],
             "extends": ["plugin:@angular-eslint/template/recommended"],
             "rules": {}
