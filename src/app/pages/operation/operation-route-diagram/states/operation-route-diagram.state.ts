@@ -110,6 +110,7 @@ const targetStations = [
     { routeName: ['本線'], stationName: '横浜' },
     { routeName: ['みなとみらい線'], stationName: '元町・中華街' },
     { routeName: ['みなとみらい線', '東横線'], stationName: '横浜' },
+    { routeName: ['東横線'], stationName: '菊名' },
     {
         routeName: ['新横浜線', '相鉄・JR直通線'],
         stationName: '羽沢横浜国大',
