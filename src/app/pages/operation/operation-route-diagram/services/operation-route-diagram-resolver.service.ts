@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Resolve, ActivatedRouteSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { OperationRouteDiagramService } from './operation-route-diagram.service';
 import { map } from 'rxjs/operators';
@@ -7,7 +7,7 @@ import { OperationRouteDiagramStateStore } from '../states/operation-route-diagr
 
 @Injectable()
 export class OperationRouteDiagramResolverService
-    implements Resolve<Observable<void>>
+    
 {
     constructor(
         private readonly operationRouteDiagramService: OperationRouteDiagramService,
