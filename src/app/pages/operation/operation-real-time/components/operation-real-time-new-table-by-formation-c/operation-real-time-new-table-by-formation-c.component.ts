@@ -2,7 +2,7 @@ import { RxPush } from '@rx-angular/template/push';
 import { RxLet } from '@rx-angular/template/let';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { RxState, selectSlice } from '@rx-angular/state';
+import { RxState } from '@rx-angular/state';
 import { map, pluck } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -17,6 +17,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
 import { OperationRealTimeUtil } from '../../utils/operation-real-time.util';
 import { OperationRealTimeNewTablePComponent } from '../operation-real-time-new-table-p/operation-real-time-new-table-p.component';
+import { selectSlice } from '@rx-angular/state/selections';
 
 type State = {
     displayedColumns: OperationRealTimeTableColumn[];

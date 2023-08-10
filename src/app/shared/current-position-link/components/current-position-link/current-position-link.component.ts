@@ -15,7 +15,7 @@ import {
     RX_RENDER_STRATEGIES_CONFIG,
     RxRenderStrategiesConfig,
 } from '@rx-angular/cdk/render-strategies';
-import { RxState, selectSlice } from '@rx-angular/state';
+import { RxState } from '@rx-angular/state';
 import { Subject } from 'rxjs';
 import { map, pluck } from 'rxjs/operators';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
@@ -25,6 +25,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { selectSlice } from '@rx-angular/state/selections';
 
 const COMPONENT_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
     primaryStrategy: 'immediate',
