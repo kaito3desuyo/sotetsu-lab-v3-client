@@ -1,3 +1,6 @@
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,9 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
@@ -58,9 +58,9 @@ import { TimetableAllLineComponent } from './timetable-all-line.component';
     ],
     imports: [
         CommonModule,
-        LetModule,
-        ForModule,
-        IfModule,
+        RxLet,
+        RxFor,
+        RxIf,
         MatCardModule,
         MatPaginatorModule,
         MatToolbarModule,

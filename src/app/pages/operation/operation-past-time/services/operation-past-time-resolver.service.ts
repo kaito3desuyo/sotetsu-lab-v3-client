@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { OperationPastTimeStateStore } from '../states/operation-past-time.state';
@@ -7,7 +7,7 @@ import { OperationPastTimeService } from './operation-past-time.service';
 
 @Injectable()
 export class OperationPastTimeResolverService
-    implements Resolve<Observable<void>>
+    
 {
     constructor(
         private readonly operationPastTimeService: OperationPastTimeService,

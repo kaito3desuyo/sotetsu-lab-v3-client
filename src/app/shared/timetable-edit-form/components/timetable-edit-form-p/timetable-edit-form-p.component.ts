@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { FormArray, FormBuilder, Validators } from '@angular/forms';
 import { MatLegacySlideToggleChange as MatSlideToggleChange } from '@angular/material/legacy-slide-toggle';
-import { RxState, selectSlice } from '@rx-angular/state';
+import { RxState } from '@rx-angular/state';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
 import { Observable, Subject } from 'rxjs';
@@ -33,6 +33,7 @@ import {
     ETimetableEditFormStopType,
 } from '../../special/enums/timetable-edit-form.enum';
 import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
+import { selectSlice } from '@rx-angular/state/selections';
 
 type State = {
     serviceId: string;

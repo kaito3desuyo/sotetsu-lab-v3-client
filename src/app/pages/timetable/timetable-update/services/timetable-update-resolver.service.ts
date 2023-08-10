@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TimetableEditFormService } from 'src/app/shared/timetable-edit-form/services/timetable-edit-form.service';
@@ -8,7 +8,7 @@ import { TimetableEditFormStateStore } from 'src/app/shared/timetable-edit-form/
 
 @Injectable()
 export class TimetableUpdateResolverService
-    implements Resolve<Observable<void>>
+    
 {
     constructor(
         private readonly timetableEditFormService: TimetableEditFormService,

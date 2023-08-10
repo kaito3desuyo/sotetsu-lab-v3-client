@@ -1,3 +1,4 @@
+import { RxPush } from '@rx-angular/template/push';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -6,7 +7,6 @@ import {
     inject,
 } from '@angular/core';
 import { RxState } from '@rx-angular/state';
-import { PushModule } from '@rx-angular/template/push';
 import { Dayjs } from 'dayjs';
 import { Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -21,7 +21,7 @@ type State = {
     templateUrl: './operation-real-time-header-p.component.html',
     styleUrls: ['./operation-real-time-header-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, PushModule],
+    imports: [CommonModule, RxPush],
     providers: [RxState],
 })
 export class OperationRealTimeHeaderPComponent {

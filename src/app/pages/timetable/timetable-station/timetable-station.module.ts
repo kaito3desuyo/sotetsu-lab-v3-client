@@ -1,11 +1,11 @@
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatRippleModule } from '@angular/material/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
@@ -34,9 +34,9 @@ import { TimetableStationComponent } from './timetable-station.component';
         AdsenseModule,
         PipesModule,
         TimetableSearchCardModule,
-        LetModule,
-        ForModule,
-        IfModule,
+        RxLet,
+        RxFor,
+        RxIf,
     ],
     declarations: [
         TimetableStationComponent,

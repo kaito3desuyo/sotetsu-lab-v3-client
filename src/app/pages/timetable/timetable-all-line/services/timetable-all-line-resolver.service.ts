@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
+import { ActivatedRouteSnapshot } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
@@ -10,7 +10,7 @@ import { TimetableAllLineService } from './timetable-all-line.service';
 
 @Injectable()
 export class TimetableAllLineResolverService
-    implements Resolve<Observable<void>>
+    
 {
     constructor(
         private readonly timetableAllLineService: TimetableAllLineService,

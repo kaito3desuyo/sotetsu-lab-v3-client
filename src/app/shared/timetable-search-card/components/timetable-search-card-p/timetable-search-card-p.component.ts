@@ -1,3 +1,6 @@
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -14,9 +17,6 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RxState } from '@rx-angular/state';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
 import { Subject } from 'rxjs';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -44,9 +44,9 @@ type State = {
         MatRadioModule,
         MatButtonModule,
         PipesModule,
-        LetModule,
-        IfModule,
-        ForModule,
+        RxLet,
+        RxIf,
+        RxFor,
     ],
 })
 export class TimetableSearchCardPComponent {

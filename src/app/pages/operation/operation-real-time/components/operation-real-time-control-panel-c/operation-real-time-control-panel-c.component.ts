@@ -1,3 +1,4 @@
+import { RxPush } from '@rx-angular/template/push';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
@@ -7,18 +8,13 @@ import {
     OperationRealTimeStateStore,
 } from '../../states/operation-real-time.state';
 import { OperationRealTimeControlPanelPComponent } from '../operation-real-time-control-panel-p/operation-real-time-control-panel-p.component';
-import { PushModule } from '@rx-angular/template/push';
 
 @Component({
     standalone: true,
     selector: 'app-operation-real-time-control-panel-c',
     templateUrl: './operation-real-time-control-panel-c.component.html',
     styleUrls: ['./operation-real-time-control-panel-c.component.scss'],
-    imports: [
-        CommonModule,
-        PushModule,
-        OperationRealTimeControlPanelPComponent,
-    ],
+    imports: [CommonModule, RxPush, OperationRealTimeControlPanelPComponent],
     providers: [RxState],
 })
 export class OperationRealTimeControlPanelCComponent {
