@@ -1,7 +1,7 @@
+import { RxPush } from '@rx-angular/template/push';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RxState, selectSlice } from '@rx-angular/state';
-import { PushModule } from '@rx-angular/template/push';
 import { map, pluck } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -37,7 +37,7 @@ type State = {
     styleUrls: [
         './operation-real-time-new-table-by-operation-c.component.scss',
     ],
-    imports: [CommonModule, PushModule, OperationRealTimeNewTablePComponent],
+    imports: [CommonModule, RxPush, OperationRealTimeNewTablePComponent],
     providers: [RxState],
 })
 export class OperationRealTimeNewTableByOperationCComponent {

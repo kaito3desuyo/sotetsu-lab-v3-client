@@ -1,3 +1,7 @@
+import { RxPush } from '@rx-angular/template/push';
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -12,10 +16,6 @@ import {
     RxRenderStrategiesConfig,
 } from '@rx-angular/cdk/render-strategies';
 import { RxState, selectSlice } from '@rx-angular/state';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
 import { Subject } from 'rxjs';
 import { map, pluck } from 'rxjs/operators';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
@@ -65,10 +65,10 @@ type State = {
         CommonModule,
         RouterModule,
         MatIconModule,
-        LetModule,
-        ForModule,
-        IfModule,
-        PushModule,
+        RxLet,
+        RxFor,
+        RxIf,
+        RxPush,
         PipesModule,
     ],
     providers: [

@@ -1,3 +1,7 @@
+import { RxPush } from '@rx-angular/template/push';
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -6,10 +10,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterModule } from '@angular/router';
 import { RxState } from '@rx-angular/state';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -38,10 +38,10 @@ type State = {
         MatRippleModule,
         MatFormFieldModule,
         MatSelectModule,
-        LetModule,
-        ForModule,
-        IfModule,
-        PushModule,
+        RxLet,
+        RxFor,
+        RxIf,
+        RxPush,
     ],
 })
 export class SidenavComponent {

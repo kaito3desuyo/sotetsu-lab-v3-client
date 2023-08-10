@@ -1,7 +1,7 @@
+import { RxIf } from '@rx-angular/template/if';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { IfModule } from '@rx-angular/template/if';
 
 @Component({
     standalone: true,
@@ -9,7 +9,7 @@ import { IfModule } from '@rx-angular/template/if';
     templateUrl: './formation-number-link.component.html',
     styleUrls: ['./formation-number-link.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, IfModule],
+    imports: [CommonModule, RxIf],
 })
 export class FormationNumberLinkComponent {
     @Input() formation: FormationDetailsDto;

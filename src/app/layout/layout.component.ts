@@ -1,6 +1,6 @@
+import { RxIf } from '@rx-angular/template/if';
 import { Component, OnDestroy, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { IfModule } from '@rx-angular/template/if';
 import { Subject } from 'rxjs';
 import { filter, last, take, takeUntil, tap } from 'rxjs/operators';
 import { wait } from '../core/utils/wait';
@@ -14,7 +14,7 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
-    imports: [RouterModule, IfModule, HeaderComponent, SidenavComponent],
+    imports: [RouterModule, RxIf, HeaderComponent, SidenavComponent],
 })
 export class LayoutComponent implements OnDestroy {
     private readonly router = inject(Router);

@@ -1,3 +1,6 @@
+import { RxLet } from '@rx-angular/template/let';
+import { RxIf } from '@rx-angular/template/if';
+import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -11,9 +14,6 @@ import { MatLegacyRadioModule as MatRadioModule } from '@angular/material/legacy
 import { MatLegacySelectModule as MatSelectModule } from '@angular/material/legacy-select';
 import { MatLegacySlideToggleModule as MatSlideToggleModule } from '@angular/material/legacy-slide-toggle';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ForModule } from '@rx-angular/template/for';
-import { IfModule } from '@rx-angular/template/if';
-import { LetModule } from '@rx-angular/template/let';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { TimetableEditFormCComponent } from './components/timetable-edit-form-c/timetable-edit-form-c.component';
 import { TimetableEditFormPComponent } from './components/timetable-edit-form-p/timetable-edit-form-p.component';
@@ -43,9 +43,9 @@ import {
         MatButtonModule,
         MatSlideToggleModule,
         MatIconModule,
-        LetModule,
-        ForModule,
-        IfModule,
+        RxLet,
+        RxFor,
+        RxIf,
         PipesModule,
     ],
     exports: [TimetableEditFormCComponent],

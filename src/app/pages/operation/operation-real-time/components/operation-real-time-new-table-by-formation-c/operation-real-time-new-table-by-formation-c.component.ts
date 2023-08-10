@@ -1,8 +1,8 @@
+import { RxPush } from '@rx-angular/template/push';
+import { RxLet } from '@rx-angular/template/let';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RxState, selectSlice } from '@rx-angular/state';
-import { LetModule } from '@rx-angular/template/let';
-import { PushModule } from '@rx-angular/template/push';
 import { map, pluck } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -38,12 +38,7 @@ type State = {
     styleUrls: [
         './operation-real-time-new-table-by-formation-c.component.scss',
     ],
-    imports: [
-        CommonModule,
-        LetModule,
-        PushModule,
-        OperationRealTimeNewTablePComponent,
-    ],
+    imports: [CommonModule, RxLet, RxPush, OperationRealTimeNewTablePComponent],
     providers: [RxState],
 })
 export class OperationRealTimeNewTableByFormationCComponent {
