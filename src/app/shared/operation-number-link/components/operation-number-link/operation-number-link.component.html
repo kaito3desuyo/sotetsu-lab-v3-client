@@ -8,6 +8,7 @@
                 'background-color':
                     operation.operationNumber | operationNumberColor
             }"
+            [matTooltip]="tooltipText"
         >
             <a
                 *rxIf="operation.operationNumber !== '100'"

@@ -1,0 +1,16 @@
+<div class="tw-p-4 tw-shadow-md">
+    <p *rxIf="tableNotDisplayed$" class="tw-m-0">
+        基準日と日数を設定して検索してください
+    </p>
+
+    <div
+        *rxIf="tableDisplayed$"
+        class="tw-max-h-[60dvh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+    >
+        <app-operation-past-time-table-p
+            [calendars]="calendars$ | push"
+            [formations]="formations$ | push"
+            [operationSightings]="operationSightings$ | push"
+        ></app-operation-past-time-table-p>
+    </div>
+</div>

@@ -1,0 +1,60 @@
+<form [formGroup]="form" (ngSubmit)="onClickSearch()">
+    <div
+        class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-items-baseline"
+    >
+        <div class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-gap-4">
+            <mat-form-field class="tw-w-full">
+                <mat-label>基準日</mat-label>
+                <input
+                    matInput
+                    [matDatepicker]="picker"
+                    [max]="maxDate"
+                    formControlName="referenceDate"
+                />
+                <mat-datepicker-toggle
+                    matSuffix
+                    [for]="picker"
+                ></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <span matTextSuffix class="tw-whitespace-nowrap">から</span>
+                <mat-error
+                    *rxIf="form.get('referenceDate').hasError('required')"
+                >
+                    <strong>必須項目</strong>です
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="tw-w-full">
+                <mat-label>日数</mat-label>
+                <input
+                    type="number"
+                    matInput
+                    [min]="1"
+                    [max]="30"
+                    formControlName="days"
+                />
+                <span matTextSuffix class="tw-whitespace-nowrap">日間</span>
+                <mat-error *rxIf="form.get('days').hasError('required')">
+                    <strong>必須項目</strong>です
+                </mat-error>
+                <mat-error *rxIf="form.get('days').hasError('min')">
+                    <strong>1～30日間の範囲内</strong>で設定してください
+                </mat-error>
+                <mat-error *rxIf="form.get('days').hasError('max')">
+                    <strong>1～30日間の範囲内</strong>で設定してください
+                </mat-error>
+            </mat-form-field>
+        </div>
+
+        <div class="tw-flex tw-flex-row tw-justify-end">
+            <button
+                type="submit"
+                mat-raised-button
+                color="primary"
+                [disabled]="form.invalid"
+            >
+                検索
+            </button>
+        </div>
+    </div>
+</form>

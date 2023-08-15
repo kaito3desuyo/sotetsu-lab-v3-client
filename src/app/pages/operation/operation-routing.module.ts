@@ -12,8 +12,8 @@ const routes: Routes = [
     {
         path: 'past-time',
         loadChildren: () =>
-            import('./operation-past-time/operation-past-time.module').then(
-                (mod) => mod.OperationPastTimeModule
+            import('./operation-past-time/operation-past-time.route').then(
+                (mod) => mod.OPERATION_PAST_TIME_ROUTES
             ),
     },
     {
