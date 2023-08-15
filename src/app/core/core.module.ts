@@ -1,6 +1,5 @@
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
-import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatLegacySnackBarModule as MatSnackBarModule } from '@angular/material/legacy-snack-bar';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { BrowserModule } from '@angular/platform-browser';
@@ -58,7 +57,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             useClass: AuthInterceptor,
             multi: true,
         },
-        { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
         {
             provide: MatPaginatorIntl,
             useClass: CustomPaginator,

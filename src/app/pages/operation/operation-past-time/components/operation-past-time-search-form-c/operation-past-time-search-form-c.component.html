@@ -1,0 +1,5 @@
+<app-operation-past-time-search-form-p
+    [referenceDate]="referenceDate$ | push"
+    [days]="days$ | push"
+    (clickSearch)="onReceiveClickSearch($event)"
+></app-operation-past-time-search-form-p>

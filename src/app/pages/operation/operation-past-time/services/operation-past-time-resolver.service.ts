@@ -6,9 +6,7 @@ import { OperationPastTimeStateStore } from '../states/operation-past-time.state
 import { OperationPastTimeService } from './operation-past-time.service';
 
 @Injectable()
-export class OperationPastTimeResolverService
-    
-{
+export class OperationPastTimeResolverService {
     constructor(
         private readonly operationPastTimeService: OperationPastTimeService,
         private readonly operationPastTimeStateStore: OperationPastTimeStateStore
@@ -16,14 +14,16 @@ export class OperationPastTimeResolverService
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         this.operationPastTimeStateStore.setReferenceDate(
-            route.paramMap.get('reference_date')
+            route.paramMap.get('reference_date') ?? undefined
         );
-        this.operationPastTimeStateStore.setDays(+route.paramMap.get('days'));
+        this.operationPastTimeStateStore.setDays(
+            route.paramMap.get('days') ? +route.paramMap.get('days') : undefined
+        );
 
         return forkJoin([
             this.operationPastTimeService.fetchCalendarByDate(),
             this.operationPastTimeService.fetchFormationsV2(),
             this.operationPastTimeService.fetchOperationSightingsV2(),
-        ]).pipe(map(() => null));
+        ]).pipe(map(() => undefined));
     }
 }

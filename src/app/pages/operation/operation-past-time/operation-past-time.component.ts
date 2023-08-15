@@ -3,11 +3,18 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
+import { OperationPastTimeMainCComponent } from './components/operation-past-time-main-c/operation-past-time-main-c.component';
+import { OperationPastTimeHeaderCComponent } from './components/operation-past-time-header-c/operation-past-time-header-c.component';
 
 @Component({
+    standalone: true,
     selector: 'app-operation-past-time',
     templateUrl: './operation-past-time.component.html',
     styleUrls: ['./operation-past-time.component.scss'],
+    imports: [
+        OperationPastTimeHeaderCComponent,
+        OperationPastTimeMainCComponent,
+    ],
     providers: [RxState],
 })
 export class OperationPastTimeComponent {
