@@ -1,12 +1,11 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { RxFor } from '@rx-angular/template/for';
+import { RxIf } from '@rx-angular/template/if';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
-import { RxFor } from '@rx-angular/template/for';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/components/operation-number-link/operation-number-link.component';
-import { RxIf } from '@rx-angular/template/if';
 import OPERATION_NUMBER_LINK_DECLARATIONS from 'src/app/shared/operation-number-link/operation-number-link.declaration';
 
 @Component({
@@ -20,7 +19,7 @@ import OPERATION_NUMBER_LINK_DECLARATIONS from 'src/app/shared/operation-number-
         RxIf,
         RxFor,
         PipesModule,
-        OPERATION_NUMBER_LINK_DECLARATIONS,
+        ...OPERATION_NUMBER_LINK_DECLARATIONS,
     ],
 })
 export class OperationPastTimeTablePComponent {

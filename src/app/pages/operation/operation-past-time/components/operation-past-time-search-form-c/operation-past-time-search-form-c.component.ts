@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { OperationPastTimeSearchFormPComponent } from '../operation-past-time-search-form-p/operation-past-time-search-form-p.component';
 import { Router, RouterModule } from '@angular/router';
-import { OperationPastTimeSearchParam } from '../../types/operation-past-time.type';
+import { RxPush } from '@rx-angular/template/push';
 import { format } from 'date-fns';
 import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
-import { RxPush } from '@rx-angular/template/push';
+import { OperationPastTimeSearchParam } from '../../types/operation-past-time.type';
+import { OperationPastTimeSearchFormPComponent } from '../operation-past-time-search-form-p/operation-past-time-search-form-p.component';
 
 @Component({
     standalone: true,
