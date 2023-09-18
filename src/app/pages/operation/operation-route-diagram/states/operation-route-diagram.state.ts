@@ -209,11 +209,11 @@ const targetStations = [
     },
     {
         routeName: ['目黒線'],
-        stationName: '武蔵小山',
+        stationName: '大岡山',
     },
     {
         routeName: ['目黒線'],
-        stationName: '大岡山',
+        stationName: '武蔵小山',
     },
     {
         routeName: ['目黒線', '南北線', '三田線'],
