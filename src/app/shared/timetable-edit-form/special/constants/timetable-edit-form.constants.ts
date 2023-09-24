@@ -4,7 +4,7 @@ export const timetableEditFormStopTypeLabel = new Map<
     ETimetableEditFormStopType,
     string
 >([
-    [ETimetableEditFormStopType.STOP, '停車'],
-    [ETimetableEditFormStopType.PASS, '通過'],
-    [ETimetableEditFormStopType.NOT_GOING_THROUGH, '経由しない'],
+    [ETimetableEditFormStopType.STOP, '停'],
+    [ETimetableEditFormStopType.PASS, '通'],
+    [ETimetableEditFormStopType.NOT_GOING_THROUGH, '経由なし'],
 ]);

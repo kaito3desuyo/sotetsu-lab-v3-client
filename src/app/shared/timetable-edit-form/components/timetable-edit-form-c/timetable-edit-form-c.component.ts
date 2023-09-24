@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { MatLegacySlideToggleChange as MatSlideToggleChange } from '@angular/material/legacy-slide-toggle';
-import { Observable, Subject } from 'rxjs';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -17,11 +17,15 @@ import {
     TimetableEditFormStateQuery,
     TimetableEditFormStateStore,
 } from '../../states/timetable-edit-form.state';
+import { CommonModule } from '@angular/common';
+import { TimetableEditFormPComponent } from '../timetable-edit-form-p/timetable-edit-form-p.component';
 
 @Component({
+    standalone: true,
     selector: 'app-timetable-edit-form-c',
     templateUrl: './timetable-edit-form-c.component.html',
     styleUrls: ['./timetable-edit-form-c.component.scss'],
+    imports: [CommonModule, TimetableEditFormPComponent],
 })
 export class TimetableEditFormCComponent {
     readonly serviceId$ = this.serviceListStateQuery.serviceId$;
