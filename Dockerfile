@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="node:16"
+ARG BASE_IMAGE="node:20"
 ARG APP_NAME="sotetsu-lab-v3-client"
 
 FROM ${BASE_IMAGE} as base

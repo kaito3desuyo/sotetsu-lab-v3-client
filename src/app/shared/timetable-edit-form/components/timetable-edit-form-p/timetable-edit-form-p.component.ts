@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -6,18 +7,39 @@ import {
     Input,
     Output,
 } from '@angular/core';
-import { FormArray, FormBuilder, Validators } from '@angular/forms';
-import { MatLegacySlideToggleChange as MatSlideToggleChange } from '@angular/material/legacy-slide-toggle';
+import {
+    FormArray,
+    FormBuilder,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
+import {
+    MatSlideToggleChange,
+    MatSlideToggleModule,
+} from '@angular/material/slide-toggle';
 import { RxState } from '@rx-angular/state';
+import { selectSlice } from '@rx-angular/state/selections';
+import { RxFor } from '@rx-angular/template/for';
+import { RxIf } from '@rx-angular/template/if';
+import { RxPush } from '@rx-angular/template/push';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
 import { Observable, Subject } from 'rxjs';
 import { filter, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
@@ -28,12 +50,12 @@ import {
     ITimetableEditFormTrip,
     ITimetableEditFormTripTime,
 } from '../../interfaces/timetable-edit-form.interface';
+import { timetableEditFormStopTypeLabel } from '../../special/constants/timetable-edit-form.constants';
 import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
 } from '../../special/enums/timetable-edit-form.enum';
 import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
-import { selectSlice } from '@rx-angular/state/selections';
 
 type State = {
     serviceId: string;
@@ -47,22 +69,39 @@ type State = {
     trips: TripDetailsDto[];
 };
 
-const constants = {
-    timetableEditForm: {
-        modeEnum: ETimetableEditFormMode,
-        stopTypeEnum: ETimetableEditFormStopType,
-    },
-} as const;
-
 @Component({
+    standalone: true,
     selector: 'app-timetable-edit-form-p',
     templateUrl: './timetable-edit-form-p.component.html',
     styleUrls: ['./timetable-edit-form-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatRadioModule,
+        MatButtonModule,
+        MatSlideToggleModule,
+        MatIconModule,
+        RxFor,
+        RxIf,
+        RxPush,
+        PipesModule,
+    ],
     providers: [RxState],
 })
 export class TimetableEditFormPComponent {
-    readonly constants = constants;
+    readonly stopTypeArray = Object.entries(ETimetableEditFormStopType).map(
+        ([key, value]) => ({
+            key,
+            value,
+            label: timetableEditFormStopTypeLabel.get(value),
+        })
+    );
+
     readonly form: ITimetableEditForm = this.fb.group({
         trips: this.fb.array<ITimetableEditFormTrip>([]),
     });
@@ -73,7 +112,27 @@ export class TimetableEditFormPComponent {
 
     private readonly _unsubscriber$ = new Subject<number>();
 
-    readonly vm$ = this.state.select();
+    readonly operations$ = this.state.select('operations');
+    readonly tripClasses$ = this.state.select('tripClasses');
+    readonly stations$ = this.state.select('stations');
+    readonly isWeekday$ = this.state.select(
+        'calendar',
+        (calendar) => !calendar.sunday && !calendar.saturday
+    );
+    readonly isHoliday$ = this.state.select(
+        'calendar',
+        (calendar) => !!calendar.sunday || !!calendar.saturday
+    );
+    readonly calendarStartDate$ = this.state.select('calendar', 'startDate');
+    readonly calendarName$ = this.state.select('calendar', 'calendarName');
+    readonly tripDirectionLabel$ = this.state.select(
+        'tripDirection',
+        (tripDirection) => tripDirectionLabel.get(tripDirection)
+    );
+    readonly isVisibleToggleThatSaveTripsIndividually$ = this.state.select(
+        'mode',
+        (mode) => mode !== ETimetableEditFormMode.UPDATE
+    );
 
     readonly onClickedAdd$ = new Subject<void>();
     readonly onClickedRemove$ = new Subject<number>();
