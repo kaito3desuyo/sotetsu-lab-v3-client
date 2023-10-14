@@ -9,14 +9,14 @@
                 ]"
             >
                 <h3 class="!tw-leading-5">
-                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
+                    {{ vm.calendar.startDate | date : 'yyyy年MM月dd日' }}
                     改正<br />
                     {{ vm.calendar.calendarName }}
                     {{ vm.operation.operationNumber }}運
                 </h3>
             </mat-toolbar>
         </mat-card-title>
-        <mat-card-content>
+        <mat-card-content class="tw-mt-4">
             <div
                 *rxIf="vm.calendar && vm.operation"
                 class="tw-flex tw-flex-col tw-gap-6"
@@ -138,7 +138,7 @@
                     {{
                         station.stationName
                             | operationRouteDiagramFormatStationName
-                            | padding: { num: 6 }
+                            | padding : { num: 6 }
                     }}
                 </text>
             </g>
@@ -191,6 +191,7 @@
                 >
                     <svg>
                         <text
+                            font-size="14"
                             [attr.x]="
                                 stationIndex
                                     ? stationIndex * 60 +
@@ -221,6 +222,8 @@
                     <svg>
                         <text
                             class="tw-cursor-pointer"
+                            font-size="14"
+                            fill="black"
                             [attr.x]="
                                 (((tripOperationList.startTime.stationId
                                     | findById
@@ -243,7 +246,6 @@
                                     9
                             "
                             [attr.y]="offset + 30 + i * 40 - 10"
-                            fill="black"
                             (click)="
                                 navigateTimetable(
                                     tripOperationList.trip.tripBlockId,

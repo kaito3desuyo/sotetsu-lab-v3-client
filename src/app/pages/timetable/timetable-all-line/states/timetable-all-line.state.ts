@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
+import { PageEvent } from '@angular/material/paginator';
 import { guid, Query, Store } from '@datorama/akita';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';

@@ -1,5 +1,5 @@
-import { MatLegacyPaginatorIntl as MatPaginatorIntl } from '@angular/material/legacy-paginator';
 import { Injectable } from '@angular/core';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 
 @Injectable()
 export class CustomPaginator extends MatPaginatorIntl {
