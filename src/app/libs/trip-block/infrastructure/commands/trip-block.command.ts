@@ -7,6 +7,7 @@ import { Pagination } from 'src/app/core/utils/pagination';
 import { environment } from 'src/environments/environment';
 import { AddTripToTripBlockDto } from '../../usecase/dtos/add-trip-to-trip-block.dto';
 import { CreateTripBlockDto } from '../../usecase/dtos/create-trip-block.dto';
+import { DeleteTripFromTripBlockDto } from '../../usecase/dtos/delete-trip-from-trip-block.dto';
 import { ReplaceTripBlockDto } from '../../usecase/dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
 import { buildTripBlockDetailsDto } from '../builders/trip-block-dto.builder';
@@ -82,6 +83,34 @@ export class TripBlockCommand {
                     '/v2/trip-blocks/' +
                     tripBlockId +
                     '/add-trip',
+                {
+                    tripId: body.tripId,
+                },
+                {
+                    params: httpParams,
+                    observe: 'response',
+                }
+            )
+            .pipe(
+                map((res) => {
+                    return buildTripBlockDetailsDto(res.body);
+                })
+            );
+    }
+
+    deleteTripFromTripBlock(
+        qb: RequestQueryBuilder,
+        tripBlockId: string,
+        body: DeleteTripFromTripBlockDto
+    ): Observable<TripBlockDetailsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .patch<TripBlockModel>(
+                environment.apiUrl +
+                    '/v2/trip-blocks/' +
+                    tripBlockId +
+                    '/delete-trip',
                 {
                     tripId: body.tripId,
                 },

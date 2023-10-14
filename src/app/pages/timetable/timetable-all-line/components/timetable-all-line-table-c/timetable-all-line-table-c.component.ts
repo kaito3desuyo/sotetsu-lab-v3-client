@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
 import { Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { Subject } from 'rxjs';
@@ -17,7 +18,6 @@ import {
     TimetableAllLineStateQuery,
     TimetableAllLineStateStore,
 } from '../../states/timetable-all-line.state';
-import { PageEvent } from '@angular/material/paginator';
 
 @Component({
     selector: 'app-timetable-all-line-table-c',
@@ -159,6 +159,7 @@ export class TimetableAllLineTableCComponent {
                         if (result.isFailure()) {
                             this.#error.handleError(result.error);
                             this.#notification.open(result.error.message, 'OK');
+                            return;
                         }
 
                         this.#notification.open('グループに追加しました', 'OK');
@@ -168,7 +169,7 @@ export class TimetableAllLineTableCComponent {
         );
 
         this.state.hold(
-            this.onClickedDeleteTripInGroup$,
+            this.onClickedDeleteTripInGroup$.asObservable(),
             ({ base, target }) => {
                 const dialogRef = this.confirmDialogService.open({
                     width: '480px',
@@ -181,29 +182,35 @@ export class TimetableAllLineTableCComponent {
                     },
                 });
 
-                dialogRef.afterClosed().subscribe((done) => {
+                dialogRef.afterClosed().subscribe(async (done) => {
                     if (done) {
-                        this.tripApi
-                            .removeTripFromTripBlockById(target.tripId)
-                            .pipe(
-                                switchMap(() =>
-                                    this.timetableAllLineService.fetchTripBlocksV2()
+                        this.#loading.open();
+
+                        const result = await tryCatchAsync(
+                            this.timetableAllLineService
+                                .deleteTripFromTripBlockV2(
+                                    base.tripBlockId,
+                                    target.tripId
                                 )
-                            )
-                            .subscribe({
-                                complete: () => {
-                                    this.notification.open(
-                                        'グループから除外しました',
-                                        'OK'
-                                    );
-                                },
-                                error: (e) => {
-                                    this.notification.open(
-                                        'エラーが発生しました',
-                                        'OK'
-                                    );
-                                },
-                            });
+                                .pipe(
+                                    switchMap(() =>
+                                        this.timetableAllLineService.fetchTripBlocksV2()
+                                    )
+                                )
+                        );
+
+                        this.#loading.close();
+
+                        if (result.isFailure()) {
+                            this.#error.handleError(result.error);
+                            this.#notification.open(result.error.message, 'OK');
+                            return;
+                        }
+
+                        this.#notification.open(
+                            'グループから除外しました',
+                            'OK'
+                        );
                     }
                 });
             }

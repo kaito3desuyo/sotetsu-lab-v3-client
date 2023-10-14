@@ -107,4 +107,17 @@ export class TimetableAllLineService {
             })
             .pipe(map(() => undefined));
     }
+
+    deleteTripFromTripBlockV2(
+        tripBlockId: string,
+        tripId: string
+    ): Observable<void> {
+        const qb = RequestQueryBuilder.create();
+
+        return this.tripBlockService
+            .deleteTripFromTripBlock(qb, tripBlockId, {
+                tripId,
+            })
+            .pipe(map(() => undefined));
+    }
 }

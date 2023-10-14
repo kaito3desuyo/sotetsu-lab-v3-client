@@ -4,10 +4,11 @@ import { Observable } from 'rxjs';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
+import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
 import { CreateTripBlockDto } from './dtos/create-trip-block.dto';
+import { DeleteTripFromTripBlockDto } from './dtos/delete-trip-from-trip-block.dto';
 import { ReplaceTripBlockDto } from './dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
-import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockService {
@@ -43,5 +44,17 @@ export class TripBlockService {
         body: AddTripToTripBlockDto
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockCommand.addTripToTripBlock(qb, tripBlockId, body);
+    }
+
+    deleteTripFromTripBlock(
+        qb: RequestQueryBuilder,
+        tripBlockId: string,
+        body: DeleteTripFromTripBlockDto
+    ): Observable<TripBlockDetailsDto> {
+        return this.tripBlockCommand.deleteTripFromTripBlock(
+            qb,
+            tripBlockId,
+            body
+        );
     }
 }
