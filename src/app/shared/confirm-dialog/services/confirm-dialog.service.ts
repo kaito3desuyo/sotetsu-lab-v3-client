@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import {
-    MatLegacyDialog as MatDialog,
-    MatLegacyDialogConfig as MatDialogConfig,
-    MatLegacyDialogRef as MatDialogRef,
-} from '@angular/material/legacy-dialog';
+    MatDialog,
+    MatDialogConfig,
+    MatDialogRef,
+} from '@angular/material/dialog';
 import extend from 'just-extend';
 import { ConfirmDialogComponent } from '../components/confirm-dialog/confirm-dialog.component';
 import { IConfirmDialogData } from '../interfaces/confirm-dialog-data.interface';

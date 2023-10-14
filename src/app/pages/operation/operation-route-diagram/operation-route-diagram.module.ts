@@ -1,15 +1,15 @@
-import { RxLet } from '@rx-angular/template/let';
-import { RxIf } from '@rx-angular/template/if';
-import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatLegacyButtonModule as MatButtonModule } from '@angular/material/legacy-button';
-import { MatLegacyCardModule as MatCardModule } from '@angular/material/legacy-card';
-import { MatLegacyFormFieldModule as MatFormFieldModule } from '@angular/material/legacy-form-field';
-import { MatLegacyInputModule as MatInputModule } from '@angular/material/legacy-input';
-import { MatLegacySelectModule as MatSelectModule } from '@angular/material/legacy-select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { RxFor } from '@rx-angular/template/for';
+import { RxIf } from '@rx-angular/template/if';
+import { RxLet } from '@rx-angular/template/let';
 import { AdsenseModule } from 'ng2-adsense';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
@@ -21,13 +21,13 @@ import { OperationRouteDiagramHeaderPComponent } from './components/operation-ro
 import { OperationRouteDiagramMainCComponent } from './components/operation-route-diagram-main-c/operation-route-diagram-main-c.component';
 import { OperationRouteDiagramRoutingModule } from './operation-route-diagram-routing.module';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
+import { OperationRouteDiagramFormatStationNamePipe } from './pipes/operation-route-diagram-format-station-name.pipe';
 import { OperationRouteDiagramResolverService } from './services/operation-route-diagram-resolver.service';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import {
     OperationRouteDiagramStateQuery,
     OperationRouteDiagramStateStore,
 } from './states/operation-route-diagram.state';
-import { OperationRouteDiagramFormatStationNamePipe } from './pipes/operation-route-diagram-format-station-name.pipe';
 
 @NgModule({
     imports: [

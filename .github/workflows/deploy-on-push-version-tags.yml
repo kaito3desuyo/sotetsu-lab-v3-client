@@ -27,7 +27,7 @@ jobs:
           restore-keys: npm-
 
       - name: Install npm package
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Build application
         run: npm run build:prod -- --output-path=./dist/build-by-ci

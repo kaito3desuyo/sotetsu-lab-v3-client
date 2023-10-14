@@ -1,31 +1,34 @@
-import { Injectable } from '@angular/core';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
+import { Injectable, inject } from '@angular/core';
 import { LoadingComponent } from './loading.component';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class LoadingService {
-    overlayRef: OverlayRef;
+    readonly #overlay = inject(Overlay);
 
-    constructor(private overlay: Overlay) {}
+    #overlayRef: OverlayRef;
 
     open() {
-        this.overlayRef = this.overlay.create({
-            hasBackdrop: true,
-            positionStrategy: this.overlay
-                .position()
-                .global()
-                .centerHorizontally()
-                .centerVertically(),
-        });
+        if (!this.#overlayRef) {
+            this.#overlayRef = this.#overlay.create({
+                hasBackdrop: true,
+                positionStrategy: this.#overlay
+                    .position()
+                    .global()
+                    .centerHorizontally()
+                    .centerVertically(),
+            });
+        }
 
-        this.overlayRef.attach(new ComponentPortal(LoadingComponent));
+        this.#overlayRef.attach(new ComponentPortal(LoadingComponent));
     }
 
     close() {
-        if (this.overlayRef) {
-            this.overlayRef.dispose();
-            this.overlayRef = null;
+        if (this.#overlayRef) {
+            this.#overlayRef.detach();
         }
     }
 }
