@@ -15,6 +15,11 @@ export class LoadingService {
         if (!this.#overlayRef) {
             this.#overlayRef = this.#overlay.create({
                 hasBackdrop: true,
+                backdropClass: [
+                    'tw-bg-white',
+                    'tw-bg-opacity-20',
+                    'tw-backdrop-blur-sm',
+                ],
                 positionStrategy: this.#overlay
                     .position()
                     .global()

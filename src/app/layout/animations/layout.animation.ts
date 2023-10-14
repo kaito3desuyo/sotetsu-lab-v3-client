@@ -23,7 +23,7 @@ export const layoutAnimations = [
         state(
             'shadow',
             style({
-                background: 'rgba(0,0,0,0.6)',
+                background: 'rgba(255, 255, 255, 0.2)',
                 'backdrop-filter': 'blur(4px)',
             })
         ),
