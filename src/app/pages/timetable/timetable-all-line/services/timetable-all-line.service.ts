@@ -94,4 +94,32 @@ export class TimetableAllLineService {
             map(() => null)
         );
     }
+
+    addTripToTripBlockV2(params: {
+        tripBlockId: string;
+        tripId: string;
+    }): Observable<void> {
+        const qb = RequestQueryBuilder.create();
+
+        return this.tripBlockService
+            .addTripToTripBlock(qb, params.tripBlockId, {
+                tripId: params.tripId,
+            })
+            .pipe(map(() => undefined));
+    }
+
+    deleteTripFromTripBlockV2(params: {
+        tripBlockId: string;
+        tripId: string;
+        holdAsAnotherTripBlock?: boolean;
+    }): Observable<void> {
+        const qb = RequestQueryBuilder.create();
+
+        return this.tripBlockService
+            .deleteTripFromTripBlock(qb, params.tripBlockId, {
+                tripId: params.tripId,
+                holdAsAnotherTripBlock: params.holdAsAnotherTripBlock ?? false,
+            })
+            .pipe(map(() => undefined));
+    }
 }
