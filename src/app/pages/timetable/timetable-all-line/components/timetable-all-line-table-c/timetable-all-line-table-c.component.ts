@@ -7,7 +7,6 @@ import { mergeMap, switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
@@ -54,14 +53,12 @@ export class TimetableAllLineTableCComponent {
     constructor(
         private readonly router: Router,
         private readonly state: RxState<{}>,
-        private readonly notification: NotificationService,
         private readonly confirmDialogService: ConfirmDialogService,
         private readonly timetableAllLineService: TimetableAllLineService,
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly timetableAllLineStateStore: TimetableAllLineStateStore,
         private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
-        private readonly calendarSelectDialogService: CalendarSelectDialogService,
-        private readonly tripApi: TripApiService
+        private readonly calendarSelectDialogService: CalendarSelectDialogService
     ) {
         this.state.hold(this.onPaged$, (pageSettings) => {
             this.timetableAllLineStateStore.setPageSettings(pageSettings);
