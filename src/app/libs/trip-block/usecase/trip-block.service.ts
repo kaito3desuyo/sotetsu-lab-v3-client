@@ -7,6 +7,7 @@ import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
 import { CreateTripBlockDto } from './dtos/create-trip-block.dto';
 import { ReplaceTripBlockDto } from './dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
+import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockService {
@@ -34,5 +35,13 @@ export class TripBlockService {
         body: ReplaceTripBlockDto
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockCommand.replaceOne(qb, tripBlockId, body);
+    }
+
+    addTripToTripBlock(
+        qb: RequestQueryBuilder,
+        tripBlockId: string,
+        body: AddTripToTripBlockDto
+    ): Observable<TripBlockDetailsDto> {
+        return this.tripBlockCommand.addTripToTripBlock(qb, tripBlockId, body);
     }
 }

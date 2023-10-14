@@ -1,14 +1,15 @@
-import { Component } from '@angular/core';
-import { MatLegacyDialog as MatDialog } from '@angular/material/legacy-dialog';
-import { LegacyPageEvent as PageEvent } from '@angular/material/legacy-paginator';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { Subject } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { TripApiService } from 'src/app/general/api/trip-api.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { TimetableAllLineService } from '../../services/timetable-all-line.service';
@@ -16,6 +17,7 @@ import {
     TimetableAllLineStateQuery,
     TimetableAllLineStateStore,
 } from '../../states/timetable-all-line.state';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
     selector: 'app-timetable-all-line-table-c',
@@ -24,6 +26,10 @@ import {
     providers: [RxState],
 })
 export class TimetableAllLineTableCComponent {
+    readonly #loading = inject(LoadingService);
+    readonly #error = inject(ErrorHandlerService);
+    readonly #notification = inject(NotificationService);
+
     readonly calendar$ = this.timetableAllLineStateQuery.calendarId$.pipe(
         mergeMap((id) => this.calendarListStateQuery.selectByCalendarId(id))
     );
@@ -46,7 +52,6 @@ export class TimetableAllLineTableCComponent {
     }>();
 
     constructor(
-        private readonly dialog: MatDialog,
         private readonly router: Router,
         private readonly state: RxState<{}>,
         private readonly notification: NotificationService,
@@ -117,44 +122,51 @@ export class TimetableAllLineTableCComponent {
                     });
             });
         });
-        this.state.hold(this.onClickedAddTripInGroup$, ({ base, target }) => {
-            const dialogRef = this.confirmDialogService.open({
-                width: '480px',
-                data: {
-                    title: 'グループに追加する',
-                    html: `<p>${target.tripNumber}列車を${base.tripNumber}列車が所属するグループに追加しますか？</p>`,
-                    cancelButtonText: 'キャンセル',
-                    goButtonText: '追加する',
-                    goButtonColor: 'primary',
-                },
-            });
 
-            dialogRef.afterClosed().subscribe((done) => {
-                if (done) {
-                    this.tripApi
-                        .addTripToTripBlockById(target.tripId, base.tripBlockId)
-                        .pipe(
-                            switchMap(() =>
-                                this.timetableAllLineService.fetchTripBlocksV2()
-                            )
-                        )
-                        .subscribe({
-                            complete: () => {
-                                this.notification.open(
-                                    'グループに追加しました',
-                                    'OK'
-                                );
-                            },
-                            error: (e) => {
-                                this.notification.open(
-                                    'エラーが発生しました',
-                                    'OK'
-                                );
-                            },
-                        });
-                }
-            });
-        });
+        this.state.hold(
+            this.onClickedAddTripInGroup$.asObservable(),
+            ({ base, target }) => {
+                const dialogRef = this.confirmDialogService.open({
+                    width: '480px',
+                    data: {
+                        title: 'グループに追加する',
+                        html: `<p>${target.tripNumber}列車を${base.tripNumber}列車が所属するグループに追加しますか？</p>`,
+                        cancelButtonText: 'キャンセル',
+                        goButtonText: '追加する',
+                        goButtonColor: 'primary',
+                    },
+                });
+
+                dialogRef.afterClosed().subscribe(async (done) => {
+                    if (done) {
+                        this.#loading.open();
+
+                        const result = await tryCatchAsync(
+                            this.timetableAllLineService
+                                .addTripToTripBlockV2(
+                                    base.tripBlockId,
+                                    target.tripId
+                                )
+                                .pipe(
+                                    switchMap(() =>
+                                        this.timetableAllLineService.fetchTripBlocksV2()
+                                    )
+                                )
+                        );
+
+                        this.#loading.close();
+
+                        if (result.isFailure()) {
+                            this.#error.handleError(result.error);
+                            this.#notification.open(result.error.message, 'OK');
+                        }
+
+                        this.#notification.open('グループに追加しました', 'OK');
+                    }
+                });
+            }
+        );
+
         this.state.hold(
             this.onClickedDeleteTripInGroup$,
             ({ base, target }) => {

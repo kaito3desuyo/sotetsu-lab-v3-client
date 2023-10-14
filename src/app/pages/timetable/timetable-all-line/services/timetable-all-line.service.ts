@@ -94,4 +94,17 @@ export class TimetableAllLineService {
             map(() => null)
         );
     }
+
+    addTripToTripBlockV2(
+        tripBlockId: string,
+        tripId: string
+    ): Observable<void> {
+        const qb = RequestQueryBuilder.create();
+
+        return this.tripBlockService
+            .addTripToTripBlock(qb, tripBlockId, {
+                tripId,
+            })
+            .pipe(map(() => undefined));
+    }
 }

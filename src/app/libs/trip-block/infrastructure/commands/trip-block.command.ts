@@ -1,11 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { instanceToPlain, plainToClass } from 'class-transformer';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { environment } from 'src/environments/environment';
+import { AddTripToTripBlockDto } from '../../usecase/dtos/add-trip-to-trip-block.dto';
 import { CreateTripBlockDto } from '../../usecase/dtos/create-trip-block.dto';
 import { ReplaceTripBlockDto } from '../../usecase/dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
@@ -57,6 +57,34 @@ export class TripBlockCommand {
             .put<TripBlockModel>(
                 this.apiUrl + '/' + tripBlockId,
                 TripBlockModelBuilder.fromReplaceDto(body),
+                {
+                    params: httpParams,
+                    observe: 'response',
+                }
+            )
+            .pipe(
+                map((res) => {
+                    return buildTripBlockDetailsDto(res.body);
+                })
+            );
+    }
+
+    addTripToTripBlock(
+        qb: RequestQueryBuilder,
+        tripBlockId: string,
+        body: AddTripToTripBlockDto
+    ): Observable<TripBlockDetailsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .patch<TripBlockModel>(
+                environment.apiUrl +
+                    '/v2/trip-blocks/' +
+                    tripBlockId +
+                    '/add-trip',
+                {
+                    tripId: body.tripId,
+                },
                 {
                     params: httpParams,
                     observe: 'response',
