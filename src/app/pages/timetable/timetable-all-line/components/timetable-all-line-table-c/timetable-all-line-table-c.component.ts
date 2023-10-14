@@ -88,7 +88,7 @@ export class TimetableAllLineTableCComponent {
                 ]);
             });
         });
-        this.state.hold(this.onClickedDeleteButton$, (trip) => {
+        this.state.hold(this.onClickedDeleteButton$.asObservable(), (trip) => {
             const dialogRef = this.confirmDialogService.open({
                 width: '480px',
                 data: {
@@ -100,26 +100,33 @@ export class TimetableAllLineTableCComponent {
                 },
             });
 
-            dialogRef.afterClosed().subscribe((done) => {
+            dialogRef.afterClosed().subscribe(async (done) => {
                 if (!done) return;
-                this.tripApi
-                    .deleteTripById(trip.tripId)
-                    .pipe(
-                        switchMap(() =>
-                            this.timetableAllLineService.fetchTripBlocksV2()
+
+                this.#loading.open();
+
+                const result = await tryCatchAsync(
+                    this.timetableAllLineService
+                        .deleteTripFromTripBlockV2({
+                            tripBlockId: trip.tripBlockId,
+                            tripId: trip.tripId,
+                        })
+                        .pipe(
+                            switchMap(() =>
+                                this.timetableAllLineService.fetchTripBlocksV2()
+                            )
                         )
-                    )
-                    .subscribe({
-                        complete: () => {
-                            this.notification.open('削除しました', 'OK');
-                        },
-                        error: (e) => {
-                            this.notification.open(
-                                'エラーが発生しました',
-                                'OK'
-                            );
-                        },
-                    });
+                );
+
+                this.#loading.close();
+
+                if (result.isFailure()) {
+                    this.#error.handleError(result.error);
+                    this.#notification.open(result.error.message, 'OK');
+                    return;
+                }
+
+                this.#notification.open('削除しました', 'OK');
             });
         });
 
@@ -138,32 +145,32 @@ export class TimetableAllLineTableCComponent {
                 });
 
                 dialogRef.afterClosed().subscribe(async (done) => {
-                    if (done) {
-                        this.#loading.open();
+                    if (!done) return;
 
-                        const result = await tryCatchAsync(
-                            this.timetableAllLineService
-                                .addTripToTripBlockV2(
-                                    base.tripBlockId,
-                                    target.tripId
+                    this.#loading.open();
+
+                    const result = await tryCatchAsync(
+                        this.timetableAllLineService
+                            .addTripToTripBlockV2({
+                                tripBlockId: base.tripBlockId,
+                                tripId: target.tripId,
+                            })
+                            .pipe(
+                                switchMap(() =>
+                                    this.timetableAllLineService.fetchTripBlocksV2()
                                 )
-                                .pipe(
-                                    switchMap(() =>
-                                        this.timetableAllLineService.fetchTripBlocksV2()
-                                    )
-                                )
-                        );
+                            )
+                    );
 
-                        this.#loading.close();
+                    this.#loading.close();
 
-                        if (result.isFailure()) {
-                            this.#error.handleError(result.error);
-                            this.#notification.open(result.error.message, 'OK');
-                            return;
-                        }
-
-                        this.#notification.open('グループに追加しました', 'OK');
+                    if (result.isFailure()) {
+                        this.#error.handleError(result.error);
+                        this.#notification.open(result.error.message, 'OK');
+                        return;
                     }
+
+                    this.#notification.open('グループに追加しました', 'OK');
                 });
             }
         );
@@ -183,35 +190,33 @@ export class TimetableAllLineTableCComponent {
                 });
 
                 dialogRef.afterClosed().subscribe(async (done) => {
-                    if (done) {
-                        this.#loading.open();
+                    if (!done) return;
 
-                        const result = await tryCatchAsync(
-                            this.timetableAllLineService
-                                .deleteTripFromTripBlockV2(
-                                    base.tripBlockId,
-                                    target.tripId
+                    this.#loading.open();
+
+                    const result = await tryCatchAsync(
+                        this.timetableAllLineService
+                            .deleteTripFromTripBlockV2({
+                                tripBlockId: base.tripBlockId,
+                                tripId: target.tripId,
+                                holdAsAnotherTripBlock: true,
+                            })
+                            .pipe(
+                                switchMap(() =>
+                                    this.timetableAllLineService.fetchTripBlocksV2()
                                 )
-                                .pipe(
-                                    switchMap(() =>
-                                        this.timetableAllLineService.fetchTripBlocksV2()
-                                    )
-                                )
-                        );
+                            )
+                    );
 
-                        this.#loading.close();
+                    this.#loading.close();
 
-                        if (result.isFailure()) {
-                            this.#error.handleError(result.error);
-                            this.#notification.open(result.error.message, 'OK');
-                            return;
-                        }
-
-                        this.#notification.open(
-                            'グループから除外しました',
-                            'OK'
-                        );
+                    if (result.isFailure()) {
+                        this.#error.handleError(result.error);
+                        this.#notification.open(result.error.message, 'OK');
+                        return;
                     }
+
+                    this.#notification.open('グループから除外しました', 'OK');
                 });
             }
         );

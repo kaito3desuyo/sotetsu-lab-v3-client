@@ -95,28 +95,30 @@ export class TimetableAllLineService {
         );
     }
 
-    addTripToTripBlockV2(
-        tripBlockId: string,
-        tripId: string
-    ): Observable<void> {
+    addTripToTripBlockV2(params: {
+        tripBlockId: string;
+        tripId: string;
+    }): Observable<void> {
         const qb = RequestQueryBuilder.create();
 
         return this.tripBlockService
-            .addTripToTripBlock(qb, tripBlockId, {
-                tripId,
+            .addTripToTripBlock(qb, params.tripBlockId, {
+                tripId: params.tripId,
             })
             .pipe(map(() => undefined));
     }
 
-    deleteTripFromTripBlockV2(
-        tripBlockId: string,
-        tripId: string
-    ): Observable<void> {
+    deleteTripFromTripBlockV2(params: {
+        tripBlockId: string;
+        tripId: string;
+        holdAsAnotherTripBlock?: boolean;
+    }): Observable<void> {
         const qb = RequestQueryBuilder.create();
 
         return this.tripBlockService
-            .deleteTripFromTripBlock(qb, tripBlockId, {
-                tripId,
+            .deleteTripFromTripBlock(qb, params.tripBlockId, {
+                tripId: params.tripId,
+                holdAsAnotherTripBlock: params.holdAsAnotherTripBlock ?? false,
             })
             .pipe(map(() => undefined));
     }

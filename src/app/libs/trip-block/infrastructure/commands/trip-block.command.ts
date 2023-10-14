@@ -83,9 +83,7 @@ export class TripBlockCommand {
                     '/v2/trip-blocks/' +
                     tripBlockId +
                     '/add-trip',
-                {
-                    tripId: body.tripId,
-                },
+                body,
                 {
                     params: httpParams,
                     observe: 'response',
@@ -111,9 +109,7 @@ export class TripBlockCommand {
                     '/v2/trip-blocks/' +
                     tripBlockId +
                     '/delete-trip',
-                {
-                    tripId: body.tripId,
-                },
+                body,
                 {
                     params: httpParams,
                     observe: 'response',
