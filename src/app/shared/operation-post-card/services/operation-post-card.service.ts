@@ -28,103 +28,114 @@ export class OperationPostCardService {
         return this._submitOperationSightingEvent.asObservable();
     }
 
-    addOperationSighting(formValue: IOperationPostCardForm): Observable<void> {
-        return of(undefined).pipe(
-            mergeMap(() =>
-                this.todaysCalendarListQuery.todaysCalendarId$.pipe(take(1))
-            ),
-            map((calendarId) => {
-                const formationQb = RequestQueryBuilder.create()
-                    .setJoin([
-                        { field: 'vehicleFormations' },
-                        { field: 'vehicleFormations.vehicle' },
-                    ])
-                    .search({
-                        $or: [
-                            {
-                                formationNumber: {
-                                    [CondOperator.EQUALS]:
-                                        formValue.formationOrVehicleNumber,
-                                },
-                            },
-                            {
-                                'vehicleFormations.vehicle.vehicleNumber': {
-                                    [CondOperator.EQUALS]:
-                                        formValue.formationOrVehicleNumber,
-                                },
-                            },
-                        ],
-                    });
-
-                const operationQb = RequestQueryBuilder.create().setFilter([
+    async addOperationSighting(
+        formValue: IOperationPostCardForm
+    ): Promise<void> {
+        const todaysCalendarId = this.todaysCalendarListQuery.todaysCalendarId;
+        const emptyQb = RequestQueryBuilder.create();
+        const formationQb = RequestQueryBuilder.create()
+            .setJoin([
+                { field: 'vehicleFormations' },
+                { field: 'vehicleFormations.vehicle' },
+            ])
+            .search({
+                $or: [
                     {
-                        field: 'calendarId',
-                        operator: CondOperator.EQUALS,
-                        value: calendarId,
+                        formationNumber: {
+                            [CondOperator.EQUALS]:
+                                formValue.formationOrVehicleNumber,
+                        },
                     },
                     {
-                        field: 'operationNumber',
-                        operator: CondOperator.EQUALS,
-                        value: formValue.operationNumber,
+                        'vehicleFormations.vehicle.vehicleNumber': {
+                            [CondOperator.EQUALS]:
+                                formValue.formationOrVehicleNumber,
+                        },
                     },
-                ]);
+                ],
+            });
+        const operationQb = RequestQueryBuilder.create().setFilter([
+            {
+                field: 'calendarId',
+                operator: CondOperator.EQUALS,
+                value: todaysCalendarId,
+            },
+            {
+                field: 'operationNumber',
+                operator: CondOperator.EQUALS,
+                value: formValue.operationNumber,
+            },
+        ]);
+        const now = dayjs();
+        const isLateNight = now.hour() < 4;
 
-                return { formationQb, operationQb };
+        const [formations, operations] = await forkJoin([
+            this.formationService.findManyBySpeficicDate(formationQb, {
+                date: now
+                    .subtract(isLateNight ? 1 : 0, 'days')
+                    .format('YYYY-MM-DD'),
             }),
-            mergeMap(({ formationQb, operationQb }) =>
-                forkJoin([
-                    this.formationService.findManyBySpeficicDate(formationQb, {
-                        date: dayjs()
-                            .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
-                            .format('YYYY-MM-DD'),
-                    }),
-                    this.operationService.findMany(operationQb),
-                ])
-            ),
-            map<
-                [FormationDetailsDto[], OperationDetailsDto[]],
-                [FormationDetailsDto[], OperationDetailsDto[], Dayjs]
-            >(([formations, operations]) => {
-                if (!formations.length) {
-                    throw new Error('存在しない編成・車両番号です');
-                }
+            this.operationService.findMany(operationQb),
+        ]).toPromise();
 
-                if (!operations.length) {
-                    throw new Error('存在しない運用番号です');
-                }
+        if (!Array.isArray(formations) || !formations.length) {
+            throw new Error('存在しない編成・車両番号です');
+        }
 
-                let sightingTime = dayjs();
-                if (formValue.sightingTime) {
-                    const now = dayjs();
-                    const st = dayjs(formValue.sightingTime, 'HH:mm');
-                    if (now.hour() < 4) {
-                        sightingTime = st.subtract(
-                            st.hour() >= 4 ? 1 : 0,
-                            'day'
-                        );
-                    } else {
-                        sightingTime = st.add(st.hour() < 4 ? 1 : 0, 'day');
-                    }
-                    if (sightingTime.isAfter(now)) {
-                        throw new Error('未来の時刻を入力することはできません');
-                    }
-                }
+        if (!Array.isArray(operations) || !operations.length) {
+            throw new Error('存在しない運用番号です');
+        }
 
-                return [formations, operations, sightingTime];
-            }),
-            mergeMap(([formations, operations, sightingTime]) => {
-                const qb = new RequestQueryBuilder();
-                return this.operationSightingService.createOne(qb, {
-                    formationId: formations[0].formationId,
-                    operationId: operations[0].operationId,
-                    sightingTime: sightingTime.toISOString(),
-                });
-            }),
-            tap((result) => {
-                this.socket.emit('sendSighting', result);
-                this._submitOperationSightingEvent.next();
-            }),
-            map(() => undefined)
-        );
+        let sightingTime = now.clone();
+        if (formValue.sightingTime) {
+            const st = dayjs(formValue.sightingTime, 'HH:mm');
+
+            if (isLateNight) {
+                sightingTime = st.subtract(st.hour() >= 4 ? 1 : 0, 'day');
+            } else {
+                sightingTime = st.add(st.hour() < 4 ? 1 : 0, 'day');
+            }
+
+            if (sightingTime.isAfter(now)) {
+                throw new Error('未来の時刻を入力することはできません');
+            }
+        }
+
+        const currentPosition = await this.operationService
+            .findOneWithCurrentPosition(operations[0].operationId, emptyQb)
+            .toPromise();
+
+        if (
+            !currentPosition.position.prev &&
+            !currentPosition.position.current &&
+            currentPosition.position.next
+        ) {
+            const firstTripDepartureTime = dayjs(
+                currentPosition.position.next.startTime.departureTime,
+                'HH:mm:ss'
+            )
+                .add(
+                    currentPosition.position.next.startTime.departureDays - 1,
+                    'day'
+                )
+                .subtract(isLateNight ? 1 : 0, 'day');
+
+            if (now.isBefore(firstTripDepartureTime.subtract(30, 'minute'))) {
+                throw new Error(
+                    `${operations[0].operationNumber}運の最初の列車が発車するより30分以上前の時刻を入力することはできません`
+                );
+            }
+        }
+
+        const result = await this.operationSightingService
+            .createOne(emptyQb, {
+                formationId: formations[0].formationId,
+                operationId: operations[0].operationId,
+                sightingTime: sightingTime.toISOString(),
+            })
+            .toPromise();
+
+        this.socket.emit('sendSighting', result);
+        this._submitOperationSightingEvent.next();
     }
 }
