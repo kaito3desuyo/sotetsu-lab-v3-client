@@ -104,6 +104,6 @@
     "template": "angular"
   },
   "volta": {
-    "node": "16.17.1"
+    "node": "20.12.0"
   }
 }
