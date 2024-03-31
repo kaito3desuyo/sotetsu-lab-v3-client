@@ -90,7 +90,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "sotetsu-lab-v3-client:build"
+            "buildTarget": "sotetsu-lab-v3-client:build"
           }
         },
         "test": {

@@ -6,7 +6,7 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
-import OPERATION_NUMBER_LINK_DECLARATIONS from 'src/app/shared/operation-number-link/operation-number-link.declaration';
+import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/operation-number-link.module';
 
 @Component({
     standalone: true,
@@ -19,7 +19,10 @@ import OPERATION_NUMBER_LINK_DECLARATIONS from 'src/app/shared/operation-number-
         RxIf,
         RxFor,
         PipesModule,
-        ...OPERATION_NUMBER_LINK_DECLARATIONS,
+        //
+        OperationNumberLinkModule,
+
+        // OPERATION_NUMBER_LINK_DECLARATIONS,
     ],
 })
 export class OperationPastTimeTablePComponent {
