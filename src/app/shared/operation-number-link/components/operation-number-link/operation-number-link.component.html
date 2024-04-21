@@ -16,7 +16,7 @@
                 class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
                 [ngClass]="{
                     'tw-font-bold': dayCountFromToday === 0,
-                    'tw-underline': dayCountFromToday === 1
+                    '!tw-underline': dayCountFromToday === 1
                 }"
                 [routerLink]="[
                     '/operation',
