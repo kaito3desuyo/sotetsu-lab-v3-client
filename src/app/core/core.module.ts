@@ -18,6 +18,7 @@ import { CustomPaginator } from './classes/custom-paginator';
 import { AppInitializerProvider } from './configs/app-initializer';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { ErrorHandlerService } from './services/error-handler.service';
+import { PayloadHashInterceptor } from './interceptors/payload-hash.interceptor';
 
 const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
     primaryStrategy: 'local',
@@ -55,6 +56,11 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,
+            multi: true,
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: PayloadHashInterceptor,
             multi: true,
         },
         {
