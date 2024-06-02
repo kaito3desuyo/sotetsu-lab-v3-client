@@ -11,7 +11,6 @@ import {
     TokenStateQuery,
     TokenStateStore,
 } from 'src/app/global-states/token.state';
-import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -46,9 +45,10 @@ export class AuthInterceptor implements HttpInterceptor {
         const req = request.clone({
             url: request.url,
             headers: accessToken
-                ? request.headers
-                      .set('Authorization', `${tokenType} ${accessToken}`)
-                      .set('X-APP-CLIENT-ID', environment.clientId)
+                ? request.headers.set(
+                      'x-sotetsu-lab-authorization',
+                      `${tokenType} ${accessToken}`
+                  )
                 : request.headers,
         });
 
