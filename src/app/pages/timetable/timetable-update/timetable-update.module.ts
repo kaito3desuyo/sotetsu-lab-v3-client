@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { TimetableEditFormModule } from 'src/app/shared/timetable-edit-form/timetable-edit-form.module';
 import { TimetableUpdateHeaderCComponent } from './components/timetable-update-header-c/timetable-update-header-c.component';
 import { TimetableUpdateHeaderPComponent } from './components/timetable-update-header-p/timetable-update-header-p.component';
@@ -20,7 +19,6 @@ import { TimetableUpdateComponent } from './timetable-update.component';
     providers: [TimetableUpdateService, TimetableUpdateResolverService],
     imports: [
         CommonModule,
-        FlexLayoutModule,
         TimetableUpdateRoutingModule,
         TimetableEditFormModule,
     ],

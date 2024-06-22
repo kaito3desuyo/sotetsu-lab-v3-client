@@ -1,4 +1,4 @@
-<div fxLayout="column" fxLayoutGap="16px">
+<div class="tw-flex tw-flex-col tw-gap-4">
     <p>ダイヤを選択してください。</p>
     <mat-form-field>
         <mat-select placeholder="ダイヤ" [(ngModel)]="selected" tabindex="0">
@@ -8,12 +8,12 @@
             >
                 {{
                     calendar.startDate
-                        | dayjs: { format: 'YYYY年MM月DD日改正 ' }
+                        | dayjs : { format: 'YYYY年MM月DD日改正 ' }
                 }}{{ calendar.calendarName }}
             </mat-option>
         </mat-select>
     </mat-form-field>
-    <div fxLayout="row" fxLayoutAlign="center">
+    <div class="tw-flex tw-flex-row tw-justify-center">
         <button
             mat-raised-button
             color="primary"

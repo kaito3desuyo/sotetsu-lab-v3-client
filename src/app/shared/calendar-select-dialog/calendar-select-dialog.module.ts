@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -27,7 +26,6 @@ import { CalendarSelectDialogService } from './services/calendar-select-dialog.s
     imports: [
         CommonModule,
         FormsModule,
-        FlexLayoutModule,
         MatFormFieldModule,
         MatSelectModule,
         MatButtonModule,

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { TimetableEditFormModule } from 'src/app/shared/timetable-edit-form/timetable-edit-form.module';
 import { TimetableCopyHeaderCComponent } from './components/timetable-copy-header-c/timetable-copy-header-c.component';
 import { TimetableCopyHeaderPComponent } from './components/timetable-copy-header-p/timetable-copy-header-p.component';
@@ -20,7 +19,6 @@ import { TimetableCopyComponent } from './timetable-copy.component';
     providers: [TimetableCopyService, TimetableCopyResolverService],
     imports: [
         CommonModule,
-        FlexLayoutModule,
         TimetableCopyRoutingModule,
         TimetableEditFormModule,
     ],
