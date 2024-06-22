@@ -1,6 +1,5 @@
-import { RxIf } from '@rx-angular/template/if';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 
 @Component({
@@ -9,7 +8,7 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
     templateUrl: './formation-number-link.component.html',
     styleUrls: ['./formation-number-link.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, RxIf],
+    imports: [CommonModule],
 })
 export class FormationNumberLinkComponent {
     @Input() formation: FormationDetailsDto;

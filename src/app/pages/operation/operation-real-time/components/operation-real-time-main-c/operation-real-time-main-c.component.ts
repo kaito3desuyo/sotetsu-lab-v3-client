@@ -66,8 +66,8 @@ export class OperationRealTimeMainCComponent {
                 .pipe(
                     switchMap(() =>
                         forkJoin([
-                            this.operationRealTimeService.fetchOperationSightings(),
-                            this.operationRealTimeService.fetchFormationSightings(),
+                            this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+                            this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
                         ])
                     )
                 )
@@ -82,8 +82,8 @@ export class OperationRealTimeMainCComponent {
                     }
 
                     return forkJoin([
-                        this.operationRealTimeService.fetchOperationSightings(),
-                        this.operationRealTimeService.fetchFormationSightings(),
+                        this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+                        this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
                     ]).pipe(
                         tap(() => {
                             this.notification.open(

@@ -1,12 +1,13 @@
-import { RxPush } from '@rx-angular/template/push';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
-import { map, pluck } from 'rxjs/operators';
+import { selectSlice } from '@rx-angular/state/selections';
+import { RxPush } from '@rx-angular/template/push';
+import { map } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
-import { OperationSightingWithCirculatedDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-with-circulated.dto';
+import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -16,7 +17,6 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
 import { OperationRealTimeUtil } from '../../utils/operation-real-time.util';
 import { OperationRealTimeNewTablePComponent } from '../operation-real-time-new-table-p/operation-real-time-new-table-p.component';
-import { selectSlice } from '@rx-angular/state/selections';
 
 type State = {
     displayedColumns: OperationRealTimeTableColumn[];
@@ -25,7 +25,7 @@ type State = {
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     operations: OperationDetailsDto[];
-    latestOperationSightings: OperationSightingWithCirculatedDto[];
+    timeCrossSections: OperationSightingTimeCrossSectionDto[];
     currentPositions: OperationCurrentPositionDto[];
     isVisibleCurrentPosition: boolean;
 };
@@ -102,22 +102,17 @@ export class OperationRealTimeNewTableByOperationCComponent {
                 .select(
                     selectSlice([
                         'operations',
-                        'latestOperationSightings',
+                        'timeCrossSections',
                         'currentPositions',
                     ])
                 )
                 .pipe(
-                    map(
-                        ({
-                            operations: operations,
-                            latestOperationSightings: sightings,
-                            currentPositions: positions,
-                        }) =>
-                            OperationRealTimeUtil.generateOperationTableData(
-                                operations,
-                                sightings,
-                                positions
-                            )
+                    map(({ operations, timeCrossSections, currentPositions }) =>
+                        OperationRealTimeUtil.generateOperationTableData(
+                            operations,
+                            timeCrossSections,
+                            currentPositions
+                        )
                     )
                 )
         );
@@ -143,10 +138,8 @@ export class OperationRealTimeNewTableByOperationCComponent {
         );
 
         this.state.connect(
-            'latestOperationSightings',
-            this.operationRealTimeStateQuery.latestSightings$.pipe(
-                pluck('operationSightings')
-            )
+            'timeCrossSections',
+            this.operationRealTimeStateQuery.operationSightingTimeCrossSections$
         );
 
         this.state.connect(

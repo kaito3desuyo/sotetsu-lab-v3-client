@@ -1,8 +1,6 @@
-import { RxLet } from '@rx-angular/template/let';
-import { RxIf } from '@rx-angular/template/if';
-import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { get } from 'lodash-es';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -24,9 +22,6 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
-        RxLet,
-        RxFor,
-        RxIf,
         PipesModule,
         OperationNumberLinkModule,
         FormationNumberLinkModule,
@@ -45,4 +40,8 @@ export class OperationRealTimeNewTablePComponent {
     @Input() todaysCalendarId: CalendarDetailsDto['calendarId'];
     @Input() stations: StationDetailsDto[];
     @Input() tripClasses: TripClassDetailsDto[];
+
+    trackBy(row: IOperationRealTimeTableData): any {
+        return get(row, this.trackByKey);
+    }
 }

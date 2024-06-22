@@ -1,13 +1,10 @@
 import { Injectable } from '@angular/core';
-
 import { forkJoin, Observable } from 'rxjs';
 import { map, mergeMap } from 'rxjs/operators';
 import { OperationRealTimeService } from './operation-real-time.service';
 
 @Injectable()
-export class OperationRealTimeResolverService
-    
-{
+export class OperationRealTimeResolverService {
     constructor(private operationRealTimeService: OperationRealTimeService) {}
 
     resolve(): Observable<void> {
@@ -20,8 +17,8 @@ export class OperationRealTimeResolverService
             mergeMap(() => {
                 return forkJoin([
                     // v2
-                    this.operationRealTimeService.fetchOperationSightings(),
-                    this.operationRealTimeService.fetchFormationSightings(),
+                    this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+                    this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
                     this.operationRealTimeService.fetchOperationCurrentPosition(),
                 ]);
             }),

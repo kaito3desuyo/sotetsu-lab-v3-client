@@ -1,7 +1,3 @@
-import { RxPush } from '@rx-angular/template/push';
-import { RxLet } from '@rx-angular/template/let';
-import { RxIf } from '@rx-angular/template/if';
-import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -16,6 +12,8 @@ import {
     RxRenderStrategiesConfig,
 } from '@rx-angular/cdk/render-strategies';
 import { RxState } from '@rx-angular/state';
+import { selectSlice } from '@rx-angular/state/selections';
+import { RxPush } from '@rx-angular/template/push';
 import { Subject } from 'rxjs';
 import { map, pluck } from 'rxjs/operators';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
@@ -25,7 +23,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { selectSlice } from '@rx-angular/state/selections';
 
 const COMPONENT_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
     primaryStrategy: 'immediate',
@@ -62,16 +59,7 @@ type State = {
     templateUrl: './current-position-link.component.html',
     styleUrls: ['./current-position-link.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        CommonModule,
-        RouterModule,
-        MatIconModule,
-        RxLet,
-        RxFor,
-        RxIf,
-        RxPush,
-        PipesModule,
-    ],
+    imports: [CommonModule, RouterModule, MatIconModule, RxPush, PipesModule],
     providers: [
         {
             provide: RX_RENDER_STRATEGIES_CONFIG,
