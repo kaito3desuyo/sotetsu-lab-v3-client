@@ -1,14 +1,14 @@
-import { RxPush } from '@rx-angular/template/push';
-import { RxLet } from '@rx-angular/template/let';
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
-import { map, pluck } from 'rxjs/operators';
+import { selectSlice } from '@rx-angular/state/selections';
+import { RxPush } from '@rx-angular/template/push';
+import { map } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { OperationSightingWithCirculatedDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-with-circulated.dto';
+import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -17,7 +17,6 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
 import { OperationRealTimeUtil } from '../../utils/operation-real-time.util';
 import { OperationRealTimeNewTablePComponent } from '../operation-real-time-new-table-p/operation-real-time-new-table-p.component';
-import { selectSlice } from '@rx-angular/state/selections';
 
 type State = {
     displayedColumns: OperationRealTimeTableColumn[];
@@ -26,7 +25,7 @@ type State = {
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     formations: FormationDetailsDto[];
-    latestFormationSightings: OperationSightingWithCirculatedDto[];
+    timeCrossSections: OperationSightingTimeCrossSectionDto[];
     currentPositions: OperationCurrentPositionDto[];
     isVisibleCurrentPosition: boolean;
 };
@@ -39,7 +38,7 @@ type State = {
     styleUrls: [
         './operation-real-time-new-table-by-formation-c.component.scss',
     ],
-    imports: [CommonModule, RxLet, RxPush, OperationRealTimeNewTablePComponent],
+    imports: [CommonModule, RxPush, OperationRealTimeNewTablePComponent],
     providers: [RxState],
 })
 export class OperationRealTimeNewTableByFormationCComponent {
@@ -93,22 +92,17 @@ export class OperationRealTimeNewTableByFormationCComponent {
                 .select(
                     selectSlice([
                         'formations',
-                        'latestFormationSightings',
+                        'timeCrossSections',
                         'currentPositions',
                     ])
                 )
                 .pipe(
-                    map(
-                        ({
-                            formations: formations,
-                            latestFormationSightings: sightings,
-                            currentPositions: positions,
-                        }) =>
-                            OperationRealTimeUtil.generateFormationTableData(
-                                formations,
-                                sightings,
-                                positions
-                            )
+                    map(({ formations, timeCrossSections, currentPositions }) =>
+                        OperationRealTimeUtil.generateFormationTableData(
+                            formations,
+                            timeCrossSections,
+                            currentPositions
+                        )
                     )
                 )
         );
@@ -134,10 +128,8 @@ export class OperationRealTimeNewTableByFormationCComponent {
         );
 
         this.state.connect(
-            'latestFormationSightings',
-            this.operationRealTimeStateQuery.latestSightings$.pipe(
-                pluck('formationSightings')
-            )
+            'timeCrossSections',
+            this.operationRealTimeStateQuery.formationSightingTimeCrossSections$
         );
 
         this.state.connect(

@@ -14,52 +14,86 @@
         class="tw-flex tw-flex-row tw-items-center tw-gap-4 tw-text-xs tw-leading-4"
     >
         <div class="tw-flex tw-w-12">
-            <ng-container
-                *rxIf="!!trip; strategy: 'immediate'; patchZone: false"
-            >
-                <a
-                    [routerLink]="[
-                        '/timetable',
-                        'all-line',
-                        {
-                            calendar_id: todaysCalendarId,
-                            trip_direction: trip.tripDirection,
-                            trip_block_id: trip.tripBlockId
-                        }
-                    ]"
-                    [ngStyle]="{
-                        color:
-                            trip.tripClassId
-                            | findById
-                                : {
-                                      array: tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor'
-                                  }
-                    }"
-                >
-                    {{
+            @if (!!trip) {
+            <a
+                [routerLink]="[
+                    '/timetable',
+                    'all-line',
+                    {
+                        calendar_id: todaysCalendarId,
+                        trip_direction: trip.tripDirection,
+                        trip_block_id: trip.tripBlockId
+                    }
+                ]"
+                [ngStyle]="{
+                    color:
                         trip.tripClassId
-                            | findById
-                                : {
-                                      array: tripClasses,
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassName'
-                                  }
-                            | antiBrackets
-                    }}
-                    <br />
-                    {{ trip.tripNumber }}
-                </a>
-            </ng-container>
+                        | findById
+                            : {
+                                  array: tripClasses,
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassColor'
+                              }
+                }"
+            >
+                {{
+                    trip.tripClassId
+                        | findById
+                            : {
+                                  array: tripClasses,
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassName'
+                              }
+                        | antiBrackets
+                }}
+                <br />
+                {{ trip.tripNumber }}
+            </a>
+            }
         </div>
         <div class="tw-flex tw-w-20">
-            <ng-container
-                *rxIf="!!leftTime; strategy: 'immediate'; patchZone: false"
-            >
-                <p class="tw-m-0">
+            @if (!!leftTime) {
+            <p class="tw-m-0">
+                {{
+                    leftTime.stationId
+                        | findById
+                            : {
+                                  array: stations,
+                                  propertyName: 'stationId',
+                                  outputPropertyName: 'stationName'
+                              }
+                }}
+                <br />
+                {{ leftTime[leftTimeKey] }}
+            </p>
+            } @else {
+            <p class="tw-m-0">
+                @if (!!hiddenTrip.depotOut) {
+                <ng-container> 出庫前<br />〇 </ng-container>
+                } @else {
+                <ng-container> 不明<br />？ </ng-container>
+                }
+            </p>
+            }
+        </div>
+        <div class="tw-flex tw-flex-row tw-items-center">
+            <mat-icon class="tw-leading-[normal]">arrow_forward</mat-icon>
+        </div>
+        <div class="tw-flex tw-w-20">
+            @if (!!rightTime) {
+            <p class="tw-m-0">
+                @if (!!leftTime && leftTime.stationId === rightTime.stationId) {
+                <ng-container>
+                    @if(!!hiddenTrip.depotIn) {
+                    <ng-container> 一時入庫 </ng-container>
+                    } @else {
+                    <ng-container> 停車中 </ng-container>
+                    }
+                </ng-container>
+                } @else {
+                <ng-container>
                     {{
-                        leftTime.stationId
+                        rightTime.stationId
                             | findById
                                 : {
                                       array: stations,
@@ -67,163 +101,48 @@
                                       outputPropertyName: 'stationName'
                                   }
                     }}
-                    <br />
-                    {{ leftTime[leftTimeKey] }}
-                </p>
-            </ng-container>
-            <ng-container
-                *rxIf="!leftTime; strategy: 'immediate'; patchZone: false"
-            >
-                <p class="tw-m-0">
-                    <ng-container
-                        *rxIf="
-                            !!hiddenTrip.depotOut;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        出庫前<br />〇
-                    </ng-container>
-                    <ng-container
-                        *rxIf="
-                            !hiddenTrip.depotOut;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        不明<br />？
-                    </ng-container>
-                </p>
-            </ng-container>
-        </div>
-        <div class="tw-flex tw-flex-row tw-items-center">
-            <mat-icon class="tw-leading-[normal]">arrow_forward</mat-icon>
-        </div>
-        <div class="tw-flex tw-w-20">
-            <ng-container
-                *rxIf="!!rightTime; strategy: 'immediate'; patchZone: false"
-            >
-                <p class="tw-m-0">
-                    <ng-container
-                        *rxIf="
-                            !!leftTime &&
-                                leftTime.stationId === rightTime.stationId;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        <ng-container
-                            *rxIf="
-                                !!hiddenTrip.depotIn;
-                                strategy: 'immediate';
-                                patchZone: false
-                            "
-                        >
-                            一時入庫
-                        </ng-container>
-                        <ng-container
-                            *rxIf="
-                                !hiddenTrip.depotIn;
-                                strategy: 'immediate';
-                                patchZone: false
-                            "
-                        >
-                            停車中
-                        </ng-container>
-                    </ng-container>
-
-                    <ng-container
-                        *rxIf="
-                            !leftTime ||
-                                leftTime.stationId !== rightTime.stationId;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        {{
-                            rightTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'stationName'
-                                      }
-                        }}
-                    </ng-container>
-                    <br />
-                    {{ rightTime[rightTimeKey] }}
-                </p>
-            </ng-container>
-            <ng-container
-                *rxIf="!rightTime; strategy: 'immediate'; patchZone: false"
-            >
-                <p class="tw-m-0">
-                    <ng-container
-                        *rxIf="
-                            !!hiddenTrip.depotIn;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        入庫済<br />△
-                    </ng-container>
-                    <ng-container
-                        *rxIf="
-                            !hiddenTrip.depotIn;
-                            strategy: 'immediate';
-                            patchZone: false
-                        "
-                    >
-                        不明<br />？
-                    </ng-container>
-                </p>
-            </ng-container>
+                </ng-container>
+                }
+                <br />
+                {{ rightTime[rightTimeKey] }}
+            </p>
+            } @else {
+            <p class="tw-m-0">
+                @if (!!hiddenTrip.depotIn) {
+                <ng-container> 入庫済<br />△ </ng-container>
+                } @else {
+                <ng-container> 不明<br />？ </ng-container>
+                }
+            </p>
+            }
         </div>
     </div>
 </ng-template>
 
 <!-- 出庫前の場合 -->
+@if (isBeforeDepotOut$ | push) {
 <ng-container
-    *rxIf="isBeforeDepotOut$; strategy: 'immediate'; patchZone: false"
->
-    <ng-container
-        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
-    >
-        <ng-container
-            *ngTemplateOutlet="container; context: context"
-        ></ng-container>
-    </ng-container>
-</ng-container>
+    *ngTemplateOutlet="container; context: context$ | push"
+></ng-container>
+}
 
 <!-- 走行中の場合 -->
-<ng-container *rxIf="isRunning$; strategy: 'immediate'; patchZone: false">
-    <ng-container
-        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
-    >
-        <ng-container
-            *ngTemplateOutlet="container; context: context"
-        ></ng-container>
-    </ng-container>
-</ng-container>
+@if (isRunning$ | push) {
+<ng-container
+    *ngTemplateOutlet="container; context: context$ | push"
+></ng-container>
+}
 
 <!-- 間隙時間の場合 -->
-<ng-container *rxIf="isGapTime$; strategy: 'immediate'; patchZone: false">
-    <ng-container
-        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
-    >
-        <ng-container
-            *ngTemplateOutlet="container; context: context"
-        ></ng-container>
-    </ng-container>
-</ng-container>
+@if (isGapTime$ | push) {
+<ng-container
+    *ngTemplateOutlet="container; context: context$ | push"
+></ng-container>
+}
 
 <!-- 入庫済みの場合 -->
-<ng-container *rxIf="isAfterDepotIn$; strategy: 'immediate'; patchZone: false">
-    <ng-container
-        *rxLet="context$; let context; strategy: 'immediate'; patchZone: false"
-    >
-        <ng-container
-            *ngTemplateOutlet="container; context: context"
-        ></ng-container>
-    </ng-container>
-</ng-container>
+@if (isAfterDepotIn$ | push) {
+<ng-container
+    *ngTemplateOutlet="container; context: context$ | push"
+></ng-container>
+}

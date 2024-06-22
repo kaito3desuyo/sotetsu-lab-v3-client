@@ -1,11 +1,10 @@
-import { RxIf } from '@rx-angular/template/if';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { MatRippleModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     standalone: true,
@@ -16,7 +15,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     imports: [
         CommonModule,
         RouterModule,
-        RxIf,
         MatRippleModule,
         MatTooltipModule,
         PipesModule,

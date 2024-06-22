@@ -1,20 +1,18 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import dayjs, { Dayjs } from 'dayjs';
-import { map } from 'rxjs/operators';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { findLatestAndCirculateOperationSighting } from '../../../../core/utils/find-latest-and-circulate-operation-sighting';
 
 type OperationRealTimeState = {
     operations: OperationDetailsDto[];
     formations: FormationDetailsDto[];
-    operationSightings: OperationSightingDetailsDto[];
-    formationSightings: OperationSightingDetailsDto[];
+    operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
+    formationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
     currentPositions: OperationCurrentPositionDto[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
@@ -30,8 +28,8 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
             {
                 operations: [],
                 formations: [],
-                operationSightings: [],
-                formationSightings: [],
+                operationSightingTimeCrossSections: [],
+                formationSightingTimeCrossSections: [],
                 currentPositions: [],
                 stations: [],
                 tripClasses: [],
@@ -57,15 +55,19 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
         });
     }
 
-    setOperationSightings(sightings: OperationSightingDetailsDto[]): void {
+    setOperationSightingTimeCrossSections(
+        timeCrossSections: OperationSightingTimeCrossSectionDto[]
+    ): void {
         this.update({
-            operationSightings: sightings,
+            operationSightingTimeCrossSections: timeCrossSections,
         });
     }
 
-    setFormationSightings(sightings: OperationSightingDetailsDto[]): void {
+    setFormationSightingTimeCrossSections(
+        timeCrossSections: OperationSightingTimeCrossSectionDto[]
+    ): void {
         this.update({
-            formationSightings: sightings,
+            formationSightingTimeCrossSections: timeCrossSections,
         });
     }
 
@@ -110,11 +112,12 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
 export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
     operations$ = this.select('operations');
     formations$ = this.select('formations');
-    latestSightings$ = this.select([
-        'operations',
-        'operationSightings',
-        'formationSightings',
-    ]).pipe(map(findLatestAndCirculateOperationSighting));
+    operationSightingTimeCrossSections$ = this.select(
+        'operationSightingTimeCrossSections'
+    );
+    formationSightingTimeCrossSections$ = this.select(
+        'formationSightingTimeCrossSections'
+    );
     currentPositions$ = this.select('currentPositions');
     stations$ = this.select('stations');
     tripClasses$ = this.select('tripClasses');
