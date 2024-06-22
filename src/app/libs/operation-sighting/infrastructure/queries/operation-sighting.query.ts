@@ -6,7 +6,12 @@ import { map } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { environment } from 'src/environments/environment';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
-import { buildOperationSightingDetailsDto } from '../builders/operation-sighting-dto.builder';
+import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
+import {
+    OperationSightingDtoBuilder,
+    buildOperationSightingDetailsDto,
+} from '../builders/operation-sighting-dto.builder';
+import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
 
 @Injectable({ providedIn: 'root' })
@@ -95,6 +100,44 @@ export class OperationSightingQuery {
                         : res.body.map((o) =>
                               buildOperationSightingDetailsDto(o)
                           );
+                })
+            );
+    }
+
+    findOneTimeCrossSectionFromOperationNumber(params: {
+        operationNumber: string;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        const { operationNumber } = params;
+
+        return this.http
+            .get<OperationSightingTimeCrossSectionModel>(
+                `${this.apiUrl}/time-cross-section/from-operation-number/${operationNumber}`,
+                { observe: 'response' }
+            )
+            .pipe(
+                map((res) => {
+                    return OperationSightingDtoBuilder.toTimeCrossSectionDto(
+                        res.body
+                    );
+                })
+            );
+    }
+
+    findOneTimeCrossSectionFromFormationNumber(params: {
+        formationNumber: string;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        const { formationNumber } = params;
+
+        return this.http
+            .get<OperationSightingTimeCrossSectionModel>(
+                `${this.apiUrl}/time-cross-section/from-formation-number/${formationNumber}`,
+                { observe: 'response' }
+            )
+            .pipe(
+                map((res) => {
+                    return OperationSightingDtoBuilder.toTimeCrossSectionDto(
+                        res.body
+                    );
                 })
             );
     }

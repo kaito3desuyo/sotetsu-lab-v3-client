@@ -6,6 +6,7 @@ import { OperationSightingCommand } from '../infrastructure/commands/operation-s
 import { OperationSightingQuery } from '../infrastructure/queries/operation-sighting.query';
 import { CreateOperationSightingDto } from './dtos/create-operation-sighting.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
+import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-time-cross-section.dto';
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingService {
@@ -36,6 +37,22 @@ export class OperationSightingService {
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
         return this.operationSightingQuery.findManyLatestGroupByOperation(qb);
+    }
+
+    findOneTimeCrossSectionFromOperationNumber(params: {
+        operationNumber: string;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        return this.operationSightingQuery.findOneTimeCrossSectionFromOperationNumber(
+            params
+        );
+    }
+
+    findOneTimeCrossSectionFromFormationNumber(params: {
+        formationNumber: string;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        return this.operationSightingQuery.findOneTimeCrossSectionFromFormationNumber(
+            params
+        );
     }
 
     createOne(
