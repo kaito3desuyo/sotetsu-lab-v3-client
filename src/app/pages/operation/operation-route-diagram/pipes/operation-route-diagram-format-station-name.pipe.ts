@@ -12,6 +12,8 @@ export class OperationRouteDiagramFormatStationNamePipe
                 return '元町中華街';
             case '東京テレポート':
                 return '東京テレポ';
+            case '武蔵丘（信）':
+                return '武蔵丘信';
             default:
                 return stationName;
         }

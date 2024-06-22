@@ -180,6 +180,18 @@ const targetStations = [
         stationName: '飯能',
     },
     {
+        routeName: ['池袋線'],
+        stationName: '武蔵丘（信）',
+    },
+    {
+        routeName: ['池袋線', '秩父線'],
+        stationName: '吾野',
+    },
+    {
+        routeName: ['秩父線'],
+        stationName: '西武秩父',
+    },
+    {
         routeName: ['東上本線'],
         stationName: '池袋',
     },
