@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, switchMap, take, tap } from 'rxjs/operators';
+import { Observable, forkJoin, of, zip } from 'rxjs';
+import { filter, map, switchMap, take, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -178,8 +178,29 @@ export class OperationRealTimeService {
     fetchOperationCurrentPosition(): Observable<void> {
         const qb = new RequestQueryBuilder();
 
-        return this.operationRealTimeStateQuery.operations$.pipe(
+        return zip(
+            this.operationRealTimeStateQuery.operations$,
+            this.operationRealTimeStateQuery.currentPositions$,
+            this.operationRealTimeStateQuery.currentPositionsThatShouldUpdate$
+        ).pipe(
             take(1),
+            map(
+                ([
+                    operations,
+                    currentPositions,
+                    currentPositionsThatShouldUpdate,
+                ]) =>
+                    operations.filter(({ operationId }) => {
+                        if (!currentPositions.length) {
+                            return true;
+                        }
+
+                        return currentPositionsThatShouldUpdate
+                            .map(({ operation }) => operation.operationId)
+                            .includes(operationId);
+                    })
+            ),
+            filter((operations) => !!operations.length),
             switchMap((operations) =>
                 forkJoin(
                     operations.map((op) =>
@@ -191,7 +212,7 @@ export class OperationRealTimeService {
                 )
             ),
             tap((data) => {
-                this.operationRealTimeStateStore.setCurrentPositions(data);
+                this.operationRealTimeStateStore.updateCurrentPositions(data);
             }),
             map(() => undefined)
         );
