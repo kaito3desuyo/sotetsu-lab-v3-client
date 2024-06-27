@@ -46,9 +46,9 @@ export class OperationRealTimeMainCComponent {
     );
 
     constructor() {
-        // 1分ごとに現在位置を更新
+        // 1秒ごとに現在位置の更新必要性を判定し、更新対象の運用がある場合は更新する
         this.state.hold(
-            interval(1000 * 60).pipe(
+            interval(1000 * 1).pipe(
                 switchMap(
                     () => this.operationRealTimeStateQuery.isEnableAutoReload$
                 ),

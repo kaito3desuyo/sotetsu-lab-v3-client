@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
@@ -62,7 +63,61 @@ function generateFormationTableData(
     return data;
 }
 
+function filterOperationCurrentPositionsThatShouldUpdate(
+    currentPositions: OperationCurrentPositionDto[]
+): OperationCurrentPositionDto[] {
+    const now = dayjs();
+    const target = (days: number, time: string) =>
+        dayjs(time, 'HH:mm:ss').add(
+            days - (now.hour() < 4 ? 1 : 0) - 1,
+            'days'
+        );
+
+    return currentPositions.filter(({ position }) => {
+        // 出庫前
+        if (!position.prev && !position.current && !!position.next) {
+            return (
+                now >=
+                target(
+                    position.next.startTime.departureDays,
+                    position.next.startTime.departureTime
+                )
+            );
+        }
+
+        // 走行中
+        if (!position.prev && !!position.current && !position.next) {
+            return (
+                now >=
+                target(
+                    position.current.endTime.arrivalDays,
+                    position.current.endTime.arrivalTime
+                )
+            );
+        }
+
+        // 間隙時間
+        if (!!position.prev && !position.current && !!position.next) {
+            return (
+                now >=
+                target(
+                    position.next.startTime.departureDays,
+                    position.next.startTime.departureTime
+                )
+            );
+        }
+
+        // 入庫済み
+        if (!!position.prev && !position.current && !position.next) {
+            return false;
+        }
+
+        return false;
+    });
+}
+
 export const OperationRealTimeUtil = {
     generateOperationTableData,
     generateFormationTableData,
+    filterOperationCurrentPositionsThatShouldUpdate,
 } as const;

@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import dayjs, { Dayjs } from 'dayjs';
+import { map } from 'rxjs/operators';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { OperationRealTimeUtil } from '../utils/operation-real-time.util';
 
 type OperationRealTimeState = {
     operations: OperationDetailsDto[];
@@ -77,6 +79,20 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
         });
     }
 
+    updateCurrentPositions(positions: OperationCurrentPositionDto[]): void {
+        this.update({
+            currentPositions: [
+                ...this.getValue().currentPositions.filter(
+                    (prev) =>
+                        !positions
+                            .map((next) => next.operation.operationId)
+                            .includes(prev.operation.operationId)
+                ),
+                ...positions,
+            ],
+        });
+    }
+
     setStations(stations: StationDetailsDto[]): void {
         this.update({
             stations,
@@ -119,6 +135,13 @@ export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
         'formationSightingTimeCrossSections'
     );
     currentPositions$ = this.select('currentPositions');
+    currentPositionsThatShouldUpdate$ = this.select('currentPositions').pipe(
+        map((currentPositions) =>
+            OperationRealTimeUtil.filterOperationCurrentPositionsThatShouldUpdate(
+                currentPositions
+            )
+        )
+    );
     stations$ = this.select('stations');
     tripClasses$ = this.select('tripClasses');
     finalUpdateTime$ = this.select('finalUpdateTime');
