@@ -200,16 +200,18 @@ export class OperationRealTimeService {
                             .includes(operationId);
                     })
             ),
-            filter((operations) => !!operations.length),
+            // filter((operations) => !!operations.length),
             switchMap((operations) =>
-                forkJoin(
-                    operations.map((op) =>
-                        this.operationService.findOneWithCurrentPosition(
-                            op.operationId,
-                            qb
-                        )
-                    )
-                )
+                !!operations.length
+                    ? forkJoin(
+                          operations.map((op) =>
+                              this.operationService.findOneWithCurrentPosition(
+                                  op.operationId,
+                                  qb
+                              )
+                          )
+                      )
+                    : of([])
             ),
             tap((data) => {
                 this.operationRealTimeStateStore.updateCurrentPositions(data);
