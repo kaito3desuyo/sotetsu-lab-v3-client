@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
+import { map } from 'rxjs/operators';
+import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
@@ -55,7 +57,15 @@ export class OperationSearchCardStateQuery extends Query<OperationSearchCardStat
     readonly calendarId$ = this.select('calendarId');
     readonly operationId$ = this.select('operationId');
     readonly calendars$ = this.select('calendars');
-    readonly operations$ = this.select('operations');
+    readonly operations$ = this.select('operations').pipe(
+        map((operations) =>
+            [...operations].sort(
+                (a, b) =>
+                    Number(generateOperationSortNumber(a.operationNumber)) -
+                    Number(generateOperationSortNumber(b.operationNumber))
+            )
+        )
+    );
 
     get calendarId(): CalendarDetailsDto['calendarId'] {
         return this.getValue().calendarId;
