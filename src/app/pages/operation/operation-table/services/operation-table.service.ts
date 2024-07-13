@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { forkJoin, Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
@@ -15,18 +15,14 @@ import {
 
 @Injectable()
 export class OperationTableService {
-    constructor(
-        private readonly operationService: OperationService,
-        private readonly stationService: StationService,
-        private readonly tripClassService: TripClassService,
-        private readonly operationTableStateStore: OperationTableStateStore,
-        private readonly operationTableStateQuery: OperationTableStateQuery
-    ) {}
+    readonly #operationService = inject(OperationService);
+    readonly #stationService = inject(StationService);
+    readonly #tripClassService = inject(TripClassService);
+    readonly #operationTableStateStore = inject(OperationTableStateStore);
+    readonly #operationTableStateQuery = inject(OperationTableStateQuery);
 
-    // v2
-
-    fetchAllOperationTrips(): Observable<void> {
-        const calendarId = this.operationTableStateQuery.calendarId;
+    fetchOperationTrips(): Observable<void> {
+        const calendarId = this.#operationTableStateQuery.calendarId;
         const qb = new RequestQueryBuilder()
             .setFilter({
                 field: 'calendarId',
@@ -39,11 +35,11 @@ export class OperationTableService {
                 value: '100',
             });
 
-        return this.operationService.findMany(qb).pipe(
+        return this.#operationService.findMany(qb).pipe(
             switchMap((operations: OperationDetailsDto[]) =>
                 forkJoin(
                     operations.map((operation) =>
-                        this.operationService.findOneWithTrips(
+                        this.#operationService.findOneWithTrips(
                             operation.operationId,
                             new RequestQueryBuilder()
                         )
@@ -51,27 +47,29 @@ export class OperationTableService {
                 )
             ),
             tap((operationTrips) => {
-                this.operationTableStateStore.setOperationTrips(operationTrips);
+                this.#operationTableStateStore.setOperationTrips(
+                    operationTrips
+                );
             }),
             map(() => undefined)
         );
     }
 
-    fetchStationsV2(): Observable<void> {
+    fetchStations(): Observable<void> {
         const qb = new RequestQueryBuilder();
-        return this.stationService.findMany(qb).pipe(
+        return this.#stationService.findMany(qb).pipe(
             tap((stations: StationDetailsDto[]) =>
-                this.operationTableStateStore.setStations(stations)
+                this.#operationTableStateStore.setStations(stations)
             ),
             map(() => undefined)
         );
     }
 
-    fetchTripClassV2(): Observable<void> {
+    fetchTripClass(): Observable<void> {
         const qb = new RequestQueryBuilder();
-        return this.tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) =>
-                this.operationTableStateStore.setTripClasses(tripClasses)
+                this.#operationTableStateStore.setTripClasses(tripClasses)
             ),
             map(() => undefined)
         );

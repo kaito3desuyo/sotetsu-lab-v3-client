@@ -1,16 +1,10 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-operation-table-header-p',
-  templateUrl: './operation-table-header-p.component.html',
-  styleUrls: ['./operation-table-header-p.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    standalone: true,
+    selector: 'app-operation-table-header-p',
+    templateUrl: './operation-table-header-p.component.html',
+    styleUrls: ['./operation-table-header-p.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OperationTableHeaderPComponent implements OnInit {
-
-  constructor() { }
-
-  ngOnInit(): void {
-  }
-
-}
+export class OperationTableHeaderPComponent {}

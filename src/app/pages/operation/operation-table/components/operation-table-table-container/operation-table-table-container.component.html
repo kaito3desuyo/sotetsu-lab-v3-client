@@ -1,7 +1,7 @@
 <app-operation-table-table-presentational
-    [calendar]="calendar$ | async"
-    [operationTrips]="operationTrips$ | async"
-    [stations]="stations$ | async"
-    [tripClasses]="tripClasses$ | async"
+    [calendar]="calendar$ | push"
+    [operationTrips]="operationTrips$ | push"
+    [stations]="stations$ | push"
+    [tripClasses]="tripClasses$ | push"
 >
 </app-operation-table-table-presentational>
