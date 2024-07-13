@@ -1,14 +1,13 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
-import { Observable, forkJoin, of, zip } from 'rxjs';
-import { filter, map, switchMap, take, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of, zip } from 'rxjs';
+import { map, switchMap, take, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -19,9 +18,13 @@ import {
 
 @Injectable()
 export class OperationRealTimeService {
+    readonly #todaysOperationsListStateQuery = inject(
+        TodaysOperationListStateQuery
+    );
+
     constructor(
         private readonly agencyListStateQuery: AgencyListStateQuery,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
+        // private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
         private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
         private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
         private readonly operationService: OperationService,
@@ -32,34 +35,34 @@ export class OperationRealTimeService {
 
     // v2
 
-    fetchOperationsV2(): Observable<void> {
-        const calendarId = this.todaysCalendarListStateQuery.todaysCalendarId;
-        const qb = new RequestQueryBuilder()
-            .setFilter([
-                {
-                    field: 'calendarId',
-                    operator: CondOperator.EQUALS,
-                    value: this.todaysCalendarListStateQuery.todaysCalendarId,
-                },
-            ])
-            .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
+    // fetchOperationsV2(): Observable<void> {
+    //     const calendarId = this.todaysCalendarListStateQuery.todaysCalendarId;
+    //     const qb = new RequestQueryBuilder()
+    //         .setFilter([
+    //             {
+    //                 field: 'calendarId',
+    //                 operator: CondOperator.EQUALS,
+    //                 value: this.todaysCalendarListStateQuery.todaysCalendarId,
+    //             },
+    //         ])
+    //         .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
-        return forkJoin([
-            this.operationService.findMany(qb),
-            this.operationService.findAllOperationNumbers(calendarId),
-        ]).pipe(
-            tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
-                const sorted = [...operations].sort(
-                    (a, b) =>
-                        numbers.findIndex((n) => n === a.operationNumber) -
-                        numbers.findIndex((n) => n === b.operationNumber)
-                );
+    //     return forkJoin([
+    //         this.operationService.findMany(qb),
+    //         this.operationService.findAllOperationNumbers(calendarId),
+    //     ]).pipe(
+    //         tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
+    //             const sorted = [...operations].sort(
+    //                 (a, b) =>
+    //                     numbers.findIndex((n) => n === a.operationNumber) -
+    //                     numbers.findIndex((n) => n === b.operationNumber)
+    //             );
 
-                this.operationRealTimeStateStore.setOperations(sorted);
-            }),
-            map(() => undefined)
-        );
-    }
+    //             this.operationRealTimeStateStore.setOperations(sorted);
+    //         }),
+    //         map(() => undefined)
+    //     );
+    // }
 
     fetchFormationsV2(): Observable<void> {
         const qb = new RequestQueryBuilder();
@@ -90,7 +93,7 @@ export class OperationRealTimeService {
     }
 
     fetchOperationSightingTimeCrossSections(): Observable<void> {
-        return this.operationRealTimeStateQuery.operations$.pipe(
+        return this.#todaysOperationsListStateQuery.todaysOperations$.pipe(
             take(1),
             switchMap((operations) =>
                 forkJoin(
@@ -149,7 +152,9 @@ export class OperationRealTimeService {
             switchMap((data) =>
                 forkJoin([
                     of(data),
-                    this.operationRealTimeStateQuery.operations$.pipe(take(1)),
+                    this.#todaysOperationsListStateQuery.todaysOperations$.pipe(
+                        take(1)
+                    ),
                 ])
             ),
             tap(([data, operations]) => {
@@ -179,7 +184,7 @@ export class OperationRealTimeService {
         const qb = new RequestQueryBuilder();
 
         return zip(
-            this.operationRealTimeStateQuery.operations$,
+            this.#todaysOperationsListStateQuery.todaysOperations$,
             this.operationRealTimeStateQuery.currentPositions$,
             this.operationRealTimeStateQuery.currentPositionsThatShouldUpdate$
         ).pipe(

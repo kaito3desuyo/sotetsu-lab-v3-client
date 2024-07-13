@@ -11,6 +11,7 @@ import { map, tap } from 'rxjs/operators';
 import { OperationDetailsDto } from '../libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from '../libs/operation/usecase/operation.service';
 import { TodaysCalendarListStateQuery } from './todays-calendar-list.state';
+import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
 
 interface TodaysOperationListState
     extends EntityState<OperationDetailsDto, string> {}
@@ -51,6 +52,15 @@ export class TodaysOperationListStateStore extends EntityStore<TodaysOperationLi
 @Injectable({ providedIn: 'root' })
 export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationListState> {
     readonly todaysOperations$ = this.selectAll();
+    readonly todaysOperationsSorted$ = this.selectAll().pipe(
+        map((operations) =>
+            [...operations].sort(
+                (a, b) =>
+                    Number(generateOperationSortNumber(a.operationNumber)) -
+                    Number(generateOperationSortNumber(b.operationNumber))
+            )
+        )
+    );
 
     get todaysOperations(): OperationDetailsDto[] {
         return this.getAll();
