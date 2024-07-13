@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
     EntityState,
     EntityStore,
@@ -70,15 +70,3 @@ export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationLi
         super(store);
     }
 }
-
-export const TodaysOperationListStateStoreProvider: Provider = {
-    provide: APP_INITIALIZER,
-    useFactory:
-        (todaysOperationListStateStore: TodaysOperationListStateStore) =>
-        async () => {
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            return todaysOperationListStateStore.fetch().toPromise();
-        },
-    deps: [TodaysOperationListStateStore],
-    multi: true,
-};
