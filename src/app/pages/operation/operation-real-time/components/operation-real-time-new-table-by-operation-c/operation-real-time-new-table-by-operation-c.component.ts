@@ -139,7 +139,6 @@ export class OperationRealTimeNewTableByOperationCComponent {
         this.state.connect(
             'operations',
             this.#todaysOperationListStateQuery.todaysOperationsSorted$
-            // this.operationRealTimeStateQuery.operations$
         );
 
         this.state.connect(

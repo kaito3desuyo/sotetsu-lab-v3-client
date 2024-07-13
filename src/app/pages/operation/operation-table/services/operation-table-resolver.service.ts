@@ -26,7 +26,6 @@ export class OperationTableResolverService {
                 forkJoin([
                     this.operationTableService.fetchStationsV2(),
                     this.operationTableService.fetchTripClassV2(),
-                    // this.operationTableService.fetchAllOperationNumbers(),
                     this.operationTableService.fetchAllOperationTrips(),
                 ])
             ),

@@ -38,9 +38,6 @@ import {
         AdsenseModule,
         OperationSearchCardModule,
         PipesModule,
-        // RxLet,
-        // RxFor,
-        // RxIf,
     ],
     providers: [
         OperationTableService,

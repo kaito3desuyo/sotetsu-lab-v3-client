@@ -10,7 +10,6 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 type OperationTableState = {
     calendarId: string;
     operations: OperationDetailsDto[];
-    // operationNumbers: string[];
     operationTrips: OperationTripsDto[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
@@ -23,7 +22,6 @@ export class OperationTableStateStore extends Store<OperationTableState> {
             {
                 calendarId: null,
                 operations: [],
-                // operationNumbers: [],
                 operationTrips: [],
                 stations: [],
                 tripClasses: [],
@@ -43,12 +41,6 @@ export class OperationTableStateStore extends Store<OperationTableState> {
             operations,
         });
     }
-
-    // setOperationNumbers(numbers: string[]): void {
-    //     this.update({
-    //         operationNumbers: numbers,
-    //     });
-    // }
 
     setOperationTrips(operationTrips: OperationTripsDto[]): void {
         this.update({
@@ -73,7 +65,6 @@ export class OperationTableStateStore extends Store<OperationTableState> {
 export class OperationTableStateQuery extends Query<OperationTableState> {
     readonly calendarId$ = this.select('calendarId');
     readonly operations$ = this.select('operations');
-    // readonly operationNumbers$ = this.select('operationNumbers');
     readonly operationTrips$ = this.select('operationTrips').pipe(
         map((operationTrips) =>
             [...operationTrips].sort(

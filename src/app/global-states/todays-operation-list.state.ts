@@ -8,10 +8,10 @@ import {
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
 import { OperationDetailsDto } from '../libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from '../libs/operation/usecase/operation.service';
 import { TodaysCalendarListStateQuery } from './todays-calendar-list.state';
-import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
 
 interface TodaysOperationListState
     extends EntityState<OperationDetailsDto, string> {}

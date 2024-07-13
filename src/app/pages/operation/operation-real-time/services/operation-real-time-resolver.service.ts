@@ -10,7 +10,6 @@ export class OperationRealTimeResolverService {
     resolve(): Observable<void> {
         return forkJoin([
             // v2
-            // this.operationRealTimeService.fetchOperationsV2(),
             this.operationRealTimeService.fetchFormationsV2(),
             this.operationRealTimeService.fetchTripClassesV2(),
         ]).pipe(

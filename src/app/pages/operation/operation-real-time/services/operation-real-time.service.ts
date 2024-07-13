@@ -24,7 +24,6 @@ export class OperationRealTimeService {
 
     constructor(
         private readonly agencyListStateQuery: AgencyListStateQuery,
-        // private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
         private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
         private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
         private readonly operationService: OperationService,
@@ -34,35 +33,6 @@ export class OperationRealTimeService {
     ) {}
 
     // v2
-
-    // fetchOperationsV2(): Observable<void> {
-    //     const calendarId = this.todaysCalendarListStateQuery.todaysCalendarId;
-    //     const qb = new RequestQueryBuilder()
-    //         .setFilter([
-    //             {
-    //                 field: 'calendarId',
-    //                 operator: CondOperator.EQUALS,
-    //                 value: this.todaysCalendarListStateQuery.todaysCalendarId,
-    //             },
-    //         ])
-    //         .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
-
-    //     return forkJoin([
-    //         this.operationService.findMany(qb),
-    //         this.operationService.findAllOperationNumbers(calendarId),
-    //     ]).pipe(
-    //         tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
-    //             const sorted = [...operations].sort(
-    //                 (a, b) =>
-    //                     numbers.findIndex((n) => n === a.operationNumber) -
-    //                     numbers.findIndex((n) => n === b.operationNumber)
-    //             );
-
-    //             this.operationRealTimeStateStore.setOperations(sorted);
-    //         }),
-    //         map(() => undefined)
-    //     );
-    // }
 
     fetchFormationsV2(): Observable<void> {
         const qb = new RequestQueryBuilder();
@@ -205,7 +175,6 @@ export class OperationRealTimeService {
                             .includes(operationId);
                     })
             ),
-            // filter((operations) => !!operations.length),
             switchMap((operations) =>
                 !!operations.length
                     ? forkJoin(
