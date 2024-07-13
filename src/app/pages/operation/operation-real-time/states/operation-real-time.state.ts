@@ -148,6 +148,16 @@ export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
     isEnableAutoReload$ = this.select('isEnableAutoReload');
     isVisibleCurrentPosition$ = this.select('isVisibleCurrentPosition');
 
+    get currentPositions(): OperationCurrentPositionDto[] {
+        return this.getValue().currentPositions;
+    }
+
+    get currentPositionsThatShouldUpdate(): OperationCurrentPositionDto[] {
+        return OperationRealTimeUtil.filterOperationCurrentPositionsThatShouldUpdate(
+            this.getValue().currentPositions
+        );
+    }
+
     get isEnableAutoReload(): boolean {
         return this.getValue().isEnableAutoReload;
     }

@@ -4,6 +4,7 @@ import { CalendarListStateStore } from 'src/app/global-states/calendar-list.stat
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
 import { TokenStateStore } from 'src/app/global-states/token.state';
 
@@ -17,7 +18,8 @@ export const AppInitializerProvider: Provider = {
             routeStationListStateStore: RouteStationListStateStore,
             serviceListStateStore: ServiceListStateStore,
             todaysCalendarListStateStore: TodaysCalendarListStateStore,
-            todaysOperationListStateStore: TodaysOperationListStateStore
+            todaysOperationListStateStore: TodaysOperationListStateStore,
+            todaysFormationListStateStore: TodaysFormationListStateStore
         ) =>
         async () => {
             await tokenStateStore.fetch().toPromise();
@@ -30,7 +32,11 @@ export const AppInitializerProvider: Provider = {
             ]);
 
             await todaysCalendarListStateStore.fetch().toPromise();
-            await todaysOperationListStateStore.fetch().toPromise();
+
+            await Promise.all([
+                todaysOperationListStateStore.fetch().toPromise(),
+                todaysFormationListStateStore.fetch().toPromise(),
+            ]);
         },
     deps: [
         TokenStateStore,
@@ -40,6 +46,7 @@ export const AppInitializerProvider: Provider = {
         ServiceListStateStore,
         TodaysCalendarListStateStore,
         TodaysOperationListStateStore,
+        TodaysFormationListStateStore,
     ],
     multi: true,
 };
