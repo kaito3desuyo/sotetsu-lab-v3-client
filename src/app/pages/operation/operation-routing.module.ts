@@ -19,8 +19,8 @@ const routes: Routes = [
     {
         path: 'table',
         loadChildren: () =>
-            import('./operation-table/operation-table.module').then(
-                (mod) => mod.OperationTableModule
+            import('./operation-table/operation-table.route').then(
+                (mod) => mod.OPERATION_TABLE_ROUTES
             ),
     },
     {
