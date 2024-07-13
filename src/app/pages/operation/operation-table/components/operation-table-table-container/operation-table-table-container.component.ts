@@ -14,8 +14,6 @@ export class OperationTableTableContainerComponent {
             this.calendarListStateQuery.selectByCalendarId(calendarId)
         )
     );
-    readonly operationNumbers$ =
-        this.operationTableStateQuery.operationNumbers$;
     readonly operationTrips$ = this.operationTableStateQuery.operationTrips$;
     readonly stations$ = this.operationTableStateQuery.stations$;
     readonly tripClasses$ = this.operationTableStateQuery.tripClasses$;

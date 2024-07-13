@@ -6,9 +6,7 @@ import { OperationTableStateStore } from '../states/operation-table.state';
 import { OperationTableService } from './operation-table.service';
 
 @Injectable()
-export class OperationTableResolverService
-    
-{
+export class OperationTableResolverService {
     constructor(
         private readonly operationTableService: OperationTableService,
         private readonly operationTableStateStore: OperationTableStateStore
@@ -28,7 +26,6 @@ export class OperationTableResolverService
                 forkJoin([
                     this.operationTableService.fetchStationsV2(),
                     this.operationTableService.fetchTripClassV2(),
-                    this.operationTableService.fetchAllOperationNumbers(),
                     this.operationTableService.fetchAllOperationTrips(),
                 ])
             ),

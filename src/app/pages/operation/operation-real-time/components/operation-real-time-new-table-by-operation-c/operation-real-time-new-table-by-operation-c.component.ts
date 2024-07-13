@@ -17,6 +17,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
 import { OperationRealTimeUtil } from '../../utils/operation-real-time.util';
 import { OperationRealTimeNewTablePComponent } from '../operation-real-time-new-table-p/operation-real-time-new-table-p.component';
+import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 
 type State = {
     displayedColumns: OperationRealTimeTableColumn[];
@@ -45,6 +46,9 @@ export class OperationRealTimeNewTableByOperationCComponent {
     private readonly state = inject<RxState<State>>(RxState);
     private readonly todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery
+    );
+    readonly #todaysOperationListStateQuery = inject(
+        TodaysOperationListStateQuery
     );
     private readonly routeStationListStateQuery = inject(
         RouteStationListStateQuery
@@ -134,7 +138,7 @@ export class OperationRealTimeNewTableByOperationCComponent {
 
         this.state.connect(
             'operations',
-            this.operationRealTimeStateQuery.operations$
+            this.#todaysOperationListStateQuery.todaysOperationsSorted$
         );
 
         this.state.connect(

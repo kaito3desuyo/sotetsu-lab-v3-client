@@ -1,14 +1,10 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import dayjs from 'dayjs';
-import { Observable, forkJoin, of, zip } from 'rxjs';
-import { filter, map, switchMap, take, tap } from 'rxjs/operators';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
+import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -19,100 +15,34 @@ import {
 
 @Injectable()
 export class OperationRealTimeService {
-    constructor(
-        private readonly agencyListStateQuery: AgencyListStateQuery,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
-        private readonly operationRealTimeStateStore: OperationRealTimeStateStore,
-        private readonly operationRealTimeStateQuery: OperationRealTimeStateQuery,
-        private readonly operationService: OperationService,
-        private readonly formationService: FormationService,
-        private readonly operationSightingService: OperationSightingService,
-        private readonly tripClassService: TripClassService
-    ) {}
-
-    // v2
-
-    fetchOperationsV2(): Observable<void> {
-        const calendarId = this.todaysCalendarListStateQuery.todaysCalendarId;
-        const qb = new RequestQueryBuilder()
-            .setFilter([
-                {
-                    field: 'calendarId',
-                    operator: CondOperator.EQUALS,
-                    value: this.todaysCalendarListStateQuery.todaysCalendarId,
-                },
-            ])
-            .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
-
-        return forkJoin([
-            this.operationService.findMany(qb),
-            this.operationService.findAllOperationNumbers(calendarId),
-        ]).pipe(
-            tap(([operations, numbers]: [OperationDetailsDto[], string[]]) => {
-                const sorted = [...operations].sort(
-                    (a, b) =>
-                        numbers.findIndex((n) => n === a.operationNumber) -
-                        numbers.findIndex((n) => n === b.operationNumber)
-                );
-
-                this.operationRealTimeStateStore.setOperations(sorted);
-            }),
-            map(() => undefined)
-        );
-    }
-
-    fetchFormationsV2(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
-        return this.formationService
-            .findManyBySpeficicDate(qb, {
-                date: dayjs()
-                    .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD'),
-            })
-            .pipe(
-                tap((formations: FormationDetailsDto[]) => {
-                    const agencies = this.agencyListStateQuery.agencies;
-                    this.operationRealTimeStateStore.setFormations(
-                        [...formations].sort(
-                            (a, b) =>
-                                agencies.findIndex(
-                                    (v) => v.agencyId === a.agencyId
-                                ) -
-                                agencies.findIndex(
-                                    (v) => v.agencyId === b.agencyId
-                                )
-                        )
-                    );
-                }),
-                map(() => undefined)
-            );
-    }
+    readonly #operationService = inject(OperationService);
+    readonly #operationSightingService = inject(OperationSightingService);
+    readonly #tripClassService = inject(TripClassService);
+    readonly #todaysOperationsListStateQuery = inject(
+        TodaysOperationListStateQuery
+    );
+    readonly #todaysFormationListStateQuery = inject(
+        TodaysFormationListStateQuery
+    );
+    readonly #operationRealTimeStateStore = inject(OperationRealTimeStateStore);
+    readonly #operationRealTimeStateQuery = inject(OperationRealTimeStateQuery);
 
     fetchOperationSightingTimeCrossSections(): Observable<void> {
-        return this.operationRealTimeStateQuery.operations$.pipe(
-            take(1),
-            switchMap((operations) =>
-                forkJoin(
-                    operations
-                        .filter(
-                            ({ operationNumber }) => operationNumber !== '100'
-                        )
-                        .map(({ operationNumber }) =>
-                            this.operationSightingService.findOneTimeCrossSectionFromOperationNumber(
-                                { operationNumber }
-                            )
-                        )
+        const operations =
+            this.#todaysOperationsListStateQuery.todaysOperations;
+
+        return forkJoin(
+            operations.map(({ operationNumber }) =>
+                this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
+                    { operationNumber }
                 )
-            ),
-            switchMap((data) =>
-                forkJoin([
-                    of(data),
-                    this.operationRealTimeStateQuery.formations$.pipe(take(1)),
-                ])
-            ),
-            tap(([data, formations]) => {
-                this.operationRealTimeStateStore.setOperationSightingTimeCrossSections(
+            )
+        ).pipe(
+            tap((data) => {
+                const formations =
+                    this.#todaysFormationListStateQuery.todaysFormations;
+
+                this.#operationRealTimeStateStore.setOperationSightingTimeCrossSections(
                     data.map((o) => ({
                         ...o,
                         expectedSighting: {
@@ -120,8 +50,8 @@ export class OperationRealTimeService {
                             formation: {
                                 ...o.expectedSighting?.formation,
                                 ...formations.find(
-                                    (f) =>
-                                        f.formationNumber ===
+                                    ({ formationNumber }) =>
+                                        formationNumber ===
                                         o.expectedSighting?.formation
                                             ?.formationNumber
                                 ),
@@ -135,25 +65,20 @@ export class OperationRealTimeService {
     }
 
     fetchFormationSightingTimeCrossSections(): Observable<void> {
-        return this.operationRealTimeStateQuery.formations$.pipe(
-            take(1),
-            switchMap((formations) =>
-                forkJoin(
-                    formations.map(({ formationNumber }) =>
-                        this.operationSightingService.findOneTimeCrossSectionFromFormationNumber(
-                            { formationNumber }
-                        )
-                    )
+        const formations = this.#todaysFormationListStateQuery.todaysFormations;
+
+        return forkJoin(
+            formations.map(({ formationNumber }) =>
+                this.#operationSightingService.findOneTimeCrossSectionFromFormationNumber(
+                    { formationNumber }
                 )
-            ),
-            switchMap((data) =>
-                forkJoin([
-                    of(data),
-                    this.operationRealTimeStateQuery.operations$.pipe(take(1)),
-                ])
-            ),
-            tap(([data, operations]) => {
-                this.operationRealTimeStateStore.setFormationSightingTimeCrossSections(
+            )
+        ).pipe(
+            tap((data) => {
+                const operations =
+                    this.#todaysOperationsListStateQuery.todaysOperations;
+
+                this.#operationRealTimeStateStore.setFormationSightingTimeCrossSections(
                     data.map((o) => ({
                         ...o,
                         expectedSighting: {
@@ -178,43 +103,37 @@ export class OperationRealTimeService {
     fetchOperationCurrentPosition(): Observable<void> {
         const qb = new RequestQueryBuilder();
 
-        return zip(
-            this.operationRealTimeStateQuery.operations$,
-            this.operationRealTimeStateQuery.currentPositions$,
-            this.operationRealTimeStateQuery.currentPositionsThatShouldUpdate$
-        ).pipe(
-            take(1),
-            map(
-                ([
-                    operations,
-                    currentPositions,
-                    currentPositionsThatShouldUpdate,
-                ]) =>
-                    operations.filter(({ operationId }) => {
-                        if (!currentPositions.length) {
-                            return true;
-                        }
+        const operations =
+            this.#todaysOperationsListStateQuery.todaysOperations;
+        const currentPositions =
+            this.#operationRealTimeStateQuery.currentPositions;
+        const currentPositionsThatShouldUpdate =
+            this.#operationRealTimeStateQuery.currentPositionsThatShouldUpdate;
 
-                        return currentPositionsThatShouldUpdate
-                            .map(({ operation }) => operation.operationId)
-                            .includes(operationId);
-                    })
-            ),
-            // filter((operations) => !!operations.length),
-            switchMap((operations) =>
-                !!operations.length
-                    ? forkJoin(
-                          operations.map((op) =>
-                              this.operationService.findOneWithCurrentPosition(
-                                  op.operationId,
-                                  qb
-                              )
-                          )
-                      )
-                    : of([])
-            ),
+        const updateTargetOperations = operations.filter(({ operationId }) => {
+            if (!currentPositions.length) {
+                return true;
+            }
+
+            return currentPositionsThatShouldUpdate
+                .map(({ operation }) => operation.operationId)
+                .includes(operationId);
+        });
+
+        if (!updateTargetOperations.length) {
+            return of(undefined);
+        }
+
+        return forkJoin(
+            updateTargetOperations.map((o) =>
+                this.#operationService.findOneWithCurrentPosition(
+                    o.operationId,
+                    qb
+                )
+            )
+        ).pipe(
             tap((data) => {
-                this.operationRealTimeStateStore.updateCurrentPositions(data);
+                this.#operationRealTimeStateStore.updateCurrentPositions(data);
             }),
             map(() => undefined)
         );
@@ -231,9 +150,9 @@ export class OperationRealTimeService {
                 },
             ]);
 
-        return this.tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
-                this.operationRealTimeStateStore.setTripClasses(tripClasses);
+                this.#operationRealTimeStateStore.setTripClasses(tripClasses);
             }),
             map(() => undefined)
         );

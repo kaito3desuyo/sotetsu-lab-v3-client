@@ -1,16 +1,16 @@
+import { Injectable } from '@angular/core';
 import {
     EntityState,
     EntityStore,
     QueryEntity,
     StoreConfig,
 } from '@datorama/akita';
-import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
-import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
-import { CalendarService } from '../libs/calendar/usecase/calendar.service';
-import { Observable } from 'rxjs';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import dayjs from 'dayjs';
+import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { CalendarService } from '../libs/calendar/usecase/calendar.service';
+import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
 
 interface TodaysCalendarListState
     extends EntityState<CalendarDetailsDto, string> {}

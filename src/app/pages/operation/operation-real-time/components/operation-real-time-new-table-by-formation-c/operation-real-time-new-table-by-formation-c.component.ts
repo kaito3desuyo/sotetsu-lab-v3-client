@@ -6,6 +6,7 @@ import { RxPush } from '@rx-angular/template/push';
 import { map } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -51,6 +52,10 @@ export class OperationRealTimeNewTableByFormationCComponent {
     );
     private readonly operationRealTimeStateQuery = inject(
         OperationRealTimeStateQuery
+    );
+
+    readonly #todaysFormationListStateQuery = inject(
+        TodaysFormationListStateQuery
     );
 
     readonly operationRealTimeTableColumn = OperationRealTimeTableColumn;
@@ -124,7 +129,7 @@ export class OperationRealTimeNewTableByFormationCComponent {
 
         this.state.connect(
             'formations',
-            this.operationRealTimeStateQuery.formations$
+            this.#todaysFormationListStateQuery.todaysFormationsSorted$
         );
 
         this.state.connect(

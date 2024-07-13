@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, Injectable, Provider } from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
     EntityState,
     EntityStore,
@@ -8,6 +8,7 @@ import {
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
 import { OperationDetailsDto } from '../libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from '../libs/operation/usecase/operation.service';
 import { TodaysCalendarListStateQuery } from './todays-calendar-list.state';
@@ -51,6 +52,15 @@ export class TodaysOperationListStateStore extends EntityStore<TodaysOperationLi
 @Injectable({ providedIn: 'root' })
 export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationListState> {
     readonly todaysOperations$ = this.selectAll();
+    readonly todaysOperationsSorted$ = this.selectAll().pipe(
+        map((operations) =>
+            [...operations].sort(
+                (a, b) =>
+                    Number(generateOperationSortNumber(a.operationNumber)) -
+                    Number(generateOperationSortNumber(b.operationNumber))
+            )
+        )
+    );
 
     get todaysOperations(): OperationDetailsDto[] {
         return this.getAll();
@@ -60,15 +70,3 @@ export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationLi
         super(store);
     }
 }
-
-export const TodaysOperationListStateStoreProvider: Provider = {
-    provide: APP_INITIALIZER,
-    useFactory:
-        (todaysOperationListStateStore: TodaysOperationListStateStore) =>
-        async () => {
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            return todaysOperationListStateStore.fetch().toPromise();
-        },
-    deps: [TodaysOperationListStateStore],
-    multi: true,
-};
