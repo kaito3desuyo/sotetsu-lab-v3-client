@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { forkJoin, Observable } from 'rxjs';
-import { map, mergeMap, tap } from 'rxjs/operators';
+import { map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -25,15 +25,15 @@ export class OperationTableService {
 
     // v2
 
-    fetchAllOperationNumbers(): Observable<void> {
-        const calendarId = this.operationTableStateQuery.calendarId;
-        return this.operationService.findAllOperationNumbers(calendarId).pipe(
-            tap((numbers) => {
-                this.operationTableStateStore.setOperationNumbers(numbers);
-            }),
-            map(() => undefined)
-        );
-    }
+    // fetchAllOperationNumbers(): Observable<void> {
+    //     const calendarId = this.operationTableStateQuery.calendarId;
+    //     return this.operationService.findAllOperationNumbers(calendarId).pipe(
+    //         tap((numbers) => {
+    //             this.operationTableStateStore.setOperationNumbers(numbers);
+    //         }),
+    //         map(() => undefined)
+    //     );
+    // }
 
     fetchAllOperationTrips(): Observable<void> {
         const calendarId = this.operationTableStateQuery.calendarId;
@@ -50,7 +50,7 @@ export class OperationTableService {
             });
 
         return this.operationService.findMany(qb).pipe(
-            mergeMap((operations: OperationDetailsDto[]) =>
+            switchMap((operations: OperationDetailsDto[]) =>
                 forkJoin(
                     operations.map((operation) =>
                         this.operationService.findOneWithTrips(
