@@ -1,7 +1,15 @@
-<app-operation-route-diagram-drawing-presentational
-    [stations]="stations$ | async"
-    [tripOperationLists]="tripOperationLists$ | async"
-    [calendar]="calendar$ | async"
-    [operation]="operation$ | async"
-    (clickNavigateTimetable)="onReceiveClickNavigateTimetable($event)"
-></app-operation-route-diagram-drawing-presentational>
+<div>
+    @if (drawingDisplayed()) {
+    <app-operation-route-diagram-drawing-presentational
+        [stations]="stations()"
+        [tripOperationLists]="tripOperationLists()"
+        [calendar]="calendar()"
+        [operation]="operation()"
+        (clickNavigateTimetable)="onReceiveClickNavigateTimetable($event)"
+    ></app-operation-route-diagram-drawing-presentational>
+    } @else {
+    <div class="tw-bg-white tw-p-4 tw-shadow-md">
+        <p class="tw-m-0">運用番号を設定して検索してください</p>
+    </div>
+    }
+</div>

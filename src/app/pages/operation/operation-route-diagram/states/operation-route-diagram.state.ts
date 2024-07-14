@@ -43,6 +43,7 @@ export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagram
 
 @Injectable()
 export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagramState> {
+    readonly operationId$ = this.select('operationId');
     readonly calendar$ = this.select(
         (state) => state.operationTrips?.operation.calendar
     );
@@ -50,7 +51,7 @@ export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagram
         (state) => state.operationTrips?.operation
     );
     readonly stations$ = this.select((state) =>
-        this._filterTargetStations(state.stations)
+        this.#filterTargetStations(state.stations)
     );
     readonly tripOperationLists$ = this.select(
         (state) => state.operationTrips?.trips
@@ -67,9 +68,7 @@ export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagram
         super(store);
     }
 
-    private _filterTargetStations(
-        stations: StationDetailsDto[]
-    ): StationDetailsDto[] {
+    #filterTargetStations(stations: StationDetailsDto[]): StationDetailsDto[] {
         return targetStations
             .map(({ routeName, stationName }) => {
                 const targetSet = new Set(routeName);

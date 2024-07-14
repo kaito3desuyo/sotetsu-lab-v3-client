@@ -12,8 +12,8 @@ const routes: Routes = [
     {
         path: 'operation',
         loadChildren: () =>
-            import('./pages/operation/operation.module').then(
-                (mod) => mod.OperationModule
+            import('./pages/operation/operation.route').then(
+                (mod) => mod.OPERATION_ROUTES
             ),
     },
     {

@@ -1,120 +1,81 @@
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     ElementRef,
-    EventEmitter,
-    Input,
-    Output,
+    input,
+    output,
+    signal,
     ViewChild,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
-import { Subject } from 'rxjs';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
-
-type State = {
-    calendar: CalendarDetailsDto;
-    operation: OperationDetailsDto;
-    stations: StationDetailsDto[];
-    tripOperationLists: TripOperationListDetailsDto[];
-};
+import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
+import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
+import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
 
 @Component({
+    standalone: true,
     selector: 'app-operation-route-diagram-drawing-presentational',
     templateUrl:
         './operation-route-diagram-drawing-presentational.component.html',
     styleUrls: [
         './operation-route-diagram-drawing-presentational.component.scss',
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        AppSharedModule,
+        PipesModule,
+        OperationRouteDiagramFormatStationNamePipe,
+    ],
     providers: [RxState],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationRouteDiagramDrawingPresentationalComponent {
-    readonly vm$ = this.state.select();
+    readonly tripDirectionEnum = ETripDirection;
 
-    private get _calendar() {
-        return this.state.get('calendar');
-    }
+    readonly drawingSVGForOutput = signal(false);
 
-    private get _operation() {
-        return this.state.get('operation');
-    }
+    readonly calendar = input.required<CalendarDetailsDto>();
+    readonly operation = input.required<OperationDetailsDto>();
+    readonly stations = input.required<StationDetailsDto[]>();
+    readonly tripOperationLists =
+        input.required<TripOperationListDetailsDto[]>();
 
-    readonly onChangedInputCalendar$ = new Subject<CalendarDetailsDto>();
-    readonly onChangedInputOperation$ = new Subject<OperationDetailsDto>();
-    readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
-    readonly onChangedInputTripOperationLists$ = new Subject<
-        TripOperationListDetailsDto[]
-    >();
+    readonly clickNavigateTimetable =
+        output<OperationRouteDiagramNavigateTimetable>();
 
-    readonly onChangedViewChildSvgElement$ = new Subject<ElementRef>();
-
-    @Input() set calendar(calendar: CalendarDetailsDto) {
-        this.onChangedInputCalendar$.next(calendar);
-    }
-    @Input() set operation(operation: OperationDetailsDto) {
-        this.onChangedInputOperation$.next(operation);
-    }
-    @Input() set stations(stations: StationDetailsDto[]) {
-        this.onChangedInputStations$.next(stations);
-    }
-    @Input() set tripOperationLists(
-        tripOpeartionLists: TripOperationListDetailsDto[]
-    ) {
-        this.onChangedInputTripOperationLists$.next(tripOpeartionLists);
-    }
-
-    @Output() clickNavigateTimetable: EventEmitter<{
-        tripBlockId: string;
-        tripDirection: 0 | 1;
-    }> = new EventEmitter();
+    readonly isHolidayCalendar = computed(() => {
+        const calendar = this.calendar();
+        return calendar.sunday || calendar.saturday;
+    });
 
     @ViewChild('svgElement') svgElement: ElementRef;
 
-    constructor(private readonly state: RxState<State>) {
-        this.state.connect(
-            'calendar',
-            this.onChangedInputCalendar$.asObservable()
-        );
-        this.state.connect(
-            'operation',
-            this.onChangedInputOperation$.asObservable()
-        );
-        this.state.connect(
-            'stations',
-            this.onChangedInputStations$.asObservable()
-        );
-        this.state.connect(
-            'tripOperationLists',
-            this.onChangedInputTripOperationLists$.asObservable()
-        );
-    }
-
-    navigateTimetable(tripBlockId: string, tripDirection: 0 | 1) {
-        this.clickNavigateTimetable.next({
-            tripBlockId: tripBlockId,
-            tripDirection: tripDirection,
-        });
-    }
-
     async downloadAsPng() {
-        const name = `${dayjs(this._calendar.startDate, 'YYYY-MM-DD').format(
+        const name = `${dayjs(this.calendar().startDate, 'YYYY-MM-DD').format(
             'YYYY年MM月DD日'
-        )}改正 ${this._calendar.calendarName} ${
-            this._operation.operationNumber
+        )}改正 ${this.calendar().calendarName} ${
+            this.operation().operationNumber
         }運 運用行路図`;
 
         const font =
             "24px -apple-system, BlinkMacSystemFont, Roboto, 'Yu Gothic UI', '游ゴシック体', YuGothic, 'Yu Gothic Medium', sans-serif";
 
-        const color =
-            this._calendar.sunday || this._calendar.saturday
-                ? 'rgb(217, 83, 79)'
-                : 'rgb(66, 139, 202)';
+        const color = this.isHolidayCalendar()
+            ? 'rgb(217, 83, 79)'
+            : 'rgb(66, 139, 202)';
 
         const getSvgUrl = (svgElementRef: ElementRef) => {
             const svgText = new XMLSerializer().serializeToString(
@@ -169,10 +130,15 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
             return canvas;
         };
 
+        this.drawingSVGForOutput.set(true);
+        await wait(0);
+
         const svgUrl = getSvgUrl(this.svgElement);
         const image = await svgUrlToImageElement(svgUrl);
         URL.revokeObjectURL(svgUrl);
         const canvas = createCanvasElement(image);
         saveAs(canvas.toDataURL(), `${name.replace(/ /g, '_')}.png`);
+
+        this.drawingSVGForOutput.set(false);
     }
 }
