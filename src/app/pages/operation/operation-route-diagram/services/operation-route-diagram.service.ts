@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -13,31 +13,26 @@ import {
 
 @Injectable()
 export class OperationRouteDiagramService {
-    private _navigateTimetable$ =
+    readonly #serviceService = inject(ServiceService);
+    readonly #operationService = inject(OperationService);
+    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #operationRouteDiagramStateStore = inject(
+        OperationRouteDiagramStateStore
+    );
+    readonly #operationRouteDiagramStateQuery = inject(
+        OperationRouteDiagramStateQuery
+    );
+
+    readonly #navigateTimetable$ =
         new Subject<OperationRouteDiagramNavigateTimetable>();
 
-    constructor(
-        private readonly serviceService: ServiceService,
-        private readonly operationService: OperationService,
-        private readonly serviceListStateQuery: ServiceListStateQuery,
-        private readonly operationRouteDiagramStateStore: OperationRouteDiagramStateStore,
-        private readonly operationRouteDiagramStateQuery: OperationRouteDiagramStateQuery
-    ) {}
-
-    // v2
-
     fetchOperationTrips(): Observable<void> {
-        const operationId = this.operationRouteDiagramStateQuery.operationId;
-
-        if (!operationId) {
-            return of(undefined);
-        }
-
+        const operationId = this.#operationRouteDiagramStateQuery.operationId;
         const qb = new RequestQueryBuilder().setJoin([{ field: 'calendar' }]);
 
-        return this.operationService.findOneWithTrips(operationId, qb).pipe(
+        return this.#operationService.findOneWithTrips(operationId, qb).pipe(
             tap((operationTrips) => {
-                this.operationRouteDiagramStateStore.setOperationTrips(
+                this.#operationRouteDiagramStateStore.setOperationTrips(
                     operationTrips
                 );
             }),
@@ -45,8 +40,8 @@ export class OperationRouteDiagramService {
         );
     }
 
-    fetchStationsV2(): Observable<void> {
-        const serviceId = this.serviceListStateQuery.serviceId;
+    fetchStations(): Observable<void> {
+        const serviceId = this.#serviceListStateQuery.serviceId;
         const qb = new RequestQueryBuilder().setJoin([
             {
                 field: 'operatingSystems.route.routeStationLists.station.routeStationLists',
@@ -56,19 +51,21 @@ export class OperationRouteDiagramService {
             },
         ]);
 
-        return this.serviceService.findOneWithStations(serviceId, qb).pipe(
+        return this.#serviceService.findOneWithStations(serviceId, qb).pipe(
             tap((data) => {
-                this.operationRouteDiagramStateStore.setStations(data.stations);
+                this.#operationRouteDiagramStateStore.setStations(
+                    data.stations
+                );
             }),
             map(() => undefined)
         );
     }
 
     receiveNavigateTimetableEvent(): Observable<OperationRouteDiagramNavigateTimetable> {
-        return this._navigateTimetable$.asObservable();
+        return this.#navigateTimetable$.asObservable();
     }
 
     emitNavigateTimetableEvent(ev: OperationRouteDiagramNavigateTimetable) {
-        this._navigateTimetable$.next(ev);
+        this.#navigateTimetable$.next(ev);
     }
 }

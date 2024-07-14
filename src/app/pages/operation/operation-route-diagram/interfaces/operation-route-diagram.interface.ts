@@ -1,4 +1,6 @@
+import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+
 export interface OperationRouteDiagramNavigateTimetable {
     tripBlockId: string;
-    tripDirection: 0 | 1;
+    tripDirection: ETripDirection;
 }

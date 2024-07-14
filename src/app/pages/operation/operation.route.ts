@@ -1,7 +1,6 @@
-import { Routes, RouterModule } from '@angular/router';
-import { NgModule } from '@angular/core';
+import { Routes } from '@angular/router';
 
-const routes: Routes = [
+export const OPERATION_ROUTES: Routes = [
     {
         path: 'real-time',
         loadChildren: () =>
@@ -27,13 +26,7 @@ const routes: Routes = [
         path: 'route-diagram',
         loadChildren: () =>
             import(
-                './operation-route-diagram/operation-route-diagram.module'
-            ).then((mod) => mod.OperationRouteDiagramModule),
+                './operation-route-diagram/operation-route-diagram.route'
+            ).then((mod) => mod.OPERATION_ROUTE_DIAGRAM_ROUTES),
     },
 ];
-
-@NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule],
-})
-export class OperationRoutingModule {}
