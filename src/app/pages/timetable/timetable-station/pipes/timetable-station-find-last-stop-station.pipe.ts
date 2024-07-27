@@ -1,10 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import dayjs from 'dayjs';
-import { maxBy, min, minBy } from 'lodash-es';
+import { maxBy, minBy } from 'lodash-es';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 @Pipe({
+    standalone: true,
     name: 'timetableStationFindLastStopStation',
 })
 export class TimetableStationFindLastStopStationPipe implements PipeTransform {
@@ -12,6 +13,7 @@ export class TimetableStationFindLastStopStationPipe implements PipeTransform {
         const searchingTrip = trip.tripBlock.trips.find(
             (o) => o.tripId === trip.tripId
         );
+
         const searchingTripFinalStopTime = maxBy(
             searchingTrip.times,
             (o) => o.stopSequence

@@ -3,11 +3,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
+import { TimetableStationHeaderCComponent } from './components/timetable-station-header-c/timetable-station-header-c.component';
+import { TimetableStationMainCComponent } from './components/timetable-station-main-c/timetable-station-main-c.component';
 
 @Component({
+    standalone: true,
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
     styleUrls: ['./timetable-station.component.scss'],
+    imports: [TimetableStationHeaderCComponent, TimetableStationMainCComponent],
     providers: [RxState],
 })
 export class TimetableStationComponent {

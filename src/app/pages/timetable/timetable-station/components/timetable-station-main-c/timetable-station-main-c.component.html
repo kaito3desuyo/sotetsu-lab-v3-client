@@ -1,14 +1,15 @@
 <div class="tw-flex tw-flex-col tw-gap-4">
     <app-timetable-station-table-p
-        [calendar]="calendar$ | async"
-        [stationName]="stationName$ | async"
-        [tripDirection]="tripDirection$ | async"
-        [tripClasses]="tripClasses$ | async"
-        [stations]="stations$ | async"
-        [timetableData]="timetableData$ | async"
-        [operations]="operations$ | async"
-        [formations]="formations$ | async"
-        [latestSightings]="latestSightings$ | async"
+        [calendar]="calendar()"
+        [stationName]="stationName()"
+        [tripDirection]="tripDirection()"
+        [tripClasses]="tripClasses()"
+        [stations]="stations()"
+        [timetableData]="timetableData()"
+        [operations]="operations()"
+        [operationSightingTimeCrossSections]="
+            operationSightingTimeCrossSections()
+        "
     ></app-timetable-station-table-p>
 
     <ng-adsense [adSlot]="6036265169"></ng-adsense>

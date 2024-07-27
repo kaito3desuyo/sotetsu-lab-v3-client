@@ -36,4 +36,21 @@ export class TripBlockQuery {
                 })
             );
     }
+
+    findOne(
+        tripBlockId: string,
+        qb: RequestQueryBuilder
+    ): Observable<TripBlockDetailsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<TripBlockModel>(this.apiUrl + '/' + tripBlockId, {
+                params: httpParams,
+            })
+            .pipe(
+                map((data) => {
+                    return buildTripBlockDetailsDto(data);
+                })
+            );
+    }
 }

@@ -42,6 +42,23 @@ export class OperationQuery {
             );
     }
 
+    findOne(
+        operationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<OperationDetailsDto> {
+        const httpParams = new HttpParams({ fromString: qb.query() });
+
+        return this.http
+            .get<OperationModel>(this.apiUrl + '/' + operationId, {
+                params: httpParams,
+            })
+            .pipe(
+                map((data) => {
+                    return buildOperationDetailsDto(data);
+                })
+            );
+    }
+
     findOneWithCurrentPosition(
         operationId: string,
         qb: RequestQueryBuilder

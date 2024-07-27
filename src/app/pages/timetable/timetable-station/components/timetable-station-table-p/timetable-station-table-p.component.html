@@ -1,350 +1,334 @@
-<ng-container *rxLet="vm$; let vm">
-    <mat-card>
-        <mat-card-title>
-            <mat-toolbar
-                class="!tw-h-[48px]"
-                [ngClass]="[
-                    vm.calendar.sunday && vm.calendar.saturday
-                        ? 'holiday'
-                        : 'weekday'
-                ]"
-            >
-                <h3 class="!tw-text-[16px] !tw-leading-5 !tw-text-white">
-                    {{ vm.calendar.startDate | date: 'yyyy年MM月dd日' }}
-                    改正<br />
-                    {{ vm.calendar.calendarName }}
-                    {{ vm.stationName }}駅
-                    {{
-                        vm.tripDirection === 0
-                            ? '上り'
-                            : vm.tripDirection === 1
-                            ? '下り'
-                            : ''
-                    }}時刻表
-                </h3>
-            </mat-toolbar>
-        </mat-card-title>
-        <mat-card-content class="!tw-p-4">
-            <div class="tw-h-[70vh] tw-overflow-auto">
-                <table class="tw-border-collapse tw-whitespace-nowrap">
-                    <tr
-                        class="[&:nth-child(odd)>th]:tw-bg-white [&:nth-child(odd)>td]:tw-bg-white [&:nth-child(even)>th]:tw-bg-grey-100 [&:nth-child(even)>td]:tw-bg-grey-100"
-                        *rxFor="
-                            let item of vm.timetableData;
-                            trackBy: 'hour' | trackBy;
-                            strategy: 'normal'
-                        "
+<article class="tw-bg-white tw-shadow-md">
+    <header
+        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
+        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+    >
+        <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
+            {{ calendar().startDate | date : 'yyyy年MM月dd日' }}
+            改正<br />
+            {{ calendar().calendarName }}
+            {{ stationName() }}駅
+            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
+        </h3>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+        <div class="tw-h-[70vh] tw-overflow-auto">
+            <table class="tw-border-collapse tw-whitespace-nowrap">
+                @for (item of timetableData(); track item.hour) {
+                <tr
+                    class="[&:nth-child(even)>td]:tw-bg-grey-100 [&:nth-child(even)>th]:tw-bg-grey-100 [&:nth-child(odd)>td]:tw-bg-white [&:nth-child(odd)>th]:tw-bg-white"
+                >
+                    <th
+                        class="tw-sticky tw-left-0 tw-z-10 tw-min-w-[48px] tw-text-2xl"
                     >
-                        <th
-                            class="tw-sticky tw-left-0 tw-z-10 tw-min-w-[48px] tw-text-2xl"
-                        >
-                            {{ item.hour }}
-                        </th>
-                        <td
-                            class="tw-p-2"
-                            *rxFor="
-                                let trip of item.trips;
-                                trackBy: 'tripId' | trackBy;
-                                strategy: 'normal'
-                            "
-                        >
-                            <div class="tw-flex tw-flex-row tw-gap-2">
-                                <a
-                                    matRipple
-                                    class="tw-flex tw-h-12 tw-w-12 tw-flex-row tw-items-center tw-justify-center tw-self-center tw-rounded-full tw-text-2xl tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
-                                    [ngStyle]="{
-                                        color:
-                                            trip.tripClassId
-                                            | findById
+                        {{ item.hour }}
+                    </th>
+                    @for (trip of item.trips; track trip.tripId) {
+                    <td class="tw-p-2">
+                        <div class="tw-flex tw-flex-row tw-gap-2">
+                            <a
+                                matRipple
+                                class="tw-flex tw-h-12 tw-w-12 tw-flex-row tw-items-center tw-justify-center tw-self-center tw-rounded-full tw-text-2xl tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
+                                [ngStyle]="{
+                                    color:
+                                        trip.tripClassId
+                                        | findById
+                                            : {
+                                                  array: tripClasses(),
+                                                  propertyName: 'tripClassId',
+                                                  outputPropertyName:
+                                                      'tripClassColor'
+                                              }
+                                }"
+                                [routerLink]="[
+                                    '/timetable/all-line',
+                                    {
+                                        calendar_id: calendar().calendarId,
+                                        trip_direction: trip.tripDirection,
+                                        trip_block_id: trip.tripBlockId
+                                    }
+                                ]"
+                            >
+                                @if (!trip.times[0].departureTime &&
+                                trip.times[0].arrivalTime) {
+                                <span class="tw-underline">
+                                    {{
+                                        trip.times[0].arrivalTime
+                                            | dayjs
                                                 : {
-                                                      array: vm.tripClasses,
-                                                      propertyName:
-                                                          'tripClassId',
-                                                      outputPropertyName:
-                                                          'tripClassColor'
+                                                      format: 'mm',
+                                                      parseFormat: 'HH:mm:ss'
                                                   }
-                                    }"
-                                    [routerLink]="[
-                                        '/timetable/all-line',
-                                        {
-                                            calendar_id: vm.calendar.calendarId,
-                                            trip_direction: trip.tripDirection,
-                                            trip_block_id: trip.tripBlockId
-                                        }
-                                    ]"
+                                    }}
+                                </span>
+                                }
+                                <!--  -->
+                                @if (trip.times[0].departureTime) {
+                                <span class="tw-no-underline">
+                                    {{
+                                        trip.times[0].departureTime
+                                            | dayjs
+                                                : {
+                                                      format: 'mm',
+                                                      parseFormat: 'HH:mm:ss'
+                                                  }
+                                    }}
+                                </span>
+                                }
+                            </a>
+                            <div class="tw-flex tw-flex-col">
+                                <div
+                                    class="tw-flex tw-flex-row tw-items-center tw-justify-between tw-gap-4"
                                 >
-                                    <span
-                                        class="tw-underline"
-                                        *rxIf="
-                                            !trip.times[0].departureTime &&
-                                                trip.times[0].arrivalTime;
-                                            strategy: 'immediate'
-                                        "
-                                    >
-                                        {{
-                                            trip.times[0].arrivalTime
-                                                | dayjs
-                                                    : {
-                                                          format: 'mm',
-                                                          parseFormat:
-                                                              'HH:mm:ss'
-                                                      }
-                                        }}
-                                    </span>
-                                    <span
-                                        class="tw-no-underline"
-                                        *rxIf="
-                                            trip.times[0].departureTime;
-                                            strategy: 'immediate'
-                                        "
-                                    >
-                                        {{
-                                            trip.times[0].departureTime
-                                                | dayjs
-                                                    : {
-                                                          format: 'mm',
-                                                          parseFormat:
-                                                              'HH:mm:ss'
-                                                      }
-                                        }}
-                                    </span>
-                                </a>
-                                <div class="tw-flex tw-flex-col">
-                                    <div
-                                        class="tw-flex tw-flex-row tw-items-center tw-justify-between tw-gap-4"
-                                    >
-                                        <div class="tw-flex tw-flex-col">
-                                            <span class="tw-text-xs">
-                                                {{ trip.tripNumber }}
-                                            </span>
-                                            <span
-                                                class="tw-text-sm"
-                                                [ngStyle]="{
-                                                    color:
-                                                        trip.tripClassId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.tripClasses,
-                                                                  propertyName:
-                                                                      'tripClassId',
-                                                                  outputPropertyName:
-                                                                      'tripClassColor'
-                                                              }
-                                                }"
-                                            >
-                                                {{
+                                    <div class="tw-flex tw-flex-col">
+                                        <span class="tw-text-xs">
+                                            {{ trip.tripNumber }}
+                                        </span>
+                                        <span
+                                            class="tw-text-sm"
+                                            [ngStyle]="{
+                                                color:
                                                     trip.tripClassId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.tripClasses,
-                                                                  propertyName:
-                                                                      'tripClassId',
-                                                                  outputPropertyName:
-                                                                      'tripClassName'
-                                                              }
-                                                        | antiBrackets
-                                                }}
-                                            </span>
-                                            <span class="tw-text-lg">
-                                                {{
-                                                    trip
-                                                        | timetableStationFindLastStopStation
-                                                        | findById
-                                                            : {
-                                                                  array: vm.stations,
-                                                                  propertyName:
-                                                                      'stationId',
-                                                                  outputPropertyName:
-                                                                      'stationName'
-                                                              }
-                                                }}
-                                            </span>
-                                        </div>
+                                                    | findById
+                                                        : {
+                                                              array: tripClasses(),
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassColor'
+                                                          }
+                                            }"
+                                        >
+                                            {{
+                                                trip.tripClassId
+                                                    | findById
+                                                        : {
+                                                              array: tripClasses(),
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassName'
+                                                          }
+                                                    | antiBrackets
+                                            }}
+                                        </span>
+                                        <span class="tw-text-lg">
+                                            {{
+                                                trip
+                                                    | timetableStationFindLastStopStation
+                                                    | findById
+                                                        : {
+                                                              array: stations(),
+                                                              propertyName:
+                                                                  'stationId',
+                                                              outputPropertyName:
+                                                                  'stationName'
+                                                          }
+                                            }}
+                                        </span>
+                                    </div>
+                                    @if (trip.tripOperationLists.length !== 0) {
+                                    <div
+                                        class="tw-flex tw-flex-row tw-items-center tw-gap-2"
+                                    >
                                         <div
-                                            class="tw-flex tw-flex-row tw-items-center tw-gap-2"
-                                            *rxIf="
-                                                trip.tripOperationLists
-                                                    .length !== 0;
-                                                strategy: 'immediate'
-                                            "
+                                            class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-opacity-100"
                                         >
                                             <div
-                                                class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-opacity-100"
+                                                class="tw-flex tw-h-full tw-w-full tw-rounded-full"
+                                                [ngStyle]="{
+                                                    'background-color':
+                                                        trip
+                                                            .tripOperationLists[0]
+                                                            .operationId
+                                                        | findById
+                                                            : {
+                                                                  array: operations(),
+                                                                  propertyName:
+                                                                      'operationId',
+                                                                  outputPropertyName:
+                                                                      'operationNumber'
+                                                              }
+                                                        | operationNumberColor
+                                                }"
                                             >
-                                                <div
-                                                    class="tw-flex tw-h-full tw-w-full tw-rounded-full"
-                                                    [ngStyle]="{
-                                                        'background-color':
-                                                            trip
-                                                                .tripOperationLists[0]
-                                                                .operationId
+                                                <a
+                                                    matRipple
+                                                    class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-sm tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
+                                                    [routerLink]="[
+                                                        '/operation',
+                                                        'route-diagram',
+                                                        {
+                                                            operation_id:
+                                                                trip
+                                                                    .tripOperationLists[0]
+                                                                    .operationId
+                                                        }
+                                                    ]"
+                                                >
+                                                    {{
+                                                        trip
+                                                            .tripOperationLists[0]
+                                                            .operationId
                                                             | findById
                                                                 : {
-                                                                      array: vm.operations,
+                                                                      array: operations(),
                                                                       propertyName:
                                                                           'operationId',
                                                                       outputPropertyName:
                                                                           'operationNumber'
                                                                   }
-                                                            | operationNumberColor
-                                                    }"
-                                                >
-                                                    <a
-                                                        matRipple
-                                                        class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-sm tw-text-black tw-no-underline hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
-                                                        [routerLink]="[
-                                                            '/operation',
-                                                            'route-diagram',
-                                                            {
-                                                                operation_id:
-                                                                    trip
-                                                                        .tripOperationLists[0]
-                                                                        .operationId
-                                                            }
-                                                        ]"
-                                                    >
-                                                        {{
-                                                            trip
-                                                                .tripOperationLists[0]
-                                                                .operationId
-                                                                | findById
-                                                                    : {
-                                                                          array: vm.operations,
-                                                                          propertyName:
-                                                                              'operationId',
-                                                                          outputPropertyName:
-                                                                              'operationNumber'
-                                                                      }
-                                                        }}
-                                                    </a>
-                                                </div>
+                                                    }}
+                                                </a>
                                             </div>
-                                            <span class="tw-text-sm">
-                                                {{
-                                                    (trip.tripOperationLists[0]
-                                                        .operationId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.latestSightings,
-                                                                  propertyName:
-                                                                      'circulatedOperationId',
-                                                                  outputPropertyName:
-                                                                      'formationId'
-                                                              }
-                                                        | findById
-                                                            : {
-                                                                  array: vm.formations,
-                                                                  propertyName:
-                                                                      'formationId',
-                                                                  outputPropertyName:
-                                                                      'formationNumber'
-                                                              }) ?? '不明'
-                                                }}{{
-                                                    (trip.tripOperationLists[0]
-                                                        .operationId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.latestSightings,
-                                                                  propertyName:
-                                                                      'circulatedOperationId',
-                                                                  outputPropertyName:
-                                                                      'sightingTime'
-                                                              }
-                                                        | calculateDayCountFromToday) !==
-                                                    0
-                                                        ? '?'
-                                                        : ''
-                                                }}
-                                            </span>
                                         </div>
+                                        <span class="tw-text-sm">
+                                            @if (
+                                            trip.tripOperationLists[0].operationId
+                                            | findById : { array: operations(),
+                                            propertyName: 'operationId',
+                                            outputPropertyName:
+                                            'operationNumber' } | findById : {
+                                            array:
+                                            operationSightingTimeCrossSections(),
+                                            propertyName:
+                                            'expectedSighting.operation.operationNumber',
+                                            outputPropertyName:
+                                            'expectedSighting.formation.formationNumber'
+                                            } ) {
+                                            <!--  -->
+                                            {{
+                                                trip.tripOperationLists[0]
+                                                    .operationId
+                                                    | findById
+                                                        : {
+                                                              array: operations(),
+                                                              propertyName:
+                                                                  'operationId',
+                                                              outputPropertyName:
+                                                                  'operationNumber'
+                                                          }
+                                                    | findById
+                                                        : {
+                                                              array: operationSightingTimeCrossSections(),
+                                                              propertyName:
+                                                                  'expectedSighting.operation.operationNumber',
+                                                              outputPropertyName:
+                                                                  'expectedSighting.formation.formationNumber'
+                                                          }
+                                            }}{{
+                                                (trip.tripOperationLists[0]
+                                                    .operationId
+                                                    | findById
+                                                        : {
+                                                              array: operations(),
+                                                              propertyName:
+                                                                  'operationId',
+                                                              outputPropertyName:
+                                                                  'operationNumber'
+                                                          }
+                                                    | findById
+                                                        : {
+                                                              array: operationSightingTimeCrossSections(),
+                                                              propertyName:
+                                                                  'expectedSighting.operation.operationNumber',
+                                                              outputPropertyName:
+                                                                  'latestSighting.sightingTime'
+                                                          }
+                                                    | calculateDayCountFromToday) !==
+                                                0
+                                                    ? '?'
+                                                    : ''
+                                            }}
+                                            <!--  -->
+                                            } @else { 不明 }
+                                        </span>
                                     </div>
-                                    <div class="tw-flex tw-flex-col">
-                                        <div
-                                            class="tw-text-xs"
-                                            *rxFor="
-                                                let otherTrip of trip
-                                                    | timetableStationFindOtherTripsInSameTripBlock;
-                                                strategy: 'normal'
-                                            "
+                                    }
+                                </div>
+                                <div class="tw-flex tw-flex-col">
+                                    @for (otherTrip of trip |
+                                    timetableStationFindOtherTripsInSameTripBlock;
+                                    track otherTrip.tripId) {
+                                    <div class="tw-text-xs">
+                                        {{
+                                            (
+                                                otherTrip.times
+                                                | minBy
+                                                    : {
+                                                          propertyName:
+                                                              'stopSequence'
+                                                      }
+                                            ).stationId
+                                                | findById
+                                                    : {
+                                                          array: stations(),
+                                                          propertyName:
+                                                              'stationId',
+                                                          outputPropertyName:
+                                                              'stationName'
+                                                      }
+                                        }}から{{
+                                            (
+                                                otherTrip.times
+                                                | maxBy
+                                                    : {
+                                                          propertyName:
+                                                              'stopSequence'
+                                                      }
+                                            ).stationId
+                                                | findById
+                                                    : {
+                                                          array: stations(),
+                                                          propertyName:
+                                                              'stationId',
+                                                          outputPropertyName:
+                                                              'stationName'
+                                                      }
+                                        }}まで<br />
+                                        {{ otherTrip.tripNumber }}
+                                        <span
+                                            [ngStyle]="{
+                                                color:
+                                                    otherTrip.tripClassId
+                                                    | findById
+                                                        : {
+                                                              array: tripClasses(),
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassColor'
+                                                          }
+                                            }"
                                         >
                                             {{
-                                                (
-                                                    otherTrip.times
-                                                    | minBy
-                                                        : {
-                                                              propertyName:
-                                                                  'stopSequence'
-                                                          }
-                                                ).stationId
+                                                otherTrip.tripClassId
                                                     | findById
                                                         : {
-                                                              array: vm.stations,
+                                                              array: tripClasses(),
                                                               propertyName:
-                                                                  'stationId',
+                                                                  'tripClassId',
                                                               outputPropertyName:
-                                                                  'stationName'
+                                                                  'tripClassName'
                                                           }
-                                            }}から{{
-                                                (
-                                                    otherTrip.times
-                                                    | maxBy
-                                                        : {
-                                                              propertyName:
-                                                                  'stopSequence'
-                                                          }
-                                                ).stationId
-                                                    | findById
-                                                        : {
-                                                              array: vm.stations,
-                                                              propertyName:
-                                                                  'stationId',
-                                                              outputPropertyName:
-                                                                  'stationName'
-                                                          }
-                                            }}まで<br />
-                                            {{ otherTrip.tripNumber }}
-                                            <span
-                                                [ngStyle]="{
-                                                    color:
-                                                        otherTrip.tripClassId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.tripClasses,
-                                                                  propertyName:
-                                                                      'tripClassId',
-                                                                  outputPropertyName:
-                                                                      'tripClassColor'
-                                                              }
-                                                }"
-                                            >
-                                                {{
-                                                    otherTrip.tripClassId
-                                                        | findById
-                                                            : {
-                                                                  array: vm.tripClasses,
-                                                                  propertyName:
-                                                                      'tripClassId',
-                                                                  outputPropertyName:
-                                                                      'tripClassName'
-                                                              }
-                                                        | antiBrackets
-                                                }}
-                                            </span>
-                                        </div>
+                                                    | antiBrackets
+                                            }}
+                                        </span>
                                     </div>
+                                    }
                                 </div>
                             </div>
-                        </td>
-                        <td
-                            *rxFor="
-                                let blank of vm.maxColumnsCount -
-                                    item.trips.length | range;
-                                strategy: 'normal'
-                            "
-                        ></td>
-                    </tr>
-                </table>
-            </div>
-        </mat-card-content>
-    </mat-card>
-</ng-container>
+                        </div>
+                    </td>
+                    }
+                    <!--  -->
+                    @for (_ of maxColumnsCount() - item.trips.length | range;
+                    track $index) {
+                    <td></td>
+                    }
+                </tr>
+                }
+            </table>
+        </div>
+    </div>
+</article>
