@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import dayjs from 'dayjs';
+import { minBy } from 'lodash-es';
+import { zip } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { findLatestAndCirculateOperationSighting } from 'src/app/core/utils/find-latest-and-circulate-operation-sighting';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
-import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 type TimetableStationState = {
@@ -16,12 +17,11 @@ type TimetableStationState = {
     stationId: StationDetailsDto['stationId'];
     tripDirection: TripDetailsDto['tripDirection'];
     trips: TripDetailsDto[];
+    tripBlocks: TripBlockDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
-    formations: FormationDetailsDto[];
-    operationSightings: OperationSightingDetailsDto[];
-    formationSightings: OperationSightingDetailsDto[];
+    operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
 };
 
 @Injectable()
@@ -33,12 +33,11 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
                 stationId: null,
                 tripDirection: null,
                 trips: [],
+                tripBlocks: [],
                 tripClasses: [],
                 stations: [],
                 operations: [],
-                formations: [],
-                operationSightings: [],
-                formationSightings: [],
+                operationSightingTimeCrossSections: [],
             },
             { name: `TimetableStation-${guid()}` }
         );
@@ -68,6 +67,12 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
         });
     }
 
+    setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
+        this.update({
+            tripBlocks,
+        });
+    }
+
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
         this.update({
             tripClasses,
@@ -86,21 +91,11 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
         });
     }
 
-    setFormations(formations: FormationDetailsDto[]): void {
+    setOperationSightingTimeCrossSections(
+        operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[]
+    ): void {
         this.update({
-            formations,
-        });
-    }
-
-    setOperationSightings(sightings: OperationSightingDetailsDto[]): void {
-        this.update({
-            operationSightings: sightings,
-        });
-    }
-
-    setFormationSightings(sightings: OperationSightingDetailsDto[]): void {
-        this.update({
-            formationSightings: sightings,
+            operationSightingTimeCrossSections,
         });
     }
 }
@@ -116,21 +111,15 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
     );
     readonly tripDirection$ = this.select('tripDirection');
     readonly trips$ = this.select('trips');
-    readonly timetableData$ = this.select('trips').pipe(
-        map(this._sortTrips),
-        map(this._generateTableData)
-    );
+    readonly timetableData$ = zip(
+        this.select('trips'),
+        this.select('tripBlocks')
+    ).pipe(map(this.#sortTrips), map(this.#generateTableData));
     readonly tripClasses$ = this.select('tripClasses');
     readonly stations$ = this.select('stations');
     readonly operations$ = this.select('operations');
-    readonly formations$ = this.select('formations');
-    readonly latestSightings$ = this.select([
-        'operations',
-        'operationSightings',
-        'formationSightings',
-    ]).pipe(
-        map(findLatestAndCirculateOperationSighting),
-        map((data) => data.operationSightings)
+    readonly operationSightingTimeCrossSections$ = this.select(
+        'operationSightingTimeCrossSections'
     );
 
     get stationId(): StationDetailsDto['stationId'] {
@@ -145,43 +134,90 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
         return this.getValue().tripDirection;
     }
 
+    get trips(): TripDetailsDto[] {
+        return this.getValue().trips;
+    }
+
+    get operationIds(): string[] {
+        return this.#extractOperationIds(this.getValue().trips);
+    }
+
+    get operations(): OperationDetailsDto[] {
+        return this.getValue().operations;
+    }
+
     constructor(protected store: TimetableStationStateStore) {
         super(store);
     }
 
-    private _sortTrips(trips: TripDetailsDto[]): TripDetailsDto[] {
-        return trips.sort((a, b) => {
-            const aDay =
-                a.times[0].departureDays || a.times[0].arrivalDays || null;
-            const aTime =
-                a.times[0].departureTime || a.times[0].arrivalTime || null;
-            const bDay =
-                b.times[0].departureDays || b.times[0].arrivalDays || null;
-            const bTime =
-                b.times[0].departureTime || b.times[0].arrivalTime || null;
-
-            const diff =
-                dayjs(aTime, 'HH:mm:ss')
-                    .add(aDay - 1, 'days')
-                    .unix() -
-                dayjs(bTime, 'HH:mm:ss')
-                    .add(bDay - 1, 'days')
-                    .unix();
-
-            // 比較する時刻が同一で、発着どちらかの時刻がnullのtripは先に表示する
-            // if (
-            //     diff === 0 &&
-            //     (b.times[0].departureTime === null ||
-            //         b.times[0].arrivalTime === null)
-            // ) {
-            //     return 1;
-            // }
-
-            return diff;
-        });
+    #extractOperationIds(trips: TripDetailsDto[]): string[] {
+        return Array.from(
+            new Set(trips.map((trip) => trip.tripOperationLists[0].operationId))
+        );
     }
 
-    private _generateTableData(trips: TripDetailsDto[]): {
+    #sortTrips([trips, tripBlocks]: [
+        TripDetailsDto[],
+        TripBlockDetailsDto[]
+    ]): TripDetailsDto[] {
+        return trips
+            .map((o) => ({
+                ...o,
+                tripBlock: tripBlocks.find(
+                    ({ tripBlockId }) => o.tripBlockId === tripBlockId
+                ),
+            }))
+            .map((o) => ({
+                ...o,
+                tripBlock: {
+                    ...o.tripBlock,
+                    trips: o.tripBlock.trips.sort((a, b) => {
+                        const aTime = minBy(a.times, (o2) => o2.stopSequence);
+                        const bTime = minBy(b.times, (o2) => o2.stopSequence);
+                        const format = 'HH:mm:ss';
+                        return (
+                            dayjs(aTime.departureTime, format)
+                                .add(aTime.departureDays - 1, 'days')
+                                .unix() -
+                            dayjs(bTime.departureTime, format)
+                                .add(bTime.departureDays - 1, 'days')
+                                .unix()
+                        );
+                    }),
+                },
+            }))
+            .sort((a, b) => {
+                const aDay =
+                    a.times[0].departureDays || a.times[0].arrivalDays || null;
+                const aTime =
+                    a.times[0].departureTime || a.times[0].arrivalTime || null;
+                const bDay =
+                    b.times[0].departureDays || b.times[0].arrivalDays || null;
+                const bTime =
+                    b.times[0].departureTime || b.times[0].arrivalTime || null;
+
+                const diff =
+                    dayjs(aTime, 'HH:mm:ss')
+                        .add(aDay - 1, 'days')
+                        .unix() -
+                    dayjs(bTime, 'HH:mm:ss')
+                        .add(bDay - 1, 'days')
+                        .unix();
+
+                // 比較する時刻が同一で、発着どちらかの時刻がnullのtripは先に表示する
+                // if (
+                //     diff === 0 &&
+                //     (b.times[0].departureTime === null ||
+                //         b.times[0].arrivalTime === null)
+                // ) {
+                //     return 1;
+                // }
+
+                return diff;
+            });
+    }
+
+    #generateTableData(trips: TripDetailsDto[]): {
         day: number;
         hour: string;
         trips: TripDetailsDto[];

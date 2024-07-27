@@ -23,6 +23,13 @@ export class TripBlockService {
         return this.tripBlockQuery.findMany(qb);
     }
 
+    findOne(
+        tripBlockId: string,
+        qb: RequestQueryBuilder
+    ): Observable<TripBlockDetailsDto> {
+        return this.tripBlockQuery.findOne(tripBlockId, qb);
+    }
+
     createMany(
         qb: RequestQueryBuilder,
         body: CreateTripBlockDto[]

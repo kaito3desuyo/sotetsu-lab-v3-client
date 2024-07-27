@@ -1,18 +1,16 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import dayjs from 'dayjs';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
-import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
-import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TripService } from 'src/app/libs/trip/usecase/trip.service';
 import {
@@ -22,31 +20,22 @@ import {
 
 @Injectable()
 export class TimetableStationService {
-    constructor(
-        private readonly stationService: StationService,
-        private readonly tripService: TripService,
-        private readonly tripClassService: TripClassService,
-        private readonly operationService: OperationService,
-        private readonly formationService: FormationService,
-        private readonly operationSightingService: OperationSightingService,
-        private readonly timetableStationStateStore: TimetableStationStateStore,
-        private readonly timetableStationStateQuery: TimetableStationStateQuery
-    ) {}
+    readonly #stationService = inject(StationService);
+    readonly #tripService = inject(TripService);
+    readonly #tripBlockService = inject(TripBlockService);
+    readonly #tripClassService = inject(TripClassService);
+    readonly #operationService = inject(OperationService);
+    readonly #operationSightingService = inject(OperationSightingService);
+    readonly #timetableStationStateStore = inject(TimetableStationStateStore);
+    readonly #timetableStationStateQuery = inject(TimetableStationStateQuery);
 
-    // v2
+    fetchTrips(): Observable<void> {
+        const stationId = this.#timetableStationStateQuery.stationId;
+        const calendarId = this.#timetableStationStateQuery.calendarId;
+        const tripDirection = this.#timetableStationStateQuery.tripDirection;
 
-    fetchTripsV2(): Observable<void> {
-        const stationId = this.timetableStationStateQuery.stationId;
-        const calendarId = this.timetableStationStateQuery.calendarId;
-        const tripDirection = this.timetableStationStateQuery.tripDirection;
         const qb = new RequestQueryBuilder()
-            .setJoin([
-                { field: 'tripBlock' },
-                { field: 'tripBlock.trips' },
-                { field: 'tripBlock.trips.times' },
-                { field: 'times' },
-                { field: 'tripOperationLists' },
-            ])
+            .setJoin([{ field: 'times' }, { field: 'tripOperationLists' }])
             .search({
                 $and: [
                     {
@@ -115,103 +104,99 @@ export class TimetableStationService {
                 { field: 'times.departureTime', order: 'ASC' },
             ]);
 
-        return this.tripService.findMany(qb).pipe(
-            tap((trips: TripDetailsDto[]) => {
-                this.timetableStationStateStore.setTrips(trips);
+        return this.#tripService.findMany(qb).pipe(
+            tap((data: TripDetailsDto[]) => {
+                this.#timetableStationStateStore.setTrips(data);
             }),
             map(() => undefined)
         );
     }
 
-    fetchStationsV2(): Observable<void> {
+    fetchTripBlocks(): Observable<void> {
+        const tripBlockIds = this.#timetableStationStateQuery.trips.map(
+            (o) => o.tripBlockId
+        );
+
+        const qb = new RequestQueryBuilder().setJoin([
+            { field: 'trips' },
+            { field: 'trips.times' },
+        ]);
+
+        return forkJoin(
+            tripBlockIds.map((id) => this.#tripBlockService.findOne(id, qb))
+        ).pipe(
+            tap((data: TripBlockDetailsDto[]) => {
+                this.#timetableStationStateStore.setTripBlocks(data);
+            }),
+            map(() => undefined)
+        );
+    }
+
+    fetchTripClasses(): Observable<void> {
         const qb = new RequestQueryBuilder();
 
-        return this.stationService.findMany(qb).pipe(
-            tap((stations: StationDetailsDto[]) => {
-                this.timetableStationStateStore.setStations(stations);
+        return this.#tripClassService.findMany(qb).pipe(
+            tap((data: TripClassDetailsDto[]) => {
+                this.#timetableStationStateStore.setTripClasses(data);
             }),
             map(() => undefined)
         );
     }
 
-    fetchTripClassesV2(): Observable<void> {
+    fetchStations(): Observable<void> {
         const qb = new RequestQueryBuilder();
 
-        return this.tripClassService.findMany(qb).pipe(
-            tap((tripClasses: TripClassDetailsDto[]) => {
-                this.timetableStationStateStore.setTripClasses(tripClasses);
+        return this.#stationService.findMany(qb).pipe(
+            tap((data: StationDetailsDto[]) => {
+                this.#timetableStationStateStore.setStations(data);
             }),
             map(() => undefined)
         );
     }
 
-    fetchOperationsV2(): Observable<void> {
-        const calendarId = this.timetableStationStateQuery.calendarId;
+    fetchOperations(): Observable<void> {
+        const calendarId = this.#timetableStationStateQuery.calendarId;
 
-        const qb = new RequestQueryBuilder()
-            .setFilter([
-                {
-                    field: 'calendarId',
-                    operator: CondOperator.EQUALS,
-                    value: calendarId, // this.todaysCalendarListStateQuery.todaysCalendarId,
-                },
-            ])
-            .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
+        const qb = new RequestQueryBuilder().setFilter([
+            {
+                field: 'calendarId',
+                operator: CondOperator.EQUALS,
+                value: calendarId, // this.todaysCalendarListStateQuery.todaysCalendarId,
+            },
+            {
+                field: 'operationNumber',
+                operator: CondOperator.NOT_EQUALS,
+                value: '100',
+            },
+        ]);
 
-        return this.operationService.findMany(qb).pipe(
+        return this.#operationService.findMany(qb).pipe(
             tap((data: OperationDetailsDto[]) => {
-                this.timetableStationStateStore.setOperations(data);
+                this.#timetableStationStateStore.setOperations(data);
             }),
             map(() => undefined)
         );
     }
 
-    fetchFormationsV2(): Observable<void> {
-        const qb = new RequestQueryBuilder();
+    fetchOperationSightingTimeCrossSections(): Observable<void> {
+        const operationIds = this.#timetableStationStateQuery.operationIds;
+        const operations = this.#timetableStationStateQuery.operations.filter(
+            (o) => operationIds.includes(o.operationId)
+        );
 
-        return this.formationService
-            .findManyBySpeficicDate(qb, {
-                date: dayjs()
-                    .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD'),
-            })
-            .pipe(
-                tap((data: FormationDetailsDto[]) => {
-                    this.timetableStationStateStore.setFormations(data);
-                }),
-                map(() => undefined)
-            );
-    }
-
-    fetchOperationSightings(): Observable<void> {
-        const qb = new RequestQueryBuilder().setJoin([
-            { field: 'operation' },
-            { field: 'formation' },
-        ]);
-
-        return this.operationSightingService
-            .findManyLatestGroupByOperation(qb)
-            .pipe(
-                tap((data: OperationSightingDetailsDto[]) => {
-                    this.timetableStationStateStore.setOperationSightings(data);
-                }),
-                map(() => undefined)
-            );
-    }
-
-    fetchFormationSightings(): Observable<void> {
-        const qb = new RequestQueryBuilder().setJoin([
-            { field: 'operation' },
-            { field: 'formation' },
-        ]);
-
-        return this.operationSightingService
-            .findManyLatestGroupByFormation(qb)
-            .pipe(
-                tap((data: OperationSightingDetailsDto[]) => {
-                    this.timetableStationStateStore.setFormationSightings(data);
-                }),
-                map(() => undefined)
-            );
+        return forkJoin(
+            operations.map(({ operationNumber }) =>
+                this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
+                    { operationNumber }
+                )
+            )
+        ).pipe(
+            tap((data) => {
+                this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
+                    data
+                );
+            }),
+            map(() => undefined)
+        );
     }
 }

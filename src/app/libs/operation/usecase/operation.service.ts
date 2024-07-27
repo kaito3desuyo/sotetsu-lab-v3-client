@@ -17,6 +17,13 @@ export class OperationService {
         return this.operationQuery.findMany(qb);
     }
 
+    findOne(
+        operationId: string,
+        qb: RequestQueryBuilder
+    ): Observable<OperationDetailsDto> {
+        return this.operationQuery.findOne(operationId, qb);
+    }
+
     findOneWithCurrentPosition(
         operationId: string,
         qb: RequestQueryBuilder
