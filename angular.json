@@ -15,7 +15,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-builders/custom-webpack:browser",
+          "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "outputPath": "dist/sotetsu-lab-v3-client",
             "index": "src/index.html",
@@ -32,9 +32,6 @@
             ],
             "styles": ["src/styles.scss"],
             "scripts": [],
-            "customWebpackConfig": {
-              "path": "./extra-webpack.config.js"
-            },
             "allowedCommonJsDependencies": [
               "moment/locale/ja",
               "@nestjsx/crud-request"
@@ -76,7 +73,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-builders/custom-webpack:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
               "browserTarget": "sotetsu-lab-v3-client:build:production"
