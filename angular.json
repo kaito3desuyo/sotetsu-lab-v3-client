@@ -15,12 +15,13 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/sotetsu-lab-v3-client",
+            "outputPath": {
+              "base": "dist/sotetsu-lab-v3-client"
+            },
             "index": "src/index.html",
-            "main": "src/main.ts",
-            "polyfills": "src/polyfills.ts",
+            "polyfills": ["src/polyfills.ts"],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
@@ -35,7 +36,8 @@
             "allowedCommonJsDependencies": [
               "moment/locale/ja",
               "@nestjsx/crud-request"
-            ]
+            ],
+            "browser": "src/main.ts"
           },
           "configurations": {
             "production": {
@@ -58,13 +60,10 @@
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": true,
-              "ngswConfigPath": "ngsw-config.json"
+              "serviceWorker": "ngsw-config.json"
             },
             "development": {
-              "buildOptimizer": false,
               "optimization": false,
-              "vendorChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
@@ -73,13 +72,13 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "sotetsu-lab-v3-client:build:production"
+              "buildTarget": "sotetsu-lab-v3-client:build:production"
             },
             "development": {
-              "browserTarget": "sotetsu-lab-v3-client:build:development"
+              "buildTarget": "sotetsu-lab-v3-client:build:development"
             }
           },
           "defaultConfiguration": "development"
