@@ -12,32 +12,32 @@
     }
 
     .deep-orange {
-        color: mat.get-color-from-palette(
-            mat.define-palette(mat.$deep-orange-palette)
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-deep-orange-palette)
         );
     }
 
     .red {
-        color: mat.get-color-from-palette(mat.define-palette(mat.$red-palette));
+        color: mat.m2-get-color-from-palette(mat.m2-define-palette(mat.$m2-red-palette));
     }
 
     .teal {
-        color: mat.get-color-from-palette(
-            mat.define-palette(mat.$teal-palette),
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-teal-palette),
             400
         );
     }
 
     .blue {
-        color: mat.get-color-from-palette(
-            mat.define-palette(mat.$blue-palette),
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-blue-palette),
             800
         );
     }
 
     .indigo {
-        color: mat.get-color-from-palette(
-            mat.define-palette(mat.$indigo-palette),
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-indigo-palette),
             900
         );
     }
