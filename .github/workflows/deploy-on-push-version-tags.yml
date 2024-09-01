@@ -40,5 +40,5 @@ jobs:
 
       - name: Deploy and create invalidation
         run: |
-          aws s3 sync ./dist/build-by-ci s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "max-age=31536000"
+          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "max-age=31536000"
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'
