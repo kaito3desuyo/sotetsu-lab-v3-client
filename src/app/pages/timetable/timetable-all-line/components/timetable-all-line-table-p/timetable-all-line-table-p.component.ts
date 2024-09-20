@@ -125,7 +125,7 @@ export class TimetableAllLineTablePComponent {
             this.onClickedDeleteTripInGroup$,
             ({ base, target }) => {
                 this.clickDeleteTripInGroup.emit({ base, target });
-            }
+            },
         );
     }
 

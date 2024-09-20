@@ -32,12 +32,12 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
             },
             {
                 name: `OperationRealTime-${guid()}`,
-            }
+            },
         );
     }
 
     setOperationSightingTimeCrossSections(
-        timeCrossSections: OperationSightingTimeCrossSectionDto[]
+        timeCrossSections: OperationSightingTimeCrossSectionDto[],
     ): void {
         this.update({
             operationSightingTimeCrossSections: timeCrossSections,
@@ -45,7 +45,7 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
     }
 
     setFormationSightingTimeCrossSections(
-        timeCrossSections: OperationSightingTimeCrossSectionDto[]
+        timeCrossSections: OperationSightingTimeCrossSectionDto[],
     ): void {
         this.update({
             formationSightingTimeCrossSections: timeCrossSections,
@@ -65,7 +65,7 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
                     (prev) =>
                         !positions
                             .map((next) => next.operation.operationId)
-                            .includes(prev.operation.operationId)
+                            .includes(prev.operation.operationId),
                 ),
                 ...positions,
             ],
@@ -100,18 +100,18 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
 @Injectable()
 export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
     operationSightingTimeCrossSections$ = this.select(
-        'operationSightingTimeCrossSections'
+        'operationSightingTimeCrossSections',
     );
     formationSightingTimeCrossSections$ = this.select(
-        'formationSightingTimeCrossSections'
+        'formationSightingTimeCrossSections',
     );
     currentPositions$ = this.select('currentPositions');
     currentPositionsThatShouldUpdate$ = this.select('currentPositions').pipe(
         map((currentPositions) =>
             OperationRealTimeUtil.filterOperationCurrentPositionsThatShouldUpdate(
-                currentPositions
-            )
-        )
+                currentPositions,
+            ),
+        ),
     );
     tripClasses$ = this.select('tripClasses');
     finalUpdateTime$ = this.select('finalUpdateTime');
@@ -124,7 +124,7 @@ export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
 
     get currentPositionsThatShouldUpdate(): OperationCurrentPositionDto[] {
         return OperationRealTimeUtil.filterOperationCurrentPositionsThatShouldUpdate(
-            this.getValue().currentPositions
+            this.getValue().currentPositions,
         );
     }
 

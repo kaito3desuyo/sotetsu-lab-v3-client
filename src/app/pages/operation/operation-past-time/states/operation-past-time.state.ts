@@ -27,7 +27,7 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
                 formations: [],
                 operationSightings: [],
             },
-            { name: `OperationPastTime-${guid()}` }
+            { name: `OperationPastTime-${guid()}` },
         );
     }
 
@@ -47,7 +47,7 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
         calendars: {
             date: string;
             calendar: CalendarDetailsDto;
-        }[]
+        }[],
     ): void {
         this.update({
             calendars,
@@ -97,7 +97,7 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
                     dates.push(date.format('YYYY-MM-DD'));
                 }
                 return dates;
-            })
+            }),
         );
     }
 
@@ -110,7 +110,7 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
             map((sightings) => {
                 const groupedByFormationId: [
                     string,
-                    OperationSightingDetailsDto[]
+                    OperationSightingDetailsDto[],
                 ][] = Object.entries(groupBy(sightings, (o) => o.formationId));
 
                 const groupedByDate: {
@@ -127,9 +127,9 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
                                         dayjs(o.sightingTime).hour() < 4
                                             ? 1
                                             : 0,
-                                        'days'
+                                        'days',
                                     )
-                                    .format('YYYY-MM-DD')
+                                    .format('YYYY-MM-DD'),
                             ),
                         ];
                     })
@@ -141,7 +141,7 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
                     }, {});
 
                 return groupedByDate;
-            })
+            }),
         );
     }
 }

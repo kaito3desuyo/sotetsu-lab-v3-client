@@ -26,34 +26,34 @@ export class TimetableStationMainCComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #timetableStationStateQuery = inject(TimetableStationStateQuery);
     readonly #timetableSearchCardStateStore = inject(
-        TimetableSearchCardStateStore
+        TimetableSearchCardStateStore,
     );
 
     readonly calendar = toSignal(
         this.#timetableStationStateQuery.calendarId$.pipe(
             mergeMap((id) =>
-                this.#calendarListStateQuery.selectByCalendarId(id)
-            )
-        )
+                this.#calendarListStateQuery.selectByCalendarId(id),
+            ),
+        ),
     );
     readonly stationName = toSignal(
-        this.#timetableStationStateQuery.stationName$
+        this.#timetableStationStateQuery.stationName$,
     );
     readonly tripDirection = toSignal(
-        this.#timetableStationStateQuery.tripDirection$
+        this.#timetableStationStateQuery.tripDirection$,
     );
     readonly tripClasses = toSignal(
-        this.#timetableStationStateQuery.tripClasses$
+        this.#timetableStationStateQuery.tripClasses$,
     );
     readonly stations = toSignal(this.#timetableStationStateQuery.stations$);
     readonly timetableData = toSignal(
-        this.#timetableStationStateQuery.timetableData$
+        this.#timetableStationStateQuery.timetableData$,
     );
     readonly operations = toSignal(
-        this.#timetableStationStateQuery.operations$
+        this.#timetableStationStateQuery.operations$,
     );
     readonly operationSightingTimeCrossSections = toSignal(
-        this.#timetableStationStateQuery.operationSightingTimeCrossSections$
+        this.#timetableStationStateQuery.operationSightingTimeCrossSections$,
     );
 
     constructor() {
@@ -61,16 +61,16 @@ export class TimetableStationMainCComponent {
             this.#timetableStationStateQuery.calendarId$,
             (calendarId) => {
                 this.#timetableSearchCardStateStore.setCalendarId(calendarId);
-            }
+            },
         );
 
         this.#state.hold(
             this.#timetableStationStateQuery.tripDirection$,
             (tripDirection) => {
                 this.#timetableSearchCardStateStore.setTripDirection(
-                    tripDirection
+                    tripDirection,
                 );
-            }
+            },
         );
 
         this.#state.hold(
@@ -78,7 +78,7 @@ export class TimetableStationMainCComponent {
             (stationId) => {
                 this.#timetableSearchCardStateStore.enableSearchByStation();
                 this.#timetableSearchCardStateStore.setStationId(stationId);
-            }
+            },
         );
     }
 }

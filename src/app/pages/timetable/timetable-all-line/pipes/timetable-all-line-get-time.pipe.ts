@@ -65,7 +65,7 @@ export class TimetableAllLineGetTimeAndTrackByPipe implements PipeTransform {
 
         if (!has(cache, propertyName)) {
             set(cache, propertyName, function trackByProperty<
-                T
+                T,
             >(index: number, item: TripDetailsDto): any {
                 return TimetableAllLineUtil.getTime({
                     tripDirection,

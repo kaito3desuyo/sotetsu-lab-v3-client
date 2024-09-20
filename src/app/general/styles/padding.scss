@@ -3,27 +3,27 @@ $padding-min: 0;
 $padding-max: 128 / 4;
 
 @for $i from $padding-min through $padding-max {
-  .pt-#{$i * 4} {
-    padding-top: #{$i * 4}px !important;
-  }
-  .pr-#{$i * 4} {
-    padding-right: #{$i * 4}px !important;
-  }
-  .pb-#{$i * 4} {
-    padding-bottom: #{$i * 4}px !important;
-  }
-  .pl-#{$i * 4} {
-    padding-left: #{$i * 4}px !important;
-  }
-  .px-#{$i * 4} {
-    padding-left: #{$i * 4}px !important;
-    padding-right: #{$i * 4}px !important;
-  }
-  .py-#{$i * 4} {
-    padding-top: #{$i * 4}px !important;
-    padding-bottom: #{$i * 4}px !important;
-  }
-  .p-#{$i * 4} {
-    padding: #{$i * 4}px !important;
-  }
+    .pt-#{$i * 4} {
+        padding-top: #{$i * 4}px !important;
+    }
+    .pr-#{$i * 4} {
+        padding-right: #{$i * 4}px !important;
+    }
+    .pb-#{$i * 4} {
+        padding-bottom: #{$i * 4}px !important;
+    }
+    .pl-#{$i * 4} {
+        padding-left: #{$i * 4}px !important;
+    }
+    .px-#{$i * 4} {
+        padding-left: #{$i * 4}px !important;
+        padding-right: #{$i * 4}px !important;
+    }
+    .py-#{$i * 4} {
+        padding-top: #{$i * 4}px !important;
+        padding-bottom: #{$i * 4}px !important;
+    }
+    .p-#{$i * 4} {
+        padding: #{$i * 4}px !important;
+    }
 }

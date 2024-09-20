@@ -14,6 +14,6 @@ describe('Service: OperationRouteDiagram', () => {
         [OperationRouteDiagramService],
         (service: OperationRouteDiagramService) => {
             expect(service).toBeTruthy();
-        }
+        },
     ));
 });

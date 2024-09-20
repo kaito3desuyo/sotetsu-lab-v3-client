@@ -4,12 +4,12 @@ import { FormationDetailsDto } from '../../usecase/dtos/formation-details.dto';
 import { FormationModel } from '../models/formation.model';
 
 export function buildFormationDetailsDto(
-    model: FormationModel
+    model: FormationModel,
 ): FormationDetailsDto {
     const plainObject = classToPlain(model, classTransformerOptions);
     return plainToClass(
         FormationDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

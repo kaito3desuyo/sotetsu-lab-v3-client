@@ -23,7 +23,7 @@ export class OperationPastTimeService {
         private readonly formationService: FormationService,
         private readonly operationSightingService: OperationSightingService,
         private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
-        private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery
+        private readonly operationPastTimeStateQuery: OperationPastTimeStateQuery,
     ) {}
 
     // v2
@@ -51,15 +51,15 @@ export class OperationPastTimeService {
                                         date,
                                         calendar: calendars[0],
                                     };
-                                })
-                            )
-                    )
+                                }),
+                            ),
+                    ),
                 );
             }),
             tap((calendars) => {
                 this.operationPastTimeStateStore.setCalendars(calendars);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -90,15 +90,15 @@ export class OperationPastTimeService {
                         [...formations].sort(
                             (a, b) =>
                                 agencies.findIndex(
-                                    (v) => v.agencyId === a.agencyId
+                                    (v) => v.agencyId === a.agencyId,
                                 ) -
                                 agencies.findIndex(
-                                    (v) => v.agencyId === b.agencyId
-                                )
-                        )
+                                    (v) => v.agencyId === b.agencyId,
+                                ),
+                        ),
                     );
                 }),
-                map(() => undefined)
+                map(() => undefined),
             );
     }
 
@@ -139,10 +139,10 @@ export class OperationPastTimeService {
         return this.operationSightingService.findMany(qb).pipe(
             tap((sightings: OperationSightingDetailsDto[]) => {
                 this.operationPastTimeStateStore.setOperationSightings(
-                    sightings
+                    sightings,
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

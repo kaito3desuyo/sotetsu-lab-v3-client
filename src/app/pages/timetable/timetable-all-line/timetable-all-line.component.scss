@@ -1,43 +1,43 @@
 :host {
-  .timetable {
-    border-collapse: collapse;
-    td,
-    th {
-      background: white;
-    }
-    thead th {
-      position: sticky;
-      white-space: nowrap;
-    }
-    thead tr:nth-child(1) th {
-      top: 0;
-      z-index: 2;
+    .timetable {
+        border-collapse: collapse;
+        td,
+        th {
+            background: white;
+        }
+        thead th {
+            position: sticky;
+            white-space: nowrap;
+        }
+        thead tr:nth-child(1) th {
+            top: 0;
+            z-index: 2;
 
-      &:first-child {
-        z-index: 3;
-      }
-    }
-    thead tr:nth-child(2) th {
-      top: 1.5rem; /* 2行目は1行目の高さの位置に固定する */
-      z-index: 2;
+            &:first-child {
+                z-index: 3;
+            }
+        }
+        thead tr:nth-child(2) th {
+            top: 1.5rem; /* 2行目は1行目の高さの位置に固定する */
+            z-index: 2;
 
-      &:first-child {
-        z-index: 3;
-      }
-    }
-    thead tr:nth-child(3) th {
-      top: 3rem; /* 3行目は1〜2行目の高さの位置に固定する */
-      z-index: 2;
+            &:first-child {
+                z-index: 3;
+            }
+        }
+        thead tr:nth-child(3) th {
+            top: 3rem; /* 3行目は1〜2行目の高さの位置に固定する */
+            z-index: 2;
 
-      &:first-child {
-        z-index: 3;
-      }
+            &:first-child {
+                z-index: 3;
+            }
+        }
+        th:first-child {
+            background: white;
+            position: sticky;
+            left: 0;
+            z-index: 1;
+        }
     }
-    th:first-child {
-      background: white;
-      position: sticky;
-      left: 0;
-      z-index: 1;
-    }
-  }
 }

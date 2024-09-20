@@ -65,7 +65,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
 
     async downloadAsPng() {
         const name = `${dayjs(this.calendar().startDate, 'YYYY-MM-DD').format(
-            'YYYY年MM月DD日'
+            'YYYY年MM月DD日',
         )}改正 ${this.calendar().calendarName} ${
             this.operation().operationNumber
         }運 運用行路図`;
@@ -79,7 +79,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
 
         const getSvgUrl = (svgElementRef: ElementRef) => {
             const svgText = new XMLSerializer().serializeToString(
-                svgElementRef.nativeElement
+                svgElementRef.nativeElement,
             );
             const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
             const svgUrl = URL.createObjectURL(svgBlob);
@@ -124,7 +124,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
                 0,
                 64 + 16,
                 image.width,
-                image.height
+                image.height,
             );
 
             return canvas;

@@ -21,7 +21,7 @@ export class OperationQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<OperationDetailsDto> | OperationDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -35,16 +35,16 @@ export class OperationQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildOperationDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildOperationDetailsDto(o));
-                })
+                }),
             );
     }
 
     findOne(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -55,13 +55,13 @@ export class OperationQuery {
             .pipe(
                 map((data) => {
                     return buildOperationDetailsDto(data);
-                })
+                }),
             );
     }
 
     findOneWithCurrentPosition(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationCurrentPositionDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -70,7 +70,7 @@ export class OperationQuery {
                 this.apiUrl + '/' + operationId + '/current-position',
                 {
                     params: httpParams,
-                }
+                },
             )
             .pipe(
                 map((data) => {
@@ -78,23 +78,23 @@ export class OperationQuery {
                         operation: buildOperationDetailsDto(data.operation),
                         position: {
                             prev: buildTripOperationListDetailsDto(
-                                data.position.prev
+                                data.position.prev,
                             ),
                             current: buildTripOperationListDetailsDto(
-                                data.position.current
+                                data.position.current,
                             ),
                             next: buildTripOperationListDetailsDto(
-                                data.position.next
+                                data.position.next,
                             ),
                         },
                     };
-                })
+                }),
             );
     }
 
     findOneWithTrips(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationTripsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -103,17 +103,17 @@ export class OperationQuery {
                 this.apiUrl + '/' + operationId + '/trips',
                 {
                     params: httpParams,
-                }
+                },
             )
             .pipe(
                 map((data) => {
                     return {
                         operation: buildOperationDetailsDto(data.operation),
                         trips: data.trips.map((o) =>
-                            buildTripOperationListDetailsDto(o)
+                            buildTripOperationListDetailsDto(o),
                         ),
                     };
-                })
+                }),
             );
     }
 }

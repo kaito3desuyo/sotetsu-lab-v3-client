@@ -7,7 +7,7 @@ import { ETimetableAllLineStationViewMode } from '../interfaces/timetable-all-li
 
 function sortTrips(
     stations: StationDetailsDto[],
-    tripBlocks: TripBlockDetailsDto[]
+    tripBlocks: TripBlockDetailsDto[],
 ) {
     const unsorted: TripBlockDetailsDto[] = tripBlocks;
     const sorted: TripBlockDetailsDto[] = [];
@@ -28,7 +28,7 @@ function sortTrips(
                 sortedTrip: for (const latestTrip of latestTrips) {
                     station: for (const station of stations) {
                         const sortTargetTime = unsortedTrip.times.find(
-                            (time) => time.stationId === station.stationId
+                            (time) => time.stationId === station.stationId,
                         );
 
                         if (!sortTargetTime) {
@@ -36,7 +36,7 @@ function sortTrips(
                         }
 
                         const latestTripTime = latestTrip.times.find(
-                            (time) => time.stationId === station.stationId
+                            (time) => time.stationId === station.stationId,
                         );
 
                         if (!latestTripTime) {
@@ -46,19 +46,19 @@ function sortTrips(
                         const format = 'HH:mm:dd';
                         const latestTripTimeArrivalTime = dayjs(
                             latestTripTime.arrivalTime,
-                            format
+                            format,
                         ).add(latestTripTime.arrivalDays, 'days');
                         const sortTargetTripTimeArrivalTime = dayjs(
                             sortTargetTime.arrivalTime,
-                            format
+                            format,
                         ).add(sortTargetTime.arrivalDays, 'days');
                         const latestTripTimeDepartureTime = dayjs(
                             latestTripTime.departureTime,
-                            format
+                            format,
                         ).add(latestTripTime.departureDays, 'days');
                         const sortTargetTripTimeDepartureTime = dayjs(
                             sortTargetTime.departureTime,
-                            format
+                            format,
                         ).add(sortTargetTime.departureDays, 'days');
 
                         if (
@@ -167,7 +167,7 @@ function getTime({
         return o.stationId === station.stationId;
     });
     const stationIndex = stations.findIndex(
-        (o) => o.stationId === station.stationId
+        (o) => o.stationId === station.stationId,
     );
     const tripIndex = trips.findIndex((o) => o.tripId === trip.tripId);
     const viewMode = getViewMode(station, tripDirection);
@@ -196,7 +196,7 @@ function getTime({
                     minus1Trip.tripBlockId === trip.tripBlockId &&
                     // plus1Time &&
                     minus1Trip.times.some(
-                        (o) => o.stationId === station.stationId
+                        (o) => o.stationId === station.stationId,
                     )
                 ) {
                     return '⬎';
@@ -284,11 +284,11 @@ function getTime({
         if (minus1Station) {
             const minus1StationViewMode = getViewMode(
                 minus1Station,
-                tripDirection
+                tripDirection,
             );
             const minus1BorderSetting = getBorderSetting(
                 minus1Station,
-                tripDirection
+                tripDirection,
             );
             const minus1Time = trip.times.find((o) => {
                 return o.stationId === minus1Station.stationId;
@@ -315,7 +315,7 @@ function getTime({
             const minus1Trip = trips[tripIndex - 1];
             const plus1StationViewMode = getViewMode(
                 plus1Station,
-                tripDirection
+                tripDirection,
             );
             const plus1Time = trip.times.find((o) => {
                 return o.stationId === plus1Station.stationId;
@@ -325,7 +325,7 @@ function getTime({
                 minus1Trip &&
                 minus1Trip.tripBlockId === trip.tripBlockId &&
                 minus1Trip.times.some(
-                    (o) => o.stationId === plus1Station.stationId
+                    (o) => o.stationId === plus1Station.stationId,
                 ) &&
                 plus1StationViewMode !==
                     ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL &&
@@ -346,7 +346,7 @@ function getTime({
 
 function getViewMode(
     station: StationDetailsDto,
-    tripDirection: 0 | 1
+    tripDirection: 0 | 1,
 ): ETimetableAllLineStationViewMode {
     if (tripDirection === 0) {
         const departureAndArrival = [
@@ -413,10 +413,10 @@ function getViewMode(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL;
@@ -437,10 +437,10 @@ function getViewMode(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return ETimetableAllLineStationViewMode.ONLY_INBOUND_ARRIVAL;
@@ -512,10 +512,10 @@ function getViewMode(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL;
@@ -538,10 +538,10 @@ function getViewMode(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return ETimetableAllLineStationViewMode.ONLY_OUTBOUND_ARRIVAL;
@@ -555,7 +555,7 @@ function getViewMode(
 
 function getBorderSetting(
     station: StationDetailsDto,
-    tripDirection: 0 | 1
+    tripDirection: 0 | 1,
 ): boolean {
     if (tripDirection === 0) {
         const target = [
@@ -578,10 +578,10 @@ function getBorderSetting(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return true;
@@ -617,10 +617,10 @@ function getBorderSetting(
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
                         station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName
+                            (rsl) => rsl.route.routeName,
                         ),
-                        o.routeName
-                    )
+                        o.routeName,
+                    ),
             )
         ) {
             return true;

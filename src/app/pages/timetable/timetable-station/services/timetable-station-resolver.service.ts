@@ -29,9 +29,9 @@ export class TimetableStationResolverService {
                 forkJoin([
                     this.#timetableStationService.fetchTripBlocks(),
                     this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
-                ])
+                ]),
             ),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

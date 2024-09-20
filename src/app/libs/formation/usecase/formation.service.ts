@@ -11,14 +11,14 @@ export class FormationService {
 
     findManyBySpeficicDate(
         qb: RequestQueryBuilder,
-        params: { date: string }
+        params: { date: string },
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         return this.formationQuery.findManyBySpeficicDate(qb, params);
     }
 
     findManyBySpecificPeriod(
         qb: RequestQueryBuilder,
-        params: { startDate: string; endDate: string }
+        params: { startDate: string; endDate: string },
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         return this.formationQuery.findManyBySpecificPeriod(qb, params);
     }

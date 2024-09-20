@@ -12,7 +12,7 @@ export const OPERATION_ROUTE_DIAGRAM_ROUTES: Route[] = [
         path: '',
         loadComponent: () =>
             import('./operation-route-diagram.component').then(
-                (mod) => mod.OperationRouteDiagramComponent
+                (mod) => mod.OperationRouteDiagramComponent,
             ),
         providers: [
             OperationRouteDiagramService,

@@ -19,7 +19,7 @@ export class ServiceQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<ServiceDetailsDto> | ServiceDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -33,33 +33,33 @@ export class ServiceQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildServiceDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildServiceDetailsDto(o));
-                })
+                }),
             );
     }
 
     findOneWithStations(
         serviceId: ServiceDetailsDto['serviceId'],
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<ServiceStationsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
         return this.http
             .get<ServiceStationsModel>(
                 this.apiUrl + '/' + serviceId + '/stations',
-                { params: httpParams }
+                { params: httpParams },
             )
             .pipe(
                 map((data) => {
                     return {
                         service: buildServiceDetailsDto(data.service),
                         stations: data.stations.map((o) =>
-                            buildStationDetailsDto(o)
+                            buildStationDetailsDto(o),
                         ),
                     };
-                })
+                }),
             );
     }
 }

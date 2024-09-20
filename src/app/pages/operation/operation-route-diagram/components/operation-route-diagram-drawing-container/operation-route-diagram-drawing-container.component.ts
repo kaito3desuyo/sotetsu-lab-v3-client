@@ -15,33 +15,33 @@ import { OperationRouteDiagramDrawingPresentationalComponent } from '../operatio
 })
 export class OperationRouteDiagramDrawingContainerComponent {
     readonly #operationRouteDiagramService = inject(
-        OperationRouteDiagramService
+        OperationRouteDiagramService,
     );
     readonly #operationRouteDiagramStateQuery = inject(
-        OperationRouteDiagramStateQuery
+        OperationRouteDiagramStateQuery,
     );
 
     readonly calendar = toSignal(
-        this.#operationRouteDiagramStateQuery.calendar$
+        this.#operationRouteDiagramStateQuery.calendar$,
     );
     readonly operation = toSignal(
-        this.#operationRouteDiagramStateQuery.operation$
+        this.#operationRouteDiagramStateQuery.operation$,
     );
     readonly tripOperationLists = toSignal(
-        this.#operationRouteDiagramStateQuery.tripOperationLists$
+        this.#operationRouteDiagramStateQuery.tripOperationLists$,
     );
     readonly stations = toSignal(
-        this.#operationRouteDiagramStateQuery.stations$
+        this.#operationRouteDiagramStateQuery.stations$,
     );
 
     readonly drawingDisplayed = toSignal(
         this.#operationRouteDiagramStateQuery.operationId$.pipe(
-            map((id) => !!id)
-        )
+            map((id) => !!id),
+        ),
     );
 
     onReceiveClickNavigateTimetable(
-        ev: OperationRouteDiagramNavigateTimetable
+        ev: OperationRouteDiagramNavigateTimetable,
     ): void {
         this.#operationRouteDiagramService.emitNavigateTimetableEvent(ev);
     }

@@ -17,10 +17,10 @@ export class OperationRouteDiagramService {
     readonly #operationService = inject(OperationService);
     readonly #serviceListStateQuery = inject(ServiceListStateQuery);
     readonly #operationRouteDiagramStateStore = inject(
-        OperationRouteDiagramStateStore
+        OperationRouteDiagramStateStore,
     );
     readonly #operationRouteDiagramStateQuery = inject(
-        OperationRouteDiagramStateQuery
+        OperationRouteDiagramStateQuery,
     );
 
     readonly #navigateTimetable$ =
@@ -33,10 +33,10 @@ export class OperationRouteDiagramService {
         return this.#operationService.findOneWithTrips(operationId, qb).pipe(
             tap((operationTrips) => {
                 this.#operationRouteDiagramStateStore.setOperationTrips(
-                    operationTrips
+                    operationTrips,
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -54,10 +54,10 @@ export class OperationRouteDiagramService {
         return this.#serviceService.findOneWithStations(serviceId, qb).pipe(
             tap((data) => {
                 this.#operationRouteDiagramStateStore.setStations(
-                    data.stations
+                    data.stations,
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 

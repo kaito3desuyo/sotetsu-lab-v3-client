@@ -14,6 +14,6 @@ describe('Service: OperationPastTime', () => {
         [OperationPastTimeService],
         (service: OperationPastTimeService) => {
             expect(service).toBeTruthy();
-        }
+        },
     ));
 });

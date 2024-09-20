@@ -31,7 +31,7 @@ export class TimetableEditFormService {
         private readonly tripBlockService: TripBlockService,
         private readonly serviceListStateQuery: ServiceListStateQuery,
         private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
-        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery
+        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery,
     ) {}
 
     createTripBlocks(trips: CreateTripDto[]): Observable<void> {
@@ -87,7 +87,7 @@ export class TimetableEditFormService {
             tap((data) => {
                 this.timetableEditFormStateStore.setStations(data.stations);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -112,7 +112,7 @@ export class TimetableEditFormService {
             tap((operations: OperationDetailsDto[]) => {
                 this.timetableEditFormStateStore.setOperations(operations);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -132,7 +132,7 @@ export class TimetableEditFormService {
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.timetableEditFormStateStore.setTripClasses(tripClasses);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -159,11 +159,11 @@ export class TimetableEditFormService {
         return this.tripBlockService.findMany(qb).pipe(
             tap((tripBlocks: TripBlockDetailsDto[]) => {
                 this.timetableEditFormStateStore.setTripDirection(
-                    tripBlocks[0].trips[0].tripDirection as ETripDirection
+                    tripBlocks[0].trips[0].tripDirection as ETripDirection,
                 );
                 this.timetableEditFormStateStore.setTripBlocks(tripBlocks);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 

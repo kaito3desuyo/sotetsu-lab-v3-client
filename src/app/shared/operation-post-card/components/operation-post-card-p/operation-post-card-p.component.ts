@@ -77,7 +77,7 @@ export class OperationPostCardPComponent {
     constructor() {
         this.state.connect(
             'agencies',
-            this.onChangedInputAgencies$.asObservable()
+            this.onChangedInputAgencies$.asObservable(),
         );
 
         this.state.hold(
@@ -91,7 +91,7 @@ export class OperationPostCardPComponent {
                         this.sightingForm.get('sightingTime').enable();
                         break;
                 }
-            }
+            },
         );
 
         this.state.hold(
@@ -104,7 +104,7 @@ export class OperationPostCardPComponent {
                     timeSetting: 'currentTime',
                     sightingTime: '',
                 });
-            }
+            },
         );
 
         this.state.hold(this.onSubmittedSighting$.asObservable(), () => {

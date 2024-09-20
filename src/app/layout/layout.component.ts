@@ -31,7 +31,7 @@ export class LayoutComponent implements OnDestroy {
                 tap(() => {
                     this.toggle();
                 }),
-                takeUntil(this._unsubscriber$.asObservable())
+                takeUntil(this._unsubscriber$.asObservable()),
             )
             .subscribe();
     }
@@ -45,7 +45,7 @@ export class LayoutComponent implements OnDestroy {
                 .pipe(
                     filter((bool) => !!bool),
                     take(1),
-                    last()
+                    last(),
                 )
                 .toPromise();
             this.isOpen = next;

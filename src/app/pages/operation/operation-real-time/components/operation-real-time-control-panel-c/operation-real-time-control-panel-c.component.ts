@@ -20,10 +20,10 @@ import { OperationRealTimeControlPanelPComponent } from '../operation-real-time-
 export class OperationRealTimeControlPanelCComponent {
     private readonly state = inject(RxState);
     private readonly operationRealTimeStateStore = inject(
-        OperationRealTimeStateStore
+        OperationRealTimeStateStore,
     );
     private readonly operationRealTimeStateQuery = inject(
-        OperationRealTimeStateQuery
+        OperationRealTimeStateQuery,
     );
 
     readonly isEnableAutoReload$ =
@@ -43,9 +43,9 @@ export class OperationRealTimeControlPanelCComponent {
             this.onToggledVisibleCurrentPosition$.asObservable(),
             (bool) => {
                 this.operationRealTimeStateStore.setIsVisibleCurrentPosition(
-                    bool
+                    bool,
                 );
-            }
+            },
         );
     }
 }

@@ -17,13 +17,13 @@ export class TrackByPipe implements PipeTransform {
     constructor(private readonly logger: NGXLogger) {}
 
     transform(
-        propertyName: string | 'this'
+        propertyName: string | 'this',
     ): <T>(index: number, item: T) => any {
         this.logger.debug(`Getting track-by for [${propertyName}].`);
 
         if (!has(cache, propertyName)) {
             set(cache, propertyName, function trackByProperty<
-                T
+                T,
             >(index: number, item: T): any {
                 if (propertyName === 'this') {
                     return item;

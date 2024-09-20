@@ -20,7 +20,7 @@ export class OperationSearchCardStateStore extends Store<OperationSearchCardStat
     constructor(
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
-        private readonly todaysOperationListStateQuery: TodaysOperationListStateQuery
+        private readonly todaysOperationListStateQuery: TodaysOperationListStateQuery,
     ) {
         super(
             {
@@ -29,7 +29,7 @@ export class OperationSearchCardStateStore extends Store<OperationSearchCardStat
                 calendars: calendarListStateQuery.calendars,
                 operations: todaysOperationListStateQuery.todaysOperations,
             },
-            { name: `OperationSearchCard-${guid()}` }
+            { name: `OperationSearchCard-${guid()}` },
         );
     }
 
@@ -62,9 +62,9 @@ export class OperationSearchCardStateQuery extends Query<OperationSearchCardStat
             [...operations].sort(
                 (a, b) =>
                     Number(generateOperationSortNumber(a.operationNumber)) -
-                    Number(generateOperationSortNumber(b.operationNumber))
-            )
-        )
+                    Number(generateOperationSortNumber(b.operationNumber)),
+            ),
+        ),
     );
 
     get calendarId(): CalendarDetailsDto['calendarId'] {

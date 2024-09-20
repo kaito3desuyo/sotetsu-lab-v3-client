@@ -12,7 +12,7 @@ export const TIMETABLE_STATION_ROUTES: Routes = [
         path: '',
         loadComponent: () =>
             import('./timetable-station.component').then(
-                (mod) => mod.TimetableStationComponent
+                (mod) => mod.TimetableStationComponent,
             ),
         providers: [
             TimetableStationService,

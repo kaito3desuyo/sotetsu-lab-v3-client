@@ -22,33 +22,33 @@ import { OperationRouteDiagramDrawingContainerComponent } from '../operation-rou
 export class OperationRouteDiagramMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);
     readonly #operationRouteDiagramStateQuery = inject(
-        OperationRouteDiagramStateQuery
+        OperationRouteDiagramStateQuery,
     );
     readonly #operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore
+        OperationSearchCardStateStore,
     );
 
     constructor() {
         this.#state.hold(
             this.#operationRouteDiagramStateQuery.calendar$.pipe(
-                filter((calendar) => !!calendar)
+                filter((calendar) => !!calendar),
             ),
             (calendar) => {
                 this.#operationSearchCardStateStore.setCalendarId(
-                    calendar.calendarId
+                    calendar.calendarId,
                 );
-            }
+            },
         );
 
         this.#state.hold(
             this.#operationRouteDiagramStateQuery.operation$.pipe(
-                filter((operation) => !!operation)
+                filter((operation) => !!operation),
             ),
             (operation) => {
                 this.#operationSearchCardStateStore.setOperationId(
-                    operation.operationId
+                    operation.operationId,
                 );
-            }
+            },
         );
     }
 }

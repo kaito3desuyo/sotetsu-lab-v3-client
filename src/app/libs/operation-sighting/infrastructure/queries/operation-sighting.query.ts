@@ -21,7 +21,7 @@ export class OperationSightingQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -37,19 +37,19 @@ export class OperationSightingQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) =>
-                                  buildOperationSightingDetailsDto(o)
+                                  buildOperationSightingDetailsDto(o),
                               ),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) =>
-                              buildOperationSightingDetailsDto(o)
+                              buildOperationSightingDetailsDto(o),
                           );
-                })
+                }),
             );
     }
 
     findManyLatestGroupByOperation(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -65,19 +65,19 @@ export class OperationSightingQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) =>
-                                  buildOperationSightingDetailsDto(o)
+                                  buildOperationSightingDetailsDto(o),
                               ),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) =>
-                              buildOperationSightingDetailsDto(o)
+                              buildOperationSightingDetailsDto(o),
                           );
-                })
+                }),
             );
     }
 
     findManyLatestGroupByFormation(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -93,14 +93,14 @@ export class OperationSightingQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) =>
-                                  buildOperationSightingDetailsDto(o)
+                                  buildOperationSightingDetailsDto(o),
                               ),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) =>
-                              buildOperationSightingDetailsDto(o)
+                              buildOperationSightingDetailsDto(o),
                           );
-                })
+                }),
             );
     }
 
@@ -112,14 +112,14 @@ export class OperationSightingQuery {
         return this.http
             .get<OperationSightingTimeCrossSectionModel>(
                 `${this.apiUrl}/time-cross-section/from-operation-number/${operationNumber}`,
-                { observe: 'response' }
+                { observe: 'response' },
             )
             .pipe(
                 map((res) => {
                     return OperationSightingDtoBuilder.toTimeCrossSectionDto(
-                        res.body
+                        res.body,
                     );
-                })
+                }),
             );
     }
 
@@ -131,14 +131,14 @@ export class OperationSightingQuery {
         return this.http
             .get<OperationSightingTimeCrossSectionModel>(
                 `${this.apiUrl}/time-cross-section/from-formation-number/${formationNumber}`,
-                { observe: 'response' }
+                { observe: 'response' },
             )
             .pipe(
                 map((res) => {
                     return OperationSightingDtoBuilder.toTimeCrossSectionDto(
-                        res.body
+                        res.body,
                     );
-                })
+                }),
             );
     }
 }

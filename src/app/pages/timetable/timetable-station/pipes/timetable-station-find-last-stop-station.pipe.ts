@@ -11,12 +11,12 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 export class TimetableStationFindLastStopStationPipe implements PipeTransform {
     transform(trip: TripDetailsDto): StationDetailsDto['stationId'] {
         const searchingTrip = trip.tripBlock.trips.find(
-            (o) => o.tripId === trip.tripId
+            (o) => o.tripId === trip.tripId,
         );
 
         const searchingTripFinalStopTime = maxBy(
             searchingTrip.times,
-            (o) => o.stopSequence
+            (o) => o.stopSequence,
         );
 
         // 検索対象のtripの後に継続して運行されるtripを探す
@@ -24,7 +24,7 @@ export class TimetableStationFindLastStopStationPipe implements PipeTransform {
             // 走査中のtripの最初のtime
             const firstTripTimeInTripBlock = minBy(
                 o.times,
-                (o) => o.stopSequence
+                (o) => o.stopSequence,
             );
 
             return (
@@ -34,11 +34,11 @@ export class TimetableStationFindLastStopStationPipe implements PipeTransform {
                     .isSameOrAfter(
                         dayjs(
                             searchingTripFinalStopTime.arrivalTime,
-                            'HH:mm:ss'
+                            'HH:mm:ss',
                         ).add(
                             searchingTripFinalStopTime.arrivalDays - 1,
-                            'days'
-                        )
+                            'days',
+                        ),
                     )
             );
         });
@@ -52,7 +52,7 @@ export class TimetableStationFindLastStopStationPipe implements PipeTransform {
         if (afterTrips.length === 1) {
             const afterTripsFinalStopTime = maxBy(
                 afterTrips[0].times,
-                (o) => o.stopSequence
+                (o) => o.stopSequence,
             );
 
             return afterTripsFinalStopTime.stationId;
@@ -64,7 +64,7 @@ export class TimetableStationFindLastStopStationPipe implements PipeTransform {
             (o) =>
                 dayjs(o.arrivalTime, 'HH:mm:ss')
                     .add(o.arrivalDays - 1, 'days')
-                    .unix()
+                    .unix(),
         );
 
         return afterTripsFinalStopTime.stationId;

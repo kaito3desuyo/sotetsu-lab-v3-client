@@ -36,13 +36,13 @@ export class OperationRealTimeMainCComponent {
     private readonly state = inject(RxState);
     private readonly socketService = inject(SocketService);
     private readonly operationRealTimeService = inject(
-        OperationRealTimeService
+        OperationRealTimeService,
     );
     private readonly operationPostCardService = inject(
-        OperationPostCardService
+        OperationPostCardService,
     );
     private readonly operationRealTimeStateQuery = inject(
-        OperationRealTimeStateQuery
+        OperationRealTimeStateQuery,
     );
 
     constructor() {
@@ -50,13 +50,13 @@ export class OperationRealTimeMainCComponent {
         this.state.hold(
             interval(1000 * 1).pipe(
                 switchMap(
-                    () => this.operationRealTimeStateQuery.isEnableAutoReload$
+                    () => this.operationRealTimeStateQuery.isEnableAutoReload$,
                 ),
                 filter((bool) => !!bool),
                 switchMap(() =>
-                    this.operationRealTimeService.fetchOperationCurrentPosition()
-                )
-            )
+                    this.operationRealTimeService.fetchOperationCurrentPosition(),
+                ),
+            ),
         );
 
         // 自分が運用目撃情報を投稿したとき
@@ -68,9 +68,9 @@ export class OperationRealTimeMainCComponent {
                         forkJoin([
                             this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
                             this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
-                        ])
-                    )
-                )
+                        ]),
+                    ),
+                ),
         );
 
         // 他人が運用目撃情報を投稿したとき
@@ -88,12 +88,12 @@ export class OperationRealTimeMainCComponent {
                         tap(() => {
                             this.notification.open(
                                 'データが更新されました',
-                                'OK'
+                                'OK',
                             );
-                        })
+                        }),
                     );
-                })
-            )
+                }),
+            ),
         );
     }
 }

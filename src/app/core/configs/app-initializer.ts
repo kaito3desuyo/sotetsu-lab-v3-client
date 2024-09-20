@@ -19,7 +19,7 @@ export const AppInitializerProvider: Provider = {
             serviceListStateStore: ServiceListStateStore,
             todaysCalendarListStateStore: TodaysCalendarListStateStore,
             todaysOperationListStateStore: TodaysOperationListStateStore,
-            todaysFormationListStateStore: TodaysFormationListStateStore
+            todaysFormationListStateStore: TodaysFormationListStateStore,
         ) =>
         async () => {
             await tokenStateStore.fetch().toPromise();

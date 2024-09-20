@@ -14,7 +14,7 @@ import {
 export class ConfirmDialogComponent {
     constructor(
         @Inject(MAT_DIALOG_DATA) private readonly data: IConfirmDialogData,
-        private readonly confirmDialogStateStore: ConfirmDialogStateStore
+        private readonly confirmDialogStateStore: ConfirmDialogStateStore,
     ) {
         this.confirmDialogStateStore.setData(this.data);
     }

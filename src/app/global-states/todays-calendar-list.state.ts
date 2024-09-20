@@ -47,7 +47,7 @@ export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarList
                 tap((calendars: CalendarDetailsDto[]) => {
                     this.set(calendars);
                 }),
-                map(() => undefined)
+                map(() => undefined),
             );
     }
 }

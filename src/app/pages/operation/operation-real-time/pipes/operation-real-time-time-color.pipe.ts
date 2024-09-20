@@ -13,8 +13,8 @@ export class OperationRealTimeTimeColorPipe implements PipeTransform {
                 dayCount === 0
                     ? '#f44336'
                     : dayCount === 1
-                    ? '#4caf50'
-                    : 'initial',
+                      ? '#4caf50'
+                      : 'initial',
         };
     }
 }

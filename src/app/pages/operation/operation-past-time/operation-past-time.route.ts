@@ -12,7 +12,7 @@ export const OPERATION_PAST_TIME_ROUTES: Route[] = [
         path: '',
         loadComponent: () =>
             import('./operation-past-time.component').then(
-                (mod) => mod.OperationPastTimeComponent
+                (mod) => mod.OperationPastTimeComponent,
             ),
         providers: [
             OperationPastTimeService,

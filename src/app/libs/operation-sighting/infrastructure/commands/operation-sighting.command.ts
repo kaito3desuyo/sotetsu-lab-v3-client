@@ -21,10 +21,10 @@ export class OperationSightingCommand {
             .post<OperationSightingModel>(
                 this.apiUrl,
                 OperationSightingModelBuilder.fromCreateDto(body),
-                { params: httpParams }
+                { params: httpParams },
             )
             .pipe(
-                map((model) => OperationSightingDtoBuilder.toDetailsDto(model))
+                map((model) => OperationSightingDtoBuilder.toDetailsDto(model)),
             );
     }
 }

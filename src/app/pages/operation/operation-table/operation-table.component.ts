@@ -33,7 +33,7 @@ export class OperationTableComponent {
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            }
+            },
         );
 
         this.#state.hold(
@@ -43,7 +43,7 @@ export class OperationTableComponent {
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            }
+            },
         );
     }
 }

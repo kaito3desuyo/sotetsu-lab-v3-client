@@ -18,7 +18,9 @@
     }
 
     .red {
-        color: mat.m2-get-color-from-palette(mat.m2-define-palette(mat.$m2-red-palette));
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-red-palette)
+        );
     }
 
     .teal {

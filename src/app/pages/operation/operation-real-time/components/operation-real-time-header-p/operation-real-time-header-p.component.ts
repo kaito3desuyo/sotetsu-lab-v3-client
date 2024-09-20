@@ -40,7 +40,7 @@ export class OperationRealTimeHeaderPComponent {
     constructor() {
         this.state.connect(
             'finalUpdateTime',
-            this.onChangedInputFinalUpdateTime$.asObservable()
+            this.onChangedInputFinalUpdateTime$.asObservable(),
         );
     }
 }

@@ -7,24 +7,24 @@ import { OperationSightingTimeCrossSectionModel } from '../models/operation-sigh
 import { OperationSightingModel } from '../models/operation-sighting.model';
 
 export function buildOperationSightingDetailsDto(
-    model: OperationSightingModel
+    model: OperationSightingModel,
 ): OperationSightingDetailsDto {
     const plainObject = classToPlain(model, classTransformerOptions);
     return plainToClass(
         OperationSightingDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }
 
 export const OperationSightingDtoBuilder = {
     toDetailsDto: (
-        model: OperationSightingModel
+        model: OperationSightingModel,
     ): OperationSightingDetailsDto => {
         return classTransformer(model, OperationSightingDetailsDto);
     },
     toTimeCrossSectionDto: (
-        model: OperationSightingTimeCrossSectionModel
+        model: OperationSightingTimeCrossSectionModel,
     ): OperationSightingTimeCrossSectionDto => {
         return classTransformer(model, OperationSightingTimeCrossSectionDto);
     },

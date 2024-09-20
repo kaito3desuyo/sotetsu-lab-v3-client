@@ -108,13 +108,13 @@ export class TimetableStationService {
             tap((data: TripDetailsDto[]) => {
                 this.#timetableStationStateStore.setTrips(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
     fetchTripBlocks(): Observable<void> {
         const tripBlockIds = this.#timetableStationStateQuery.trips.map(
-            (o) => o.tripBlockId
+            (o) => o.tripBlockId,
         );
 
         const qb = new RequestQueryBuilder().setJoin([
@@ -123,12 +123,12 @@ export class TimetableStationService {
         ]);
 
         return forkJoin(
-            tripBlockIds.map((id) => this.#tripBlockService.findOne(id, qb))
+            tripBlockIds.map((id) => this.#tripBlockService.findOne(id, qb)),
         ).pipe(
             tap((data: TripBlockDetailsDto[]) => {
                 this.#timetableStationStateStore.setTripBlocks(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -139,7 +139,7 @@ export class TimetableStationService {
             tap((data: TripClassDetailsDto[]) => {
                 this.#timetableStationStateStore.setTripClasses(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -150,7 +150,7 @@ export class TimetableStationService {
             tap((data: StationDetailsDto[]) => {
                 this.#timetableStationStateStore.setStations(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -174,29 +174,29 @@ export class TimetableStationService {
             tap((data: OperationDetailsDto[]) => {
                 this.#timetableStationStateStore.setOperations(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
     fetchOperationSightingTimeCrossSections(): Observable<void> {
         const operationIds = this.#timetableStationStateQuery.operationIds;
         const operations = this.#timetableStationStateQuery.operations.filter(
-            (o) => operationIds.includes(o.operationId)
+            (o) => operationIds.includes(o.operationId),
         );
 
         return forkJoin(
             operations.map(({ operationNumber }) =>
                 this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
-                    { operationNumber }
-                )
-            )
+                    { operationNumber },
+                ),
+            ),
         ).pipe(
             tap((data) => {
                 this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
-                    data
+                    data,
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

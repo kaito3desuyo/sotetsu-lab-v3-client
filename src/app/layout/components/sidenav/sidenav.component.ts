@@ -48,10 +48,10 @@ export class SidenavComponent {
     private readonly fb = inject(FormBuilder);
     private readonly state = inject<RxState<State>>(RxState);
     private readonly todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery
+        TodaysCalendarListStateQuery,
     );
     private readonly routeStationListStateQuery = inject(
-        RouteStationListStateQuery
+        RouteStationListStateQuery,
     );
 
     readonly stationId = this.fb.control<string>('');
@@ -67,12 +67,12 @@ export class SidenavComponent {
 
         this.state.connect(
             'todaysCalendarId',
-            this.todaysCalendarListStateQuery.todaysCalendarId$
+            this.todaysCalendarListStateQuery.todaysCalendarId$,
         );
 
         this.state.connect(
             'routeStations',
-            this.routeStationListStateQuery.routeStations$
+            this.routeStationListStateQuery.routeStations$,
         );
 
         this.state.connect('selectedStationId', this.stationId.valueChanges);
@@ -81,7 +81,7 @@ export class SidenavComponent {
     }
 
     private _generateTimetableLink(
-        tripDirection: 0 | 1
+        tripDirection: 0 | 1,
     ): Observable<(string | { [key: string]: any })[]> {
         return combineLatest([
             this.state.select('todaysCalendarId'),
@@ -108,7 +108,7 @@ export class SidenavComponent {
                         },
                     ];
                 }
-            })
+            }),
         );
     }
 }

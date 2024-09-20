@@ -10,7 +10,7 @@ export class TripService {
     constructor(private readonly tripQuery: TripQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<TripDetailsDto> | TripDetailsDto[]> {
         return this.tripQuery.findMany(qb);
     }

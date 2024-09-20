@@ -4,85 +4,104 @@
             class="tw-h-16 [&>th+th]:tw-pl-4 [&>th:first-child]:tw-pl-6 [&>th:last-child]:tw-pr-6"
         >
             @for (column of displayedColumns; track column) {
-            <th
-                class="tw-p-0 tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
-            >
-                {{ operationRealTimeTableColumnLabel[column] }}
-            </th>
+                <th
+                    class="tw-p-0 tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
+                >
+                    {{ operationRealTimeTableColumnLabel[column] }}
+                </th>
             }
         </tr>
     </thead>
     <tbody>
         @for (row of data; track trackBy(row)) {
-        <tr
-            class="tw-h-12 [&>td+td]:tw-pl-4 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6"
-        >
-            @for (column of displayedColumns; track column) {
-            <td
-                class="tw-border-0 tw-border-t tw-border-solid tw-border-t-grey-300 tw-p-0"
+            <tr
+                class="tw-h-12 [&>td+td]:tw-pl-4 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6"
             >
-                @if ( column === operationRealTimeTableColumn.OPERATION_NUMBER )
-                {
-                <app-operation-number-link
-                    [operation]="
-                        row.operation ||
-                        row.timeCrossSection?.expectedSighting?.operation
-                    "
-                    [dayCountFromToday]="
-                        primaryKey !==
-                        operationRealTimeTableColumn.OPERATION_NUMBER
-                            ? (row.timeCrossSection?.latestSighting
-                                  ?.sightingTime | calculateDayCountFromToday)
-                            : undefined
-                    "
-                ></app-operation-number-link>
-                } @if ( column ===
-                operationRealTimeTableColumn.FORMATION_NUMBER) {
-                <app-formation-number-link
-                    [formation]="
-                        row.formation ||
-                        row.timeCrossSection?.expectedSighting?.formation
-                    "
-                    [dayCountFromToday]="
-                        primaryKey !==
-                        operationRealTimeTableColumn.FORMATION_NUMBER
-                            ? (row.timeCrossSection?.latestSighting
-                                  ?.sightingTime | calculateDayCountFromToday)
-                            : undefined
-                    "
-                ></app-formation-number-link>
-                } @if ( column ===
-                operationRealTimeTableColumn.CURRENT_POSITION) {
-                <app-current-position-link
-                    [todaysCalendarId]="todaysCalendarId"
-                    [stations]="stations"
-                    [tripClasses]="tripClasses"
-                    [currentPosition]="row.currentPosition"
-                ></app-current-position-link>
-                } @if (column === operationRealTimeTableColumn.SIGHTING_TIME) {
-                <ng-container
-                    *ngTemplateOutlet="
-                        time;
-                        context: {
-                            time: row.timeCrossSection?.latestSighting
-                                ?.sightingTime
+                @for (column of displayedColumns; track column) {
+                    <td
+                        class="tw-border-0 tw-border-t tw-border-solid tw-border-t-grey-300 tw-p-0"
+                    >
+                        @if (
+                            column ===
+                            operationRealTimeTableColumn.OPERATION_NUMBER
+                        ) {
+                            <app-operation-number-link
+                                [operation]="
+                                    row.operation ||
+                                    row.timeCrossSection?.expectedSighting
+                                        ?.operation
+                                "
+                                [dayCountFromToday]="
+                                    primaryKey !==
+                                    operationRealTimeTableColumn.OPERATION_NUMBER
+                                        ? (row.timeCrossSection?.latestSighting
+                                              ?.sightingTime
+                                          | calculateDayCountFromToday)
+                                        : undefined
+                                "
+                            ></app-operation-number-link>
                         }
-                    "
-                ></ng-container>
-                } @if (column === operationRealTimeTableColumn.UPDATED_AT) {
-                <ng-container
-                    *ngTemplateOutlet="
-                        time;
-                        context: {
-                            time: row.timeCrossSection?.latestSighting
-                                ?.updatedAt
+                        @if (
+                            column ===
+                            operationRealTimeTableColumn.FORMATION_NUMBER
+                        ) {
+                            <app-formation-number-link
+                                [formation]="
+                                    row.formation ||
+                                    row.timeCrossSection?.expectedSighting
+                                        ?.formation
+                                "
+                                [dayCountFromToday]="
+                                    primaryKey !==
+                                    operationRealTimeTableColumn.FORMATION_NUMBER
+                                        ? (row.timeCrossSection?.latestSighting
+                                              ?.sightingTime
+                                          | calculateDayCountFromToday)
+                                        : undefined
+                                "
+                            ></app-formation-number-link>
                         }
-                    "
-                ></ng-container>
+                        @if (
+                            column ===
+                            operationRealTimeTableColumn.CURRENT_POSITION
+                        ) {
+                            <app-current-position-link
+                                [todaysCalendarId]="todaysCalendarId"
+                                [stations]="stations"
+                                [tripClasses]="tripClasses"
+                                [currentPosition]="row.currentPosition"
+                            ></app-current-position-link>
+                        }
+                        @if (
+                            column ===
+                            operationRealTimeTableColumn.SIGHTING_TIME
+                        ) {
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    time;
+                                    context: {
+                                        time: row.timeCrossSection
+                                            ?.latestSighting?.sightingTime,
+                                    }
+                                "
+                            ></ng-container>
+                        }
+                        @if (
+                            column === operationRealTimeTableColumn.UPDATED_AT
+                        ) {
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    time;
+                                    context: {
+                                        time: row.timeCrossSection
+                                            ?.latestSighting?.updatedAt,
+                                    }
+                                "
+                            ></ng-container>
+                        }
+                    </td>
                 }
-            </td>
-            }
-        </tr>
+            </tr>
         }
     </tbody>
 </table>
@@ -95,10 +114,10 @@
                 (time | calculateDayCountFromToday) === 0
                     ? '#f44336'
                     : (time | calculateDayCountFromToday) === 1
-                    ? '#4caf50'
-                    : 'initial'
+                      ? '#4caf50'
+                      : 'initial',
         }"
     >
-        {{ time | dayjs : { format: 'YYYY/MM/DD HH:mm:ss' } }}
+        {{ time | dayjs: { format: 'YYYY/MM/DD HH:mm:ss' } }}
     </span>
 </ng-template>

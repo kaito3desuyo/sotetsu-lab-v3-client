@@ -16,7 +16,7 @@ export class StationQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<StationDetailsDto> | StationDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -30,16 +30,16 @@ export class StationQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildStationDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildStationDetailsDto(o));
-                })
+                }),
             );
     }
 
     findOne(
         stationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<StationDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -50,7 +50,7 @@ export class StationQuery {
             .pipe(
                 map((data) => {
                     return buildStationDetailsDto(data);
-                })
+                }),
             );
     }
 }

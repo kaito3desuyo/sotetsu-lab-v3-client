@@ -8,6 +8,6 @@ export function buildStationDetailsDto(model: StationModel): StationDetailsDto {
     return plainToClass(
         StationDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

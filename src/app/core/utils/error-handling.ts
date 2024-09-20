@@ -37,7 +37,7 @@ export class Failure<E extends Error> {
 
 export async function tryCatchAsync<T, E extends Error>(
     fn: Observable<T> | Promise<T>,
-    onCatch: (e: unknown) => E = (e) => e as E
+    onCatch: (e: unknown) => E = (e) => e as E,
 ): PromiseResult<T, E> {
     try {
         if (isObservable(fn)) {

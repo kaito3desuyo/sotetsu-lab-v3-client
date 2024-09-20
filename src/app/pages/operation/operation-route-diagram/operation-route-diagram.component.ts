@@ -26,10 +26,10 @@ export class OperationRouteDiagramComponent {
     readonly #titleService = inject(TitleService);
     readonly #operationSearchCardService = inject(OperationSearchCardService);
     readonly #operationRouteDiagramService = inject(
-        OperationRouteDiagramService
+        OperationRouteDiagramService,
     );
     readonly #operationRouteDiagramStateQuery = inject(
-        OperationRouteDiagramStateQuery
+        OperationRouteDiagramStateQuery,
     );
 
     constructor() {
@@ -44,7 +44,7 @@ export class OperationRouteDiagramComponent {
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            }
+            },
         );
 
         this.#state.hold(
@@ -54,7 +54,7 @@ export class OperationRouteDiagramComponent {
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            }
+            },
         );
 
         this.#state.hold(
@@ -70,7 +70,7 @@ export class OperationRouteDiagramComponent {
                         trip_direction: ev.tripDirection,
                     },
                 ]);
-            }
+            },
         );
     }
 }

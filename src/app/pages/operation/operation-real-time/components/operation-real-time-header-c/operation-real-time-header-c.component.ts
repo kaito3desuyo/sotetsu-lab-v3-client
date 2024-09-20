@@ -12,7 +12,7 @@ import { OperationRealTimeHeaderPComponent } from '../operation-real-time-header
 })
 export class OperationRealTimeHeaderCComponent {
     private readonly operationRealTimeStateQuery = inject(
-        OperationRealTimeStateQuery
+        OperationRealTimeStateQuery,
     );
 
     readonly finalUpdateTime$ =

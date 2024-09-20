@@ -8,6 +8,6 @@ export function buildServiceDetailsDto(model: ServiceModel): ServiceDetailsDto {
     return plainToClass(
         ServiceDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

@@ -8,10 +8,10 @@ import { ETimetableEditFormMode } from 'src/app/shared/timetable-edit-form/speci
 import { TimetableEditFormStateStore } from 'src/app/shared/timetable-edit-form/states/timetable-edit-form.state';
 
 @Injectable()
-export class TimetableAddResolverService  {
+export class TimetableAddResolverService {
     constructor(
         private readonly timetableEditFormService: TimetableEditFormService,
-        private readonly timetableEditFormStateStore: TimetableEditFormStateStore
+        private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
     ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
@@ -21,7 +21,7 @@ export class TimetableAddResolverService  {
         this.timetableEditFormStateStore.setCalendarId(calendarId);
         this.timetableEditFormStateStore.setMode(ETimetableEditFormMode.ADD);
         this.timetableEditFormStateStore.setTripDirection(
-            +tripDirection as ETripDirection
+            +tripDirection as ETripDirection,
         );
 
         return forkJoin([

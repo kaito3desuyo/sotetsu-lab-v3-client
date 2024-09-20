@@ -3,11 +3,11 @@
         class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-px-4"
         [ngClass]="{
             weekday: isWeekday$ | push,
-            holiday: isHoliday$ | push
+            holiday: isHoliday$ | push,
         }"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-            {{ calendarStartDate$ | push | date : 'yyyy年MM月dd日' }}
+            {{ calendarStartDate$ | push | date: 'yyyy年MM月dd日' }}
             改正<br />
             {{ calendarName$ | push }}
             {{ tripDirectionLabel$ | push }}時刻表
@@ -223,7 +223,7 @@
                                         ? (station.stationName.length - 4) *
                                           16 *
                                           -1
-                                        : 0) + 'px'
+                                        : 0) + 'px',
                             }"
                         >
                             {{ station.stationName }}

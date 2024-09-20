@@ -9,13 +9,11 @@ import {
 import { TimetableAllLineService } from './timetable-all-line.service';
 
 @Injectable()
-export class TimetableAllLineResolverService
-    
-{
+export class TimetableAllLineResolverService {
     constructor(
         private readonly timetableAllLineService: TimetableAllLineService,
         private readonly timetableAllLineStateStore: TimetableAllLineStateStore,
-        private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery
+        private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
     ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {

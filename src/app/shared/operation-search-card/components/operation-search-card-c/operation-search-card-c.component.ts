@@ -22,13 +22,13 @@ import { OperationSearchCardPComponent } from '../operation-search-card-p/operat
 export class OperationSearchCardCComponent {
     private readonly state = inject(RxState);
     private readonly operationSearchCardService = inject(
-        OperationSearchCardService
+        OperationSearchCardService,
     );
     private readonly operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore
+        OperationSearchCardStateStore,
     );
     private readonly operationSearchCardStateQuery = inject(
-        OperationSearchCardStateQuery
+        OperationSearchCardStateQuery,
     );
 
     readonly calendarId$ = this.operationSearchCardStateQuery.calendarId$;
@@ -40,21 +40,21 @@ export class OperationSearchCardCComponent {
         this.state.hold(
             this.calendarId$.pipe(
                 switchMap(() =>
-                    this.operationSearchCardService.fetchOperations()
-                )
-            )
+                    this.operationSearchCardService.fetchOperations(),
+                ),
+            ),
         );
     }
 
     onReceiveSelectCalendarId(
-        calendarId: CalendarDetailsDto['calendarId']
+        calendarId: CalendarDetailsDto['calendarId'],
     ): void {
         this.operationSearchCardStateStore.setCalendarId(calendarId);
         this.operationSearchCardStateStore.setOperationId(null);
     }
 
     onReceiveSelectOperationId(
-        operationId: OperationDetailsDto['operationId']
+        operationId: OperationDetailsDto['operationId'],
     ): void {
         this.operationSearchCardStateStore.setOperationId(operationId);
     }
@@ -65,14 +65,14 @@ export class OperationSearchCardCComponent {
 
         if (operationId) {
             this.operationSearchCardService.emitSearchOperationRouteDiagramEvent(
-                operationId
+                operationId,
             );
             return;
         }
 
         if (calendarId) {
             this.operationSearchCardService.emitSearchOperationTableEvent(
-                calendarId
+                calendarId,
             );
             return;
         }

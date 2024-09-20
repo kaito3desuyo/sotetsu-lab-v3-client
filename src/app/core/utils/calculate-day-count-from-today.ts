@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 export function calculateDayCountFromToday(dateTime: string): number {
     const target = dayjs(dateTime).subtract(
         dayjs(dateTime).hour() < 4 ? 1 : 0,
-        'days'
+        'days',
     );
     const now = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
 

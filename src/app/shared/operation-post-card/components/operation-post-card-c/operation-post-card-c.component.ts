@@ -22,7 +22,7 @@ export class OperationPostCardCComponent {
     private readonly notification = inject(NotificationService);
     private readonly agencyListStateQuery = inject(AgencyListStateQuery);
     private readonly operationPostCardService = inject(
-        OperationPostCardService
+        OperationPostCardService,
     );
 
     readonly agencies$ = this.agencyListStateQuery.agencies$;
@@ -30,12 +30,12 @@ export class OperationPostCardCComponent {
         this.operationPostCardService.receiveSubmitOperationSightingEvent();
 
     async onReceiveSubmitSighting(
-        formValue: IOperationPostCardForm
+        formValue: IOperationPostCardForm,
     ): Promise<void> {
         this.loading.open();
 
         const result = await tryCatchAsync(
-            this.operationPostCardService.addOperationSighting(formValue)
+            this.operationPostCardService.addOperationSighting(formValue),
         );
 
         this.loading.close();

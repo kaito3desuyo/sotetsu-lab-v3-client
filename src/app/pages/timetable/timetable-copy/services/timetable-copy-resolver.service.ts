@@ -7,10 +7,10 @@ import { ETimetableEditFormMode } from 'src/app/shared/timetable-edit-form/speci
 import { TimetableEditFormStateStore } from 'src/app/shared/timetable-edit-form/states/timetable-edit-form.state';
 
 @Injectable()
-export class TimetableCopyResolverService  {
+export class TimetableCopyResolverService {
     constructor(
         private readonly timetableEditFormService: TimetableEditFormService,
-        private readonly timetableEditFormStateStore: TimetableEditFormStateStore
+        private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
     ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {

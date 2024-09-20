@@ -22,7 +22,7 @@ export class TripBlockCommand {
 
     createMany(
         qb: RequestQueryBuilder,
-        body: CreateTripBlockDto[]
+        body: CreateTripBlockDto[],
     ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -33,24 +33,24 @@ export class TripBlockCommand {
                 {
                     params: httpParams,
                     observe: 'response',
-                }
+                },
             )
             .pipe(
                 map((res) => {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildTripBlockDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildTripBlockDetailsDto(o));
-                })
+                }),
             );
     }
 
     replaceOne(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: ReplaceTripBlockDto
+        body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -61,19 +61,19 @@ export class TripBlockCommand {
                 {
                     params: httpParams,
                     observe: 'response',
-                }
+                },
             )
             .pipe(
                 map((res) => {
                     return buildTripBlockDetailsDto(res.body);
-                })
+                }),
             );
     }
 
     addTripToTripBlock(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: AddTripToTripBlockDto
+        body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -87,19 +87,19 @@ export class TripBlockCommand {
                 {
                     params: httpParams,
                     observe: 'response',
-                }
+                },
             )
             .pipe(
                 map((res) => {
                     return buildTripBlockDetailsDto(res.body);
-                })
+                }),
             );
     }
 
     deleteTripFromTripBlock(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: DeleteTripFromTripBlockDto
+        body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -113,12 +113,12 @@ export class TripBlockCommand {
                 {
                     params: httpParams,
                     observe: 'response',
-                }
+                },
             )
             .pipe(
                 map((res) => {
                     return buildTripBlockDetailsDto(res.body);
-                })
+                }),
             );
     }
 }

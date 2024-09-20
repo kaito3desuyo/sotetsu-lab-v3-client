@@ -75,7 +75,7 @@ export class TimetableSearchCardPComponent {
         this.onChangedInputCalendars$.next(calendars);
     }
     @Input() set routeStationLists(
-        routeStationLists: RouteStationListDetailsDto[]
+        routeStationLists: RouteStationListDetailsDto[],
     ) {
         this.onChangedInputRouteStationLists$.next(routeStationLists);
     }
@@ -88,11 +88,11 @@ export class TimetableSearchCardPComponent {
     constructor() {
         this.state.connect(
             'calendars',
-            this.onChangedInputCalendars$.asObservable()
+            this.onChangedInputCalendars$.asObservable(),
         );
         this.state.connect(
             'routeStationLists',
-            this.onChangedInputRouteStationLists$.asObservable()
+            this.onChangedInputRouteStationLists$.asObservable(),
         );
         this.state.hold(
             this.form.get('searchByStation').valueChanges,
@@ -102,13 +102,13 @@ export class TimetableSearchCardPComponent {
                 } else {
                     this.form.get('stationId').disable();
                 }
-            }
+            },
         );
         this.state.hold(
             this.onChangedInputCurrentState$.asObservable(),
             (state) => {
                 this.form.patchValue(state);
-            }
+            },
         );
         this.state.hold(this.onClickedSearch$.asObservable(), () => {
             this.clickSearch.next(this.form.value);

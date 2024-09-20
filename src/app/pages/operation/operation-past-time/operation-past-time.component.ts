@@ -36,7 +36,7 @@ export class OperationPastTimeComponent {
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            }
+            },
         );
 
         this.#state.hold(
@@ -46,7 +46,7 @@ export class OperationPastTimeComponent {
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            }
+            },
         );
     }
 }

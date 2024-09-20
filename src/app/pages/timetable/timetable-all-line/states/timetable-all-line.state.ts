@@ -37,7 +37,7 @@ export class TimetableAllLineStateStore extends Store<TimetableAllLineState> {
             },
             {
                 name: `TimetableAllLine-${guid()}`,
-            }
+            },
         );
     }
 
@@ -94,7 +94,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
     readonly stations$ = this.select(['tripDirection', 'stations']).pipe(
         map(({ tripDirection, stations }) => {
             return tripDirection === 0 ? [...stations].reverse() : stations;
-        })
+        }),
     );
     readonly trips$ = combineLatest([
         this.select(['tripDirection', 'stations', 'tripBlocks']).pipe(
@@ -105,16 +105,16 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                 const sortedTrips = arrayUniqueBy(
                     TimetableAllLineUtil.sortTrips(
                         sortedStations,
-                        tripBlocks
+                        tripBlocks,
                     ).reverse(),
-                    'tripBlockId'
+                    'tripBlockId',
                 )
                     .reverse()
                     .map((o) => o.trips)
                     .reduce((a, b) => [...a, ...b], []);
 
                 return sortedTrips;
-            })
+            }),
         ),
         this.select('pageSettings'),
     ]).pipe(
@@ -125,7 +125,7 @@ export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
                     i < (pageSettings.pageIndex + 1) * pageSettings.pageSize
                 );
             });
-        })
+        }),
     );
     readonly pageSettings$ = this.select('pageSettings');
 

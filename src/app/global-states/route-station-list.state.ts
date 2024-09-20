@@ -47,21 +47,21 @@ export class RouteStationListStateStore extends EntityStore<RouteStationListStat
                         .map((o) => ({
                             ...o,
                             routeStationLists: Array.from(
-                                o.routeStationLists
+                                o.routeStationLists,
                             ).sort((a, b) =>
                                 desc.some((rn) => o.routeName === rn)
                                     ? b.stationSequence - a.stationSequence
-                                    : a.stationSequence - b.stationSequence
+                                    : a.stationSequence - b.stationSequence,
                             ),
                         }))
                         .sort(
                             (a, b) =>
                                 sort.findIndex((rn) => a.routeName === rn) -
-                                sort.findIndex((rn) => b.routeName === rn)
-                        )
+                                sort.findIndex((rn) => b.routeName === rn),
+                        ),
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }
@@ -73,11 +73,11 @@ export class RouteStationListStateQuery extends QueryEntity<RouteStationListStat
         map((routes) => {
             const stations = flatten(
                 routes.map((route) =>
-                    route.routeStationLists.map((rsl) => rsl.station)
-                )
+                    route.routeStationLists.map((rsl) => rsl.station),
+                ),
             );
             return uniqBy(stations, (o) => o.stationId);
-        })
+        }),
     );
 
     constructor(protected store: RouteStationListStateStore) {

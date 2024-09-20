@@ -9,15 +9,17 @@ import { OperationPastTimeService } from './operation-past-time.service';
 export class OperationPastTimeResolverService {
     constructor(
         private readonly operationPastTimeService: OperationPastTimeService,
-        private readonly operationPastTimeStateStore: OperationPastTimeStateStore
+        private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
     ) {}
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         this.operationPastTimeStateStore.setReferenceDate(
-            route.paramMap.get('reference_date') ?? undefined
+            route.paramMap.get('reference_date') ?? undefined,
         );
         this.operationPastTimeStateStore.setDays(
-            route.paramMap.get('days') ? +route.paramMap.get('days') : undefined
+            route.paramMap.get('days')
+                ? +route.paramMap.get('days')
+                : undefined,
         );
 
         return forkJoin([

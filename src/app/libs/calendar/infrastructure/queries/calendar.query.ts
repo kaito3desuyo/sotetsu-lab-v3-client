@@ -17,7 +17,7 @@ export class CalendarQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -31,16 +31,16 @@ export class CalendarQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildCalendarDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildCalendarDetailsDto(o));
-                })
+                }),
             );
     }
 
     findManyBySpecificDate(
         qb: RequestQueryBuilder,
-        params: { date: string }
+        params: { date: string },
     ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -54,10 +54,10 @@ export class CalendarQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildCalendarDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildCalendarDetailsDto(o));
-                })
+                }),
             );
     }
 }

@@ -11,14 +11,14 @@ export class ServiceService {
     constructor(private readonly serviceQuery: ServiceQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<ServiceDetailsDto> | ServiceDetailsDto[]> {
         return this.serviceQuery.findMany(qb);
     }
 
     findOneWithStations(
         serviceId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<ServiceStationsDto> {
         return this.serviceQuery.findOneWithStations(serviceId, qb);
     }

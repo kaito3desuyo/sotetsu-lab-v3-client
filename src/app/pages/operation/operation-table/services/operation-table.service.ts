@@ -41,17 +41,17 @@ export class OperationTableService {
                     operations.map((operation) =>
                         this.#operationService.findOneWithTrips(
                             operation.operationId,
-                            new RequestQueryBuilder()
-                        )
-                    )
-                )
+                            new RequestQueryBuilder(),
+                        ),
+                    ),
+                ),
             ),
             tap((operationTrips) => {
                 this.#operationTableStateStore.setOperationTrips(
-                    operationTrips
+                    operationTrips,
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -59,9 +59,9 @@ export class OperationTableService {
         const qb = new RequestQueryBuilder();
         return this.#stationService.findMany(qb).pipe(
             tap((stations: StationDetailsDto[]) =>
-                this.#operationTableStateStore.setStations(stations)
+                this.#operationTableStateStore.setStations(stations),
             ),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -69,9 +69,9 @@ export class OperationTableService {
         const qb = new RequestQueryBuilder();
         return this.#tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) =>
-                this.#operationTableStateStore.setTripClasses(tripClasses)
+                this.#operationTableStateStore.setTripClasses(tripClasses),
             ),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

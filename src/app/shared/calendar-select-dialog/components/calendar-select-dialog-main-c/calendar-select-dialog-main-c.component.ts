@@ -13,7 +13,7 @@ export class CalendarSelectDialogMainCComponent {
 
     constructor(
         private readonly calendarListStateQuery: CalendarListStateQuery,
-        private readonly calendarSelectDialogService: CalendarSelectDialogService
+        private readonly calendarSelectDialogService: CalendarSelectDialogService,
     ) {}
 
     onReceiveClickSelect(calendarId: CalendarDetailsDto['calendarId']): void {

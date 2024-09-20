@@ -17,7 +17,7 @@ export class FormationQuery {
 
     findManyBySpeficicDate(
         qb: RequestQueryBuilder,
-        params: { date: string }
+        params: { date: string },
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -31,16 +31,16 @@ export class FormationQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildFormationDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildFormationDetailsDto(o));
-                })
+                }),
             );
     }
 
     findManyBySpecificPeriod(
         qb: RequestQueryBuilder,
-        params: { startDate: string; endDate: string }
+        params: { startDate: string; endDate: string },
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -54,17 +54,17 @@ export class FormationQuery {
                 {
                     params: httpParams,
                     observe: 'response',
-                }
+                },
             )
             .pipe(
                 map((res) => {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildFormationDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildFormationDetailsDto(o));
-                })
+                }),
             );
     }
 }

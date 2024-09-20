@@ -4,12 +4,12 @@ import { TripOperationListDetailsDto } from '../../usecase/dtos/trip-operation-l
 import { TripOperationListModel } from '../models/trip-operation-list.model';
 
 export function buildTripOperationListDetailsDto(
-    model: TripOperationListModel
+    model: TripOperationListModel,
 ): TripOperationListDetailsDto {
     const plainObject = classToPlain(model, classTransformerOptions);
     return plainToClass(
         TripOperationListDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

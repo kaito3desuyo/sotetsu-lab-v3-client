@@ -8,7 +8,7 @@ import { CalendarSelectDialogService } from '../../services/calendar-select-dial
 })
 export class CalendarSelectDialogHeaderCComponent {
     constructor(
-        private readonly calendarSelectDialogService: CalendarSelectDialogService
+        private readonly calendarSelectDialogService: CalendarSelectDialogService,
     ) {}
 
     onReceiveClickCloseButton(): void {

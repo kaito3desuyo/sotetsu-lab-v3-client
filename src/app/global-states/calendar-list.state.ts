@@ -40,7 +40,7 @@ export class CalendarListStateStore extends EntityStore<CalendarListState> {
             tap((data: CalendarDetailsDto[]) => {
                 this.set(data);
             }),
-            map(() => null)
+            map(() => null),
         );
     }
 }
@@ -67,7 +67,7 @@ export class CalendarListStateQuery extends QueryEntity<CalendarListState> {
         return this.selectEntity(
             (e) =>
                 dayjs(e.startDate, format).isSameOrBefore(targetDate) &&
-                dayjs(e.endDate, format).isSameOrAfter(targetDate)
+                dayjs(e.endDate, format).isSameOrAfter(targetDate),
         );
     }
 }

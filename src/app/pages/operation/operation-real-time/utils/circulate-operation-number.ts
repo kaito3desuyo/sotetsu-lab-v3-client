@@ -12,7 +12,7 @@ export function circulateOperationNumber(number: string, days: number): string {
                         if (circulated.slice(-2, -1) === '6') {
                             circulated =
                                 String(
-                                    Number(circulated.replace('G', '')) - 5
+                                    Number(circulated.replace('G', '')) - 5,
                                 ) + 'G';
                         }
                         continue daysLoop;

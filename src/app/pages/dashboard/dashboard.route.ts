@@ -5,7 +5,7 @@ export const DASHBOARD_ROUTES: Route[] = [
         path: '',
         loadComponent: () =>
             import('./dashboard.component').then(
-                (mod) => mod.DashboardComponent
+                (mod) => mod.DashboardComponent,
             ),
     },
 ];

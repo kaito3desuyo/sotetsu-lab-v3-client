@@ -22,7 +22,7 @@ export class OperationTableMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);
     readonly #operationTableStateQuery = inject(OperationTableStateQuery);
     readonly #operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore
+        OperationSearchCardStateStore,
     );
 
     constructor() {
@@ -30,7 +30,7 @@ export class OperationTableMainCComponent {
             this.#operationTableStateQuery.calendarId$,
             (calendarId) => {
                 this.#operationSearchCardStateStore.setCalendarId(calendarId);
-            }
+            },
         );
     }
 }

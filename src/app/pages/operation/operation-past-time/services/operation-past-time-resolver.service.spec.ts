@@ -14,6 +14,6 @@ describe('Service: OperationPastTimeResolver', () => {
         [OperationPastTimeResolverService],
         (service: OperationPastTimeResolverService) => {
             expect(service).toBeTruthy();
-        }
+        },
     ));
 });

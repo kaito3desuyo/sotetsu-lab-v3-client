@@ -4,17 +4,17 @@ import { ITimetableEditFormTripTime } from '../interfaces/timetable-edit-form.in
 import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
 
 const stopsStationCountShouldBeGreaterAndEqualThanTwo = (
-    formArray: FormArray<ITimetableEditFormTripTime>
+    formArray: FormArray<ITimetableEditFormTripTime>,
 ): ValidationErrors | null => {
     return formArray.value.filter(
-        (o) => o.stopType === ETimetableEditFormStopType.STOP
+        (o) => o.stopType === ETimetableEditFormStopType.STOP,
     ).length < 2
         ? { stopsStationCountShouldBeGreaterAndEqualThanTwo: true }
         : null;
 };
 
 const stopTimesShouldBeLaterThanPrevStopTimes = (
-    formArray: FormArray<ITimetableEditFormTripTime>
+    formArray: FormArray<ITimetableEditFormTripTime>,
 ): ValidationErrors | null => {
     let valid = true;
 
@@ -22,7 +22,7 @@ const stopTimesShouldBeLaterThanPrevStopTimes = (
         const today = dayjs().format('YYYY-MM-DD');
         return dayjs(today + ' ' + time, 'YYYY-MM-DD HH:mm').add(
             dayjs(today + ' ' + time, 'YYYY-MM-DD HH:mm').hour() < 4 ? 1 : 0,
-            'day'
+            'day',
         );
     };
 

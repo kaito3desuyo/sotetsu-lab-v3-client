@@ -27,7 +27,7 @@ export class AgencyListStateStore extends EntityStore<AgencyListState> {
             tap((data: AgencyDetailsDto[]) => {
                 this.set(data);
             }),
-            map(() => null)
+            map(() => null),
         );
     }
 }

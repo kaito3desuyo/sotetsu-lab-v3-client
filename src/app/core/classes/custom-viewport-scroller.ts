@@ -8,7 +8,7 @@ export class CustomViewportScroller implements ViewportScroller {
         private scrollElementID: string,
         private document: Document,
         private window: any,
-        private errorHandler: ErrorHandler
+        private errorHandler: ErrorHandler,
     ) {}
 
     setOffset(offset: [number, number] | (() => [number, number])): void {
@@ -21,7 +21,7 @@ export class CustomViewportScroller implements ViewportScroller {
 
     getScrollPosition(): [number, number] {
         const scrollEl = this.document.querySelector(
-            `#${this.scrollElementID}`
+            `#${this.scrollElementID}`,
         );
         if (this.supportScrollRestoration() && scrollEl) {
             return [scrollEl.scrollLeft, scrollEl.scrollTop];
@@ -32,7 +32,7 @@ export class CustomViewportScroller implements ViewportScroller {
 
     scrollToPosition(position: [number, number]): void {
         const scrollEl = this.document.querySelector(
-            `#${this.scrollElementID}`
+            `#${this.scrollElementID}`,
         );
         if (this.supportScrollRestoration() && scrollEl) {
             setTimeout(() => {
@@ -50,14 +50,14 @@ export class CustomViewportScroller implements ViewportScroller {
             }
             try {
                 const elSelectedById = this.document.querySelector(
-                    `#${anchor}`
+                    `#${anchor}`,
                 );
                 if (elSelectedById) {
                     this.scrollToElement(elSelectedById);
                     return;
                 }
                 const elSelectedByName = this.document.querySelector(
-                    `[name='${anchor}']`
+                    `[name='${anchor}']`,
                 );
                 if (elSelectedByName) {
                     this.scrollToElement(elSelectedByName);

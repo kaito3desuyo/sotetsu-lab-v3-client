@@ -16,7 +16,7 @@ export class TripQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<TripDetailsDto> | TripDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -30,10 +30,10 @@ export class TripQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildTripDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildTripDetailsDto(o));
-                })
+                }),
             );
     }
 }
