@@ -14,6 +14,6 @@ describe('Service: OperationRealTimeResolver', () => {
         [OperationRealTimeResolverService],
         (service: OperationRealTimeResolverService) => {
             expect(service).toBeTruthy();
-        }
+        },
     ));
 });

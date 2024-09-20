@@ -25,9 +25,9 @@ export class OperationTableResolverService {
                     this.#operationTableService.fetchOperationTrips(),
                     this.#operationTableService.fetchStations(),
                     this.#operationTableService.fetchTripClass(),
-                ])
+                ]),
             ),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

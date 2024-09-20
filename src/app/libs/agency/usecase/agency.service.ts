@@ -10,7 +10,7 @@ export class AgencyService {
     constructor(private readonly agencyQuery: AgencyQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<AgencyDetailsDto> | AgencyDetailsDto[]> {
         return this.agencyQuery.findMany(qb);
     }

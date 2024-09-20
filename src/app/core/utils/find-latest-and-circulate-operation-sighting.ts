@@ -33,13 +33,13 @@ export function findLatestAndCirculateOperationSighting({
                 currentOperationNumber !== null
                     ? circulateOperationNumber(
                           currentOperationNumber,
-                          calculateDayCountFromToday(o.sightingTime)
+                          calculateDayCountFromToday(o.sightingTime),
                       )
                     : currentOperationNumber;
             const circulatedOperation = circulatedOperationNumber
-                ? operations.find(
-                      (op) => op.operationNumber === circulatedOperationNumber
-                  ) ?? null
+                ? (operations.find(
+                      (op) => op.operationNumber === circulatedOperationNumber,
+                  ) ?? null)
                 : null;
 
             return {
@@ -55,7 +55,7 @@ export function findLatestAndCirculateOperationSighting({
                 isExistNewerSightings(
                     o,
                     arr,
-                    'circulatedOperation.operationNumber'
+                    'circulatedOperation.operationNumber',
                 ) || isExistNewerSightings(o, arr, 'formation.formationNumber');
 
             return {
@@ -73,11 +73,11 @@ export function findLatestAndCirculateOperationSighting({
 
     const operationGrouped = groupBy(
         addCirculated,
-        (o) => o.circulatedOperation?.operationNumber
+        (o) => o.circulatedOperation?.operationNumber,
     );
     const formationGrouped = groupBy(
         addCirculated,
-        (o) => o.formation?.formationNumber ?? null
+        (o) => o.formation?.formationNumber ?? null,
     );
     const operationFlatted = flatMap(operationGrouped, (arr) => arr[0]);
     const formationFlatted = flatMap(formationGrouped, (arr) => arr[0]);
@@ -91,7 +91,7 @@ export function findLatestAndCirculateOperationSighting({
 function isExistNewerSightings(
     target: OperationSightingDetailsDto,
     array: OperationSightingDetailsDto[],
-    path: string
+    path: string,
 ): boolean {
     return array.some((o) => {
         return (

@@ -14,6 +14,6 @@ describe('Service: TimetableAdd', () => {
         [TimetableAddService],
         (service: TimetableAddService) => {
             expect(service).toBeTruthy();
-        }
+        },
     ));
 });

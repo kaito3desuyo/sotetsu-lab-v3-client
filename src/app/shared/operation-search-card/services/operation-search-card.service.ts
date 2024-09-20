@@ -22,11 +22,11 @@ export class OperationSearchCardService {
     constructor(
         private readonly operationService: OperationService,
         private readonly operationSearchCardStateStore: OperationSearchCardStateStore,
-        private readonly operationSearchCardStateQuery: OperationSearchCardStateQuery
+        private readonly operationSearchCardStateQuery: OperationSearchCardStateQuery,
     ) {}
 
     emitSearchOperationTableEvent(
-        calendarId: CalendarDetailsDto['calendarId']
+        calendarId: CalendarDetailsDto['calendarId'],
     ): void {
         this._searchOpeartionTableEvent$.next(calendarId);
     }
@@ -38,7 +38,7 @@ export class OperationSearchCardService {
     }
 
     emitSearchOperationRouteDiagramEvent(
-        operationId: OperationDetailsDto['operationId']
+        operationId: OperationDetailsDto['operationId'],
     ): void {
         this._searchOpeartionRouteDiagramEvent$.next(operationId);
     }
@@ -68,7 +68,7 @@ export class OperationSearchCardService {
             tap((operations: OperationDetailsDto[]) => {
                 this.operationSearchCardStateStore.setOperations(operations);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

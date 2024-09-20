@@ -13,22 +13,22 @@ export class TimetableAllLineMainCComponent {
     constructor(
         private readonly state: RxState<{}>,
         private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
-        private readonly timetableSearchCardStateStore: TimetableSearchCardStateStore
+        private readonly timetableSearchCardStateStore: TimetableSearchCardStateStore,
     ) {
         this.state.hold(
             this.timetableAllLineStateQuery.calendarId$,
             (calendarId) => {
                 this.timetableSearchCardStateStore.setCalendarId(calendarId);
-            }
+            },
         );
 
         this.state.hold(
             this.timetableAllLineStateQuery.tripDirection$,
             (tripDirection) => {
                 this.timetableSearchCardStateStore.setTripDirection(
-                    tripDirection
+                    tripDirection,
                 );
-            }
+            },
         );
     }
 }

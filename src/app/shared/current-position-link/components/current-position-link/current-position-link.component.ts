@@ -90,7 +90,7 @@ export class CurrentPositionLinkComponent {
         new Subject<OperationCurrentPositionDto>();
 
     @Input() set todaysCalendarId(
-        calendarId: CalendarDetailsDto['calendarId']
+        calendarId: CalendarDetailsDto['calendarId'],
     ) {
         this.onChangedInputTodaysCalendarId$.next(calendarId);
     }
@@ -110,38 +110,38 @@ export class CurrentPositionLinkComponent {
     constructor() {
         this.state.connect(
             'todaysCalendarId',
-            this.onChangedInputTodaysCalendarId$.asObservable()
+            this.onChangedInputTodaysCalendarId$.asObservable(),
         );
 
         this.state.connect(
             'stations',
-            this.onChangedInputStations$.asObservable()
+            this.onChangedInputStations$.asObservable(),
         );
 
         this.state.connect(
             'tripClasses',
-            this.onChangedInputTripClasses$.asObservable()
+            this.onChangedInputTripClasses$.asObservable(),
         );
 
         this.state.connect(
             'prevTrip',
             this.onChangedInputCurrentPosition$
                 .asObservable()
-                .pipe(pluck('position', 'prev'))
+                .pipe(pluck('position', 'prev')),
         );
 
         this.state.connect(
             'currentTrip',
             this.onChangedInputCurrentPosition$
                 .asObservable()
-                .pipe(pluck('position', 'current'))
+                .pipe(pluck('position', 'current')),
         );
 
         this.state.connect(
             'nextTrip',
             this.onChangedInputCurrentPosition$
                 .asObservable()
-                .pipe(pluck('position', 'next'))
+                .pipe(pluck('position', 'next')),
         );
 
         this.state.connect(
@@ -151,9 +151,9 @@ export class CurrentPositionLinkComponent {
                 .pipe(
                     map(
                         ({ prevTrip, currentTrip, nextTrip }) =>
-                            !prevTrip && !currentTrip && !!nextTrip
-                    )
-                )
+                            !prevTrip && !currentTrip && !!nextTrip,
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -163,9 +163,9 @@ export class CurrentPositionLinkComponent {
                 .pipe(
                     map(
                         ({ prevTrip, currentTrip, nextTrip }) =>
-                            !prevTrip && !!currentTrip && !nextTrip
-                    )
-                )
+                            !prevTrip && !!currentTrip && !nextTrip,
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -175,9 +175,9 @@ export class CurrentPositionLinkComponent {
                 .pipe(
                     map(
                         ({ prevTrip, currentTrip, nextTrip }) =>
-                            !!prevTrip && !currentTrip && !!nextTrip
-                    )
-                )
+                            !!prevTrip && !currentTrip && !!nextTrip,
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -187,9 +187,9 @@ export class CurrentPositionLinkComponent {
                 .pipe(
                     map(
                         ({ prevTrip, currentTrip, nextTrip }) =>
-                            !!prevTrip && !currentTrip && !nextTrip
-                    )
-                )
+                            !!prevTrip && !currentTrip && !nextTrip,
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -203,7 +203,7 @@ export class CurrentPositionLinkComponent {
                         'prevTrip',
                         'currentTrip',
                         'nextTrip',
-                    ])
+                    ]),
                 )
                 .pipe(
                     map(
@@ -272,9 +272,9 @@ export class CurrentPositionLinkComponent {
                             }
 
                             return undefined;
-                        }
-                    )
-                )
+                        },
+                    ),
+                ),
         );
     }
 }

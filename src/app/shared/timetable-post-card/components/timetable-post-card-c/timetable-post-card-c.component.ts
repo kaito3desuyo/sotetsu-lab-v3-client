@@ -15,7 +15,7 @@ import { TimetablePostCardPComponent } from '../timetable-post-card-p/timetable-
 export class TimetablePostCardCComponent {
     private readonly calendarListStateQuery = inject(CalendarListStateQuery);
     private readonly timetablePostCardService = inject(
-        TimetablePostCardService
+        TimetablePostCardService,
     );
 
     readonly calendars$ = this.calendarListStateQuery.calendars$;

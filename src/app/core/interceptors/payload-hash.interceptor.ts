@@ -1,4 +1,9 @@
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import {
+    HttpEvent,
+    HttpHandler,
+    HttpInterceptor,
+    HttpRequest,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
@@ -17,7 +22,7 @@ async function convertToDigest<T>(body: T): Promise<string> {
 export class PayloadHashInterceptor implements HttpInterceptor {
     intercept(
         req: HttpRequest<any>,
-        next: HttpHandler
+        next: HttpHandler,
     ): Observable<HttpEvent<any>> {
         if (req.body) {
             return from(convertToDigest(req.body)).pipe(
@@ -27,9 +32,9 @@ export class PayloadHashInterceptor implements HttpInterceptor {
                             setHeaders: {
                                 'x-amz-content-sha256': digest,
                             },
-                        })
-                    )
-                )
+                        }),
+                    ),
+                ),
             );
         }
 

@@ -21,7 +21,7 @@ interface TodaysOperationListState
 export class TodaysOperationListStateStore extends EntityStore<TodaysOperationListState> {
     constructor(
         private readonly operationService: OperationService,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery
+        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
     ) {
         super();
     }
@@ -44,7 +44,7 @@ export class TodaysOperationListStateStore extends EntityStore<TodaysOperationLi
             tap((operations: OperationDetailsDto[]) => {
                 this.set(operations);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }
@@ -57,9 +57,9 @@ export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationLi
             [...operations].sort(
                 (a, b) =>
                     Number(generateOperationSortNumber(a.operationNumber)) -
-                    Number(generateOperationSortNumber(b.operationNumber))
-            )
-        )
+                    Number(generateOperationSortNumber(b.operationNumber)),
+            ),
+        ),
     );
 
     get todaysOperations(): OperationDetailsDto[] {

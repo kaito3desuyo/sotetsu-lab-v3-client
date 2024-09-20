@@ -4,12 +4,12 @@ import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
 import { OperationModel } from '../models/operation.model';
 
 export function buildOperationDetailsDto(
-    model: OperationModel
+    model: OperationModel,
 ): OperationDetailsDto {
     const plainObject = classToPlain(model, classTransformerOptions);
     return plainToClass(
         OperationDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

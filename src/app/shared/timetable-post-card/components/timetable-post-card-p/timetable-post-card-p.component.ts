@@ -68,7 +68,7 @@ export class TimetablePostCardPComponent {
     constructor() {
         this.state.connect(
             'calendars',
-            this.onChangedInputCalendars$.asObservable()
+            this.onChangedInputCalendars$.asObservable(),
         );
 
         this.state.hold(this.onClickedMoveTimetableAdd$.asObservable(), () => {

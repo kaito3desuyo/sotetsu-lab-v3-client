@@ -14,25 +14,25 @@ import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
 export class TripBlockService {
     constructor(
         private readonly tripBlockCommand: TripBlockCommand,
-        private readonly tripBlockQuery: TripBlockQuery
+        private readonly tripBlockQuery: TripBlockQuery,
     ) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
         return this.tripBlockQuery.findMany(qb);
     }
 
     findOne(
         tripBlockId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockQuery.findOne(tripBlockId, qb);
     }
 
     createMany(
         qb: RequestQueryBuilder,
-        body: CreateTripBlockDto[]
+        body: CreateTripBlockDto[],
     ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
         return this.tripBlockCommand.createMany(qb, body);
     }
@@ -40,7 +40,7 @@ export class TripBlockService {
     replaceOne(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: ReplaceTripBlockDto
+        body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockCommand.replaceOne(qb, tripBlockId, body);
     }
@@ -48,7 +48,7 @@ export class TripBlockService {
     addTripToTripBlock(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: AddTripToTripBlockDto
+        body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockCommand.addTripToTripBlock(qb, tripBlockId, body);
     }
@@ -56,12 +56,12 @@ export class TripBlockService {
     deleteTripFromTripBlock(
         qb: RequestQueryBuilder,
         tripBlockId: string,
-        body: DeleteTripFromTripBlockDto
+        body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         return this.tripBlockCommand.deleteTripFromTripBlock(
             qb,
             tripBlockId,
-            body
+            body,
         );
     }
 }

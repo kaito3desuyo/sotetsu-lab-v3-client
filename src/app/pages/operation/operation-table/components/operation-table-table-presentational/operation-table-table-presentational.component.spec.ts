@@ -17,7 +17,7 @@ describe('OperationTableTablePresentationalComponent', () => {
 
     beforeEach(() => {
         fixture = TestBed.createComponent(
-            OperationTableTablePresentationalComponent
+            OperationTableTablePresentationalComponent,
         );
         component = fixture.componentInstance;
         fixture.detectChanges();

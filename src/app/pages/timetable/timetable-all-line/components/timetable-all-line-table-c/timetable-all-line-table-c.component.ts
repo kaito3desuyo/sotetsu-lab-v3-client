@@ -30,7 +30,7 @@ export class TimetableAllLineTableCComponent {
     readonly #notification = inject(NotificationService);
 
     readonly calendar$ = this.timetableAllLineStateQuery.calendarId$.pipe(
-        mergeMap((id) => this.calendarListStateQuery.selectByCalendarId(id))
+        mergeMap((id) => this.calendarListStateQuery.selectByCalendarId(id)),
     );
     readonly tripDirection$ = this.timetableAllLineStateQuery.tripDirection$;
     readonly stations$ = this.timetableAllLineStateQuery.stations$;
@@ -58,7 +58,7 @@ export class TimetableAllLineTableCComponent {
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly timetableAllLineStateStore: TimetableAllLineStateStore,
         private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
-        private readonly calendarSelectDialogService: CalendarSelectDialogService
+        private readonly calendarSelectDialogService: CalendarSelectDialogService,
     ) {
         this.state.hold(this.onPaged$, (pageSettings) => {
             this.timetableAllLineStateStore.setPageSettings(pageSettings);
@@ -110,9 +110,9 @@ export class TimetableAllLineTableCComponent {
                         })
                         .pipe(
                             switchMap(() =>
-                                this.timetableAllLineService.fetchTripBlocksV2()
-                            )
-                        )
+                                this.timetableAllLineService.fetchTripBlocksV2(),
+                            ),
+                        ),
                 );
 
                 this.#loading.close();
@@ -154,9 +154,9 @@ export class TimetableAllLineTableCComponent {
                             })
                             .pipe(
                                 switchMap(() =>
-                                    this.timetableAllLineService.fetchTripBlocksV2()
-                                )
-                            )
+                                    this.timetableAllLineService.fetchTripBlocksV2(),
+                                ),
+                            ),
                     );
 
                     this.#loading.close();
@@ -169,7 +169,7 @@ export class TimetableAllLineTableCComponent {
 
                     this.#notification.open('グループに追加しました', 'OK');
                 });
-            }
+            },
         );
 
         this.state.hold(
@@ -200,9 +200,9 @@ export class TimetableAllLineTableCComponent {
                             })
                             .pipe(
                                 switchMap(() =>
-                                    this.timetableAllLineService.fetchTripBlocksV2()
-                                )
-                            )
+                                    this.timetableAllLineService.fetchTripBlocksV2(),
+                                ),
+                            ),
                     );
 
                     this.#loading.close();
@@ -215,7 +215,7 @@ export class TimetableAllLineTableCComponent {
 
                     this.#notification.open('グループから除外しました', 'OK');
                 });
-            }
+            },
         );
     }
 }

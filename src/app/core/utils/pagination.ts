@@ -39,12 +39,12 @@ export class Pagination<T> {
     static isApiPaginated<Model>(res: HttpResponse<Model[]>): boolean {
         return areArrayValuesEqual(
             res.headers.keys().filter((header) => headerName.includes(header)),
-            headerName
+            headerName,
         );
     }
 
     static getApiPageSettings<Model>(
-        res: HttpResponse<Model[]>
+        res: HttpResponse<Model[]>,
     ): ApiPageSettings {
         return {
             itemCount: +res.headers.get(headerName[0]),

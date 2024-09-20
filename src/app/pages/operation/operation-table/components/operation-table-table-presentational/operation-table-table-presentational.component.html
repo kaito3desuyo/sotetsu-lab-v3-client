@@ -4,7 +4,7 @@
         [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-            {{ calendar().startDate | date : 'yyyy年MM月dd日' }}
+            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
             改正<br />
             {{ calendar().calendarName }}
         </h3>
@@ -12,370 +12,445 @@
     <section
         class="tw-flex tw-flex-row tw-flex-wrap tw-justify-center tw-gap-x-4 tw-overflow-x-visible tw-p-4"
     >
-        @for (operationTrip of operationTrips(); track
-        operationTrip.operation.operationNumber) {
-        <div class="tw-my-4">
-            <table
-                class="monoscape tw-w-[300px] tw-border-collapse tw-whitespace-nowrap tw-text-center tw-text-[13px] [&_td]:tw-p-0"
-            >
-                <thead>
-                    <tr>
-                        <td colspan="9">
-                            <div
-                                class="tw-mb-4 tw-py-2 tw-text-base tw-font-bold"
-                                [ngStyle]="{
-                                    background:
-                                        operationTrip.operation.operationNumber
-                                        | operationNumberColor
-                                }"
-                            >
-                                <a
-                                    [routerLink]="[
-                                        '/operation/route-diagram',
-                                        {
-                                            operation_id:
-                                                operationTrip.operation
-                                                    .operationId
-                                        }
-                                    ]"
+        @for (
+            operationTrip of operationTrips();
+            track operationTrip.operation.operationNumber
+        ) {
+            <div class="tw-my-4">
+                <table
+                    class="monoscape tw-w-[300px] tw-border-collapse tw-whitespace-nowrap tw-text-center tw-text-[13px] [&_td]:tw-p-0"
+                >
+                    <thead>
+                        <tr>
+                            <td colspan="9">
+                                <div
+                                    class="tw-mb-4 tw-py-2 tw-text-base tw-font-bold"
+                                    [ngStyle]="{
+                                        background:
+                                            operationTrip.operation
+                                                .operationNumber
+                                            | operationNumberColor,
+                                    }"
                                 >
-                                    {{
-                                        operationTrip.operation.operationNumber
-                                    }}
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (tripOperationList of operationTrip.trips; track
-                    tripOperationList.tripOperationListId; let i = $index) {
-                    <tr>
-                        <td class="tw-w-4">
-                            @switch (tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            {{ tripOperationList.trip.depotOut ? '◯' : '┗' }}
-                            <!--  -->
-                            }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            {{ tripOperationList.trip.depotIn ? '△' : '┏' }}
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                        <td class="tw-w-12 tw-max-w-[3rem]">
-                            @switch (tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    stationNameColumn;
-                                    context: {
-                                        stationName:
-                                            tripOperationList.startTime
-                                                .stationId
-                                            | findById
-                                                : {
-                                                      array: stations(),
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName'
-                                                  }
-                                            | operationTableFormatStationName
+                                    <a
+                                        [routerLink]="[
+                                            '/operation/route-diagram',
+                                            {
+                                                operation_id:
+                                                    operationTrip.operation
+                                                        .operationId,
+                                            },
+                                        ]"
+                                    >
+                                        {{
+                                            operationTrip.operation
+                                                .operationNumber
+                                        }}
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (
+                            tripOperationList of operationTrip.trips;
+                            track tripOperationList.tripOperationListId;
+                            let i = $index
+                        ) {
+                            <tr>
+                                <td class="tw-w-4">
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            {{
+                                                tripOperationList.trip.depotOut
+                                                    ? '◯'
+                                                    : '┗'
+                                            }}
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            {{
+                                                tripOperationList.trip.depotIn
+                                                    ? '△'
+                                                    : '┏'
+                                            }}
+                                            <!--  -->
+                                        }
+                                        <!--  -->
                                     }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    stationNameColumn;
-                                    context: {
-                                        stationName:
-                                            tripOperationList.endTime.stationId
-                                            | findById
-                                                : {
-                                                      array: stations(),
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName'
-                                                  }
-                                            | operationTableFormatStationName
+                                </td>
+                                <td class="tw-w-12 tw-max-w-[3rem]">
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationNameColumn;
+                                                    context: {
+                                                        stationName:
+                                                            tripOperationList
+                                                                .startTime
+                                                                .stationId
+                                                            | findById
+                                                                : {
+                                                                      array: stations(),
+                                                                      propertyName:
+                                                                          'stationId',
+                                                                      outputPropertyName:
+                                                                          'stationName',
+                                                                  }
+                                                            | operationTableFormatStationName,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationNameColumn;
+                                                    context: {
+                                                        stationName:
+                                                            tripOperationList
+                                                                .endTime
+                                                                .stationId
+                                                            | findById
+                                                                : {
+                                                                      array: stations(),
+                                                                      propertyName:
+                                                                          'stationId',
+                                                                      outputPropertyName:
+                                                                          'stationName',
+                                                                  }
+                                                            | operationTableFormatStationName,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
                                     }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                        <td>
-                            @switch (tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    timeColumn;
-                                    context: {
-                                        time: tripOperationList.startTime
-                                            .departureTime
+                                </td>
+                                <td>
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    timeColumn;
+                                                    context: {
+                                                        time: tripOperationList
+                                                            .startTime
+                                                            .departureTime,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    timeColumn;
+                                                    context: {
+                                                        time: tripOperationList
+                                                            .endTime
+                                                            .arrivalTime,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
                                     }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    timeColumn;
-                                    context: {
-                                        time: tripOperationList.endTime
-                                            .arrivalTime
-                                    }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                        <td>
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    arrowColumn;
-                                    context: {
-                                        tripClassColor:
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            arrowColumn;
+                                            context: {
+                                                tripClassColor:
+                                                    tripOperationList.trip
+                                                        .tripClassId
+                                                    | findById
+                                                        : {
+                                                              array: tripClasses(),
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassColor',
+                                                          },
+                                                tripDirection:
+                                                    tripOperationList.trip
+                                                        .tripDirection,
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    <a
+                                        [ngStyle]="{
+                                            color:
+                                                tripOperationList.trip
+                                                    .tripClassId
+                                                | findById
+                                                    : {
+                                                          array: tripClasses(),
+                                                          propertyName:
+                                                              'tripClassId',
+                                                          outputPropertyName:
+                                                              'tripClassColor',
+                                                      },
+                                        }"
+                                        [routerLink]="[
+                                            '/timetable',
+                                            'all-line',
+                                            {
+                                                calendar_id:
+                                                    calendar().calendarId,
+                                                trip_direction:
+                                                    tripOperationList.trip
+                                                        .tripDirection,
+                                                trip_block_id:
+                                                    tripOperationList.trip
+                                                        .tripBlockId,
+                                            },
+                                        ]"
+                                    >
+                                        {{
                                             tripOperationList.trip.tripClassId
-                                            | findById
-                                                : {
-                                                      array: tripClasses(),
-                                                      propertyName:
-                                                          'tripClassId',
-                                                      outputPropertyName:
-                                                          'tripClassColor'
-                                                  },
-                                        tripDirection:
+                                                | findById
+                                                    : {
+                                                          array: tripClasses(),
+                                                          propertyName:
+                                                              'tripClassId',
+                                                          outputPropertyName:
+                                                              'tripClassName',
+                                                      }
+                                                | antiBrackets
+                                                | operationTableFormatTripClassName
+                                        }}
+                                        {{ tripOperationList.trip.tripNumber }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <ng-container
+                                        *ngTemplateOutlet="
+                                            arrowColumn;
+                                            context: {
+                                                tripClassColor:
+                                                    tripOperationList.trip
+                                                        .tripClassId
+                                                    | findById
+                                                        : {
+                                                              array: tripClasses(),
+                                                              propertyName:
+                                                                  'tripClassId',
+                                                              outputPropertyName:
+                                                                  'tripClassColor',
+                                                          },
+                                                tripDirection:
+                                                    tripOperationList.trip
+                                                        .tripDirection,
+                                            }
+                                        "
+                                    ></ng-container>
+                                </td>
+                                <td>
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    timeColumn;
+                                                    context: {
+                                                        time: tripOperationList
+                                                            .endTime
+                                                            .arrivalTime,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    timeColumn;
+                                                    context: {
+                                                        time: tripOperationList
+                                                            .startTime
+                                                            .departureTime,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                    }
+                                </td>
+                                <td class="tw-w-12 tw-max-w-[3rem]">
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationNameColumn;
+                                                    context: {
+                                                        stationName:
+                                                            tripOperationList
+                                                                .endTime
+                                                                .stationId
+                                                            | findById
+                                                                : {
+                                                                      array: stations(),
+                                                                      propertyName:
+                                                                          'stationId',
+                                                                      outputPropertyName:
+                                                                          'stationName',
+                                                                  }
+                                                            | operationTableFormatStationName,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationNameColumn;
+                                                    context: {
+                                                        stationName:
+                                                            tripOperationList
+                                                                .startTime
+                                                                .stationId
+                                                            | findById
+                                                                : {
+                                                                      array: stations(),
+                                                                      propertyName:
+                                                                          'stationId',
+                                                                      outputPropertyName:
+                                                                          'stationName',
+                                                                  }
+                                                            | operationTableFormatStationName,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                    }
+                                </td>
+                                <td class="tw-w-4">
+                                    @switch (
+                                        tripOperationList.trip.tripDirection
+                                    ) {
+                                        <!--  -->
+                                        @case (tripDirectionEnum.INBOUND) {
+                                            <!--  -->
+                                            {{
+                                                tripOperationList.trip.depotIn
+                                                    ? '△'
+                                                    : '┓'
+                                            }}
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                        @case (tripDirectionEnum.OUTBOUND) {
+                                            <!--  -->
+                                            {{
+                                                tripOperationList.trip.depotOut
+                                                    ? '◯'
+                                                    : '┛'
+                                            }}
+                                            <!--  -->
+                                        }
+                                        <!--  -->
+                                    }
+                                </td>
+                            </tr>
+
+                            @if (
+                                tripOperationList.trip.tripDirection ===
+                                    operationTrip?.trips[i + 1]?.trip
+                                        ?.tripDirection &&
+                                !tripOperationList.trip.depotIn &&
+                                !operationTrip?.trips[i + 1]?.trip?.depotOut
+                            ) {
+                                <!--  -->
+                                <tr>
+                                    <td class="tw-w-4">
+                                        @switch (
                                             tripOperationList.trip.tripDirection
-                                    }
-                                "
-                            ></ng-container>
-                        </td>
-                        <td>
-                            <a
-                                [ngStyle]="{
-                                    color:
-                                        tripOperationList.trip.tripClassId
-                                        | findById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassColor'
-                                              }
-                                }"
-                                [routerLink]="[
-                                    '/timetable',
-                                    'all-line',
-                                    {
-                                        calendar_id: calendar().calendarId,
-                                        trip_direction:
-                                            tripOperationList.trip
-                                                .tripDirection,
-                                        trip_block_id:
-                                            tripOperationList.trip.tripBlockId
-                                    }
-                                ]"
-                            >
-                                {{
-                                    tripOperationList.trip.tripClassId
-                                        | findById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassName'
-                                              }
-                                        | antiBrackets
-                                        | operationTableFormatTripClassName
-                                }}
-                                {{ tripOperationList.trip.tripNumber }}
-                            </a>
-                        </td>
-                        <td>
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    arrowColumn;
-                                    context: {
-                                        tripClassColor:
-                                            tripOperationList.trip.tripClassId
-                                            | findById
-                                                : {
-                                                      array: tripClasses(),
-                                                      propertyName:
-                                                          'tripClassId',
-                                                      outputPropertyName:
-                                                          'tripClassColor'
-                                                  },
-                                        tripDirection:
+                                        ) {
+                                            <!--  -->
+                                            @case (tripDirectionEnum.INBOUND) {
+                                                ┏
+                                            }
+                                            <!--  -->
+                                            @case (tripDirectionEnum.OUTBOUND) {
+                                                ┗
+                                            }
+                                            <!--  -->
+                                        }
+                                    </td>
+
+                                    <td colspan="7">━━━━━━━━━━━━━━━━━━━━━</td>
+
+                                    <td class="tw-w-4">
+                                        @switch (
                                             tripOperationList.trip.tripDirection
-                                    }
-                                "
-                            ></ng-container>
-                        </td>
-                        <td>
-                            @switch (tripOperationList.trip .tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    timeColumn;
-                                    context: {
-                                        time: tripOperationList.endTime
-                                            .arrivalTime
-                                    }
-                                "
-                            ></ng-container>
-                            <!--  -->
+                                        ) {
+                                            <!--  -->
+                                            @case (tripDirectionEnum.INBOUND) {
+                                                ┛
+                                            }
+                                            <!--  -->
+                                            @case (tripDirectionEnum.OUTBOUND) {
+                                                ┓
+                                            }
+                                            <!--  -->
+                                        }
+                                    </td>
+                                </tr>
+                                <!--  -->
                             }
                             <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    timeColumn;
-                                    context: {
-                                        time: tripOperationList.startTime
-                                            .departureTime
-                                    }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                        <td class="tw-w-12 tw-max-w-[3rem]">
-                            @switch (tripOperationList.trip .tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    stationNameColumn;
-                                    context: {
-                                        stationName:
-                                            tripOperationList.endTime.stationId
-                                            | findById
-                                                : {
-                                                      array: stations(),
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName'
-                                                  }
-                                            | operationTableFormatStationName
-                                    }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            <ng-container
-                                *ngTemplateOutlet="
-                                    stationNameColumn;
-                                    context: {
-                                        stationName:
-                                            tripOperationList.startTime
-                                                .stationId
-                                            | findById
-                                                : {
-                                                      array: stations(),
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName'
-                                                  }
-                                            | operationTableFormatStationName
-                                    }
-                                "
-                            ></ng-container>
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                        <td class="tw-w-4">
-                            @switch (tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) {
-                            <!--  -->
-                            {{ tripOperationList.trip.depotIn ? '△' : '┓' }}
-                            <!--  -->
-                            }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) {
-                            <!--  -->
-                            {{ tripOperationList.trip.depotOut ? '◯' : '┛' }}
-                            <!--  -->
-                            }
-                            <!--  -->
-                            }
-                        </td>
-                    </tr>
-
-                    @if (tripOperationList.trip.tripDirection ===
-                    operationTrip?.trips[i + 1]?.trip?.tripDirection &&
-                    !tripOperationList.trip.depotIn && !operationTrip?.trips[i +
-                    1]?.trip?.depotOut) {
-                    <!--  -->
-                    <tr>
-                        <td class="tw-w-4">
-                            @switch ( tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) { ┏ }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) { ┗ }
-                            <!--  -->
-                            }
-                        </td>
-
-                        <td colspan="7">━━━━━━━━━━━━━━━━━━━━━</td>
-
-                        <td class="tw-w-4">
-                            @switch ( tripOperationList.trip.tripDirection) {
-                            <!--  -->
-                            @case (tripDirectionEnum.INBOUND) { ┛ }
-                            <!--  -->
-                            @case (tripDirectionEnum.OUTBOUND) { ┓ }
-                            <!--  -->
-                            }
-                        </td>
-                    </tr>
-                    <!--  -->
-                    }
-                    <!--  -->
-                    }
-                </tbody>
-            </table>
-        </div>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
         <!--  -->
-        @for (operationTrip of operationTrips(); track
-        operationTrip.operation.operationNumber) {
-        <div class="tw-h-0 tw-w-[300px]"></div>
+        @for (
+            operationTrip of operationTrips();
+            track operationTrip.operation.operationNumber
+        ) {
+            <div class="tw-h-0 tw-w-[300px]"></div>
         }
     </section>
 </article>
@@ -392,7 +467,7 @@
                 (stationName.length > 3
                     ? (stationName.length - 3) * 8 * -1
                     : 0) +
-                'px'
+                'px',
         }"
     >
         {{ stationName }}
@@ -406,7 +481,7 @@
               | dayjs
                   : {
                         parseFormat: 'HH:mm:ss',
-                        format: 'HHmm'
+                        format: 'HHmm',
                     })
             : '????'
     }}
@@ -419,15 +494,19 @@
 >
     <span
         [ngStyle]="{
-            color: tripClassColor
+            color: tripClassColor,
         }"
     >
         @switch (tripDirection) {
-        <!--  -->
-        @case (tripDirectionEnum.INBOUND) { ➡ }
-        <!--  -->
-        @case (tripDirectionEnum.OUTBOUND) { ⬅ }
-        <!--  -->
+            <!--  -->
+            @case (tripDirectionEnum.INBOUND) {
+                ➡
+            }
+            <!--  -->
+            @case (tripDirectionEnum.OUTBOUND) {
+                ⬅
+            }
+            <!--  -->
         }
     </span>
 </ng-template>

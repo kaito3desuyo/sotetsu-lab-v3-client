@@ -15,65 +15,65 @@
     >
         <div class="tw-flex tw-w-12">
             @if (!!trip) {
-            <a
-                [routerLink]="[
-                    '/timetable',
-                    'all-line',
-                    {
-                        calendar_id: todaysCalendarId,
-                        trip_direction: trip.tripDirection,
-                        trip_block_id: trip.tripBlockId
-                    }
-                ]"
-                [ngStyle]="{
-                    color:
+                <a
+                    [routerLink]="[
+                        '/timetable',
+                        'all-line',
+                        {
+                            calendar_id: todaysCalendarId,
+                            trip_direction: trip.tripDirection,
+                            trip_block_id: trip.tripBlockId,
+                        },
+                    ]"
+                    [ngStyle]="{
+                        color:
+                            trip.tripClassId
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassColor',
+                                  },
+                    }"
+                >
+                    {{
                         trip.tripClassId
-                        | findById
-                            : {
-                                  array: tripClasses,
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassColor'
-                              }
-                }"
-            >
-                {{
-                    trip.tripClassId
-                        | findById
-                            : {
-                                  array: tripClasses,
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassName'
-                              }
-                        | antiBrackets
-                }}
-                <br />
-                {{ trip.tripNumber }}
-            </a>
+                            | findById
+                                : {
+                                      array: tripClasses,
+                                      propertyName: 'tripClassId',
+                                      outputPropertyName: 'tripClassName',
+                                  }
+                            | antiBrackets
+                    }}
+                    <br />
+                    {{ trip.tripNumber }}
+                </a>
             }
         </div>
         <div class="tw-flex tw-w-20">
             @if (!!leftTime) {
-            <p class="tw-m-0">
-                {{
-                    leftTime.stationId
-                        | findById
-                            : {
-                                  array: stations,
-                                  propertyName: 'stationId',
-                                  outputPropertyName: 'stationName'
-                              }
-                }}
-                <br />
-                {{ leftTime[leftTimeKey] }}
-            </p>
+                <p class="tw-m-0">
+                    {{
+                        leftTime.stationId
+                            | findById
+                                : {
+                                      array: stations,
+                                      propertyName: 'stationId',
+                                      outputPropertyName: 'stationName',
+                                  }
+                    }}
+                    <br />
+                    {{ leftTime[leftTimeKey] }}
+                </p>
             } @else {
-            <p class="tw-m-0">
-                @if (!!hiddenTrip.depotOut) {
-                <ng-container> 出庫前<br />〇 </ng-container>
-                } @else {
-                <ng-container> 不明<br />？ </ng-container>
-                }
-            </p>
+                <p class="tw-m-0">
+                    @if (!!hiddenTrip.depotOut) {
+                        <ng-container> 出庫前<br />〇 </ng-container>
+                    } @else {
+                        <ng-container> 不明<br />？ </ng-container>
+                    }
+                </p>
             }
         </div>
         <div class="tw-flex tw-flex-row tw-items-center">
@@ -81,39 +81,41 @@
         </div>
         <div class="tw-flex tw-w-20">
             @if (!!rightTime) {
-            <p class="tw-m-0">
-                @if (!!leftTime && leftTime.stationId === rightTime.stationId) {
-                <ng-container>
-                    @if(!!hiddenTrip.depotIn) {
-                    <ng-container> 一時入庫 </ng-container>
+                <p class="tw-m-0">
+                    @if (
+                        !!leftTime && leftTime.stationId === rightTime.stationId
+                    ) {
+                        <ng-container>
+                            @if (!!hiddenTrip.depotIn) {
+                                <ng-container> 一時入庫 </ng-container>
+                            } @else {
+                                <ng-container> 停車中 </ng-container>
+                            }
+                        </ng-container>
                     } @else {
-                    <ng-container> 停車中 </ng-container>
+                        <ng-container>
+                            {{
+                                rightTime.stationId
+                                    | findById
+                                        : {
+                                              array: stations,
+                                              propertyName: 'stationId',
+                                              outputPropertyName: 'stationName',
+                                          }
+                            }}
+                        </ng-container>
                     }
-                </ng-container>
-                } @else {
-                <ng-container>
-                    {{
-                        rightTime.stationId
-                            | findById
-                                : {
-                                      array: stations,
-                                      propertyName: 'stationId',
-                                      outputPropertyName: 'stationName'
-                                  }
-                    }}
-                </ng-container>
-                }
-                <br />
-                {{ rightTime[rightTimeKey] }}
-            </p>
+                    <br />
+                    {{ rightTime[rightTimeKey] }}
+                </p>
             } @else {
-            <p class="tw-m-0">
-                @if (!!hiddenTrip.depotIn) {
-                <ng-container> 入庫済<br />△ </ng-container>
-                } @else {
-                <ng-container> 不明<br />？ </ng-container>
-                }
-            </p>
+                <p class="tw-m-0">
+                    @if (!!hiddenTrip.depotIn) {
+                        <ng-container> 入庫済<br />△ </ng-container>
+                    } @else {
+                        <ng-container> 不明<br />？ </ng-container>
+                    }
+                </p>
             }
         </div>
     </div>
@@ -121,28 +123,28 @@
 
 <!-- 出庫前の場合 -->
 @if (isBeforeDepotOut$ | push) {
-<ng-container
-    *ngTemplateOutlet="container; context: context$ | push"
-></ng-container>
+    <ng-container
+        *ngTemplateOutlet="container; context: context$ | push"
+    ></ng-container>
 }
 
 <!-- 走行中の場合 -->
 @if (isRunning$ | push) {
-<ng-container
-    *ngTemplateOutlet="container; context: context$ | push"
-></ng-container>
+    <ng-container
+        *ngTemplateOutlet="container; context: context$ | push"
+    ></ng-container>
 }
 
 <!-- 間隙時間の場合 -->
 @if (isGapTime$ | push) {
-<ng-container
-    *ngTemplateOutlet="container; context: context$ | push"
-></ng-container>
+    <ng-container
+        *ngTemplateOutlet="container; context: context$ | push"
+    ></ng-container>
 }
 
 <!-- 入庫済みの場合 -->
 @if (isAfterDepotIn$ | push) {
-<ng-container
-    *ngTemplateOutlet="container; context: context$ | push"
-></ng-container>
+    <ng-container
+        *ngTemplateOutlet="container; context: context$ | push"
+    ></ng-container>
 }

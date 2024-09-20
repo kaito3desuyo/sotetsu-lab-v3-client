@@ -15,7 +15,7 @@ export class ConfirmDialogService {
     constructor(private readonly dialog: MatDialog) {}
 
     open(
-        config?: MatDialogConfig<IConfirmDialogData>
+        config?: MatDialogConfig<IConfirmDialogData>,
     ): MatDialogRef<ConfirmDialogComponent> {
         const defaultConfig: MatDialogConfig<IConfirmDialogData> = {
             width: '360px',

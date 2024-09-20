@@ -4,12 +4,12 @@ import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
 import { TripBlockModel } from '../models/trip-block.model';
 
 export function buildTripBlockDetailsDto(
-    model: TripBlockModel
+    model: TripBlockModel,
 ): TripBlockDetailsDto {
     const plainObject = classToPlain(model, classTransformerOptions);
     return plainToClass(
         TripBlockDetailsDto,
         plainObject,
-        classTransformerOptions
+        classTransformerOptions,
     );
 }

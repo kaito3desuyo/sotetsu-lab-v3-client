@@ -16,7 +16,7 @@
                             | dayjs
                                 : {
                                       format: 'MM/DD',
-                                      parseFormat: 'YYYY/MM/DD'
+                                      parseFormat: 'YYYY/MM/DD',
                                   }
                     }}
                     <br />
@@ -45,7 +45,11 @@
             >
                 <div class="tw-sticky">
                     <ng-container
-                        *rxIf="operationSightings?.[formation.formationId]?.[calendar.date]"
+                        *rxIf="
+                            operationSightings?.[formation.formationId]?.[
+                                calendar.date
+                            ]
+                        "
                     >
                         <div class="tw-flex tw-flex-row tw-gap-2">
                             <ng-container
@@ -62,7 +66,7 @@
                                         sighting.sightingTime
                                             | dayjs
                                                 : {
-                                                      format: '目撃：YYYY/MM/DD HH:mm:ss'
+                                                      format: '目撃：YYYY/MM/DD HH:mm:ss',
                                                   }
                                     "
                                 ></app-operation-number-link>

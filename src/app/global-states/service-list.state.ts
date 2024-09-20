@@ -31,7 +31,7 @@ export class ServiceListStateStore extends EntityStore<ServiceListState> {
             tap((data: ServiceDetailsDto[]) => {
                 this.set(data);
             }),
-            map(() => null)
+            map(() => null),
         );
     }
 }

@@ -17,7 +17,7 @@ export class TimetableSearchCardStateStore extends Store<TimetableSearchCardStat
                 searchByStation: false,
                 stationId: null,
             },
-            { name: `TimetableSearchCard-${guid()}` }
+            { name: `TimetableSearchCard-${guid()}` },
         );
     }
 

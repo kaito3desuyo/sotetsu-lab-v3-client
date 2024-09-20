@@ -11,11 +11,11 @@ export class AppUpdateService {
     constructor(
         private readonly updates: SwUpdate,
         private readonly logger: NGXLogger,
-        private readonly confirmDialogService: ConfirmDialogService
+        private readonly confirmDialogService: ConfirmDialogService,
     ) {
         this.logger.log(
             'AppUpdateService: Constructor',
-            this.updates.isEnabled
+            this.updates.isEnabled,
         );
 
         if (this.updates.isEnabled) {
@@ -29,15 +29,15 @@ export class AppUpdateService {
             switch (ev.type) {
                 case 'VERSION_DETECTED':
                     this.logger.log(
-                        `Downloading new app version: ${ev.version.hash}`
+                        `Downloading new app version: ${ev.version.hash}`,
                     );
                     break;
                 case 'VERSION_READY':
                     this.logger.log(
-                        `Current app version: ${ev.currentVersion.hash}`
+                        `Current app version: ${ev.currentVersion.hash}`,
                     );
                     this.logger.log(
-                        `New app version ready for use: ${ev.latestVersion.hash}`
+                        `New app version ready for use: ${ev.latestVersion.hash}`,
                     );
 
                     const dialogRef = this.confirmDialogService.open({
@@ -59,7 +59,7 @@ export class AppUpdateService {
                     break;
                 case 'VERSION_INSTALLATION_FAILED':
                     this.logger.error(
-                        `Failed to install app version '${ev.version.hash}': ${ev.error}`
+                        `Failed to install app version '${ev.version.hash}': ${ev.error}`,
                     );
                     break;
             }

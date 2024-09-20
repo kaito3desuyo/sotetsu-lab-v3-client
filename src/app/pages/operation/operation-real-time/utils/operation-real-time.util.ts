@@ -8,7 +8,7 @@ import { IOperationRealTimeTableData } from '../interfaces/operation-real-time-t
 function generateOperationTableData(
     operations: OperationDetailsDto[],
     timeCrossSections: OperationSightingTimeCrossSectionDto[],
-    positions: OperationCurrentPositionDto[]
+    positions: OperationCurrentPositionDto[],
 ): IOperationRealTimeTableData[] {
     const data = operations
         .filter((o) => o.operationNumber !== '100')
@@ -17,11 +17,11 @@ function generateOperationTableData(
                 timeCrossSections.find(
                     (so) =>
                         so.expectedSighting?.operation?.operationNumber ===
-                        o.operationNumber
+                        o.operationNumber,
                 ) ?? null;
             const currentPosition =
                 positions.find(
-                    (so) => so.operation.operationId === o.operationId
+                    (so) => so.operation.operationId === o.operationId,
                 ) ?? null;
 
             return {
@@ -37,20 +37,20 @@ function generateOperationTableData(
 function generateFormationTableData(
     formations: FormationDetailsDto[],
     timeCrossSections: OperationSightingTimeCrossSectionDto[],
-    positions: OperationCurrentPositionDto[]
+    positions: OperationCurrentPositionDto[],
 ): IOperationRealTimeTableData[] {
     const data = formations.map((o) => {
         const timeCrossSection =
             timeCrossSections.find(
                 (so) =>
                     so.expectedSighting?.formation?.formationNumber ===
-                    o.formationNumber
+                    o.formationNumber,
             ) ?? null;
         const currentPosition =
             positions.find(
                 (so) =>
                     so.operation.operationId ===
-                    timeCrossSection?.expectedSighting.operation.operationId
+                    timeCrossSection?.expectedSighting.operation.operationId,
             ) ?? null;
 
         return {
@@ -64,13 +64,13 @@ function generateFormationTableData(
 }
 
 function filterOperationCurrentPositionsThatShouldUpdate(
-    currentPositions: OperationCurrentPositionDto[]
+    currentPositions: OperationCurrentPositionDto[],
 ): OperationCurrentPositionDto[] {
     const now = dayjs();
     const target = (days: number, time: string) =>
         dayjs(time, 'HH:mm:ss').add(
             days - (now.hour() < 4 ? 1 : 0) - 1,
-            'days'
+            'days',
         );
 
     return currentPositions.filter(({ position }) => {
@@ -80,7 +80,7 @@ function filterOperationCurrentPositionsThatShouldUpdate(
                 now >=
                 target(
                     position.next.startTime.departureDays,
-                    position.next.startTime.departureTime
+                    position.next.startTime.departureTime,
                 )
             );
         }
@@ -91,7 +91,7 @@ function filterOperationCurrentPositionsThatShouldUpdate(
                 now >=
                 target(
                     position.current.endTime.arrivalDays,
-                    position.current.endTime.arrivalTime
+                    position.current.endTime.arrivalTime,
                 )
             );
         }
@@ -102,7 +102,7 @@ function filterOperationCurrentPositionsThatShouldUpdate(
                 now >=
                 target(
                     position.next.startTime.departureDays,
-                    position.next.startTime.departureTime
+                    position.next.startTime.departureTime,
                 )
             );
         }

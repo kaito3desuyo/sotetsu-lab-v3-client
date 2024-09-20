@@ -32,8 +32,8 @@ export class TimetableEditFormCComponent {
     readonly calendarId$ = this.timetableEditFormStateQuery.calendarId$;
     readonly calendar$ = this.timetableEditFormStateQuery.calendarId$.pipe(
         switchMap((calendarId) =>
-            this.calendarListStateQuery.selectByCalendarId(calendarId)
-        )
+            this.calendarListStateQuery.selectByCalendarId(calendarId),
+        ),
     );
     readonly mode$ = this.timetableEditFormStateQuery.mode$;
     readonly tripDirection$ = this.timetableEditFormStateQuery.tripDirection$;
@@ -53,11 +53,11 @@ export class TimetableEditFormCComponent {
         private readonly calendarListStateQuery: CalendarListStateQuery,
         private readonly timetableEditFormService: TimetableEditFormService,
         private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
-        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery
+        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery,
     ) {}
 
     async onReceiveClickSubmit(
-        trips: CreateTripDto[] | ReplaceTripDto[]
+        trips: CreateTripDto[] | ReplaceTripDto[],
     ): Promise<void> {
         const isCreateTripDto = (_: unknown): _ is CreateTripDto[] => {
             return (
@@ -76,7 +76,7 @@ export class TimetableEditFormCComponent {
         };
 
         const fn = (
-            trips: CreateTripDto[] | ReplaceTripDto[]
+            trips: CreateTripDto[] | ReplaceTripDto[],
         ): Observable<void> => {
             if (isCreateTripDto(trips)) {
                 return this.timetableEditFormService.createTripBlocks(trips);
@@ -89,7 +89,7 @@ export class TimetableEditFormCComponent {
 
         const result = await tryCatchAsync(
             fn(trips),
-            (e) => e as HttpErrorResponse
+            (e) => e as HttpErrorResponse,
         );
 
         this.loading.close();

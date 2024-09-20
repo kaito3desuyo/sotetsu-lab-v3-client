@@ -9,12 +9,12 @@ import { isMoment, Moment } from 'moment';
 export class DayjsPipe implements PipeTransform {
     transform(
         value: string,
-        args: { format: string; parseFormat?: string }
+        args: { format: string; parseFormat?: string },
     ): string;
     transform(value: Moment, args: { format: string }): string;
     transform(
         value: string | Moment,
-        args: { format: string; parseFormat?: string }
+        args: { format: string; parseFormat?: string },
     ): string {
         if (isString(value)) {
             const instance = dayjs(value, args.parseFormat);

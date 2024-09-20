@@ -102,19 +102,19 @@ export class OperationSearchCardPComponent {
     constructor() {
         this.state.connect(
             'calendarId',
-            this.onChangedInputCalendarId$.asObservable()
+            this.onChangedInputCalendarId$.asObservable(),
         );
         this.state.connect(
             'operationId',
-            this.onChangedInputOperationId$.asObservable()
+            this.onChangedInputOperationId$.asObservable(),
         );
         this.state.connect(
             'calendars',
-            this.onChangedInputCalendars$.asObservable()
+            this.onChangedInputCalendars$.asObservable(),
         );
         this.state.connect(
             'operations',
-            this.onChangedInputOperations$.asObservable()
+            this.onChangedInputOperations$.asObservable(),
         );
 
         this.state.hold(this.state.select('calendarId'), (calendarId) => {

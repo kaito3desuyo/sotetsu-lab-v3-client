@@ -10,14 +10,14 @@ export class StationService {
     constructor(private readonly stationQuery: StationQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<StationDetailsDto> | StationDetailsDto[]> {
         return this.stationQuery.findMany(qb);
     }
 
     findOne(
         stationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<StationDetailsDto> {
         return this.stationQuery.findOne(stationId, qb);
     }

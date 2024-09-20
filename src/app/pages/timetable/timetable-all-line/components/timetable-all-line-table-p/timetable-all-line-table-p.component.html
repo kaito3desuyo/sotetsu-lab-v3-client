@@ -6,7 +6,7 @@
                 [ngClass]="[
                     vm.calendar.sunday && vm.calendar.saturday
                         ? 'holiday'
-                        : 'weekday'
+                        : 'weekday',
                 ]"
             >
                 <h3 class="!tw-text-[16px] !tw-leading-5 !tw-text-white">
@@ -17,8 +17,8 @@
                         vm.tripDirection === 0
                             ? '上り'
                             : vm.tripDirection === 1
-                            ? '下り'
-                            : ''
+                              ? '下り'
+                              : ''
                     }}時刻表
                 </h3>
             </mat-toolbar>
@@ -69,7 +69,7 @@
                                                 (trip.tripNumber.length > 3
                                                     ? 3 / trip.tripNumber.length
                                                     : 1) +
-                                                ', 1)'
+                                                ', 1)',
                                         }"
                                     >
                                         {{ trip.tripNumber }}
@@ -109,8 +109,8 @@
                                             {
                                                 operation_id:
                                                     trip.tripOperationLists[0]
-                                                        .operationId
-                                            }
+                                                        .operationId,
+                                            },
                                         ]"
                                     >
                                         {{
@@ -174,7 +174,7 @@
                                                           | antiBrackets
                                                       ).length
                                                     : 1) +
-                                                ', 1)'
+                                                ', 1)',
                                         }"
                                     >
                                         {{
@@ -199,17 +199,26 @@
                             <tr
                                 class="tw-h-6"
                                 *rxIf="
-                                ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                    staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                (vm.tripDirection === 0 &&
-                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                        staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
-                                (vm.tripDirection === 1 &&
-                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                        staitonViewMode.ONLY_OUTBOUND_ARRIVAL);
-                                strategy: 'immediate';
-                                patchZone: false
-                            "
+                                    ({
+                                        station,
+                                        tripDirection: vm.tripDirection,
+                                    } | timetableAllLineGetViewMode) ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        (vm.tripDirection === 0 &&
+                                            ({
+                                                station,
+                                                tripDirection: vm.tripDirection,
+                                            } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
+                                        (vm.tripDirection === 1 &&
+                                            ({
+                                                station,
+                                                tripDirection: vm.tripDirection,
+                                            } | timetableAllLineGetViewMode) ===
+                                                staitonViewMode.ONLY_OUTBOUND_ARRIVAL);
+                                    strategy: 'immediate';
+                                    patchZone: false
+                                "
                             >
                                 <td
                                     class="tw-sticky tw-left-0 tw-z-10 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-top-0 before:tw-left-[-0.5px] before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
@@ -217,7 +226,7 @@
                                         'tw-border-b before:tw-border-b':
                                             ({
                                                 station: station,
-                                                tripDirection: vm.tripDirection
+                                                tripDirection: vm.tripDirection,
                                             }
                                                 | timetableAllLineGetBorderSetting) ===
                                                 true ||
@@ -225,7 +234,7 @@
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetViewMode) ===
                                                     staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
@@ -233,17 +242,20 @@
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetViewMode) ===
-                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL),
                                     }"
                                     [rowSpan]="
-                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) ===
-                                    staitonViewMode.DEPARTURE_AND_ARRIVAL
-                                        ? 2
-                                        : 1
-                                "
+                                        ({
+                                            station,
+                                            tripDirection: vm.tripDirection,
+                                        } | timetableAllLineGetViewMode) ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL
+                                            ? 2
+                                            : 1
+                                    "
                                 >
                                     <span
                                         class="tw-relative tw-text-[10px]"
@@ -280,7 +292,7 @@
                                                           4) *
                                                       16 *
                                                       -1
-                                                    : 0) + 'px'
+                                                    : 0) + 'px',
                                         }"
                                     >
                                         {{ station.stationName }}
@@ -292,20 +304,20 @@
                                         'tw-border-b before:tw-border-b':
                                             ({
                                                 station: station,
-                                                tripDirection: vm.tripDirection
+                                                tripDirection: vm.tripDirection,
                                             }
                                                 | timetableAllLineGetBorderSetting) ===
                                                 true ||
                                             ({
                                                 station: station,
-                                                tripDirection: vm.tripDirection
+                                                tripDirection: vm.tripDirection,
                                             } | timetableAllLineGetViewMode) ===
                                                 staitonViewMode.DEPARTURE_AND_ARRIVAL ||
                                             (vm.tripDirection === 0 &&
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetViewMode) ===
                                                     staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
@@ -313,10 +325,10 @@
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetViewMode) ===
-                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                                    staitonViewMode.ONLY_OUTBOUND_ARRIVAL),
                                     }"
                                 >
                                     <span class="tw-relative">着</span>
@@ -332,7 +344,7 @@
                                             station: station,
                                             stations: vm.stations,
                                             trip: trip,
-                                            trips: vm.trips
+                                            trips: vm.trips,
                                         } | timetableAllLineGetTimeAndTrackBy;
                                         strategy: 'normal';
                                         patchZone: false
@@ -345,14 +357,14 @@
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetBorderSetting) ===
                                                     true ||
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetViewMode) ===
                                                     staitonViewMode.DEPARTURE_AND_ARRIVAL ||
@@ -360,7 +372,7 @@
                                                     ({
                                                         station: station,
                                                         tripDirection:
-                                                            vm.tripDirection
+                                                            vm.tripDirection,
                                                     }
                                                         | timetableAllLineGetViewMode) ===
                                                         staitonViewMode.ONLY_INBOUND_ARRIVAL) ||
@@ -368,13 +380,14 @@
                                                     ({
                                                         station: station,
                                                         tripDirection:
-                                                            vm.tripDirection
+                                                            vm.tripDirection,
                                                     }
                                                         | timetableAllLineGetViewMode) ===
-                                                        staitonViewMode.ONLY_OUTBOUND_ARRIVAL)
+                                                        staitonViewMode.ONLY_OUTBOUND_ARRIVAL),
                                         }"
                                         [ngStyle]="{
-                                            color: trip.tripClass.tripClassColor
+                                            color: trip.tripClass
+                                                .tripClassColor,
                                         }"
                                     >
                                         {{
@@ -384,7 +397,7 @@
                                                 station: station,
                                                 trip: trip,
                                                 stations: vm.stations,
-                                                trips: vm.trips
+                                                trips: vm.trips,
                                             } | timetableAllLineGetTime
                                         }}
                                     </td>
@@ -393,8 +406,16 @@
                             <tr
                                 class="tw-h-6"
                                 *rxIf="
-                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.DEPARTURE_AND_ARRIVAL ||
-                                    ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
+                                    ({
+                                        station,
+                                        tripDirection: vm.tripDirection,
+                                    } | timetableAllLineGetViewMode) ===
+                                        staitonViewMode.DEPARTURE_AND_ARRIVAL ||
+                                        ({
+                                            station,
+                                            tripDirection: vm.tripDirection,
+                                        } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.ONLY_DEPARTURE;
                                     strategy: 'immediate';
                                     patchZone: false
                                 "
@@ -405,11 +426,16 @@
                                         'tw-border-b before:tw-border-b':
                                             {
                                                 station: station,
-                                                tripDirection: vm.tripDirection
-                                            } | timetableAllLineGetBorderSetting
+                                                tripDirection: vm.tripDirection,
+                                            }
+                                            | timetableAllLineGetBorderSetting,
                                     }"
                                     *rxIf="
-                                        ({ station, tripDirection: vm.tripDirection } | timetableAllLineGetViewMode) === staitonViewMode.ONLY_DEPARTURE;
+                                        ({
+                                            station,
+                                            tripDirection: vm.tripDirection,
+                                        } | timetableAllLineGetViewMode) ===
+                                            staitonViewMode.ONLY_DEPARTURE;
                                         strategy: 'immediate';
                                         patchZone: false
                                     "
@@ -449,7 +475,7 @@
                                                           4) *
                                                       16 *
                                                       -1
-                                                    : 0) + 'px'
+                                                    : 0) + 'px',
                                         }"
                                     >
                                         {{ station.stationName }}
@@ -461,8 +487,9 @@
                                         'tw-border-b before:tw-border-b':
                                             {
                                                 station: station,
-                                                tripDirection: vm.tripDirection
-                                            } | timetableAllLineGetBorderSetting
+                                                tripDirection: vm.tripDirection,
+                                            }
+                                            | timetableAllLineGetBorderSetting,
                                     }"
                                 >
                                     <span class="tw-relative">発</span>
@@ -478,7 +505,7 @@
                                             station: station,
                                             stations: vm.stations,
                                             trip: trip,
-                                            trips: vm.trips
+                                            trips: vm.trips,
                                         } | timetableAllLineGetTimeAndTrackBy;
                                         strategy: 'normal';
                                         patchZone: false
@@ -491,13 +518,14 @@
                                                 ({
                                                     station: station,
                                                     tripDirection:
-                                                        vm.tripDirection
+                                                        vm.tripDirection,
                                                 }
                                                     | timetableAllLineGetBorderSetting) ===
-                                                true
+                                                true,
                                         }"
                                         [ngStyle]="{
-                                            color: trip.tripClass.tripClassColor
+                                            color: trip.tripClass
+                                                .tripClassColor,
                                         }"
                                     >
                                         {{
@@ -507,7 +535,7 @@
                                                 station: station,
                                                 trip: trip,
                                                 stations: vm.stations,
-                                                trips: vm.trips
+                                                trips: vm.trips,
                                             } | timetableAllLineGetTime
                                         }}
                                     </td>
@@ -697,7 +725,7 @@
                                             (click)="
                                                 onClickedAddTripInGroup$.next({
                                                     base: vm.groupingBaseTrip,
-                                                    target: trip
+                                                    target: trip,
                                                 })
                                             "
                                         >
@@ -723,7 +751,7 @@
                                                 onClickedDeleteTripInGroup$.next(
                                                     {
                                                         base: vm.groupingBaseTrip,
-                                                        target: trip
+                                                        target: trip,
                                                     }
                                                 )
                                             "

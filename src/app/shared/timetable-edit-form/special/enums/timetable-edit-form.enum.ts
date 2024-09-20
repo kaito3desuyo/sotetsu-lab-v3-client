@@ -4,7 +4,7 @@ export const ETimetableEditFormMode = {
     UPDATE: 'update',
 } as const;
 export type ETimetableEditFormMode =
-    typeof ETimetableEditFormMode[keyof typeof ETimetableEditFormMode];
+    (typeof ETimetableEditFormMode)[keyof typeof ETimetableEditFormMode];
 
 export const ETimetableEditFormStopType = {
     STOP: 'stop',
@@ -12,4 +12,4 @@ export const ETimetableEditFormStopType = {
     NOT_GOING_THROUGH: 'not-going-through',
 } as const;
 export type ETimetableEditFormStopType =
-    typeof ETimetableEditFormStopType[keyof typeof ETimetableEditFormStopType];
+    (typeof ETimetableEditFormStopType)[keyof typeof ETimetableEditFormStopType];

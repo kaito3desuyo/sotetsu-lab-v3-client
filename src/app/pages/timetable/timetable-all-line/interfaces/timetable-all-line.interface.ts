@@ -5,4 +5,4 @@ export const ETimetableAllLineStationViewMode = {
     DEPARTURE_AND_ARRIVAL: 3,
 } as const;
 export type ETimetableAllLineStationViewMode =
-    typeof ETimetableAllLineStationViewMode[keyof typeof ETimetableAllLineStationViewMode];
+    (typeof ETimetableAllLineStationViewMode)[keyof typeof ETimetableAllLineStationViewMode];

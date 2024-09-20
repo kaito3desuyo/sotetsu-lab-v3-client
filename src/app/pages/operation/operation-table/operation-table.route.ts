@@ -12,7 +12,7 @@ export const OPERATION_TABLE_ROUTES: Route[] = [
         path: '',
         loadComponent: () =>
             import('./operation-table.component').then(
-                (mod) => mod.OperationTableComponent
+                (mod) => mod.OperationTableComponent,
             ),
         providers: [
             OperationTableService,

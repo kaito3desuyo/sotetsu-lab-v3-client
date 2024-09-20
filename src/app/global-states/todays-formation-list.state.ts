@@ -37,7 +37,7 @@ export class TodaysFormationListStateStore extends EntityStore<State> {
                 tap((formations: FormationDetailsDto[]) => {
                     this.set(formations);
                 }),
-                map(() => undefined)
+                map(() => undefined),
             );
     }
 }
@@ -54,8 +54,8 @@ export class TodaysFormationListStateQuery extends QueryEntity<State> {
                 const getIndex = (agencyId: string) =>
                     agencies.findIndex((v) => v.agencyId === agencyId);
                 return getIndex(a.agencyId) - getIndex(b.agencyId);
-            })
-        )
+            }),
+        ),
     );
 
     get todaysFormations() {

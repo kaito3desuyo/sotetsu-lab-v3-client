@@ -26,36 +26,36 @@ export class AppComponent implements OnInit, OnDestroy {
         private readonly gaService: GoogleAnalyticsService,
         private readonly loadingService: LoadingService,
         private readonly tokenStateStore: TokenStateStore,
-        private readonly tokenStateQuery: TokenStateQuery
+        private readonly tokenStateQuery: TokenStateQuery,
     ) {
         this.state.hold(
             this.router.events.pipe(
-                filter<NavigationStart>((ev) => ev instanceof NavigationStart)
+                filter<NavigationStart>((ev) => ev instanceof NavigationStart),
             ),
             () => {
                 this.loadingService.open();
-            }
+            },
         );
 
         this.state.hold(
             this.router.events.pipe(
-                filter<NavigationEnd>((ev) => ev instanceof NavigationEnd)
+                filter<NavigationEnd>((ev) => ev instanceof NavigationEnd),
             ),
             (ev) => {
                 this.loadingService.close();
                 this.gaService.sendPageView(
                     this.title.getTitle(),
-                    ev.urlAfterRedirects
+                    ev.urlAfterRedirects,
                 );
-            }
+            },
         );
 
         this.state.hold(
             interval(1000 * 10).pipe(
                 map(() => this.tokenStateQuery.isExpired),
                 filter((bool) => !!bool),
-                switchMap(() => this.tokenStateStore.fetch())
-            )
+                switchMap(() => this.tokenStateStore.fetch()),
+            ),
         );
     }
 

@@ -12,28 +12,28 @@ export class OperationService {
     constructor(private readonly operationQuery: OperationQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<OperationDetailsDto> | OperationDetailsDto[]> {
         return this.operationQuery.findMany(qb);
     }
 
     findOne(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationDetailsDto> {
         return this.operationQuery.findOne(operationId, qb);
     }
 
     findOneWithCurrentPosition(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationCurrentPositionDto> {
         return this.operationQuery.findOneWithCurrentPosition(operationId, qb);
     }
 
     findOneWithTrips(
         operationId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<OperationTripsDto> {
         return this.operationQuery.findOneWithTrips(operationId, qb);
     }

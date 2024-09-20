@@ -11,7 +11,7 @@ export const OPERATION_REAL_TIME_ROUTES: Route[] = [
         path: '',
         loadComponent: () =>
             import('./operation-real-time.component').then(
-                (mod) => mod.OperationRealTimeComponent
+                (mod) => mod.OperationRealTimeComponent,
             ),
         providers: [
             OperationRealTimeService,

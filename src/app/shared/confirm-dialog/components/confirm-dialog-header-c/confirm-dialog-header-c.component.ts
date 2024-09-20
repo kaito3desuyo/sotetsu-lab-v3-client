@@ -12,7 +12,7 @@ export class ConfirmDialogHeaderCComponent {
 
     constructor(
         private readonly confirmDialogService: ConfirmDialogService,
-        private readonly confirmDialogStateQuery: ConfirmDialogStateQuery
+        private readonly confirmDialogStateQuery: ConfirmDialogStateQuery,
     ) {}
 
     onReceiveClickClose(): void {

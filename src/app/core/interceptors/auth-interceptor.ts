@@ -1,4 +1,9 @@
-import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import {
+    HttpEvent,
+    HttpHandler,
+    HttpInterceptor,
+    HttpRequest,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
@@ -11,28 +16,28 @@ import {
 export class AuthInterceptor implements HttpInterceptor {
     constructor(
         private readonly tokenStateStore: TokenStateStore,
-        private readonly tokenStateQuery: TokenStateQuery
+        private readonly tokenStateQuery: TokenStateQuery,
     ) {}
 
     intercept(
         request: HttpRequest<any>,
-        next: HttpHandler
+        next: HttpHandler,
     ): Observable<HttpEvent<any>> {
         if (this.tokenStateQuery.isExpired) {
             return of(undefined).pipe(
                 mergeMap(() => this.tokenStateStore.fetch()),
-                mergeMap(() => this._handleRequest(request, next))
+                mergeMap(() => this._handleRequest(request, next)),
             );
         }
 
         return of(undefined).pipe(
-            mergeMap(() => this._handleRequest(request, next))
+            mergeMap(() => this._handleRequest(request, next)),
         );
     }
 
     private _handleRequest(
         request: HttpRequest<any>,
-        next: HttpHandler
+        next: HttpHandler,
     ): Observable<HttpEvent<any>> {
         const accessToken = this.tokenStateQuery.accessToken;
         const tokenType = this.tokenStateQuery.tokenType;
@@ -42,7 +47,7 @@ export class AuthInterceptor implements HttpInterceptor {
             headers: accessToken
                 ? request.headers.set(
                       'x-sotetsu-lab-authorization',
-                      `${tokenType} ${accessToken}`
+                      `${tokenType} ${accessToken}`,
                   )
                 : request.headers,
         });

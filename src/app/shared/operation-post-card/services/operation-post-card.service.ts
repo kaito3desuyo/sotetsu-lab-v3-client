@@ -21,7 +21,7 @@ export class OperationPostCardService {
         private readonly formationService: FormationService,
         private readonly operationService: OperationService,
         private readonly operationSightingService: OperationSightingService,
-        private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery
+        private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery,
     ) {}
 
     receiveSubmitOperationSightingEvent(): Observable<void> {
@@ -29,7 +29,7 @@ export class OperationPostCardService {
     }
 
     async addOperationSighting(
-        formValue: IOperationPostCardForm
+        formValue: IOperationPostCardForm,
     ): Promise<void> {
         const todaysCalendarId = this.todaysCalendarListQuery.todaysCalendarId;
         const emptyQb = RequestQueryBuilder.create();
@@ -112,17 +112,17 @@ export class OperationPostCardService {
         ) {
             const firstTripDepartureTime = dayjs(
                 currentPosition.position.next.startTime.departureTime,
-                'HH:mm:ss'
+                'HH:mm:ss',
             )
                 .add(
                     currentPosition.position.next.startTime.departureDays - 1,
-                    'day'
+                    'day',
                 )
                 .subtract(isLateNight ? 1 : 0, 'day');
 
             if (now.isBefore(firstTripDepartureTime.subtract(30, 'minute'))) {
                 throw new Error(
-                    `${operations[0].operationNumber}運の最初の列車が発車するより30分以上前の時刻を入力することはできません`
+                    `${operations[0].operationNumber}運の最初の列車が発車するより30分以上前の時刻を入力することはできません`,
                 );
             }
         }

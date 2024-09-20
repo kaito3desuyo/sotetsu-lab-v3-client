@@ -10,7 +10,7 @@ export class RouteService {
     constructor(private readonly routeQuery: RouteQuery) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<RouteDetailsDto> | RouteDetailsDto[]> {
         return this.routeQuery.findMany(qb);
     }

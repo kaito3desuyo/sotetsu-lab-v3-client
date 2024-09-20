@@ -12,27 +12,27 @@ export const layoutAnimations = [
             'open',
             style({
                 left: '0px',
-            })
+            }),
         ),
         state(
             'close',
             style({
                 left: '-256px',
-            })
+            }),
         ),
         state(
             'shadow',
             style({
                 background: 'rgba(255, 255, 255, 0.2)',
                 'backdrop-filter': 'blur(4px)',
-            })
+            }),
         ),
         state(
             'clear',
             style({
                 background: 'rgba(0,0,0,0.0)',
                 'backdrop-filter': 'none',
-            })
+            }),
         ),
         transition('close => open', [
             animate('0.3s cubic-bezier(0.4, 0.0, 0.2, 1)'),

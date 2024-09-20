@@ -16,7 +16,7 @@ export class TripBlockQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -30,16 +30,16 @@ export class TripBlockQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildTripBlockDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildTripBlockDetailsDto(o));
-                })
+                }),
             );
     }
 
     findOne(
         tripBlockId: string,
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<TripBlockDetailsDto> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -50,7 +50,7 @@ export class TripBlockQuery {
             .pipe(
                 map((data) => {
                     return buildTripBlockDetailsDto(data);
-                })
+                }),
             );
     }
 }

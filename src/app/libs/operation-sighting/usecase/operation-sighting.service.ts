@@ -12,11 +12,11 @@ import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-
 export class OperationSightingService {
     constructor(
         private readonly operationSightingCommand: OperationSightingCommand,
-        private readonly operationSightingQuery: OperationSightingQuery
+        private readonly operationSightingQuery: OperationSightingQuery,
     ) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -24,7 +24,7 @@ export class OperationSightingService {
     }
 
     findManyLatestGroupByFormation(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -32,7 +32,7 @@ export class OperationSightingService {
     }
 
     findManyLatestGroupByOperation(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<
         Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
     > {
@@ -43,7 +43,7 @@ export class OperationSightingService {
         operationNumber: string;
     }): Observable<OperationSightingTimeCrossSectionDto> {
         return this.operationSightingQuery.findOneTimeCrossSectionFromOperationNumber(
-            params
+            params,
         );
     }
 
@@ -51,13 +51,13 @@ export class OperationSightingService {
         formationNumber: string;
     }): Observable<OperationSightingTimeCrossSectionDto> {
         return this.operationSightingQuery.findOneTimeCrossSectionFromFormationNumber(
-            params
+            params,
         );
     }
 
     createOne(
         qb: RequestQueryBuilder,
-        body: CreateOperationSightingDto
+        body: CreateOperationSightingDto,
     ): Observable<OperationSightingDetailsDto> {
         return this.operationSightingCommand.createOne(qb, body);
     }

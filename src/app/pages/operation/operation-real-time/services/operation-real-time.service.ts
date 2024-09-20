@@ -19,10 +19,10 @@ export class OperationRealTimeService {
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #tripClassService = inject(TripClassService);
     readonly #todaysOperationsListStateQuery = inject(
-        TodaysOperationListStateQuery
+        TodaysOperationListStateQuery,
     );
     readonly #todaysFormationListStateQuery = inject(
-        TodaysFormationListStateQuery
+        TodaysFormationListStateQuery,
     );
     readonly #operationRealTimeStateStore = inject(OperationRealTimeStateStore);
     readonly #operationRealTimeStateQuery = inject(OperationRealTimeStateQuery);
@@ -34,9 +34,9 @@ export class OperationRealTimeService {
         return forkJoin(
             operations.map(({ operationNumber }) =>
                 this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
-                    { operationNumber }
-                )
-            )
+                    { operationNumber },
+                ),
+            ),
         ).pipe(
             tap((data) => {
                 const formations =
@@ -53,14 +53,14 @@ export class OperationRealTimeService {
                                     ({ formationNumber }) =>
                                         formationNumber ===
                                         o.expectedSighting?.formation
-                                            ?.formationNumber
+                                            ?.formationNumber,
                                 ),
                             },
                         },
-                    }))
+                    })),
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -70,9 +70,9 @@ export class OperationRealTimeService {
         return forkJoin(
             formations.map(({ formationNumber }) =>
                 this.#operationSightingService.findOneTimeCrossSectionFromFormationNumber(
-                    { formationNumber }
-                )
-            )
+                    { formationNumber },
+                ),
+            ),
         ).pipe(
             tap((data) => {
                 const operations =
@@ -89,14 +89,14 @@ export class OperationRealTimeService {
                                     ({ operationNumber }) =>
                                         operationNumber ===
                                         o.expectedSighting?.operation
-                                            ?.operationNumber
+                                            ?.operationNumber,
                                 ),
                             },
                         },
-                    }))
+                    })),
                 );
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -128,14 +128,14 @@ export class OperationRealTimeService {
             updateTargetOperations.map((o) =>
                 this.#operationService.findOneWithCurrentPosition(
                     o.operationId,
-                    qb
-                )
-            )
+                    qb,
+                ),
+            ),
         ).pipe(
             tap((data) => {
                 this.#operationRealTimeStateStore.updateCurrentPositions(data);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 
@@ -154,7 +154,7 @@ export class OperationRealTimeService {
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.#operationRealTimeStateStore.setTripClasses(tripClasses);
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

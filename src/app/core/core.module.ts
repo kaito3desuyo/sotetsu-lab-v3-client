@@ -1,4 +1,8 @@
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import {
+    HTTP_INTERCEPTORS,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -25,7 +29,9 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
     patchZone: true,
 };
 
-@NgModule({ imports: [BrowserModule,
+@NgModule({
+    imports: [
+        BrowserModule,
         BrowserAnimationsModule,
         ServiceWorkerModule.register('ngsw-worker.js', {
             enabled: environment.production,
@@ -42,7 +48,9 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             serverLogLevel: NgxLoggerLevel.OFF,
         }),
         ConfirmDialogModule,
-        MatSnackBarModule], providers: [
+        MatSnackBarModule,
+    ],
+    providers: [
         AppInitializerProvider,
         {
             provide: ErrorHandler,
@@ -77,5 +85,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             useValue: CUSTOM_RX_ANGULAR_CONFIG,
         },
         provideHttpClient(withInterceptorsFromDi()),
-    ] })
+    ],
+})
 export class CoreModule {}

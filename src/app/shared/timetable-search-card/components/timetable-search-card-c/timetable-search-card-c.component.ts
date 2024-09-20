@@ -17,13 +17,13 @@ import { TimetableSearchCardPComponent } from '../timetable-search-card-p/timeta
 export class TimetableSearchCardCComponent {
     private readonly calendarListStateQuery = inject(CalendarListStateQuery);
     private readonly routeStationListStateQuery = inject(
-        RouteStationListStateQuery
+        RouteStationListStateQuery,
     );
     private readonly timetableSearchCardService = inject(
-        TimetableSearchCardService
+        TimetableSearchCardService,
     );
     private readonly timetableSearchCardStateQuery = inject(
-        TimetableSearchCardStateQuery
+        TimetableSearchCardStateQuery,
     );
 
     readonly calendars$ = this.calendarListStateQuery.calendars$;

@@ -45,17 +45,17 @@ type State = {
 export class OperationRealTimeNewTableByFormationCComponent {
     private readonly state = inject<RxState<State>>(RxState);
     private readonly todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery
+        TodaysCalendarListStateQuery,
     );
     private readonly routeStationListStateQuery = inject(
-        RouteStationListStateQuery
+        RouteStationListStateQuery,
     );
     private readonly operationRealTimeStateQuery = inject(
-        OperationRealTimeStateQuery
+        OperationRealTimeStateQuery,
     );
 
     readonly #todaysFormationListStateQuery = inject(
-        TodaysFormationListStateQuery
+        TodaysFormationListStateQuery,
     );
 
     readonly operationRealTimeTableColumn = OperationRealTimeTableColumn;
@@ -87,8 +87,8 @@ export class OperationRealTimeNewTableByFormationCComponent {
                             'updatedAt',
                         ] as OperationRealTimeTableColumn[];
                     }
-                })
-            )
+                }),
+            ),
         );
 
         this.state.connect(
@@ -99,52 +99,53 @@ export class OperationRealTimeNewTableByFormationCComponent {
                         'formations',
                         'timeCrossSections',
                         'currentPositions',
-                    ])
+                    ]),
                 )
                 .pipe(
                     map(({ formations, timeCrossSections, currentPositions }) =>
                         OperationRealTimeUtil.generateFormationTableData(
                             formations,
                             timeCrossSections,
-                            currentPositions
-                        )
-                    )
-                )
+                            currentPositions,
+                        ),
+                    ),
+                ),
         );
 
         this.state.connect(
             'todaysCalendarId',
-            this.todaysCalendarListStateQuery.todaysCalendarId$
+            this.todaysCalendarListStateQuery.todaysCalendarId$,
         );
 
         this.state.connect(
             'stations',
-            this.routeStationListStateQuery.stations$
+            this.routeStationListStateQuery.stations$,
         );
 
         this.state.connect(
             'tripClasses',
-            this.operationRealTimeStateQuery.tripClasses$
+            this.operationRealTimeStateQuery.tripClasses$,
         );
 
         this.state.connect(
             'formations',
-            this.#todaysFormationListStateQuery.todaysFormationsSorted$
+            this.#todaysFormationListStateQuery.todaysFormationsSorted$,
         );
 
         this.state.connect(
             'timeCrossSections',
-            this.operationRealTimeStateQuery.formationSightingTimeCrossSections$
+            this.operationRealTimeStateQuery
+                .formationSightingTimeCrossSections$,
         );
 
         this.state.connect(
             'currentPositions',
-            this.operationRealTimeStateQuery.currentPositions$
+            this.operationRealTimeStateQuery.currentPositions$,
         );
 
         this.state.connect(
             'isVisibleCurrentPosition',
-            this.operationRealTimeStateQuery.isVisibleCurrentPosition$
+            this.operationRealTimeStateQuery.isVisibleCurrentPosition$,
         );
     }
 }

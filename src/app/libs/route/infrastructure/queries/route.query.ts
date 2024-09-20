@@ -16,7 +16,7 @@ export class RouteQuery {
     constructor(private readonly http: HttpClient) {}
 
     findMany(
-        qb: RequestQueryBuilder
+        qb: RequestQueryBuilder,
     ): Observable<Pagination<RouteDetailsDto> | RouteDetailsDto[]> {
         const httpParams = new HttpParams({ fromString: qb.query() });
 
@@ -30,10 +30,10 @@ export class RouteQuery {
                     return Pagination.isApiPaginated(res)
                         ? Pagination.create(
                               res.body.map((o) => buildRouteDetailsDto(o)),
-                              Pagination.getApiPageSettings(res)
+                              Pagination.getApiPageSettings(res),
                           )
                         : res.body.map((o) => buildRouteDetailsDto(o));
-                })
+                }),
             );
     }
 }

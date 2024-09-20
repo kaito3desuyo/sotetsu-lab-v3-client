@@ -13,7 +13,7 @@ export class TimetableAddComponent {
     constructor(
         private readonly route: ActivatedRoute,
         private readonly state: RxState<{}>,
-        private readonly titleService: TitleService
+        private readonly titleService: TitleService,
     ) {
         this.state.hold(this.route.data, ({ title }) => {
             this.titleService.setTitle(title);

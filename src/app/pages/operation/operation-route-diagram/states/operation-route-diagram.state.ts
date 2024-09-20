@@ -18,7 +18,7 @@ export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagram
                 operationTrips: null,
                 stations: [],
             },
-            { name: `OperationRouteDiagram-${guid()}` }
+            { name: `OperationRouteDiagram-${guid()}` },
         );
     }
 
@@ -45,16 +45,16 @@ export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagram
 export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagramState> {
     readonly operationId$ = this.select('operationId');
     readonly calendar$ = this.select(
-        (state) => state.operationTrips?.operation.calendar
+        (state) => state.operationTrips?.operation.calendar,
     );
     readonly operation$ = this.select(
-        (state) => state.operationTrips?.operation
+        (state) => state.operationTrips?.operation,
     );
     readonly stations$ = this.select((state) =>
-        this.#filterTargetStations(state.stations)
+        this.#filterTargetStations(state.stations),
     );
     readonly tripOperationLists$ = this.select(
-        (state) => state.operationTrips?.trips
+        (state) => state.operationTrips?.trips,
     );
 
     get calendarId(): string {
@@ -75,11 +75,11 @@ export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagram
 
                 return stations.find((s) => {
                     const dataSet = new Set(
-                        s.routeStationLists.map((rsl) => rsl.route.routeName)
+                        s.routeStationLists.map((rsl) => rsl.route.routeName),
                     );
 
                     const differenceSet = new Set(
-                        [...dataSet].filter((x) => !targetSet.has(x))
+                        [...dataSet].filter((x) => !targetSet.has(x)),
                     );
 
                     return (

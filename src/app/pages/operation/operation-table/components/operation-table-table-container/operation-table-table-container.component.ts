@@ -18,8 +18,8 @@ export class OperationTableTableContainerComponent {
 
     readonly calendar$ = this.#operationTableStateQuery.calendarId$.pipe(
         switchMap((calendarId) =>
-            this.#calendarListStateQuery.selectByCalendarId(calendarId)
-        )
+            this.#calendarListStateQuery.selectByCalendarId(calendarId),
+        ),
     );
     readonly operationTrips$ = this.#operationTableStateQuery.operationTrips$;
     readonly stations$ = this.#operationTableStateQuery.stations$;

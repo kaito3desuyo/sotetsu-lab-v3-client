@@ -37,7 +37,7 @@ export class TimetableEditFormStateStore extends Store<State> {
                 tripBlocks: [],
                 isSaveTripsIndividually: false,
             },
-            { name: `TimetableEditForm-${guid()}` }
+            { name: `TimetableEditForm-${guid()}` },
         );
     }
 
@@ -88,7 +88,7 @@ export class TimetableEditFormStateQuery extends Query<State> {
             return tripDirection === ETripDirection.INBOUND
                 ? [...stations].reverse()
                 : stations;
-        })
+        }),
     );
     readonly operations$ = this.select('operations');
     readonly tripClasses$ = this.select('tripClasses');
@@ -104,16 +104,16 @@ export class TimetableEditFormStateQuery extends Query<State> {
             const sortedTrips = arrayUniqueBy(
                 TimetableAllLineUtil.sortTrips(
                     sortedStations,
-                    tripBlocks
+                    tripBlocks,
                 ).reverse(),
-                'tripBlockId'
+                'tripBlockId',
             )
                 .reverse()
                 .map((o) => o.trips)
                 .reduce((a, b) => [...a, ...b], []);
 
             return sortedTrips;
-        })
+        }),
     );
 
     get calendarId(): string {

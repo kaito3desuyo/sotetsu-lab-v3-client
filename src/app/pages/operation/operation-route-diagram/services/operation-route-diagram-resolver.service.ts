@@ -8,10 +8,10 @@ import { OperationRouteDiagramService } from './operation-route-diagram.service'
 @Injectable()
 export class OperationRouteDiagramResolverService {
     readonly #operationRouteDiagramService = inject(
-        OperationRouteDiagramService
+        OperationRouteDiagramService,
     );
     readonly #operationRouteDiagramStateStore = inject(
-        OperationRouteDiagramStateStore
+        OperationRouteDiagramStateStore,
     );
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {

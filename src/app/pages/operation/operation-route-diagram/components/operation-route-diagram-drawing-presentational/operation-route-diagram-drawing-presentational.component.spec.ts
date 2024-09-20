@@ -17,7 +17,7 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
 
     beforeEach(() => {
         fixture = TestBed.createComponent(
-            OperationRouteDiagramDrawingPresentationalComponent
+            OperationRouteDiagramDrawingPresentationalComponent,
         );
         component = fixture.componentInstance;
         fixture.detectChanges();

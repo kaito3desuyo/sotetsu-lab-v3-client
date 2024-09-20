@@ -16,7 +16,7 @@ export class TimetableAllLineComponent {
         private readonly router: Router,
         private readonly state: RxState<{}>,
         private readonly titleService: TitleService,
-        private readonly timetableSearchCardService: TimetableSearchCardService
+        private readonly timetableSearchCardService: TimetableSearchCardService,
     ) {
         this.state.hold(this.route.data, ({ title }) => {
             this.titleService.setTitle(title);
@@ -45,7 +45,7 @@ export class TimetableAllLineComponent {
                         },
                     ]);
                 }
-            }
+            },
         );
     }
 }

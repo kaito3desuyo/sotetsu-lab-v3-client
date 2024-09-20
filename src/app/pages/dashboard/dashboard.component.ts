@@ -31,13 +31,13 @@ export class DashboardComponent {
     private readonly state = inject(RxState);
     private readonly titleService = inject(TitleService);
     private readonly operationSearchCardService = inject(
-        OperationSearchCardService
+        OperationSearchCardService,
     );
     private readonly timetableSearchCardService = inject(
-        TimetableSearchCardService
+        TimetableSearchCardService,
     );
     private readonly timetablePostCardService = inject(
-        TimetablePostCardService
+        TimetablePostCardService,
     );
 
     constructor() {
@@ -52,7 +52,7 @@ export class DashboardComponent {
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            }
+            },
         );
 
         this.state.hold(
@@ -62,7 +62,7 @@ export class DashboardComponent {
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            }
+            },
         );
 
         this.state.hold(
@@ -88,7 +88,7 @@ export class DashboardComponent {
                         },
                     ]);
                 }
-            }
+            },
         );
 
         this.state.hold(
@@ -100,7 +100,7 @@ export class DashboardComponent {
                     state.calendarId,
                     { trip_direction: state.tripDirection },
                 ]);
-            }
+            },
         );
     }
 }

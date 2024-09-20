@@ -40,7 +40,7 @@ export class TokenStateStore extends Store<State> {
                     isFetching: false,
                 });
             }),
-            map(() => undefined)
+            map(() => undefined),
         );
     }
 }

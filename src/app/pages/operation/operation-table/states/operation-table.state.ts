@@ -26,7 +26,7 @@ export class OperationTableStateStore extends Store<OperationTableState> {
                 stations: [],
                 tripClasses: [],
             },
-            { name: `OperationTable-${guid()}` }
+            { name: `OperationTable-${guid()}` },
         );
     }
 
@@ -70,13 +70,17 @@ export class OperationTableStateQuery extends Query<OperationTableState> {
             [...operationTrips].sort(
                 (a, b) =>
                     Number(
-                        generateOperationSortNumber(a.operation.operationNumber)
+                        generateOperationSortNumber(
+                            a.operation.operationNumber,
+                        ),
                     ) -
                     Number(
-                        generateOperationSortNumber(b.operation.operationNumber)
-                    )
-            )
-        )
+                        generateOperationSortNumber(
+                            b.operation.operationNumber,
+                        ),
+                    ),
+            ),
+        ),
     );
     readonly stations$ = this.select('stations');
     readonly tripClasses$ = this.select('tripClasses');

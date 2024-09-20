@@ -12,7 +12,7 @@ export class ConfirmDialogMainCComponent {
 
     constructor(
         private readonly confirmDialogService: ConfirmDialogService,
-        private readonly confirmDialogStateQuery: ConfirmDialogStateQuery
+        private readonly confirmDialogStateQuery: ConfirmDialogStateQuery,
     ) {}
 
     onReceiveClickButton(bool: boolean): void {

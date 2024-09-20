@@ -3,27 +3,27 @@ $margin-min: 0;
 $margin-max: 128 / 4;
 
 @for $i from $margin-min through $margin-max {
-  .mt-#{$i * 4} {
-    margin-top: #{$i * 4}px !important;
-  }
-  .mr-#{$i * 4} {
-    margin-right: #{$i * 4}px !important;
-  }
-  .mb-#{$i * 4} {
-    margin-bottom: #{$i * 4}px !important;
-  }
-  .ml-#{$i * 4} {
-    margin-left: #{$i * 4}px !important;
-  }
-  .mx-#{$i * 4} {
-    margin-left: #{$i * 4}px !important;
-    margin-right: #{$i * 4}px !important;
-  }
-  .my-#{$i * 4} {
-    margin-top: #{$i * 4}px !important;
-    margin-bottom: #{$i * 4}px !important;
-  }
-  .m-#{$i * 4} {
-    margin: #{$i * 4}px !important;
-  }
+    .mt-#{$i * 4} {
+        margin-top: #{$i * 4}px !important;
+    }
+    .mr-#{$i * 4} {
+        margin-right: #{$i * 4}px !important;
+    }
+    .mb-#{$i * 4} {
+        margin-bottom: #{$i * 4}px !important;
+    }
+    .ml-#{$i * 4} {
+        margin-left: #{$i * 4}px !important;
+    }
+    .mx-#{$i * 4} {
+        margin-left: #{$i * 4}px !important;
+        margin-right: #{$i * 4}px !important;
+    }
+    .my-#{$i * 4} {
+        margin-top: #{$i * 4}px !important;
+        margin-bottom: #{$i * 4}px !important;
+    }
+    .m-#{$i * 4} {
+        margin: #{$i * 4}px !important;
+    }
 }

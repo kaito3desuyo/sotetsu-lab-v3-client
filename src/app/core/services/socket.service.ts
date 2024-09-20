@@ -17,7 +17,7 @@ export class SocketService {
 
     connect(): void {
         this._conn = new WebSocket(
-            `${this._url}?token=${this._tokenStateQuery.accessToken}`
+            `${this._url}?token=${this._tokenStateQuery.accessToken}`,
         );
         this._conn.onmessage = (ev: MessageEvent<unknown>) => {
             this._ev$.next(ev);
@@ -35,7 +35,7 @@ export class SocketService {
             JSON.stringify({
                 action,
                 data: JSON.stringify(data),
-            })
+            }),
         );
     }
 

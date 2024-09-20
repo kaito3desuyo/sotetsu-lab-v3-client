@@ -18,7 +18,7 @@ export class TimetableAllLineService {
         private readonly tripBlockService: TripBlockService,
         private readonly serviceListStateQuery: ServiceListStateQuery,
         private readonly timetableAllLineStateStore: TimetableAllLineStateStore,
-        private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery
+        private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
     ) {}
 
     // v2
@@ -38,7 +38,7 @@ export class TimetableAllLineService {
             tap((data) => {
                 this.timetableAllLineStateStore.setStations(data.stations);
             }),
-            map(() => null)
+            map(() => null),
         );
     }
 
@@ -75,7 +75,7 @@ export class TimetableAllLineService {
                               operator: CondOperator.EQUALS,
                               value: tripDirection,
                           },
-                      ]
+                      ],
             )
             .sortBy([
                 { field: 'trips.times.departureDays', order: 'ASC' },
@@ -91,7 +91,7 @@ export class TimetableAllLineService {
                         .reduce((a, b) => a + b, 0),
                 });
             }),
-            map(() => null)
+            map(() => null),
         );
     }
 

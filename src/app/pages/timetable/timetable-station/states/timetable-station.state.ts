@@ -39,7 +39,7 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
                 operations: [],
                 operationSightingTimeCrossSections: [],
             },
-            { name: `TimetableStation-${guid()}` }
+            { name: `TimetableStation-${guid()}` },
         );
     }
 
@@ -92,7 +92,7 @@ export class TimetableStationStateStore extends Store<TimetableStationState> {
     }
 
     setOperationSightingTimeCrossSections(
-        operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[]
+        operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[],
     ): void {
         this.update({
             operationSightingTimeCrossSections,
@@ -107,19 +107,19 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
     readonly stationName$ = this.select(['stationId', 'stations']).pipe(
         map(({ stationId, stations }) => {
             return stations.find((o) => o.stationId === stationId)?.stationName;
-        })
+        }),
     );
     readonly tripDirection$ = this.select('tripDirection');
     readonly trips$ = this.select('trips');
     readonly timetableData$ = zip(
         this.select('trips'),
-        this.select('tripBlocks')
+        this.select('tripBlocks'),
     ).pipe(map(this.#sortTrips), map(this.#generateTableData));
     readonly tripClasses$ = this.select('tripClasses');
     readonly stations$ = this.select('stations');
     readonly operations$ = this.select('operations');
     readonly operationSightingTimeCrossSections$ = this.select(
-        'operationSightingTimeCrossSections'
+        'operationSightingTimeCrossSections',
     );
 
     get stationId(): StationDetailsDto['stationId'] {
@@ -152,19 +152,21 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
 
     #extractOperationIds(trips: TripDetailsDto[]): string[] {
         return Array.from(
-            new Set(trips.map((trip) => trip.tripOperationLists[0].operationId))
+            new Set(
+                trips.map((trip) => trip.tripOperationLists[0].operationId),
+            ),
         );
     }
 
     #sortTrips([trips, tripBlocks]: [
         TripDetailsDto[],
-        TripBlockDetailsDto[]
+        TripBlockDetailsDto[],
     ]): TripDetailsDto[] {
         return trips
             .map((o) => ({
                 ...o,
                 tripBlock: tripBlocks.find(
-                    ({ tripBlockId }) => o.tripBlockId === tripBlockId
+                    ({ tripBlockId }) => o.tripBlockId === tripBlockId,
                 ),
             }))
             .map((o) => ({
@@ -240,7 +242,7 @@ export class TimetableStationStateQuery extends Query<TimetableStationState> {
             const hour = dayjs(time, 'HH:mm:ss').format('H');
 
             const index = data.findIndex(
-                (o) => o.day === day && o.hour === hour
+                (o) => o.day === day && o.hour === hour,
             );
 
             if (day && time && index !== -1) {
