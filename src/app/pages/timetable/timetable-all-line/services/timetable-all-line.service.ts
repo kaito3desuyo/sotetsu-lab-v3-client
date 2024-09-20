@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
@@ -47,13 +47,11 @@ export class TimetableAllLineService {
         const tripDirection = this.timetableAllLineStateQuery.tripDirection;
         const tripBlockId = this.timetableAllLineStateQuery.tripBlockId;
 
-        const qb = new RequestQueryBuilder()
+        const qb = RequestQueryBuilder.create()
+            .select(['id'])
             .setJoin([
-                { field: 'trips' },
-                { field: 'trips.times' },
-                { field: 'trips.tripOperationLists' },
-                { field: 'trips.tripOperationLists.operation' },
-                { field: 'trips.tripClass' },
+                { field: 'trips', select: ['id'] },
+                { field: 'trips.times', select: ['id'] },
             ])
             .setFilter(
                 tripBlockId
@@ -82,7 +80,29 @@ export class TimetableAllLineService {
                 { field: 'trips.times.departureTime', order: 'ASC' },
             ]);
 
-        return this.tripBlockService.findMany(qb).pipe(
+        const secondQb = RequestQueryBuilder.create()
+            .setJoin([
+                { field: 'trips' },
+                { field: 'trips.times' },
+                { field: 'trips.tripOperationLists' },
+                { field: 'trips.tripOperationLists.operation' },
+                { field: 'trips.tripClass' },
+            ])
+            .sortBy([
+                { field: 'trips.times.departureDays', order: 'ASC' },
+                { field: 'trips.times.departureTime', order: 'ASC' },
+            ]);
+
+        // 総件数を取得する
+        return of(undefined).pipe(
+            mergeMap(() => this.tripBlockService.findMany(qb)),
+            mergeMap((data: TripBlockDetailsDto[]) =>
+                forkJoin(
+                    data.map(({ tripBlockId }) =>
+                        this.tripBlockService.findOne(tripBlockId, secondQb),
+                    ),
+                ),
+            ),
             tap((data: TripBlockDetailsDto[]) => {
                 this.timetableAllLineStateStore.setTripBlocks(data);
                 this.timetableAllLineStateStore.updatePageSettings({
@@ -91,7 +111,7 @@ export class TimetableAllLineService {
                         .reduce((a, b) => a + b, 0),
                 });
             }),
-            map(() => null),
+            map(() => undefined),
         );
     }
 
