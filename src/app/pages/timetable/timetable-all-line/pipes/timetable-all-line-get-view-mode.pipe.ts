@@ -1,9 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { ETimetableAllLineStationViewMode } from '../interfaces/timetable-all-line.interface';
+import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
 @Pipe({
+    standalone: true,
     name: 'timetableAllLineGetViewMode',
 })
 export class TimetableAllLineGetViewModePipe implements PipeTransform {

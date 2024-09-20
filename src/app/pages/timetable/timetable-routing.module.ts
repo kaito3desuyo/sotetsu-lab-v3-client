@@ -5,8 +5,8 @@ const routes: Routes = [
     {
         path: 'all-line',
         loadChildren: () =>
-            import('./timetable-all-line/timetable-all-line.module').then(
-                (mod) => mod.TimetableAllLineModule,
+            import('./timetable-all-line/timetable-all-line.route').then(
+                (mod) => mod.TIMETABLE_ALL_LINE_ROUTES,
             ),
     },
     {

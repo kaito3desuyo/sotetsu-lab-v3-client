@@ -1,29 +1,32 @@
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
-    Output,
+    computed,
+    input,
+    output,
+    signal,
 } from '@angular/core';
-import { PageEvent } from '@angular/material/paginator';
-import { RxState } from '@rx-angular/state';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import dayjs from 'dayjs';
-import { Subject } from 'rxjs';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
+import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { ETimetableAllLineStationViewMode } from '../../interfaces/timetable-all-line.interface';
-
-type State = {
-    calendar: CalendarDetailsDto;
-    tripDirection: TripDetailsDto['tripDirection'];
-    stations: StationDetailsDto[];
-    trips: TripDetailsDto[];
-    pageSettings: PageEvent;
-    groupingBaseTrip: TripDetailsDto;
-};
+import { ETimetableAllLineStationViewMode } from '../../enums/timetable-all-line.enum';
+import { TimetableAllLineGetBorderSettingPipe } from '../../pipes/timetable-all-line-get-border-setting.pipe';
+import { TimetableAllLineGetStationNumberingPipe } from '../../pipes/timetable-all-line-get-station-numbering.pipe';
+import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-time.pipe';
+import { TimetableAllLineGetViewModePipe } from '../../pipes/timetable-all-line-get-view-mode.pipe';
+import { RouterLink } from '@angular/router';
 
 @Component({
+    standalone: true,
     selector: 'app-timetable-all-line-table-p',
     templateUrl: './timetable-all-line-table-p.component.html',
     styleUrls: [
@@ -31,105 +34,53 @@ type State = {
         '../../../../../../assets/fonts/DiaPro-web/DiaPro.css',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
+    imports: [
+        CommonModule,
+        RouterLink,
+        MatPaginatorModule,
+        MatTooltipModule,
+        MatButtonModule,
+        MatIconModule,
+        PipesModule,
+        TimetableAllLineGetBorderSettingPipe,
+        TimetableAllLineGetStationNumberingPipe,
+        TimetableAllLineGetTimePipe,
+        TimetableAllLineGetViewModePipe,
+    ],
 })
 export class TimetableAllLineTablePComponent {
-    readonly staitonViewMode: typeof ETimetableAllLineStationViewMode =
-        ETimetableAllLineStationViewMode;
+    readonly staitonViewModeEnum = ETimetableAllLineStationViewMode;
+    readonly tripDirectionEnum = ETripDirection;
+    readonly tripDirectionLabel = tripDirectionLabel;
 
-    readonly vm$ = this.state.select();
+    readonly calendar = input.required<CalendarDetailsDto>();
+    readonly tripDirection = input.required<ETripDirection>();
+    readonly stations = input.required<StationDetailsDto[]>();
+    readonly trips = input.required<TripDetailsDto[]>();
+    readonly pageSettings = input.required<PageEvent>();
 
-    readonly onChangedInputCalendar$ = new Subject<CalendarDetailsDto>();
-    readonly onChangedInputTripDirection$ = new Subject<
-        TripDetailsDto['tripDirection']
-    >();
-    readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
-    readonly onChangedInputTrips$ = new Subject<TripDetailsDto[]>();
-    readonly onChangedInputPageSettings$ = new Subject<PageEvent>();
-
-    readonly onPaged$ = new Subject<PageEvent>();
-    readonly onClickedEditButton$ = new Subject<TripDetailsDto>();
-    readonly onClickedCopyButton$ = new Subject<TripDetailsDto>();
-    readonly onClickedDeleteButton$ = new Subject<TripDetailsDto>();
-    readonly onClickedGroupingButton$ = new Subject<TripDetailsDto>();
-    readonly onClickedAddTripInGroup$ = new Subject<{
+    readonly page = output<PageEvent>();
+    readonly clickEditButton = output<TripDetailsDto>();
+    readonly clickCopyButton = output<TripDetailsDto>();
+    readonly clickDeleteButton = output<TripDetailsDto>();
+    readonly clickAddTripInGroup = output<{
         base: TripDetailsDto;
         target: TripDetailsDto;
     }>();
-    readonly onClickedDeleteTripInGroup$ = new Subject<{
+    readonly clickDeleteTripInGroup = output<{
         base: TripDetailsDto;
         target: TripDetailsDto;
     }>();
 
-    @Input() set calendar(calendar: CalendarDetailsDto) {
-        this.onChangedInputCalendar$.next(calendar);
-    }
-    @Input() set tripDirection(tripDirection: TripDetailsDto['tripDirection']) {
-        this.onChangedInputTripDirection$.next(tripDirection);
-    }
-    @Input() set stations(stations: StationDetailsDto[]) {
-        this.onChangedInputStations$.next(stations);
-    }
-    @Input() set trips(trips: TripDetailsDto[]) {
-        this.onChangedInputTrips$.next(trips);
-    }
-    @Input() set pageSettings(pageSettings: PageEvent) {
-        this.onChangedInputPageSettings$.next(pageSettings);
-    }
+    readonly groupingBaseTrip = signal<TripDetailsDto | undefined>(undefined);
 
-    @Output() page = new EventEmitter<PageEvent>();
-    @Output() clickEditButton = new EventEmitter<TripDetailsDto>();
-    @Output() clickCopyButton = new EventEmitter<TripDetailsDto>();
-    @Output() clickDeleteButton = new EventEmitter<TripDetailsDto>();
-    @Output() clickAddTripInGroup = new EventEmitter<{
-        base: TripDetailsDto;
-        target: TripDetailsDto;
-    }>();
-    @Output() clickDeleteTripInGroup = new EventEmitter<{
-        base: TripDetailsDto;
-        target: TripDetailsDto;
-    }>();
+    readonly isHolidayCalendar = computed(() => {
+        const calendar = this.calendar();
+        return calendar.sunday || calendar.saturday;
+    });
 
-    constructor(private readonly state: RxState<State>) {
-        this.state.set({
-            pageSettings: {
-                pageIndex: 0,
-                pageSize: 10,
-                length: 0,
-            },
-        });
-
-        this.state.connect('calendar', this.onChangedInputCalendar$);
-        this.state.connect('tripDirection', this.onChangedInputTripDirection$);
-        this.state.connect('stations', this.onChangedInputStations$);
-        this.state.connect('trips', this.onChangedInputTrips$);
-        this.state.connect('pageSettings', this.onChangedInputPageSettings$);
-        this.state.connect('groupingBaseTrip', this.onClickedGroupingButton$);
-
-        this.state.hold(this.onPaged$, (pageSettings) => {
-            this.page.emit(pageSettings);
-        });
-        this.state.hold(this.onClickedEditButton$, (trip) => {
-            this.clickEditButton.emit(trip);
-        });
-        this.state.hold(this.onClickedCopyButton$, (trip) => {
-            this.clickCopyButton.emit(trip);
-        });
-        this.state.hold(this.onClickedDeleteButton$, (trip) => {
-            this.clickDeleteButton.emit(trip);
-        });
-        this.state.hold(this.onClickedAddTripInGroup$, ({ base, target }) => {
-            this.clickAddTripInGroup.emit({ base, target });
-        });
-        this.state.hold(
-            this.onClickedDeleteTripInGroup$,
-            ({ base, target }) => {
-                this.clickDeleteTripInGroup.emit({ base, target });
-            },
-        );
-    }
-
-    isFeatureDate(date: string): boolean {
+    readonly isFeatureDate = computed(() => {
+        const date = this.calendar().startDate;
         return dayjs() > dayjs(date, 'YYYY-MM-DD');
-    }
+    });
 }

@@ -7,6 +7,7 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
 @Pipe({
+    standalone: true,
     name: 'timetableAllLineGetTime',
 })
 export class TimetableAllLineGetTimePipe implements PipeTransform {
@@ -43,6 +44,7 @@ interface TrackByFunctionCache {
 const cache: TrackByFunctionCache = Object.create(null);
 
 @Pipe({
+    standalone: true,
     name: 'timetableAllLineGetTimeAndTrackBy',
 })
 export class TimetableAllLineGetTimeAndTrackByPipe implements PipeTransform {
