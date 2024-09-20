@@ -1,7 +1,7 @@
 <app-operation-real-time-control-panel-p
-    [isEnableAutoReload]="isEnableAutoReload$ | push"
-    [isVisibleSightingHistories]="isVisibleSightingHistories$ | push"
-    [isVisibleCurrentPosition]="isVisibleCurrentPosition$ | push"
+    [isEnableAutoReload]="isEnableAutoReload()"
+    [isVisibleSightingHistories]="isVisibleSightingHistories()"
+    [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
     (toggleAutoReload)="onToggledAutoReload$.next($event)"
     (toggleVisibleSightingHistories)="
         onToggledVisibleSightingHistories$.next($event)

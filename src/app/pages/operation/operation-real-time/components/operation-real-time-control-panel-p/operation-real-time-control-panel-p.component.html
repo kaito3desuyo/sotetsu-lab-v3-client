@@ -1,7 +1,7 @@
 <div class="tw-flex tw-flex-col tw-gap-4">
     <div>
         <mat-slide-toggle
-            [checked]="isEnableAutoReload"
+            [checked]="isEnableAutoReload()"
             (change)="toggleAutoReload.emit($event.checked)"
         >
             自動更新する
@@ -9,7 +9,7 @@
     </div>
     <div>
         <mat-slide-toggle
-            [checked]="isVisibleSightingHistories"
+            [checked]="isVisibleSightingHistories()"
             (change)="toggleVisibleSightingHistories.emit($event.checked)"
         >
             履歴を表示する
@@ -17,7 +17,7 @@
     </div>
     <div>
         <mat-slide-toggle
-            [checked]="isVisibleCurrentPosition"
+            [checked]="isVisibleCurrentPosition()"
             (change)="toggleVisibleCurrentPosition.emit($event.checked)"
         >
             現在位置を表示する

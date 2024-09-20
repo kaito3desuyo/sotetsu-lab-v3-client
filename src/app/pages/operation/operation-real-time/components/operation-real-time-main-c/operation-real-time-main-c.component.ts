@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RxState } from '@rx-angular/state';
 import { AdsenseModule } from 'ng2-adsense';
 import { forkJoin, interval, of } from 'rxjs';
@@ -20,6 +20,7 @@ import { OperationRealTimeNewTableByOperationCComponent } from '../operation-rea
     selector: 'app-operation-real-time-main-c',
     templateUrl: './operation-real-time-main-c.component.html',
     styleUrls: ['./operation-real-time-main-c.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         AdsenseModule,
@@ -32,61 +33,59 @@ import { OperationRealTimeNewTableByOperationCComponent } from '../operation-rea
     providers: [RxState],
 })
 export class OperationRealTimeMainCComponent {
-    private readonly notification = inject(NotificationService);
-    private readonly state = inject(RxState);
-    private readonly socketService = inject(SocketService);
-    private readonly operationRealTimeService = inject(
-        OperationRealTimeService,
-    );
-    private readonly operationPostCardService = inject(
-        OperationPostCardService,
-    );
-    private readonly operationRealTimeStateQuery = inject(
-        OperationRealTimeStateQuery,
-    );
+    readonly #notification = inject(NotificationService);
+    readonly #state = inject(RxState);
+    readonly #socketService = inject(SocketService);
+    readonly #operationRealTimeService = inject(OperationRealTimeService);
+    readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #operationRealTimeStateQuery = inject(OperationRealTimeStateQuery);
 
     constructor() {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象の運用がある場合は更新する
-        this.state.hold(
+        this.#state.hold(
             interval(1000 * 1).pipe(
                 switchMap(
-                    () => this.operationRealTimeStateQuery.isEnableAutoReload$,
+                    () => this.#operationRealTimeStateQuery.isEnableAutoReload$,
                 ),
                 filter((bool) => !!bool),
                 switchMap(() =>
-                    this.operationRealTimeService.fetchOperationCurrentPosition(),
+                    this.#operationRealTimeService.fetchOperationCurrentPosition(),
                 ),
             ),
         );
 
         // 自分が運用目撃情報を投稿したとき
-        this.state.hold(
-            this.operationPostCardService
+        this.#state.hold(
+            this.#operationPostCardService
                 .receiveSubmitOperationSightingEvent()
                 .pipe(
                     switchMap(() =>
                         forkJoin([
-                            this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-                            this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+                            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+                            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+                            this.#operationRealTimeService.fetchOperationSightingHistories(),
+                            this.#operationRealTimeService.fetchFormationSightingHistories(),
                         ]),
                     ),
                 ),
         );
 
         // 他人が運用目撃情報を投稿したとき
-        this.state.hold(
-            this.socketService.on().pipe(
+        this.#state.hold(
+            this.#socketService.on().pipe(
                 switchMap(() => {
-                    if (!this.operationRealTimeStateQuery.isEnableAutoReload) {
+                    if (!this.#operationRealTimeStateQuery.isEnableAutoReload) {
                         return of(null);
                     }
 
                     return forkJoin([
-                        this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-                        this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+                        this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+                        this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+                        this.#operationRealTimeService.fetchOperationSightingHistories(),
+                        this.#operationRealTimeService.fetchFormationSightingHistories(),
                     ]).pipe(
                         tap(() => {
-                            this.notification.open(
+                            this.#notification.open(
                                 'データが更新されました',
                                 'OK',
                             );
