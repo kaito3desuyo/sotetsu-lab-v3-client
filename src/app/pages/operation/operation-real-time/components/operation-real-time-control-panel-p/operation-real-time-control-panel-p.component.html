@@ -9,6 +9,14 @@
     </div>
     <div>
         <mat-slide-toggle
+            [checked]="isVisibleSightingHistories"
+            (change)="toggleVisibleSightingHistories.emit($event.checked)"
+        >
+            履歴を表示する
+        </mat-slide-toggle>
+    </div>
+    <div>
+        <mat-slide-toggle
             [checked]="isVisibleCurrentPosition"
             (change)="toggleVisibleCurrentPosition.emit($event.checked)"
         >

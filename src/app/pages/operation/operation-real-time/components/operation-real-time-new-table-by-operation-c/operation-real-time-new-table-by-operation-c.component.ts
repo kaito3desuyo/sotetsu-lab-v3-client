@@ -6,7 +6,9 @@ import { RxPush } from '@rx-angular/template/push';
 import { map } from 'rxjs/operators';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -17,7 +19,6 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { OperationRealTimeStateQuery } from '../../states/operation-real-time.state';
 import { OperationRealTimeUtil } from '../../utils/operation-real-time.util';
 import { OperationRealTimeNewTablePComponent } from '../operation-real-time-new-table-p/operation-real-time-new-table-p.component';
-import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 
 type State = {
     displayedColumns: OperationRealTimeTableColumn[];
@@ -27,7 +28,9 @@ type State = {
     tripClasses: TripClassDetailsDto[];
     operations: OperationDetailsDto[];
     timeCrossSections: OperationSightingTimeCrossSectionDto[];
+    histories: OperationSightingDetailsDto[];
     currentPositions: OperationCurrentPositionDto[];
+    isVisibleSightingHistories: boolean;
     isVisibleCurrentPosition: boolean;
 };
 
@@ -66,38 +69,46 @@ export class OperationRealTimeNewTableByOperationCComponent {
     readonly tripClasses$ = this.state.select('tripClasses');
 
     constructor() {
-        this.state.set({
-            displayedColumns: [
-                'operationNumber',
-                'formationNumber',
-                'currentPosition',
-                'sightingTime',
-                'updatedAt',
-            ],
-        });
-
         this.state.connect(
             'displayedColumns',
-            this.state.select('isVisibleCurrentPosition').pipe(
-                map((bool) => {
-                    if (bool) {
-                        return [
-                            'operationNumber',
-                            'formationNumber',
-                            'currentPosition',
-                            'sightingTime',
-                            'updatedAt',
-                        ] as OperationRealTimeTableColumn[];
-                    } else {
-                        return [
-                            'operationNumber',
-                            'formationNumber',
-                            'sightingTime',
-                            'updatedAt',
-                        ] as OperationRealTimeTableColumn[];
-                    }
-                }),
-            ),
+            this.state
+                .select(
+                    selectSlice([
+                        'isVisibleSightingHistories',
+                        'isVisibleCurrentPosition',
+                    ]),
+                )
+                .pipe(
+                    map(
+                        ({
+                            isVisibleSightingHistories,
+                            isVisibleCurrentPosition,
+                        }) => {
+                            let columns: OperationRealTimeTableColumn[] = [
+                                'operationNumber',
+                                'formationNumber',
+                                'sightingHistories',
+                                'currentPosition',
+                                'sightingTime',
+                                'updatedAt',
+                            ];
+
+                            if (!isVisibleSightingHistories) {
+                                columns = columns.filter(
+                                    (c) => c !== 'sightingHistories',
+                                );
+                            }
+
+                            if (!isVisibleCurrentPosition) {
+                                columns = columns.filter(
+                                    (c) => c !== 'currentPosition',
+                                );
+                            }
+
+                            return columns;
+                        },
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -107,16 +118,24 @@ export class OperationRealTimeNewTableByOperationCComponent {
                     selectSlice([
                         'operations',
                         'timeCrossSections',
+                        'histories',
                         'currentPositions',
                     ]),
                 )
                 .pipe(
-                    map(({ operations, timeCrossSections, currentPositions }) =>
-                        OperationRealTimeUtil.generateOperationTableData(
+                    map(
+                        ({
                             operations,
                             timeCrossSections,
+                            histories,
                             currentPositions,
-                        ),
+                        }) =>
+                            OperationRealTimeUtil.generateOperationTableData(
+                                operations,
+                                timeCrossSections,
+                                histories,
+                                currentPositions,
+                            ),
                     ),
                 ),
         );
@@ -148,8 +167,18 @@ export class OperationRealTimeNewTableByOperationCComponent {
         );
 
         this.state.connect(
+            'histories',
+            this.operationRealTimeStateQuery.operationSightingHistories$,
+        );
+
+        this.state.connect(
             'currentPositions',
             this.operationRealTimeStateQuery.currentPositions$,
+        );
+
+        this.state.connect(
+            'isVisibleSightingHistories',
+            this.operationRealTimeStateQuery.isVisibleSightingHistories$,
         );
 
         this.state.connect(

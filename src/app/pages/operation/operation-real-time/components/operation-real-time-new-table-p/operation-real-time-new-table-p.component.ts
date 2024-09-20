@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { get } from 'lodash-es';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -22,6 +24,8 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
+        MatIconModule,
+        MatTooltipModule,
         PipesModule,
         OperationNumberLinkModule,
         FormationNumberLinkModule,

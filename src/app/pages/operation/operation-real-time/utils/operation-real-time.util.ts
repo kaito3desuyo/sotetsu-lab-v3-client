@@ -4,10 +4,12 @@ import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sig
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { IOperationRealTimeTableData } from '../interfaces/operation-real-time-table-data.interface';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 
 function generateOperationTableData(
     operations: OperationDetailsDto[],
     timeCrossSections: OperationSightingTimeCrossSectionDto[],
+    histories: OperationSightingDetailsDto[],
     positions: OperationCurrentPositionDto[],
 ): IOperationRealTimeTableData[] {
     const data = operations
@@ -19,6 +21,16 @@ function generateOperationTableData(
                         so.expectedSighting?.operation?.operationNumber ===
                         o.operationNumber,
                 ) ?? null;
+            const sightingHistories = histories.filter(
+                (so) =>
+                    o.operationId === so.operationId &&
+                    !timeCrossSections.some(
+                        (tcs) =>
+                            tcs.expectedSighting.formation.formationNumber &&
+                            tcs.latestSighting.operationSightingId ===
+                                so.operationSightingId,
+                    ),
+            );
             const currentPosition =
                 positions.find(
                     (so) => so.operation.operationId === o.operationId,
@@ -27,6 +39,7 @@ function generateOperationTableData(
             return {
                 operation: o,
                 timeCrossSection,
+                sightingHistories,
                 currentPosition,
             };
         });
@@ -37,6 +50,7 @@ function generateOperationTableData(
 function generateFormationTableData(
     formations: FormationDetailsDto[],
     timeCrossSections: OperationSightingTimeCrossSectionDto[],
+    histories: OperationSightingDetailsDto[],
     positions: OperationCurrentPositionDto[],
 ): IOperationRealTimeTableData[] {
     const data = formations.map((o) => {
@@ -46,6 +60,16 @@ function generateFormationTableData(
                     so.expectedSighting?.formation?.formationNumber ===
                     o.formationNumber,
             ) ?? null;
+        const sightingHistories = histories.filter(
+            (so) =>
+                o.formationId === so.formationId &&
+                !timeCrossSections.some(
+                    (tcs) =>
+                        tcs.expectedSighting.operation.operationNumber &&
+                        tcs.latestSighting.operationSightingId ===
+                            so.operationSightingId,
+                ),
+        );
         const currentPosition =
             positions.find(
                 (so) =>
@@ -56,6 +80,7 @@ function generateFormationTableData(
         return {
             formation: o,
             timeCrossSection,
+            sightingHistories,
             currentPosition,
         };
     });
