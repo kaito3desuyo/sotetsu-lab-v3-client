@@ -30,7 +30,7 @@
     "@angular/platform-browser-dynamic": "^18.2.2",
     "@angular/router": "^18.2.2",
     "@angular/service-worker": "^18.2.2",
-    "@datorama/akita": "^7.1.1",
+    "@datorama/akita": "^8.0.1",
     "@nestjsx/crud-request": "^4.6.2",
     "@rx-angular/cdk": "^18.0.0",
     "@rx-angular/state": "^18.0.0",
@@ -52,7 +52,7 @@
     "qs": "^6.13.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "~6.6.7",
-    "tslib": "^2.7.0",
+    "tslib": "^2.4.1",
     "zone.js": "~0.14.10"
   },
   "devDependencies": {
