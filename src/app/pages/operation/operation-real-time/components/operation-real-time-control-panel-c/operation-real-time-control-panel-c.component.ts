@@ -28,16 +28,28 @@ export class OperationRealTimeControlPanelCComponent {
 
     readonly isEnableAutoReload$ =
         this.operationRealTimeStateQuery.isEnableAutoReload$;
+    readonly isVisibleSightingHistories$ =
+        this.operationRealTimeStateQuery.isVisibleSightingHistories$;
     readonly isVisibleCurrentPosition$ =
         this.operationRealTimeStateQuery.isVisibleCurrentPosition$;
 
     readonly onToggledAutoReload$ = new Subject<boolean>();
+    readonly onToggledVisibleSightingHistories$ = new Subject<boolean>();
     readonly onToggledVisibleCurrentPosition$ = new Subject<boolean>();
 
     constructor() {
         this.state.hold(this.onToggledAutoReload$.asObservable(), (bool) => {
             this.operationRealTimeStateStore.setIsEnableAutoReload(bool);
         });
+
+        this.state.hold(
+            this.onToggledVisibleSightingHistories$.asObservable(),
+            (bool) => {
+                this.operationRealTimeStateStore.setIsVisibleSightingHistories(
+                    bool,
+                );
+            },
+        );
 
         this.state.hold(
             this.onToggledVisibleCurrentPosition$.asObservable(),

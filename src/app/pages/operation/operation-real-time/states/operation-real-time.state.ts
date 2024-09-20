@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import dayjs, { Dayjs } from 'dayjs';
 import { map } from 'rxjs/operators';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -10,10 +11,13 @@ import { OperationRealTimeUtil } from '../utils/operation-real-time.util';
 type OperationRealTimeState = {
     operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
     formationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
+    operationSightingHistories: OperationSightingDetailsDto[];
+    formationSightingHistories: OperationSightingDetailsDto[];
     currentPositions: OperationCurrentPositionDto[];
     tripClasses: TripClassDetailsDto[];
     finalUpdateTime: Dayjs;
     isEnableAutoReload: boolean;
+    isVisibleSightingHistories: boolean;
     isVisibleCurrentPosition: boolean;
 };
 
@@ -24,10 +28,13 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
             {
                 operationSightingTimeCrossSections: [],
                 formationSightingTimeCrossSections: [],
+                operationSightingHistories: [],
+                formationSightingHistories: [],
                 currentPositions: [],
                 tripClasses: [],
                 finalUpdateTime: dayjs(),
                 isEnableAutoReload: true,
+                isVisibleSightingHistories: true,
                 isVisibleCurrentPosition: true,
             },
             {
@@ -49,6 +56,22 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
     ): void {
         this.update({
             formationSightingTimeCrossSections: timeCrossSections,
+        });
+    }
+
+    setOperationSightingHistories(
+        sightings: OperationSightingDetailsDto[],
+    ): void {
+        this.update({
+            operationSightingHistories: sightings,
+        });
+    }
+
+    setFormationSightingHistories(
+        sightings: OperationSightingDetailsDto[],
+    ): void {
+        this.update({
+            formationSightingHistories: sightings,
         });
     }
 
@@ -90,6 +113,12 @@ export class OperationRealTimeStateStore extends Store<OperationRealTimeState> {
         });
     }
 
+    setIsVisibleSightingHistories(bool: boolean): void {
+        this.update({
+            isVisibleSightingHistories: bool,
+        });
+    }
+
     setIsVisibleCurrentPosition(bool: boolean): void {
         this.update({
             isVisibleCurrentPosition: bool,
@@ -105,6 +134,8 @@ export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
     formationSightingTimeCrossSections$ = this.select(
         'formationSightingTimeCrossSections',
     );
+    operationSightingHistories$ = this.select('operationSightingHistories');
+    formationSightingHistories$ = this.select('formationSightingHistories');
     currentPositions$ = this.select('currentPositions');
     currentPositionsThatShouldUpdate$ = this.select('currentPositions').pipe(
         map((currentPositions) =>
@@ -116,6 +147,7 @@ export class OperationRealTimeStateQuery extends Query<OperationRealTimeState> {
     tripClasses$ = this.select('tripClasses');
     finalUpdateTime$ = this.select('finalUpdateTime');
     isEnableAutoReload$ = this.select('isEnableAutoReload');
+    isVisibleSightingHistories$ = this.select('isVisibleSightingHistories');
     isVisibleCurrentPosition$ = this.select('isVisibleCurrentPosition');
 
     get currentPositions(): OperationCurrentPositionDto[] {

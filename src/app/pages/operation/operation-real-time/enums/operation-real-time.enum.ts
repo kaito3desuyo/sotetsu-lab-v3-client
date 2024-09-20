@@ -1,6 +1,7 @@
 export const OperationRealTimeTableColumn = {
     OPERATION_NUMBER: 'operationNumber',
     FORMATION_NUMBER: 'formationNumber',
+    SIGHTING_HISTORIES: 'sightingHistories',
     CURRENT_POSITION: 'currentPosition',
     SIGHTING_TIME: 'sightingTime',
     UPDATED_AT: 'updatedAt',
@@ -11,6 +12,7 @@ export type OperationRealTimeTableColumn =
 export const OperationRealTimeTableColumnLabel = {
     [OperationRealTimeTableColumn.OPERATION_NUMBER]: '運用',
     [OperationRealTimeTableColumn.FORMATION_NUMBER]: '編成',
+    [OperationRealTimeTableColumn.SIGHTING_HISTORIES]: '履歴',
     [OperationRealTimeTableColumn.CURRENT_POSITION]: '現在位置',
     [OperationRealTimeTableColumn.SIGHTING_TIME]: '目撃時刻',
     [OperationRealTimeTableColumn.UPDATED_AT]: '最終更新',

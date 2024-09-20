@@ -18,8 +18,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 })
 export class OperationRealTimeControlPanelPComponent {
     @Input() isEnableAutoReload!: boolean;
+    @Input() isVisibleSightingHistories!: boolean;
     @Input() isVisibleCurrentPosition!: boolean;
 
     @Output() toggleAutoReload = new EventEmitter<boolean>();
+    @Output() toggleVisibleSightingHistories = new EventEmitter<boolean>();
     @Output() toggleVisibleCurrentPosition = new EventEmitter<boolean>();
 }

@@ -1,9 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import dayjs from 'dayjs';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -153,6 +155,91 @@ export class OperationRealTimeService {
         return this.#tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.#operationRealTimeStateStore.setTripClasses(tripClasses);
+            }),
+            map(() => undefined),
+        );
+    }
+
+    fetchOperationSightingHistories(): Observable<void> {
+        const operations =
+            this.#todaysOperationsListStateQuery.todaysOperations;
+        const date = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
+        const start = date.hour(4).minute(0).second(0).millisecond(0);
+        const end = start.add(1, 'days');
+
+        const qb = RequestQueryBuilder.create()
+            .setJoin([
+                {
+                    field: 'operation',
+                },
+                {
+                    field: 'formation',
+                },
+            ])
+            .setFilter([
+                {
+                    field: 'operationId',
+                    operator: CondOperator.IN,
+                    value: operations.map((o) => o.operationId),
+                },
+                {
+                    field: 'sightingTime',
+                    operator: CondOperator.BETWEEN,
+                    value: [start.toISOString(), end.toISOString()],
+                },
+            ])
+            .sortBy([
+                { field: 'sightingTime', order: 'DESC' },
+                { field: 'updatedAt', order: 'DESC' },
+            ]);
+
+        return this.#operationSightingService.findMany(qb).pipe(
+            tap((data: OperationSightingDetailsDto[]) => {
+                this.#operationRealTimeStateStore.setOperationSightingHistories(
+                    data,
+                );
+            }),
+            map(() => undefined),
+        );
+    }
+
+    fetchFormationSightingHistories(): Observable<void> {
+        const formations = this.#todaysFormationListStateQuery.todaysFormations;
+        const date = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
+        const start = date.hour(4).minute(0).second(0).millisecond(0);
+        const end = start.add(1, 'days');
+
+        const qb = RequestQueryBuilder.create()
+            .setJoin([
+                {
+                    field: 'operation',
+                },
+                {
+                    field: 'formation',
+                },
+            ])
+            .setFilter([
+                {
+                    field: 'formationId',
+                    operator: CondOperator.IN,
+                    value: formations.map((o) => o.formationId),
+                },
+                {
+                    field: 'sightingTime',
+                    operator: CondOperator.BETWEEN,
+                    value: [start.toISOString(), end.toISOString()],
+                },
+            ])
+            .sortBy([
+                { field: 'sightingTime', order: 'DESC' },
+                { field: 'updatedAt', order: 'DESC' },
+            ]);
+
+        return this.#operationSightingService.findMany(qb).pipe(
+            tap((data: OperationSightingDetailsDto[]) => {
+                this.#operationRealTimeStateStore.setFormationSightingHistories(
+                    data,
+                );
             }),
             map(() => undefined),
         );

@@ -12,6 +12,8 @@ export class OperationRealTimeResolverService {
             // v2
             this.operationRealTimeService.fetchOperationSightingTimeCrossSections(),
             this.operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+            this.operationRealTimeService.fetchOperationSightingHistories(),
+            this.operationRealTimeService.fetchFormationSightingHistories(),
             this.operationRealTimeService.fetchOperationCurrentPosition(),
             this.operationRealTimeService.fetchTripClassesV2(),
         ]).pipe(map(() => undefined));

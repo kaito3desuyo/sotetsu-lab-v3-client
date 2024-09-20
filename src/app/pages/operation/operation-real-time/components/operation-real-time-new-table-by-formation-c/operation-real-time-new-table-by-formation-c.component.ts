@@ -9,6 +9,7 @@ import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calen
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -27,7 +28,9 @@ type State = {
     tripClasses: TripClassDetailsDto[];
     formations: FormationDetailsDto[];
     timeCrossSections: OperationSightingTimeCrossSectionDto[];
+    histories: OperationSightingDetailsDto[];
     currentPositions: OperationCurrentPositionDto[];
+    isVisibleSightingHistories: boolean;
     isVisibleCurrentPosition: boolean;
 };
 
@@ -69,26 +72,44 @@ export class OperationRealTimeNewTableByFormationCComponent {
     constructor() {
         this.state.connect(
             'displayedColumns',
-            this.state.select('isVisibleCurrentPosition').pipe(
-                map((bool) => {
-                    if (bool) {
-                        return [
-                            'formationNumber',
-                            'operationNumber',
-                            'currentPosition',
-                            'sightingTime',
-                            'updatedAt',
-                        ] as OperationRealTimeTableColumn[];
-                    } else {
-                        return [
-                            'formationNumber',
-                            'operationNumber',
-                            'sightingTime',
-                            'updatedAt',
-                        ] as OperationRealTimeTableColumn[];
-                    }
-                }),
-            ),
+            this.state
+                .select(
+                    selectSlice([
+                        'isVisibleSightingHistories',
+                        'isVisibleCurrentPosition',
+                    ]),
+                )
+                .pipe(
+                    map(
+                        ({
+                            isVisibleSightingHistories,
+                            isVisibleCurrentPosition,
+                        }) => {
+                            let columns: OperationRealTimeTableColumn[] = [
+                                'formationNumber',
+                                'operationNumber',
+                                'sightingHistories',
+                                'currentPosition',
+                                'sightingTime',
+                                'updatedAt',
+                            ];
+
+                            if (!isVisibleSightingHistories) {
+                                columns = columns.filter(
+                                    (c) => c !== 'sightingHistories',
+                                );
+                            }
+
+                            if (!isVisibleCurrentPosition) {
+                                columns = columns.filter(
+                                    (c) => c !== 'currentPosition',
+                                );
+                            }
+
+                            return columns;
+                        },
+                    ),
+                ),
         );
 
         this.state.connect(
@@ -98,16 +119,24 @@ export class OperationRealTimeNewTableByFormationCComponent {
                     selectSlice([
                         'formations',
                         'timeCrossSections',
+                        'histories',
                         'currentPositions',
                     ]),
                 )
                 .pipe(
-                    map(({ formations, timeCrossSections, currentPositions }) =>
-                        OperationRealTimeUtil.generateFormationTableData(
+                    map(
+                        ({
                             formations,
                             timeCrossSections,
+                            histories,
                             currentPositions,
-                        ),
+                        }) =>
+                            OperationRealTimeUtil.generateFormationTableData(
+                                formations,
+                                timeCrossSections,
+                                histories,
+                                currentPositions,
+                            ),
                     ),
                 ),
         );
@@ -139,8 +168,18 @@ export class OperationRealTimeNewTableByFormationCComponent {
         );
 
         this.state.connect(
+            'histories',
+            this.operationRealTimeStateQuery.formationSightingHistories$,
+        );
+
+        this.state.connect(
             'currentPositions',
             this.operationRealTimeStateQuery.currentPositions$,
+        );
+
+        this.state.connect(
+            'isVisibleSightingHistories',
+            this.operationRealTimeStateQuery.isVisibleSightingHistories$,
         );
 
         this.state.connect(
