@@ -1,10 +1,10 @@
 <app-operation-search-card-p
     class="tw-h-full tw-w-full"
-    [calendarId]="calendarId$ | async"
-    [operationId]="operationId$ | async"
-    [calendars]="calendars$ | async"
-    [operations]="operations$ | async"
-    (selectCalendarId)="onReceiveSelectCalendarId($event)"
-    (selectOperationId)="onReceiveSelectOperationId($event)"
-    (clickSearch)="onReceiveClickSearch()"
+    [calendarId]="calendarId()"
+    [operationId]="operationId()"
+    [calendars]="calendars()"
+    [operations]="operations()"
+    (selectCalendarId)="onSelectedCalendarId$.next($event)"
+    (selectOperationId)="onSelectedOperationId$.next($event)"
+    (clickSearch)="onClickedSearch$.next()"
 ></app-operation-search-card-p>

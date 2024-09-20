@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -12,45 +12,47 @@ import {
 
 @Injectable()
 export class OperationSearchCardService {
-    private readonly _searchOpeartionTableEvent$ = new Subject<
+    readonly #operationService = inject(OperationService);
+    readonly #operationSearchCardStateStore = inject(
+        OperationSearchCardStateStore,
+    );
+    readonly #operationSearchCardStateQuery = inject(
+        OperationSearchCardStateQuery,
+    );
+
+    readonly #searchOpeartionTableEvent$ = new Subject<
         CalendarDetailsDto['calendarId']
     >();
-    private readonly _searchOpeartionRouteDiagramEvent$ = new Subject<
+    readonly #searchOpeartionRouteDiagramEvent$ = new Subject<
         OperationDetailsDto['operationId']
     >();
-
-    constructor(
-        private readonly operationService: OperationService,
-        private readonly operationSearchCardStateStore: OperationSearchCardStateStore,
-        private readonly operationSearchCardStateQuery: OperationSearchCardStateQuery,
-    ) {}
 
     emitSearchOperationTableEvent(
         calendarId: CalendarDetailsDto['calendarId'],
     ): void {
-        this._searchOpeartionTableEvent$.next(calendarId);
+        this.#searchOpeartionTableEvent$.next(calendarId);
     }
 
     receiveSearchOperationTableEvent(): Observable<
         CalendarDetailsDto['calendarId']
     > {
-        return this._searchOpeartionTableEvent$.asObservable();
+        return this.#searchOpeartionTableEvent$.asObservable();
     }
 
     emitSearchOperationRouteDiagramEvent(
         operationId: OperationDetailsDto['operationId'],
     ): void {
-        this._searchOpeartionRouteDiagramEvent$.next(operationId);
+        this.#searchOpeartionRouteDiagramEvent$.next(operationId);
     }
 
     receiveSearchOperationRouteDiagramEvent(): Observable<
         OperationDetailsDto['operationId']
     > {
-        return this._searchOpeartionRouteDiagramEvent$.asObservable();
+        return this.#searchOpeartionRouteDiagramEvent$.asObservable();
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = this.operationSearchCardStateQuery.calendarId;
+        const calendarId = this.#operationSearchCardStateQuery.calendarId;
         const qb = RequestQueryBuilder.create().setFilter([
             {
                 field: 'calendarId',
@@ -64,9 +66,9 @@ export class OperationSearchCardService {
             },
         ]);
 
-        return this.operationService.findMany(qb).pipe(
+        return this.#operationService.findMany(qb).pipe(
             tap((operations: OperationDetailsDto[]) => {
-                this.operationSearchCardStateStore.setOperations(operations);
+                this.#operationSearchCardStateStore.setOperations(operations);
             }),
             map(() => undefined),
         );
