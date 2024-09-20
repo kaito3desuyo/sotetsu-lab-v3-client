@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { get } from 'lodash-es';
@@ -37,15 +42,17 @@ export class OperationRealTimeNewTablePComponent {
     readonly operationRealTimeTableColumnLabel =
         OperationRealTimeTableColumnLabel;
 
-    @Input() primaryKey: OperationRealTimeTableColumn;
-    @Input() trackByKey: string;
-    @Input() displayedColumns: OperationRealTimeTableColumn[];
-    @Input() data: IOperationRealTimeTableData[];
-    @Input() todaysCalendarId: CalendarDetailsDto['calendarId'];
-    @Input() stations: StationDetailsDto[];
-    @Input() tripClasses: TripClassDetailsDto[];
+    readonly primaryKey = input.required<OperationRealTimeTableColumn>();
+    readonly trackByKey = input.required<string>();
+    readonly displayedColumns =
+        input.required<OperationRealTimeTableColumn[]>();
+    readonly data = input.required<IOperationRealTimeTableData[]>();
+    readonly todaysCalendarId =
+        input.required<CalendarDetailsDto['calendarId']>();
+    readonly stations = input.required<StationDetailsDto[]>();
+    readonly tripClasses = input.required<TripClassDetailsDto[]>();
 
-    trackBy(row: IOperationRealTimeTableData): any {
-        return get(row, this.trackByKey);
-    }
+    readonly trackBy = computed(
+        () => (row: IOperationRealTimeTableData) => get(row, this.trackByKey()),
+    );
 }

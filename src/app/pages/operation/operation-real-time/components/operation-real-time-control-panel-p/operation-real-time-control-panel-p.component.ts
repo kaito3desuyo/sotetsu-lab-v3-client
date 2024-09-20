@@ -2,9 +2,8 @@ import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
-    Output,
+    input,
+    output,
 } from '@angular/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
@@ -17,11 +16,11 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
     imports: [CommonModule, MatSlideToggleModule],
 })
 export class OperationRealTimeControlPanelPComponent {
-    @Input() isEnableAutoReload!: boolean;
-    @Input() isVisibleSightingHistories!: boolean;
-    @Input() isVisibleCurrentPosition!: boolean;
+    readonly isEnableAutoReload = input.required<boolean>();
+    readonly isVisibleSightingHistories = input.required<boolean>();
+    readonly isVisibleCurrentPosition = input.required<boolean>();
 
-    @Output() toggleAutoReload = new EventEmitter<boolean>();
-    @Output() toggleVisibleSightingHistories = new EventEmitter<boolean>();
-    @Output() toggleVisibleCurrentPosition = new EventEmitter<boolean>();
+    readonly toggleAutoReload = output<boolean>();
+    readonly toggleVisibleSightingHistories = output<boolean>();
+    readonly toggleVisibleCurrentPosition = output<boolean>();
 }

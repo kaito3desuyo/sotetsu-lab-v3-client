@@ -1,9 +1,9 @@
-<table class="tw-flex-1 tw-border-collapse tw-bg-white">
+<table class="tw-h-full tw-flex-1 tw-border-collapse tw-bg-white">
     <thead>
         <tr
             class="tw-h-16 [&>th+th]:tw-pl-4 [&>th.formationNumber]:tw-w-10 [&>th.operationNumber]:tw-w-9 [&>th:first-child]:tw-pl-6 [&>th:last-child]:tw-pr-6"
         >
-            @for (column of displayedColumns; track column) {
+            @for (column of displayedColumns(); track column) {
                 <th
                     class="tw-p-0 tw-text-left tw-text-xs tw-font-normal tw-text-grey-600"
                     [ngClass]="[column]"
@@ -14,11 +14,11 @@
         </tr>
     </thead>
     <tbody>
-        @for (row of data; track trackBy(row)) {
+        @for (row of data(); track trackBy()(row)) {
             <tr
                 class="tw-h-12 [&>td+td]:tw-pl-4 [&>td.formationNumber]:tw-w-10 [&>td.operationNumber]:tw-w-9 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6"
             >
-                @for (column of displayedColumns; track column) {
+                @for (column of displayedColumns(); track column) {
                     <td
                         class="tw-h-full tw-border-0 tw-border-t tw-border-solid tw-border-t-grey-300 tw-p-0"
                         [ngClass]="[column]"
@@ -34,7 +34,7 @@
                                         ?.operation
                                 "
                                 [dayCountFromToday]="
-                                    primaryKey !==
+                                    primaryKey() !==
                                     operationRealTimeTableColumn.OPERATION_NUMBER
                                         ? (row.timeCrossSection?.latestSighting
                                               ?.sightingTime
@@ -54,7 +54,7 @@
                                         ?.formation
                                 "
                                 [dayCountFromToday]="
-                                    primaryKey !==
+                                    primaryKey() !==
                                     operationRealTimeTableColumn.FORMATION_NUMBER
                                         ? (row.timeCrossSection?.latestSighting
                                               ?.sightingTime
@@ -81,9 +81,9 @@
                             operationRealTimeTableColumn.CURRENT_POSITION
                         ) {
                             <app-current-position-link
-                                [todaysCalendarId]="todaysCalendarId"
-                                [stations]="stations"
-                                [tripClasses]="tripClasses"
+                                [todaysCalendarId]="todaysCalendarId()"
+                                [stations]="stations()"
+                                [tripClasses]="tripClasses()"
                                 [currentPosition]="row.currentPosition"
                             ></app-current-position-link>
                         }
@@ -139,12 +139,10 @@
 
 <ng-template #histories let-histories="histories">
     <div
-        class="tw-flex tw-h-full tw-w-fit tw-max-w-32 tw-flex-row tw-items-center tw-gap-1 tw-overflow-x-scroll"
+        class="tw-flex tw-h-full tw-w-fit tw-max-w-32 tw-flex-row tw-items-center tw-gap-1 tw-overflow-x-auto"
     >
         @for (history of histories; track history.operationSightingId) {
-            <mat-icon
-                class="!tw-h-4 !tw-w-4 tw-min-w-4 tw-text-[16px] tw-leading-[1.2]"
-            >
+            <mat-icon class="!tw-h-4 !tw-w-4 tw-min-w-4 tw-text-[16px]">
                 arrow_back
             </mat-icon>
             <span
@@ -155,11 +153,13 @@
                 "
             >
                 @if (
-                    primaryKey === operationRealTimeTableColumn.OPERATION_NUMBER
+                    primaryKey() ===
+                    operationRealTimeTableColumn.OPERATION_NUMBER
                 ) {
                     {{ history.formation.formationNumber }}
                 } @else if (
-                    primaryKey === operationRealTimeTableColumn.FORMATION_NUMBER
+                    primaryKey() ===
+                    operationRealTimeTableColumn.FORMATION_NUMBER
                 ) {
                     {{ history.operation.operationNumber }}
                 }

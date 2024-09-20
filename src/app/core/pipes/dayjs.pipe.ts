@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs, isDayjs } from 'dayjs';
 import { isString } from 'lodash-es';
 import { isMoment, Moment } from 'moment';
 
@@ -12,8 +12,9 @@ export class DayjsPipe implements PipeTransform {
         args: { format: string; parseFormat?: string },
     ): string;
     transform(value: Moment, args: { format: string }): string;
+    transform(value: Dayjs, args: { format: string }): string;
     transform(
-        value: string | Moment,
+        value: string | Moment | Dayjs,
         args: { format: string; parseFormat?: string },
     ): string {
         if (isString(value)) {
@@ -23,6 +24,11 @@ export class DayjsPipe implements PipeTransform {
 
         if (isMoment(value)) {
             const instance = dayjs(value.toDate());
+            return instance.isValid() ? instance.format(args.format) : '';
+        }
+
+        if (isDayjs(value)) {
+            const instance = value;
             return instance.isValid() ? instance.format(args.format) : '';
         }
 
