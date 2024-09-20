@@ -3,7 +3,7 @@ import { areArrayValuesEqual } from 'src/app/core/utils/are-array-values-equal';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { ETimetableAllLineStationViewMode } from '../interfaces/timetable-all-line.interface';
+import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
 
 function sortTrips(
     stations: StationDetailsDto[],

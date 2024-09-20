@@ -3,6 +3,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
 @Pipe({
+    standalone: true,
     name: 'timetableAllLineGetBorderSetting',
 })
 export class TimetableAllLineGetBorderSettingPipe implements PipeTransform {
