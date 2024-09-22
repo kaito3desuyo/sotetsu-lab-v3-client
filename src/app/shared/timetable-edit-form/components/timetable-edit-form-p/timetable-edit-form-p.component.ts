@@ -3,10 +3,12 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter,
-    Input,
-    Output,
+    computed,
+    inject,
+    input,
+    output,
 } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import {
     FormArray,
     FormBuilder,
@@ -25,18 +27,15 @@ import {
     MatSlideToggleModule,
 } from '@angular/material/slide-toggle';
 import { RxState } from '@rx-angular/state';
-import { selectSlice } from '@rx-angular/state/selections';
-import { RxFor } from '@rx-angular/template/for';
-import { RxIf } from '@rx-angular/template/if';
-import { RxPush } from '@rx-angular/template/push';
 import { plainToClass } from 'class-transformer';
 import dayjs from 'dayjs';
-import { Observable, Subject } from 'rxjs';
-import { filter, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
+import { combineLatest, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { ServiceDetailsDto } from 'src/app/libs/service/usecase/dtos/service-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
@@ -57,18 +56,6 @@ import {
 } from '../../special/enums/timetable-edit-form.enum';
 import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
 
-type State = {
-    serviceId: string;
-    calendarId: string;
-    calendar: CalendarDetailsDto;
-    mode: ETimetableEditFormMode;
-    tripDirection: ETripDirection;
-    stations: StationDetailsDto[];
-    operations: OperationDetailsDto[];
-    tripClasses: TripClassDetailsDto[];
-    trips: TripDetailsDto[];
-};
-
 @Component({
     standalone: true,
     selector: 'app-timetable-edit-form-p',
@@ -86,14 +73,17 @@ type State = {
         MatButtonModule,
         MatSlideToggleModule,
         MatIconModule,
-        RxFor,
-        RxIf,
-        RxPush,
         PipesModule,
     ],
     providers: [RxState],
 })
 export class TimetableEditFormPComponent {
+    readonly #cd = inject(ChangeDetectorRef);
+    readonly #fb = inject(FormBuilder);
+    readonly #state = inject<RxState<{}>>(RxState);
+
+    readonly tripDirectionEnum = ETripDirection;
+    readonly tripDirectionLabel = tripDirectionLabel;
     readonly stopTypeArray = Object.entries(ETimetableEditFormStopType).map(
         ([key, value]) => ({
             key,
@@ -102,208 +92,88 @@ export class TimetableEditFormPComponent {
         }),
     );
 
-    readonly form: ITimetableEditForm = this.fb.group({
-        trips: this.fb.array<ITimetableEditFormTrip>([]),
+    readonly form: ITimetableEditForm = this.#fb.group({
+        trips: this.#fb.array<ITimetableEditFormTrip>([]),
     });
 
     get tripsForm(): FormArray<ITimetableEditFormTrip> {
         return this.form.get('trips') as FormArray<ITimetableEditFormTrip>;
     }
 
-    private readonly _unsubscriber$ = new Subject<number>();
-
-    readonly operations$ = this.state.select('operations');
-    readonly tripClasses$ = this.state.select('tripClasses');
-    readonly stations$ = this.state.select('stations');
-    readonly isWeekday$ = this.state.select(
-        'calendar',
-        (calendar) => !calendar.sunday && !calendar.saturday,
-    );
-    readonly isHoliday$ = this.state.select(
-        'calendar',
-        (calendar) => !!calendar.sunday || !!calendar.saturday,
-    );
-    readonly calendarStartDate$ = this.state.select('calendar', 'startDate');
-    readonly calendarName$ = this.state.select('calendar', 'calendarName');
-    readonly tripDirectionLabel$ = this.state.select(
-        'tripDirection',
-        (tripDirection) => tripDirectionLabel.get(tripDirection),
-    );
-    readonly isVisibleToggleThatSaveTripsIndividually$ = this.state.select(
-        'mode',
-        (mode) => mode !== ETimetableEditFormMode.UPDATE,
-    );
+    readonly #unsubscriber$ = new Subject<number>();
 
     readonly onClickedAdd$ = new Subject<void>();
     readonly onClickedRemove$ = new Subject<number>();
     readonly onClickedClear$ = new Subject<void>();
     readonly onClickedSubmit$ = new Subject<void>();
 
-    readonly onChangedInputServiceId$ = new Subject<string>();
-    readonly onChangedInputCalendarId$ = new Subject<string>();
-    readonly onChangedInputCalendar$ = new Subject<CalendarDetailsDto>();
-    readonly onChangedInputMode$ = new Subject<ETimetableEditFormMode>();
-    readonly onChangedInputTripDirection$ = new Subject<ETripDirection>();
-    readonly onChangedInputStations$ = new Subject<StationDetailsDto[]>();
-    readonly onChangedInputOperations$ = new Subject<OperationDetailsDto[]>();
-    readonly onChangedInputTripClasses$ = new Subject<TripClassDetailsDto[]>();
-    readonly onChangedInputTrips$ = new Subject<TripDetailsDto[]>();
-    readonly onChangedInputSubmittedEvent$ = new Subject<Observable<void>>();
+    readonly serviceId = input.required<ServiceDetailsDto['serviceId']>();
+    readonly calendarId = input.required<CalendarDetailsDto['calendarId']>();
+    readonly calendar = input.required<CalendarDetailsDto>();
+    readonly mode = input.required<ETimetableEditFormMode>();
+    readonly tripDirection = input.required<ETripDirection>();
+    readonly stations = input.required<StationDetailsDto[]>();
+    readonly operations = input.required<OperationDetailsDto[]>();
+    readonly tripClasses = input.required<TripClassDetailsDto[]>();
+    readonly trips = input.required<TripDetailsDto[]>();
+    readonly lastSubmittedAt = input.required<number>();
 
-    @Input() set serviceId(serviceId: string) {
-        this.onChangedInputServiceId$.next(serviceId);
-    }
-    @Input() set calendarId(calendarId: string) {
-        this.onChangedInputCalendarId$.next(calendarId);
-    }
-    @Input() set calendar(calendar: CalendarDetailsDto) {
-        this.onChangedInputCalendar$.next(calendar);
-    }
-    @Input() set mode(mode: ETimetableEditFormMode) {
-        this.onChangedInputMode$.next(mode);
-    }
-    @Input() set tripDirection(tripDirection: ETripDirection) {
-        this.onChangedInputTripDirection$.next(tripDirection);
-    }
-    @Input() set stations(stations: StationDetailsDto[]) {
-        this.onChangedInputStations$.next(stations);
-    }
-    @Input() set operations(operations: OperationDetailsDto[]) {
-        this.onChangedInputOperations$.next(operations);
-    }
-    @Input() set tripClasses(tripClasses: TripClassDetailsDto[]) {
-        this.onChangedInputTripClasses$.next(tripClasses);
-    }
-    @Input() set trips(trips: TripDetailsDto[]) {
-        this.onChangedInputTrips$.next(trips);
-    }
-    @Input() set submittedEvent$(ev: Observable<void>) {
-        this.onChangedInputSubmittedEvent$.next(ev);
-    }
+    readonly clickSubmit = output<CreateTripDto[] | ReplaceTripDto[]>();
+    readonly toggleIsSaveTripsIndividually = output<MatSlideToggleChange>();
 
-    @Output() clickSubmit = new EventEmitter<
-        CreateTripDto[] | ReplaceTripDto[]
-    >();
-    @Output() toggleIsSaveTripsIndividually =
-        new EventEmitter<MatSlideToggleChange>();
+    readonly isHolidayCalendar = computed(() => {
+        const calendar = this.calendar();
+        return calendar.sunday || calendar.saturday;
+    });
 
-    constructor(
-        private readonly cd: ChangeDetectorRef,
-        private readonly fb: FormBuilder,
-        private readonly state: RxState<State>,
-    ) {
-        this.state.connect(
-            'serviceId',
-            this.onChangedInputServiceId$.asObservable(),
-        );
-        this.state.connect(
-            'calendarId',
-            this.onChangedInputCalendarId$.asObservable(),
-        );
-        this.state.connect(
-            'calendar',
-            this.onChangedInputCalendar$.asObservable(),
-        );
-        this.state.connect('mode', this.onChangedInputMode$.asObservable());
-        this.state.connect(
-            'tripDirection',
-            this.onChangedInputTripDirection$.asObservable(),
-        );
-        this.state.connect(
-            'stations',
-            this.onChangedInputStations$.asObservable(),
-        );
-        this.state.connect(
-            'operations',
-            this.onChangedInputOperations$.asObservable(),
-        );
-        this.state.connect(
-            'tripClasses',
-            this.onChangedInputTripClasses$.asObservable(),
-        );
-        this.state.connect('trips', this.onChangedInputTrips$.asObservable());
+    readonly isVisibleToggleThatSaveTripsIndividually = computed(() => {
+        const mode = this.mode();
+        return mode !== ETimetableEditFormMode.UPDATE;
+    });
 
-        this.state.hold(
-            this.state.select('mode').pipe(
-                filter((mode) => mode === ETimetableEditFormMode.ADD),
-                switchMap(() =>
-                    this.state.select(
-                        selectSlice([
-                            'serviceId',
-                            'calendarId',
-                            'tripDirection',
-                            'stations',
-                        ]),
-                    ),
-                ),
-            ),
+    constructor() {
+        this.#state.hold(
+            combineLatest([
+                toObservable(this.serviceId),
+                toObservable(this.calendarId),
+                toObservable(this.mode),
+                toObservable(this.tripDirection),
+                toObservable(this.stations),
+                toObservable(this.trips),
+            ]),
             () => {
-                this._add();
+                this.#formInitialize();
             },
         );
 
-        this.state.hold(
-            this.state.select('mode').pipe(
-                filter(
-                    (mode) =>
-                        mode === ETimetableEditFormMode.COPY ||
-                        mode === ETimetableEditFormMode.UPDATE,
-                ),
-                switchMap(() =>
-                    this.state.select(
-                        selectSlice([
-                            'serviceId',
-                            'calendarId',
-                            'tripDirection',
-                            'stations',
-                            'trips',
-                        ]),
-                    ),
-                ),
-            ),
-            ({ trips }) => {
-                for (const trip of trips) {
-                    this._add(trip);
-                }
-            },
-        );
-
-        this.state.hold(this.onClickedAdd$.asObservable(), () => {
-            this._add();
+        this.#state.hold(toObservable(this.lastSubmittedAt), () => {
+            if (this.mode() !== ETimetableEditFormMode.UPDATE) {
+                this.#formInitialize();
+            }
         });
 
-        this.state.hold(this.onClickedRemove$.asObservable(), (index) => {
-            this._remove(index);
+        this.#state.hold(this.onClickedAdd$.asObservable(), () => {
+            this.#onReceiveClickAdd();
         });
 
-        this.state.hold(this.onClickedClear$.asObservable(), () => {
-            this._onReceiveClickClear();
+        this.#state.hold(this.onClickedRemove$.asObservable(), (index) => {
+            this.#onReceiveClickRemove(index);
         });
 
-        this.state.hold(this.onClickedSubmit$.asObservable(), () => {
-            this._onReceiveClickSubmit();
+        this.#state.hold(this.onClickedClear$.asObservable(), () => {
+            this.#onReceiveClickClear();
         });
 
-        this.state.hold(
-            this.onChangedInputSubmittedEvent$.pipe(
-                mergeMap((ob) => ob),
-                mergeMap(() => this.state.select('mode')),
-                filter((mode) => mode !== ETimetableEditFormMode.UPDATE),
-            ),
-            () => {
-                this._onReceiveClickClear();
-                this.cd.detectChanges();
-            },
-        );
+        this.#state.hold(this.onClickedSubmit$.asObservable(), () => {
+            this.#onReceiveClickSubmit();
+        });
     }
 
-    private _generateTripFormGroup(
-        trip?: TripDetailsDto,
-    ): ITimetableEditFormTrip {
+    #generateTripFormGroup(trip?: TripDetailsDto): ITimetableEditFormTrip {
         if (trip) {
-            return this.fb.group({
+            return this.#fb.group({
                 tripId: [trip.tripId],
-                serviceId: [this.state.get('serviceId'), [Validators.required]],
+                serviceId: [this.serviceId(), [Validators.required]],
                 tripNumber: [
                     trip.tripNumber,
                     [
@@ -312,21 +182,15 @@ export class TimetableEditFormPComponent {
                 ],
                 tripClassId: [trip.tripClassId, [Validators.required]],
                 tripName: [''],
-                tripDirection: [
-                    this.state.get('tripDirection'),
-                    [Validators.required],
-                ],
+                tripDirection: [this.tripDirection(), [Validators.required]],
                 tripBlockId: [trip.tripBlockId],
                 depotIn: [trip.depotIn],
                 depotOut: [trip.depotOut],
-                calendarId: [
-                    this.state.get('calendarId'),
-                    [Validators.required],
-                ],
+                calendarId: [this.calendarId(), [Validators.required]],
                 extraCalendarId: [null],
-                times: this.fb.array(
-                    this.state.get('stations').map((station) =>
-                        this._generateTripTimeFormGroup(
+                times: this.#fb.array(
+                    this.stations().map((station) =>
+                        this.#generateTripTimeFormGroup(
                             station,
                             trip.times.find(
                                 (o) => o.stationId === station.stationId,
@@ -339,7 +203,7 @@ export class TimetableEditFormPComponent {
                     ],
                 ),
                 operationId: [
-                    this.state.get('mode') === ETimetableEditFormMode.UPDATE &&
+                    this.mode() === ETimetableEditFormMode.UPDATE &&
                     trip.tripOperationLists.length
                         ? trip.tripOperationLists[0].operationId
                         : '',
@@ -347,9 +211,9 @@ export class TimetableEditFormPComponent {
             });
         }
 
-        return this.fb.group({
+        return this.#fb.group({
             tripId: [null],
-            serviceId: [this.state.get('serviceId'), [Validators.required]],
+            serviceId: [this.serviceId(), [Validators.required]],
             tripNumber: [
                 '',
                 [
@@ -358,19 +222,16 @@ export class TimetableEditFormPComponent {
             ],
             tripClassId: ['', [Validators.required]],
             tripName: [''],
-            tripDirection: [
-                this.state.get('tripDirection'),
-                [Validators.required],
-            ],
+            tripDirection: [this.tripDirection(), [Validators.required]],
             tripBlockId: [null],
             depotIn: [false],
             depotOut: [false],
-            calendarId: [this.state.get('calendarId'), [Validators.required]],
+            calendarId: [this.calendarId(), [Validators.required]],
             extraCalendarId: [null],
-            times: this.fb.array(
-                this.state
-                    .get('stations')
-                    .map((station) => this._generateTripTimeFormGroup(station)),
+            times: this.#fb.array(
+                this.stations().map((station) =>
+                    this.#generateTripTimeFormGroup(station),
+                ),
                 [
                     TimetableEditFormValidator.stopsStationCountShouldBeGreaterAndEqualThanTwo,
                     TimetableEditFormValidator.stopTimesShouldBeLaterThanPrevStopTimes,
@@ -380,12 +241,12 @@ export class TimetableEditFormPComponent {
         });
     }
 
-    private _generateTripTimeFormGroup(
+    #generateTripTimeFormGroup(
         station: StationDetailsDto,
         time?: TimeDetailsDto,
     ): ITimetableEditFormTripTime {
         if (time) {
-            return this.fb.group({
+            return this.#fb.group({
                 timeId: [time.timeId],
                 tripId: [time.tripId],
                 stationId: [station.stationId, [Validators.required]],
@@ -409,7 +270,7 @@ export class TimetableEditFormPComponent {
             });
         }
 
-        return this.fb.group({
+        return this.#fb.group({
             timeId: [null],
             tripId: [null],
             stationId: [station.stationId, [Validators.required]],
@@ -423,7 +284,7 @@ export class TimetableEditFormPComponent {
         });
     }
 
-    private _changeDisabledStateWhenChangeStopType(
+    #changeDisabledStateWhenChangeStopType(
         tripTimesForm: FormArray<ITimetableEditFormTripTime>,
         unsubscribeIndex: number,
     ): void {
@@ -449,12 +310,12 @@ export class TimetableEditFormPComponent {
         for (const form of tripTimesForm.controls) {
             changeDisabledState(form.get('stopType').value, form);
 
-            this.state.hold(
+            this.#state.hold(
                 form
                     .get('stopType')
                     .valueChanges.pipe(
                         takeUntil(
-                            this._unsubscriber$
+                            this.#unsubscriber$
                                 .asObservable()
                                 .pipe(
                                     filter(
@@ -470,13 +331,13 @@ export class TimetableEditFormPComponent {
         }
     }
 
-    private _add(trip?: TripDetailsDto): void {
+    #add(trip?: TripDetailsDto): void {
         const tripsForm = this.form.get(
             'trips',
         ) as FormArray<ITimetableEditFormTrip>;
-        const newTripForm = this._generateTripFormGroup(trip);
+        const newTripForm = this.#generateTripFormGroup(trip);
 
-        this._changeDisabledStateWhenChangeStopType(
+        this.#changeDisabledStateWhenChangeStopType(
             newTripForm.get('times') as FormArray<ITimetableEditFormTripTime>,
             tripsForm.controls.length,
         );
@@ -484,42 +345,53 @@ export class TimetableEditFormPComponent {
         tripsForm.push(newTripForm);
     }
 
-    private _remove(index: number): void {
+    #remove(index: number): void {
         const tripsForm = this.form.get(
             'trips',
         ) as FormArray<ITimetableEditFormTrip>;
+
         tripsForm.removeAt(index);
     }
 
-    private _formInitialize(): void {
+    #formInitialize(): void {
         const tripsForm = this.form.get(
             'trips',
         ) as FormArray<ITimetableEditFormTrip>;
 
         for (let index = 0; index < tripsForm.controls.length; index++) {
-            this._unsubscriber$.next(index);
+            this.#unsubscriber$.next(index);
         }
 
         tripsForm.clear();
 
-        switch (this.state.get('mode')) {
+        switch (this.mode()) {
             case ETimetableEditFormMode.ADD:
-                this._add();
-                return;
+                this.#add();
+                break;
             case ETimetableEditFormMode.COPY:
             case ETimetableEditFormMode.UPDATE:
-                for (const trip of this.state.get('trips')) {
-                    this._add(trip);
+                for (const trip of this.trips()) {
+                    this.#add(trip);
                 }
-                return;
+                break;
         }
+
+        this.#cd.markForCheck();
     }
 
-    private _onReceiveClickClear(): void {
-        this._formInitialize();
+    #onReceiveClickAdd(): void {
+        this.#add();
     }
 
-    private _onReceiveClickSubmit(): void {
+    #onReceiveClickRemove(index: number): void {
+        this.#remove(index);
+    }
+
+    #onReceiveClickClear(): void {
+        this.#formInitialize();
+    }
+
+    #onReceiveClickSubmit(): void {
         const tripsForm = this.form.get(
             'trips',
         ) as FormArray<ITimetableEditFormTrip>;
@@ -531,7 +403,7 @@ export class TimetableEditFormPComponent {
             );
 
             return plainToClass(
-                this.state.get('mode') === ETimetableEditFormMode.UPDATE
+                this.mode() === ETimetableEditFormMode.UPDATE
                     ? ReplaceTripDto
                     : CreateTripDto,
                 {
