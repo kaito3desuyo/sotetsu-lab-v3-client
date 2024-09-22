@@ -1,7 +1,7 @@
 <app-timetable-search-card-p
     class="tw-h-full tw-w-full"
-    [calendars]="calendars$ | async"
-    [routeStationLists]="routeStationLists$ | async"
-    [currentState]="currentState$ | async"
+    [calendars]="calendars()"
+    [routeStationLists]="routeStationLists()"
+    [currentState]="currentState()"
     (clickSearch)="onReceiveClickSearch($event)"
 ></app-timetable-search-card-p>

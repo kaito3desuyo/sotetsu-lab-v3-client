@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { guid, Query, Store } from '@datorama/akita';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ITimetableSearchCardForm } from '../interfaces/timetable-search-card-form.interface';
 
@@ -12,10 +13,10 @@ export class TimetableSearchCardStateStore extends Store<TimetableSearchCardStat
     constructor() {
         super(
             {
-                calendarId: null,
-                tripDirection: 0,
+                calendarId: '',
+                tripDirection: ETripDirection.INBOUND,
                 searchByStation: false,
-                stationId: null,
+                stationId: '',
             },
             { name: `TimetableSearchCard-${guid()}` },
         );
