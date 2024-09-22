@@ -26,8 +26,8 @@ const routes: Routes = [
     {
         path: 'copy',
         loadChildren: () =>
-            import('./timetable-copy/timetable-copy.module').then(
-                (mod) => mod.TimetableCopyModule,
+            import('./timetable-copy/timetable-copy.route').then(
+                (mod) => mod.TIMETABLE_COPY_ROUTES,
             ),
     },
     {
