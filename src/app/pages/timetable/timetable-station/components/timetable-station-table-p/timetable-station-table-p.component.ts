@@ -24,6 +24,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     selector: 'app-timetable-station-table-p',
     templateUrl: './timetable-station-table-p.component.html',
     styleUrls: ['./timetable-station-table-p.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         RouterLink,
@@ -31,7 +32,6 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimetableStationTablePComponent {
     readonly tripDirectionEnum = ETripDirection;
@@ -57,6 +57,7 @@ export class TimetableStationTablePComponent {
         const calendar = this.calendar();
         return calendar.sunday || calendar.saturday;
     });
+
     readonly maxColumnsCount = computed(() => {
         const data = this.timetableData();
         return max(data.map((o) => o.trips.length));

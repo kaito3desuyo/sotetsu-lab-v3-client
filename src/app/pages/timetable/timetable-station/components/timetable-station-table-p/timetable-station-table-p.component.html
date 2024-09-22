@@ -68,7 +68,7 @@
                                                 }}
                                             </span>
                                         }
-                                        <!--  -->
+
                                         @if (trip.times[0].departureTime) {
                                             <span class="tw-no-underline">
                                                 {{
@@ -214,7 +214,6 @@
                                                                               'expectedSighting.formation.formationNumber',
                                                                       }
                                                         ) {
-                                                            <!--  -->
                                                             {{
                                                                 trip
                                                                     .tripOperationLists[0]
@@ -260,7 +259,6 @@
                                                                     ? '?'
                                                                     : ''
                                                             }}
-                                                            <!--  -->
                                                         } @else {
                                                             不明
                                                         }
@@ -345,7 +343,7 @@
                                 </div>
                             </td>
                         }
-                        <!--  -->
+
                         @for (
                             _ of maxColumnsCount() - item.trips.length | range;
                             track $index

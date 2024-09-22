@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
@@ -11,26 +11,27 @@ import { TimetableStationMainCComponent } from './components/timetable-station-m
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
     styleUrls: ['./timetable-station.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableStationHeaderCComponent, TimetableStationMainCComponent],
     providers: [RxState],
 })
 export class TimetableStationComponent {
-    constructor(
-        private readonly router: Router,
-        private readonly route: ActivatedRoute,
-        private readonly state: RxState<{}>,
-        private readonly titleService: TitleService,
-        private readonly timetableSearchCardService: TimetableSearchCardService,
-    ) {
-        this.state.hold(this.route.data, ({ title }) => {
-            this.titleService.setTitle(title);
+    readonly #route = inject(ActivatedRoute);
+    readonly #router = inject(Router);
+    readonly #state = inject<RxState<{}>>(RxState);
+    readonly #titleService = inject(TitleService);
+    readonly #timetableSearchCardService = inject(TimetableSearchCardService);
+
+    constructor() {
+        this.#state.hold(this.#route.data, ({ title }) => {
+            this.#titleService.setTitle(title);
         });
 
-        this.state.hold(
-            this.timetableSearchCardService.receiveSearchTimetableEvent(),
+        this.#state.hold(
+            this.#timetableSearchCardService.receiveSearchTimetableEvent(),
             (state) => {
                 if (state.searchByStation) {
-                    this.router.navigate([
+                    this.#router.navigate([
                         'timetable',
                         'station',
                         {
@@ -40,7 +41,7 @@ export class TimetableStationComponent {
                         },
                     ]);
                 } else {
-                    this.router.navigate([
+                    this.#router.navigate([
                         'timetable',
                         'all-line',
                         {
