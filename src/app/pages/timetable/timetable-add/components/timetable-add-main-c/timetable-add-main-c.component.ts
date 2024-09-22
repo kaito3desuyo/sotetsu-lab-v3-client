@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TimetableEditFormCComponent } from 'src/app/shared/timetable-edit-form/components/timetable-edit-form-c/timetable-edit-form-c.component';
 
 @Component({
+    standalone: true,
     selector: 'app-timetable-add-main-c',
     templateUrl: './timetable-add-main-c.component.html',
     styleUrls: ['./timetable-add-main-c.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [TimetableEditFormCComponent],
 })
-export class TimetableAddMainCComponent {
-    constructor() {}
-}
+export class TimetableAddMainCComponent {}
