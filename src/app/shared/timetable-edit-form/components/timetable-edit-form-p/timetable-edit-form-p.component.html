@@ -1,16 +1,13 @@
 <article class="tw-bg-white tw-shadow-md">
     <header
-        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-px-4"
-        [ngClass]="{
-            weekday: isWeekday$ | push,
-            holiday: isHoliday$ | push,
-        }"
+        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
+        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-            {{ calendarStartDate$ | push | date: 'yyyy年MM月dd日' }}
+            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
             改正<br />
-            {{ calendarName$ | push }}
-            {{ tripDirectionLabel$ | push }}時刻表
+            {{ calendar().calendarName }}
+            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
         </h3>
     </header>
     <form
@@ -18,22 +15,22 @@
         [formGroup]="form"
         (ngSubmit)="onClickedSubmit$.next()"
     >
-        <div
-            *rxIf="isVisibleToggleThatSaveTripsIndividually$"
-            class="tw-flex tw-flex-col tw-gap-4 tw-bg-grey-200 tw-p-4"
-        >
-            <p class="tw-m-0">
-                デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
-                途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
-                <br />
-                分割・併合・直通がない列車を複数同時に保存する（グループを作成せず、単一列車に単一グループを割り当てる）場合は、以下のトグルをONにしてください。
-            </p>
-            <mat-slide-toggle
-                (change)="toggleIsSaveTripsIndividually.emit($event)"
-            >
-                列車個別保存モード
-            </mat-slide-toggle>
-        </div>
+        @if (isVisibleToggleThatSaveTripsIndividually()) {
+            <div class="tw-flex tw-flex-col tw-gap-4 tw-bg-grey-200 tw-p-4">
+                <p class="tw-m-0">
+                    デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
+                    途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
+                    <br />
+                    分割・併合・直通がない列車を複数同時に保存する（グループを作成せず、単一列車に単一グループを割り当てる）場合は、以下のトグルをONにしてください。
+                </p>
+                <mat-slide-toggle
+                    (change)="toggleIsSaveTripsIndividually.emit($event)"
+                >
+                    列車個別保存モード
+                </mat-slide-toggle>
+            </div>
+        }
+
         <div class="tw-overflow-x-auto">
             <table
                 class="tw-table-fixed tw-border-collapse [&_td]:tw-w-[256px] [&_td]:tw-max-w-[256px] [&_td]:tw-bg-white [&_td]:tw-px-1 [&_td]:tw-py-2 [&_th:first-child]:tw-sticky [&_th:first-child]:tw-left-0 [&_th:first-child]:tw-z-[9999] [&_th]:tw-whitespace-nowrap [&_th]:tw-bg-white [&_th]:tw-px-1 [&_th]:tw-py-2 [&_th]:tw-text-right"
@@ -41,12 +38,11 @@
                 <tr>
                     <th></th>
                     <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let i = index
-                            "
-                        >
+                        @for (
+                            tripForm of tripsForm.controls;
+                            track $index;
+                            let i = $index
+                        ) {
                             <td>
                                 <div
                                     class="tw-flex tw-flex-row tw-justify-end tw-gap-2"
@@ -74,7 +70,7 @@
                                     </button>
                                 </div>
                             </td>
-                        </ng-container>
+                        }
                     </ng-container>
                 </tr>
                 <tr>
@@ -82,12 +78,7 @@
                         <!-- 列車番号 -->
                     </th>
                     <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let i = index
-                            "
-                        >
+                        @for (tripForm of tripsForm.controls; track $index) {
                             <td [formGroup]="tripForm">
                                 <mat-form-field class="tw-w-full">
                                     <mat-label>列車番号</mat-label>
@@ -97,7 +88,7 @@
                                     />
                                 </mat-form-field>
                             </td>
-                        </ng-container>
+                        }
                     </ng-container>
                 </tr>
                 <tr>
@@ -105,28 +96,25 @@
                         <!-- 運用番号 -->
                     </th>
                     <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let i = index
-                            "
-                        >
+                        @for (tripForm of tripsForm.controls; track $index) {
                             <td [formGroup]="tripForm">
                                 <mat-form-field class="tw-w-full">
                                     <mat-label>運用番号</mat-label>
                                     <mat-select formControlName="operationId">
-                                        <mat-option
-                                            *rxFor="
-                                                let operation of operations$
-                                            "
-                                            [value]="operation.operationId"
-                                        >
-                                            {{ operation.operationNumber }}
-                                        </mat-option>
+                                        @for (
+                                            operation of operations();
+                                            track operation.operationId
+                                        ) {
+                                            <mat-option
+                                                [value]="operation.operationId"
+                                            >
+                                                {{ operation.operationNumber }}
+                                            </mat-option>
+                                        }
                                     </mat-select>
                                 </mat-form-field>
                             </td>
-                        </ng-container>
+                        }
                     </ng-container>
                 </tr>
                 <tr>
@@ -134,28 +122,25 @@
                         <!-- 種別 -->
                     </th>
                     <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let i = index
-                            "
-                        >
+                        @for (tripForm of tripsForm.controls; track $index) {
                             <td [formGroup]="tripForm">
                                 <mat-form-field class="tw-w-full">
                                     <mat-label>種別</mat-label>
                                     <mat-select formControlName="tripClassId">
-                                        <mat-option
-                                            *rxFor="
-                                                let tripClass of tripClasses$
-                                            "
-                                            [value]="tripClass.tripClassId"
-                                        >
-                                            {{ tripClass.tripClassName }}
-                                        </mat-option>
+                                        @for (
+                                            tripClass of tripClasses();
+                                            track tripClass.tripClassId
+                                        ) {
+                                            <mat-option
+                                                [value]="tripClass.tripClassId"
+                                            >
+                                                {{ tripClass.tripClassName }}
+                                            </mat-option>
+                                        }
                                     </mat-select>
                                 </mat-form-field>
                             </td>
-                        </ng-container>
+                        }
                     </ng-container>
                 </tr>
                 <tr>
@@ -163,12 +148,7 @@
                         <!-- 入出庫 -->
                     </th>
                     <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let i = index
-                            "
-                        >
+                        @for (tripForm of tripsForm.controls; track $index) {
                             <td [formGroup]="tripForm">
                                 <div
                                     class="tw-flex tw-flex-row tw-justify-center tw-gap-2"
@@ -184,7 +164,7 @@
                                     </mat-checkbox>
                                 </div>
                             </td>
-                        </ng-container>
+                        }
                     </ng-container>
                 </tr>
                 <!-- <tr>
@@ -198,80 +178,81 @@
                         <td></td>
                     </ng-container>
                 </tr> -->
-                <tr
-                    *rxFor="
-                        let station of stations$;
-                        let i = index;
-                        trackBy: 'stationId' | trackBy
-                    "
-                >
-                    <th>
-                        <span
-                            style="
-                                display: inline-block;
-                                transform-origin: right;
-                            "
-                            [ngStyle]="{
-                                transform:
-                                    'scale(' +
-                                    (station.stationName.length > 4
-                                        ? 4 / station.stationName.length
-                                        : 1) +
-                                    ', 1)',
-                                marginLeft:
-                                    (station.stationName.length > 4
-                                        ? (station.stationName.length - 4) *
-                                          16 *
-                                          -1
-                                        : 0) + 'px',
-                            }"
-                        >
-                            {{ station.stationName }}
-                        </span>
-                    </th>
-                    <ng-container formArrayName="trips">
-                        <ng-container
-                            *rxFor="
-                                let tripForm of tripsForm.controls;
-                                let j = index
-                            "
-                        >
-                            <td [formGroup]="tripForm.get('times').at(i)">
-                                <div class="tw-flex tw-flex-col tw-gap-2">
-                                    <div>
-                                        <mat-radio-group
-                                            class="tw-flex tw-flex-row tw-justify-center tw-gap-2"
-                                            formControlName="stopType"
-                                        >
-                                            <mat-radio-button
-                                                *rxFor="
-                                                    let type of stopTypeArray
-                                                "
-                                                [value]="type.value"
+                @for (
+                    station of stations();
+                    track station.stationId;
+                    let i = $index
+                ) {
+                    <tr>
+                        <th>
+                            <span
+                                style="
+                                    display: inline-block;
+                                    transform-origin: right;
+                                "
+                                [ngStyle]="{
+                                    transform:
+                                        'scale(' +
+                                        (station.stationName.length > 4
+                                            ? 4 / station.stationName.length
+                                            : 1) +
+                                        ', 1)',
+                                    marginLeft:
+                                        (station.stationName.length > 4
+                                            ? (station.stationName.length - 4) *
+                                              16 *
+                                              -1
+                                            : 0) + 'px',
+                                }"
+                            >
+                                {{ station.stationName }}
+                            </span>
+                        </th>
+                        <ng-container formArrayName="trips">
+                            @for (
+                                tripForm of tripsForm.controls;
+                                track $index
+                            ) {
+                                <td [formGroup]="tripForm.get('times').at(i)">
+                                    <div class="tw-flex tw-flex-col tw-gap-2">
+                                        <div>
+                                            <mat-radio-group
+                                                class="tw-flex tw-flex-row tw-justify-center tw-gap-2"
+                                                formControlName="stopType"
                                             >
-                                                {{ type.label }}
-                                            </mat-radio-button>
-                                        </mat-radio-group>
-                                    </div>
-                                    <div class="tw-flex tw-flex-row tw-gap-2">
-                                        <div></div>
-                                        <mat-form-field class="tw-w-1/2">
-                                            <mat-label> 着 </mat-label>
-                                            <input
-                                                type="time"
-                                                matInput
-                                                formControlName="arrivalTime"
-                                            />
-                                        </mat-form-field>
-                                        <mat-form-field class="tw-w-1/2">
-                                            <mat-label> 発 </mat-label>
-                                            <input
-                                                type="time"
-                                                matInput
-                                                formControlName="departureTime"
-                                            />
-                                        </mat-form-field>
-                                        <!-- <mat-form-field
+                                                @for (
+                                                    type of stopTypeArray;
+                                                    track $index
+                                                ) {
+                                                    <mat-radio-button
+                                                        [value]="type.value"
+                                                    >
+                                                        {{ type.label }}
+                                                    </mat-radio-button>
+                                                }
+                                            </mat-radio-group>
+                                        </div>
+                                        <div
+                                            class="tw-flex tw-flex-row tw-gap-2"
+                                        >
+                                            <div></div>
+                                            <mat-form-field class="tw-w-1/2">
+                                                <mat-label> 着 </mat-label>
+                                                <input
+                                                    type="time"
+                                                    matInput
+                                                    formControlName="arrivalTime"
+                                                />
+                                            </mat-form-field>
+                                            <mat-form-field class="tw-w-1/2">
+                                                <mat-label> 発 </mat-label>
+                                                <input
+                                                    type="time"
+                                                    matInput
+                                                    formControlName="departureTime"
+                                                />
+                                            </mat-form-field>
+                                            <!-- <mat-form-field
                                             class="tw-w-16"
                                         >
                                             <mat-label>
@@ -300,12 +281,13 @@
                                                 </mat-option>
                                             </mat-select>
                                         </mat-form-field> -->
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
+                                </td>
+                            }
                         </ng-container>
-                    </ng-container>
-                </tr>
+                    </tr>
+                }
             </table>
         </div>
         <div class="tw-flex tw-flex-row tw-justify-center tw-gap-6">

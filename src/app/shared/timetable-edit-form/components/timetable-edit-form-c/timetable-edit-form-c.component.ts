@@ -1,8 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -17,7 +18,6 @@ import {
     TimetableEditFormStateQuery,
     TimetableEditFormStateStore,
 } from '../../states/timetable-edit-form.state';
-import { CommonModule } from '@angular/common';
 import { TimetableEditFormPComponent } from '../timetable-edit-form-p/timetable-edit-form-p.component';
 
 @Component({
@@ -25,52 +25,63 @@ import { TimetableEditFormPComponent } from '../timetable-edit-form-p/timetable-
     selector: 'app-timetable-edit-form-c',
     templateUrl: './timetable-edit-form-c.component.html',
     styleUrls: ['./timetable-edit-form-c.component.scss'],
-    imports: [CommonModule, TimetableEditFormPComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [TimetableEditFormPComponent],
 })
 export class TimetableEditFormCComponent {
-    readonly serviceId$ = this.serviceListStateQuery.serviceId$;
-    readonly calendarId$ = this.timetableEditFormStateQuery.calendarId$;
-    readonly calendar$ = this.timetableEditFormStateQuery.calendarId$.pipe(
-        switchMap((calendarId) =>
-            this.calendarListStateQuery.selectByCalendarId(calendarId),
+    readonly #loading = inject(LoadingService);
+    readonly #error = inject(ErrorHandlerService);
+    readonly #notification = inject(NotificationService);
+    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #timetableEditFormService = inject(TimetableEditFormService);
+    readonly #timetableEditFormStateStore = inject(TimetableEditFormStateStore);
+    readonly #timetableEditFormStateQuery = inject(TimetableEditFormStateQuery);
+
+    readonly serviceId = toSignal(this.#serviceListStateQuery.serviceId$);
+    readonly calendarId = toSignal(
+        this.#timetableEditFormStateQuery.calendarId$,
+    );
+    readonly calendar = toSignal(
+        this.#timetableEditFormStateQuery.calendarId$.pipe(
+            switchMap((calendarId) =>
+                this.#calendarListStateQuery.selectByCalendarId(calendarId),
+            ),
         ),
     );
-    readonly mode$ = this.timetableEditFormStateQuery.mode$;
-    readonly tripDirection$ = this.timetableEditFormStateQuery.tripDirection$;
-    readonly stations$ = this.timetableEditFormStateQuery.stations$;
-    readonly operations$ = this.timetableEditFormStateQuery.operations$;
-    readonly tripClasses$ = this.timetableEditFormStateQuery.tripClasses$;
-    readonly trips$ = this.timetableEditFormStateQuery.trips$;
-
-    readonly submittedEvent$ =
-        this.timetableEditFormService.receiveSubmittedEvent();
-
-    constructor(
-        private readonly loading: LoadingService,
-        private readonly error: ErrorHandlerService,
-        private readonly notification: NotificationService,
-        private readonly serviceListStateQuery: ServiceListStateQuery,
-        private readonly calendarListStateQuery: CalendarListStateQuery,
-        private readonly timetableEditFormService: TimetableEditFormService,
-        private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
-        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery,
-    ) {}
+    readonly mode = toSignal(this.#timetableEditFormStateQuery.mode$);
+    readonly tripDirection = toSignal(
+        this.#timetableEditFormStateQuery.tripDirection$,
+    );
+    readonly stations = toSignal(this.#timetableEditFormStateQuery.stations$);
+    readonly operations = toSignal(
+        this.#timetableEditFormStateQuery.operations$,
+    );
+    readonly tripClasses = toSignal(
+        this.#timetableEditFormStateQuery.tripClasses$,
+    );
+    readonly trips = toSignal(this.#timetableEditFormStateQuery.trips$);
+    readonly lastSubmittedAt = toSignal(
+        this.#timetableEditFormService
+            .receiveSubmittedEvent()
+            .pipe(map(() => new Date().getTime())),
+    );
 
     async onReceiveClickSubmit(
         trips: CreateTripDto[] | ReplaceTripDto[],
     ): Promise<void> {
         const isCreateTripDto = (_: unknown): _ is CreateTripDto[] => {
             return (
-                this.timetableEditFormStateQuery.mode ===
+                this.#timetableEditFormStateQuery.mode ===
                     ETimetableEditFormMode.ADD ||
-                this.timetableEditFormStateQuery.mode ===
+                this.#timetableEditFormStateQuery.mode ===
                     ETimetableEditFormMode.COPY
             );
         };
 
         const isReplaceTripDto = (_: unknown): _ is ReplaceTripDto[] => {
             return (
-                this.timetableEditFormStateQuery.mode ===
+                this.#timetableEditFormStateQuery.mode ===
                 ETimetableEditFormMode.UPDATE
             );
         };
@@ -79,30 +90,30 @@ export class TimetableEditFormCComponent {
             trips: CreateTripDto[] | ReplaceTripDto[],
         ): Observable<void> => {
             if (isCreateTripDto(trips)) {
-                return this.timetableEditFormService.createTripBlocks(trips);
+                return this.#timetableEditFormService.createTripBlocks(trips);
             } else if (isReplaceTripDto(trips)) {
-                return this.timetableEditFormService.replaceTripBlock(trips);
+                return this.#timetableEditFormService.replaceTripBlock(trips);
             }
         };
 
-        this.loading.open();
+        this.#loading.open();
 
         const result = await tryCatchAsync(
             fn(trips),
             (e) => e as HttpErrorResponse,
         );
 
-        this.loading.close();
+        this.#loading.close();
 
         if (result.isFailure()) {
             const e = result.error;
-            this.error.handleError(e);
-            this.notification.open(e.message, 'OK');
+            this.#error.handleError(e);
+            this.#notification.open(e.message, 'OK');
             return;
         }
 
         const message = () => {
-            switch (this.timetableEditFormStateQuery.mode) {
+            switch (this.#timetableEditFormStateQuery.mode) {
                 case ETimetableEditFormMode.ADD:
                     return '列車を追加しました';
                 case ETimetableEditFormMode.COPY:
@@ -112,11 +123,13 @@ export class TimetableEditFormCComponent {
             }
         };
 
-        this.notification.open(message(), 'OK');
-        this.timetableEditFormService.emitSubmittedEvent();
+        this.#notification.open(message(), 'OK');
+        this.#timetableEditFormService.emitSubmittedEvent();
     }
 
     onReceiveToggleIsSaveTripsIndividually(ev: MatSlideToggleChange) {
-        this.timetableEditFormStateStore.setIsSaveTripsIndividually(ev.checked);
+        this.#timetableEditFormStateStore.setIsSaveTripsIndividually(
+            ev.checked,
+        );
     }
 }

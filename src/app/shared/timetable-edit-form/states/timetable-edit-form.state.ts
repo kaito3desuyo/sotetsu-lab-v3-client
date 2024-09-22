@@ -99,7 +99,9 @@ export class TimetableEditFormStateQuery extends Query<State> {
     ]).pipe(
         map(({ tripDirection, stations, tripBlocks }) => {
             const sortedStations =
-                tripDirection === 0 ? [...stations].reverse() : stations;
+                tripDirection === ETripDirection.INBOUND
+                    ? [...stations].reverse()
+                    : stations;
 
             const sortedTrips = arrayUniqueBy(
                 TimetableAllLineUtil.sortTrips(

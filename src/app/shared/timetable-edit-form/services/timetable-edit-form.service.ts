@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -22,34 +22,32 @@ import {
 
 @Injectable()
 export class TimetableEditFormService {
-    private _submittedEvent$ = new Subject<void>();
+    readonly #serviceService = inject(ServiceService);
+    readonly #operationService = inject(OperationService);
+    readonly #tripClassService = inject(TripClassService);
+    readonly #tripBlockService = inject(TripBlockService);
+    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #timetableEditFormStateStore = inject(TimetableEditFormStateStore);
+    readonly #timetableEditFormStateQuery = inject(TimetableEditFormStateQuery);
 
-    constructor(
-        private readonly serviceService: ServiceService,
-        private readonly operationService: OperationService,
-        private readonly tripClassService: TripClassService,
-        private readonly tripBlockService: TripBlockService,
-        private readonly serviceListStateQuery: ServiceListStateQuery,
-        private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
-        private readonly timetableEditFormStateQuery: TimetableEditFormStateQuery,
-    ) {}
+    #submittedEvent$ = new Subject<void>();
 
     createTripBlocks(trips: CreateTripDto[]): Observable<void> {
         const isSaveTripsIndividually =
-            this.timetableEditFormStateQuery.isSaveTripsIndividually;
+            this.#timetableEditFormStateQuery.isSaveTripsIndividually;
         const qb = new RequestQueryBuilder();
 
         const tripBlocks: CreateTripBlockDto[] = isSaveTripsIndividually
             ? trips.map((trip) => ({ tripBlockId: undefined, trips: [trip] }))
             : [{ tripBlockId: undefined, trips }];
 
-        return this.tripBlockService
+        return this.#tripBlockService
             .createMany(qb, tripBlocks)
             .pipe(map(() => undefined));
     }
 
     replaceTripBlock(trips: ReplaceTripDto[]): Observable<void> {
-        const tripBlockId = this.timetableEditFormStateQuery.tripBlockId;
+        const tripBlockId = this.#timetableEditFormStateQuery.tripBlockId;
         const qb = new RequestQueryBuilder();
 
         const tripBlock: ReplaceTripBlockDto = {
@@ -57,13 +55,13 @@ export class TimetableEditFormService {
             trips,
         };
 
-        return this.tripBlockService
+        return this.#tripBlockService
             .replaceOne(qb, tripBlockId, tripBlock)
             .pipe(map(() => undefined));
     }
 
     fetchStations(): Observable<void> {
-        const serviceId = this.serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListStateQuery.serviceId;
         const qb = new RequestQueryBuilder()
             .setJoin([
                 {
@@ -83,16 +81,16 @@ export class TimetableEditFormService {
                 },
             ]);
 
-        return this.serviceService.findOneWithStations(serviceId, qb).pipe(
+        return this.#serviceService.findOneWithStations(serviceId, qb).pipe(
             tap((data) => {
-                this.timetableEditFormStateStore.setStations(data.stations);
+                this.#timetableEditFormStateStore.setStations(data.stations);
             }),
             map(() => undefined),
         );
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = this.timetableEditFormStateQuery.calendarId;
+        const calendarId = this.#timetableEditFormStateQuery.calendarId;
         const qb = RequestQueryBuilder.create()
             .setFilter([
                 {
@@ -108,16 +106,16 @@ export class TimetableEditFormService {
             ])
             .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
-        return this.operationService.findMany(qb).pipe(
+        return this.#operationService.findMany(qb).pipe(
             tap((operations: OperationDetailsDto[]) => {
-                this.timetableEditFormStateStore.setOperations(operations);
+                this.#timetableEditFormStateStore.setOperations(operations);
             }),
             map(() => undefined),
         );
     }
 
     fetchTripClasses(): Observable<void> {
-        const serviceId = this.serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListStateQuery.serviceId;
         const qb = RequestQueryBuilder.create()
             .setFilter([
                 {
@@ -128,16 +126,16 @@ export class TimetableEditFormService {
             ])
             .sortBy([{ field: 'sequence', order: 'ASC' }]);
 
-        return this.tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany(qb).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
-                this.timetableEditFormStateStore.setTripClasses(tripClasses);
+                this.#timetableEditFormStateStore.setTripClasses(tripClasses);
             }),
             map(() => undefined),
         );
     }
 
     fetchTripBlocks(): Observable<void> {
-        const tripBlockId = this.timetableEditFormStateQuery.tripBlockId;
+        const tripBlockId = this.#timetableEditFormStateQuery.tripBlockId;
         const qb = RequestQueryBuilder.create()
             .setJoin([
                 { field: 'trips' },
@@ -156,22 +154,22 @@ export class TimetableEditFormService {
                 { field: 'trips.times.departureTime', order: 'ASC' },
             ]);
 
-        return this.tripBlockService.findMany(qb).pipe(
+        return this.#tripBlockService.findMany(qb).pipe(
             tap((tripBlocks: TripBlockDetailsDto[]) => {
-                this.timetableEditFormStateStore.setTripDirection(
+                this.#timetableEditFormStateStore.setTripDirection(
                     tripBlocks[0].trips[0].tripDirection as ETripDirection,
                 );
-                this.timetableEditFormStateStore.setTripBlocks(tripBlocks);
+                this.#timetableEditFormStateStore.setTripBlocks(tripBlocks);
             }),
             map(() => undefined),
         );
     }
 
     receiveSubmittedEvent(): Observable<void> {
-        return this._submittedEvent$.asObservable();
+        return this.#submittedEvent$.asObservable();
     }
 
     emitSubmittedEvent(): void {
-        this._submittedEvent$.next();
+        this.#submittedEvent$.next();
     }
 }
