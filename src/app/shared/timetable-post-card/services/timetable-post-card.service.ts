@@ -4,15 +4,13 @@ import { ITimetablePostCardForm } from '../interfaces/timetable-post-card-form.i
 
 @Injectable()
 export class TimetablePostCardService {
-    private _moveTimetableAddEvent$ = new Subject<ITimetablePostCardForm>();
-
-    constructor() {}
+    readonly #moveTimetableAddEvent$ = new Subject<ITimetablePostCardForm>();
 
     emitMoveTimetableAddEvent(state: ITimetablePostCardForm): void {
-        this._moveTimetableAddEvent$.next(state);
+        this.#moveTimetableAddEvent$.next(state);
     }
 
     receiveMoveTimetableAddEvent(): Observable<ITimetablePostCardForm> {
-        return this._moveTimetableAddEvent$.asObservable();
+        return this.#moveTimetableAddEvent$.asObservable();
     }
 }
