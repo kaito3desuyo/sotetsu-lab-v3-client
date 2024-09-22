@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -9,25 +9,23 @@ import { TimetableEditFormStateStore } from 'src/app/shared/timetable-edit-form/
 
 @Injectable()
 export class TimetableAddResolverService {
-    constructor(
-        private readonly timetableEditFormService: TimetableEditFormService,
-        private readonly timetableEditFormStateStore: TimetableEditFormStateStore,
-    ) {}
+    readonly #timetableEditFormService = inject(TimetableEditFormService);
+    readonly #timetableEditFormStateStore = inject(TimetableEditFormStateStore);
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         const calendarId = route.paramMap.get('calendarId');
         const tripDirection = route.paramMap.get('trip_direction') as '0' | '1';
 
-        this.timetableEditFormStateStore.setCalendarId(calendarId);
-        this.timetableEditFormStateStore.setMode(ETimetableEditFormMode.ADD);
-        this.timetableEditFormStateStore.setTripDirection(
+        this.#timetableEditFormStateStore.setCalendarId(calendarId);
+        this.#timetableEditFormStateStore.setMode(ETimetableEditFormMode.ADD);
+        this.#timetableEditFormStateStore.setTripDirection(
             +tripDirection as ETripDirection,
         );
 
         return forkJoin([
-            this.timetableEditFormService.fetchStations(),
-            this.timetableEditFormService.fetchOperations(),
-            this.timetableEditFormService.fetchTripClasses(),
-        ]).pipe(map(() => null));
+            this.#timetableEditFormService.fetchStations(),
+            this.#timetableEditFormService.fetchOperations(),
+            this.#timetableEditFormService.fetchTripClasses(),
+        ]).pipe(map(() => undefined));
     }
 }

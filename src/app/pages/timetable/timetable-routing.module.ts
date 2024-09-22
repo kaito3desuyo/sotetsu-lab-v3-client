@@ -19,8 +19,8 @@ const routes: Routes = [
     {
         path: 'add/:calendarId',
         loadChildren: () =>
-            import('./timetable-add/timetable-add.module').then(
-                (mod) => mod.TimetableAddModule,
+            import('./timetable-add/timetable-add.route').then(
+                (mod) => mod.TIMETABLE_ADD_ROUTES,
             ),
     },
     {
