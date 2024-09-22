@@ -1,29 +1,35 @@
-import { RxLet } from '@rx-angular/template/let';
-import { RxIf } from '@rx-angular/template/if';
-import { RxFor } from '@rx-angular/template/for';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
-    Output,
     inject,
+    input,
+    output,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { toObservable } from '@angular/core/rxjs-interop';
+import {
+    FormBuilder,
+    FormControl,
+    FormGroup,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { RxState } from '@rx-angular/state';
-import { Subject } from 'rxjs';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { IOperationPostCardForm } from '../../interfaces/operation-post-card-form.interface';
 
-type State = {
-    agencies: AgencyDetailsDto[];
-};
+type Form = FormGroup<{
+    agencyId: FormControl<string>;
+    formationOrVehicleNumber: FormControl<string>;
+    operationNumber: FormControl<string>;
+    timeSetting: FormControl<'currentTime' | 'specifiedTime'>;
+    sightingTime: FormControl<string>;
+}>;
 
 @Component({
     standalone: true,
@@ -31,7 +37,6 @@ type State = {
     templateUrl: './operation-post-card-p.component.html',
     styleUrls: ['./operation-post-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
     imports: [
         CommonModule,
         ReactiveFormsModule,
@@ -40,47 +45,31 @@ type State = {
         MatRadioModule,
         MatSelectModule,
         MatButtonModule,
-        RxLet,
-        RxFor,
-        RxIf,
     ],
+    providers: [RxState],
 })
 export class OperationPostCardPComponent {
-    private readonly fb = inject(FormBuilder);
-    private readonly state = inject<RxState<State>>(RxState);
+    readonly #fb = inject(FormBuilder).nonNullable;
+    readonly #state = inject<RxState<{}>>(RxState);
 
-    readonly sightingForm = this.fb.nonNullable.group({
-        agencyId: ['', Validators.required],
-        formationOrVehicleNumber: ['', Validators.required],
-        operationNumber: ['', Validators.required],
-        timeSetting: ['currentTime', Validators.required],
-        sightingTime: [{ value: '', disabled: true }, Validators.required],
+    readonly sightingForm: Form = this.#fb.group({
+        agencyId: this.#fb.control('', [Validators.required]),
+        formationOrVehicleNumber: this.#fb.control('', [Validators.required]),
+        operationNumber: this.#fb.control('', [Validators.required]),
+        timeSetting: this.#fb.control<'currentTime' | 'specifiedTime'>(
+            'currentTime',
+            [Validators.required],
+        ),
+        sightingTime: this.#fb.control('', [Validators.required]),
     });
 
-    readonly vm$ = this.state.select();
+    readonly agencies = input.required<AgencyDetailsDto[]>();
+    readonly lastSubmittedAt = input.required<number>();
 
-    readonly onChangedInputAgencies$ = new EventEmitter<AgencyDetailsDto[]>();
-    readonly onChangedInputSubmitOperationSightingEvent$ =
-        new EventEmitter<void>();
-
-    readonly onSubmittedSighting$ = new Subject<void>();
-
-    @Input() set agencies(agencies: AgencyDetailsDto[]) {
-        this.onChangedInputAgencies$.next(agencies);
-    }
-    @Input() set submitOperationSightingEvent(event: void) {
-        this.onChangedInputSubmitOperationSightingEvent$.next(event);
-    }
-
-    @Output() submitSighting = new EventEmitter<IOperationPostCardForm>();
+    readonly submitSighting = output<IOperationPostCardForm>();
 
     constructor() {
-        this.state.connect(
-            'agencies',
-            this.onChangedInputAgencies$.asObservable(),
-        );
-
-        this.state.hold(
+        this.#state.hold(
             this.sightingForm.get('timeSetting').valueChanges,
             (timeSetting) => {
                 switch (timeSetting) {
@@ -94,21 +83,14 @@ export class OperationPostCardPComponent {
             },
         );
 
-        this.state.hold(
-            this.onChangedInputSubmitOperationSightingEvent$.asObservable(),
-            () => {
-                this.sightingForm.reset({
-                    agencyId: '',
-                    formationOrVehicleNumber: '',
-                    operationNumber: '',
-                    timeSetting: 'currentTime',
-                    sightingTime: '',
-                });
-            },
-        );
-
-        this.state.hold(this.onSubmittedSighting$.asObservable(), () => {
-            this.submitSighting.emit(this.sightingForm.value);
+        this.#state.hold(toObservable(this.lastSubmittedAt), () => {
+            this.sightingForm.reset({
+                agencyId: '',
+                formationOrVehicleNumber: '',
+                operationNumber: '',
+                timeSetting: 'currentTime',
+                sightingTime: '',
+            });
         });
     }
 }
