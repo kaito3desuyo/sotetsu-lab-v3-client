@@ -1,37 +1,32 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import dayjs, { Dayjs } from 'dayjs';
-import { forkJoin, Observable, of, Subject } from 'rxjs';
-import { map, mergeMap, take, tap } from 'rxjs/operators';
+import dayjs from 'dayjs';
+import { forkJoin, Observable, Subject } from 'rxjs';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { IOperationPostCardForm } from '../interfaces/operation-post-card-form.interface';
 
 @Injectable()
 export class OperationPostCardService {
-    private readonly _submitOperationSightingEvent = new Subject<void>();
+    readonly #socket = inject(SocketService);
+    readonly #formationService = inject(FormationService);
+    readonly #operationService = inject(OperationService);
+    readonly #operationSightingService = inject(OperationSightingService);
+    readonly #todaysCalendarListQuery = inject(TodaysCalendarListStateQuery);
 
-    constructor(
-        private readonly socket: SocketService,
-        private readonly formationService: FormationService,
-        private readonly operationService: OperationService,
-        private readonly operationSightingService: OperationSightingService,
-        private readonly todaysCalendarListQuery: TodaysCalendarListStateQuery,
-    ) {}
+    readonly #submitOperationSightingEvent = new Subject<void>();
 
     receiveSubmitOperationSightingEvent(): Observable<void> {
-        return this._submitOperationSightingEvent.asObservable();
+        return this.#submitOperationSightingEvent.asObservable();
     }
 
     async addOperationSighting(
         formValue: IOperationPostCardForm,
     ): Promise<void> {
-        const todaysCalendarId = this.todaysCalendarListQuery.todaysCalendarId;
+        const todaysCalendarId = this.#todaysCalendarListQuery.todaysCalendarId;
         const emptyQb = RequestQueryBuilder.create();
         const formationQb = RequestQueryBuilder.create()
             .setJoin([
@@ -70,12 +65,12 @@ export class OperationPostCardService {
         const isLateNight = now.hour() < 4;
 
         const [formations, operations] = await forkJoin([
-            this.formationService.findManyBySpeficicDate(formationQb, {
+            this.#formationService.findManyBySpeficicDate(formationQb, {
                 date: now
                     .subtract(isLateNight ? 1 : 0, 'days')
                     .format('YYYY-MM-DD'),
             }),
-            this.operationService.findMany(operationQb),
+            this.#operationService.findMany(operationQb),
         ]).toPromise();
 
         if (!Array.isArray(formations) || !formations.length) {
@@ -101,7 +96,7 @@ export class OperationPostCardService {
             }
         }
 
-        const currentPosition = await this.operationService
+        const currentPosition = await this.#operationService
             .findOneWithCurrentPosition(operations[0].operationId, emptyQb)
             .toPromise();
 
@@ -127,7 +122,7 @@ export class OperationPostCardService {
             }
         }
 
-        const result = await this.operationSightingService
+        const result = await this.#operationSightingService
             .createOne(emptyQb, {
                 formationId: formations[0].formationId,
                 operationId: operations[0].operationId,
@@ -135,7 +130,7 @@ export class OperationPostCardService {
             })
             .toPromise();
 
-        this.socket.emit('sendSighting', result);
-        this._submitOperationSightingEvent.next();
+        this.#socket.emit('sendSighting', result);
+        this.#submitOperationSightingEvent.next();
     }
 }
