@@ -1,7 +1,6 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
-const routes: Routes = [
+export const TIMETABLE_ROUTES: Routes = [
     {
         path: 'all-line',
         loadChildren: () =>
@@ -33,14 +32,8 @@ const routes: Routes = [
     {
         path: 'update',
         loadChildren: () =>
-            import('./timetable-update/timetable-update.module').then(
-                (mod) => mod.TimetableUpdateModule,
+            import('./timetable-update/timetable-update.route').then(
+                (mod) => mod.TIMETABLE_UPDATE_ROUTES,
             ),
     },
 ];
-
-@NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule],
-})
-export class TimetableRoutingModule {}

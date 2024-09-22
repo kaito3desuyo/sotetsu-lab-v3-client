@@ -19,8 +19,8 @@ const routes: Routes = [
     {
         path: 'timetable',
         loadChildren: () =>
-            import('./pages/timetable/timetable.module').then(
-                (mod) => mod.TimetableModule,
+            import('./pages/timetable/timetable.route').then(
+                (mod) => mod.TIMETABLE_ROUTES,
             ),
     },
     {
