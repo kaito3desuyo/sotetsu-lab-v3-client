@@ -1,10 +1,13 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import { AppModule } from './app/app.module';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import { AppComponent } from './app/app.component';
+import { APP_ROUTES } from './app/app.route';
+import { CoreModule } from './app/core/core.module';
 import { environment } from './environments/environment';
 
 dayjs.extend(customParseFormat);
@@ -18,6 +21,6 @@ if (environment.production) {
     enableProdMode();
 }
 
-platformBrowserDynamic()
-    .bootstrapModule(AppModule)
-    .catch((err) => console.error(err));
+bootstrapApplication(AppComponent, {
+    providers: [provideRouter(APP_ROUTES), importProvidersFrom([CoreModule])],
+}).catch((err) => console.error(err));

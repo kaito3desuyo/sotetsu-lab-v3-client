@@ -9,6 +9,7 @@ import { MinByPipe } from './min-by.pipe';
 import { OperationNumberColorPipe } from './operation-number-color.pipe';
 import { RangePipe } from './range.pipe';
 import { TrackByPipe } from './track-by.pipe';
+import { PaddingPipe } from './padding.pipe';
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import { TrackByPipe } from './track-by.pipe';
         CalculateDayCountFromTodayPipe,
         RangePipe,
         AntiBracketsPipe,
+        PaddingPipe,
     ],
     imports: [CommonModule],
     exports: [
@@ -33,6 +35,7 @@ import { TrackByPipe } from './track-by.pipe';
         CalculateDayCountFromTodayPipe,
         RangePipe,
         AntiBracketsPipe,
+        PaddingPipe,
     ],
 })
 export class PipesModule {}

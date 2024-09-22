@@ -1,7 +1,6 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 
-const routes: Routes = [
+export const APP_ROUTES: Routes = [
     {
         path: '',
         loadChildren: () =>
@@ -31,15 +30,3 @@ const routes: Routes = [
             ),
     },
 ];
-
-@NgModule({
-    imports: [
-        RouterModule.forRoot(routes, {
-            onSameUrlNavigation: 'reload',
-            // preloadingStrategy: PreloadAllModules,
-            scrollPositionRestoration: 'enabled',
-        }),
-    ],
-    exports: [RouterModule],
-})
-export class AppRoutingModule {}
