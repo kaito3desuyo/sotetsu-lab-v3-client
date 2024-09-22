@@ -1,96 +1,74 @@
-<ng-container *rxLet="vm$; let vm; strategy: 'immediate'; patchZone: true">
-    <article
-        class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
-    >
-        <header>
-            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">時刻表</h2>
-            <p class="tw-m-0 tw-text-sm tw-text-grey-700">
-                相鉄線の時刻表を検索できます。
-            </p>
-        </header>
-        <section class="tw-flex-grow">
-            <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
-                <mat-form-field appearance="fill">
-                    <mat-label>ダイヤ</mat-label>
-                    <mat-select formControlName="calendarId">
-                        <mat-option
-                            *rxFor="
-                                let calendar of vm.calendars;
-                                strategy: 'userBlocking';
-                                patchZone: true
-                            "
-                            [value]="calendar.calendarId"
-                        >
+<article
+    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+>
+    <header>
+        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">時刻表</h2>
+        <p class="tw-m-0 tw-text-sm tw-text-grey-700">
+            相鉄線の時刻表を検索できます。
+        </p>
+    </header>
+    <div class="tw-flex-grow">
+        <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+            <mat-form-field appearance="fill">
+                <mat-label>ダイヤ</mat-label>
+                <mat-select formControlName="calendarId">
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
                             {{
                                 calendar.startDate
                                     | dayjs: { format: 'YYYY年MM月DD日改正 ' }
                             }}{{ calendar.calendarName }}</mat-option
                         >
-                    </mat-select>
-                    <mat-error
-                        *rxIf="
-                            form.get('calendarId');
-                            strategy: 'userBlocking';
-                            patchZone: false
-                        "
-                    >
-                        <strong>必須項目</strong>です
-                    </mat-error>
-                </mat-form-field>
+                    }
+                </mat-select>
+                @if (form.get('calendarId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
 
-                <mat-radio-group
-                    class="tw-flex tw-flex-row tw-gap-4"
-                    formControlName="tripDirection"
-                >
-                    <mat-radio-button [value]="0">上り</mat-radio-button>
-                    <mat-radio-button [value]="1">下り</mat-radio-button>
-                </mat-radio-group>
-
-                <mat-slide-toggle formControlName="searchByStation">
-                    駅を指定して検索する
-                </mat-slide-toggle>
-
-                <mat-form-field appearance="fill">
-                    <mat-label>駅名</mat-label>
-                    <mat-select formControlName="stationId">
-                        <mat-optgroup
-                            *rxFor="
-                                let rsl of vm.routeStationLists;
-                                strategy: 'userBlocking';
-                                patchZone: true
-                            "
-                            [label]="rsl.routeName"
-                        >
-                            <mat-option
-                                *ngFor="let rsl2 of rsl.routeStationLists"
-                                [value]="rsl2.station.stationId"
-                            >
-                                {{ rsl2.station.stationName }}
-                            </mat-option>
-                        </mat-optgroup>
-                    </mat-select>
-                    <mat-error
-                        *rxIf="
-                            form.get('stationId');
-                            strategy: 'userBlocking';
-                            patchZone: false
-                        "
-                    >
-                        <strong>必須項目</strong>です
-                    </mat-error>
-                </mat-form-field>
-            </form>
-        </section>
-        <footer class="tw-flex tw-flex-row tw-justify-end">
-            <button
-                type="button"
-                color="primary"
-                mat-raised-button
-                [disabled]="form.invalid"
-                (click)="onClickedSearch$.next()"
+            <mat-radio-group
+                class="tw-flex tw-flex-row tw-gap-4"
+                formControlName="tripDirection"
             >
-                検索
-            </button>
-        </footer>
-    </article>
-</ng-container>
+                <mat-radio-button [value]="0">上り</mat-radio-button>
+                <mat-radio-button [value]="1">下り</mat-radio-button>
+            </mat-radio-group>
+
+            <mat-slide-toggle formControlName="searchByStation">
+                駅を指定して検索する
+            </mat-slide-toggle>
+
+            <mat-form-field appearance="fill">
+                <mat-label>駅名</mat-label>
+                <mat-select formControlName="stationId">
+                    @for (rsl of routeStationLists(); track rsl.routeId) {
+                        <mat-optgroup [label]="rsl.routeName">
+                            @for (
+                                rsl2 of rsl.routeStationLists;
+                                track rsl2.stationId
+                            ) {
+                                <mat-option [value]="rsl2.stationId">
+                                    {{ rsl2.station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+                @if (form.get('stationId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
+        </form>
+    </div>
+    <footer class="tw-flex tw-flex-row tw-justify-end">
+        <button
+            type="button"
+            color="primary"
+            mat-raised-button
+            [disabled]="form.invalid"
+            (click)="clickSearch.emit(form.value)"
+        >
+            検索
+        </button>
+    </footer>
+</article>

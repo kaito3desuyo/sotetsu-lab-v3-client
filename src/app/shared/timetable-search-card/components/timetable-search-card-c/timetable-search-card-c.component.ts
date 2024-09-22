@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
@@ -12,7 +12,8 @@ import { TimetableSearchCardPComponent } from '../timetable-search-card-p/timeta
     selector: 'app-timetable-search-card-c',
     templateUrl: './timetable-search-card-c.component.html',
     styleUrls: ['./timetable-search-card-c.component.scss'],
-    imports: [CommonModule, TimetableSearchCardPComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [TimetableSearchCardPComponent],
 })
 export class TimetableSearchCardCComponent {
     private readonly calendarListStateQuery = inject(CalendarListStateQuery);
@@ -26,10 +27,13 @@ export class TimetableSearchCardCComponent {
         TimetableSearchCardStateQuery,
     );
 
-    readonly calendars$ = this.calendarListStateQuery.calendars$;
-    readonly routeStationLists$ =
-        this.routeStationListStateQuery.routeStations$;
-    readonly currentState$ = this.timetableSearchCardStateQuery.formState$;
+    readonly calendars = toSignal(this.calendarListStateQuery.calendars$);
+    readonly routeStationLists = toSignal(
+        this.routeStationListStateQuery.routeStations$,
+    );
+    readonly currentState = toSignal(
+        this.timetableSearchCardStateQuery.formState$,
+    );
 
     onReceiveClickSearch(state: ITimetableSearchCardForm): void {
         this.timetableSearchCardService.emitSearchTimetableEvent(state);
