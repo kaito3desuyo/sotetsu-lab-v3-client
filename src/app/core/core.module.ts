@@ -21,8 +21,8 @@ import { ConfirmDialogModule } from '../shared/confirm-dialog/confirm-dialog.mod
 import { CustomPaginator } from './classes/custom-paginator';
 import { AppInitializerProvider } from './configs/app-initializer';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
-import { ErrorHandlerService } from './services/error-handler.service';
 import { PayloadHashInterceptor } from './interceptors/payload-hash.interceptor';
+import { ErrorHandlerService } from './services/error-handler.service';
 
 const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
     primaryStrategy: 'local',

@@ -20,7 +20,6 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
-import { AppSharedModule } from 'src/app/shared/app-shared/app-shared.module';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
 
@@ -35,7 +34,6 @@ import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operatio
     imports: [
         CommonModule,
         MatButtonModule,
-        AppSharedModule,
         PipesModule,
         OperationRouteDiagramFormatStationNamePipe,
     ],
