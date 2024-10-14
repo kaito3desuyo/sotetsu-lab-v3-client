@@ -6,7 +6,7 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
-import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/operation-number-link.module';
+import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/components/operation-number-link/operation-number-link.component';
 
 @Component({
     standalone: true,
@@ -20,7 +20,7 @@ import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/
         RxFor,
         PipesModule,
         //
-        OperationNumberLinkModule,
+        OperationNumberLinkComponent,
 
         // OPERATION_NUMBER_LINK_DECLARATIONS,
     ],

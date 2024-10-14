@@ -1,14 +1,14 @@
-@if (formation.formationNumber) {
+@if (formation().formationNumber) {
     <span
         class="tw-text-sm"
         [ngClass]="{
-            'tw-font-bold': dayCountFromToday === 0,
-            'tw-underline': dayCountFromToday === 1,
+            'tw-font-bold': dayCountFromToday() === 0,
+            'tw-underline': dayCountFromToday() === 1,
         }"
     >
         {{
-            formation.formationNumber +
-                (dayCountFromToday !== undefined && dayCountFromToday !== 0
+            formation().formationNumber +
+                (dayCountFromToday() !== undefined && dayCountFromToday() !== 0
                     ? '?'
                     : '')
         }}

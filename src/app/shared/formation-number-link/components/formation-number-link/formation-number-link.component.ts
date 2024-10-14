@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 
 @Component({
@@ -11,6 +11,6 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
     imports: [CommonModule],
 })
 export class FormationNumberLinkComponent {
-    @Input() formation: FormationDetailsDto;
-    @Input() dayCountFromToday: number;
+    readonly formation = input.required<FormationDetailsDto>();
+    readonly dayCountFromToday = input.required<number>();
 }
