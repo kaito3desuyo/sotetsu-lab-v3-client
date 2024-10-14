@@ -1,4 +1,4 @@
 <app-calendar-select-dialog-main-p
-    [calendars]="calendars$ | async"
+    [calendars]="calendars()"
     (clickSelect)="onReceiveClickSelect($event)"
 ></app-calendar-select-dialog-main-p>

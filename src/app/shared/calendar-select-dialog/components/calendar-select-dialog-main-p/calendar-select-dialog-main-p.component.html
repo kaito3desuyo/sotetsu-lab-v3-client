@@ -2,15 +2,14 @@
     <p>ダイヤを選択してください。</p>
     <mat-form-field>
         <mat-select placeholder="ダイヤ" [(ngModel)]="selected" tabindex="0">
-            <mat-option
-                *ngFor="let calendar of calendars"
-                [value]="calendar.calendarId"
-            >
-                {{
-                    calendar.startDate
-                        | dayjs: { format: 'YYYY年MM月DD日改正 ' }
-                }}{{ calendar.calendarName }}
-            </mat-option>
+            @for (calendar of calendars(); track calendar.calendarId) {
+                <mat-option [value]="calendar.calendarId">
+                    {{
+                        calendar.startDate
+                            | dayjs: { format: 'YYYY年MM月DD日改正 ' }
+                    }}{{ calendar.calendarName }}
+                </mat-option>
+            }
         </mat-select>
     </mat-form-field>
     <div class="tw-flex tw-flex-row tw-justify-center">
