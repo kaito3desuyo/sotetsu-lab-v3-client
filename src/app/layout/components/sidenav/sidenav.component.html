@@ -1,6 +1,6 @@
 <nav class="tw-h-full tw-w-full tw-bg-white">
     <div
-        class="tw-flex tw-flex-col [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100"
+        class="tw-flex tw-flex-col [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100 [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal"
     >
         <a matRipple routerLink="/"> TOP </a>
         <h3>時刻表</h3>
@@ -8,29 +8,23 @@
             <mat-label>駅名</mat-label>
             <mat-select [formControl]="stationId">
                 <mat-option [value]="null"> 選択しない（全線検索） </mat-option>
-                <mat-optgroup
-                    *rxFor="
-                        let route of routeStations$ | push;
-                        strategy: 'userBlocking';
-                        patchZone: false
-                    "
-                    [label]="route.routeName"
-                >
-                    <mat-option
-                        *rxFor="
-                            let rsl of route.routeStationLists;
-                            strategy: 'userBlocking';
-                            patchZone: false
-                        "
-                        [value]="rsl.stationId"
-                    >
-                        {{ rsl.station.stationName }}
-                    </mat-option>
-                </mat-optgroup>
+
+                @for (route of routeStations(); track route.routeId) {
+                    <mat-optgroup [label]="route.routeName">
+                        @for (
+                            rsl of route.routeStationLists;
+                            track rsl.routeStationListId
+                        ) {
+                            <mat-option [value]="rsl.stationId">
+                                {{ rsl.station.stationName }}
+                            </mat-option>
+                        }
+                    </mat-optgroup>
+                }
             </mat-select>
         </mat-form-field>
-        <a matRipple [routerLink]="upTimetableLink$ | push"> 上り </a>
-        <a matRipple [routerLink]="downTimetableLink$ | push"> 下り </a>
+        <a matRipple [routerLink]="inboundTimetableLink()"> 上り </a>
+        <a matRipple [routerLink]="outboundTimetableLink()"> 下り </a>
         <h3>運用情報</h3>
         <a matRipple routerLink="/operation/real-time">
             リアルタイム運用情報
@@ -40,7 +34,7 @@
             matRipple
             [routerLink]="[
                 '/operation/table',
-                { calendar_id: todaysCalendarId$ | push },
+                { calendar_id: todaysCalendarId() },
             ]"
         >
             運用表

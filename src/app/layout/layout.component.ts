@@ -1,8 +1,7 @@
-import { RxIf } from '@rx-angular/template/if';
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
-import { filter, last, take, takeUntil, tap } from 'rxjs/operators';
+import { filter, takeUntil, tap } from 'rxjs/operators';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
@@ -14,49 +13,44 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
-    imports: [RouterModule, RxIf, HeaderComponent, SidenavComponent],
+    imports: [RouterModule, HeaderComponent, SidenavComponent],
 })
 export class LayoutComponent implements OnDestroy {
-    private readonly router = inject(Router);
-    private readonly _unsubscriber$ = new Subject<void>();
+    readonly #router = inject(Router);
+    readonly #unsubscriber$ = new Subject<void>();
 
-    isOpen = false;
-    isVisibled = false;
-    visibled$ = new Subject<boolean>();
+    isOpen = signal<boolean>(false);
+    isVisibled = signal<boolean>(false);
 
     constructor() {
-        this.router.events
+        this.#router.events
             .pipe(
-                filter((ev) => !!this.isOpen && ev instanceof NavigationEnd),
+                filter(
+                    (ev) => !!this.isVisibled() && ev instanceof NavigationEnd,
+                ),
                 tap(() => {
                     this.toggle();
                 }),
-                takeUntil(this._unsubscriber$.asObservable()),
+                takeUntil(this.#unsubscriber$.asObservable()),
             )
             .subscribe();
     }
 
     async toggle(): Promise<void> {
-        const next = !this.isOpen;
+        const next = !this.isVisibled();
 
         if (!!next) {
-            this.isVisibled = true;
-            await this.visibled$
-                .pipe(
-                    filter((bool) => !!bool),
-                    take(1),
-                    last(),
-                )
-                .toPromise();
-            this.isOpen = next;
+            this.isVisibled.set(next);
+            await wait(0);
+            this.isOpen.set(next);
         } else {
-            this.isOpen = next;
+            this.isOpen.set(next);
             await wait(250);
-            this.isVisibled = false;
+            this.isVisibled.set(next);
         }
     }
 
     ngOnDestroy(): void {
-        this._unsubscriber$.next();
+        this.#unsubscriber$.next();
     }
 }
