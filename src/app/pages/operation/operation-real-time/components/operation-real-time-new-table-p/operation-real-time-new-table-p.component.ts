@@ -14,7 +14,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { CurrentPositionLinkComponent } from 'src/app/shared/current-position-link/components/current-position-link/current-position-link.component';
 import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/components/formation-number-link/formation-number-link.component';
-import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/operation-number-link.module';
+import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/components/operation-number-link/operation-number-link.component';
 import {
     OperationRealTimeTableColumn,
     OperationRealTimeTableColumnLabel,
@@ -32,7 +32,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
         MatIconModule,
         MatTooltipModule,
         PipesModule,
-        OperationNumberLinkModule,
+        OperationNumberLinkComponent,
         FormationNumberLinkComponent,
         CurrentPositionLinkComponent,
     ],
