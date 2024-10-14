@@ -122,29 +122,29 @@
 </ng-template>
 
 <!-- 出庫前の場合 -->
-@if (isBeforeDepotOut$ | push) {
+@if (isBeforeDepotOut()) {
     <ng-container
-        *ngTemplateOutlet="container; context: context$ | push"
+        *ngTemplateOutlet="container; context: context()"
     ></ng-container>
 }
 
 <!-- 走行中の場合 -->
-@if (isRunning$ | push) {
+@if (isRunning()) {
     <ng-container
-        *ngTemplateOutlet="container; context: context$ | push"
+        *ngTemplateOutlet="container; context: context()"
     ></ng-container>
 }
 
 <!-- 間隙時間の場合 -->
-@if (isGapTime$ | push) {
+@if (isGapTime()) {
     <ng-container
-        *ngTemplateOutlet="container; context: context$ | push"
+        *ngTemplateOutlet="container; context: context()"
     ></ng-container>
 }
 
 <!-- 入庫済みの場合 -->
-@if (isAfterDepotIn$ | push) {
+@if (isAfterDepotIn()) {
     <ng-container
-        *ngTemplateOutlet="container; context: context$ | push"
+        *ngTemplateOutlet="container; context: context()"
     ></ng-container>
 }

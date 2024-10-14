@@ -2,56 +2,16 @@ import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    Input,
-    inject,
+    computed,
+    input,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterModule } from '@angular/router';
-import {
-    RX_RENDER_STRATEGIES_CONFIG,
-    RxRenderStrategiesConfig,
-} from '@rx-angular/cdk/render-strategies';
-import { RxState } from '@rx-angular/state';
-import { selectSlice } from '@rx-angular/state/selections';
-import { RxPush } from '@rx-angular/template/push';
-import { Subject } from 'rxjs';
-import { map, pluck } from 'rxjs/operators';
+import { RouterLink } from '@angular/router';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-
-const COMPONENT_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
-    primaryStrategy: 'immediate',
-    patchZone: false,
-};
-
-type State = {
-    todaysCalendarId: CalendarDetailsDto['calendarId'];
-    stations: StationDetailsDto[];
-    tripClasses: TripClassDetailsDto[];
-    prevTrip: OperationCurrentPositionDto['position']['prev'];
-    currentTrip: OperationCurrentPositionDto['position']['current'];
-    nextTrip: OperationCurrentPositionDto['position']['next'];
-    isBeforeDepotOut: boolean;
-    isRunning: boolean;
-    isGapTime: boolean;
-    isAfterDepotIn: boolean;
-    context: {
-        todaysCalendarId: CalendarDetailsDto['calendarId'];
-        stations: StationDetailsDto[];
-        tripClasses: TripClassDetailsDto[];
-        trip?: TripDetailsDto;
-        hiddenTrip?: TripDetailsDto;
-        leftTime?: TimeDetailsDto;
-        leftTimeKey?: string;
-        rightTime?: TimeDetailsDto;
-        rightTimeKey?: string;
-    };
-};
 
 @Component({
     standalone: true,
@@ -59,222 +19,124 @@ type State = {
     templateUrl: './current-position-link.component.html',
     styleUrls: ['./current-position-link.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, RouterModule, MatIconModule, RxPush, PipesModule],
-    providers: [
-        {
-            provide: RX_RENDER_STRATEGIES_CONFIG,
-            useValue: COMPONENT_RX_ANGULAR_CONFIG,
-        },
-        RxState,
-    ],
+    imports: [CommonModule, RouterLink, MatIconModule, PipesModule],
 })
 export class CurrentPositionLinkComponent {
-    private readonly state = inject<RxState<State>>(RxState);
+    readonly todaysCalendarId =
+        input.required<CalendarDetailsDto['calendarId']>();
+    readonly stations = input.required<StationDetailsDto[]>();
+    readonly tripClasses = input.required<TripClassDetailsDto[]>();
+    readonly currentPosition = input.required<OperationCurrentPositionDto>();
 
-    readonly isBeforeDepotOut$ = this.state.select('isBeforeDepotOut');
-    readonly isAfterDepotIn$ = this.state.select('isAfterDepotIn');
-    readonly isRunning$ = this.state.select('isRunning');
-    readonly isGapTime$ = this.state.select('isGapTime');
-    readonly context$ = this.state.select('context');
+    readonly #prevTrip = computed(() => {
+        const currentPosition = this.currentPosition();
+        return currentPosition?.position.prev;
+    });
+    readonly #currentTrip = computed(() => {
+        const currentPosition = this.currentPosition();
+        return currentPosition?.position.current;
+    });
+    readonly #nextTrip = computed(() => {
+        const currentPosition = this.currentPosition();
+        return currentPosition?.position.next;
+    });
 
-    private readonly onChangedInputTodaysCalendarId$ = new Subject<
-        CalendarDetailsDto['calendarId']
-    >();
-    private readonly onChangedInputStations$ = new Subject<
-        StationDetailsDto[]
-    >();
-    private readonly onChangedInputTripClasses$ = new Subject<
-        TripClassDetailsDto[]
-    >();
-    private readonly onChangedInputCurrentPosition$ =
-        new Subject<OperationCurrentPositionDto>();
+    readonly isBeforeDepotOut = computed(() => {
+        const prev = this.#prevTrip();
+        const current = this.#currentTrip();
+        const next = this.#nextTrip();
 
-    @Input() set todaysCalendarId(
-        calendarId: CalendarDetailsDto['calendarId'],
-    ) {
-        this.onChangedInputTodaysCalendarId$.next(calendarId);
-    }
+        return !prev && !current && !!next;
+    });
 
-    @Input() set stations(stations: StationDetailsDto[]) {
-        this.onChangedInputStations$.next(stations);
-    }
+    readonly isRunning = computed(() => {
+        const prev = this.#prevTrip();
+        const current = this.#currentTrip();
+        const next = this.#nextTrip();
 
-    @Input() set tripClasses(tripClasses: TripClassDetailsDto[]) {
-        this.onChangedInputTripClasses$.next(tripClasses);
-    }
+        return !prev && !!current && !next;
+    });
 
-    @Input() set currentPosition(position: OperationCurrentPositionDto) {
-        this.onChangedInputCurrentPosition$.next(position);
-    }
+    readonly isGapTime = computed(() => {
+        const prev = this.#prevTrip();
+        const current = this.#currentTrip();
+        const next = this.#nextTrip();
 
-    constructor() {
-        this.state.connect(
-            'todaysCalendarId',
-            this.onChangedInputTodaysCalendarId$.asObservable(),
-        );
+        return !!prev && !current && !!next;
+    });
 
-        this.state.connect(
-            'stations',
-            this.onChangedInputStations$.asObservable(),
-        );
+    readonly isAfterDepotIn = computed(() => {
+        const prev = this.#prevTrip();
+        const current = this.#currentTrip();
+        const next = this.#nextTrip();
 
-        this.state.connect(
-            'tripClasses',
-            this.onChangedInputTripClasses$.asObservable(),
-        );
+        return !!prev && !current && !next;
+    });
 
-        this.state.connect(
-            'prevTrip',
-            this.onChangedInputCurrentPosition$
-                .asObservable()
-                .pipe(pluck('position', 'prev')),
-        );
+    readonly context = computed(() => {
+        const todaysCalendarId = this.todaysCalendarId();
+        const stations = this.stations();
+        const tripClasses = this.tripClasses();
+        const prev = this.#prevTrip();
+        const current = this.#currentTrip();
+        const next = this.#nextTrip();
 
-        this.state.connect(
-            'currentTrip',
-            this.onChangedInputCurrentPosition$
-                .asObservable()
-                .pipe(pluck('position', 'current')),
-        );
+        if (!prev && !current && !!next) {
+            return {
+                todaysCalendarId: todaysCalendarId,
+                stations: stations,
+                tripClasses: tripClasses,
+                trip: undefined,
+                hiddenTrip: next?.trip,
+                leftTime: undefined,
+                leftTimeKey: undefined,
+                rightTime: next?.startTime,
+                rightTimeKey: 'departureTime',
+            };
+        }
 
-        this.state.connect(
-            'nextTrip',
-            this.onChangedInputCurrentPosition$
-                .asObservable()
-                .pipe(pluck('position', 'next')),
-        );
+        if (!prev && !!current && !next) {
+            return {
+                todaysCalendarId: todaysCalendarId,
+                stations: stations,
+                tripClasses: tripClasses,
+                trip: current?.trip,
+                hiddenTrip: undefined,
+                leftTime: current?.startTime,
+                leftTimeKey: 'departureTime',
+                rightTime: current?.endTime,
+                rightTimeKey: 'arrivalTime',
+            };
+        }
 
-        this.state.connect(
-            'isBeforeDepotOut',
-            this.state
-                .select(selectSlice(['prevTrip', 'currentTrip', 'nextTrip']))
-                .pipe(
-                    map(
-                        ({ prevTrip, currentTrip, nextTrip }) =>
-                            !prevTrip && !currentTrip && !!nextTrip,
-                    ),
-                ),
-        );
+        if (!!prev && !current && !!next) {
+            return {
+                todaysCalendarId: todaysCalendarId,
+                stations: stations,
+                tripClasses: tripClasses,
+                trip: undefined,
+                hiddenTrip: prev?.trip,
+                leftTime: prev?.endTime,
+                leftTimeKey: 'arrivalTime',
+                rightTime: next?.startTime,
+                rightTimeKey: 'departureTime',
+            };
+        }
 
-        this.state.connect(
-            'isRunning',
-            this.state
-                .select(selectSlice(['prevTrip', 'currentTrip', 'nextTrip']))
-                .pipe(
-                    map(
-                        ({ prevTrip, currentTrip, nextTrip }) =>
-                            !prevTrip && !!currentTrip && !nextTrip,
-                    ),
-                ),
-        );
+        if (!!prev && !current && !next) {
+            return {
+                todaysCalendarId: todaysCalendarId,
+                stations: stations,
+                tripClasses: tripClasses,
+                trip: undefined,
+                hiddenTrip: prev?.trip,
+                leftTime: prev?.endTime,
+                leftTimeKey: 'arrivalTime',
+                rightTime: undefined,
+                rightTimeKey: undefined,
+            };
+        }
 
-        this.state.connect(
-            'isGapTime',
-            this.state
-                .select(selectSlice(['prevTrip', 'currentTrip', 'nextTrip']))
-                .pipe(
-                    map(
-                        ({ prevTrip, currentTrip, nextTrip }) =>
-                            !!prevTrip && !currentTrip && !!nextTrip,
-                    ),
-                ),
-        );
-
-        this.state.connect(
-            'isAfterDepotIn',
-            this.state
-                .select(selectSlice(['prevTrip', 'currentTrip', 'nextTrip']))
-                .pipe(
-                    map(
-                        ({ prevTrip, currentTrip, nextTrip }) =>
-                            !!prevTrip && !currentTrip && !nextTrip,
-                    ),
-                ),
-        );
-
-        this.state.connect(
-            'context',
-            this.state
-                .select(
-                    selectSlice([
-                        'todaysCalendarId',
-                        'stations',
-                        'tripClasses',
-                        'prevTrip',
-                        'currentTrip',
-                        'nextTrip',
-                    ]),
-                )
-                .pipe(
-                    map(
-                        ({
-                            todaysCalendarId,
-                            stations,
-                            tripClasses,
-                            prevTrip,
-                            currentTrip,
-                            nextTrip,
-                        }) => {
-                            if (!prevTrip && !currentTrip && !!nextTrip) {
-                                return {
-                                    todaysCalendarId: todaysCalendarId,
-                                    stations: stations,
-                                    tripClasses: tripClasses,
-                                    trip: undefined,
-                                    hiddenTrip: nextTrip?.trip,
-                                    leftTime: undefined,
-                                    leftTimeKey: undefined,
-                                    rightTime: nextTrip?.startTime,
-                                    rightTimeKey: 'departureTime',
-                                };
-                            }
-
-                            if (!prevTrip && !!currentTrip && !nextTrip) {
-                                return {
-                                    todaysCalendarId: todaysCalendarId,
-                                    stations: stations,
-                                    tripClasses: tripClasses,
-                                    trip: currentTrip?.trip,
-                                    hiddenTrip: undefined,
-                                    leftTime: currentTrip?.startTime,
-                                    leftTimeKey: 'departureTime',
-                                    rightTime: currentTrip?.endTime,
-                                    rightTimeKey: 'arrivalTime',
-                                };
-                            }
-
-                            if (!!prevTrip && !currentTrip && !!nextTrip) {
-                                return {
-                                    todaysCalendarId: todaysCalendarId,
-                                    stations: stations,
-                                    tripClasses: tripClasses,
-                                    trip: undefined,
-                                    hiddenTrip: prevTrip?.trip,
-                                    leftTime: prevTrip?.endTime,
-                                    leftTimeKey: 'arrivalTime',
-                                    rightTime: nextTrip?.startTime,
-                                    rightTimeKey: 'departureTime',
-                                };
-                            }
-
-                            if (!!prevTrip && !currentTrip && !nextTrip) {
-                                return {
-                                    todaysCalendarId: todaysCalendarId,
-                                    stations: stations,
-                                    tripClasses: tripClasses,
-                                    trip: undefined,
-                                    hiddenTrip: prevTrip?.trip,
-                                    leftTime: prevTrip?.endTime,
-                                    leftTimeKey: 'arrivalTime',
-                                    rightTime: undefined,
-                                    rightTimeKey: undefined,
-                                };
-                            }
-
-                            return undefined;
-                        },
-                    ),
-                ),
-        );
-    }
+        return undefined;
+    });
 }

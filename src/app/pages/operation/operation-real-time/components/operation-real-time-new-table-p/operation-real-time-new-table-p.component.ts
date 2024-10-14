@@ -12,7 +12,7 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { CurrentPositionLinkModule } from 'src/app/shared/current-position-link/current-position-link.module';
+import { CurrentPositionLinkComponent } from 'src/app/shared/current-position-link/components/current-position-link/current-position-link.component';
 import { FormationNumberLinkModule } from 'src/app/shared/formation-number-link/formation-number-link.module';
 import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/operation-number-link.module';
 import {
@@ -34,7 +34,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
         PipesModule,
         OperationNumberLinkModule,
         FormationNumberLinkModule,
-        CurrentPositionLinkModule,
+        CurrentPositionLinkComponent,
     ],
 })
 export class OperationRealTimeNewTablePComponent {
