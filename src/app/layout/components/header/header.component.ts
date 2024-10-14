@@ -1,10 +1,5 @@
-import {
-    ChangeDetectionStrategy,
-    Component,
-    EventEmitter,
-    Output,
-} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -17,5 +12,5 @@ import { MatIconModule } from '@angular/material/icon';
     imports: [CommonModule, MatButtonModule, MatIconModule],
 })
 export class HeaderComponent {
-    @Output() clickButton = new EventEmitter<void>();
+    clickButton = output<void>();
 }
