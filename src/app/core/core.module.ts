@@ -17,7 +17,6 @@ import {
 import { AdsenseModule } from 'ng2-adsense';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
-import { ConfirmDialogModule } from '../shared/confirm-dialog/confirm-dialog.module';
 import { CustomPaginator } from './classes/custom-paginator';
 import { AppInitializerProvider } from './configs/app-initializer';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
@@ -47,7 +46,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
                 : NgxLoggerLevel.DEBUG,
             serverLogLevel: NgxLoggerLevel.OFF,
         }),
-        ConfirmDialogModule,
         MatSnackBarModule,
     ],
     providers: [

@@ -1,21 +1,21 @@
 <div class="tw-flex tw-flex-col tw-gap-4">
-    <div class="[&_*]:tw-m-0" [innerHTML]="data?.html"></div>
+    <div class="[&_*]:tw-m-0" [innerHTML]="data().html"></div>
     <div class="tw-flex tw-flex-row tw-items-center tw-justify-end tw-gap-4">
         <button
             #cancelButton
             mat-button
-            [color]="data?.cancelButtonColor"
+            [color]="data().cancelButtonColor"
             (click)="clickButton.emit(false)"
         >
-            {{ data?.cancelButtonText }}
+            {{ data().cancelButtonText }}
         </button>
         <button
             #goButton
             mat-raised-button
-            [color]="data?.goButtonColor"
+            [color]="data().goButtonColor"
             (click)="clickButton.emit(true)"
         >
-            {{ data?.goButtonText }}
+            {{ data().goButtonText }}
         </button>
     </div>
 </div>

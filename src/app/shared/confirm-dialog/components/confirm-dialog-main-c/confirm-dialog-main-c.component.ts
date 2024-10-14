@@ -1,21 +1,25 @@
-import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
 import { ConfirmDialogStateQuery } from '../../states/confirm-dialog.state';
+import { ConfirmDialogMainPComponent } from '../confirm-dialog-main-p/confirm-dialog-main-p.component';
 
 @Component({
+    standalone: true,
     selector: 'app-confirm-dialog-main-c',
     templateUrl: './confirm-dialog-main-c.component.html',
     styleUrls: ['./confirm-dialog-main-c.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [ConfirmDialogMainPComponent, CommonModule],
 })
 export class ConfirmDialogMainCComponent {
-    readonly data$ = this.confirmDialogStateQuery.data$;
+    readonly #confirmDialogService = inject(ConfirmDialogService);
+    readonly #confirmDialogStateQuery = inject(ConfirmDialogStateQuery);
 
-    constructor(
-        private readonly confirmDialogService: ConfirmDialogService,
-        private readonly confirmDialogStateQuery: ConfirmDialogStateQuery,
-    ) {}
+    readonly data = toSignal(this.#confirmDialogStateQuery.data$);
 
     onReceiveClickButton(bool: boolean): void {
-        this.confirmDialogService.close(bool);
+        this.#confirmDialogService.close(bool);
     }
 }

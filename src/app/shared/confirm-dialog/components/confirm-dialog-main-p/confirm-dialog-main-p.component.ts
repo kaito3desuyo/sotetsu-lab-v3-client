@@ -1,37 +1,39 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
+    input,
     OnInit,
-    Output,
+    output,
     ViewChild,
 } from '@angular/core';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatButtonModule } from '@angular/material/button';
+import { wait } from 'src/app/core/utils/wait';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 
 @Component({
+    standalone: true,
     selector: 'app-confirm-dialog-main-p',
     templateUrl: './confirm-dialog-main-p.component.html',
     styleUrls: ['./confirm-dialog-main-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [MatButtonModule],
 })
 export class ConfirmDialogMainPComponent implements OnInit {
-    @Input() data: IConfirmDialogData;
-    @Output() clickButton = new EventEmitter<boolean>();
+    data = input.required<IConfirmDialogData>();
+    clickButton = output<boolean>();
 
-    @ViewChild('cancelButton', { static: true }) cancelButton: MatButton;
-    @ViewChild('goButton', { static: true }) goButton: MatButton;
+    @ViewChild('cancelButton', { static: true })
+    cancelButton: MatButton;
 
-    constructor() {}
+    @ViewChild('goButton', { static: true })
+    goButton: MatButton;
 
-    ngOnInit(): void {
-        setTimeout(() => {
-            if (this.data.goButtonColor === 'warn') {
-                this.cancelButton.focus();
-            } else {
-                this.goButton.focus();
-            }
-        }, 0);
+    async ngOnInit(): Promise<void> {
+        await wait(0);
+        if (this.data().goButtonColor === 'warn') {
+            this.cancelButton.focus();
+        } else {
+            this.goButton.focus();
+        }
     }
 }
