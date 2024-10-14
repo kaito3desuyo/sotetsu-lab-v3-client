@@ -6,75 +6,72 @@
             >
                 <span class="tw-sticky">編成＼日付</span>
             </th>
-            <th
-                *rxFor="let calendar of calendars; trackBy: 'date' | trackBy"
-                class="tw-sticky before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-            >
-                <span class="tw-sticky">
-                    {{
-                        calendar.date
-                            | dayjs
-                                : {
-                                      format: 'MM/DD',
-                                      parseFormat: 'YYYY/MM/DD',
-                                  }
-                    }}
-                    <br />
-                    <small>
-                        {{ calendar.calendar.calendarName }}
-                    </small>
-                </span>
-            </th>
+            @for (calendar of calendars(); track calendar.date) {
+                <th
+                    class="tw-sticky before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                >
+                    <span class="tw-sticky">
+                        {{
+                            calendar.date
+                                | dayjs
+                                    : {
+                                          format: 'MM/DD',
+                                          parseFormat: 'YYYY/MM/DD',
+                                      }
+                        }}
+                        <br />
+                        <small>
+                            {{ calendar.calendar.calendarName }}
+                        </small>
+                    </span>
+                </th>
+            }
         </tr>
     </thead>
     <tbody>
-        <tr
-            *rxFor="
-                let formation of formations;
-                trackBy: 'formationNumber' | trackBy
-            "
-        >
-            <th
-                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-            >
-                <span class="tw-sticky">{{ formation.formationNumber }}</span>
-            </th>
-            <td
-                *rxFor="let calendar of calendars; trackBy: 'date' | trackBy"
-                class="tw-relative before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-            >
-                <div class="tw-sticky">
-                    <ng-container
-                        *rxIf="
-                            operationSightings?.[formation.formationId]?.[
-                                calendar.date
-                            ]
-                        "
+        @for (formation of formations(); track formation.formationId) {
+            <tr>
+                <th
+                    class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                >
+                    <span class="tw-sticky">{{
+                        formation.formationNumber
+                    }}</span>
+                </th>
+                @for (calendar of calendars(); track calendar.date) {
+                    <td
+                        class="tw-relative before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
                     >
-                        <div class="tw-flex tw-flex-row tw-gap-2">
-                            <ng-container
-                                *rxFor="
-                                    let sighting of operationSightings[
-                                        formation.formationId
-                                    ][calendar.date];
-                                    trackBy: 'operationSightingId' | trackBy
-                                "
-                            >
-                                <app-operation-number-link
-                                    [operation]="sighting.operation"
-                                    [tooltipText]="
-                                        sighting.sightingTime
-                                            | dayjs
-                                                : {
-                                                      format: '目撃：YYYY/MM/DD HH:mm:ss',
-                                                  }
-                                    "
-                                ></app-operation-number-link>
-                            </ng-container>
+                        <div class="tw-sticky">
+                            @if (
+                                operationSightings()?.[formation.formationId]?.[
+                                    calendar.date
+                                ]
+                            ) {
+                                <div class="tw-flex tw-flex-row tw-gap-2">
+                                    @for (
+                                        sighting of operationSightings()[
+                                            formation.formationId
+                                        ][calendar.date];
+                                        track sighting.operationSightingId
+                                    ) {
+                                        <app-operation-number-link
+                                            [operation]="sighting.operation"
+                                            [tooltipText]="
+                                                sighting.sightingTime
+                                                    | dayjs
+                                                        : {
+                                                              format: '目撃：YYYY/MM/DD HH:mm:ss',
+                                                          }
+                                            "
+                                        ></app-operation-number-link>
+                                    }
+                                </div>
+                            }
                         </div>
-                    </ng-container>
-                </div>
-            </td>
-        </tr>
+                    </td>
+                }
+            </tr>
+        }
     </tbody>
 </table>

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
@@ -11,6 +11,7 @@ import { OperationPastTimeMainCComponent } from './components/operation-past-tim
     selector: 'app-operation-past-time',
     templateUrl: './operation-past-time.component.html',
     styleUrls: ['./operation-past-time.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         OperationPastTimeHeaderCComponent,
         OperationPastTimeMainCComponent,

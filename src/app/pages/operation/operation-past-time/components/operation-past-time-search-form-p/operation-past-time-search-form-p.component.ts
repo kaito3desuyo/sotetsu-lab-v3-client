@@ -1,11 +1,11 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    EventEmitter,
-    Input,
-    Output,
+    Injectable,
+    effect,
     inject,
+    input,
+    output,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
@@ -17,7 +17,6 @@ import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { RxIf } from '@rx-angular/template/if';
 import { parse } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import {
@@ -25,6 +24,7 @@ import {
     OperationPastTimeSearchParam,
 } from '../../types/operation-past-time.type';
 
+@Injectable()
 class CustomDateFnsAdapter extends DateFnsAdapter {
     override getDateNames(): string[] {
         return [...Array(31).keys()].map((i) => String(i + 1));
@@ -38,14 +38,12 @@ class CustomDateFnsAdapter extends DateFnsAdapter {
     styleUrls: ['./operation-past-time-search-form-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatDatepickerModule,
         MatDateFnsModule,
         MatButtonModule,
-        RxIf,
     ],
     providers: [
         { provide: MAT_DATE_LOCALE, useValue: ja },
@@ -68,18 +66,32 @@ export class OperationPastTimeSearchFormPComponent {
         ]),
     });
 
-    @Input() set referenceDate(dateString: string) {
-        this.form
-            .get('referenceDate')
-            .setValue(parse(dateString, 'yyyy-MM-dd', new Date()));
-    }
+    readonly referenceDate = input.required<string>();
+    readonly days = input.required<number>();
 
-    @Input() set days(days: number) {
-        this.form.get('days').setValue(days);
-    }
+    readonly clickSearch = output<OperationPastTimeSearchParam>();
 
-    @Output() readonly clickSearch =
-        new EventEmitter<OperationPastTimeSearchParam>();
+    constructor() {
+        effect(() => {
+            const referenceDate = this.referenceDate();
+            if (referenceDate) {
+                this.form
+                    .get('referenceDate')
+                    .setValue(parse(referenceDate, 'yyyy-MM-dd', new Date()));
+            } else {
+                this.form.get('referenceDate').reset();
+            }
+        });
+
+        effect(() => {
+            const days = this.days();
+            if (days) {
+                this.form.get('days').setValue(days);
+            } else {
+                this.form.get('days').reset();
+            }
+        });
+    }
 
     onClickSearch(): void {
         this.clickSearch.emit(this.form.value as OperationPastTimeSearchParam);
