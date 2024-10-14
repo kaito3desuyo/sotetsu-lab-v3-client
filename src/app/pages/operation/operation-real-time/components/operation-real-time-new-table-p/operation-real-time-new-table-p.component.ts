@@ -13,7 +13,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { CurrentPositionLinkComponent } from 'src/app/shared/current-position-link/components/current-position-link/current-position-link.component';
-import { FormationNumberLinkModule } from 'src/app/shared/formation-number-link/formation-number-link.module';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/components/formation-number-link/formation-number-link.component';
 import { OperationNumberLinkModule } from 'src/app/shared/operation-number-link/operation-number-link.module';
 import {
     OperationRealTimeTableColumn,
@@ -33,7 +33,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
         MatTooltipModule,
         PipesModule,
         OperationNumberLinkModule,
-        FormationNumberLinkModule,
+        FormationNumberLinkComponent,
         CurrentPositionLinkComponent,
     ],
 })
