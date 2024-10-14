@@ -17,11 +17,9 @@
                 ></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
                 <span matTextSuffix class="tw-whitespace-nowrap">から</span>
-                <mat-error
-                    *rxIf="form.get('referenceDate').hasError('required')"
-                >
-                    <strong>必須項目</strong>です
-                </mat-error>
+                @if (form.get('referenceDate').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
             </mat-form-field>
 
             <mat-form-field class="tw-w-full">
@@ -34,15 +32,16 @@
                     formControlName="days"
                 />
                 <span matTextSuffix class="tw-whitespace-nowrap">日間</span>
-                <mat-error *rxIf="form.get('days').hasError('required')">
-                    <strong>必須項目</strong>です
-                </mat-error>
-                <mat-error *rxIf="form.get('days').hasError('min')">
-                    <strong>1～30日間の範囲内</strong>で設定してください
-                </mat-error>
-                <mat-error *rxIf="form.get('days').hasError('max')">
-                    <strong>1～30日間の範囲内</strong>で設定してください
-                </mat-error>
+                @if (form.get('days').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                } @else if (
+                    form.get('days').hasError('min') ||
+                    form.get('days').hasError('max')
+                ) {
+                    <mat-error>
+                        <strong>1～30日間の範囲内</strong>で設定してください
+                    </mat-error>
+                }
             </mat-form-field>
         </div>
 

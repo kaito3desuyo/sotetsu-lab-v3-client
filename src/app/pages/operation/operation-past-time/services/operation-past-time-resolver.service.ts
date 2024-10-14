@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -7,25 +7,23 @@ import { OperationPastTimeService } from './operation-past-time.service';
 
 @Injectable()
 export class OperationPastTimeResolverService {
-    constructor(
-        private readonly operationPastTimeService: OperationPastTimeService,
-        private readonly operationPastTimeStateStore: OperationPastTimeStateStore,
-    ) {}
+    readonly #operationPastTimeService = inject(OperationPastTimeService);
+    readonly #operationPastTimeStateStore = inject(OperationPastTimeStateStore);
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
-        this.operationPastTimeStateStore.setReferenceDate(
+        this.#operationPastTimeStateStore.setReferenceDate(
             route.paramMap.get('reference_date') ?? undefined,
         );
-        this.operationPastTimeStateStore.setDays(
+        this.#operationPastTimeStateStore.setDays(
             route.paramMap.get('days')
                 ? +route.paramMap.get('days')
                 : undefined,
         );
 
         return forkJoin([
-            this.operationPastTimeService.fetchCalendarByDate(),
-            this.operationPastTimeService.fetchFormationsV2(),
-            this.operationPastTimeService.fetchOperationSightingsV2(),
+            this.#operationPastTimeService.fetchCalendarByDate(),
+            this.#operationPastTimeService.fetchFormationsV2(),
+            this.#operationPastTimeService.fetchOperationSightingsV2(),
         ]).pipe(map(() => undefined));
     }
 }
