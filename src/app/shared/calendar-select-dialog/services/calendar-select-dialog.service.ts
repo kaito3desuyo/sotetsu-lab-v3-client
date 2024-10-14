@@ -1,22 +1,23 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { CalendarSelectDialogComponent } from '../components/calendar-select-dialog/calendar-select-dialog.component';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class CalendarSelectDialogService {
-    private _dialogRef: MatDialogRef<
+    readonly #dialog = inject(MatDialog);
+    #dialogRef: MatDialogRef<
         CalendarSelectDialogComponent,
         CalendarDetailsDto['calendarId']
     >;
-
-    constructor(private readonly dialog: MatDialog) {}
 
     open(): MatDialogRef<
         CalendarSelectDialogComponent,
         CalendarDetailsDto['calendarId']
     > {
-        this._dialogRef = this.dialog.open<
+        this.#dialogRef = this.#dialog.open<
             CalendarSelectDialogComponent,
             {},
             CalendarDetailsDto['calendarId']
@@ -25,11 +26,10 @@ export class CalendarSelectDialogService {
             disableClose: true,
         });
 
-        return this._dialogRef;
+        return this.#dialogRef;
     }
 
     close(calendarId?: CalendarDetailsDto['calendarId']): void {
-        if (!this._dialogRef) return;
-        this._dialogRef.close(calendarId ?? undefined);
+        this.#dialogRef.close(calendarId ?? undefined);
     }
 }

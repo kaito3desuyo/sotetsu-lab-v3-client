@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
     MatDialog,
     MatDialogConfig,
@@ -8,11 +8,12 @@ import extend from 'just-extend';
 import { ConfirmDialogComponent } from '../components/confirm-dialog/confirm-dialog.component';
 import { IConfirmDialogData } from '../interfaces/confirm-dialog-data.interface';
 
-@Injectable()
+@Injectable({
+    providedIn: 'root',
+})
 export class ConfirmDialogService {
-    private _dialogRef: MatDialogRef<ConfirmDialogComponent>;
-
-    constructor(private readonly dialog: MatDialog) {}
+    readonly #dialog = inject(MatDialog);
+    #dialogRef: MatDialogRef<ConfirmDialogComponent>;
 
     open(
         config?: MatDialogConfig<IConfirmDialogData>,
@@ -23,16 +24,16 @@ export class ConfirmDialogService {
             disableClose: true,
         };
 
-        this._dialogRef = this.dialog.open<
+        this.#dialogRef = this.#dialog.open<
             ConfirmDialogComponent,
             IConfirmDialogData,
             boolean
         >(ConfirmDialogComponent, extend(true, defaultConfig, config));
 
-        return this._dialogRef;
+        return this.#dialogRef;
     }
 
     close(bool = false): void {
-        this._dialogRef.close(bool);
+        this.#dialogRef.close(bool);
     }
 }

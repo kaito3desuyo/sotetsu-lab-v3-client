@@ -11,9 +11,7 @@ import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
-import { CalendarSelectDialogModule } from 'src/app/shared/calendar-select-dialog/calendar-select-dialog.module';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
-import { ConfirmDialogModule } from 'src/app/shared/confirm-dialog/confirm-dialog.module';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { TimetableAllLineService } from '../../services/timetable-all-line.service';
 import {
@@ -28,11 +26,7 @@ import { TimetableAllLineTablePComponent } from '../timetable-all-line-table-p/t
     templateUrl: './timetable-all-line-table-c.component.html',
     styleUrls: ['./timetable-all-line-table-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        ConfirmDialogModule,
-        CalendarSelectDialogModule,
-        TimetableAllLineTablePComponent,
-    ],
+    imports: [TimetableAllLineTablePComponent],
     providers: [RxState],
 })
 export class TimetableAllLineTableCComponent {
