@@ -34,7 +34,6 @@
     "@nestjsx/crud-request": "^4.6.2",
     "@rx-angular/cdk": "^18.0.0",
     "@rx-angular/state": "^18.0.0",
-    "@rx-angular/template": "^18.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "date-fns": "^3.6.0",
