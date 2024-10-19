@@ -1,6 +1,12 @@
-import { Component, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    effect,
+    inject,
+    untracked,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationTableHeaderCComponent } from './components/operation-table-header-c/operation-table-header-c.component';
@@ -11,39 +17,43 @@ import { OperationTableMainCComponent } from './components/operation-table-main-
     selector: 'app-operation-table',
     templateUrl: './operation-table.component.html',
     styleUrls: ['./operation-table.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [OperationTableHeaderCComponent, OperationTableMainCComponent],
-    providers: [RxState],
 })
 export class OperationTableComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
-    readonly #state = inject<RxState<{}>>(RxState);
     readonly #titleService = inject(TitleService);
     readonly #operationSearchCardService = inject(OperationSearchCardService);
 
+    readonly #data = toSignal(this.#route.data);
+
     constructor() {
-        this.#state.hold(this.#route.data, ({ title }) => {
-            this.#titleService.setTitle(title);
+        effect(() => {
+            const { title } = this.#data();
+            untracked(() => {
+                this.#titleService.setTitle(title);
+            });
         });
 
-        this.#state.hold(
-            this.#operationSearchCardService.receiveSearchOperationTableEvent(),
-            (calendarId) => {
+        this.#operationSearchCardService
+            .receiveSearchOperationTableEvent()
+            .pipe(takeUntilDestroyed())
+            .subscribe((calendarId) => {
                 this.#router.navigate([
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.#operationSearchCardService.receiveSearchOperationRouteDiagramEvent(),
-            (operationId) => {
+        this.#operationSearchCardService
+            .receiveSearchOperationRouteDiagramEvent()
+            .pipe(takeUntilDestroyed())
+            .subscribe((operationId) => {
                 this.#router.navigate([
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            },
-        );
+            });
     }
 }

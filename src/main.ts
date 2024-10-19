@@ -1,6 +1,6 @@
 import { enableProdMode, importProvidersFrom } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -22,5 +22,11 @@ if (environment.production) {
 }
 
 bootstrapApplication(AppComponent, {
-    providers: [provideRouter(APP_ROUTES), importProvidersFrom([CoreModule])],
+    providers: [
+        provideRouter(
+            APP_ROUTES,
+            withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+        ),
+        importProvidersFrom([CoreModule]),
+    ],
 }).catch((err) => console.error(err));
