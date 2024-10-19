@@ -1,6 +1,5 @@
-import { RxLet } from '@rx-angular/template/let';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
     standalone: true,
@@ -8,6 +7,6 @@ import { RouterModule } from '@angular/router';
     templateUrl: './library-list-card-p.component.html',
     styleUrls: ['./library-list-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterModule, RxLet],
+    imports: [RouterLink],
 })
 export class LibraryListCardPComponent {}
