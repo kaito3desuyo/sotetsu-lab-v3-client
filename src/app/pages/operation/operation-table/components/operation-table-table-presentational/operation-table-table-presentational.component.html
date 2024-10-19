@@ -62,36 +62,28 @@
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             {{
                                                 tripOperationList.trip.depotOut
                                                     ? '◯'
                                                     : '┗'
                                             }}
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             {{
                                                 tripOperationList.trip.depotIn
                                                     ? '△'
                                                     : '┏'
                                             }}
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                                 <td class="tw-w-12 tw-max-w-[3rem]">
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     stationNameColumn;
@@ -112,11 +104,9 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     stationNameColumn;
@@ -137,18 +127,14 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                                 <td>
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     timeColumn;
@@ -159,11 +145,9 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     timeColumn;
@@ -174,9 +158,7 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                                 <td>
@@ -275,9 +257,7 @@
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     timeColumn;
@@ -288,11 +268,9 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     timeColumn;
@@ -303,18 +281,14 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                                 <td class="tw-w-12 tw-max-w-[3rem]">
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     stationNameColumn;
@@ -335,11 +309,9 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             <ng-container
                                                 *ngTemplateOutlet="
                                                     stationNameColumn;
@@ -360,36 +332,28 @@
                                                     }
                                                 "
                                             ></ng-container>
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                                 <td class="tw-w-4">
                                     @switch (
                                         tripOperationList.trip.tripDirection
                                     ) {
-                                        <!--  -->
                                         @case (tripDirectionEnum.INBOUND) {
-                                            <!--  -->
                                             {{
                                                 tripOperationList.trip.depotIn
                                                     ? '△'
                                                     : '┓'
                                             }}
-                                            <!--  -->
                                         }
-                                        <!--  -->
+
                                         @case (tripDirectionEnum.OUTBOUND) {
-                                            <!--  -->
                                             {{
                                                 tripOperationList.trip.depotOut
                                                     ? '◯'
                                                     : '┛'
                                             }}
-                                            <!--  -->
                                         }
-                                        <!--  -->
                                     }
                                 </td>
                             </tr>
@@ -401,21 +365,18 @@
                                 !tripOperationList.trip.depotIn &&
                                 !operationTrip?.trips[i + 1]?.trip?.depotOut
                             ) {
-                                <!--  -->
                                 <tr>
                                     <td class="tw-w-4">
                                         @switch (
                                             tripOperationList.trip.tripDirection
                                         ) {
-                                            <!--  -->
                                             @case (tripDirectionEnum.INBOUND) {
                                                 ┏
                                             }
-                                            <!--  -->
+
                                             @case (tripDirectionEnum.OUTBOUND) {
                                                 ┗
                                             }
-                                            <!--  -->
                                         }
                                     </td>
 
@@ -425,27 +386,23 @@
                                         @switch (
                                             tripOperationList.trip.tripDirection
                                         ) {
-                                            <!--  -->
                                             @case (tripDirectionEnum.INBOUND) {
                                                 ┛
                                             }
-                                            <!--  -->
+
                                             @case (tripDirectionEnum.OUTBOUND) {
                                                 ┓
                                             }
-                                            <!--  -->
                                         }
                                     </td>
                                 </tr>
-                                <!--  -->
                             }
-                            <!--  -->
                         }
                     </tbody>
                 </table>
             </div>
         }
-        <!--  -->
+
         @for (
             operationTrip of operationTrips();
             track operationTrip.operation.operationNumber
@@ -498,15 +455,13 @@
         }"
     >
         @switch (tripDirection) {
-            <!--  -->
             @case (tripDirectionEnum.INBOUND) {
                 ➡
             }
-            <!--  -->
+
             @case (tripDirectionEnum.OUTBOUND) {
                 ⬅
             }
-            <!--  -->
         }
     </span>
 </ng-template>

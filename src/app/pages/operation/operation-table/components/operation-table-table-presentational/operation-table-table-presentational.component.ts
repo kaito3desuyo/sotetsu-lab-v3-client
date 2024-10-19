@@ -20,6 +20,7 @@ import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-tab
     selector: 'app-operation-table-table-presentational',
     templateUrl: './operation-table-table-presentational.component.html',
     styleUrls: ['./operation-table-table-presentational.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,
         RouterLink,
@@ -27,7 +28,6 @@ import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-tab
         OperationTableFormatStationNamePipe,
         OperationTableFormatTripClassNamePipe,
     ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationTableTablePresentationalComponent {
     readonly tripDirectionEnum = ETripDirection;
