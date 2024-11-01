@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { StopDetailsDto } from './stop-details.dto';
+import 'reflect-metadata';
 
 export class StationDetailsDto {
     @Expose({ name: 'id' })

@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { TripDetailsDto } from './trip-details.dto';
+import 'reflect-metadata';
 
 export class TripBlockDetailsDto {
     @Expose({ name: 'id' })
