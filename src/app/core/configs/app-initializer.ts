@@ -2,6 +2,7 @@ import { APP_INITIALIZER, Provider } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
+import { InitializeStateStore } from 'src/app/global-states/initialize.state';
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
@@ -21,6 +22,7 @@ export const AppInitializerProvider: Provider = {
             todaysCalendarListStateStore: TodaysCalendarListStateStore,
             todaysOperationListStateStore: TodaysOperationListStateStore,
             todaysFormationListStateStore: TodaysFormationListStateStore,
+            initializeStateStore: InitializeStateStore,
         ) =>
         async () => {
             await lastValueFrom(tokenStateStore.fetch());
@@ -38,6 +40,8 @@ export const AppInitializerProvider: Provider = {
                 lastValueFrom(todaysOperationListStateStore.fetch()),
                 lastValueFrom(todaysFormationListStateStore.fetch()),
             ]);
+
+            initializeStateStore.markInitialized();
         },
     deps: [
         TokenStateStore,
@@ -48,6 +52,7 @@ export const AppInitializerProvider: Provider = {
         TodaysCalendarListStateStore,
         TodaysOperationListStateStore,
         TodaysFormationListStateStore,
+        InitializeStateStore,
     ],
     multi: true,
 };

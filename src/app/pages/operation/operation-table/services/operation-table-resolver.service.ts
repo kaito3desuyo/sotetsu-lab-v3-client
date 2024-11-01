@@ -1,14 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
-import { forkJoin, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { filter, first, map, mergeMap } from 'rxjs/operators';
 import { TitleService } from 'src/app/core/services/title.service';
+import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
 import { OperationTableStateStore } from '../states/operation-table.state';
 import { OperationTableService } from './operation-table.service';
 
 @Injectable()
 export class OperationTableResolverService {
     readonly #titleService = inject(TitleService);
+    readonly #initializeStateQuery = inject(InitializeStateQuery);
     readonly #operationTableService = inject(OperationTableService);
     readonly #operationTableStateStore = inject(OperationTableStateStore);
 
@@ -19,10 +21,21 @@ export class OperationTableResolverService {
         this.#titleService.setTitle(title);
         this.#operationTableStateStore.setCalendarId(calendarId ?? '');
 
-        return forkJoin([
-            this.#operationTableService.fetchOperationTrips(),
-            this.#operationTableService.fetchStations(),
-            this.#operationTableService.fetchTripClass(),
-        ]).pipe(map(() => undefined));
+        return of(undefined).pipe(
+            mergeMap(() =>
+                this.#initializeStateQuery.isInitialized$.pipe(
+                    filter((bool) => !!bool),
+                    first(),
+                ),
+            ),
+            mergeMap(() =>
+                forkJoin([
+                    this.#operationTableService.fetchOperationTrips(),
+                    this.#operationTableService.fetchStations(),
+                    this.#operationTableService.fetchTripClass(),
+                ]),
+            ),
+            map(() => undefined),
+        );
     }
 }

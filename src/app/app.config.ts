@@ -1,5 +1,6 @@
 import {
     provideHttpClient,
+    withFetch,
     withInterceptorsFromDi,
 } from '@angular/common/http';
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
@@ -21,7 +22,7 @@ export const appConfig: ApplicationConfig = {
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
         ),
         provideClientHydration(),
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
         importProvidersFrom([CoreModule]),
     ],
