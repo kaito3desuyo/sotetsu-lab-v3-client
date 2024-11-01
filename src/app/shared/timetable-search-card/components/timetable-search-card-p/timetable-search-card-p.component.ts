@@ -20,11 +20,12 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RxState } from '@rx-angular/state';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
+import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 
 type Form = FormGroup<{
     calendarId: FormControl<string>;
@@ -48,7 +49,7 @@ type Form = FormGroup<{
         MatSlideToggleModule,
         MatRadioModule,
         MatButtonModule,
-        PipesModule,
+        DateFnsPipe,
     ],
 })
 export class TimetableSearchCardPComponent {
@@ -65,7 +66,7 @@ export class TimetableSearchCardPComponent {
     });
 
     readonly calendars = input.required<CalendarDetailsDto[]>();
-    readonly routeStationLists = input.required<RouteStationListDetailsDto[]>();
+    readonly routeStationLists = input.required<RouteDetailsDto[]>();
     readonly currentState = input.required<ITimetableSearchCardForm>();
 
     readonly clickSearch = output<ITimetableSearchCardForm>();

@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
-import { guid, Query, Store } from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
+import { select, setProps } from '@ngneat/elf';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { IConfirmDialogData } from '../interfaces/confirm-dialog-data.interface';
 
 type State = {
@@ -7,21 +8,26 @@ type State = {
 };
 
 @Injectable()
-export class ConfirmDialogStateStore extends Store<State> {
-    constructor() {
-        super({ data: null }, { name: `ConfirmDialog-${guid()}` });
-    }
+export class ConfirmDialogStateStore {
+    readonly state = createElfStore<State>({
+        name: 'ConfirmDialog',
+        initialValue: {
+            data: null,
+        },
+    });
 
     setData(data: IConfirmDialogData): void {
-        this.update({ data });
+        this.state.update(
+            setProps({
+                data,
+            }),
+        );
     }
 }
 
 @Injectable()
-export class ConfirmDialogStateQuery extends Query<State> {
-    readonly data$ = this.select('data');
+export class ConfirmDialogStateQuery {
+    readonly #store = inject(ConfirmDialogStateStore);
 
-    constructor(protected readonly store: ConfirmDialogStateStore) {
-        super(store);
-    }
+    readonly data$ = this.#store.state.pipe(select((state) => state.data));
 }

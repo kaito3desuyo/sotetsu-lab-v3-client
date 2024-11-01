@@ -1,6 +1,6 @@
-import { HttpBackend, HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Query, Store, StoreConfig } from '@datorama/akita';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { createStore, setProps, withProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
@@ -13,32 +13,44 @@ type State = {
     isFetching: boolean;
 };
 
-@Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'Token' })
-export class TokenStateStore extends Store<State> {
-    private readonly _http = new HttpClient(this.handler);
+const state = createStore(
+    { name: 'Token' },
+    withProps<State>({
+        accessToken: null,
+        expiresAt: null,
+        tokenType: null,
+        isFetching: false,
+    }),
+);
 
-    constructor(private readonly handler: HttpBackend) {
-        super({ accessToken: null, expiresAt: null, tokenType: null });
-    }
+@Injectable({ providedIn: 'root' })
+export class TokenStateStore {
+    readonly #http = inject(HttpClient);
 
     fetch(): Observable<void> {
-        if (!!this.getValue().isFetching) {
+        if (!!state.getValue().isFetching) {
             return of(undefined);
         }
 
         return of(undefined).pipe(
             tap(() => {
-                this.update({
-                    isFetching: true,
-                });
+                state.update(
+                    setProps((state) => ({
+                        ...state,
+                        isFetching: true,
+                    })),
+                );
             }),
-            mergeMap(() => this._http.get(environment.backendUrl + '/token')),
+            mergeMap(() =>
+                this.#http.get<State>(environment.backendUrl + '/token'),
+            ),
             tap((v) => {
-                this.update({
-                    ...v,
-                    isFetching: false,
-                });
+                state.update(
+                    setProps({
+                        ...v,
+                        isFetching: false,
+                    }),
+                );
             }),
             map(() => undefined),
         );
@@ -46,20 +58,19 @@ export class TokenStateStore extends Store<State> {
 }
 
 @Injectable({ providedIn: 'root' })
-export class TokenStateQuery extends Query<State> {
+export class TokenStateQuery {
     get accessToken(): string {
-        return this.getValue().accessToken;
+        const { accessToken } = state.getValue();
+        return accessToken;
     }
 
     get tokenType(): string {
-        return this.getValue().tokenType;
+        const { tokenType } = state.getValue();
+        return tokenType;
     }
 
     get isExpired(): boolean {
-        return this.getValue().expiresAt < dayjs().subtract(1, 'minute').unix();
-    }
-
-    constructor(protected store: TokenStateStore) {
-        super(store);
+        const { expiresAt } = state.getValue();
+        return expiresAt < dayjs().subtract(1, 'minute').unix();
     }
 }

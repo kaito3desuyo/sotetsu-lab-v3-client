@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { TimeDetailsDto } from './time-details.dto';
 import { TripDetailsDto } from './trip-details.dto';
+import 'reflect-metadata';
 
 export class TripOperationListDetailsDto {
     @Expose({ name: 'id' })

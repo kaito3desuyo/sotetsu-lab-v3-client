@@ -1,16 +1,16 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
-import { guid, Query, Store } from '@datorama/akita';
-import { combineLatest } from 'rxjs';
+import { select, setProps } from '@ngneat/elf';
 import { map } from 'rxjs/operators';
 import { arrayUniqueBy } from 'src/app/core/utils/array-unique-by';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
-type TimetableAllLineState = {
+type State = {
     calendarId: CalendarDetailsDto['calendarId'];
     tripDirection: TripDetailsDto['tripDirection'];
     tripBlockId: TripBlockDetailsDto['tripBlockId'];
@@ -20,128 +20,150 @@ type TimetableAllLineState = {
 };
 
 @Injectable()
-export class TimetableAllLineStateStore extends Store<TimetableAllLineState> {
-    constructor() {
-        super(
-            {
-                calendarId: null,
-                tripDirection: null,
-                tripBlockId: null,
-                stations: [],
-                tripBlocks: [],
-                pageSettings: {
-                    pageIndex: 0,
-                    pageSize: 10,
-                    length: 0,
-                },
+export class TimetableAllLineStateStore {
+    readonly state = createElfStore<State>({
+        name: 'TimetableAllLine',
+        initialValue: {
+            calendarId: null,
+            tripDirection: null,
+            tripBlockId: null,
+            stations: [],
+            tripBlocks: [],
+            pageSettings: {
+                pageIndex: 0,
+                pageSize: 10,
+                length: 0,
             },
-            {
-                name: `TimetableAllLine-${guid()}`,
-            },
+        },
+    });
+
+    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
+        this.state.update(
+            setProps({
+                calendarId,
+            }),
         );
     }
 
-    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
-        this.update({
-            calendarId,
-        });
-    }
-
     setTripDirection(tripDirection: TripDetailsDto['tripDirection']): void {
-        this.update({
-            tripDirection,
-        });
+        this.state.update(
+            setProps({
+                tripDirection,
+            }),
+        );
     }
 
     setTripBlockId(tripBlockId: TripBlockDetailsDto['tripBlockId']): void {
-        this.update({
-            tripBlockId,
-        });
+        this.state.update(
+            setProps({
+                tripBlockId,
+            }),
+        );
     }
 
     setStations(stations: StationDetailsDto[]): void {
-        this.update({
-            stations,
-        });
+        this.state.update(
+            setProps({
+                stations,
+            }),
+        );
     }
 
     setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
-        this.update({
-            tripBlocks,
-        });
+        this.state.update(
+            setProps({
+                tripBlocks,
+            }),
+        );
     }
 
     setPageSettings(pageSettings: PageEvent): void {
-        this.update({
-            pageSettings,
-        });
+        this.state.update(
+            setProps({
+                pageSettings,
+            }),
+        );
     }
 
     updatePageSettings(pageSettings: Partial<PageEvent>): void {
-        this.update({
-            pageSettings: {
-                ...this.getValue().pageSettings,
-                ...pageSettings,
-            },
-        });
+        this.state.update(
+            setProps((state) => ({
+                pageSettings: {
+                    ...state.pageSettings,
+                    ...pageSettings,
+                },
+            })),
+        );
     }
 }
 
 @Injectable()
-export class TimetableAllLineStateQuery extends Query<TimetableAllLineState> {
-    readonly calendarId$ = this.select('calendarId');
-    readonly tripDirection$ = this.select('tripDirection');
-    readonly stations$ = this.select(['tripDirection', 'stations']).pipe(
+export class TimetableAllLineStateQuery {
+    readonly #store = inject(TimetableAllLineStateStore);
+
+    readonly calendarId$ = this.#store.state.pipe(
+        select((state) => state.calendarId),
+    );
+    readonly tripDirection$ = this.#store.state.pipe(
+        select((state) => state.tripDirection),
+    );
+    readonly stations$ = this.#store.state.pipe(
+        select((state) => ({
+            tripDirection: state.tripDirection,
+            stations: state.stations,
+        })),
         map(({ tripDirection, stations }) => {
             return tripDirection === 0 ? [...stations].reverse() : stations;
         }),
     );
-    readonly trips$ = combineLatest([
-        this.select(['tripDirection', 'stations', 'tripBlocks']).pipe(
-            map(({ tripDirection, stations, tripBlocks }) => {
-                const sortedStations =
-                    tripDirection === 0 ? [...stations].reverse() : stations;
+    readonly trips$ = this.#store.state.pipe(
+        select((state) => ({
+            tripDirection: state.tripDirection,
+            stations: state.stations,
+            tripBlocks: state.tripBlocks,
+            pageSettings: state.pageSettings,
+        })),
+        map(({ tripDirection, stations, tripBlocks, pageSettings }) => {
+            const sortedStations =
+                tripDirection === 0 ? [...stations].reverse() : stations;
 
-                const sortedTrips = arrayUniqueBy(
-                    TimetableAllLineUtil.sortTrips(
-                        sortedStations,
-                        tripBlocks,
-                    ).reverse(),
-                    'tripBlockId',
-                )
-                    .reverse()
-                    .map((o) => o.trips)
-                    .reduce((a, b) => [...a, ...b], []);
+            const sortedTrips = arrayUniqueBy(
+                TimetableAllLineUtil.sortTrips(
+                    sortedStations,
+                    tripBlocks,
+                ).reverse(),
+                'tripBlockId',
+            )
+                .reverse()
+                .map((o) => o.trips)
+                .reduce((a, b) => [...a, ...b], []);
 
-                return sortedTrips;
-            }),
-        ),
-        this.select('pageSettings'),
-    ]).pipe(
-        map(([trips, pageSettings]) => {
-            return trips.filter((_, i) => {
+            const filteredTrips = sortedTrips.filter((_, i) => {
                 return (
                     pageSettings.pageIndex * pageSettings.pageSize <= i &&
                     i < (pageSettings.pageIndex + 1) * pageSettings.pageSize
                 );
             });
+
+            return filteredTrips;
         }),
     );
-    readonly pageSettings$ = this.select('pageSettings');
+    readonly pageSettings$ = this.#store.state.pipe(
+        select((state) => state.pageSettings),
+    );
 
     get calendarId(): CalendarDetailsDto['calendarId'] {
-        return this.getValue().calendarId;
+        const { calendarId } = this.#store.state.getValue();
+        return calendarId;
     }
 
     get tripDirection(): TripDetailsDto['tripDirection'] {
-        return this.getValue().tripDirection;
+        const { tripDirection } = this.#store.state.getValue();
+        return tripDirection;
     }
 
     get tripBlockId(): TripBlockDetailsDto['tripBlockId'] {
-        return this.getValue().tripBlockId;
-    }
-
-    constructor(protected store: TimetableAllLineStateStore) {
-        super(store);
+        const { tripBlockId } = this.#store.state.getValue();
+        return tripBlockId;
     }
 }

@@ -1,28 +1,32 @@
 import { inject, Injectable } from '@angular/core';
-import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
-import {
-    EntityState,
-    EntityStore,
-    QueryEntity,
-    StoreConfig,
-} from '@datorama/akita';
-import { Observable } from 'rxjs';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { FormationService } from '../libs/formation/usecase/formation.service';
+import { createStore } from '@ngneat/elf';
+import {
+    getAllEntities,
+    selectEntities,
+    setEntities,
+    withEntities,
+} from '@ngneat/elf-entities';
 import dayjs from 'dayjs';
+import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
+import { FormationService } from '../libs/formation/usecase/formation.service';
 import { AgencyListStateQuery } from './agency-list.state';
 
-type State = EntityState<FormationDetailsDto, string>;
+type State = FormationDetailsDto;
+
+const state = createStore(
+    { name: 'TodaysFormationList' },
+    withEntities<State, 'formationId'>({
+        initialValue: [],
+        idKey: 'formationId',
+    }),
+);
 
 @Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'TodaysFormationList', idKey: 'formationId' })
-export class TodaysFormationListStateStore extends EntityStore<State> {
+export class TodaysFormationListStateStore {
     readonly #formationService = inject(FormationService);
-
-    constructor() {
-        super();
-    }
 
     fetch(): Observable<void> {
         const qb = new RequestQueryBuilder();
@@ -34,8 +38,8 @@ export class TodaysFormationListStateStore extends EntityStore<State> {
                     .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap((formations: FormationDetailsDto[]) => {
-                    this.set(formations);
+                tap((data: FormationDetailsDto[]) => {
+                    state.update(setEntities(data));
                 }),
                 map(() => undefined),
             );
@@ -43,11 +47,16 @@ export class TodaysFormationListStateStore extends EntityStore<State> {
 }
 
 @Injectable({ providedIn: 'root' })
-export class TodaysFormationListStateQuery extends QueryEntity<State> {
+export class TodaysFormationListStateQuery {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
-    readonly todaysFormations$ = this.selectAll();
-    readonly todaysFormationsSorted$ = this.selectAll().pipe(
+    readonly todaysFormations$ = state.pipe(
+        selectEntities(),
+        map((formationsMap) =>
+            Object.entries(formationsMap).map(([_, value]) => value),
+        ),
+    );
+    readonly todaysFormationsSorted$ = this.todaysFormations$.pipe(
         map((formations) =>
             [...formations].sort((a, b) => {
                 const agencies = this.#agencyListStateQuery.agencies;
@@ -59,10 +68,6 @@ export class TodaysFormationListStateQuery extends QueryEntity<State> {
     );
 
     get todaysFormations() {
-        return this.getAll();
-    }
-
-    constructor(protected store: TodaysFormationListStateStore) {
-        super(store);
+        return state.query(getAllEntities());
     }
 }

@@ -3,6 +3,7 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 import { TimeDetailsDto } from './time-details.dto';
 import { TripBlockDetailsDto } from './trip-block-details.dto';
 import { TripOperationListDetailsDto } from './trip-operation-list-details.dto';
+import 'reflect-metadata';
 
 export class TripDetailsDto {
     @Expose({ name: 'id' })

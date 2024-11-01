@@ -133,7 +133,14 @@
                       : 'initial',
         }"
     >
-        {{ time | dayjs: { format: 'YYYY/MM/DD HH:mm:ss' } }}
+        {{
+            time
+                | dateFns
+                    : {
+                          format: 'yyyy/MM/dd HH:mm:ss',
+                          parseISO: true,
+                      }
+        }}
     </span>
 </ng-template>
 
@@ -149,7 +156,11 @@
                 class="tw-text-xs"
                 [matTooltip]="
                     history.sightingTime
-                        | dayjs: { format: '目撃：YYYY/MM/DD HH:mm:ss' }
+                        | dateFns
+                            : {
+                                  format: 'yyyy/MM/dd HH:mm:ss',
+                                  parseISO: true,
+                              }
                 "
             >
                 @if (

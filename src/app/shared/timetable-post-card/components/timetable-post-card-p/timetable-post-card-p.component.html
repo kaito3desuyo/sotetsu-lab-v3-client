@@ -16,9 +16,14 @@
                         <mat-option [value]="calendar.calendarId">
                             {{
                                 calendar.startDate
-                                    | dayjs: { format: 'YYYY年MM月DD日改正 ' }
-                            }}{{ calendar.calendarName }}</mat-option
-                        >
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy年MM月dd日改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
                     }
                 </mat-select>
                 @if (form.get('calendarId').hasError('required')) {

@@ -1,11 +1,12 @@
-import { Injectable } from '@angular/core';
-import {
-    EntityState,
-    EntityStore,
-    QueryEntity,
-    StoreConfig,
-} from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import { createStore } from '@ngneat/elf';
+import {
+    getAllEntities,
+    selectEntities,
+    setEntities,
+    withEntities,
+} from '@ngneat/elf-entities';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
@@ -13,25 +14,29 @@ import { OperationDetailsDto } from '../libs/operation/usecase/dtos/operation-de
 import { OperationService } from '../libs/operation/usecase/operation.service';
 import { TodaysCalendarListStateQuery } from './todays-calendar-list.state';
 
-interface TodaysOperationListState
-    extends EntityState<OperationDetailsDto, string> {}
+type State = OperationDetailsDto;
+
+const state = createStore(
+    { name: 'TodaysOperationList' },
+    withEntities<State, 'operationId'>({
+        initialValue: [],
+        idKey: 'operationId',
+    }),
+);
 
 @Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'TodaysOperationList', idKey: 'operationId' })
-export class TodaysOperationListStateStore extends EntityStore<TodaysOperationListState> {
-    constructor(
-        private readonly operationService: OperationService,
-        private readonly todaysCalendarListStateQuery: TodaysCalendarListStateQuery,
-    ) {
-        super();
-    }
+export class TodaysOperationListStateStore {
+    readonly #operationService = inject(OperationService);
+    readonly #todaysCalendarListStateQuery = inject(
+        TodaysCalendarListStateQuery,
+    );
 
     fetch(): Observable<void> {
         const qb = RequestQueryBuilder.create().setFilter([
             {
                 field: 'calendarId',
                 operator: CondOperator.EQUALS,
-                value: this.todaysCalendarListStateQuery.todaysCalendarId,
+                value: this.#todaysCalendarListStateQuery.todaysCalendarId,
             },
             {
                 field: 'operationNumber',
@@ -40,9 +45,9 @@ export class TodaysOperationListStateStore extends EntityStore<TodaysOperationLi
             },
         ]);
 
-        return this.operationService.findMany(qb).pipe(
-            tap((operations: OperationDetailsDto[]) => {
-                this.set(operations);
+        return this.#operationService.findMany(qb).pipe(
+            tap((data: OperationDetailsDto[]) => {
+                state.update(setEntities(data));
             }),
             map(() => undefined),
         );
@@ -50,9 +55,14 @@ export class TodaysOperationListStateStore extends EntityStore<TodaysOperationLi
 }
 
 @Injectable({ providedIn: 'root' })
-export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationListState> {
-    readonly todaysOperations$ = this.selectAll();
-    readonly todaysOperationsSorted$ = this.selectAll().pipe(
+export class TodaysOperationListStateQuery {
+    readonly todaysOperations$ = state.pipe(
+        selectEntities(),
+        map((operationsMap) =>
+            Object.entries(operationsMap).map(([_, value]) => value),
+        ),
+    );
+    readonly todaysOperationsSorted$ = this.todaysOperations$.pipe(
         map((operations) =>
             [...operations].sort(
                 (a, b) =>
@@ -63,10 +73,6 @@ export class TodaysOperationListStateQuery extends QueryEntity<TodaysOperationLi
     );
 
     get todaysOperations(): OperationDetailsDto[] {
-        return this.getAll();
-    }
-
-    constructor(protected store: TodaysOperationListStateStore) {
-        super(store);
+        return state.query(getAllEntities());
     }
 }

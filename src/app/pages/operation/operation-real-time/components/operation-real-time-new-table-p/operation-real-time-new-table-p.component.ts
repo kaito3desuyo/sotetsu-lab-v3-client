@@ -20,6 +20,7 @@ import {
     OperationRealTimeTableColumnLabel,
 } from '../../enums/operation-real-time.enum';
 import { IOperationRealTimeTableData } from '../../interfaces/operation-real-time-table-data.interface';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 
 @Component({
     standalone: true,
@@ -32,6 +33,7 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
         MatIconModule,
         MatTooltipModule,
         PipesModule,
+        DateFnsPipe,
         OperationNumberLinkComponent,
         FormationNumberLinkComponent,
         CurrentPositionLinkComponent,

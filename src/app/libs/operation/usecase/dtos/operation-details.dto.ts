@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import 'reflect-metadata';
 
 export class OperationDetailsDto {
     @Expose({ name: 'id' })

@@ -1,26 +1,31 @@
-import { Injectable } from '@angular/core';
-import {
-    EntityState,
-    EntityStore,
-    QueryEntity,
-    StoreConfig,
-} from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { createStore, select } from '@ngneat/elf';
+import {
+    getAllEntities,
+    selectFirst,
+    setEntities,
+    withEntities,
+} from '@ngneat/elf-entities';
 import dayjs from 'dayjs';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
 
-interface TodaysCalendarListState
-    extends EntityState<CalendarDetailsDto, string> {}
+type State = CalendarDetailsDto;
+
+const state = createStore(
+    { name: 'TodaysCalendarList' },
+    withEntities<State, 'calendarId'>({
+        initialValue: [],
+        idKey: 'calendarId',
+    }),
+);
 
 @Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'TodaysCalendarList', idKey: 'calendarId' })
-export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarListState> {
-    constructor(private readonly calendarService: CalendarService) {
-        super();
-    }
+export class TodaysCalendarListStateStore {
+    readonly #calendarService = inject(CalendarService);
 
     fetch(): Observable<void> {
         const qb = RequestQueryBuilder.create()
@@ -37,15 +42,15 @@ export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarList
                 { field: 'monday', order: 'DESC' },
             ]);
 
-        return this.calendarService
+        return this.#calendarService
             .findManyBySpecificDate(qb, {
                 date: dayjs()
                     .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
                     .format('YYYY-MM-DD'),
             })
             .pipe(
-                tap((calendars: CalendarDetailsDto[]) => {
-                    this.set(calendars);
+                tap((data: CalendarDetailsDto[]) => {
+                    state.update(setEntities(data));
                 }),
                 map(() => undefined),
             );
@@ -53,15 +58,13 @@ export class TodaysCalendarListStateStore extends EntityStore<TodaysCalendarList
 }
 
 @Injectable({ providedIn: 'root' })
-export class TodaysCalendarListStateQuery extends QueryEntity<TodaysCalendarListState> {
-    todaysCalendarId$ = this.selectFirst((calendar) => calendar.calendarId);
+export class TodaysCalendarListStateQuery {
+    readonly todaysCalendarId$ = state.pipe(
+        selectFirst(),
+        select((state) => state.calendarId),
+    );
 
     get todaysCalendarId() {
-        const list = this.getAll();
-        return list[0].calendarId;
-    }
-
-    constructor(protected store: TodaysCalendarListStateStore) {
-        super(store);
+        return state.query(getAllEntities()).at(0).calendarId;
     }
 }

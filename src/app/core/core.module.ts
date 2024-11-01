@@ -1,15 +1,10 @@
-import {
-    HTTP_INTERCEPTORS,
-    provideHttpClient,
-    withInterceptorsFromDi,
-} from '@angular/common/http';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ErrorHandler, NgModule } from '@angular/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { AkitaNgDevtools } from '@datorama/akita-ngdevtools';
 import {
     RX_RENDER_STRATEGIES_CONFIG,
     RxRenderStrategiesConfig,
@@ -39,7 +34,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             adClient: 'ca-pub-8923857677281403',
             fullWidthResponsive: false,
         }),
-        environment.production ? [] : AkitaNgDevtools.forRoot(),
         LoggerModule.forRoot({
             level: environment.production
                 ? NgxLoggerLevel.OFF
@@ -82,7 +76,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
             provide: RX_RENDER_STRATEGIES_CONFIG,
             useValue: CUSTOM_RX_ANGULAR_CONFIG,
         },
-        provideHttpClient(withInterceptorsFromDi()),
     ],
 })
 export class CoreModule {}

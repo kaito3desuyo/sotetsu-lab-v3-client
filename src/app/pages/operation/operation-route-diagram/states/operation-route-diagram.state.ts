@@ -1,71 +1,81 @@
-import { Injectable } from '@angular/core';
-import { guid, Query, Store } from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
+import { select, setProps } from '@ngneat/elf';
+import { map } from 'rxjs/operators';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 
-type OperationRouteDiagramState = {
+type State = {
     operationId: string;
     operationTrips: OperationTripsDto;
     stations: StationDetailsDto[];
 };
 
 @Injectable()
-export class OperationRouteDiagramStateStore extends Store<OperationRouteDiagramState> {
-    constructor() {
-        super(
-            {
-                operationId: null,
-                operationTrips: null,
-                stations: [],
-            },
-            { name: `OperationRouteDiagram-${guid()}` },
+export class OperationRouteDiagramStateStore {
+    readonly state = createElfStore<State>({
+        name: 'OperationRouteDiagram',
+        initialValue: {
+            operationId: null,
+            operationTrips: null,
+            stations: [],
+        },
+    });
+
+    setOperationId(operationId: string): void {
+        this.state.update(
+            setProps({
+                operationId,
+            }),
         );
     }
 
-    setOperationId(operationId: string): void {
-        this.update({
-            operationId,
-        });
-    }
-
     setOperationTrips(operationTrips: OperationTripsDto): void {
-        this.update({
-            operationTrips,
-        });
+        this.state.update(
+            setProps({
+                operationTrips,
+            }),
+        );
     }
 
     setStations(stations: StationDetailsDto[]): void {
-        this.update({
-            stations,
-        });
+        this.state.update(
+            setProps({
+                stations,
+            }),
+        );
     }
 }
 
 @Injectable()
-export class OperationRouteDiagramStateQuery extends Query<OperationRouteDiagramState> {
-    readonly operationId$ = this.select('operationId');
-    readonly calendar$ = this.select(
-        (state) => state.operationTrips?.operation.calendar,
+export class OperationRouteDiagramStateQuery {
+    readonly #store = inject(OperationRouteDiagramStateStore);
+
+    readonly operationId$ = this.#store.state.pipe(
+        select((state) => state.operationId),
     );
-    readonly operation$ = this.select(
-        (state) => state.operationTrips?.operation,
+    readonly calendar$ = this.#store.state.pipe(
+        select((state) => state.operationTrips?.operation.calendar),
     );
-    readonly stations$ = this.select((state) =>
-        this.#filterTargetStations(state.stations),
+    readonly operation$ = this.#store.state.pipe(
+        select((state) => state.operationTrips?.operation),
     );
-    readonly tripOperationLists$ = this.select(
-        (state) => state.operationTrips?.trips,
+    readonly stations$ = this.#store.state.pipe(
+        select((state) => state.stations),
+        map((stations) => this.#filterTargetStations(stations)),
+    );
+    readonly tripOperationLists$ = this.#store.state.pipe(
+        select((state) => state.operationTrips?.trips),
     );
 
     get calendarId(): string {
-        return this.getValue().operationTrips?.operation.calendarId;
-    }
-    get operationId(): string {
-        return this.getValue().operationId;
+        const { operationTrips } = this.#store.state.getValue();
+        return operationTrips?.operation.calendarId;
     }
 
-    constructor(protected store: OperationRouteDiagramStateStore) {
-        super(store);
+    get operationId(): string {
+        const { operationId } = this.#store.state.getValue();
+        return operationId;
     }
 
     #filterTargetStations(stations: StationDetailsDto[]): StationDetailsDto[] {

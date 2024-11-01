@@ -1,15 +1,15 @@
 import {
-    ChangeDetectionStrategy,
+    ApplicationRef,
     Component,
+    DestroyRef,
     inject,
     OnDestroy,
-    OnInit,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
-import { RxState } from '@rx-angular/state';
 import { interval } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { filter, first, map, switchMap, tap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { SocketService } from './core/services/socket.service';
@@ -23,12 +23,12 @@ import { LoadingService } from './shared/app-shared/loading/loading.service';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
     imports: [LayoutComponent],
-    providers: [RxState],
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnDestroy {
+    readonly #appRef = inject(ApplicationRef);
+    readonly #destroyRef = inject(DestroyRef);
     readonly #router = inject(Router);
     readonly #title = inject(Title);
-    readonly #state = inject<RxState<{}>>(RxState);
     readonly #appUpdateService = inject(AppUpdateService);
     readonly #socketService = inject(SocketService);
     readonly #gaService = inject(GoogleAnalyticsService);
@@ -37,39 +37,37 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #tokenStateQuery = inject(TokenStateQuery);
 
     constructor() {
-        this.#state.hold(
-            this.#router.events.pipe(
+        this.#router.events
+            .pipe(
                 filter<NavigationStart>((ev) => ev instanceof NavigationStart),
-            ),
-            () => {
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => {
                 this.#loadingService.open();
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.#router.events.pipe(
-                filter<NavigationEnd>((ev) => ev instanceof NavigationEnd),
-            ),
-            (ev) => {
+        this.#router.events
+            .pipe(filter<NavigationEnd>((ev) => ev instanceof NavigationEnd))
+            .subscribe((ev) => {
                 this.#loadingService.close();
                 this.#gaService.sendPageView(
                     this.#title.getTitle(),
                     ev.urlAfterRedirects,
                 );
-            },
-        );
+            });
 
-        this.#state.hold(
-            interval(1000 * 10).pipe(
-                map(() => this.#tokenStateQuery.isExpired),
-                filter((bool) => !!bool),
-                switchMap(() => this.#tokenStateStore.fetch()),
-            ),
-        );
-    }
+        this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
+            this.#socketService.connect();
 
-    ngOnInit(): void {
-        this.#socketService.connect();
+            interval(1000 * 10)
+                .pipe(
+                    map(() => this.#tokenStateQuery.isExpired),
+                    filter((bool) => !!bool),
+                    switchMap(() => this.#tokenStateStore.fetch()),
+                    takeUntilDestroyed(this.#destroyRef),
+                )
+                .subscribe();
+        });
     }
 
     ngOnDestroy(): void {

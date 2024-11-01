@@ -1,4 +1,5 @@
 import { APP_INITIALIZER, Provider } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
 import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
@@ -22,20 +23,20 @@ export const AppInitializerProvider: Provider = {
             todaysFormationListStateStore: TodaysFormationListStateStore,
         ) =>
         async () => {
-            await tokenStateStore.fetch().toPromise();
+            await lastValueFrom(tokenStateStore.fetch());
 
             await Promise.all([
-                agencyListStateStore.fetch().toPromise(),
-                calendarListStateStore.fetch().toPromise(),
-                routeStationListStateStore.fetch().toPromise(),
-                serviceListStateStore.fetch().toPromise(),
+                lastValueFrom(agencyListStateStore.fetch()),
+                lastValueFrom(calendarListStateStore.fetch()),
+                lastValueFrom(routeStationListStateStore.fetch()),
+                lastValueFrom(serviceListStateStore.fetch()),
             ]);
 
-            await todaysCalendarListStateStore.fetch().toPromise();
+            await lastValueFrom(todaysCalendarListStateStore.fetch());
 
             await Promise.all([
-                todaysOperationListStateStore.fetch().toPromise(),
-                todaysFormationListStateStore.fetch().toPromise(),
+                lastValueFrom(todaysOperationListStateStore.fetch()),
+                lastValueFrom(todaysFormationListStateStore.fetch()),
             ]);
         },
     deps: [

@@ -2,6 +2,8 @@ import { Expose, Type } from 'class-transformer';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from './trip-details.dto';
 import { TripOperationListDetailsDto } from './trip-operation-list-details.dto';
+import { StopDetailsDto } from 'src/app/libs/station/usecase/dtos/stop-details.dto';
+import 'reflect-metadata';
 
 export class TimeDetailsDto {
     @Expose({ name: 'id' })
@@ -52,7 +54,8 @@ export class TimeDetailsDto {
     station?: StationDetailsDto;
 
     @Expose()
-    stop?: any;
+    @Type(() => StopDetailsDto)
+    stop?: StopDetailsDto;
 
     @Expose()
     @Type(() => TripOperationListDetailsDto)

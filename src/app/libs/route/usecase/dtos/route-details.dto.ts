@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { RouteStationListDetailsDto } from './route-station-list-details.dto';
+import 'reflect-metadata';
 
 export class RouteDetailsDto {
     @Expose({ name: 'id' })

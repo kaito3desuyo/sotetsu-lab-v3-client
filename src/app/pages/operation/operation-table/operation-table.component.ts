@@ -1,13 +1,6 @@
-import {
-    ChangeDetectionStrategy,
-    Component,
-    effect,
-    inject,
-    untracked,
-} from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TitleService } from 'src/app/core/services/title.service';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationTableHeaderCComponent } from './components/operation-table-header-c/operation-table-header-c.component';
 import { OperationTableMainCComponent } from './components/operation-table-main-c/operation-table-main-c.component';
@@ -21,21 +14,10 @@ import { OperationTableMainCComponent } from './components/operation-table-main-
     imports: [OperationTableHeaderCComponent, OperationTableMainCComponent],
 })
 export class OperationTableComponent {
-    readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
-    readonly #titleService = inject(TitleService);
     readonly #operationSearchCardService = inject(OperationSearchCardService);
 
-    readonly #data = toSignal(this.#route.data);
-
     constructor() {
-        effect(() => {
-            const { title } = this.#data();
-            untracked(() => {
-                this.#titleService.setTitle(title);
-            });
-        });
-
         this.#operationSearchCardService
             .receiveSearchOperationTableEvent()
             .pipe(takeUntilDestroyed())
