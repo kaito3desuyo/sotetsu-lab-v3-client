@@ -4,12 +4,13 @@ import {
     DestroyRef,
     inject,
     OnDestroy,
+    OnInit,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { interval } from 'rxjs';
-import { filter, first, map, switchMap, tap } from 'rxjs/operators';
+import { filter, first, map, switchMap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { SocketService } from './core/services/socket.service';
@@ -24,7 +25,7 @@ import { LoadingService } from './shared/app-shared/loading/loading.service';
     styleUrls: ['./app.component.scss'],
     imports: [LayoutComponent],
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements OnInit, OnDestroy {
     readonly #appRef = inject(ApplicationRef);
     readonly #destroyRef = inject(DestroyRef);
     readonly #router = inject(Router);
@@ -57,8 +58,6 @@ export class AppComponent implements OnDestroy {
             });
 
         this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
-            this.#socketService.connect();
-
             interval(1000 * 10)
                 .pipe(
                     map(() => this.#tokenStateQuery.isExpired),
@@ -68,6 +67,10 @@ export class AppComponent implements OnDestroy {
                 )
                 .subscribe();
         });
+    }
+
+    ngOnInit(): void {
+        this.#socketService.connect();
     }
 
     ngOnDestroy(): void {

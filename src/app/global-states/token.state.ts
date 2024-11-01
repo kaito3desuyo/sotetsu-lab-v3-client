@@ -1,5 +1,5 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { HttpBackend, HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { createStore, setProps, withProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import { Observable, of } from 'rxjs';
@@ -10,7 +10,6 @@ type State = {
     accessToken: string;
     expiresAt: number;
     tokenType: string;
-    isFetching: boolean;
 };
 
 const state = createStore(
@@ -19,38 +18,24 @@ const state = createStore(
         accessToken: null,
         expiresAt: null,
         tokenType: null,
-        isFetching: false,
     }),
 );
 
 @Injectable({ providedIn: 'root' })
 export class TokenStateStore {
-    readonly #http = inject(HttpClient);
+    #http: HttpClient;
+
+    constructor(handler: HttpBackend) {
+        this.#http = new HttpClient(handler);
+    }
 
     fetch(): Observable<void> {
-        if (!!state.getValue().isFetching) {
-            return of(undefined);
-        }
-
         return of(undefined).pipe(
-            tap(() => {
-                state.update(
-                    setProps((state) => ({
-                        ...state,
-                        isFetching: true,
-                    })),
-                );
-            }),
             mergeMap(() =>
                 this.#http.get<State>(environment.backendUrl + '/token'),
             ),
             tap((v) => {
-                state.update(
-                    setProps({
-                        ...v,
-                        isFetching: false,
-                    }),
-                );
+                state.update(setProps(v));
             }),
             map(() => undefined),
         );
@@ -71,6 +56,6 @@ export class TokenStateQuery {
 
     get isExpired(): boolean {
         const { expiresAt } = state.getValue();
-        return expiresAt < dayjs().subtract(1, 'minute').unix();
+        return !!expiresAt && expiresAt < dayjs().subtract(1, 'minute').unix();
     }
 }
