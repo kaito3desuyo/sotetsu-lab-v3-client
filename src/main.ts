@@ -1,13 +1,11 @@
-import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { AppComponent } from './app/app.component';
-import { APP_ROUTES } from './app/app.route';
-import { CoreModule } from './app/core/core.module';
+import { appConfig } from './app/app.config';
 import { environment } from './environments/environment';
 
 dayjs.extend(customParseFormat);
@@ -21,12 +19,6 @@ if (environment.production) {
     enableProdMode();
 }
 
-bootstrapApplication(AppComponent, {
-    providers: [
-        provideRouter(
-            APP_ROUTES,
-            withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
-        ),
-        importProvidersFrom([CoreModule]),
-    ],
-}).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+    console.error(err),
+);
