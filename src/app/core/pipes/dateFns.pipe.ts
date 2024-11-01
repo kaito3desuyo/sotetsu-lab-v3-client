@@ -2,7 +2,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { format, parse, parseISO } from 'date-fns';
 import { Dayjs, isDayjs } from 'dayjs';
 import { isString } from 'es-toolkit';
-import { isMoment, Moment } from 'moment';
 
 @Pipe({
     standalone: true,
@@ -15,7 +14,7 @@ export class DateFnsPipe implements PipeTransform {
     ): string;
     transform(value: Dayjs, args: { format: string }): string;
     transform(
-        value: string | Moment | Dayjs,
+        value: string | Dayjs,
         args: { format: string; parseFormat?: string; parseISO?: boolean },
     ): string {
         const formatFn = (date: Date) => {
@@ -31,7 +30,7 @@ export class DateFnsPipe implements PipeTransform {
             return formatFn(parse(value, args.parseFormat, new Date()));
         }
 
-        if (isMoment(value) || isDayjs(value)) {
+        if (isDayjs(value)) {
             return formatFn(value.toDate());
         }
 
