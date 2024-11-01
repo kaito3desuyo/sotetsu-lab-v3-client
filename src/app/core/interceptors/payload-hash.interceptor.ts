@@ -21,9 +21,9 @@ async function convertToDigest<T>(body: T): Promise<string> {
 @Injectable()
 export class PayloadHashInterceptor implements HttpInterceptor {
     intercept(
-        req: HttpRequest<any>,
+        req: HttpRequest<unknown>,
         next: HttpHandler,
-    ): Observable<HttpEvent<any>> {
+    ): Observable<HttpEvent<unknown>> {
         if (req.body) {
             return from(convertToDigest(req.body)).pipe(
                 mergeMap((digest) =>

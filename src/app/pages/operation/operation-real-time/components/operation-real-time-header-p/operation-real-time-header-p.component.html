@@ -2,7 +2,8 @@
     <h2 class="mat-h2 !tw-m-0">リアルタイム運用情報</h2>
     <small>
         最終更新時刻：{{
-            finalUpdateTime() | dayjs: { format: 'YYYY/MM/DD HH:mm:ss' }
+            finalUpdateTime()
+                | dateFns: { format: 'yyyy/MM/dd HH:mm:ss', parseISO: true }
         }}
     </small>
 </div>

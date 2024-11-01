@@ -6,6 +6,10 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class OperationTableFormatStationNamePipe implements PipeTransform {
     transform(stationName: string): string {
+        if (!stationName) {
+            return '';
+        }
+
         if (stationNameMap.has(stationName)) {
             return stationNameMap.get(stationName);
         }

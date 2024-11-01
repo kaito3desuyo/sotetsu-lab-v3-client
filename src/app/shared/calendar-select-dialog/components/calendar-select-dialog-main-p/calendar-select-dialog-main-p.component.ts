@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 
 @Component({
@@ -22,7 +22,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
         MatFormFieldModule,
         MatSelectModule,
         MatButtonModule,
-        PipesModule,
+        DateFnsPipe,
     ],
 })
 export class CalendarSelectDialogMainPComponent {

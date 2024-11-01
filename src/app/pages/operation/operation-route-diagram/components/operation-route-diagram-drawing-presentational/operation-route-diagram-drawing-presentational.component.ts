@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -35,6 +36,7 @@ import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operatio
         CommonModule,
         MatButtonModule,
         PipesModule,
+        DateFnsPipe,
         OperationRouteDiagramFormatStationNamePipe,
     ],
     providers: [RxState],

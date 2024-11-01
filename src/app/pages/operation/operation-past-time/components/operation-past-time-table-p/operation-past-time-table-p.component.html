@@ -13,10 +13,10 @@
                     <span class="tw-sticky">
                         {{
                             calendar.date
-                                | dayjs
+                                | dateFns
                                     : {
-                                          format: 'MM/DD',
-                                          parseFormat: 'YYYY/MM/DD',
+                                          format: 'MM/dd',
+                                          parseFormat: 'yyyy-MM-dd',
                                       }
                         }}
                         <br />
@@ -59,9 +59,10 @@
                                             [operation]="sighting.operation"
                                             [tooltipText]="
                                                 sighting.sightingTime
-                                                    | dayjs
+                                                    | dateFns
                                                         : {
-                                                              format: '目撃：YYYY/MM/DD HH:mm:ss',
+                                                              format: '目撃：yyyy/MM/dd HH:mm:ss',
+                                                              parseISO: true,
                                                           }
                                             "
                                         ></app-operation-number-link>

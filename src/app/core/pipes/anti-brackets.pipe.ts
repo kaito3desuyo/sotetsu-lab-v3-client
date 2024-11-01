@@ -5,6 +5,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class AntiBracketsPipe implements PipeTransform {
     transform(str: string): string {
-        return str.replace(/（[^（）]*）/g, '');
+        return str ? str.replace(/（[^（）]*）/g, '') : '';
     }
 }

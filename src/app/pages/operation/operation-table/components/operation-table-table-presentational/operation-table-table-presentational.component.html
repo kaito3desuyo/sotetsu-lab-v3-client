@@ -435,10 +435,10 @@
     {{
         time
             ? (time
-              | dayjs
+              | dateFns
                   : {
-                        parseFormat: 'HH:mm:ss',
                         format: 'HHmm',
+                        parseFormat: 'HH:mm:ss',
                     })
             : '????'
     }}

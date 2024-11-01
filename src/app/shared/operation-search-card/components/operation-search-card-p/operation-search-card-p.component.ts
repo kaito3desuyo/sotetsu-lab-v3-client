@@ -11,7 +11,7 @@ import { MatRippleModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterModule } from '@angular/router';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
@@ -29,7 +29,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
         MatSelectModule,
         MatButtonModule,
         MatRippleModule,
-        PipesModule,
+        DateFnsPipe,
     ],
 })
 export class OperationSearchCardPComponent {

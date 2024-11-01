@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import { add, format, parse } from 'date-fns';
 import { areArrayValuesEqual } from 'src/app/core/utils/are-array-values-equal';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
@@ -43,23 +43,28 @@ function sortTrips(
                             continue;
                         }
 
-                        const format = 'HH:mm:dd';
-                        const latestTripTimeArrivalTime = dayjs(
-                            latestTripTime.arrivalTime,
-                            format,
-                        ).add(latestTripTime.arrivalDays, 'days');
-                        const sortTargetTripTimeArrivalTime = dayjs(
-                            sortTargetTime.arrivalTime,
-                            format,
-                        ).add(sortTargetTime.arrivalDays, 'days');
-                        const latestTripTimeDepartureTime = dayjs(
-                            latestTripTime.departureTime,
-                            format,
-                        ).add(latestTripTime.departureDays, 'days');
-                        const sortTargetTripTimeDepartureTime = dayjs(
-                            sortTargetTime.departureTime,
-                            format,
-                        ).add(sortTargetTime.departureDays, 'days');
+                        const format = 'HH:mm:ss';
+                        const timeParseFn = (time: string, days: number) =>
+                            add(parse(time, format, new Date()), {
+                                days,
+                            });
+
+                        const latestTripTimeArrivalTime = timeParseFn(
+                            latestTripTime.arrivalTime ?? '',
+                            latestTripTime.arrivalDays ?? 0,
+                        );
+                        const sortTargetTripTimeArrivalTime = timeParseFn(
+                            sortTargetTime.arrivalTime ?? '',
+                            sortTargetTime.arrivalDays ?? 0,
+                        );
+                        const latestTripTimeDepartureTime = timeParseFn(
+                            latestTripTime.departureTime ?? '',
+                            latestTripTime.departureDays ?? 0,
+                        );
+                        const sortTargetTripTimeDepartureTime = timeParseFn(
+                            sortTargetTime.departureTime ?? '',
+                            sortTargetTime.departureDays ?? 0,
+                        );
 
                         if (
                             latestTripTimeArrivalTime >
@@ -141,7 +146,8 @@ function sortTrips(
 }
 
 function _formatTime(timeString: string): string {
-    let time = dayjs(timeString, 'HH:mm:ss').format('Hmm');
+    const date = parse(timeString, 'HH:mm:ss', new Date());
+    let time = format(date, 'Hmm');
     if (time.length === 3) {
         time = '-' + time;
     }

@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { max } from 'lodash-es';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -29,6 +30,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
         CommonModule,
         RouterLink,
         PipesModule,
+        DateFnsPipe,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
     ],

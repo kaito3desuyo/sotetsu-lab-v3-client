@@ -6,6 +6,7 @@ import {
     input,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
@@ -25,6 +26,7 @@ import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-tab
         CommonModule,
         RouterLink,
         PipesModule,
+        DateFnsPipe,
         OperationTableFormatStationNamePipe,
         OperationTableFormatTripClassNamePipe,
     ],

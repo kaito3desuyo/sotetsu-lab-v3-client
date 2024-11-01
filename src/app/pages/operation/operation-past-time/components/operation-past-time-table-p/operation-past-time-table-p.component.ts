@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -11,7 +11,7 @@ import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-li
     templateUrl: './operation-past-time-table-p.component.html',
     styleUrls: ['./operation-past-time-table-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [PipesModule, OperationNumberLinkComponent],
+    imports: [DateFnsPipe, OperationNumberLinkComponent],
 })
 export class OperationPastTimeTablePComponent {
     readonly calendars =

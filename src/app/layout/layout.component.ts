@@ -1,7 +1,7 @@
-import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
-import { filter, takeUntil, tap } from 'rxjs/operators';
+import { filter, tap } from 'rxjs/operators';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
@@ -15,12 +15,11 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     animations: layoutAnimations,
     imports: [RouterModule, HeaderComponent, SidenavComponent],
 })
-export class LayoutComponent implements OnDestroy {
+export class LayoutComponent {
     readonly #router = inject(Router);
-    readonly #unsubscriber$ = new Subject<void>();
 
-    isOpen = signal<boolean>(false);
-    isVisibled = signal<boolean>(false);
+    readonly isOpen = signal<boolean>(false);
+    readonly isVisibled = signal<boolean>(false);
 
     constructor() {
         this.#router.events
@@ -31,7 +30,7 @@ export class LayoutComponent implements OnDestroy {
                 tap(() => {
                     this.toggle();
                 }),
-                takeUntil(this.#unsubscriber$.asObservable()),
+                takeUntilDestroyed(),
             )
             .subscribe();
     }
@@ -48,9 +47,5 @@ export class LayoutComponent implements OnDestroy {
             await wait(250);
             this.isVisibled.set(next);
         }
-    }
-
-    ngOnDestroy(): void {
-        this.#unsubscriber$.next();
     }
 }
