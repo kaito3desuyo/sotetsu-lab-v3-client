@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
-import { guid, Query, Store } from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
+import { select, setProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
-import { groupBy, isString } from 'lodash-es';
+import { groupBy, isString } from 'es-toolkit';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 
-type OperationPastTimeState = {
+type State = {
     referenceDate: string;
     days: number;
     calendars: { date: string; calendar: CalendarDetailsDto }[];
@@ -17,30 +18,32 @@ type OperationPastTimeState = {
 };
 
 @Injectable()
-export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
-    constructor() {
-        super(
-            {
-                referenceDate: null,
-                days: null,
-                calendars: [],
-                formations: [],
-                operationSightings: [],
-            },
-            { name: `OperationPastTime-${guid()}` },
+export class OperationPastTimeStateStore {
+    readonly state = createElfStore<State>({
+        name: 'OperationPastTime',
+        initialValue: {
+            referenceDate: null,
+            days: null,
+            calendars: [],
+            formations: [],
+            operationSightings: [],
+        },
+    });
+
+    setReferenceDate(date: string): void {
+        this.state.update(
+            setProps({
+                referenceDate: date,
+            }),
         );
     }
 
-    setReferenceDate(date: string): void {
-        this.update({
-            referenceDate: date,
-        });
-    }
-
     setDays(days: number): void {
-        this.update({
-            days,
-        });
+        this.state.update(
+            setProps({
+                days,
+            }),
+        );
     }
 
     setCalendars(
@@ -49,45 +52,61 @@ export class OperationPastTimeStateStore extends Store<OperationPastTimeState> {
             calendar: CalendarDetailsDto;
         }[],
     ): void {
-        this.update({
-            calendars,
-        });
+        this.state.update(
+            setProps({
+                calendars,
+            }),
+        );
     }
 
     setFormations(formations: FormationDetailsDto[]): void {
-        this.update({
-            formations,
-        });
+        this.state.update(
+            setProps({
+                formations,
+            }),
+        );
     }
 
     setOperationSightings(sightings: OperationSightingDetailsDto[]): void {
-        this.update({
-            operationSightings: sightings,
-        });
+        this.state.update(
+            setProps({
+                operationSightings: sightings,
+            }),
+        );
     }
 }
 
 @Injectable()
-export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
-    readonly referenceDate$ = this.select('referenceDate');
-    readonly days$ = this.select('days');
-    readonly calendars$ = this.select('calendars');
-    readonly formations$ = this.select('formations');
+export class OperationPastTimeStateQuery {
+    readonly #store = inject(OperationPastTimeStateStore);
+
+    readonly referenceDate$ = this.#store.state.pipe(
+        select((state) => state.referenceDate),
+    );
+    readonly days$ = this.#store.state.pipe(select((state) => state.days));
+    readonly calendars$ = this.#store.state.pipe(
+        select((state) => state.calendars),
+    );
+    readonly formations$ = this.#store.state.pipe(
+        select((state) => state.formations),
+    );
 
     get referenceDate(): string {
-        return this.getValue().referenceDate;
+        const { referenceDate } = this.#store.state.getValue();
+        return referenceDate;
     }
 
     get days(): number {
-        return this.getValue().days;
-    }
-
-    constructor(protected readonly store: OperationPastTimeStateStore) {
-        super(store);
+        const { days } = this.#store.state.getValue();
+        return days;
     }
 
     selectDates(): Observable<string[]> {
-        return this.select(['referenceDate', 'days']).pipe(
+        return this.#store.state.pipe(
+            select((state) => ({
+                referenceDate: state.referenceDate,
+                days: state.days,
+            })),
             map(({ referenceDate, days }) => {
                 if (!referenceDate || !days) return [];
                 const dates: string[] = [];
@@ -106,7 +125,8 @@ export class OperationPastTimeStateQuery extends Query<OperationPastTimeState> {
             [date: string]: OperationSightingDetailsDto[];
         };
     }> {
-        return this.select('operationSightings').pipe(
+        return this.#store.state.pipe(
+            select((state) => state.operationSightings),
             map((sightings) => {
                 const groupedByFormationId: [
                     string,

@@ -1,46 +1,45 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { createStore } from '@ngneat/elf';
 import {
-    EntityState,
-    EntityStore,
-    QueryEntity,
-    StoreConfig,
-} from '@datorama/akita';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+    getAllEntities,
+    selectAllEntities,
+    setEntities,
+    withEntities,
+} from '@ngneat/elf-entities';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AgencyService } from '../libs/agency/usecase/agency.service';
 import { AgencyDetailsDto } from '../libs/agency/usecase/dtos/agency-details.dto';
 
-interface AgencyListState extends EntityState<AgencyDetailsDto, string> {}
+type State = AgencyDetailsDto;
+
+const state = createStore(
+    { name: 'AgencyList' },
+    withEntities<State, 'agencyId'>({ initialValue: [], idKey: 'agencyId' }),
+);
 
 @Injectable({ providedIn: 'root' })
-@StoreConfig({ name: 'AgencyList', idKey: 'agencyId' })
-export class AgencyListStateStore extends EntityStore<AgencyListState> {
-    constructor(private readonly agencyService: AgencyService) {
-        super();
-    }
+export class AgencyListStateStore {
+    readonly #agencyService = inject(AgencyService);
 
     fetch(): Observable<void> {
         const qb = RequestQueryBuilder.create();
 
-        return this.agencyService.findMany(qb).pipe(
+        return this.#agencyService.findMany(qb).pipe(
             tap((data: AgencyDetailsDto[]) => {
-                this.set(data);
+                state.update(setEntities(data));
             }),
-            map(() => null),
+            map(() => undefined),
         );
     }
 }
 
 @Injectable({ providedIn: 'root' })
-export class AgencyListStateQuery extends QueryEntity<AgencyListState> {
-    agencies$ = this.selectAll();
+export class AgencyListStateQuery {
+    readonly agencies$ = state.pipe(selectAllEntities());
 
     get agencies(): AgencyDetailsDto[] {
-        return this.getAll();
-    }
-
-    constructor(protected store: AgencyListStateStore) {
-        super(store);
+        return state.query(getAllEntities());
     }
 }

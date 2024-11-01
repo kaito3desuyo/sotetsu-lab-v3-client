@@ -1,13 +1,14 @@
-import { Injectable } from '@angular/core';
-import { guid, Query, Store } from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
+import { select, setProps } from '@ngneat/elf';
 import { map } from 'rxjs/operators';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
-type OperationTableState = {
+type State = {
     calendarId: string;
     operations: OperationDetailsDto[];
     operationTrips: OperationTripsDto[];
@@ -16,56 +17,71 @@ type OperationTableState = {
 };
 
 @Injectable()
-export class OperationTableStateStore extends Store<OperationTableState> {
-    constructor() {
-        super(
-            {
-                calendarId: null,
-                operations: [],
-                operationTrips: [],
-                stations: [],
-                tripClasses: [],
-            },
-            { name: `OperationTable-${guid()}` },
+export class OperationTableStateStore {
+    readonly state = createElfStore<State>({
+        name: 'OperationTable',
+        initialValue: {
+            calendarId: null,
+            operations: [],
+            operationTrips: [],
+            stations: [],
+            tripClasses: [],
+        },
+    });
+
+    setCalendarId(calendarId: string): void {
+        this.state.update(
+            setProps({
+                calendarId,
+            }),
         );
     }
 
-    setCalendarId(calendarId: string): void {
-        this.update({
-            calendarId,
-        });
-    }
-
     setOperations(operations: OperationDetailsDto[]): void {
-        this.update({
-            operations,
-        });
+        this.state.update(
+            setProps({
+                operations,
+            }),
+        );
     }
 
     setOperationTrips(operationTrips: OperationTripsDto[]): void {
-        this.update({
-            operationTrips,
-        });
+        this.state.update(
+            setProps({
+                operationTrips,
+            }),
+        );
     }
 
     setStations(stations: StationDetailsDto[]): void {
-        this.update({
-            stations,
-        });
+        this.state.update(
+            setProps({
+                stations,
+            }),
+        );
     }
 
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        this.update({
-            tripClasses,
-        });
+        this.state.update(
+            setProps({
+                tripClasses,
+            }),
+        );
     }
 }
 
 @Injectable()
-export class OperationTableStateQuery extends Query<OperationTableState> {
-    readonly calendarId$ = this.select('calendarId');
-    readonly operations$ = this.select('operations');
-    readonly operationTrips$ = this.select('operationTrips').pipe(
+export class OperationTableStateQuery {
+    readonly #store = inject(OperationTableStateStore);
+
+    readonly calendarId$ = this.#store.state.pipe(
+        select((state) => state.calendarId),
+    );
+    readonly operations$ = this.#store.state.pipe(
+        select((state) => state.operations),
+    );
+    readonly operationTrips$ = this.#store.state.pipe(
+        select((state) => state.operationTrips),
         map((operationTrips) =>
             [...operationTrips].sort(
                 (a, b) =>
@@ -82,18 +98,20 @@ export class OperationTableStateQuery extends Query<OperationTableState> {
             ),
         ),
     );
-    readonly stations$ = this.select('stations');
-    readonly tripClasses$ = this.select('tripClasses');
+    readonly stations$ = this.#store.state.pipe(
+        select((state) => state.stations),
+    );
+    readonly tripClasses$ = this.#store.state.pipe(
+        select((state) => state.tripClasses),
+    );
 
     get calendarId(): string {
-        return this.getValue().calendarId;
+        const { calendarId } = this.#store.state.getValue();
+        return calendarId;
     }
 
     get operations(): OperationDetailsDto[] {
-        return this.getValue().operations;
-    }
-
-    constructor(protected store: OperationTableStateStore) {
-        super(store);
+        const { operations } = this.#store.state.getValue();
+        return operations;
     }
 }

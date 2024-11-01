@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
-import { guid, Query, Store } from '@datorama/akita';
+import { inject, Injectable } from '@angular/core';
+import { select, setProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import { minBy } from 'lodash-es';
 import { zip } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { createElfStore } from 'src/app/core/utils/elf-store';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -12,7 +13,7 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
-type TimetableStationState = {
+type State = {
     calendarId: CalendarDetailsDto['calendarId'];
     stationId: StationDetailsDto['stationId'];
     tripDirection: TripDetailsDto['tripDirection'];
@@ -25,129 +26,165 @@ type TimetableStationState = {
 };
 
 @Injectable()
-export class TimetableStationStateStore extends Store<TimetableStationState> {
-    constructor() {
-        super(
-            {
-                calendarId: null,
-                stationId: null,
-                tripDirection: null,
-                trips: [],
-                tripBlocks: [],
-                tripClasses: [],
-                stations: [],
-                operations: [],
-                operationSightingTimeCrossSections: [],
-            },
-            { name: `TimetableStation-${guid()}` },
+export class TimetableStationStateStore {
+    readonly state = createElfStore<State>({
+        name: 'TimetableStation',
+        initialValue: {
+            calendarId: null,
+            stationId: null,
+            tripDirection: null,
+            trips: [],
+            tripBlocks: [],
+            tripClasses: [],
+            stations: [],
+            operations: [],
+            operationSightingTimeCrossSections: [],
+        },
+    });
+
+    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
+        this.state.update(
+            setProps({
+                calendarId,
+            }),
         );
     }
 
-    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
-        this.update({
-            calendarId,
-        });
-    }
-
     setStationId(stationId: StationDetailsDto['stationId']): void {
-        this.update({
-            stationId,
-        });
+        this.state.update(
+            setProps({
+                stationId,
+            }),
+        );
     }
 
     setTripDirection(tripDirection: TripDetailsDto['tripDirection']): void {
-        this.update({
-            tripDirection,
-        });
+        this.state.update(
+            setProps({
+                tripDirection,
+            }),
+        );
     }
 
     setTrips(trips: TripDetailsDto[]): void {
-        this.update({
-            trips,
-        });
+        this.state.update(
+            setProps({
+                trips,
+            }),
+        );
     }
 
     setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
-        this.update({
-            tripBlocks,
-        });
+        this.state.update(
+            setProps({
+                tripBlocks,
+            }),
+        );
     }
 
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        this.update({
-            tripClasses,
-        });
+        this.state.update(
+            setProps({
+                tripClasses,
+            }),
+        );
     }
 
     setStations(stations: StationDetailsDto[]): void {
-        this.update({
-            stations,
-        });
+        this.state.update(
+            setProps({
+                stations,
+            }),
+        );
     }
 
     setOperations(operations: OperationDetailsDto[]): void {
-        this.update({
-            operations,
-        });
+        this.state.update(
+            setProps({
+                operations,
+            }),
+        );
     }
 
     setOperationSightingTimeCrossSections(
         operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[],
     ): void {
-        this.update({
-            operationSightingTimeCrossSections,
-        });
+        this.state.update(
+            setProps({
+                operationSightingTimeCrossSections,
+            }),
+        );
     }
 }
 
 @Injectable()
-export class TimetableStationStateQuery extends Query<TimetableStationState> {
-    readonly calendarId$ = this.select('calendarId');
-    readonly stationId$ = this.select('stationId');
-    readonly stationName$ = this.select(['stationId', 'stations']).pipe(
+export class TimetableStationStateQuery {
+    readonly #store = inject(TimetableStationStateStore);
+
+    readonly calendarId$ = this.#store.state.pipe(
+        select((state) => state.calendarId),
+    );
+    readonly stationId$ = this.#store.state.pipe(
+        select((state) => state.stationId),
+    );
+    readonly stationName$ = this.#store.state.pipe(
+        select((state) => ({
+            stationId: state.stationId,
+            stations: state.stations,
+        })),
         map(({ stationId, stations }) => {
             return stations.find((o) => o.stationId === stationId)?.stationName;
         }),
     );
-    readonly tripDirection$ = this.select('tripDirection');
-    readonly trips$ = this.select('trips');
+    readonly tripDirection$ = this.#store.state.pipe(
+        select((state) => state.tripDirection),
+    );
+    readonly trips$ = this.#store.state.pipe(select((state) => state.trips));
     readonly timetableData$ = zip(
-        this.select('trips'),
-        this.select('tripBlocks'),
+        this.#store.state.pipe(select((state) => state.trips)),
+        this.#store.state.pipe(select((state) => state.tripBlocks)),
     ).pipe(map(this.#sortTrips), map(this.#generateTableData));
-    readonly tripClasses$ = this.select('tripClasses');
-    readonly stations$ = this.select('stations');
-    readonly operations$ = this.select('operations');
-    readonly operationSightingTimeCrossSections$ = this.select(
-        'operationSightingTimeCrossSections',
+    readonly tripClasses$ = this.#store.state.pipe(
+        select((state) => state.tripClasses),
+    );
+    readonly stations$ = this.#store.state.pipe(
+        select((state) => state.stations),
+    );
+    readonly operations$ = this.#store.state.pipe(
+        select((state) => state.operations),
+    );
+    readonly operationSightingTimeCrossSections$ = this.#store.state.pipe(
+        select((state) => state.operationSightingTimeCrossSections),
     );
 
     get stationId(): StationDetailsDto['stationId'] {
-        return this.getValue().stationId;
+        const { stationId } = this.#store.state.getValue();
+        return stationId;
     }
 
     get calendarId(): CalendarDetailsDto['calendarId'] {
-        return this.getValue().calendarId;
+        const { calendarId } = this.#store.state.getValue();
+        return calendarId;
     }
 
     get tripDirection(): TripDetailsDto['tripDirection'] {
-        return this.getValue().tripDirection;
+        const { tripDirection } = this.#store.state.getValue();
+        return tripDirection;
     }
 
     get trips(): TripDetailsDto[] {
-        return this.getValue().trips;
+        const { trips } = this.#store.state.getValue();
+        return trips;
     }
 
     get operationIds(): string[] {
-        return this.#extractOperationIds(this.getValue().trips);
+        const { trips } = this.#store.state.getValue();
+        return this.#extractOperationIds(trips);
     }
 
     get operations(): OperationDetailsDto[] {
-        return this.getValue().operations;
-    }
-
-    constructor(protected store: TimetableStationStateStore) {
-        super(store);
+        const { operations } = this.#store.state.getValue();
+        return operations;
     }
 
     #extractOperationIds(trips: TripDetailsDto[]): string[] {

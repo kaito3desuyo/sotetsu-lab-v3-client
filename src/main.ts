@@ -1,5 +1,7 @@
 import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { enableElfProdMode } from '@ngneat/elf';
+import { devTools } from '@ngneat/elf-devtools';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -12,12 +14,15 @@ dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-gtag('js', new Date());
-gtag('config', environment.analytics.id, { send_page_view: false });
-
 if (environment.production) {
     enableProdMode();
+    enableElfProdMode();
+} else {
+    devTools();
 }
+
+gtag('js', new Date());
+gtag('config', environment.analytics.id, { send_page_view: false });
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
     console.error(err),
