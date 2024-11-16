@@ -28,7 +28,9 @@ export class LoadingService {
             });
         }
 
-        this.#overlayRef.attach(new ComponentPortal(LoadingComponent));
+        if (!this.#overlayRef.hasAttached()) {
+            this.#overlayRef.attach(new ComponentPortal(LoadingComponent));
+        }
     }
 
     close() {

@@ -5,23 +5,13 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import {
-    RX_RENDER_STRATEGIES_CONFIG,
-    RxRenderStrategiesConfig,
-} from '@rx-angular/cdk/render-strategies';
 import { AdsenseModule } from 'ng2-adsense';
 import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
 import { CustomPaginator } from './classes/custom-paginator';
-import { AppInitializerProvider } from './configs/app-initializer';
 import { AuthInterceptor } from './interceptors/auth-interceptor';
 import { PayloadHashInterceptor } from './interceptors/payload-hash.interceptor';
 import { ErrorHandlerService } from './services/error-handler.service';
-
-const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
-    primaryStrategy: 'local',
-    patchZone: true,
-};
 
 @NgModule({
     imports: [
@@ -43,7 +33,7 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
         MatSnackBarModule,
     ],
     providers: [
-        AppInitializerProvider,
+        // AppInitializerProvider,
         {
             provide: ErrorHandler,
             useClass: ErrorHandlerService,
@@ -72,10 +62,6 @@ const CUSTOM_RX_ANGULAR_CONFIG: RxRenderStrategiesConfig<string> = {
         //             ɵɵinject(ErrorHandler)
         //         ),
         // },
-        {
-            provide: RX_RENDER_STRATEGIES_CONFIG,
-            useValue: CUSTOM_RX_ANGULAR_CONFIG,
-        },
     ],
 })
 export class CoreModule {}

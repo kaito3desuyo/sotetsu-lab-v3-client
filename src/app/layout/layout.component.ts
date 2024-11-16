@@ -1,6 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import {
+    NavigationCancel,
+    NavigationEnd,
+    Router,
+    RouterModule,
+} from '@angular/router';
 import { filter, tap } from 'rxjs/operators';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
@@ -25,7 +30,10 @@ export class LayoutComponent {
         this.#router.events
             .pipe(
                 filter(
-                    (ev) => !!this.isVisibled() && ev instanceof NavigationEnd,
+                    (ev) =>
+                        !!this.isVisibled() &&
+                        (ev instanceof NavigationEnd ||
+                            ev instanceof NavigationCancel),
                 ),
                 tap(() => {
                     this.toggle();

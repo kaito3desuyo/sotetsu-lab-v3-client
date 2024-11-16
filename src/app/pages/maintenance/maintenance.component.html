@@ -1,0 +1,27 @@
+<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
+    <header>
+        <h2 class="mat-h2 !tw-m-0">メンテナンス中です</h2>
+    </header>
+    <div class="mat-typography">
+        <p>
+            Sotetsu Labは現在メンテナンス中です。<br />一部のページがご覧いただけません。
+        </p>
+        <dl
+            class="tw-grid tw-grid-cols-[max-content_auto] tw-gap-2 [&_dd]:tw-m-0 [&_dt]:tw-font-bold"
+        >
+            <dt>開始時刻</dt>
+            <dd>
+                {{ startAt() | dateFns: { format: 'yyyy/MM/dd HH:mm:ss' } }}
+            </dd>
+            <dt>終了予定時刻</dt>
+            <dd>{{ endAt() | dateFns: { format: 'yyyy/MM/dd HH:mm:ss' } }}</dd>
+        </dl>
+        <p>
+            詳しい状況については、管理者X（旧Twitter）<a
+                href="https://twitter.com/ST_Exp"
+                target="_blank"
+                >&#64;ST_Exp</a
+            >をご覧ください。
+        </p>
+    </div>
+</main>

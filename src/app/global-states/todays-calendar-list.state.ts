@@ -61,10 +61,10 @@ export class TodaysCalendarListStateStore {
 export class TodaysCalendarListStateQuery {
     readonly todaysCalendarId$ = state.pipe(
         selectFirst(),
-        select((state) => state.calendarId),
+        select((state) => state?.calendarId),
     );
 
     get todaysCalendarId() {
-        return state.query(getAllEntities()).at(0).calendarId;
+        return state.query(getAllEntities()).at(0)?.calendarId;
     }
 }
