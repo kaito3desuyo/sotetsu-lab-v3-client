@@ -1,7 +1,6 @@
 import {
     provideHttpClient,
     withFetch,
-    withInterceptors,
     withInterceptorsFromDi,
 } from '@angular/common/http';
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
@@ -14,7 +13,6 @@ import {
 } from '@angular/router';
 import { APP_ROUTES } from './app.route';
 import { CoreModule } from './core/core.module';
-import { maintenanceInterceptor } from './core/interceptors/maintenance.interceptor';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -24,11 +22,7 @@ export const appConfig: ApplicationConfig = {
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
         ),
         provideClientHydration(),
-        provideHttpClient(
-            withFetch(),
-            withInterceptorsFromDi(),
-            withInterceptors([maintenanceInterceptor]),
-        ),
+        provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
         importProvidersFrom([CoreModule]),
     ],
