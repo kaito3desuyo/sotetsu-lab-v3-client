@@ -8,9 +8,14 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import {
+    NavigationCancel,
+    NavigationEnd,
+    NavigationStart,
+    Router,
+} from '@angular/router';
 import { interval } from 'rxjs';
-import { filter, first, map, switchMap } from 'rxjs/operators';
+import { debounceTime, filter, first, map, switchMap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { SocketService } from './core/services/socket.service';
@@ -48,13 +53,27 @@ export class AppComponent implements OnInit, OnDestroy {
             });
 
         this.#router.events
-            .pipe(filter<NavigationEnd>((ev) => ev instanceof NavigationEnd))
+            .pipe(
+                filter<NavigationEnd>((ev) => ev instanceof NavigationEnd),
+                takeUntilDestroyed(),
+            )
             .subscribe((ev) => {
                 this.#loadingService.close();
                 this.#gaService.sendPageView(
                     this.#title.getTitle(),
                     ev.urlAfterRedirects,
                 );
+            });
+
+        this.#router.events
+            .pipe(
+                filter<NavigationCancel>(
+                    (ev) => ev instanceof NavigationCancel,
+                ),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => {
+                this.#loadingService.close();
             });
 
         this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
