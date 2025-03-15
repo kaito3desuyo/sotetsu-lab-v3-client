@@ -26,8 +26,8 @@ function generateOperationTableData(
                     o.operationId === so.operationId &&
                     !timeCrossSections.some(
                         (tcs) =>
-                            tcs.expectedSighting.formation.formationNumber &&
-                            tcs.latestSighting.operationSightingId ===
+                            tcs.expectedSighting?.formation?.formationNumber &&
+                            tcs.latestSighting?.operationSightingId ===
                                 so.operationSightingId,
                     ),
             );
@@ -65,8 +65,8 @@ function generateFormationTableData(
                 o.formationId === so.formationId &&
                 !timeCrossSections.some(
                     (tcs) =>
-                        tcs.expectedSighting.operation.operationNumber &&
-                        tcs.latestSighting.operationSightingId ===
+                        tcs.expectedSighting?.operation?.operationNumber &&
+                        tcs.latestSighting?.operationSightingId ===
                             so.operationSightingId,
                 ),
         );
@@ -74,7 +74,7 @@ function generateFormationTableData(
             positions.find(
                 (so) =>
                     so.operation.operationId ===
-                    timeCrossSection?.expectedSighting.operation.operationId,
+                    timeCrossSection?.expectedSighting?.operation?.operationId,
             ) ?? null;
 
         return {
