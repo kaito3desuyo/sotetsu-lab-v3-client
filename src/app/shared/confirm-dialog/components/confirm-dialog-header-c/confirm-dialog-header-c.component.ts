@@ -5,12 +5,11 @@ import { ConfirmDialogStateQuery } from '../../states/confirm-dialog.state';
 import { ConfirmDialogHeaderPComponent } from '../confirm-dialog-header-p/confirm-dialog-header-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-confirm-dialog-header-c',
     templateUrl: './confirm-dialog-header-c.component.html',
     styleUrls: ['./confirm-dialog-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ConfirmDialogHeaderPComponent],
+    imports: [ConfirmDialogHeaderPComponent]
 })
 export class ConfirmDialogHeaderCComponent {
     readonly #confirmDialogService = inject(ConfirmDialogService);

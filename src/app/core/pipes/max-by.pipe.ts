@@ -3,6 +3,7 @@ import { maxBy } from 'lodash-es';
 
 @Pipe({
     name: 'maxBy',
+    standalone: false
 })
 export class MaxByPipe implements PipeTransform {
     transform<T>(array: T[], options: { propertyName: keyof T }): T {

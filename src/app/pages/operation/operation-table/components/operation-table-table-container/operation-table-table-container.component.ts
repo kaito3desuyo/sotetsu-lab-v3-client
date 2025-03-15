@@ -6,12 +6,11 @@ import { OperationTableStateQuery } from '../../states/operation-table.state';
 import { OperationTableTablePresentationalComponent } from '../operation-table-table-presentational/operation-table-table-presentational.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-table-table-container',
     templateUrl: './operation-table-table-container.component.html',
     styleUrls: ['./operation-table-table-container.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [OperationTableTablePresentationalComponent],
+    imports: [OperationTableTablePresentationalComponent]
 })
 export class OperationTableTableContainerComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);

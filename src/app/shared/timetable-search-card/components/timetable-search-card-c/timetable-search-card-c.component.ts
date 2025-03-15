@@ -8,12 +8,11 @@ import { TimetableSearchCardStateQuery } from '../../states/timetable-search-car
 import { TimetableSearchCardPComponent } from '../timetable-search-card-p/timetable-search-card-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-search-card-c',
     templateUrl: './timetable-search-card-c.component.html',
     styleUrls: ['./timetable-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [TimetableSearchCardPComponent],
+    imports: [TimetableSearchCardPComponent]
 })
 export class TimetableSearchCardCComponent {
     private readonly calendarListStateQuery = inject(CalendarListStateQuery);

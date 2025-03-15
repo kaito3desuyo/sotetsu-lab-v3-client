@@ -25,10 +25,8 @@ import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operati
 import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-route-diagram-drawing-presentational',
-    templateUrl:
-        './operation-route-diagram-drawing-presentational.component.html',
+    templateUrl: './operation-route-diagram-drawing-presentational.component.html',
     styleUrls: [
         './operation-route-diagram-drawing-presentational.component.scss',
     ],
@@ -40,7 +38,7 @@ import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operatio
         OperationRouteDiagramFormatStationNamePipe,
     ],
     providers: [RxState],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OperationRouteDiagramDrawingPresentationalComponent {
     readonly tripDirectionEnum = ETripDirection;

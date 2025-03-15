@@ -7,7 +7,6 @@ import { TimetableAllLineStateQuery } from '../../states/timetable-all-line.stat
 import { TimetableAllLineTableCComponent } from '../timetable-all-line-table-c/timetable-all-line-table-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-all-line-main-c',
     templateUrl: './timetable-all-line-main-c.component.html',
     styleUrls: ['./timetable-all-line-main-c.component.scss'],
@@ -17,7 +16,7 @@ import { TimetableAllLineTableCComponent } from '../timetable-all-line-table-c/t
         TimetableAllLineTableCComponent,
         TimetableSearchCardCComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableAllLineMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);

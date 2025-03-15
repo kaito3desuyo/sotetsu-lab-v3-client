@@ -9,13 +9,12 @@ import { ConfirmDialogHeaderCComponent } from '../confirm-dialog-header-c/confir
 import { ConfirmDialogMainCComponent } from '../confirm-dialog-main-c/confirm-dialog-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-confirm-dialog',
     templateUrl: './confirm-dialog.component.html',
     styleUrls: ['./confirm-dialog.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ConfirmDialogHeaderCComponent, ConfirmDialogMainCComponent],
-    providers: [ConfirmDialogStateStore, ConfirmDialogStateQuery],
+    providers: [ConfirmDialogStateStore, ConfirmDialogStateQuery]
 })
 export class ConfirmDialogComponent {
     constructor(

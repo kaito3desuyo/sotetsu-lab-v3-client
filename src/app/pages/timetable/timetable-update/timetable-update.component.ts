@@ -6,13 +6,12 @@ import { TimetableUpdateHeaderCComponent } from './components/timetable-update-h
 import { TimetableUpdateMainCComponent } from './components/timetable-update-main-c/timetable-update-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-update',
     templateUrl: './timetable-update.component.html',
     styleUrls: ['./timetable-update.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableUpdateHeaderCComponent, TimetableUpdateMainCComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableUpdateComponent {
     readonly #route = inject(ActivatedRoute);

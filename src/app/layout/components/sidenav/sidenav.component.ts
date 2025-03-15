@@ -18,7 +18,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 
 @Component({
-    standalone: true,
     selector: 'app-sidenav',
     templateUrl: './sidenav.component.html',
     styleUrls: ['./sidenav.component.scss'],
@@ -30,7 +29,7 @@ import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
         MatRippleModule,
         MatFormFieldModule,
         MatSelectModule,
-    ],
+    ]
 })
 export class SidenavComponent {
     readonly #fb = inject(FormBuilder);

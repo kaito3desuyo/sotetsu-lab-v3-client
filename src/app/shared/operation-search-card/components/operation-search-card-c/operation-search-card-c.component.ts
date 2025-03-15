@@ -14,13 +14,12 @@ import {
 import { OperationSearchCardPComponent } from '../operation-search-card-p/operation-search-card-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-search-card-c',
     templateUrl: './operation-search-card-c.component.html',
     styleUrls: ['./operation-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RxState],
-    imports: [CommonModule, OperationSearchCardPComponent],
+    imports: [CommonModule, OperationSearchCardPComponent]
 })
 export class OperationSearchCardCComponent {
     readonly #state = inject(RxState);

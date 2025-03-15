@@ -3,11 +3,10 @@ import { LibraryVehicleHeaderCComponent } from './components/library-vehicle-hea
 import { LibraryVehicleMainCComponent } from './components/library-vehicle-main-c/library-vehicle-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-library-vehicle',
     templateUrl: './library-vehicle.component.html',
     styleUrls: ['./library-vehicle.component.scss'],
-    imports: [LibraryVehicleHeaderCComponent, LibraryVehicleMainCComponent],
+    imports: [LibraryVehicleHeaderCComponent, LibraryVehicleMainCComponent]
 })
 export class LibraryVehicleComponent {
     constructor() {}

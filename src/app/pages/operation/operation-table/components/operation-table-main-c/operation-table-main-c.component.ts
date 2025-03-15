@@ -13,7 +13,6 @@ import { OperationTableStateQuery } from '../../states/operation-table.state';
 import { OperationTableTableContainerComponent } from '../operation-table-table-container/operation-table-table-container.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-table-main-c',
     templateUrl: './operation-table-main-c.component.html',
     styleUrls: ['./operation-table-main-c.component.scss'],
@@ -22,7 +21,7 @@ import { OperationTableTableContainerComponent } from '../operation-table-table-
         AdsenseModule,
         OperationSearchCardCComponent,
         OperationTableTableContainerComponent,
-    ],
+    ]
 })
 export class OperationTableMainCComponent {
     readonly #operationTableStateQuery = inject(OperationTableStateQuery);

@@ -21,12 +21,11 @@ import {
 import { TimetableEditFormPComponent } from '../timetable-edit-form-p/timetable-edit-form-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-edit-form-c',
     templateUrl: './timetable-edit-form-c.component.html',
     styleUrls: ['./timetable-edit-form-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [TimetableEditFormPComponent],
+    imports: [TimetableEditFormPComponent]
 })
 export class TimetableEditFormCComponent {
     readonly #loading = inject(LoadingService);

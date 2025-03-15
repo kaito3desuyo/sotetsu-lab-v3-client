@@ -7,13 +7,12 @@ import { TimetableStationHeaderCComponent } from './components/timetable-station
 import { TimetableStationMainCComponent } from './components/timetable-station-main-c/timetable-station-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
     styleUrls: ['./timetable-station.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableStationHeaderCComponent, TimetableStationMainCComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableStationComponent {
     readonly #route = inject(ActivatedRoute);

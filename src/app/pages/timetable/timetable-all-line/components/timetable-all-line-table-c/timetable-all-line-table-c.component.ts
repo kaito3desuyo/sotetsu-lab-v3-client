@@ -21,13 +21,12 @@ import {
 import { TimetableAllLineTablePComponent } from '../timetable-all-line-table-p/timetable-all-line-table-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-all-line-table-c',
     templateUrl: './timetable-all-line-table-c.component.html',
     styleUrls: ['./timetable-all-line-table-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableAllLineTablePComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableAllLineTableCComponent {
     readonly #router = inject(Router);

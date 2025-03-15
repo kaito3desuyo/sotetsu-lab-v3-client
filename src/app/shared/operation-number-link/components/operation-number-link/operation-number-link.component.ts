@@ -7,7 +7,6 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-number-link',
     templateUrl: './operation-number-link.component.html',
     styleUrls: ['./operation-number-link.component.scss'],
@@ -18,7 +17,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
         MatRippleModule,
         MatTooltipModule,
         PipesModule,
-    ],
+    ]
 })
 export class OperationNumberLinkComponent {
     readonly operation = input.required<OperationDetailsDto>();

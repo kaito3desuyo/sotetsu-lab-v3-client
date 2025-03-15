@@ -7,11 +7,10 @@ import { OperationRouteDiagramStateQuery } from '../../states/operation-route-di
 import { OperationRouteDiagramDrawingPresentationalComponent } from '../operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-route-diagram-drawing-container',
     templateUrl: './operation-route-diagram-drawing-container.component.html',
     styleUrls: ['./operation-route-diagram-drawing-container.component.scss'],
-    imports: [OperationRouteDiagramDrawingPresentationalComponent],
+    imports: [OperationRouteDiagramDrawingPresentationalComponent]
 })
 export class OperationRouteDiagramDrawingContainerComponent {
     readonly #operationRouteDiagramService = inject(

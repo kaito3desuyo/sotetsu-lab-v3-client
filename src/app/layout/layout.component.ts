@@ -13,12 +13,11 @@ import { HeaderComponent } from './components/header/header.component';
 import { SidenavComponent } from './components/sidenav/sidenav.component';
 
 @Component({
-    standalone: true,
     selector: 'app-layout',
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
-    imports: [RouterModule, HeaderComponent, SidenavComponent],
+    imports: [RouterModule, HeaderComponent, SidenavComponent]
 })
 export class LayoutComponent {
     readonly #router = inject(Router);

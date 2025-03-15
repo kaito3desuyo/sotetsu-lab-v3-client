@@ -21,7 +21,6 @@ import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-s
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-station-table-p',
     templateUrl: './timetable-station-table-p.component.html',
     styleUrls: ['./timetable-station-table-p.component.scss'],
@@ -33,7 +32,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
         DateFnsPipe,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
-    ],
+    ]
 })
 export class TimetableStationTablePComponent {
     readonly tripDirectionEnum = ETripDirection;

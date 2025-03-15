@@ -11,12 +11,11 @@ import { OperationPostCardService } from '../../services/operation-post-card.ser
 import { OperationPostCardPComponent } from '../operation-post-card-p/operation-post-card-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-post-card-c',
     templateUrl: './operation-post-card-c.component.html',
     styleUrls: ['./operation-post-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [OperationPostCardPComponent],
+    imports: [OperationPostCardPComponent]
 })
 export class OperationPostCardCComponent {
     readonly #loading = inject(LoadingService);

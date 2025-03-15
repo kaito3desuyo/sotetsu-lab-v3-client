@@ -28,7 +28,6 @@ type Form = FormGroup<{
 }>;
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-post-card-p',
     templateUrl: './timetable-post-card-p.component.html',
     styleUrls: ['./timetable-post-card-p.component.scss'],
@@ -41,7 +40,7 @@ type Form = FormGroup<{
         MatRadioModule,
         MatButtonModule,
         DateFnsPipe,
-    ],
+    ]
 })
 export class TimetablePostCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;

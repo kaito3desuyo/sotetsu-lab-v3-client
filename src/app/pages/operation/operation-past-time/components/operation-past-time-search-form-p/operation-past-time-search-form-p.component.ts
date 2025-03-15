@@ -32,7 +32,6 @@ class CustomDateFnsAdapter extends DateFnsAdapter {
 }
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time-search-form-p',
     templateUrl: './operation-past-time-search-form-p.component.html',
     styleUrls: ['./operation-past-time-search-form-p.component.scss'],
@@ -51,7 +50,7 @@ class CustomDateFnsAdapter extends DateFnsAdapter {
             provide: DateAdapter,
             useClass: CustomDateFnsAdapter,
         },
-    ],
+    ]
 })
 export class OperationPastTimeSearchFormPComponent {
     readonly #fb = inject(FormBuilder);

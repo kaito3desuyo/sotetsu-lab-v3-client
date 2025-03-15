@@ -9,12 +9,11 @@ import { OperationPastTimeStateQuery } from '../../states/operation-past-time.st
 import { OperationPastTimeTablePComponent } from '../operation-past-time-table-p/operation-past-time-table-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time-table-c',
     templateUrl: './operation-past-time-table-c.component.html',
     styleUrls: ['./operation-past-time-table-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [OperationPastTimeTablePComponent],
+    imports: [OperationPastTimeTablePComponent]
 })
 export class OperationPastTimeTableCComponent {
     readonly #operationPastTimeStateQuery = inject(OperationPastTimeStateQuery);

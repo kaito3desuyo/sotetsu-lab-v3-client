@@ -9,12 +9,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 
 @Component({
-    standalone: true,
     selector: 'app-confirm-dialog-header-p',
     templateUrl: './confirm-dialog-header-p.component.html',
     styleUrls: ['./confirm-dialog-header-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatButtonModule, MatIconModule],
+    imports: [MatButtonModule, MatIconModule]
 })
 export class ConfirmDialogHeaderPComponent {
     data = input.required<IConfirmDialogData>();

@@ -6,12 +6,11 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/components/operation-number-link/operation-number-link.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time-table-p',
     templateUrl: './operation-past-time-table-p.component.html',
     styleUrls: ['./operation-past-time-table-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [DateFnsPipe, OperationNumberLinkComponent],
+    imports: [DateFnsPipe, OperationNumberLinkComponent]
 })
 export class OperationPastTimeTablePComponent {
     readonly calendars =

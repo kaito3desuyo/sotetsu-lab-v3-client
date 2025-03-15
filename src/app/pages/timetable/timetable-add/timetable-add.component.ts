@@ -6,13 +6,12 @@ import { TimetableAddHeaderCComponent } from './components/timetable-add-header-
 import { TimetableAddMainCComponent } from './components/timetable-add-main-c/timetable-add-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-add',
     templateUrl: './timetable-add.component.html',
     styleUrls: ['./timetable-add.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableAddHeaderCComponent, TimetableAddMainCComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableAddComponent {
     readonly #route = inject(ActivatedRoute);

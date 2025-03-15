@@ -5,12 +5,11 @@ import { OperationRealTimeHeaderPComponent } from '../operation-real-time-header
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-header-c',
     templateUrl: './operation-real-time-header-c.component.html',
     styleUrls: ['./operation-real-time-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, OperationRealTimeHeaderPComponent],
+    imports: [CommonModule, OperationRealTimeHeaderPComponent]
 })
 export class OperationRealTimeHeaderCComponent {
     readonly #operationRealTimeStateQuery = inject(OperationRealTimeStateQuery);

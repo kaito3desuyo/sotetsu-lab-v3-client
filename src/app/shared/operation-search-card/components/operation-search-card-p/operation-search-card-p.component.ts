@@ -16,7 +16,6 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-search-card-p',
     templateUrl: './operation-search-card-p.component.html',
     styleUrls: ['./operation-search-card-p.component.scss'],
@@ -30,7 +29,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
         MatButtonModule,
         MatRippleModule,
         DateFnsPipe,
-    ],
+    ]
 })
 export class OperationSearchCardPComponent {
     readonly calendarId = input.required<CalendarDetailsDto['calendarId']>();

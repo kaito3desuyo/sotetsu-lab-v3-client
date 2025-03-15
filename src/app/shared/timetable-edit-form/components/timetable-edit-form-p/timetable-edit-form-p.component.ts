@@ -57,7 +57,6 @@ import {
 import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-edit-form-p',
     templateUrl: './timetable-edit-form-p.component.html',
     styleUrls: ['./timetable-edit-form-p.component.scss'],
@@ -75,7 +74,7 @@ import { TimetableEditFormValidator } from '../../validators/timetable-edit-form
         MatIconModule,
         PipesModule,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableEditFormPComponent {
     readonly #cd = inject(ChangeDetectorRef);

@@ -6,12 +6,11 @@ import { CalendarSelectDialogService } from '../../services/calendar-select-dial
 import { CalendarSelectDialogMainPComponent } from '../calendar-select-dialog-main-p/calendar-select-dialog-main-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-calendar-select-dialog-main-c',
     templateUrl: './calendar-select-dialog-main-c.component.html',
     styleUrls: ['./calendar-select-dialog-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CalendarSelectDialogMainPComponent],
+    imports: [CalendarSelectDialogMainPComponent]
 })
 export class CalendarSelectDialogMainCComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);

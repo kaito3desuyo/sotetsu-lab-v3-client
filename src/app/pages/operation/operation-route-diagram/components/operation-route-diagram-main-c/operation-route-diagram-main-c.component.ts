@@ -8,7 +8,6 @@ import { OperationRouteDiagramStateQuery } from '../../states/operation-route-di
 import { OperationRouteDiagramDrawingContainerComponent } from '../operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-route-diagram-main-c',
     templateUrl: './operation-route-diagram-main-c.component.html',
     styleUrls: ['./operation-route-diagram-main-c.component.scss'],
@@ -17,7 +16,7 @@ import { OperationRouteDiagramDrawingContainerComponent } from '../operation-rou
         OperationRouteDiagramDrawingContainerComponent,
         OperationSearchCardCComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationRouteDiagramMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);

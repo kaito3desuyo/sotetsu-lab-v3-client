@@ -14,12 +14,11 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 @Component({
-    standalone: true,
     selector: 'app-current-position-link',
     templateUrl: './current-position-link.component.html',
     styleUrls: ['./current-position-link.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, RouterLink, MatIconModule, PipesModule],
+    imports: [CommonModule, RouterLink, MatIconModule, PipesModule]
 })
 export class CurrentPositionLinkComponent {
     readonly todaysCalendarId =

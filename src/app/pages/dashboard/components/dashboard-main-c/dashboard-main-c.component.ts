@@ -8,7 +8,6 @@ import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/
 import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashboard-description-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-dashboard-main-c',
     templateUrl: './dashboard-main-c.component.html',
     styleUrls: ['./dashboard-main-c.component.scss'],
@@ -22,12 +21,11 @@ import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashb
         TimetableSearchCardModule,
         TimetablePostCardModule,
         LibraryListCardModule,
-
         // OPERATION_SEARCH_CARD_DECLARATIONS,
         // OPERATION_POST_CARD_DECLARATIONS,
         // TIMETABLE_SEARCH_CARD_DECLARATIONS,
         // TIMETABLE_POST_CARD_DECLARATIONS,
         // LIBRARY_LIST_CARD_DECLARATIONS,
-    ],
+    ]
 })
 export class DashboardMainCComponent {}

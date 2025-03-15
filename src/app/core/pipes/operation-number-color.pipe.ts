@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
     name: 'operationNumberColor',
+    standalone: false
 })
 export class OperationNumberColorPipe implements PipeTransform {
     transform(operationNumber: string): string {

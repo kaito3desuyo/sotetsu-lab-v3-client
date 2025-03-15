@@ -6,12 +6,11 @@ import { ConfirmDialogStateQuery } from '../../states/confirm-dialog.state';
 import { ConfirmDialogMainPComponent } from '../confirm-dialog-main-p/confirm-dialog-main-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-confirm-dialog-main-c',
     templateUrl: './confirm-dialog-main-c.component.html',
     styleUrls: ['./confirm-dialog-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ConfirmDialogMainPComponent, CommonModule],
+    imports: [ConfirmDialogMainPComponent, CommonModule]
 })
 export class ConfirmDialogMainCComponent {
     readonly #confirmDialogService = inject(ConfirmDialogService);

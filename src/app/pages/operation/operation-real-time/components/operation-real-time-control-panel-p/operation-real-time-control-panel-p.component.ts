@@ -8,12 +8,11 @@ import {
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-control-panel-p',
     templateUrl: './operation-real-time-control-panel-p.component.html',
     styleUrls: ['./operation-real-time-control-panel-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, MatSlideToggleModule],
+    imports: [CommonModule, MatSlideToggleModule]
 })
 export class OperationRealTimeControlPanelPComponent {
     readonly isEnableAutoReload = input.required<boolean>();

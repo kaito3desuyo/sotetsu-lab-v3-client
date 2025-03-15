@@ -17,7 +17,6 @@ import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-table-table-presentational',
     templateUrl: './operation-table-table-presentational.component.html',
     styleUrls: ['./operation-table-table-presentational.component.scss'],
@@ -29,7 +28,7 @@ import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-tab
         DateFnsPipe,
         OperationTableFormatStationNamePipe,
         OperationTableFormatTripClassNamePipe,
-    ],
+    ]
 })
 export class OperationTableTablePresentationalComponent {
     readonly tripDirectionEnum = ETripDirection;

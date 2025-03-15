@@ -7,7 +7,6 @@ import { OperationPastTimeHeaderCComponent } from './components/operation-past-t
 import { OperationPastTimeMainCComponent } from './components/operation-past-time-main-c/operation-past-time-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time',
     templateUrl: './operation-past-time.component.html',
     styleUrls: ['./operation-past-time.component.scss'],
@@ -16,7 +15,7 @@ import { OperationPastTimeMainCComponent } from './components/operation-past-tim
         OperationPastTimeHeaderCComponent,
         OperationPastTimeMainCComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationPastTimeComponent {
     readonly #route = inject(ActivatedRoute);

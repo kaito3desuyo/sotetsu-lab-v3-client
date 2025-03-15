@@ -7,13 +7,12 @@ import { TimetableAllLineHeaderCComponent } from './components/timetable-all-lin
 import { TimetableAllLineMainCComponent } from './components/timetable-all-line-main-c/timetable-all-line-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-all-line',
     templateUrl: './timetable-all-line.component.html',
     styleUrls: ['./timetable-all-line.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableAllLineHeaderCComponent, TimetableAllLineMainCComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableAllLineComponent {
     readonly #route = inject(ActivatedRoute);

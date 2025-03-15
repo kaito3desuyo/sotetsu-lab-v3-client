@@ -23,7 +23,6 @@ import { IOperationRealTimeTableData } from '../../interfaces/operation-real-tim
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-new-table-p',
     templateUrl: './operation-real-time-new-table-p.component.html',
     styleUrls: ['./operation-real-time-new-table-p.component.scss'],
@@ -37,7 +36,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
         OperationNumberLinkComponent,
         FormationNumberLinkComponent,
         CurrentPositionLinkComponent,
-    ],
+    ]
 })
 export class OperationRealTimeNewTablePComponent {
     readonly operationRealTimeTableColumn = OperationRealTimeTableColumn;

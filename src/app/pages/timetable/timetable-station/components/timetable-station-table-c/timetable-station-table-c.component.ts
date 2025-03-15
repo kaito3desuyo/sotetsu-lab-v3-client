@@ -6,12 +6,11 @@ import { TimetableStationStateQuery } from '../../states/timetable-station.state
 import { TimetableStationTablePComponent } from '../timetable-station-table-p/timetable-station-table-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-station-table-c',
     templateUrl: './timetable-station-table-c.component.html',
     styleUrl: './timetable-station-table-c.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [TimetableStationTablePComponent],
+    imports: [TimetableStationTablePComponent]
 })
 export class TimetableStationTableCComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);

@@ -3,6 +3,7 @@ import { calculateDayCountFromToday } from '../utils/calculate-day-count-from-to
 
 @Pipe({
     name: 'calculateDayCountFromToday',
+    standalone: false
 })
 export class CalculateDayCountFromTodayPipe implements PipeTransform {
     transform(dateTime: string): number {
