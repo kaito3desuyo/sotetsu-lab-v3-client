@@ -6,12 +6,11 @@ import { TimetableCopyHeaderCComponent } from './components/timetable-copy-heade
 import { TimetableCopyMainCComponent } from './components/timetable-copy-main-c/timetable-copy-main-c.component';
 
 @Component({
-    standalone: true,
     templateUrl: './timetable-copy.component.html',
     styleUrls: ['./timetable-copy.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableCopyHeaderCComponent, TimetableCopyMainCComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableCopyComponent {
     readonly #route = inject(ActivatedRoute);

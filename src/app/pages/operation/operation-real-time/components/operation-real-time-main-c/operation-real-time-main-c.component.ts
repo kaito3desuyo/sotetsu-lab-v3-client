@@ -16,7 +16,6 @@ import { OperationRealTimeNewTableByFormationCComponent } from '../operation-rea
 import { OperationRealTimeNewTableByOperationCComponent } from '../operation-real-time-new-table-by-operation-c/operation-real-time-new-table-by-operation-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-main-c',
     templateUrl: './operation-real-time-main-c.component.html',
     styleUrls: ['./operation-real-time-main-c.component.scss'],
@@ -30,7 +29,7 @@ import { OperationRealTimeNewTableByOperationCComponent } from '../operation-rea
         OperationRealTimeNewTableByFormationCComponent,
         OperationRealTimeLegendPComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationRealTimeMainCComponent {
     readonly #notification = inject(NotificationService);

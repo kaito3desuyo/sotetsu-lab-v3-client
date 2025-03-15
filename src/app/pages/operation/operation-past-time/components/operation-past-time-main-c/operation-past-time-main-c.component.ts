@@ -4,7 +4,6 @@ import { OperationPastTimeSearchFormCComponent } from '../operation-past-time-se
 import { OperationPastTimeTableCComponent } from '../operation-past-time-table-c/operation-past-time-table-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time-main-c',
     templateUrl: './operation-past-time-main-c.component.html',
     styleUrls: ['./operation-past-time-main-c.component.scss'],
@@ -13,6 +12,6 @@ import { OperationPastTimeTableCComponent } from '../operation-past-time-table-c
         OperationPastTimeSearchFormCComponent,
         OperationPastTimeTableCComponent,
         OperationSearchCardCComponent,
-    ],
+    ]
 })
 export class OperationPastTimeMainCComponent {}

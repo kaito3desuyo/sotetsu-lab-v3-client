@@ -11,12 +11,11 @@ import { wait } from 'src/app/core/utils/wait';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 
 @Component({
-    standalone: true,
     selector: 'app-confirm-dialog-main-p',
     templateUrl: './confirm-dialog-main-p.component.html',
     styleUrls: ['./confirm-dialog-main-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatButtonModule],
+    imports: [MatButtonModule]
 })
 export class ConfirmDialogMainPComponent implements OnInit {
     data = input.required<IConfirmDialogData>();

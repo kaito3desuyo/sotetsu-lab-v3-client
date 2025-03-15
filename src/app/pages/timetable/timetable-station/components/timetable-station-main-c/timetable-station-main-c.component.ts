@@ -8,7 +8,6 @@ import { TimetableStationTableCComponent } from '../timetable-station-table-c/ti
 import { TimetableStationTablePComponent } from '../timetable-station-table-p/timetable-station-table-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-station-main-c',
     templateUrl: './timetable-station-main-c.component.html',
     styleUrls: ['./timetable-station-main-c.component.scss'],
@@ -19,7 +18,7 @@ import { TimetableStationTablePComponent } from '../timetable-station-table-p/ti
         TimetableStationTablePComponent,
         TimetableSearchCardCComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class TimetableStationMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);

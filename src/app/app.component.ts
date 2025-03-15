@@ -24,11 +24,10 @@ import { LayoutComponent } from './layout/layout.component';
 import { LoadingService } from './shared/app-shared/loading/loading.service';
 
 @Component({
-    standalone: true,
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    imports: [LayoutComponent],
+    imports: [LayoutComponent]
 })
 export class AppComponent implements OnInit, OnDestroy {
     readonly #appRef = inject(ApplicationRef);

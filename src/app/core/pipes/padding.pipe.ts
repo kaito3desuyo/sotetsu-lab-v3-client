@@ -9,6 +9,7 @@ const padding = (str: string, num: number, pad: string) => {
 
 @Pipe({
     name: 'padding',
+    standalone: false
 })
 export class PaddingPipe implements PipeTransform {
     transform(value: any, args: { num: number; pad?: string }): any {

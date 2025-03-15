@@ -7,12 +7,11 @@ import { OperationPastTimeSearchParam } from '../../types/operation-past-time.ty
 import { OperationPastTimeSearchFormPComponent } from '../operation-past-time-search-form-p/operation-past-time-search-form-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-past-time-search-form-c',
     templateUrl: './operation-past-time-search-form-c.component.html',
     styleUrls: ['./operation-past-time-search-form-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterModule, OperationPastTimeSearchFormPComponent],
+    imports: [RouterModule, OperationPastTimeSearchFormPComponent]
 })
 export class OperationPastTimeSearchFormCComponent {
     readonly #router = inject(Router);

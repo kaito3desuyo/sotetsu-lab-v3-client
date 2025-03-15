@@ -35,7 +35,6 @@ type Form = FormGroup<{
 }>;
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-search-card-p',
     templateUrl: './timetable-search-card-p.component.html',
     styleUrls: ['./timetable-search-card-p.component.scss'],
@@ -50,7 +49,7 @@ type Form = FormGroup<{
         MatRadioModule,
         MatButtonModule,
         DateFnsPipe,
-    ],
+    ]
 })
 export class TimetableSearchCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;

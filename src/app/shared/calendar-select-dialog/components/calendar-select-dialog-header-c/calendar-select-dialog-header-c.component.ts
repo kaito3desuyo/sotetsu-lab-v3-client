@@ -3,12 +3,11 @@ import { CalendarSelectDialogService } from '../../services/calendar-select-dial
 import { CalendarSelectDialogHeaderPComponent } from '../calendar-select-dialog-header-p/calendar-select-dialog-header-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-calendar-select-dialog-header-c',
     templateUrl: './calendar-select-dialog-header-c.component.html',
     styleUrls: ['./calendar-select-dialog-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CalendarSelectDialogHeaderPComponent],
+    imports: [CalendarSelectDialogHeaderPComponent]
 })
 export class CalendarSelectDialogHeaderCComponent {
     readonly #calendarSelectDialogService = inject(CalendarSelectDialogService);

@@ -3,7 +3,6 @@ import { CalendarSelectDialogHeaderCComponent } from '../calendar-select-dialog-
 import { CalendarSelectDialogMainCComponent } from '../calendar-select-dialog-main-c/calendar-select-dialog-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-calendar-select-dialog',
     templateUrl: './calendar-select-dialog.component.html',
     styleUrls: ['./calendar-select-dialog.component.scss'],
@@ -11,6 +10,6 @@ import { CalendarSelectDialogMainCComponent } from '../calendar-select-dialog-ma
     imports: [
         CalendarSelectDialogHeaderCComponent,
         CalendarSelectDialogMainCComponent,
-    ],
+    ]
 })
 export class CalendarSelectDialogComponent {}

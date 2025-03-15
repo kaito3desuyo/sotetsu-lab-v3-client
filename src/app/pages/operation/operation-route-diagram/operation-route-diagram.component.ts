@@ -9,7 +9,6 @@ import { OperationRouteDiagramService } from './services/operation-route-diagram
 import { OperationRouteDiagramStateQuery } from './states/operation-route-diagram.state';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-route-diagram',
     templateUrl: './operation-route-diagram.component.html',
     styleUrls: ['./operation-route-diagram.component.scss'],
@@ -17,7 +16,7 @@ import { OperationRouteDiagramStateQuery } from './states/operation-route-diagra
         OperationRouteDiagramHeaderCComponent,
         OperationRouteDiagramMainCComponent,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationRouteDiagramComponent {
     readonly #route = inject(ActivatedRoute);

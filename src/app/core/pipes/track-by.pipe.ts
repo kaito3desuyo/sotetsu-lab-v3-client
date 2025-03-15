@@ -12,6 +12,7 @@ const cache: TrackByFunctionCache = Object.create(null);
 
 @Pipe({
     name: 'trackBy',
+    standalone: false
 })
 export class TrackByPipe implements PipeTransform {
     constructor(private readonly logger: NGXLogger) {}

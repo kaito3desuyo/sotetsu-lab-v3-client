@@ -5,12 +5,11 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { MaintenanceStateQuery } from 'src/app/global-states/maintenance.state';
 
 @Component({
-    standalone: true,
     selector: 'app-maintenance',
     templateUrl: './maintenance.component.html',
     styleUrl: './maintenance.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, DateFnsPipe],
+    imports: [CommonModule, DateFnsPipe]
 })
 export class MaintenanceComponent {
     readonly #maintenanceStateQuery = inject(MaintenanceStateQuery);

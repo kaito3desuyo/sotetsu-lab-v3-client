@@ -10,13 +10,12 @@ import {
 import { OperationRealTimeControlPanelPComponent } from '../operation-real-time-control-panel-p/operation-real-time-control-panel-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-control-panel-c',
     templateUrl: './operation-real-time-control-panel-c.component.html',
     styleUrls: ['./operation-real-time-control-panel-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, OperationRealTimeControlPanelPComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationRealTimeControlPanelCComponent {
     readonly #state = inject(RxState);

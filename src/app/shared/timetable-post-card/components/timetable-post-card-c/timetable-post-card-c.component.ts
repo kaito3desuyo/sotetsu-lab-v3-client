@@ -6,12 +6,11 @@ import { TimetablePostCardService } from '../../services/timetable-post-card.ser
 import { TimetablePostCardPComponent } from '../timetable-post-card-p/timetable-post-card-p.component';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-post-card-c',
     templateUrl: './timetable-post-card-c.component.html',
     styleUrls: ['./timetable-post-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [TimetablePostCardPComponent],
+    imports: [TimetablePostCardPComponent]
 })
 export class TimetablePostCardCComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);

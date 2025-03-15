@@ -32,7 +32,6 @@ type Form = FormGroup<{
 }>;
 
 @Component({
-    standalone: true,
     selector: 'app-operation-post-card-p',
     templateUrl: './operation-post-card-p.component.html',
     styleUrls: ['./operation-post-card-p.component.scss'],
@@ -46,7 +45,7 @@ type Form = FormGroup<{
         MatSelectModule,
         MatButtonModule,
     ],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationPostCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;

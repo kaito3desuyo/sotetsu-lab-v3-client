@@ -12,7 +12,6 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 
 @Component({
-    standalone: true,
     selector: 'app-calendar-select-dialog-main-p',
     templateUrl: './calendar-select-dialog-main-p.component.html',
     styleUrls: ['./calendar-select-dialog-main-p.component.scss'],
@@ -23,7 +22,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
         MatSelectModule,
         MatButtonModule,
         DateFnsPipe,
-    ],
+    ]
 })
 export class CalendarSelectDialogMainPComponent {
     selected: CalendarDetailsDto['calendarId'] = undefined;

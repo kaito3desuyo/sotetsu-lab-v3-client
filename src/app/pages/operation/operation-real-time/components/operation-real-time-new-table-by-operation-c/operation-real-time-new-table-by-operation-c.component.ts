@@ -25,16 +25,14 @@ type State = {
 };
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time-new-table-by-operation-c',
-    templateUrl:
-        './operation-real-time-new-table-by-operation-c.component.html',
+    templateUrl: './operation-real-time-new-table-by-operation-c.component.html',
     styleUrls: [
         './operation-real-time-new-table-by-operation-c.component.scss',
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CommonModule, OperationRealTimeNewTablePComponent],
-    providers: [RxState],
+    providers: [RxState]
 })
 export class OperationRealTimeNewTableByOperationCComponent {
     readonly #state = inject<RxState<State>>(RxState);

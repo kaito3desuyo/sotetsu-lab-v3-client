@@ -26,7 +26,6 @@ import { TimetableAllLineGetViewModePipe } from '../../pipes/timetable-all-line-
 import { RouterLink } from '@angular/router';
 
 @Component({
-    standalone: true,
     selector: 'app-timetable-all-line-table-p',
     templateUrl: './timetable-all-line-table-p.component.html',
     styleUrls: [
@@ -46,7 +45,7 @@ import { RouterLink } from '@angular/router';
         TimetableAllLineGetStationNumberingPipe,
         TimetableAllLineGetTimePipe,
         TimetableAllLineGetViewModePipe,
-    ],
+    ]
 })
 export class TimetableAllLineTablePComponent {
     readonly staitonViewModeEnum = ETimetableAllLineStationViewMode;

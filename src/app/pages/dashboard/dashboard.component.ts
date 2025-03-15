@@ -12,7 +12,6 @@ import TIMETABLE_SEARCH_CARD_PROVIDERS from 'src/app/shared/timetable-search-car
 import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
@@ -23,7 +22,7 @@ import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard
         ...TIMETABLE_POST_CARD_PROVIDERS,
         RxState,
     ],
-    imports: [DashboardMainCComponent],
+    imports: [DashboardMainCComponent]
 })
 export class DashboardComponent {
     private readonly router = inject(Router);

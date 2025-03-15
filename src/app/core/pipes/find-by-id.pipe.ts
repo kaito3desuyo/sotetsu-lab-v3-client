@@ -3,6 +3,7 @@ import get from 'just-safe-get';
 
 @Pipe({
     name: 'findById',
+    standalone: false
 })
 export class FindByIdPipe implements PipeTransform {
     transform<T>(

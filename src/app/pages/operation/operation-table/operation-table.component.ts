@@ -6,12 +6,11 @@ import { OperationTableHeaderCComponent } from './components/operation-table-hea
 import { OperationTableMainCComponent } from './components/operation-table-main-c/operation-table-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-table',
     templateUrl: './operation-table.component.html',
     styleUrls: ['./operation-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [OperationTableHeaderCComponent, OperationTableMainCComponent],
+    imports: [OperationTableHeaderCComponent, OperationTableMainCComponent]
 })
 export class OperationTableComponent {
     readonly #router = inject(Router);

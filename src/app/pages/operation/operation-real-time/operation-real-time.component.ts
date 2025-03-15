@@ -3,7 +3,6 @@ import { OperationRealTimeHeaderCComponent } from './components/operation-real-t
 import { OperationRealTimeMainCComponent } from './components/operation-real-time-main-c/operation-real-time-main-c.component';
 
 @Component({
-    standalone: true,
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
     styleUrls: ['./operation-real-time.component.scss'],
@@ -11,6 +10,6 @@ import { OperationRealTimeMainCComponent } from './components/operation-real-tim
     imports: [
         OperationRealTimeHeaderCComponent,
         OperationRealTimeMainCComponent,
-    ],
+    ]
 })
 export class OperationRealTimeComponent {}
