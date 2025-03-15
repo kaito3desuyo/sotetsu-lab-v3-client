@@ -47,18 +47,21 @@ export class OperationRealTimeService {
                 this.#operationRealTimeStateStore.setOperationSightingTimeCrossSections(
                     data.map((o) => ({
                         ...o,
-                        expectedSighting: {
-                            ...o.expectedSighting,
-                            formation: {
-                                ...o.expectedSighting?.formation,
-                                ...formations.find(
-                                    ({ formationNumber }) =>
-                                        formationNumber ===
-                                        o.expectedSighting?.formation
-                                            ?.formationNumber,
-                                ),
-                            },
-                        },
+                        expectedSighting:
+                            o.expectedSighting !== null
+                                ? {
+                                      ...o.expectedSighting,
+                                      formation: {
+                                          ...o.expectedSighting?.formation,
+                                          ...formations.find(
+                                              ({ formationNumber }) =>
+                                                  formationNumber ===
+                                                  o.expectedSighting?.formation
+                                                      ?.formationNumber,
+                                          ),
+                                      },
+                                  }
+                                : null,
                     })),
                 );
             }),
@@ -83,18 +86,21 @@ export class OperationRealTimeService {
                 this.#operationRealTimeStateStore.setFormationSightingTimeCrossSections(
                     data.map((o) => ({
                         ...o,
-                        expectedSighting: {
-                            ...o.expectedSighting,
-                            operation: {
-                                ...o.expectedSighting?.operation,
-                                ...operations.find(
-                                    ({ operationNumber }) =>
-                                        operationNumber ===
-                                        o.expectedSighting?.operation
-                                            ?.operationNumber,
-                                ),
-                            },
-                        },
+                        expectedSighting:
+                            o.expectedSighting !== null
+                                ? {
+                                      ...o.expectedSighting,
+                                      operation: {
+                                          ...o.expectedSighting?.operation,
+                                          ...operations.find(
+                                              ({ operationNumber }) =>
+                                                  operationNumber ===
+                                                  o.expectedSighting?.operation
+                                                      ?.operationNumber,
+                                          ),
+                                      },
+                                  }
+                                : null,
                     })),
                 );
             }),
