@@ -22,7 +22,7 @@ import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard
         ...TIMETABLE_POST_CARD_PROVIDERS,
         RxState,
     ],
-    imports: [DashboardMainCComponent]
+    imports: [DashboardMainCComponent],
 })
 export class DashboardComponent {
     private readonly router = inject(Router);

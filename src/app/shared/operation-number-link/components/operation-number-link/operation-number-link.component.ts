@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+} from '@angular/core';
 import { MatRippleModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
@@ -17,10 +22,15 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
         MatRippleModule,
         MatTooltipModule,
         PipesModule,
-    ]
+    ],
 })
 export class OperationNumberLinkComponent {
     readonly operation = input.required<OperationDetailsDto>();
     readonly dayCountFromToday = input<number>();
     readonly tooltipText = input<string>();
+
+    readonly operationId = computed(() => this.operation()?.operationId);
+    readonly operationNumber = computed(
+        () => this.operation()?.operationNumber,
+    );
 }

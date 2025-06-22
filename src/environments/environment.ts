@@ -5,7 +5,7 @@
 export const environment = {
     production: false,
     apiUrl: 'http://localhost:3000',
-    backendUrl: 'http://localhost:3011/offline/api',
+    backendUrl: '/api',
     socketUrl: 'ws://localhost:3021',
     analytics: {
         id: 'G-CFKSDNMCY3', // IDを設定する、environment.prod.tsにも

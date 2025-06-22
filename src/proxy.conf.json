@@ -1,0 +1,6 @@
+{
+  "/api": {
+    "target": "http://host.docker.internal:3011",
+    "secure": false
+  }
+}

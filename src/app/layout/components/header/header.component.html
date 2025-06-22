@@ -1,5 +1,5 @@
 <header
-    class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-gap-2 tw-bg-primary-500 tw-px-2 tw-font-[Quicksand,sans-serif] tw-text-2xl tw-text-white md:tw-h-16 md:tw-gap-4 md:tw-px-4"
+    class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-gap-2 tw-bg-primary-500 tw-px-2 tw-text-white md:tw-h-16 md:tw-gap-4 md:tw-px-4"
 >
     <button
         mat-mini-fab
@@ -9,5 +9,46 @@
     >
         <mat-icon>menu</mat-icon>
     </button>
-    <span>Sotetsu Lab.</span>
+    <h1
+        class="tw-font-[Quicksand,sans-serif] tw-text-lg tw-font-normal md:tw-text-2xl"
+    >
+        Sotetsu Lab.
+    </h1>
+    <div class="tw-grow"></div>
+    @if (isLoggedIn()) {
+        <div>
+            <p class="tw-m-0 tw-text-xs">
+                ようこそ<br />{{ displayName() }} さん
+            </p>
+        </div>
+    } @else {
+        <div>
+            <p class="tw-m-0 tw-text-xs">ようこそ<br />ゲスト さん</p>
+        </div>
+    }
+    <button mat-icon-button [matMenuTriggerFor]="menu" class="!tw-shadow-none">
+        <mat-icon>account_circle</mat-icon>
+    </button>
 </header>
+
+<mat-menu #menu="matMenu">
+    @if (isLoggedIn()) {
+        <!-- <button mat-menu-item (click)="onClickOpenProfileDialog()">
+            <mat-icon>person</mat-icon>
+            <span>プロフィール</span>
+        </button> -->
+        <button mat-menu-item (click)="onClickLogout()">
+            <mat-icon>logout</mat-icon>
+            <span>ログアウト</span>
+        </button>
+    } @else {
+        <button mat-menu-item (click)="onClickRegister()">
+            <mat-icon>person_add</mat-icon>
+            <span>新規登録</span>
+        </button>
+        <button mat-menu-item (click)="onClickLogin()">
+            <mat-icon>login</mat-icon>
+            <span>ログイン</span>
+        </button>
+    }
+</mat-menu>

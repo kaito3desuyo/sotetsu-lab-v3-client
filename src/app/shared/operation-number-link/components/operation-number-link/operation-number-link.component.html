@@ -1,16 +1,15 @@
-@if (operation()?.operationId && operation()?.operationNumber) {
+@if (operationId() && operationNumber()) {
     <div
         class="tw-flex tw-h-9 tw-w-9 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-sm tw-opacity-100"
     >
         <div
             class="tw-flex tw-h-full tw-w-full tw-rounded-full"
             [ngStyle]="{
-                'background-color':
-                    operation().operationNumber | operationNumberColor,
+                'background-color': operationNumber() | operationNumberColor,
             }"
             [matTooltip]="tooltipText()"
         >
-            @if (operation().operationNumber !== '100') {
+            @if (operationNumber() !== '100') {
                 <a
                     matRipple
                     class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.12]"
@@ -23,12 +22,12 @@
                         '/operation',
                         'route-diagram',
                         {
-                            operation_id: operation().operationId,
+                            operation_id: operationId(),
                         },
                     ]"
                 >
                     {{
-                        operation().operationNumber +
+                        operationNumber() +
                             (dayCountFromToday() !== undefined &&
                             dayCountFromToday() !== 0
                                 ? '?'
