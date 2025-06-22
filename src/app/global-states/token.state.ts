@@ -1,39 +1,29 @@
-import { HttpBackend, HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { createStore, setProps, withProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { AuthService } from '../libs/auth/usecase/auth.service';
+import { TokenDetailsDto } from '../libs/auth/usecase/dtos/token-details.dto';
 
-type State = {
-    accessToken: string;
-    expiresAt: number;
-    tokenType: string;
-};
+type State = TokenDetailsDto;
 
 const state = createStore(
     { name: 'Token' },
     withProps<State>({
         accessToken: null,
-        expiresAt: null,
         tokenType: null,
+        expiresAt: null,
     }),
 );
 
 @Injectable({ providedIn: 'root' })
 export class TokenStateStore {
-    #http: HttpClient;
-
-    constructor(handler: HttpBackend) {
-        this.#http = new HttpClient(handler);
-    }
+    readonly #authService = inject(AuthService);
 
     fetch(): Observable<void> {
         return of(undefined).pipe(
-            mergeMap(() =>
-                this.#http.get<State>(environment.backendUrl + '/token'),
-            ),
+            mergeMap(() => this.#authService.getToken()),
             tap((v) => {
                 state.update(setProps(v));
             }),
@@ -56,6 +46,6 @@ export class TokenStateQuery {
 
     get isExpired(): boolean {
         const { expiresAt } = state.getValue();
-        return !!expiresAt && expiresAt < dayjs().subtract(1, 'minute').unix();
+        return !!expiresAt && dayjs().add(1, 'minute').unix() > expiresAt;
     }
 }

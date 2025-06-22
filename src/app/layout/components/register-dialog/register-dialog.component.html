@@ -1,0 +1,121 @@
+<form
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-6"
+    [formGroup]="form"
+    (ngSubmit)="onClickSubmit()"
+>
+    <header class="tw-flex tw-flex-row tw-items-center">
+        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">新規登録</h2>
+        <div class="tw-flex-grow"></div>
+        <button mat-icon-button type="button" (click)="onClickClose()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+    <div>
+        <p class="tw-m-0">ユーザー登録を行います。</p>
+        <dl class="tw-flex tw-flex-col tw-gap-2 tw-text-sm [&_dd]:tw-ml-4">
+            <div>
+                <dt>ユーザー名</dt>
+                <dd>英数字とハイフン・アンダースコアが利用可能</dd>
+                <dd>4文字以上32文字以下</dd>
+            </div>
+            <div>
+                <dt>パスワード</dt>
+                <dd>英数字と記号「!&#64;#$%^&*」が利用可能</dd>
+                <dd>英大文字・英小文字・数字・記号がそれぞれ1文字以上必要</dd>
+                <dd>8文字以上128文字以下</dd>
+            </div>
+        </dl>
+    </div>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <mat-form-field>
+            <mat-label>ユーザー名</mat-label>
+            <input
+                matInput
+                type="text"
+                formControlName="username"
+                placeholder="ユーザー名を入力してください"
+            />
+            @if (form.get('username')?.hasError('required')) {
+                <mat-error>必須項目です</mat-error>
+            } @else if (form.get('username')?.hasError('minlength')) {
+                <mat-error>4文字以上で入力してください</mat-error>
+            } @else if (form.get('username')?.hasError('maxlength')) {
+                <mat-error>32文字以下で入力してください</mat-error>
+            } @else if (form.get('username')?.hasError('pattern')) {
+                <mat-error>使用文字の要件を満たしていません</mat-error>
+            }
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>パスワード</mat-label>
+            <input
+                matInput
+                [type]="passwordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="パスワードを入力してください"
+            />
+            <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="togglePasswordVisibility()"
+            >
+                <mat-icon>{{
+                    passwordVisible() ? 'visibility' : 'visibility_off'
+                }}</mat-icon>
+            </button>
+            @if (form.get('password')?.hasError('required')) {
+                <mat-error>必須項目です</mat-error>
+            } @else if (form.get('password')?.hasError('minlength')) {
+                <mat-error>8文字以上で入力してください</mat-error>
+            } @else if (form.get('password')?.hasError('maxlength')) {
+                <mat-error>128文字以下で入力してください</mat-error>
+            } @else if (form.get('password')?.hasError('pattern')) {
+                <mat-error>使用文字の要件を満たしていません</mat-error>
+            } @else if (form.get('password')?.hasError('passwordsNotMatch')) {
+                <mat-error>パスワードが一致しません</mat-error>
+            }
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>パスワード（確認用）</mat-label>
+            <input
+                matInput
+                [type]="confirmPasswordVisible() ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="パスワードを再度入力してください"
+            />
+            <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="toggleConfirmPasswordVisibility()"
+            >
+                <mat-icon>{{
+                    confirmPasswordVisible() ? 'visibility' : 'visibility_off'
+                }}</mat-icon>
+            </button>
+            @if (form.get('confirmPassword')?.hasError('required')) {
+                <mat-error>必須項目です</mat-error>
+            } @else if (form.get('confirmPassword')?.hasError('minlength')) {
+                <mat-error>8文字以上で入力してください</mat-error>
+            } @else if (form.get('confirmPassword')?.hasError('maxlength')) {
+                <mat-error>128文字以下で入力してください</mat-error>
+            } @else if (form.get('confirmPassword')?.hasError('pattern')) {
+                <mat-error>使用文字の要件を満たしていません</mat-error>
+            } @else if (
+                form.get('confirmPassword')?.hasError('passwordsNotMatch')
+            ) {
+                <mat-error>パスワードが一致しません</mat-error>
+            }
+        </mat-form-field>
+    </div>
+    <div class="tw-flex tw-flex-row tw-justify-center">
+        <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="form.invalid || submitting()"
+        >
+            新規登録
+        </button>
+    </div>
+</form>

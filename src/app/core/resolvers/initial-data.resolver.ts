@@ -10,9 +10,11 @@ import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calen
 import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
 import { TokenStateStore } from 'src/app/global-states/token.state';
+import { UserStateStore } from 'src/app/global-states/user.state';
 
 export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const tokenStateStore = inject(TokenStateStore);
+    const userStateStore = inject(UserStateStore);
     const agencyListStateStore = inject(AgencyListStateStore);
     const calendarListStateStore = inject(CalendarListStateStore);
     const routeStationListStateStore = inject(RouteStationListStateStore);
@@ -22,7 +24,10 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
     const initializeStateStore = inject(InitializeStateStore);
 
-    await lastValueFrom(tokenStateStore.fetch());
+    await Promise.all([
+        lastValueFrom(tokenStateStore.fetch()),
+        lastValueFrom(userStateStore.fetch()),
+    ]);
 
     await Promise.all([
         lastValueFrom(agencyListStateStore.fetch()),
