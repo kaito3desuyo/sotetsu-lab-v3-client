@@ -1,4 +1,4 @@
-@if (formation()?.formationNumber) {
+@if (formationNumber()) {
     <span
         class="tw-text-sm"
         [ngClass]="{
@@ -7,7 +7,7 @@
         }"
     >
         {{
-            formation().formationNumber +
+            formationNumber() +
                 (dayCountFromToday() !== undefined && dayCountFromToday() !== 0
                     ? '?'
                     : '')
