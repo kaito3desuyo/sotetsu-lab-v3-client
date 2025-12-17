@@ -1,0 +1,38 @@
+<div class="tw-h-9 tw-w-9 tw-rounded-full tw-bg-white tw-text-sm">
+    <div
+        class="tw-h-full tw-w-full tw-rounded-full"
+        [style.background-color]="bgColor()"
+        [class.tw-border]="borderEnabled()"
+        [class.tw-border-solid]="borderEnabled()"
+        [style.border-color]="borderColor()"
+    >
+        <a
+            class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black"
+            [class.tw-no-underline]="textStyle() === 'normal'"
+            [class.tw-font-bold]="textStyle() === 'bold'"
+            [class.tw-underline]="textStyle() === 'underline'"
+            [class.hover:tw-bg-grey-500]="link() !== undefined"
+            [class.hover:tw-bg-opacity-20]="link() !== undefined"
+            [routerLink]="link()"
+            [matContextMenuTriggerFor]="menu"
+            [matContextMenuTriggerDisabled]="
+                contextMenus() === undefined || contextMenus()?.length === 0
+            "
+        >
+            {{ text() }}
+        </a>
+    </div>
+</div>
+
+<mat-menu #menu="matMenu">
+    @for (menu of contextMenus(); track $index) {
+        <button
+            mat-menu-item
+            [disabled]="menu.disabled"
+            (click)="menu.onClick()"
+        >
+            <mat-icon>{{ menu.icon }}</mat-icon>
+            <span>{{ menu.text }}</span>
+        </button>
+    }
+</mat-menu>

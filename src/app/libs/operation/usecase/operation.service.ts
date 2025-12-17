@@ -17,6 +17,13 @@ export class OperationService {
         return this.operationQuery.findMany(qb);
     }
 
+    findManyBySpecificPeriod(params: {
+        from: string;
+        to: string;
+    }): Observable<OperationDetailsDto[]> {
+        return this.operationQuery.findManyBySpecificPeriod(params);
+    }
+
     findOne(
         operationId: string,
         qb: RequestQueryBuilder,

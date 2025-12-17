@@ -7,6 +7,9 @@
                 [calendars]="calendars()"
                 [formations]="formations()"
                 [operationSightings]="operationSightings()"
+                [contextMenuDisabled]="contextMenuDisabled()"
+                (onClickInvalidate)="onReceiveClickInvalidate($event)"
+                (onClickRestore)="onReceiveClickRestore($event)"
             ></app-operation-past-time-table-p>
         </div>
     } @else {

@@ -13,10 +13,12 @@ import {
 } from '../builders/operation-sighting-dto.builder';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
+import { omitBy } from 'es-toolkit';
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingQuery {
     private readonly apiUrl = environment.apiUrl + '/v2/operation-sightings';
+    private readonly v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
 
     constructor(private readonly http: HttpClient) {}
 
@@ -102,6 +104,20 @@ export class OperationSightingQuery {
                           );
                 }),
             );
+    }
+
+    findManyBySpecificPeriod(params: {
+        from: string;
+        to: string;
+        includeInvalidated?: boolean;
+    }): Observable<OperationSightingDetailsDto[]> {
+        const { from, to, includeInvalidated } = params;
+
+        return this.http
+            .get<
+                OperationSightingDetailsDto[]
+            >(this.v3ApiUrl + `/from/${from}/to/${to}`, { params: omitBy({ includeInvalidated }, (v) => v === undefined), observe: 'response' })
+            .pipe(map((res) => res.body));
     }
 
     findOneTimeCrossSectionFromOperationNumber(params: {

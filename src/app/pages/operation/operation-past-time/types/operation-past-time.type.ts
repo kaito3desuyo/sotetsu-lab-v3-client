@@ -8,4 +8,5 @@ export type OperationPastTimeSearchParam = {
 export type OperationPastTimeSearchForm = FormGroup<{
     referenceDate: FormControl<Date>;
     days: FormControl<number>;
+    includeInvalidated: FormControl<boolean>;
 }>;
