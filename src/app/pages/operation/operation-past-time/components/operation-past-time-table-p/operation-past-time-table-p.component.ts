@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    input,
+    output,
+} from '@angular/core';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -10,7 +16,7 @@ import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-li
     templateUrl: './operation-past-time-table-p.component.html',
     styleUrls: ['./operation-past-time-table-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [DateFnsPipe, OperationNumberLinkComponent]
+    imports: [CommonModule, DateFnsPipe, OperationNumberLinkComponent],
 })
 export class OperationPastTimeTablePComponent {
     readonly calendars =
@@ -21,4 +27,28 @@ export class OperationPastTimeTablePComponent {
             [date: string]: OperationSightingDetailsDto[];
         };
     }>();
+    readonly contextMenuDisabled = input.required<boolean>();
+
+    readonly onClickInvalidate = output<{ operationSightingId: string }>();
+    readonly onClickRestore = output<{ operationSightingId: string }>();
+
+    generateOnClickInvalidateCallback(
+        sighting: OperationSightingDetailsDto,
+    ): () => void {
+        return () => {
+            this.onClickInvalidate.emit({
+                operationSightingId: sighting.operationSightingId,
+            });
+        };
+    }
+
+    generateOnClickRestoreCallback(
+        sighting: OperationSightingDetailsDto,
+    ): () => void {
+        return () => {
+            this.onClickRestore.emit({
+                operationSightingId: sighting.operationSightingId,
+            });
+        };
+    }
 }

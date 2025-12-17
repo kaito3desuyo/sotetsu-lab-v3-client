@@ -65,6 +65,28 @@
                                                               parseISO: true,
                                                           }
                                             "
+                                            [contextMenus]="[
+                                                {
+                                                    icon: 'block',
+                                                    text: '無効化',
+                                                    disabled:
+                                                        contextMenuDisabled(),
+                                                    onClick:
+                                                        generateOnClickInvalidateCallback(
+                                                            sighting
+                                                        ),
+                                                },
+                                                {
+                                                    icon: 'restore',
+                                                    text: '復元',
+                                                    disabled:
+                                                        contextMenuDisabled(),
+                                                    onClick:
+                                                        generateOnClickRestoreCallback(
+                                                            sighting
+                                                        ),
+                                                },
+                                            ]"
                                         ></app-operation-number-link>
                                     }
                                 </div>

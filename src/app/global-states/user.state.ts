@@ -44,4 +44,9 @@ export class UserStateStore {
 export class UserStateQuery {
     readonly isLoggedIn$ = state.pipe(select((state) => !!state.userId));
     readonly displayName$ = state.pipe(select((state) => state.displayName));
+    readonly role$ = state.pipe(select((state) => state.role));
+
+    get userId(): string | null {
+        return state.getValue().userId;
+    }
 }

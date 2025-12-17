@@ -1,0 +1,145 @@
+<div class="tw-p-4 tw-shadow-md">
+    @if (tableDisplayed()) {
+        <div
+            class="tw-max-h-[60dvh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+        >
+            <table class="tw-border-collapse [&_td]:tw-p-2 [&_th]:tw-p-2">
+                <thead>
+                    <tr class="tw-sticky tw-top-0 tw-z-20">
+                        <th
+                            class="tw-sticky tw-left-0 tw-z-30 tw-whitespace-nowrap before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        >
+                            <span class="tw-sticky">編成＼日付</span>
+                        </th>
+                        @for (calendar of calendars(); track calendar.date) {
+                            <th
+                                class="tw-sticky before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            >
+                                <span class="tw-sticky">
+                                    {{
+                                        calendar.date
+                                            | dateFns
+                                                : {
+                                                      format: 'MM/dd',
+                                                      parseFormat: 'yyyy-MM-dd',
+                                                  }
+                                    }}
+                                    <br />
+                                    <small>
+                                        {{ calendar.calendar.calendarName }}
+                                    </small>
+                                </span>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (
+                        formation of formations();
+                        track formation.formationId
+                    ) {
+                        <tr>
+                            <th
+                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            >
+                                <span class="tw-sticky">{{
+                                    formation.formationNumber
+                                }}</span>
+                            </th>
+                            @for (
+                                calendar of calendars();
+                                track calendar.date
+                            ) {
+                                <td
+                                    class="tw-relative before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                >
+                                    <div class="tw-sticky">
+                                        @if (
+                                            operationSightings()?.[
+                                                formation.formationId
+                                            ]?.[calendar.date]
+                                        ) {
+                                            <div
+                                                class="tw-flex tw-flex-row tw-gap-2"
+                                            >
+                                                @for (
+                                                    sighting of operationSightings()[
+                                                        formation.formationId
+                                                    ][calendar.date];
+                                                    track sighting.operationSightingId
+                                                ) {
+                                                    @let operationNumber =
+                                                        sighting.operationId
+                                                            | newFindById
+                                                                : {
+                                                                      array: operations(),
+                                                                      propertyName:
+                                                                          'operationId',
+                                                                      outputPropertyName:
+                                                                          'operationNumber',
+                                                                  };
+                                                    @let bgColor =
+                                                        operationNumber
+                                                            | newOperationNumberColor;
+                                                    @let borderEnabled =
+                                                        sighting.invalidation !==
+                                                        null;
+                                                    <app-new-operation-number-link
+                                                        [text]="operationNumber"
+                                                        [bgColor]="bgColor"
+                                                        [borderEnabled]="
+                                                            borderEnabled
+                                                        "
+                                                        [borderColor]="
+                                                            'rgb(183, 28, 28)'
+                                                        "
+                                                        [link]="[
+                                                            '/operation',
+                                                            'route-diagram',
+                                                            {
+                                                                operation_id:
+                                                                    sighting.operationId,
+                                                            },
+                                                        ]"
+                                                        [contextMenus]="[
+                                                            {
+                                                                icon: 'block',
+                                                                text: '無効化',
+                                                                disabled:
+                                                                    contextMenuDisabled() ||
+                                                                    sighting.invalidation !==
+                                                                        null,
+                                                                onClick:
+                                                                    generateOnClickInvalidateCallback(
+                                                                        sighting
+                                                                    ),
+                                                            },
+                                                            {
+                                                                icon: 'restore',
+                                                                text: '復元',
+                                                                disabled:
+                                                                    contextMenuDisabled() ||
+                                                                    sighting.invalidation ===
+                                                                        null,
+                                                                onClick:
+                                                                    generateOnClickRestoreCallback(
+                                                                        sighting
+                                                                    ),
+                                                            },
+                                                        ]"
+                                                    ></app-new-operation-number-link>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    } @else {
+        <p class="tw-m-0">基準日と日数を設定して検索してください</p>
+    }
+</div>

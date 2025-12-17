@@ -5,7 +5,6 @@ import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-c
 import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
 import { TimetableStationStateQuery } from '../../states/timetable-station.state';
 import { TimetableStationTableCComponent } from '../timetable-station-table-c/timetable-station-table-c.component';
-import { TimetableStationTablePComponent } from '../timetable-station-table-p/timetable-station-table-p.component';
 
 @Component({
     selector: 'app-timetable-station-main-c',
@@ -15,10 +14,9 @@ import { TimetableStationTablePComponent } from '../timetable-station-table-p/ti
     imports: [
         AdsenseModule,
         TimetableStationTableCComponent,
-        TimetableStationTablePComponent,
         TimetableSearchCardCComponent,
     ],
-    providers: [RxState]
+    providers: [RxState],
 })
 export class TimetableStationMainCComponent {
     readonly #state = inject<RxState<{}>>(RxState);

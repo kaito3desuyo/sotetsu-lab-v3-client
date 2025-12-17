@@ -1,0 +1,48 @@
+<form class="tw-flex tw-flex-col tw-gap-4 tw-p-6" [formGroup]="form">
+    <header class="tw-flex tw-flex-row tw-items-center tw-justify-between">
+        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">目撃情報を無効化する</h2>
+        <button
+            mat-icon-button
+            type="button"
+            tabindex="-1"
+            (click)="onClickClose()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <p class="tw-m-0">指定した目撃情報を無効化します。</p>
+        <mat-form-field>
+            <mat-label>理由</mat-label>
+            <textarea
+                matInput
+                formControlName="reason"
+                placeholder="無効化の理由を入力してください"
+                rows="3"
+            ></textarea>
+            @if (form.get('reason')?.hasError('required')) {
+                <mat-error>必須項目です</mat-error>
+            }
+        </mat-form-field>
+        <p class="tw-m-0">続行しますか？</p>
+    </div>
+    <div class="tw-flex tw-flex-row tw-justify-center tw-gap-4">
+        <button
+            mat-button
+            type="button"
+            color="primary"
+            (click)="onClickClose()"
+        >
+            キャンセル
+        </button>
+        <button
+            mat-raised-button
+            type="button"
+            color="warn"
+            [disabled]="form.invalid"
+            (click)="onClickSubmit()"
+        >
+            無効化する
+        </button>
+    </div>
+</form>

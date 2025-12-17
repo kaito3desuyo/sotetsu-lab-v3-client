@@ -18,10 +18,15 @@ export class OperationPastTimeResolverService {
         const title = route.data.title;
         const referenceDate = route.paramMap.get('reference_date') ?? undefined;
         const days = route.paramMap.get('days') ?? undefined;
+        const includeInvalidated =
+            route.paramMap.get('include_invalidated') ?? undefined;
 
         this.#titleService.setTitle(title);
         this.#operationPastTimeStateStore.setReferenceDate(referenceDate);
         this.#operationPastTimeStateStore.setDays(days && +days);
+        this.#operationPastTimeStateStore.setIncludeInvalidated(
+            includeInvalidated === 'true',
+        );
 
         return of(undefined).pipe(
             mergeMap(() =>
@@ -34,7 +39,10 @@ export class OperationPastTimeResolverService {
                 forkJoin([
                     this.#operationPastTimeService.fetchCalendarByDate(),
                     this.#operationPastTimeService.fetchFormationsV2(),
-                    this.#operationPastTimeService.fetchOperationSightingsV2(),
+                    // this.#operationPastTimeService.fetchOperationSightingsV2(),
+
+                    this.#operationPastTimeService.fetchOperationsV3(),
+                    this.#operationPastTimeService.fetchOperationSightingsV3(),
                 ]),
             ),
             map(() => undefined),

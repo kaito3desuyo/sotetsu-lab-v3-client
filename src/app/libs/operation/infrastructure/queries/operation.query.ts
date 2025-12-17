@@ -17,6 +17,7 @@ import { OperationModel } from '../models/operation.model';
 @Injectable({ providedIn: 'root' })
 export class OperationQuery {
     private readonly apiUrl = environment.apiUrl + '/v2/operations';
+    private readonly v3ApiUrl = environment.apiUrl + '/v3/operations';
 
     constructor(private readonly http: HttpClient) {}
 
@@ -40,6 +41,19 @@ export class OperationQuery {
                         : res.body.map((o) => buildOperationDetailsDto(o));
                 }),
             );
+    }
+
+    findManyBySpecificPeriod(params: {
+        from: string;
+        to: string;
+    }): Observable<OperationDetailsDto[]> {
+        const { from, to } = params;
+
+        return this.http
+            .get<
+                OperationDetailsDto[]
+            >(this.v3ApiUrl + `/from/${from}/to/${to}`, { observe: 'response' })
+            .pipe(map((res) => res.body));
     }
 
     findOne(

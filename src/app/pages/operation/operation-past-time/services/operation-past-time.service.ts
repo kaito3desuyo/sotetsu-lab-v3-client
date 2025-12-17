@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
+import { format } from 'date-fns';
 import dayjs from 'dayjs';
 import { forkJoin, Observable, of } from 'rxjs';
-import { map, mergeMap, take, tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -14,11 +15,14 @@ import {
     OperationPastTimeStateQuery,
     OperationPastTimeStateStore,
 } from '../states/operation-past-time.state';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
 @Injectable()
 export class OperationPastTimeService {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #calendarService = inject(CalendarService);
+    readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #operationPastTimeStateStore = inject(OperationPastTimeStateStore);
@@ -27,33 +31,27 @@ export class OperationPastTimeService {
     // v2
 
     fetchCalendarByDate(): Observable<void> {
-        const referenceDate = this.#operationPastTimeStateQuery.referenceDate;
-        const days = this.#operationPastTimeStateQuery.days;
+        const dates = this.#operationPastTimeStateQuery.dates;
 
-        if (!referenceDate || !days) {
+        if (!dates.length) {
             this.#operationPastTimeStateStore.setCalendars([]);
             return of(undefined);
         }
 
         const qb = new RequestQueryBuilder();
-        return this.#operationPastTimeStateQuery.selectDates().pipe(
-            take(1),
-            mergeMap((dates) => {
-                return forkJoin(
-                    dates.map((date) =>
-                        this.#calendarService
-                            .findManyBySpecificDate(qb, { date })
-                            .pipe(
-                                map((calendars: CalendarDetailsDto[]) => {
-                                    return {
-                                        date,
-                                        calendar: calendars[0],
-                                    };
-                                }),
-                            ),
-                    ),
-                );
-            }),
+
+        return forkJoin(
+            dates.map((date) =>
+                this.#calendarService.findManyBySpecificDate(qb, { date }).pipe(
+                    map((calendars: CalendarDetailsDto[]) => {
+                        return {
+                            date,
+                            calendar: calendars[0],
+                        };
+                    }),
+                ),
+            ),
+        ).pipe(
             tap((calendars) => {
                 this.#operationPastTimeStateStore.setCalendars(calendars);
             }),
@@ -62,24 +60,19 @@ export class OperationPastTimeService {
     }
 
     fetchFormationsV2(): Observable<void> {
-        const referenceDate = this.#operationPastTimeStateQuery.referenceDate;
-        const days = this.#operationPastTimeStateQuery.days;
+        const dates = this.#operationPastTimeStateQuery.dates;
 
-        if (!referenceDate || !days) {
+        if (!dates.length) {
             this.#operationPastTimeStateStore.setFormations([]);
             return of(undefined);
         }
 
-        const format = 'YYYY-MM-DD';
-        const refDate = dayjs(referenceDate, format);
-        const start = refDate.format(format);
-        const end = refDate.add(days - 1, 'days').format(format);
         const qb = new RequestQueryBuilder();
 
         return this.#formationService
             .findManyBySpecificPeriod(qb, {
-                startDate: start,
-                endDate: end,
+                startDate: dates[0],
+                endDate: dates[dates.length - 1],
             })
             .pipe(
                 tap((formations: FormationDetailsDto[]) => {
@@ -142,5 +135,51 @@ export class OperationPastTimeService {
             }),
             map(() => undefined),
         );
+    }
+
+    // v3
+    fetchOperationsV3(): Observable<void> {
+        const dates = this.#operationPastTimeStateQuery.dates;
+
+        if (!dates.length) {
+            return of(undefined);
+        }
+
+        return this.#operationService
+            .findManyBySpecificPeriod({
+                from: format(dates[0], 'yyyy-MM-dd'),
+                to: format(dates[dates.length - 1], 'yyyy-MM-dd'),
+            })
+            .pipe(
+                tap((operations: OperationDetailsDto[]) => {
+                    this.#operationPastTimeStateStore.setOperations(operations);
+                }),
+                map(() => undefined),
+            );
+    }
+
+    fetchOperationSightingsV3(): Observable<void> {
+        const dates = this.#operationPastTimeStateQuery.dates;
+        const includeInvalidated =
+            this.#operationPastTimeStateQuery.includeInvalidated;
+
+        if (!dates.length) {
+            return of(undefined);
+        }
+
+        return this.#operationSightingService
+            .findManyBySpecificPeriod({
+                from: format(dates[0], 'yyyy-MM-dd'),
+                to: format(dates[dates.length - 1], 'yyyy-MM-dd'),
+                includeInvalidated: includeInvalidated ? true : undefined,
+            })
+            .pipe(
+                tap((sightings: OperationSightingDetailsDto[]) => {
+                    this.#operationPastTimeStateStore.setOperationSightings(
+                        sightings,
+                    );
+                }),
+                map(() => undefined),
+            );
     }
 }

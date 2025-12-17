@@ -7,6 +7,8 @@ import { OperationSightingQuery } from '../infrastructure/queries/operation-sigh
 import { CreateOperationSightingDto } from './dtos/create-operation-sighting.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-time-cross-section.dto';
+import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
+import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.dto';
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingService {
@@ -39,6 +41,14 @@ export class OperationSightingService {
         return this.operationSightingQuery.findManyLatestGroupByOperation(qb);
     }
 
+    findManyBySpecificPeriod(params: {
+        from: string;
+        to: string;
+        includeInvalidated?: boolean;
+    }): Observable<OperationSightingDetailsDto[]> {
+        return this.operationSightingQuery.findManyBySpecificPeriod(params);
+    }
+
     findOneTimeCrossSectionFromOperationNumber(params: {
         operationNumber: string;
     }): Observable<OperationSightingTimeCrossSectionDto> {
@@ -60,5 +70,13 @@ export class OperationSightingService {
         body: CreateOperationSightingDto,
     ): Observable<OperationSightingDetailsDto> {
         return this.operationSightingCommand.createOne(qb, body);
+    }
+
+    invalidate(body: InvalidateOperationSightingDto): Observable<void> {
+        return this.operationSightingCommand.invalidate(body);
+    }
+
+    restore(body: RestoreOperationSightingDto): Observable<void> {
+        return this.operationSightingCommand.restore(body);
     }
 }
