@@ -1,6 +1,6 @@
 {
   "name": "sotetsu-lab-v3-client",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "scripts": {
     "ng": "ng",
     "dev": "ng serve --host 0.0.0.0",
