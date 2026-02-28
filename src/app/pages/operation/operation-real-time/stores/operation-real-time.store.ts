@@ -53,7 +53,7 @@ const store = createStore(
         operationSightingHistories: {},
         formationSightingHistories: {},
         currentPositions: {},
-        finalUpdateTime: Date.now() / 1000,
+        finalUpdateTime: Math.floor(Date.now() / 1000),
         loadingQueue: [],
         isEnableAutoReload: true,
         isVisibleSightingHistories: true,
@@ -144,7 +144,7 @@ export const OperationRealTimeStore = {
         );
     },
     setFinalUpdateTime(finalUpdateTime?: number): void {
-        const time = finalUpdateTime ?? Date.now() / 1000;
+        const time = finalUpdateTime ?? Math.floor(Date.now() / 1000);
         store.update(setProp('finalUpdateTime', () => time));
     },
     enableLoading(): void {
