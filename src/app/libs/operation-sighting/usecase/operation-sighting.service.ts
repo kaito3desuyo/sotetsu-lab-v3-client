@@ -5,9 +5,9 @@ import { Pagination } from 'src/app/core/utils/pagination';
 import { OperationSightingCommand } from '../infrastructure/commands/operation-sighting.command';
 import { OperationSightingQuery } from '../infrastructure/queries/operation-sighting.query';
 import { CreateOperationSightingDto } from './dtos/create-operation-sighting.dto';
+import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-time-cross-section.dto';
-import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
 import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.dto';
 
 @Injectable({ providedIn: 'root' })
@@ -45,6 +45,7 @@ export class OperationSightingService {
         from: string;
         to: string;
         includeInvalidated?: boolean;
+        forceReload?: boolean;
     }): Observable<OperationSightingDetailsDto[]> {
         return this.operationSightingQuery.findManyBySpecificPeriod(params);
     }
@@ -57,10 +58,28 @@ export class OperationSightingService {
         );
     }
 
+    findOneTimeCrossSectionByOperationNumber_V3(params: {
+        operationNumber: string;
+        forceReload?: boolean;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        return this.operationSightingQuery.findOneTimeCrossSectionByOperationNumber_V3(
+            params,
+        );
+    }
+
     findOneTimeCrossSectionFromFormationNumber(params: {
         formationNumber: string;
     }): Observable<OperationSightingTimeCrossSectionDto> {
         return this.operationSightingQuery.findOneTimeCrossSectionFromFormationNumber(
+            params,
+        );
+    }
+
+    findOneTimeCrossSectionByFormationNumber_V3(params: {
+        formationNumber: string;
+        forceReload?: boolean;
+    }): Observable<OperationSightingTimeCrossSectionDto> {
+        return this.operationSightingQuery.findOneTimeCrossSectionByFormationNumber_V3(
             params,
         );
     }

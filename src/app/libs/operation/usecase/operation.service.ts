@@ -17,9 +17,17 @@ export class OperationService {
         return this.operationQuery.findMany(qb);
     }
 
+    findManyByCalendarId(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationDetailsDto[]> {
+        return this.operationQuery.findManyByCalendarId(params);
+    }
+
     findManyBySpecificPeriod(params: {
         from: string;
         to: string;
+        forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
         return this.operationQuery.findManyBySpecificPeriod(params);
     }
@@ -36,6 +44,14 @@ export class OperationService {
         qb: RequestQueryBuilder,
     ): Observable<OperationCurrentPositionDto> {
         return this.operationQuery.findOneWithCurrentPosition(operationId, qb);
+    }
+
+    findOneWithCurrentPosition_V3(params: {
+        operationId: string;
+        searchTime?: string;
+        forceReload?: boolean;
+    }): Observable<OperationCurrentPositionDto> {
+        return this.operationQuery.findOneWithCurrentPosition_V3(params);
     }
 
     findOneWithTrips(

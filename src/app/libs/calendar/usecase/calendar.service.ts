@@ -21,4 +21,11 @@ export class CalendarService {
     ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
         return this.calendarQuery.findManyBySpecificDate(qb, params);
     }
+
+    findOneBySpecificDate(params: {
+        date: string;
+        forceReload?: boolean;
+    }): Observable<CalendarDetailsDto> {
+        return this.calendarQuery.findOneBySpecificDate(params);
+    }
 }

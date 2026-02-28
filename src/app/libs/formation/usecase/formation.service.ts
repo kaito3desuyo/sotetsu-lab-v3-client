@@ -22,4 +22,12 @@ export class FormationService {
     ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
         return this.formationQuery.findManyBySpecificPeriod(qb, params);
     }
+
+    findManyBySpecificPeriod_V3(params: {
+        startDate: string;
+        endDate: string;
+        forceReload?: boolean;
+    }): Observable<FormationDetailsDto[]> {
+        return this.formationQuery.findManyBySpecificPeriod_V3(params);
+    }
 }

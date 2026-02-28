@@ -8,7 +8,7 @@
     >
         <a
             class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black"
-            [class.tw-no-underline]="textStyle() === 'normal'"
+            [class.tw-no-underline]="textStyle() !== 'underline'"
             [class.tw-font-bold]="textStyle() === 'bold'"
             [class.tw-underline]="textStyle() === 'underline'"
             [class.hover:tw-bg-grey-500]="link() !== undefined"

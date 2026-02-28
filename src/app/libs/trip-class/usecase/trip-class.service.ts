@@ -14,4 +14,12 @@ export class TripClassService {
     ): Observable<Pagination<TripClassDetailsDto> | TripClassDetailsDto[]> {
         return this.tripClassQuery.findMany(qb);
     }
+
+    // v3
+
+    findMany_V3(params: {
+        forceReload?: boolean;
+    }): Observable<TripClassDetailsDto[]> {
+        return this.tripClassQuery.findMany_V3(params);
+    }
 }

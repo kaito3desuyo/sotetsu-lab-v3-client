@@ -1,0 +1,464 @@
+<table class="tw-h-full tw-w-full tw-border-collapse tw-bg-white">
+    <thead>
+        <tr
+            class="tw-h-16 [&>th+th]:tw-pl-4 [&>th.formationNumber]:tw-w-10 [&>th.operationNumber]:tw-w-9 [&>th:first-child]:tw-pl-6 [&>th:last-child]:tw-pr-6 [&>th]:tw-p-0 [&>th]:tw-text-left [&>th]:tw-text-xs [&>th]:tw-font-normal [&>th]:tw-text-grey-600"
+        >
+            @for (column of displayedColumns(); track column) {
+                <th [class]="[column]">
+                    {{ operationRealTimeTableColumnLabel[column] }}
+                </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @for (operation of operations(); track operation.operationId) {
+            <tr
+                class="tw-h-12 [&>td+td]:tw-pl-4 [&>td.formationNumber]:tw-w-10 [&>td.operationNumber]:tw-w-9 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6 [&>td]:tw-h-full [&>td]:tw-border-0 [&>td]:tw-border-t [&>td]:tw-border-solid [&>td]:tw-border-t-grey-300 [&>td]:tw-p-0 [&>td]:tw-text-sm"
+            >
+                @for (column of displayedColumns(); track column) {
+                    @if (
+                        column === operationRealTimeTableColumn.OPERATION_NUMBER
+                    ) {
+                        <td
+                            [class]="[column]"
+                            class="tw-flex tw-flex-row tw-items-center tw-justify-center"
+                        >
+                            <app-new-operation-number-link
+                                [text]="operation.operationNumber"
+                                [bgColor]="
+                                    operation.operationNumber
+                                        | newOperationNumberColor
+                                "
+                                [link]="[
+                                    '/operation',
+                                    'route-diagram',
+                                    { operation_id: operation.operationId },
+                                ]"
+                            ></app-new-operation-number-link>
+                        </td>
+                    }
+
+                    @if (
+                        column === operationRealTimeTableColumn.FORMATION_NUMBER
+                    ) {
+                        @let operationSightingTimeCrossSection =
+                            queryTimeCrossSectionByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        @let latestSighting =
+                            operationSightingTimeCrossSection?.latestSighting;
+
+                        @let expectedSightingFormation =
+                            operationSightingTimeCrossSection?.expectedSighting
+                                ?.formation;
+
+                        @let dayCount =
+                            latestSighting?.sightingTime
+                                | operationRealTimeDayCount;
+
+                        <td [class]="[column]">
+                            @if (expectedSightingFormation) {
+                                <span
+                                    [class]="{
+                                        'tw-font-bold': dayCount === 0,
+                                        'tw-underline': dayCount === 1,
+                                        'tw-no-underline': dayCount !== 1,
+                                    }"
+                                >
+                                    {{
+                                        expectedSightingFormation.formationNumber +
+                                            (dayCount !== undefined &&
+                                            dayCount !== 0
+                                                ? '?'
+                                                : '')
+                                    }}
+                                </span>
+                            } @else {
+                                <span class="tw-text-grey-600"> 不明 </span>
+                            }
+                        </td>
+                    }
+
+                    @if (
+                        column ===
+                        operationRealTimeTableColumn.SIGHTING_HISTORIES
+                    ) {
+                        @let operationSightingTimeCrossSection =
+                            queryTimeCrossSectionByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        @let latestSighting =
+                            operationSightingTimeCrossSection?.latestSighting;
+
+                        @let expectedSightingFormation =
+                            operationSightingTimeCrossSection?.expectedSighting
+                                ?.formation;
+
+                        @let histories =
+                            queryHistoriesByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        <td [class]="[column]">
+                            <div
+                                class="tw-flex tw-h-full tw-w-fit tw-max-w-32 tw-flex-row tw-items-center tw-gap-1 tw-overflow-x-auto"
+                            >
+                                @for (
+                                    history of histories;
+                                    track history.operationSightingId
+                                ) {
+                                    @if (
+                                        !expectedSightingFormation ||
+                                        latestSighting?.operationSightingId !==
+                                            history.operationSightingId
+                                    ) {
+                                        <mat-icon
+                                            class="!tw-h-4 !tw-w-4 tw-min-w-4 tw-text-[16px]"
+                                        >
+                                            arrow_back
+                                        </mat-icon>
+                                        <span
+                                            class="tw-text-xs"
+                                            [matTooltip]="
+                                                history.sightingTime
+                                                    | dateFns
+                                                        : {
+                                                              format: '目撃：yyyy/MM/dd HH:mm:ss',
+                                                              parseISO: true,
+                                                          }
+                                            "
+                                        >
+                                            {{
+                                                history.formationId
+                                                    | newFindById
+                                                        : {
+                                                              array: formations(),
+                                                              propertyName:
+                                                                  'formationId',
+                                                              outputPropertyName:
+                                                                  'formationNumber',
+                                                          }
+                                            }}
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </td>
+                    }
+
+                    @if (
+                        column === operationRealTimeTableColumn.CURRENT_POSITION
+                    ) {
+                        @let currentPosition =
+                            queryCurrentPositionByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        @let prev = currentPosition?.prev;
+                        @let current = currentPosition?.current;
+                        @let next = currentPosition?.next;
+
+                        <td [class]="[column]">
+                            @if (!!prev || !!current || !!next) {
+                                <div
+                                    class="tw-flex tw-flex-row tw-items-center tw-gap-4 tw-text-xs tw-leading-4"
+                                >
+                                    <div class="tw-flex tw-w-14">
+                                        @if (!!current) {
+                                            <a
+                                                [routerLink]="[
+                                                    '/timetable',
+                                                    'all-line',
+                                                    {
+                                                        calendar_id:
+                                                            calendar()
+                                                                ?.calendarId,
+                                                        trip_direction:
+                                                            current.trip
+                                                                .tripDirection,
+                                                        trip_block_id:
+                                                            current.trip
+                                                                .tripBlockId,
+                                                    },
+                                                ]"
+                                                [style.color]="
+                                                    current.trip.tripClassId
+                                                        | newFindById
+                                                            : {
+                                                                  array: tripClasses(),
+                                                                  propertyName:
+                                                                      'tripClassId',
+                                                                  outputPropertyName:
+                                                                      'tripClassColor',
+                                                              }
+                                                "
+                                            >
+                                                {{
+                                                    current.trip.tripClassId
+                                                        | newFindById
+                                                            : {
+                                                                  array: tripClasses(),
+                                                                  propertyName:
+                                                                      'tripClassId',
+                                                                  outputPropertyName:
+                                                                      'tripClassName',
+                                                              }
+                                                        | newAntiBrackets
+                                                }}
+                                                <br />
+                                                {{ current.trip.tripNumber }}
+                                            </a>
+                                        }
+                                    </div>
+                                    <div class="tw-flex tw-w-20">
+                                        @if (!prev && !current && !!next) {
+                                            <span>
+                                                @if (!!next.trip.depotOut) {
+                                                    出庫前<br />〇
+                                                } @else {
+                                                    不明<br />？
+                                                }
+                                            </span>
+                                        }
+
+                                        @if (!prev && !!current && !next) {
+                                            <span>
+                                                {{
+                                                    current.startTime.stationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: stations(),
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'stationName',
+                                                              }
+                                                }}
+                                                <br />
+                                                {{
+                                                    current.startTime
+                                                        .departureTime
+                                                }}
+                                            </span>
+                                        }
+
+                                        @if (!!prev && !current && !!next) {
+                                            <span>
+                                                {{
+                                                    prev.endTime.stationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: stations(),
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'stationName',
+                                                              }
+                                                }}
+                                                <br />
+                                                {{ prev.endTime.arrivalTime }}
+                                            </span>
+                                        }
+
+                                        @if (!!prev && !current && !next) {
+                                            <span>
+                                                {{
+                                                    prev.endTime.stationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: stations(),
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'stationName',
+                                                              }
+                                                }}
+                                                <br />
+                                                {{ prev.endTime.arrivalTime }}
+                                            </span>
+                                        }
+                                    </div>
+                                    <div
+                                        class="tw-flex tw-flex-row tw-items-center"
+                                    >
+                                        <mat-icon class="tw-leading-[normal]">
+                                            arrow_forward
+                                        </mat-icon>
+                                    </div>
+                                    <div class="tw-flex tw-w-20">
+                                        @if (!prev && !current && !!next) {
+                                            <span>
+                                                {{
+                                                    next.startTime.stationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: stations(),
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'stationName',
+                                                              }
+                                                }}
+                                                <br />
+                                                {{
+                                                    next.startTime.departureTime
+                                                }}
+                                            </span>
+                                        }
+
+                                        @if (!prev && !!current && !next) {
+                                            <span>
+                                                {{
+                                                    current.endTime.stationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: stations(),
+                                                                  propertyName:
+                                                                      'stationId',
+                                                                  outputPropertyName:
+                                                                      'stationName',
+                                                              }
+                                                }}
+                                                <br />
+                                                {{
+                                                    current.endTime.arrivalTime
+                                                }}
+                                            </span>
+                                        }
+
+                                        @if (!!prev && !current && !!next) {
+                                            <span>
+                                                @if (
+                                                    prev.endTime.stationId ===
+                                                    next.startTime.stationId
+                                                ) {
+                                                    @if (prev.trip.depotIn) {
+                                                        一時入庫
+                                                    } @else {
+                                                        停車中
+                                                    }
+                                                } @else {
+                                                    {{
+                                                        next.startTime.stationId
+                                                            | newFindById
+                                                                : {
+                                                                      array: stations(),
+                                                                      propertyName:
+                                                                          'stationId',
+                                                                      outputPropertyName:
+                                                                          'stationName',
+                                                                  }
+                                                    }}
+                                                }
+                                                <br />
+                                                {{
+                                                    next.startTime.departureTime
+                                                }}
+                                            </span>
+                                        }
+
+                                        @if (!!prev && !current && !next) {
+                                            <span>
+                                                @if (prev.trip.depotIn) {
+                                                    入庫済<br />△
+                                                } @else {
+                                                    不明<br />？
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </td>
+                    }
+
+                    @if (
+                        column === operationRealTimeTableColumn.SIGHTING_TIME
+                    ) {
+                        @let operationSightingTimeCrossSection =
+                            queryTimeCrossSectionByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        @let latestSighting =
+                            operationSightingTimeCrossSection?.latestSighting;
+
+                        @let sightingTime = latestSighting?.sightingTime;
+
+                        <td [class]="[column]">
+                            @if (sightingTime) {
+                                <span
+                                    class="tw-text-sm tw-leading-none"
+                                    [style.color]="
+                                        (sightingTime
+                                            | operationRealTimeDayCount) === 0
+                                            ? '#f44336'
+                                            : (sightingTime
+                                                    | operationRealTimeDayCount) ===
+                                                1
+                                              ? '#4caf50'
+                                              : 'initial'
+                                    "
+                                >
+                                    {{
+                                        sightingTime
+                                            | dateFns
+                                                : {
+                                                      format: 'yyyy/MM/dd HH:mm:ss',
+                                                      parseISO: true,
+                                                  }
+                                    }}
+                                </span>
+                            } @else {
+                                <span class="tw-text-grey-600">不明</span>
+                            }
+                        </td>
+                    }
+
+                    @if (column === operationRealTimeTableColumn.UPDATED_AT) {
+                        @let operationSightingTimeCrossSection =
+                            queryTimeCrossSectionByOperationNumber(
+                                operation.operationNumber
+                            )();
+
+                        @let latestSighting =
+                            operationSightingTimeCrossSection?.latestSighting;
+
+                        @let updatedAt = latestSighting?.updatedAt;
+
+                        <td>
+                            @if (updatedAt) {
+                                <span
+                                    class="tw-text-sm tw-leading-none"
+                                    [style.color]="
+                                        (updatedAt
+                                            | operationRealTimeDayCount) === 0
+                                            ? '#f44336'
+                                            : (updatedAt
+                                                    | operationRealTimeDayCount) ===
+                                                1
+                                              ? '#4caf50'
+                                              : 'initial'
+                                    "
+                                >
+                                    {{
+                                        updatedAt
+                                            | dateFns
+                                                : {
+                                                      format: 'yyyy/MM/dd HH:mm:ss',
+                                                      parseISO: true,
+                                                  }
+                                    }}
+                                </span>
+                            } @else {
+                                <span class="tw-text-grey-600">不明</span>
+                            }
+                        </td>
+                    }
+                }
+            </tr>
+        }
+    </tbody>
+</table>

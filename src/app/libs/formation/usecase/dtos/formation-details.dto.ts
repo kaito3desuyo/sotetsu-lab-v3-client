@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 
 export class FormationDetailsDto {
     @Expose({ name: 'id' })
@@ -27,4 +28,8 @@ export class FormationDetailsDto {
 
     @Expose()
     updatedAt?: string;
+
+    @Expose()
+    @Type(() => AgencyDetailsDto)
+    agency?: AgencyDetailsDto;
 }

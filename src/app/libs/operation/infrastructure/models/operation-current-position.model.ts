@@ -3,7 +3,10 @@ import { OperationModel } from './operation.model';
 
 export interface OperationCurrentPositionModel {
     operation: OperationModel;
-    position: {
+    prev?: TripOperationListModel | null;
+    current?: TripOperationListModel | null;
+    next?: TripOperationListModel | null;
+    position?: {
         prev: TripOperationListModel;
         current: TripOperationListModel;
         next: TripOperationListModel;

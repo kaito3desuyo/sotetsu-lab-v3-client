@@ -6,9 +6,17 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import localForage from 'localforage';
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
 import { environment } from './environments/environment';
+
+localForage.config({
+    driver: localForage.INDEXEDDB,
+    name: 'sotetsu-lab-v3-client',
+    version: 1.0,
+    storeName: 'elf_state',
+});
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrBefore);

@@ -1,0 +1,17 @@
+<p>operation-real-time-table.component works!</p>
+,
+
+@for (operation of operations(); track operation.operationId) {
+    <div>{{ operation.operationId }} - {{ operation.operationNumber }}</div>
+    <div>
+        @let operationTimeCrossSection =
+            queryOperationTimeCrossSectionByOperationNumber(
+                operation.operationNumber
+            );
+        @defer (when !!operationTimeCrossSection()) {
+            {{ operationTimeCrossSection() | json }}
+        } @placeholder {
+            placehplder
+        }
+    </div>
+}

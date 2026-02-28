@@ -1,8 +1,36 @@
+@if (isLoading()) {
+    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
 <main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
     <header>
-        <app-operation-real-time-header-c></app-operation-real-time-header-c>
+        <app-operation-real-time-header></app-operation-real-time-header>
     </header>
     <div>
-        <app-operation-real-time-main-c></app-operation-real-time-main-c>
+        <app-operation-real-time-controller></app-operation-real-time-controller>
+    </div>
+    <div class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-gap-16">
+        <div
+            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
+        >
+            <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
+        </div>
+
+        <div
+            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
+        >
+            <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
+        </div>
+    </div>
+    <div>
+        <app-operation-real-time-legend></app-operation-real-time-legend>
+    </div>
+    <div>
+        <app-operation-post-card-c></app-operation-post-card-c>
     </div>
 </main>

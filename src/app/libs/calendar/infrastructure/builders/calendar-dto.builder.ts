@@ -1,5 +1,6 @@
 import { classToPlain, plainToClass } from 'class-transformer';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
+import { classTransformer } from 'src/app/core/utils/class-transformer';
 import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
 import { CalendarModel } from '../models/calendar.model';
 
@@ -13,3 +14,9 @@ export function buildCalendarDetailsDto(
         classTransformerOptions,
     );
 }
+
+export const CalendarDtoBuilder = {
+    toDetailsDto: (model: CalendarModel): CalendarDetailsDto => {
+        return classTransformer(model, CalendarDetailsDto);
+    },
+} as const;
