@@ -1,0 +1,33 @@
+<div class="tw-flex tw-flex-row tw-justify-between">
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <div>
+            <mat-slide-toggle
+                [checked]="isEnableAutoReload()"
+                (change)="toggleAutoReload($event.checked)"
+            >
+                自動更新する
+            </mat-slide-toggle>
+        </div>
+        <div>
+            <mat-slide-toggle
+                [checked]="isVisibleSightingHistories()"
+                (change)="toggleVisibleSightingHistories($event.checked)"
+            >
+                履歴を表示する
+            </mat-slide-toggle>
+        </div>
+        <div>
+            <mat-slide-toggle
+                [checked]="isVisibleCurrentPosition()"
+                (change)="toggleVisibleCurrentPosition($event.checked)"
+            >
+                現在位置を表示する
+            </mat-slide-toggle>
+        </div>
+    </div>
+    <div class="tw-self-end">
+        <button mat-icon-button color="accent" (click)="reload()">
+            <mat-icon>refresh</mat-icon>
+        </button>
+    </div>
+</div>

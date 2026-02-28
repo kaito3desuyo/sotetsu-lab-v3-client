@@ -29,3 +29,13 @@ export const OperationSightingDtoBuilder = {
         return classTransformer(model, OperationSightingTimeCrossSectionDto);
     },
 } as const;
+
+export const OperationSightingsDtoBuilder = {
+    toDetailsDto: (
+        models: OperationSightingModel[],
+    ): OperationSightingDetailsDto[] => {
+        return models.map((model) =>
+            OperationSightingDtoBuilder.toDetailsDto(model),
+        );
+    },
+} as const;

@@ -15,7 +15,7 @@ import {
     Router,
 } from '@angular/router';
 import { interval } from 'rxjs';
-import { debounceTime, filter, first, map, switchMap } from 'rxjs/operators';
+import { filter, first, map, switchMap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { SocketService } from './core/services/socket.service';
@@ -27,7 +27,7 @@ import { LoadingService } from './shared/app-shared/loading/loading.service';
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    imports: [LayoutComponent]
+    imports: [LayoutComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
     readonly #appRef = inject(ApplicationRef);

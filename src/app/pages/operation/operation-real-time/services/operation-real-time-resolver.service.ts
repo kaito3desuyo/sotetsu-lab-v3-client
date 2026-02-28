@@ -1,16 +1,16 @@
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { filter, first, map, mergeMap } from 'rxjs/operators';
 import { TitleService } from 'src/app/core/services/title.service';
 import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
-import { OperationRealTimeService } from './operation-real-time.service';
+import { OperationRealTimeStore } from '../stores/operation-real-time.store';
 
 @Injectable()
 export class OperationRealTimeResolverService {
     readonly #titleService = inject(TitleService);
     readonly #initializeStateQuery = inject(InitializeStateQuery);
-    readonly #operationRealTimeService = inject(OperationRealTimeService);
+    // readonly #operationRealTimeService = inject(OperationRealTimeService);
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         const title = route.data.title;
@@ -24,17 +24,18 @@ export class OperationRealTimeResolverService {
                     first(),
                 ),
             ),
-            mergeMap(() =>
-                forkJoin([
-                    // v2
-                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
-                    this.#operationRealTimeService.fetchOperationSightingHistories(),
-                    this.#operationRealTimeService.fetchFormationSightingHistories(),
-                    this.#operationRealTimeService.fetchOperationCurrentPosition(),
-                    this.#operationRealTimeService.fetchTripClassesV2(),
-                ]),
-            ),
+            mergeMap(() => OperationRealTimeStore.persistInitialized$),
+            // mergeMap(() =>
+            //     forkJoin([
+            //         // v2
+            //         this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+            //         this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+            //         this.#operationRealTimeService.fetchOperationSightingHistories(),
+            //         this.#operationRealTimeService.fetchFormationSightingHistories(),
+            //         this.#operationRealTimeService.fetchOperationCurrentPosition(),
+            //         this.#operationRealTimeService.fetchTripClassesV2(),
+            //     ]),
+            // ),
             map(() => undefined),
         );
     }

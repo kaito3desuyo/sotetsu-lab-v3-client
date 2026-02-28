@@ -1,18 +1,23 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { parse } from 'qs';
+import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, shareReplay } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { environment } from 'src/environments/environment';
 import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
-import { buildCalendarDetailsDto } from '../builders/calendar-dto.builder';
+import {
+    buildCalendarDetailsDto,
+    CalendarDtoBuilder,
+} from '../builders/calendar-dto.builder';
 import { CalendarModel } from '../models/calendar.model';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarQuery {
     private readonly apiUrl = environment.apiUrl + '/v2/calendars';
+    readonly #v3ApiUrl = environment.apiUrl + '/v3/calendars';
+    #obs: Record<string, Observable<any>> = {};
 
     constructor(private readonly http: HttpClient) {}
 
@@ -59,5 +64,41 @@ export class CalendarQuery {
                         : res.body.map((o) => buildCalendarDetailsDto(o));
                 }),
             );
+    }
+
+    findOneBySpecificDate(params: {
+        date: string;
+        forceReload?: boolean;
+    }): Observable<CalendarDetailsDto> {
+        const { date, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findOneBySpecificDate',
+                date,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<CalendarModel>(`${this.#v3ApiUrl}/as/of/${params.date}`, {
+                    observe: 'response',
+                })
+                .pipe(
+                    shareReplay({
+                        bufferSize: 1,
+                        refCount: true,
+                    }),
+                    map((res) => {
+                        return CalendarDtoBuilder.toDetailsDto(res.body);
+                    }),
+                );
+        }
+
+        return this.#obs[key];
     }
 }
