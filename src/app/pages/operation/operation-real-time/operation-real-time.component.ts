@@ -51,10 +51,11 @@ export class OperationRealTimeComponent {
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
 
     constructor() {
-        this.init();
+        this.fetchData();
+        this.hookEvent();
     }
 
-    async init(): Promise<void> {
+    async fetchData(): Promise<void> {
         OperationRealTimeStore.enableLoading();
         await lastValueFrom(this.#operationRealTimeService.fetchRoutes_V3());
         await lastValueFrom(this.#operationRealTimeService.fetchStations_V3());
@@ -86,14 +87,16 @@ export class OperationRealTimeComponent {
             OperationRealTimeStore.setFinalUpdateTime();
             firstLoading.set(false);
         }
+    }
 
-        await lastValueFrom(
-            this.#appRef.isStable.pipe(first((bool) => !!bool)),
-        );
-
+    hookEvent(): void {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象がある場合は更新する
-        interval(1000 * 1)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
+        this.#appRef.isStable
+            .pipe(
+                first((bool) => !!bool),
+                switchMap(() => interval(1000 * 1)),
+                takeUntilDestroyed(this.#destroyRef),
+            )
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
@@ -135,11 +138,12 @@ export class OperationRealTimeComponent {
         this.#socketService
             .on()
             .pipe(
-                takeUntilDestroyed(this.#destroyRef),
                 switchMap(() => OperationRealTimeStore.isEnableAutoReload$),
                 filter((bool) => !!bool),
+                takeUntilDestroyed(this.#destroyRef),
             )
             .subscribe(async () => {
+                this.#notification.open('更新中...', 'OK');
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
                     this.#operationRealTimeService.fetchOperationSightingTimeCrossSections_V3(
