@@ -75,16 +75,16 @@ export class AppComponent implements OnInit, OnDestroy {
                 this.#loadingService.close();
             });
 
-        this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
-            interval(1000 * 10)
-                .pipe(
-                    map(() => this.#tokenStateQuery.isExpired),
-                    filter((bool) => !!bool),
-                    switchMap(() => this.#tokenStateStore.fetch()),
-                    takeUntilDestroyed(this.#destroyRef),
-                )
-                .subscribe();
-        });
+        // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
+        interval(1000 * 10)
+            .pipe(
+                map(() => this.#tokenStateQuery.isExpired),
+                filter((bool) => !!bool),
+                switchMap(() => this.#tokenStateStore.fetch()),
+                takeUntilDestroyed(this.#destroyRef),
+            )
+            .subscribe();
+        // });
     }
 
     ngOnInit(): void {
