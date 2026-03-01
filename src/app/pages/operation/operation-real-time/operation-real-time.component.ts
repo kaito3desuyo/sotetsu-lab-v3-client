@@ -91,17 +91,17 @@ export class OperationRealTimeComponent {
 
     hookEvent(): void {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象がある場合は更新する
-        this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
-            interval(1000 * 1)
-                .pipe(takeUntilDestroyed(this.#destroyRef))
-                .subscribe(async () => {
-                    OperationRealTimeStore.enableLoading();
-                    await lastValueFrom(
-                        this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate_V3(),
-                    );
-                    OperationRealTimeStore.disableLoading();
-                });
-        });
+        // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
+        interval(1000 * 1)
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(async () => {
+                OperationRealTimeStore.enableLoading();
+                await lastValueFrom(
+                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate_V3(),
+                );
+                OperationRealTimeStore.disableLoading();
+            });
+        // });
 
         // 自分が運用目撃情報を投稿したとき
         this.#operationPostCardService
