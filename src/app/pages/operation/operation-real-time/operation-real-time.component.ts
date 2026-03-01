@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { filter, first, interval, lastValueFrom, switchMap } from 'rxjs';
+import { first, interval, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
@@ -91,19 +91,17 @@ export class OperationRealTimeComponent {
 
     hookEvent(): void {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象がある場合は更新する
-        this.#appRef.isStable
-            .pipe(
-                first((bool) => !!bool),
-                switchMap(() => interval(1000 * 1)),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe(async () => {
-                OperationRealTimeStore.enableLoading();
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate_V3(),
-                );
-                OperationRealTimeStore.disableLoading();
-            });
+        this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
+            interval(1000 * 1)
+                .pipe(takeUntilDestroyed(this.#destroyRef))
+                .subscribe(async () => {
+                    OperationRealTimeStore.enableLoading();
+                    await lastValueFrom(
+                        this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate_V3(),
+                    );
+                    OperationRealTimeStore.disableLoading();
+                });
+        });
 
         // 自分が運用目撃情報を投稿したとき
         this.#operationPostCardService
@@ -137,12 +135,10 @@ export class OperationRealTimeComponent {
         // 他人が運用目撃情報を投稿したとき
         this.#socketService
             .on()
-            .pipe(
-                switchMap(() => OperationRealTimeStore.isEnableAutoReload$),
-                filter((bool) => !!bool),
-                takeUntilDestroyed(this.#destroyRef),
-            )
+            .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
+                if (!OperationRealTimeStore.isEnableAutoReload) return;
+
                 this.#notification.open('更新中...', 'OK');
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
