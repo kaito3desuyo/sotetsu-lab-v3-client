@@ -298,4 +298,7 @@ export const OperationRealTimeStore = {
             },
         );
     },
+    get isEnableAutoReload(): boolean {
+        return store.getValue().isEnableAutoReload;
+    },
 } as const;
