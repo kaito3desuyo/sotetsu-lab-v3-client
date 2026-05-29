@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AdsenseModule } from 'ng2-adsense';
 import { LibraryListCardModule } from 'src/app/shared/library-list-card/library-list-card.module';
-import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
+import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
 import { OperationSearchCardModule } from 'src/app/shared/operation-search-card/operation-search-card.module';
 import { TimetablePostCardModule } from 'src/app/shared/timetable-post-card/timetable-post-card.module';
 import { TimetableSearchCardModule } from 'src/app/shared/timetable-search-card/timetable-search-card.module';
@@ -17,7 +17,6 @@ import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashb
         DashboardDescriptionPComponent,
         //
         OperationSearchCardModule,
-        OperationPostCardModule,
         TimetableSearchCardModule,
         TimetablePostCardModule,
         LibraryListCardModule,
@@ -26,6 +25,7 @@ import { DashboardDescriptionPComponent } from '../dashboard-description-p/dashb
         // TIMETABLE_SEARCH_CARD_DECLARATIONS,
         // TIMETABLE_POST_CARD_DECLARATIONS,
         // LIBRARY_LIST_CARD_DECLARATIONS,
-    ]
+        NewOperationPostCardComponent,
+    ],
 })
 export class DashboardMainCComponent {}

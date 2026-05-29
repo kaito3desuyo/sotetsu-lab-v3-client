@@ -1,7 +1,7 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { debounceTime } from 'rxjs';
+import { debounceTime, map } from 'rxjs';
 import { ServiceAgenciesDto } from 'src/app/libs/service/usecase/dtos/service-agencies.dto';
 
 type StoreProps = {
@@ -29,12 +29,9 @@ export const OperationPostCardStore = {
     },
 
     agencies$: store.pipe(
-        select((state) => {
-            if (!state.serviceAgencies) {
-                return [];
-            }
-
-            const index = {
+        select((state) => state.serviceAgencies?.agencies ?? []),
+        map((agencies) => {
+            const index: Record<string, number> = {
                 相鉄: 0,
                 JR東日本: 1,
                 東急: 2,
@@ -44,11 +41,22 @@ export const OperationPostCardStore = {
                 東武: 6,
                 埼玉高速: 7,
                 都営: 8,
+                西武: 9,
             };
 
-            return state.serviceAgencies.agencies.sort(
-                (a, b) => index[a.agencyName] - index[b.agencyName],
-            );
+            const getOrder = (agencyName: string): number =>
+                index[agencyName] ?? Number.MAX_SAFE_INTEGER;
+
+            return [...agencies].sort((a, b) => {
+                const orderDiff =
+                    getOrder(a.agencyName) - getOrder(b.agencyName);
+
+                if (orderDiff !== 0) {
+                    return orderDiff;
+                }
+
+                return a.agencyName.localeCompare(b.agencyName, 'ja');
+            });
         }),
     ),
 } as const;
