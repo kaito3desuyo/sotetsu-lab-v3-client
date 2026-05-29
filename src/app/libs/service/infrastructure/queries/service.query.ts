@@ -7,13 +7,16 @@ import { map, shareReplay } from 'rxjs/operators';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { buildStationDetailsDto } from 'src/app/libs/station/infrastructure/builders/station-dto.builder';
 import { environment } from 'src/environments/environment';
+import { ServiceAgenciesDto } from '../../usecase/dtos/service-agencies.dto';
 import { ServiceDetailsDto } from '../../usecase/dtos/service-details.dto';
 import { ServiceRoutesDto } from '../../usecase/dtos/service-routes.dto';
 import { ServiceStationsDto } from '../../usecase/dtos/service-stations.dto';
+import { ServiceAgenciesDtoBuilder } from '../builders/service-agencies.dto.builder';
 import {
     buildServiceDetailsDto,
     ServiceDtoBuilder,
 } from '../builders/service-dto.builder';
+import { ServiceAgenciesModel } from '../models/service-agencies.model';
 import { ServiceRoutesModel } from '../models/service-routes.model';
 import { ServiceStationsModel } from '../models/service-stations.model';
 import { ServiceModel } from '../models/service.model';
@@ -71,6 +74,42 @@ export class ServiceQuery {
     }
 
     // v3
+
+    findOneWithAgencies_V3(params: {
+        serviceId: string;
+        forceReload?: boolean;
+    }): Observable<ServiceAgenciesDto> {
+        const { serviceId, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findOneWithAgencies',
+                serviceId,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.#http
+                .get<ServiceAgenciesModel>(
+                    `${this.#v3ApiUrl}/${serviceId}/agencies`,
+                    {
+                        observe: 'response',
+                    },
+                )
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        ServiceAgenciesDtoBuilder.buildFromModel(res.body),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
 
     findOneWithRoutes_V3(params: {
         serviceId: string;

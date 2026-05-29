@@ -1,5 +1,4 @@
 import {
-    ApplicationRef,
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
@@ -8,11 +7,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { first, interval, lastValueFrom } from 'rxjs';
+import { interval, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { OperationPostCardModule } from 'src/app/shared/operation-post-card/operation-post-card.module';
-import { OperationPostCardService } from 'src/app/shared/operation-post-card/services/operation-post-card.service';
+import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
+import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
 import { OperationRealTimeHeaderComponent } from './components/operation-real-time-header/operation-real-time-header.component';
@@ -36,17 +35,15 @@ OperationRealTimeStore.resetLoading();
         OperationRealTimeOperationTableComponent,
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
-
-        OperationPostCardModule,
+        NewOperationPostCardComponent,
     ],
 })
 export class OperationRealTimeComponent {
-    readonly #appRef = inject(ApplicationRef);
     readonly #destroyRef = inject(DestroyRef);
     readonly #socketService = inject(SocketService);
     readonly #notification = inject(NotificationService);
     readonly #operationRealTimeService = inject(OperationRealTimeService);
-    readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #newOperationPostCardService = inject(NewOperationPostCardService);
 
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
 
@@ -104,8 +101,7 @@ export class OperationRealTimeComponent {
         // });
 
         // 自分が運用目撃情報を投稿したとき
-        this.#operationPostCardService
-            .receiveSubmitOperationSightingEvent()
+        this.#newOperationPostCardService.submitEvent$
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();

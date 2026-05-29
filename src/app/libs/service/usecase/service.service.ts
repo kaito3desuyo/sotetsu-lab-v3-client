@@ -3,6 +3,7 @@ import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { ServiceQuery } from '../infrastructure/queries/service.query';
+import { ServiceAgenciesDto } from './dtos/service-agencies.dto';
 import { ServiceDetailsDto } from './dtos/service-details.dto';
 import { ServiceRoutesDto } from './dtos/service-routes.dto';
 import { ServiceStationsDto } from './dtos/service-stations.dto';
@@ -25,6 +26,13 @@ export class ServiceService {
     }
 
     // v3
+
+    findOneWithAgencies_V3(params: {
+        serviceId: string;
+        forceReload?: boolean;
+    }): Observable<ServiceAgenciesDto> {
+        return this.serviceQuery.findOneWithAgencies_V3(params);
+    }
 
     findOneWithRoutes_V3(params: {
         serviceId: string;

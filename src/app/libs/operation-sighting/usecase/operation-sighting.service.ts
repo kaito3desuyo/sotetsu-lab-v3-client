@@ -8,6 +8,7 @@ import { CreateOperationSightingDto } from './dtos/create-operation-sighting.dto
 import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-time-cross-section.dto';
+import { PostOperationSightingDto } from './dtos/post-operation-sighting.dto';
 import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.dto';
 
 @Injectable({ providedIn: 'root' })
@@ -89,6 +90,10 @@ export class OperationSightingService {
         body: CreateOperationSightingDto,
     ): Observable<OperationSightingDetailsDto> {
         return this.operationSightingCommand.createOne(qb, body);
+    }
+
+    post(body: PostOperationSightingDto): Observable<void> {
+        return this.operationSightingCommand.post(body);
     }
 
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {

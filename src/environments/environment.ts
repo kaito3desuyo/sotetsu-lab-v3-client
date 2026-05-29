@@ -10,6 +10,7 @@ export const environment = {
     analytics: {
         id: 'G-CFKSDNMCY3', // IDを設定する、environment.prod.tsにも
     },
+    serviceId: '8d9d2a20-48ad-438b-83a4-ba8727b4708c',
 };
 
 /*
