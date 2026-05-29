@@ -1,11 +1,13 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RequestQueryBuilder } from '@nestjsx/crud-request';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { environment } from 'src/environments/environment';
 import { CreateOperationSightingDto } from '../../usecase/dtos/create-operation-sighting.dto';
 import { InvalidateOperationSightingDto } from '../../usecase/dtos/invalidate-operation-sighting.dto';
+import { PostOperationSightingDto } from '../../usecase/dtos/post-operation-sighting.dto';
 import { RestoreOperationSightingDto } from '../../usecase/dtos/restore-operation-sighting.dto';
 import { OperationSightingDtoBuilder } from '../builders/operation-sighting-dto.builder';
 import { OperationSightingModelBuilder } from '../builders/operation-sighting.model.builder';
@@ -30,6 +32,21 @@ export class OperationSightingCommand {
             .pipe(
                 map((model) => OperationSightingDtoBuilder.toDetailsDto(model)),
             );
+    }
+
+    post(body: PostOperationSightingDto): Observable<void> {
+        return this.http.post(`${this.#v3ApiUrl}`, body).pipe(
+            map(() => undefined),
+            catchError(({ status, error }) => {
+                return throwError(
+                    () =>
+                        new FetchError(
+                            status,
+                            error?.message ?? '不明なエラーが発生しました',
+                        ),
+                );
+            }),
+        );
     }
 
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {

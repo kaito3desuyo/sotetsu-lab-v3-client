@@ -254,8 +254,9 @@ export const OperationRealTimeStore = {
                 days - (getHours(now) < 4 ? 1 : 0) - 1,
             );
 
-        return Object.values(currentPositions).filter(
-            ({ prev, current, next }) => {
+        return Object.values(currentPositions)
+            .filter((position) => !!position)
+            .filter(({ prev, current, next }) => {
                 // 出庫前
                 if (!prev && !current && !!next) {
                     return (
@@ -295,8 +296,7 @@ export const OperationRealTimeStore = {
                 }
 
                 return false;
-            },
-        );
+            });
     },
     get isEnableAutoReload(): boolean {
         return store.getValue().isEnableAutoReload;
