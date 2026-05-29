@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
 import { TitleService } from 'src/app/core/services/title.service';
-import OPERATION_POST_CARD_PROVIDERS from 'src/app/shared/operation-post-card/operation-post-card.provider';
 import OPERATION_SEARCH_CARD_PROVIDERS from 'src/app/shared/operation-search-card/operation-search-card.provider';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
@@ -17,7 +16,6 @@ import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard
     styleUrls: ['./dashboard.component.scss'],
     providers: [
         ...OPERATION_SEARCH_CARD_PROVIDERS,
-        ...OPERATION_POST_CARD_PROVIDERS,
         ...TIMETABLE_SEARCH_CARD_PROVIDERS,
         ...TIMETABLE_POST_CARD_PROVIDERS,
         RxState,
