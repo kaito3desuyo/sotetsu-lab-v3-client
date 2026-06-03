@@ -39,19 +39,12 @@ export class OperationService {
         return this.operationQuery.findOne(operationId, qb);
     }
 
-    findOneWithCurrentPosition(
-        operationId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<OperationCurrentPositionDto> {
-        return this.operationQuery.findOneWithCurrentPosition(operationId, qb);
-    }
-
-    findOneWithCurrentPosition_V3(params: {
+    findOneWithCurrentPosition(params: {
         operationId: string;
         searchTime?: string;
         forceReload?: boolean;
     }): Observable<OperationCurrentPositionDto> {
-        return this.operationQuery.findOneWithCurrentPosition_V3(params);
+        return this.operationQuery.findOneWithCurrentPosition(params);
     }
 
     findOneWithTrips(

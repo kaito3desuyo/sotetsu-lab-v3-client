@@ -208,26 +208,7 @@ export class OperationSightingQuery {
         return this.#obs[key];
     }
 
-    findOneTimeCrossSectionFromFormationNumber(params: {
-        formationNumber: string;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
-        const { formationNumber } = params;
-
-        return this.http
-            .get<OperationSightingTimeCrossSectionModel>(
-                `${this.apiUrl}/time-cross-section/from-formation-number/${formationNumber}`,
-                { observe: 'response' },
-            )
-            .pipe(
-                map((res) => {
-                    return OperationSightingDtoBuilder.toTimeCrossSectionDto(
-                        res.body,
-                    );
-                }),
-            );
-    }
-
-    findOneTimeCrossSectionByFormationNumber_V3(params: {
+    findOneTimeCrossSectionByFormationNumber(params: {
         formationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {

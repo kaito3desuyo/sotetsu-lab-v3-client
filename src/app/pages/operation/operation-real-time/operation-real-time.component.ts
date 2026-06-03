@@ -54,29 +54,29 @@ export class OperationRealTimeComponent {
 
     async fetchData(): Promise<void> {
         OperationRealTimeStore.enableLoading();
-        await lastValueFrom(this.#operationRealTimeService.fetchRoutes_V3());
-        await lastValueFrom(this.#operationRealTimeService.fetchStations_V3());
+        await lastValueFrom(this.#operationRealTimeService.fetchRoutes());
+        await lastValueFrom(this.#operationRealTimeService.fetchStations());
         await lastValueFrom(
-            this.#operationRealTimeService.fetchTripClasses_V3(),
+            this.#operationRealTimeService.fetchTripClasses(),
         );
-        await lastValueFrom(this.#operationRealTimeService.fetchCalendar_V3());
+        await lastValueFrom(this.#operationRealTimeService.fetchCalendar());
         await lastValueFrom(
-            this.#operationRealTimeService.fetchOperations_V3(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchFormations_V3(),
+            this.#operationRealTimeService.fetchOperations(),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections_V3(),
+            this.#operationRealTimeService.fetchFormations(),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections_V3(),
+            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchSightingHistories_V3(),
+            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchCurrentPositions_V3(),
+            this.#operationRealTimeService.fetchSightingHistories(),
+        );
+        await lastValueFrom(
+            this.#operationRealTimeService.fetchCurrentPositions(),
         );
         OperationRealTimeStore.disableLoading();
 
@@ -94,7 +94,7 @@ export class OperationRealTimeComponent {
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate_V3(),
+                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
                 );
                 OperationRealTimeStore.disableLoading();
             });
@@ -106,21 +106,21 @@ export class OperationRealTimeComponent {
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections_V3(
+                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
                         {
                             forceReload: true,
                         },
                     ),
                 );
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections_V3(
+                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
                         {
                             forceReload: true,
                         },
                     ),
                 );
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchSightingHistories_V3({
+                    this.#operationRealTimeService.fetchSightingHistories({
                         forceReload: true,
                     }),
                 );
@@ -138,21 +138,21 @@ export class OperationRealTimeComponent {
                 this.#notification.open('更新中...', 'OK');
                 OperationRealTimeStore.enableLoading();
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections_V3(
+                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
                         {
                             forceReload: true,
                         },
                     ),
                 );
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections_V3(
+                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
                         {
                             forceReload: true,
                         },
                     ),
                 );
                 await lastValueFrom(
-                    this.#operationRealTimeService.fetchSightingHistories_V3({
+                    this.#operationRealTimeService.fetchSightingHistories({
                         forceReload: true,
                     }),
                 );

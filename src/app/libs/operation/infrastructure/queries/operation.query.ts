@@ -141,40 +141,7 @@ export class OperationQuery {
             );
     }
 
-    findOneWithCurrentPosition(
-        operationId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<OperationCurrentPositionDto> {
-        const httpParams = new HttpParams({ fromString: qb.query() });
-
-        return this.http
-            .get<OperationCurrentPositionModel>(
-                this.apiUrl + '/' + operationId + '/current-position',
-                {
-                    params: httpParams,
-                },
-            )
-            .pipe(
-                map((data) => {
-                    return {
-                        operation: buildOperationDetailsDto(data.operation),
-                        position: {
-                            prev: buildTripOperationListDetailsDto(
-                                data.position.prev,
-                            ),
-                            current: buildTripOperationListDetailsDto(
-                                data.position.current,
-                            ),
-                            next: buildTripOperationListDetailsDto(
-                                data.position.next,
-                            ),
-                        },
-                    };
-                }),
-            );
-    }
-
-    findOneWithCurrentPosition_V3(params: {
+    findOneWithCurrentPosition(params: {
         operationId: string;
         searchTime?: string;
         forceReload?: boolean;

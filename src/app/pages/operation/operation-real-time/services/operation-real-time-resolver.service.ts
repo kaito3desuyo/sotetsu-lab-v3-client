@@ -10,7 +10,6 @@ import { OperationRealTimeStore } from '../stores/operation-real-time.store';
 export class OperationRealTimeResolverService {
     readonly #titleService = inject(TitleService);
     readonly #initializeStateQuery = inject(InitializeStateQuery);
-    // readonly #operationRealTimeService = inject(OperationRealTimeService);
 
     resolve(route: ActivatedRouteSnapshot): Observable<void> {
         const title = route.data.title;
@@ -25,17 +24,6 @@ export class OperationRealTimeResolverService {
                 ),
             ),
             mergeMap(() => OperationRealTimeStore.persistInitialized$),
-            // mergeMap(() =>
-            //     forkJoin([
-            //         // v2
-            //         this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-            //         this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
-            //         this.#operationRealTimeService.fetchOperationSightingHistories(),
-            //         this.#operationRealTimeService.fetchFormationSightingHistories(),
-            //         this.#operationRealTimeService.fetchOperationCurrentPosition(),
-            //         this.#operationRealTimeService.fetchTripClassesV2(),
-            //     ]),
-            // ),
             map(() => undefined),
         );
     }
