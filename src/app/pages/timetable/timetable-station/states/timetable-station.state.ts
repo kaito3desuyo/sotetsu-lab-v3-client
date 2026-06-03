@@ -15,6 +15,7 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 
 type State = {
     calendarId: CalendarDetailsDto['calendarId'];
+    calendar: CalendarDetailsDto | null;
     stationId: StationDetailsDto['stationId'];
     tripDirection: TripDetailsDto['tripDirection'];
     trips: TripDetailsDto[];
@@ -31,6 +32,7 @@ export class TimetableStationStateStore {
         name: 'TimetableStation',
         initialValue: {
             calendarId: null,
+            calendar: null,
             stationId: null,
             tripDirection: null,
             trips: [],
@@ -46,6 +48,14 @@ export class TimetableStationStateStore {
         this.state.update(
             setProps({
                 calendarId,
+            }),
+        );
+    }
+
+    setCalendar(calendar: CalendarDetailsDto): void {
+        this.state.update(
+            setProps({
+                calendar,
             }),
         );
     }
@@ -124,6 +134,9 @@ export class TimetableStationStateQuery {
     readonly calendarId$ = this.#store.state.pipe(
         select((state) => state.calendarId),
     );
+    readonly calendar$ = this.#store.state.pipe(
+        select((state) => state.calendar),
+    );
     readonly stationId$ = this.#store.state.pipe(
         select((state) => state.stationId),
     );
@@ -165,6 +178,11 @@ export class TimetableStationStateQuery {
     get calendarId(): CalendarDetailsDto['calendarId'] {
         const { calendarId } = this.#store.state.getValue();
         return calendarId;
+    }
+
+    get calendar(): CalendarDetailsDto | null {
+        const { calendar } = this.#store.state.getValue();
+        return calendar;
     }
 
     get tripDirection(): TripDetailsDto['tripDirection'] {

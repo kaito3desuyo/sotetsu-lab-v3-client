@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { mergeMap } from 'rxjs/operators';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TimetableStationStateQuery } from '../../states/timetable-station.state';
 import { TimetableStationTablePComponent } from '../timetable-station-table-p/timetable-station-table-p.component';
 
@@ -13,15 +11,10 @@ import { TimetableStationTablePComponent } from '../timetable-station-table-p/ti
     imports: [TimetableStationTablePComponent]
 })
 export class TimetableStationTableCComponent {
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #timetableStationStateQuery = inject(TimetableStationStateQuery);
 
     readonly calendar = toSignal(
-        this.#timetableStationStateQuery.calendarId$.pipe(
-            mergeMap((id) =>
-                this.#calendarListStateQuery.selectByCalendarId(id),
-            ),
-        ),
+        this.#timetableStationStateQuery.calendar$,
     );
     readonly stationName = toSignal(
         this.#timetableStationStateQuery.stationName$,

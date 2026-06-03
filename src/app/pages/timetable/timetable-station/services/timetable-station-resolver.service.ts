@@ -34,6 +34,7 @@ export class TimetableStationResolverService {
             ),
             mergeMap(() =>
                 forkJoin([
+                    this.#timetableStationService.fetchCalendar(),
                     this.#timetableStationService.fetchTrips(),
                     this.#timetableStationService.fetchTripClasses(),
                     this.#timetableStationService.fetchStations(),
