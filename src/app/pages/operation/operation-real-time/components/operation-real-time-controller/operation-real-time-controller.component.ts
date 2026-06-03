@@ -42,21 +42,21 @@ export class OperationRealTimeControllerComponent {
     async reload(): Promise<void> {
         OperationRealTimeStore.enableLoading();
         await lastValueFrom(
-            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections_V3(
+            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
                 {
                     forceReload: true,
                 },
             ),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections_V3(
+            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
                 {
                     forceReload: true,
                 },
             ),
         );
         await lastValueFrom(
-            this.#operationRealTimeService.fetchSightingHistories_V3({
+            this.#operationRealTimeService.fetchSightingHistories({
                 forceReload: true,
             }),
         );

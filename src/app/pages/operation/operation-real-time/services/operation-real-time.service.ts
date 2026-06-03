@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import {
     format,
     getHours,
@@ -10,25 +9,16 @@ import {
     subDays,
 } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import dayjs from 'dayjs';
 import { flow } from 'es-toolkit';
 import { forkJoin, from, Observable, of } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
-import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
-import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
-import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import {
-    OperationRealTimeStateQuery,
-    OperationRealTimeStateStore,
-} from '../states/operation-real-time.state';
 import { OperationRealTimeStore } from '../stores/operation-real-time.store';
 
 @Injectable()
@@ -40,240 +30,8 @@ export class OperationRealTimeService {
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #todaysOperationsListStateQuery = inject(
-        TodaysOperationListStateQuery,
-    );
-    readonly #todaysFormationListStateQuery = inject(
-        TodaysFormationListStateQuery,
-    );
-    readonly #operationRealTimeStateStore = inject(OperationRealTimeStateStore);
-    readonly #operationRealTimeStateQuery = inject(OperationRealTimeStateQuery);
 
-    fetchOperationSightingTimeCrossSections(): Observable<void> {
-        const operations =
-            this.#todaysOperationsListStateQuery.todaysOperations;
-
-        return forkJoin(
-            operations.map(({ operationNumber }) =>
-                this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
-                    { operationNumber },
-                ),
-            ),
-        ).pipe(
-            tap((data) => {
-                const formations =
-                    this.#todaysFormationListStateQuery.todaysFormations;
-
-                this.#operationRealTimeStateStore.setOperationSightingTimeCrossSections(
-                    data.map((o) => ({
-                        ...o,
-                        expectedSighting:
-                            o.expectedSighting !== null
-                                ? {
-                                      ...o.expectedSighting,
-                                      formation: {
-                                          ...o.expectedSighting?.formation,
-                                          ...formations.find(
-                                              ({ formationNumber }) =>
-                                                  formationNumber ===
-                                                  o.expectedSighting?.formation
-                                                      ?.formationNumber,
-                                          ),
-                                      },
-                                  }
-                                : null,
-                    })),
-                );
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchFormationSightingTimeCrossSections(): Observable<void> {
-        const formations = this.#todaysFormationListStateQuery.todaysFormations;
-
-        return forkJoin(
-            formations.map(({ formationNumber }) =>
-                this.#operationSightingService.findOneTimeCrossSectionFromFormationNumber(
-                    { formationNumber },
-                ),
-            ),
-        ).pipe(
-            tap((data) => {
-                const operations =
-                    this.#todaysOperationsListStateQuery.todaysOperations;
-
-                this.#operationRealTimeStateStore.setFormationSightingTimeCrossSections(
-                    data.map((o) => ({
-                        ...o,
-                        expectedSighting:
-                            o.expectedSighting !== null
-                                ? {
-                                      ...o.expectedSighting,
-                                      operation: {
-                                          ...o.expectedSighting?.operation,
-                                          ...operations.find(
-                                              ({ operationNumber }) =>
-                                                  operationNumber ===
-                                                  o.expectedSighting?.operation
-                                                      ?.operationNumber,
-                                          ),
-                                      },
-                                  }
-                                : null,
-                    })),
-                );
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchOperationCurrentPosition(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
-        const operations =
-            this.#todaysOperationsListStateQuery.todaysOperations;
-        const currentPositions =
-            this.#operationRealTimeStateQuery.currentPositions;
-        const currentPositionsThatShouldUpdate =
-            this.#operationRealTimeStateQuery.currentPositionsThatShouldUpdate;
-
-        const updateTargetOperations = operations.filter(({ operationId }) => {
-            if (!currentPositions.length) {
-                return true;
-            }
-
-            return currentPositionsThatShouldUpdate
-                .map(({ operation }) => operation.operationId)
-                .includes(operationId);
-        });
-
-        if (!updateTargetOperations.length) {
-            return of(undefined);
-        }
-
-        return forkJoin(
-            updateTargetOperations.map((o) =>
-                this.#operationService.findOneWithCurrentPosition(
-                    o.operationId,
-                    qb,
-                ),
-            ),
-        ).pipe(
-            tap((data) => {
-                this.#operationRealTimeStateStore.updateCurrentPositions(data);
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchTripClassesV2(): Observable<void> {
-        const qb = new RequestQueryBuilder()
-            .setJoin([{ field: 'service' }])
-            .setFilter([
-                {
-                    field: 'service.serviceName',
-                    operator: CondOperator.EQUALS,
-                    value: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
-                },
-            ]);
-
-        return this.#tripClassService.findMany(qb).pipe(
-            tap((tripClasses: TripClassDetailsDto[]) => {
-                this.#operationRealTimeStateStore.setTripClasses(tripClasses);
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchOperationSightingHistories(): Observable<void> {
-        const operations =
-            this.#todaysOperationsListStateQuery.todaysOperations;
-        const date = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
-        const start = date.hour(4).minute(0).second(0).millisecond(0);
-        const end = start.add(1, 'days');
-
-        const qb = RequestQueryBuilder.create()
-            .setJoin([
-                {
-                    field: 'operation',
-                },
-                {
-                    field: 'formation',
-                },
-            ])
-            .setFilter([
-                {
-                    field: 'operationId',
-                    operator: CondOperator.IN,
-                    value: operations.map((o) => o.operationId),
-                },
-                {
-                    field: 'sightingTime',
-                    operator: CondOperator.BETWEEN,
-                    value: [start.toISOString(), end.toISOString()],
-                },
-            ])
-            .sortBy([
-                { field: 'sightingTime', order: 'DESC' },
-                { field: 'updatedAt', order: 'DESC' },
-            ]);
-
-        return this.#operationSightingService.findMany(qb).pipe(
-            tap((data: OperationSightingDetailsDto[]) => {
-                this.#operationRealTimeStateStore.setOperationSightingHistories(
-                    data,
-                );
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchFormationSightingHistories(): Observable<void> {
-        const formations = this.#todaysFormationListStateQuery.todaysFormations;
-        const date = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
-        const start = date.hour(4).minute(0).second(0).millisecond(0);
-        const end = start.add(1, 'days');
-
-        const qb = RequestQueryBuilder.create()
-            .setJoin([
-                {
-                    field: 'operation',
-                },
-                {
-                    field: 'formation',
-                },
-            ])
-            .setFilter([
-                {
-                    field: 'formationId',
-                    operator: CondOperator.IN,
-                    value: formations.map((o) => o.formationId),
-                },
-                {
-                    field: 'sightingTime',
-                    operator: CondOperator.BETWEEN,
-                    value: [start.toISOString(), end.toISOString()],
-                },
-            ])
-            .sortBy([
-                { field: 'sightingTime', order: 'DESC' },
-                { field: 'updatedAt', order: 'DESC' },
-            ]);
-
-        return this.#operationSightingService.findMany(qb).pipe(
-            tap((data: OperationSightingDetailsDto[]) => {
-                this.#operationRealTimeStateStore.setFormationSightingHistories(
-                    data,
-                );
-            }),
-            map(() => undefined),
-        );
-    }
-
-    // v3
-
-    fetchRoutes_V3(): Observable<void> {
+    fetchRoutes(): Observable<void> {
         return this.#serviceService
             .findOneWithRoutes_V3({
                 serviceId: '8d9d2a20-48ad-438b-83a4-ba8727b4708c',
@@ -286,7 +44,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchStations_V3(): Observable<void> {
+    fetchStations(): Observable<void> {
         const routes = OperationRealTimeStore.routes;
 
         return forkJoin(
@@ -311,7 +69,7 @@ export class OperationRealTimeService {
         );
     }
 
-    fetchTripClasses_V3(): Observable<void> {
+    fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany_V3({}).pipe(
             tap((data) => {
                 OperationRealTimeStore.setTripClasses(data);
@@ -320,7 +78,7 @@ export class OperationRealTimeService {
         );
     }
 
-    fetchCalendar_V3(): Observable<void> {
+    fetchCalendar(): Observable<void> {
         const generateBaseDate: (unixtime: number) => string = flow(
             (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
             (date: Date) => (getHours(date) < 4 ? subDays(date, 1) : date),
@@ -344,7 +102,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchOperations_V3(): Observable<void> {
+    fetchOperations(): Observable<void> {
         const calendarId = OperationRealTimeStore.calendar.calendarId;
 
         return this.#operationService
@@ -359,7 +117,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchFormations_V3(): Observable<void> {
+    fetchFormations(): Observable<void> {
         const generateBaseDate: (unixtime: number) => string = flow(
             (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
             (date: Date) => (getHours(date) < 4 ? subDays(date, 1) : date),
@@ -384,7 +142,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchOperationSightingTimeCrossSections_V3(params?: {
+    fetchOperationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
@@ -411,7 +169,7 @@ export class OperationRealTimeService {
         );
     }
 
-    fetchFormationSightingTimeCrossSections_V3(params?: {
+    fetchFormationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
         const formations = OperationRealTimeStore.formations;
@@ -420,7 +178,7 @@ export class OperationRealTimeService {
             mergeMap(
                 ({ formationNumber }) =>
                     this.#operationSightingService
-                        .findOneTimeCrossSectionByFormationNumber_V3({
+                        .findOneTimeCrossSectionByFormationNumber({
                             formationNumber,
                             forceReload: params?.forceReload,
                         })
@@ -438,7 +196,7 @@ export class OperationRealTimeService {
         );
     }
 
-    fetchSightingHistories_V3(params?: {
+    fetchSightingHistories(params?: {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
@@ -489,7 +247,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchCurrentPositions_V3(params?: {
+    fetchCurrentPositions(params?: {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
@@ -498,7 +256,7 @@ export class OperationRealTimeService {
             mergeMap(
                 ({ operationId, operationNumber }) =>
                     this.#operationService
-                        .findOneWithCurrentPosition_V3({
+                        .findOneWithCurrentPosition({
                             operationId,
                             forceReload: params?.forceReload,
                         })
@@ -516,7 +274,7 @@ export class OperationRealTimeService {
         );
     }
 
-    fetchCurrentPositionThatShouldUpdate_V3(): Observable<void> {
+    fetchCurrentPositionThatShouldUpdate(): Observable<void> {
         const currentPositions =
             OperationRealTimeStore.currentPositionsThatShouldUpdate;
 
@@ -533,7 +291,7 @@ export class OperationRealTimeService {
             mergeMap(
                 ({ operationId, operationNumber }) =>
                     this.#operationService
-                        .findOneWithCurrentPosition_V3({
+                        .findOneWithCurrentPosition({
                             operationId,
                             forceReload: true,
                         })

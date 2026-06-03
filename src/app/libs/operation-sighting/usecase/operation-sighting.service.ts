@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { Pagination } from 'src/app/core/utils/pagination';
 import { OperationSightingCommand } from '../infrastructure/commands/operation-sighting.command';
 import { OperationSightingQuery } from '../infrastructure/queries/operation-sighting.query';
-import { CreateOperationSightingDto } from './dtos/create-operation-sighting.dto';
 import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from './dtos/operation-sighting-time-cross-section.dto';
@@ -68,28 +67,13 @@ export class OperationSightingService {
         );
     }
 
-    findOneTimeCrossSectionFromFormationNumber(params: {
-        formationNumber: string;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionFromFormationNumber(
-            params,
-        );
-    }
-
-    findOneTimeCrossSectionByFormationNumber_V3(params: {
+    findOneTimeCrossSectionByFormationNumber(params: {
         formationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionByFormationNumber_V3(
+        return this.operationSightingQuery.findOneTimeCrossSectionByFormationNumber(
             params,
         );
-    }
-
-    createOne(
-        qb: RequestQueryBuilder,
-        body: CreateOperationSightingDto,
-    ): Observable<OperationSightingDetailsDto> {
-        return this.operationSightingCommand.createOne(qb, body);
     }
 
     post(body: PostOperationSightingDto): Observable<void> {
