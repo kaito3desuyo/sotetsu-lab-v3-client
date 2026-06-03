@@ -148,26 +148,7 @@ export class OperationSightingQuery {
         return this.#obs[key];
     }
 
-    findOneTimeCrossSectionFromOperationNumber(params: {
-        operationNumber: string;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
-        const { operationNumber } = params;
-
-        return this.http
-            .get<OperationSightingTimeCrossSectionModel>(
-                `${this.apiUrl}/time-cross-section/from-operation-number/${operationNumber}`,
-                { observe: 'response' },
-            )
-            .pipe(
-                map((res) => {
-                    return OperationSightingDtoBuilder.toTimeCrossSectionDto(
-                        res.body,
-                    );
-                }),
-            );
-    }
-
-    findOneTimeCrossSectionByOperationNumber_V3(params: {
+    findOneTimeCrossSectionByOperationNumber(params: {
         operationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {

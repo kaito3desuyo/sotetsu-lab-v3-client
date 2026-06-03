@@ -151,7 +151,7 @@ export class OperationRealTimeService {
             mergeMap(
                 ({ operationNumber }) =>
                     this.#operationSightingService
-                        .findOneTimeCrossSectionByOperationNumber_V3({
+                        .findOneTimeCrossSectionByOperationNumber({
                             operationNumber,
                             forceReload: params?.forceReload,
                         })

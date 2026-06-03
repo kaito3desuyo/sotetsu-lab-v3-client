@@ -50,19 +50,11 @@ export class OperationSightingService {
         return this.operationSightingQuery.findManyBySpecificPeriod(params);
     }
 
-    findOneTimeCrossSectionFromOperationNumber(params: {
-        operationNumber: string;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionFromOperationNumber(
-            params,
-        );
-    }
-
-    findOneTimeCrossSectionByOperationNumber_V3(params: {
+    findOneTimeCrossSectionByOperationNumber(params: {
         operationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionByOperationNumber_V3(
+        return this.operationSightingQuery.findOneTimeCrossSectionByOperationNumber(
             params,
         );
     }

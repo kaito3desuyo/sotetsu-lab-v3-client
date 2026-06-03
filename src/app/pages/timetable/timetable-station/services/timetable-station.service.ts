@@ -186,7 +186,7 @@ export class TimetableStationService {
 
         return forkJoin(
             operations.map(({ operationNumber }) =>
-                this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
+                this.#operationSightingService.findOneTimeCrossSectionByOperationNumber(
                     { operationNumber },
                 ),
             ),
