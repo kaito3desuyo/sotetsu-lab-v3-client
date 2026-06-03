@@ -66,6 +66,42 @@ export class CalendarQuery {
             );
     }
 
+    findOne(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<CalendarDetailsDto> {
+        const { calendarId, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findOne',
+                calendarId,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<CalendarModel>(`${this.#v3ApiUrl}/${calendarId}`, {
+                    observe: 'response',
+                })
+                .pipe(
+                    shareReplay({
+                        bufferSize: 1,
+                        refCount: true,
+                    }),
+                    map((res) => {
+                        return CalendarDtoBuilder.buildFromModel(res.body);
+                    }),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
     findOneBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
@@ -94,7 +130,7 @@ export class CalendarQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return CalendarDtoBuilder.toDetailsDto(res.body);
+                        return CalendarDtoBuilder.buildFromModel(res.body);
                     }),
                 );
         }

@@ -2,6 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { forkJoin, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -20,6 +22,7 @@ import {
 
 @Injectable()
 export class TimetableStationService {
+    readonly #calendarService = inject(CalendarService);
     readonly #stationService = inject(StationService);
     readonly #tripService = inject(TripService);
     readonly #tripBlockService = inject(TripBlockService);
@@ -28,6 +31,17 @@ export class TimetableStationService {
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #timetableStationStateStore = inject(TimetableStationStateStore);
     readonly #timetableStationStateQuery = inject(TimetableStationStateQuery);
+
+    fetchCalendar(): Observable<void> {
+        const calendarId = this.#timetableStationStateQuery.calendarId;
+
+        return this.#calendarService.findOne({ calendarId }).pipe(
+            tap((data: CalendarDetailsDto) => {
+                this.#timetableStationStateStore.setCalendar(data);
+            }),
+            map(() => undefined),
+        );
+    }
 
     fetchTrips(): Observable<void> {
         const stationId = this.#timetableStationStateQuery.stationId;
@@ -186,7 +200,7 @@ export class TimetableStationService {
 
         return forkJoin(
             operations.map(({ operationNumber }) =>
-                this.#operationSightingService.findOneTimeCrossSectionFromOperationNumber(
+                this.#operationSightingService.findOneTimeCrossSectionByOperationNumber(
                     { operationNumber },
                 ),
             ),

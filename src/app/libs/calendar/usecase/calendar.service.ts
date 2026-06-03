@@ -22,6 +22,13 @@ export class CalendarService {
         return this.calendarQuery.findManyBySpecificDate(qb, params);
     }
 
+    findOne(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<CalendarDetailsDto> {
+        return this.calendarQuery.findOne(params);
+    }
+
     findOneBySpecificDate(params: {
         date: string;
         forceReload?: boolean;

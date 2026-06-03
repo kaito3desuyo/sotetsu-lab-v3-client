@@ -16,7 +16,7 @@ export function buildCalendarDetailsDto(
 }
 
 export const CalendarDtoBuilder = {
-    toDetailsDto: (model: CalendarModel): CalendarDetailsDto => {
+    buildFromModel: (model: CalendarModel): CalendarDetailsDto => {
         return classTransformer(model, CalendarDetailsDto);
     },
 } as const;
