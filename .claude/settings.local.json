@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_serena_serena__onboarding",
+      "mcp__plugin_serena_serena__initial_instructions",
+      "mcp__plugin_serena_serena__activate_project",
+      "mcp__plugin_serena_serena__read_memory",
+      "mcp__plugin_serena_serena__list_dir",
+      "mcp__plugin_serena_serena__get_symbols_overview",
+      "mcp__plugin_serena_serena__write_memory"
+    ]
+  }
+}
