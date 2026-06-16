@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { OperationSearchCardPComponent } from './operation-search-card-p.component';
 
@@ -8,14 +9,12 @@ describe('OperationSearchCardPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [OperationSearchCardPComponent],
+            imports: [OperationSearchCardPComponent],
+            providers: [provideRouter([])],
         }).compileComponents();
-    });
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(OperationSearchCardPComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
     });
 
     it('should create', () => {

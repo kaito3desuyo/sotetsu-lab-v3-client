@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { OperationSightingCommand } from '../infrastructure/commands/operation-sighting.command';
 import { OperationSightingQuery } from '../infrastructure/queries/operation-sighting.query';
 import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
@@ -16,30 +14,6 @@ export class OperationSightingService {
         private readonly operationSightingCommand: OperationSightingCommand,
         private readonly operationSightingQuery: OperationSightingQuery,
     ) {}
-
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<
-        Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
-    > {
-        return this.operationSightingQuery.findMany(qb);
-    }
-
-    findManyLatestGroupByFormation(
-        qb: RequestQueryBuilder,
-    ): Observable<
-        Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
-    > {
-        return this.operationSightingQuery.findManyLatestGroupByFormation(qb);
-    }
-
-    findManyLatestGroupByOperation(
-        qb: RequestQueryBuilder,
-    ): Observable<
-        Pagination<OperationSightingDetailsDto> | OperationSightingDetailsDto[]
-    > {
-        return this.operationSightingQuery.findManyLatestGroupByOperation(qb);
-    }
 
     findManyBySpecificPeriod(params: {
         from: string;

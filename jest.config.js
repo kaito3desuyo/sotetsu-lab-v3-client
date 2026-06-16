@@ -1,4 +1,4 @@
-const esModules = ['lodash-es', '@datorama/akita'].join('|');
+const esModules = ['lodash-es', '@datorama/akita', 'nanoid'].join('|');
 
 module.exports = {
     preset: 'jest-preset-angular',
@@ -6,4 +6,5 @@ module.exports = {
     globalSetup: 'jest-preset-angular/global-setup',
     testMatch: ['<rootDir>/src/**/*.spec.ts'],
     transformIgnorePatterns: [`/node_modules/(?!(${esModules}|.*.mjs$))`],
+    modulePaths: ['<rootDir>'],
 };

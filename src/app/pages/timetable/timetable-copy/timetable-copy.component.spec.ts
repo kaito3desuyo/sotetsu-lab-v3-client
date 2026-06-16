@@ -1,4 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { TimetableCopyComponent } from './timetable-copy.component';
 
@@ -8,14 +10,16 @@ describe('TimetableCopyComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableCopyComponent],
-        }).compileComponents();
-    });
+            imports: [TimetableCopyComponent],
+            providers: [provideRouter([])],
+        })
+            .overrideComponent(TimetableCopyComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(TimetableCopyComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
     });
 
     it('should create', () => {

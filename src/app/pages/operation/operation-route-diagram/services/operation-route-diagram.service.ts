@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
@@ -28,9 +27,8 @@ export class OperationRouteDiagramService {
 
     fetchOperationTrips(): Observable<void> {
         const operationId = this.#operationRouteDiagramStateQuery.operationId;
-        const qb = new RequestQueryBuilder().setJoin([{ field: 'calendar' }]);
 
-        return this.#operationService.findOneWithTrips(operationId, qb).pipe(
+        return this.#operationService.findOneWithTrips_V3({ operationId }).pipe(
             tap((operationTrips) => {
                 this.#operationRouteDiagramStateStore.setOperationTrips(
                     operationTrips,
@@ -42,16 +40,8 @@ export class OperationRouteDiagramService {
 
     fetchStations(): Observable<void> {
         const serviceId = this.#serviceListStateQuery.serviceId;
-        const qb = new RequestQueryBuilder().setJoin([
-            {
-                field: 'operatingSystems.route.routeStationLists.station.routeStationLists',
-            },
-            {
-                field: 'operatingSystems.route.routeStationLists.station.routeStationLists.route',
-            },
-        ]);
 
-        return this.#serviceService.findOneWithStations(serviceId, qb).pipe(
+        return this.#serviceService.findOneWithStations_V3({ serviceId }).pipe(
             tap((data) => {
                 this.#operationRouteDiagramStateStore.setStations(
                     data.stations,

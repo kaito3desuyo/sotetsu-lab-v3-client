@@ -1,12 +1,17 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+import { TestBed, inject } from '@angular/core/testing';
 
-import { TestBed, inject, waitForAsync } from '@angular/core/testing';
+import { OperationRouteDiagramStateStore } from '../states/operation-route-diagram.state';
+import { OperationRouteDiagramService } from './operation-route-diagram.service';
 import { OperationRouteDiagramResolverService } from './operation-route-diagram-resolver.service';
 
 describe('Service: OperationRouteDiagramResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [OperationRouteDiagramResolverService],
+            providers: [
+                OperationRouteDiagramResolverService,
+                { provide: OperationRouteDiagramService, useValue: {} },
+                { provide: OperationRouteDiagramStateStore, useValue: {} },
+            ],
         });
     });
 

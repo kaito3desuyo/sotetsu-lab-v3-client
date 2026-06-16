@@ -8,7 +8,7 @@ describe('CalendarSelectDialogComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CalendarSelectDialogComponent],
+            imports: [CalendarSelectDialogComponent],
         }).compileComponents();
     });
 

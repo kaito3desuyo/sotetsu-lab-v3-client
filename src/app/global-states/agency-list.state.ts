@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { createStore } from '@ngneat/elf';
 import {
     getAllEntities,
@@ -24,9 +23,7 @@ export class AgencyListStateStore {
     readonly #agencyService = inject(AgencyService);
 
     fetch(): Observable<void> {
-        const qb = RequestQueryBuilder.create();
-
-        return this.#agencyService.findMany(qb).pipe(
+        return this.#agencyService.findMany_V3().pipe(
             tap((data: AgencyDetailsDto[]) => {
                 state.update(setEntities(data));
             }),

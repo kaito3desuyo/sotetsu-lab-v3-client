@@ -8,7 +8,7 @@ describe('OperationPastTimeHeaderCComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [OperationPastTimeHeaderCComponent],
+            imports: [OperationPastTimeHeaderCComponent],
         }).compileComponents();
     });
 

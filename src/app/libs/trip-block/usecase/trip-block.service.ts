@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
 import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
@@ -17,49 +15,44 @@ export class TripBlockService {
         private readonly tripBlockQuery: TripBlockQuery,
     ) {}
 
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
-        return this.tripBlockQuery.findMany(qb);
+    findManyByFilter_V3(params: {
+        calendarId: string;
+        tripDirection: number;
+        forceReload?: boolean;
+    }): Observable<TripBlockDetailsDto[]> {
+        return this.tripBlockQuery.findManyByFilter_V3(params);
     }
 
-    findOne(
-        tripBlockId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockQuery.findOne(tripBlockId, qb);
+    findOneById_V3(params: {
+        id: string;
+        forceReload?: boolean;
+    }): Observable<TripBlockDetailsDto> {
+        return this.tripBlockQuery.findOneById_V3(params);
     }
 
-    createMany(
-        qb: RequestQueryBuilder,
-        body: CreateTripBlockDto[],
-    ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
-        return this.tripBlockCommand.createMany(qb, body);
+    createMany_V3(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
+        return this.tripBlockCommand.createMany_V3(body);
     }
 
-    replaceOne(
-        qb: RequestQueryBuilder,
+    replaceOne_V3(
         tripBlockId: string,
         body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.replaceOne(qb, tripBlockId, body);
+        return this.tripBlockCommand.replaceOne_V3(tripBlockId, body);
     }
 
-    addTripToTripBlock(
-        qb: RequestQueryBuilder,
+    addTripToTripBlock_V3(
         tripBlockId: string,
         body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.addTripToTripBlock(qb, tripBlockId, body);
+        return this.tripBlockCommand.addTripToTripBlock_V3(tripBlockId, body);
     }
 
-    deleteTripFromTripBlock(
-        qb: RequestQueryBuilder,
+    deleteTripFromTripBlock_V3(
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.deleteTripFromTripBlock(
-            qb,
+        return this.tripBlockCommand.deleteTripFromTripBlock_V3(
             tripBlockId,
             body,
         );

@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { forkJoin, Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -23,41 +22,29 @@ export class OperationTableService {
 
     fetchOperationTrips(): Observable<void> {
         const calendarId = this.#operationTableStateQuery.calendarId;
-        const qb = new RequestQueryBuilder()
-            .setFilter({
-                field: 'calendarId',
-                operator: CondOperator.EQUALS,
-                value: calendarId,
-            })
-            .setFilter({
-                field: 'operationNumber',
-                operator: CondOperator.NOT_EQUALS,
-                value: '100',
-            });
 
-        return this.#operationService.findMany(qb).pipe(
+        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
+            map((operations) =>
+                operations.filter((o) => o.operationNumber !== '100'),
+            ),
             switchMap((operations: OperationDetailsDto[]) =>
                 forkJoin(
                     operations.map((operation) =>
-                        this.#operationService.findOneWithTrips(
-                            operation.operationId,
-                            new RequestQueryBuilder(),
-                        ),
+                        this.#operationService.findOneWithTrips_V3({
+                            operationId: operation.operationId,
+                        }),
                     ),
                 ),
             ),
             tap((operationTrips) => {
-                this.#operationTableStateStore.setOperationTrips(
-                    operationTrips,
-                );
+                this.#operationTableStateStore.setOperationTrips(operationTrips);
             }),
             map(() => undefined),
         );
     }
 
     fetchStations(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-        return this.#stationService.findMany(qb).pipe(
+        return this.#stationService.findMany_V3({}).pipe(
             tap((stations: StationDetailsDto[]) =>
                 this.#operationTableStateStore.setStations(stations),
             ),
@@ -66,8 +53,7 @@ export class OperationTableService {
     }
 
     fetchTripClass(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-        return this.#tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany_V3({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) =>
                 this.#operationTableStateStore.setTripClasses(tripClasses),
             ),

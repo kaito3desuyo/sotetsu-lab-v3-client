@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
@@ -35,20 +34,18 @@ export class TimetableEditFormService {
     createTripBlocks(trips: CreateTripDto[]): Observable<void> {
         const isSaveTripsIndividually =
             this.#timetableEditFormStateQuery.isSaveTripsIndividually;
-        const qb = new RequestQueryBuilder();
 
         const tripBlocks: CreateTripBlockDto[] = isSaveTripsIndividually
             ? trips.map((trip) => ({ tripBlockId: undefined, trips: [trip] }))
             : [{ tripBlockId: undefined, trips }];
 
         return this.#tripBlockService
-            .createMany(qb, tripBlocks)
+            .createMany_V3(tripBlocks)
             .pipe(map(() => undefined));
     }
 
     replaceTripBlock(trips: ReplaceTripDto[]): Observable<void> {
         const tripBlockId = this.#timetableEditFormStateQuery.tripBlockId;
-        const qb = new RequestQueryBuilder();
 
         const tripBlock: ReplaceTripBlockDto = {
             tripBlockId,
@@ -56,32 +53,14 @@ export class TimetableEditFormService {
         };
 
         return this.#tripBlockService
-            .replaceOne(qb, tripBlockId, tripBlock)
+            .replaceOne_V3(tripBlockId, tripBlock)
             .pipe(map(() => undefined));
     }
 
     fetchStations(): Observable<void> {
         const serviceId = this.#serviceListStateQuery.serviceId;
-        const qb = new RequestQueryBuilder()
-            .setJoin([
-                {
-                    field: 'operatingSystems.route.routeStationLists.station.routeStationLists',
-                },
-                {
-                    field: 'operatingSystems.route.routeStationLists.station.routeStationLists.route',
-                },
-                {
-                    field: 'operatingSystems.route.routeStationLists.station.stops',
-                },
-            ])
-            .sortBy([
-                {
-                    field: 'routeStationListsStationStops.stopName',
-                    order: 'ASC',
-                },
-            ]);
 
-        return this.#serviceService.findOneWithStations(serviceId, qb).pipe(
+        return this.#serviceService.findOneWithStations_V3({ serviceId }).pipe(
             tap((data) => {
                 this.#timetableEditFormStateStore.setStations(data.stations);
             }),
@@ -91,22 +70,15 @@ export class TimetableEditFormService {
 
     fetchOperations(): Observable<void> {
         const calendarId = this.#timetableEditFormStateQuery.calendarId;
-        const qb = RequestQueryBuilder.create()
-            .setFilter([
-                {
-                    field: 'calendarId',
-                    operator: CondOperator.EQUALS,
-                    value: calendarId,
-                },
-                {
-                    field: 'operationNumber',
-                    operator: CondOperator.NOT_EQUALS,
-                    value: '100',
-                },
-            ])
-            .sortBy([{ field: 'operationNumber', order: 'ASC' }]);
 
-        return this.#operationService.findMany(qb).pipe(
+        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
+            map((operations) =>
+                operations
+                    .filter((o) => o.operationNumber !== '100')
+                    .sort((a, b) =>
+                        a.operationNumber.localeCompare(b.operationNumber),
+                    ),
+            ),
             tap((operations: OperationDetailsDto[]) => {
                 this.#timetableEditFormStateStore.setOperations(operations);
             }),
@@ -115,18 +87,7 @@ export class TimetableEditFormService {
     }
 
     fetchTripClasses(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
-        const qb = RequestQueryBuilder.create()
-            .setFilter([
-                {
-                    field: 'serviceId',
-                    operator: CondOperator.EQUALS,
-                    value: serviceId,
-                },
-            ])
-            .sortBy([{ field: 'sequence', order: 'ASC' }]);
-
-        return this.#tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany_V3({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.#timetableEditFormStateStore.setTripClasses(tripClasses);
             }),
@@ -136,30 +97,13 @@ export class TimetableEditFormService {
 
     fetchTripBlocks(): Observable<void> {
         const tripBlockId = this.#timetableEditFormStateQuery.tripBlockId;
-        const qb = RequestQueryBuilder.create()
-            .setJoin([
-                { field: 'trips' },
-                { field: 'trips.times' },
-                { field: 'trips.tripOperationLists' },
-            ])
-            .setFilter([
-                {
-                    field: 'id',
-                    operator: CondOperator.EQUALS,
-                    value: tripBlockId,
-                },
-            ])
-            .sortBy([
-                { field: 'trips.times.departureDays', order: 'ASC' },
-                { field: 'trips.times.departureTime', order: 'ASC' },
-            ]);
 
-        return this.#tripBlockService.findMany(qb).pipe(
-            tap((tripBlocks: TripBlockDetailsDto[]) => {
+        return this.#tripBlockService.findOneById_V3({ id: tripBlockId }).pipe(
+            tap((tripBlock: TripBlockDetailsDto) => {
                 this.#timetableEditFormStateStore.setTripDirection(
-                    tripBlocks[0].trips[0].tripDirection as ETripDirection,
+                    tripBlock.trips[0].tripDirection as ETripDirection,
                 );
-                this.#timetableEditFormStateStore.setTripBlocks(tripBlocks);
+                this.#timetableEditFormStateStore.setTripBlocks([tripBlock]);
             }),
             map(() => undefined),
         );

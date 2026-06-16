@@ -11,7 +11,7 @@ describe('OperationTableTablePresentationalComponent', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationTableTablePresentationalComponent],
+            imports: [OperationTableTablePresentationalComponent],
         }).compileComponents();
     }));
 
@@ -20,6 +20,10 @@ describe('OperationTableTablePresentationalComponent', () => {
             OperationTableTablePresentationalComponent,
         );
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('calendar', {} as any);
+        fixture.componentRef.setInput('operationTrips', []);
+        fixture.componentRef.setInput('stations', []);
+        fixture.componentRef.setInput('tripClasses', []);
         fixture.detectChanges();
     });
 

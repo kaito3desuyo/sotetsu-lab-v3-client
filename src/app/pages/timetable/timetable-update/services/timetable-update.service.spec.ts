@@ -6,7 +6,9 @@ describe('TimetableUpdateService', () => {
     let service: TimetableUpdateService;
 
     beforeEach(() => {
-        TestBed.configureTestingModule({});
+        TestBed.configureTestingModule({
+            providers: [TimetableUpdateService],
+        });
         service = TestBed.inject(TimetableUpdateService);
     });
 

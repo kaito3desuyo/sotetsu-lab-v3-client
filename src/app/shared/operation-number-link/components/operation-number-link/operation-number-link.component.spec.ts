@@ -13,6 +13,7 @@ describe('OperationNumberLinkComponent', () => {
 
         fixture = TestBed.createComponent(OperationNumberLinkComponent);
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('operation', {} as any);
         fixture.detectChanges();
     });
 

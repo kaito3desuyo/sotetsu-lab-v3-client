@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { RouteQuery } from '../infrastructure/queries/route.query';
 import { RouteDetailsDto } from './dtos/route-details.dto';
 import { RouteStationsDto } from './dtos/route-stations.dto';
@@ -10,10 +8,11 @@ import { RouteStationsDto } from './dtos/route-stations.dto';
 export class RouteService {
     constructor(private readonly routeQuery: RouteQuery) {}
 
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<RouteDetailsDto> | RouteDetailsDto[]> {
-        return this.routeQuery.findMany(qb);
+    findMany_V3(params?: {
+        serviceName?: string;
+        forceReload?: boolean;
+    }): Observable<RouteDetailsDto[]> {
+        return this.routeQuery.findMany_V3(params);
     }
 
     findOneWithStations_V3(params: {

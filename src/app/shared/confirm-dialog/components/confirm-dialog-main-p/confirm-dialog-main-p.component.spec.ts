@@ -8,11 +8,12 @@ describe('ConfirmDialogMainPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ConfirmDialogMainPComponent],
+            imports: [ConfirmDialogMainPComponent],
         }).compileComponents();
 
         fixture = TestBed.createComponent(ConfirmDialogMainPComponent);
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('data', {} as any);
         fixture.detectChanges();
     });
 

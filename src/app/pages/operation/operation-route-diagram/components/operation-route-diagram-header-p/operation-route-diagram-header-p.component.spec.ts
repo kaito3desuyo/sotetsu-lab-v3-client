@@ -8,7 +8,7 @@ describe('OperationRouteDiagramHeaderPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [OperationRouteDiagramHeaderPComponent],
+            imports: [OperationRouteDiagramHeaderPComponent],
         }).compileComponents();
     });
 

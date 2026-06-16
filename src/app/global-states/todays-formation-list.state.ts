@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { createStore } from '@ngneat/elf';
 import {
     getAllEntities,
@@ -29,10 +28,8 @@ export class TodaysFormationListStateStore {
     readonly #formationService = inject(FormationService);
 
     fetch(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
         return this.#formationService
-            .findManyBySpeficicDate(qb, {
+            .findManyBySpecificDate_V3({
                 date: dayjs()
                     .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
                     .format('YYYY-MM-DD'),

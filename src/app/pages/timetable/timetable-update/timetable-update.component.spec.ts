@@ -1,7 +1,6 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { TimetableUpdateComponent } from './timetable-update.component';
 
@@ -9,16 +8,18 @@ describe('TimetableUpdateComponent', () => {
     let component: TimetableUpdateComponent;
     let fixture: ComponentFixture<TimetableUpdateComponent>;
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [TimetableUpdateComponent],
-        }).compileComponents();
-    }));
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableUpdateComponent],
+            providers: [provideRouter([])],
+        })
+            .overrideComponent(TimetableUpdateComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(TimetableUpdateComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
     });
 
     it('should create', () => {

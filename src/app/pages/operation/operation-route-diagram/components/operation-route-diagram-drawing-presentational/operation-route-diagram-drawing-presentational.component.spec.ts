@@ -11,7 +11,7 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationRouteDiagramDrawingPresentationalComponent],
+            imports: [OperationRouteDiagramDrawingPresentationalComponent],
         }).compileComponents();
     }));
 
@@ -20,6 +20,10 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
             OperationRouteDiagramDrawingPresentationalComponent,
         );
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('calendar', {} as any);
+        fixture.componentRef.setInput('operation', {} as any);
+        fixture.componentRef.setInput('stations', []);
+        fixture.componentRef.setInput('tripOperationLists', []);
         fixture.detectChanges();
     });
 

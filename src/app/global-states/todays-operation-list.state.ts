@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { createStore } from '@ngneat/elf';
 import {
     getAllEntities,
@@ -32,25 +31,20 @@ export class TodaysOperationListStateStore {
     );
 
     fetch(): Observable<void> {
-        const qb = RequestQueryBuilder.create().setFilter([
-            {
-                field: 'calendarId',
-                operator: CondOperator.EQUALS,
-                value: this.#todaysCalendarListStateQuery.todaysCalendarId,
-            },
-            {
-                field: 'operationNumber',
-                operator: CondOperator.NOT_EQUALS,
-                value: '100',
-            },
-        ]);
-
-        return this.#operationService.findMany(qb).pipe(
-            tap((data: OperationDetailsDto[]) => {
-                state.update(setEntities(data));
-            }),
-            map(() => undefined),
-        );
+        return this.#operationService
+            .findManyByCalendarId({
+                calendarId:
+                    this.#todaysCalendarListStateQuery.todaysCalendarId,
+            })
+            .pipe(
+                map((data) =>
+                    data.filter((o) => o.operationNumber !== '100'),
+                ),
+                tap((data: OperationDetailsDto[]) => {
+                    state.update(setEntities(data));
+                }),
+                map(() => undefined),
+            );
     }
 }
 

@@ -1,7 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { format } from 'date-fns';
-import dayjs from 'dayjs';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -38,18 +36,11 @@ export class OperationPastTimeService {
             return of(undefined);
         }
 
-        const qb = new RequestQueryBuilder();
-
         return forkJoin(
             dates.map((date) =>
-                this.#calendarService.findManyBySpecificDate(qb, { date }).pipe(
-                    map((calendars: CalendarDetailsDto[]) => {
-                        return {
-                            date,
-                            calendar: calendars[0],
-                        };
-                    }),
-                ),
+                this.#calendarService
+                    .findOneBySpecificDate({ date })
+                    .pipe(map((calendar: CalendarDetailsDto) => ({ date, calendar }))),
             ),
         ).pipe(
             tap((calendars) => {
@@ -67,10 +58,8 @@ export class OperationPastTimeService {
             return of(undefined);
         }
 
-        const qb = new RequestQueryBuilder();
-
         return this.#formationService
-            .findManyBySpecificPeriod(qb, {
+            .findManyBySpecificPeriod_V3({
                 startDate: dates[0],
                 endDate: dates[dates.length - 1],
             })
@@ -91,50 +80,6 @@ export class OperationPastTimeService {
                 }),
                 map(() => undefined),
             );
-    }
-
-    fetchOperationSightingsV2(): Observable<void> {
-        const referenceDate = this.#operationPastTimeStateQuery.referenceDate;
-        const days = this.#operationPastTimeStateQuery.days;
-
-        if (!referenceDate || !days) {
-            // this.operationPastTimeStateStore.setFormations([]);
-            return of(undefined);
-        }
-
-        const start = dayjs(referenceDate, 'YYYY-MM-DD')
-            .hour(4)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .toISOString();
-        const end = dayjs(referenceDate, 'YYYY-MM-DD')
-            .hour(4)
-            .minute(0)
-            .second(0)
-            .millisecond(0)
-            .add(days, 'days')
-            .toISOString();
-
-        const qb = new RequestQueryBuilder()
-            .setFilter([
-                {
-                    field: 'sightingTime',
-                    operator: CondOperator.BETWEEN,
-                    value: [start, end],
-                },
-            ])
-            .setJoin([{ field: 'operation' }])
-            .sortBy([{ field: 'sightingTime', order: 'ASC' }]);
-
-        return this.#operationSightingService.findMany(qb).pipe(
-            tap((sightings: OperationSightingDetailsDto[]) => {
-                this.#operationPastTimeStateStore.setOperationSightings(
-                    sightings,
-                );
-            }),
-            map(() => undefined),
-        );
     }
 
     // v3

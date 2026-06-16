@@ -12,6 +12,10 @@ describe('OperationPastTimeTablePComponent', () => {
         });
         fixture = TestBed.createComponent(OperationPastTimeTablePComponent);
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('calendars', []);
+        fixture.componentRef.setInput('formations', []);
+        fixture.componentRef.setInput('operationSightings', []);
+        fixture.componentRef.setInput('contextMenuDisabled', false);
         fixture.detectChanges();
     });
 
