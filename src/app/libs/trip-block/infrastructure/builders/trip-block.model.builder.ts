@@ -10,10 +10,10 @@ const transformer = <T>(dto: T) => {
 };
 
 export const TripBlockModelBuilder = {
-    fromCreateDto: (dto: CreateTripBlockDto) => {
+    buildFromCreateDto: (dto: CreateTripBlockDto) => {
         return transformer(dto);
     },
-    fromReplaceDto: (dto: ReplaceTripBlockDto) => {
+    buildFromReplaceDto: (dto: ReplaceTripBlockDto) => {
         return transformer(dto);
     },
 } as const;

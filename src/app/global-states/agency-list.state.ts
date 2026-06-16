@@ -23,7 +23,7 @@ export class AgencyListStateStore {
     readonly #agencyService = inject(AgencyService);
 
     fetch(): Observable<void> {
-        return this.#agencyService.findMany_V3().pipe(
+        return this.#agencyService.findMany().pipe(
             tap((data: AgencyDetailsDto[]) => {
                 state.update(setEntities(data));
             }),

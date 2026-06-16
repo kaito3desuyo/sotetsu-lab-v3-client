@@ -4,16 +4,16 @@ import { omitBy } from 'es-toolkit';
 import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { buildTripOperationListDetailsDto } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list-dto.builder';
+import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import {
-    buildOperationDetailsDto,
     OperationDtoBuilder,
     OperationsDtoBuilder,
-} from '../builders/operation-dto.builder';
+} from '../builders/operation.dto.builder';
+import { OperationCurrentPositionDtoBuilder } from '../builders/operation-current-position.dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
@@ -53,7 +53,7 @@ export class OperationQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationsDtoBuilder.toDetailsDto(res.body);
+                        return OperationsDtoBuilder.buildFromModels(res.body);
                     }),
                 );
         }
@@ -91,7 +91,7 @@ export class OperationQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationsDtoBuilder.toDetailsDto(res.body);
+                        return OperationsDtoBuilder.buildFromModels(res.body);
                     }),
                 );
         }
@@ -137,7 +137,7 @@ export class OperationQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationDtoBuilder.toCurrentPositionDto(
+                        return OperationCurrentPositionDtoBuilder.buildFromModel(
                             res.body,
                         );
                     }),
@@ -147,7 +147,7 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
-    findOneWithTrips_V3(params: {
+    findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
     }): Observable<OperationTripsDto> {
@@ -173,11 +173,11 @@ export class OperationQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) => ({
-                        operation: buildOperationDetailsDto(
+                        operation: OperationDtoBuilder.buildFromModel(
                             res.body.operation,
                         ),
                         trips: res.body.trips.map((o) =>
-                            buildTripOperationListDetailsDto(o),
+                            TripOperationListDtoBuilder.buildFromModel(o),
                         ),
                     })),
                 );

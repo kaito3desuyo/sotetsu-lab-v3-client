@@ -7,9 +7,9 @@ import { AgencyDetailsDto } from './dtos/agency-details.dto';
 export class AgencyService {
     constructor(private readonly agencyQuery: AgencyQuery) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         forceReload?: boolean;
     }): Observable<AgencyDetailsDto[]> {
-        return this.agencyQuery.findMany_V3(params);
+        return this.agencyQuery.findMany(params);
     }
 }

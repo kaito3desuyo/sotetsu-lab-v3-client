@@ -7,18 +7,18 @@ import { FormationDetailsDto } from './dtos/formation-details.dto';
 export class FormationService {
     constructor(private readonly formationQuery: FormationQuery) {}
 
-    findManyBySpecificDate_V3(params: {
+    findManyBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificDate_V3(params);
+        return this.formationQuery.findManyBySpecificDate(params);
     }
 
-    findManyBySpecificPeriod_V3(params: {
+    findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificPeriod_V3(params);
+        return this.formationQuery.findManyBySpecificPeriod(params);
     }
 }

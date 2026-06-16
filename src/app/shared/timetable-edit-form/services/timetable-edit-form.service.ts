@@ -40,7 +40,7 @@ export class TimetableEditFormService {
             : [{ tripBlockId: undefined, trips }];
 
         return this.#tripBlockService
-            .createMany_V3(tripBlocks)
+            .createMany(tripBlocks)
             .pipe(map(() => undefined));
     }
 
@@ -53,14 +53,14 @@ export class TimetableEditFormService {
         };
 
         return this.#tripBlockService
-            .replaceOne_V3(tripBlockId, tripBlock)
+            .replaceOne(tripBlockId, tripBlock)
             .pipe(map(() => undefined));
     }
 
     fetchStations(): Observable<void> {
         const serviceId = this.#serviceListStateQuery.serviceId;
 
-        return this.#serviceService.findOneWithStations_V3({ serviceId }).pipe(
+        return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
                 this.#timetableEditFormStateStore.setStations(data.stations);
             }),
@@ -87,7 +87,7 @@ export class TimetableEditFormService {
     }
 
     fetchTripClasses(): Observable<void> {
-        return this.#tripClassService.findMany_V3({}).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
                 this.#timetableEditFormStateStore.setTripClasses(tripClasses);
             }),
@@ -98,7 +98,7 @@ export class TimetableEditFormService {
     fetchTripBlocks(): Observable<void> {
         const tripBlockId = this.#timetableEditFormStateQuery.tripBlockId;
 
-        return this.#tripBlockService.findOneById_V3({ id: tripBlockId }).pipe(
+        return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
             tap((tripBlock: TripBlockDetailsDto) => {
                 this.#timetableEditFormStateStore.setTripDirection(
                     tripBlock.trips[0].tripDirection as ETripDirection,

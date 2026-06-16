@@ -28,7 +28,7 @@ export class OperationRouteDiagramService {
     fetchOperationTrips(): Observable<void> {
         const operationId = this.#operationRouteDiagramStateQuery.operationId;
 
-        return this.#operationService.findOneWithTrips_V3({ operationId }).pipe(
+        return this.#operationService.findOneWithTrips({ operationId }).pipe(
             tap((operationTrips) => {
                 this.#operationRouteDiagramStateStore.setOperationTrips(
                     operationTrips,
@@ -41,7 +41,7 @@ export class OperationRouteDiagramService {
     fetchStations(): Observable<void> {
         const serviceId = this.#serviceListStateQuery.serviceId;
 
-        return this.#serviceService.findOneWithStations_V3({ serviceId }).pipe(
+        return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
                 this.#operationRouteDiagramStateStore.setStations(
                     data.stations,

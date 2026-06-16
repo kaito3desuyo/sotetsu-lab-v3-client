@@ -8,8 +8,8 @@ import { CreateTripBlockDto } from '../../usecase/dtos/create-trip-block.dto';
 import { DeleteTripFromTripBlockDto } from '../../usecase/dtos/delete-trip-from-trip-block.dto';
 import { ReplaceTripBlockDto } from '../../usecase/dtos/replace-trip-block.dto';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
-import { buildTripBlockDetailsDto } from '../builders/trip-block-dto.builder';
-import { TripBlockModelBuilder } from '../builders/trip-block-model.builder';
+import { TripBlockDtoBuilder } from '../builders/trip-block.dto.builder';
+import { TripBlockModelBuilder } from '../builders/trip-block.model.builder';
 import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
@@ -18,36 +18,36 @@ export class TripBlockCommand {
 
     constructor(private readonly http: HttpClient) {}
 
-    createMany_V3(
+    createMany(
         body: CreateTripBlockDto[],
     ): Observable<TripBlockDetailsDto[]> {
         return this.http
             .post<TripBlockModel[]>(
                 `${this.#v3ApiUrl}/bulk`,
-                body.map((o) => TripBlockModelBuilder.fromCreateDto(o)),
+                body.map((o) => TripBlockModelBuilder.buildFromCreateDto(o)),
                 { observe: 'response' },
             )
             .pipe(
                 map((res) =>
-                    res.body.map((o) => buildTripBlockDetailsDto(o)),
+                    res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
                 ),
             );
     }
 
-    replaceOne_V3(
+    replaceOne(
         tripBlockId: string,
         body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
         return this.http
             .put<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}`,
-                TripBlockModelBuilder.fromReplaceDto(body),
+                TripBlockModelBuilder.buildFromReplaceDto(body),
                 { observe: 'response' },
             )
-            .pipe(map((res) => buildTripBlockDetailsDto(res.body)));
+            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
     }
 
-    addTripToTripBlock_V3(
+    addTripToTripBlock(
         tripBlockId: string,
         body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
@@ -57,10 +57,10 @@ export class TripBlockCommand {
                 body,
                 { observe: 'response' },
             )
-            .pipe(map((res) => buildTripBlockDetailsDto(res.body)));
+            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
     }
 
-    deleteTripFromTripBlock_V3(
+    deleteTripFromTripBlock(
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
@@ -70,6 +70,6 @@ export class TripBlockCommand {
                 body,
                 { observe: 'response' },
             )
-            .pipe(map((res) => buildTripBlockDetailsDto(res.body)));
+            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
     }
 }

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { AgencyDetailsDto } from '../../usecase/dtos/agency-details.dto';
-import { buildAgencyDetailsDto } from '../builders/agency-dto.builder';
+import { AgencyDtoBuilder } from '../builders/agency.dto.builder';
 import { AgencyModel } from '../models/agency.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class AgencyQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         forceReload?: boolean;
     }): Observable<AgencyDetailsDto[]> {
         const { forceReload } = params ?? {};
@@ -30,7 +30,7 @@ export class AgencyQuery {
                 .get<AgencyModel[]>(this.#v3ApiUrl, { observe: 'response' })
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => res.body.map((o) => buildAgencyDetailsDto(o))),
+                    map((res) => res.body.map((o) => AgencyDtoBuilder.buildFromModel(o))),
                 );
         }
 

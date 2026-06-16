@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
-import { buildTripBlockDetailsDto } from '../builders/trip-block-dto.builder';
+import { TripBlockDtoBuilder } from '../builders/trip-block.dto.builder';
 import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class TripBlockQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findManyByFilter_V3(params: {
+    findManyByFilter(params: {
         calendarId: string;
         tripDirection: number;
         forceReload?: boolean;
@@ -49,7 +49,7 @@ export class TripBlockQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) =>
-                        res.body.map((o) => buildTripBlockDetailsDto(o)),
+                        res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
                     ),
                 );
         }
@@ -57,7 +57,7 @@ export class TripBlockQuery {
         return this.#obs[key];
     }
 
-    findOneById_V3(params: {
+    findOneById(params: {
         id: string;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto> {
@@ -76,7 +76,7 @@ export class TripBlockQuery {
                 })
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => buildTripBlockDetailsDto(res.body)),
+                    map((res) => TripBlockDtoBuilder.buildFromModel(res.body)),
                 );
         }
 

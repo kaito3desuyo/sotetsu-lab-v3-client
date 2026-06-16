@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { FormationDetailsDto } from '../../usecase/dtos/formation-details.dto';
-import { FormationsDtoBuilder } from '../builders/formation-dto.builder';
+import { FormationsDtoBuilder } from '../builders/formation.dto.builder';
 import { FormationModel } from '../models/formation.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class FormationQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findManyBySpecificDate_V3(params: {
+    findManyBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
@@ -46,7 +46,7 @@ export class FormationQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return FormationsDtoBuilder.toDetailsDto(res.body);
+                        return FormationsDtoBuilder.buildFromModels(res.body);
                     }),
                 );
         }
@@ -54,7 +54,7 @@ export class FormationQuery {
         return this.#obs[key];
     }
 
-    findManyBySpecificPeriod_V3(params: {
+    findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
         forceReload?: boolean;
@@ -87,7 +87,7 @@ export class FormationQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return FormationsDtoBuilder.toDetailsDto(res.body);
+                        return FormationsDtoBuilder.buildFromModels(res.body);
                     }),
                 );
         }

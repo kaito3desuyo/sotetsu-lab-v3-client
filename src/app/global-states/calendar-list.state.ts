@@ -30,7 +30,7 @@ export class CalendarListStateStore {
 
     fetch(): Observable<void> {
         return this.#calendarService
-            .findMany_V3({
+            .findMany({
                 serviceName:
                     '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
             })

@@ -7,9 +7,9 @@ import { StationDetailsDto } from './dtos/station-details.dto';
 export class StationService {
     constructor(private readonly stationQuery: StationQuery) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         forceReload?: boolean;
     }): Observable<StationDetailsDto[]> {
-        return this.stationQuery.findMany_V3(params);
+        return this.stationQuery.findMany(params);
     }
 }

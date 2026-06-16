@@ -7,11 +7,11 @@ import { CalendarDetailsDto } from './dtos/calendar-details.dto';
 export class CalendarService {
     constructor(private readonly calendarQuery: CalendarQuery) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto[]> {
-        return this.calendarQuery.findMany_V3(params);
+        return this.calendarQuery.findMany(params);
     }
 
     findOne(params: {

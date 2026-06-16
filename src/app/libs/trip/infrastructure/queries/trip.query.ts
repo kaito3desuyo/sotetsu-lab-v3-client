@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TripDetailsDto } from '../../usecase/dtos/trip-details.dto';
-import { buildTripDetailsDto } from '../builders/trip-dto.builder';
+import { TripDtoBuilder } from '../builders/trip.dto.builder';
 import { TripModel } from '../models/trip.model';
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +50,7 @@ export class TripQuery {
                 )
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => res.body.map((o) => buildTripDetailsDto(o))),
+                    map((res) => res.body.map((o) => TripDtoBuilder.buildFromModel(o))),
                 );
         }
 

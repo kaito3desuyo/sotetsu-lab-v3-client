@@ -22,7 +22,7 @@ export class TimetableAllLineService {
 
     fetchStationsV2(): Observable<void> {
         const serviceId = this.serviceListStateQuery.serviceId;
-        return this.serviceService.findOneWithStations_V3({ serviceId }).pipe(
+        return this.serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
                 this.timetableAllLineStateStore.setStations(data.stations);
             }),
@@ -36,8 +36,8 @@ export class TimetableAllLineService {
         const tripBlockId = this.timetableAllLineStateQuery.tripBlockId;
 
         const tripBlocks$ = tripBlockId
-            ? this.tripBlockService.findOneById_V3({ id: tripBlockId }).pipe(map((tb) => [tb]))
-            : this.tripBlockService.findManyByFilter_V3({ calendarId, tripDirection });
+            ? this.tripBlockService.findOneById({ id: tripBlockId }).pipe(map((tb) => [tb]))
+            : this.tripBlockService.findManyByFilter({ calendarId, tripDirection });
 
         return tripBlocks$.pipe(
             tap((data: TripBlockDetailsDto[]) => {
@@ -57,7 +57,7 @@ export class TimetableAllLineService {
         tripId: string;
     }): Observable<void> {
         return this.tripBlockService
-            .addTripToTripBlock_V3(params.tripBlockId, { tripId: params.tripId })
+            .addTripToTripBlock(params.tripBlockId, { tripId: params.tripId })
             .pipe(map(() => undefined));
     }
 
@@ -67,7 +67,7 @@ export class TimetableAllLineService {
         holdAsAnotherTripBlock?: boolean;
     }): Observable<void> {
         return this.tripBlockService
-            .deleteTripFromTripBlock_V3(params.tripBlockId, {
+            .deleteTripFromTripBlock(params.tripBlockId, {
                 tripId: params.tripId,
                 holdAsAnotherTripBlock: params.holdAsAnotherTripBlock ?? false,
             })

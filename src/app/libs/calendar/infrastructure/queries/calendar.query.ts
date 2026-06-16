@@ -8,7 +8,7 @@ import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
 import {
     buildCalendarDetailsDto,
     CalendarDtoBuilder,
-} from '../builders/calendar-dto.builder';
+} from '../builders/calendar.dto.builder';
 import { CalendarModel } from '../models/calendar.model';
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +18,7 @@ export class CalendarQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto[]> {

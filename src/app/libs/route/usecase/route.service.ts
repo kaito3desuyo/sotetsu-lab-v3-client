@@ -8,17 +8,17 @@ import { RouteStationsDto } from './dtos/route-stations.dto';
 export class RouteService {
     constructor(private readonly routeQuery: RouteQuery) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<RouteDetailsDto[]> {
-        return this.routeQuery.findMany_V3(params);
+        return this.routeQuery.findMany(params);
     }
 
-    findOneWithStations_V3(params: {
+    findOneWithStations(params: {
         routeId: string;
         forceReload?: boolean;
     }): Observable<RouteStationsDto> {
-        return this.routeQuery.findOneWithStations_V3(params);
+        return this.routeQuery.findOneWithStations(params);
     }
 }

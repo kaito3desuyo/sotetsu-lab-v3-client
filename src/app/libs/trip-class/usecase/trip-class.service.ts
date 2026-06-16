@@ -7,9 +7,9 @@ import { TripClassDetailsDto } from './dtos/trip-class-details.dto';
 export class TripClassService {
     constructor(private readonly tripClassQuery: TripClassQuery) {}
 
-    findMany_V3(params: {
+    findMany(params: {
         forceReload?: boolean;
     }): Observable<TripClassDetailsDto[]> {
-        return this.tripClassQuery.findMany_V3(params);
+        return this.tripClassQuery.findMany(params);
     }
 }

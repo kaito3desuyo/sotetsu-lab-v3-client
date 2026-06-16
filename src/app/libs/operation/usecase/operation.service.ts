@@ -32,10 +32,10 @@ export class OperationService {
         return this.operationQuery.findOneWithCurrentPosition(params);
     }
 
-    findOneWithTrips_V3(params: {
+    findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
     }): Observable<OperationTripsDto> {
-        return this.operationQuery.findOneWithTrips_V3(params);
+        return this.operationQuery.findOneWithTrips(params);
     }
 }

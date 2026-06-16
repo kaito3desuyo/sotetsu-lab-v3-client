@@ -7,7 +7,8 @@ import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
-import { OperationSightingDtoBuilder } from '../builders/operation-sighting-dto.builder';
+import { OperationSightingDtoBuilder } from '../builders/operation-sighting.dto.builder';
+import { OperationSightingTimeCrossSectionDtoBuilder } from '../builders/operation-sighting-time-cross-section.dto.builder';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
 
@@ -89,7 +90,7 @@ export class OperationSightingQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationSightingDtoBuilder.toTimeCrossSectionDto(
+                        return OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
                             res.body,
                         );
                     }),
@@ -130,7 +131,7 @@ export class OperationSightingQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationSightingDtoBuilder.toTimeCrossSectionDto(
+                        return OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
                             res.body,
                         );
                     }),

@@ -10,31 +10,31 @@ import { ServiceStationsDto } from './dtos/service-stations.dto';
 export class ServiceService {
     constructor(private readonly serviceQuery: ServiceQuery) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<ServiceDetailsDto[]> {
-        return this.serviceQuery.findMany_V3(params);
+        return this.serviceQuery.findMany(params);
     }
 
-    findOneWithStations_V3(params: {
+    findOneWithStations(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceStationsDto> {
-        return this.serviceQuery.findOneWithStations_V3(params);
+        return this.serviceQuery.findOneWithStations(params);
     }
 
-    findOneWithAgencies_V3(params: {
+    findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceAgenciesDto> {
-        return this.serviceQuery.findOneWithAgencies_V3(params);
+        return this.serviceQuery.findOneWithAgencies(params);
     }
 
-    findOneWithRoutes_V3(params: {
+    findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceRoutesDto> {
-        return this.serviceQuery.findOneWithRoutes_V3(params);
+        return this.serviceQuery.findOneWithRoutes(params);
     }
 }

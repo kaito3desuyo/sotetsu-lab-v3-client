@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { RegisterUserDto } from '../../usecase/dtos/register-user.dto';
-import { UserModelBuilder } from '../builders/user-model.builder';
+import { UserModelBuilder } from '../builders/user.model.builder';
 
 @Injectable({ providedIn: 'root' })
 export class UserCommand {
@@ -11,7 +11,7 @@ export class UserCommand {
     readonly #baseUrl = `${environment.backendUrl}/user`;
 
     registerUser(user: RegisterUserDto): Observable<void> {
-        const model = UserModelBuilder.fromRegisterUserDto(user);
+        const model = UserModelBuilder.buildFromDto(user);
 
         return this.#http
             .post<void>(`${this.#baseUrl}/register`, model)

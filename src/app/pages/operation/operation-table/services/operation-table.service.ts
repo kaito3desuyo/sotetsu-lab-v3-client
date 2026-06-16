@@ -30,7 +30,7 @@ export class OperationTableService {
             switchMap((operations: OperationDetailsDto[]) =>
                 forkJoin(
                     operations.map((operation) =>
-                        this.#operationService.findOneWithTrips_V3({
+                        this.#operationService.findOneWithTrips({
                             operationId: operation.operationId,
                         }),
                     ),
@@ -44,7 +44,7 @@ export class OperationTableService {
     }
 
     fetchStations(): Observable<void> {
-        return this.#stationService.findMany_V3({}).pipe(
+        return this.#stationService.findMany({}).pipe(
             tap((stations: StationDetailsDto[]) =>
                 this.#operationTableStateStore.setStations(stations),
             ),
@@ -53,7 +53,7 @@ export class OperationTableService {
     }
 
     fetchTripClass(): Observable<void> {
-        return this.#tripClassService.findMany_V3({}).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) =>
                 this.#operationTableStateStore.setTripClasses(tripClasses),
             ),

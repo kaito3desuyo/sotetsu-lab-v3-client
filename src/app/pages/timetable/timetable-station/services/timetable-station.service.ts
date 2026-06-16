@@ -62,7 +62,7 @@ export class TimetableStationService {
         );
 
         return forkJoin(
-            tripBlockIds.map((id) => this.#tripBlockService.findOneById_V3({ id })),
+            tripBlockIds.map((id) => this.#tripBlockService.findOneById({ id })),
         ).pipe(
             tap((data) => {
                 this.#timetableStationStateStore.setTripBlocks(data);
@@ -72,7 +72,7 @@ export class TimetableStationService {
     }
 
     fetchTripClasses(): Observable<void> {
-        return this.#tripClassService.findMany_V3({}).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((data: TripClassDetailsDto[]) => {
                 this.#timetableStationStateStore.setTripClasses(data);
             }),
@@ -81,7 +81,7 @@ export class TimetableStationService {
     }
 
     fetchStations(): Observable<void> {
-        return this.#stationService.findMany_V3({}).pipe(
+        return this.#stationService.findMany({}).pipe(
             tap((data: StationDetailsDto[]) => {
                 this.#timetableStationStateStore.setStations(data);
             }),

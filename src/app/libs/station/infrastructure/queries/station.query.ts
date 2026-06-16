@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { StationDetailsDto } from '../../usecase/dtos/station-details.dto';
-import { buildStationDetailsDto } from '../builders/station-dto.builder';
+import { StationDtoBuilder } from '../builders/station.dto.builder';
 import { StationModel } from '../models/station.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class StationQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany_V3(params?: {
+    findMany(params?: {
         forceReload?: boolean;
     }): Observable<StationDetailsDto[]> {
         const { forceReload } = params ?? {};
@@ -31,7 +31,7 @@ export class StationQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) =>
-                        res.body.map((o) => buildStationDetailsDto(o)),
+                        res.body.map((o) => StationDtoBuilder.buildFromModel(o)),
                     ),
                 );
         }

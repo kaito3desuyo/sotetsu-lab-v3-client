@@ -29,7 +29,7 @@ export class TodaysFormationListStateStore {
 
     fetch(): Observable<void> {
         return this.#formationService
-            .findManyBySpecificDate_V3({
+            .findManyBySpecificDate({
                 date: dayjs()
                     .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
                     .format('YYYY-MM-DD'),

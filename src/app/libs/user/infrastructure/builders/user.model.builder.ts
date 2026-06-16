@@ -4,8 +4,8 @@ import {
     plainToClass,
 } from 'class-transformer';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
-import { TokenDetailsDto } from '../../usecase/dtos/token-details.dto';
-import { TokenModel } from '../models/token.model';
+import { RegisterUserDto } from '../../usecase/dtos/register-user.dto';
+import { UserModel } from '../models/user.model';
 
 const transformer = <Source, Target>(
     source: Source,
@@ -15,8 +15,8 @@ const transformer = <Source, Target>(
     return plainToClass(target, plainObject, classTransformerOptions);
 };
 
-export const TokenDtoBuilder = {
-    fromTokenModel: (model: TokenModel) => {
-        return transformer(model, TokenDetailsDto);
+export const UserModelBuilder = {
+    buildFromDto: (dto: RegisterUserDto) => {
+        return transformer(dto, UserModel);
     },
-};
+} as const;

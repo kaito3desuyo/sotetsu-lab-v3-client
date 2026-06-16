@@ -33,7 +33,7 @@ export class OperationRealTimeService {
 
     fetchRoutes(): Observable<void> {
         return this.#serviceService
-            .findOneWithRoutes_V3({
+            .findOneWithRoutes({
                 serviceId: '8d9d2a20-48ad-438b-83a4-ba8727b4708c',
             })
             .pipe(
@@ -49,7 +49,7 @@ export class OperationRealTimeService {
 
         return forkJoin(
             routes.map(({ routeId }) =>
-                this.#routeService.findOneWithStations_V3({ routeId }),
+                this.#routeService.findOneWithStations({ routeId }),
             ),
         ).pipe(
             map((data) =>
@@ -70,7 +70,7 @@ export class OperationRealTimeService {
     }
 
     fetchTripClasses(): Observable<void> {
-        return this.#tripClassService.findMany_V3({}).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((data) => {
                 OperationRealTimeStore.setTripClasses(data);
             }),
@@ -130,7 +130,7 @@ export class OperationRealTimeService {
         const date = generateBaseDate(Date.now());
 
         return this.#formationService
-            .findManyBySpecificPeriod_V3({
+            .findManyBySpecificPeriod({
                 startDate: date,
                 endDate: date,
             })

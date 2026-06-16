@@ -6,10 +6,8 @@ import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { RouteDetailsDto } from '../../usecase/dtos/route-details.dto';
 import { RouteStationsDto } from '../../usecase/dtos/route-stations.dto';
-import {
-    buildRouteDetailsDto,
-    RouteDtoBuilder,
-} from '../builders/route-dto.builder';
+import { RouteDtoBuilder } from '../builders/route.dto.builder';
+import { RouteStationsDtoBuilder } from '../builders/route-stations.dto.builder';
 import { RouteStationsModel } from '../models/route-stations.model';
 import { RouteModel } from '../models/route.model';
 
@@ -19,7 +17,7 @@ export class RouteQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/routes';
     #obs: Record<string, Observable<any>> = {};
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<RouteDetailsDto[]> {
@@ -42,7 +40,7 @@ export class RouteQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) =>
-                        res.body.map((o) => buildRouteDetailsDto(o)),
+                        res.body.map((o) => RouteDtoBuilder.buildFromModel(o)),
                     ),
                 );
         }
@@ -50,7 +48,7 @@ export class RouteQuery {
         return this.#obs[key];
     }
 
-    findOneWithStations_V3(params: {
+    findOneWithStations(params: {
         routeId: string;
         forceReload?: boolean;
     }): Observable<RouteStationsDto> {
@@ -77,7 +75,7 @@ export class RouteQuery {
                 )
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => RouteDtoBuilder.toStationsDto(res.body)),
+                    map((res) => RouteStationsDtoBuilder.buildFromModel(res.body)),
                 );
         }
 

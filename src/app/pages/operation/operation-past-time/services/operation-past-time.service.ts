@@ -59,7 +59,7 @@ export class OperationPastTimeService {
         }
 
         return this.#formationService
-            .findManyBySpecificPeriod_V3({
+            .findManyBySpecificPeriod({
                 startDate: dates[0],
                 endDate: dates[dates.length - 1],
             })

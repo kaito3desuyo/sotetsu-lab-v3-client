@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TripClassDetailsDto } from '../../usecase/dtos/trip-class-details.dto';
-import { TripClassesDtoBuilder } from '../builders/trip-class-dto.builder';
+import { TripClassesDtoBuilder } from '../builders/trip-class.dto.builder';
 import { TripClassModel } from '../models/trip-class.model';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class TripClassQuery {
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany_V3(params: {
+    findMany(params: {
         forceReload?: boolean;
     }): Observable<TripClassDetailsDto[]> {
         const { forceReload } = params;
@@ -35,7 +35,7 @@ export class TripClassQuery {
                 .get<TripClassModel[]>(this.#v3ApiUrl, { observe: 'response' })
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => TripClassesDtoBuilder.toDetailsDtos(res.body)),
+                    map((res) => TripClassesDtoBuilder.buildFromModels(res.body)),
                 );
         }
 

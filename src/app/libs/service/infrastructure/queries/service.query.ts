@@ -3,17 +3,15 @@ import { inject, Injectable } from '@angular/core';
 import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { buildStationDetailsDto } from 'src/app/libs/station/infrastructure/builders/station-dto.builder';
+import { StationDtoBuilder } from 'src/app/libs/station/infrastructure/builders/station.dto.builder';
 import { environment } from 'src/environments/environment';
 import { ServiceAgenciesDto } from '../../usecase/dtos/service-agencies.dto';
 import { ServiceDetailsDto } from '../../usecase/dtos/service-details.dto';
 import { ServiceRoutesDto } from '../../usecase/dtos/service-routes.dto';
 import { ServiceStationsDto } from '../../usecase/dtos/service-stations.dto';
 import { ServiceAgenciesDtoBuilder } from '../builders/service-agencies.dto.builder';
-import {
-    buildServiceDetailsDto,
-    ServiceDtoBuilder,
-} from '../builders/service-dto.builder';
+import { ServiceDtoBuilder } from '../builders/service.dto.builder';
+import { ServiceRoutesDtoBuilder } from '../builders/service-routes.dto.builder';
 import { ServiceAgenciesModel } from '../models/service-agencies.model';
 import { ServiceRoutesModel } from '../models/service-routes.model';
 import { ServiceStationsModel } from '../models/service-stations.model';
@@ -25,7 +23,7 @@ export class ServiceQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/services';
     #obs: Record<string, Observable<any>> = {};
 
-    findMany_V3(params?: {
+    findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<ServiceDetailsDto[]> {
@@ -48,7 +46,7 @@ export class ServiceQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) =>
-                        res.body.map((o) => buildServiceDetailsDto(o)),
+                        res.body.map((o) => ServiceDtoBuilder.buildFromModel(o)),
                     ),
                 );
         }
@@ -56,7 +54,7 @@ export class ServiceQuery {
         return this.#obs[key];
     }
 
-    findOneWithStations_V3(params: {
+    findOneWithStations(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceStationsDto> {
@@ -79,9 +77,9 @@ export class ServiceQuery {
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
                     map((res) => ({
-                        service: buildServiceDetailsDto(res.body.service),
+                        service: ServiceDtoBuilder.buildFromModel(res.body.service),
                         stations: res.body.stations.map((o) =>
-                            buildStationDetailsDto(o),
+                            StationDtoBuilder.buildFromModel(o),
                         ),
                     })),
                 );
@@ -90,7 +88,7 @@ export class ServiceQuery {
         return this.#obs[key];
     }
 
-    findOneWithAgencies_V3(params: {
+    findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceAgenciesDto> {
@@ -126,7 +124,7 @@ export class ServiceQuery {
         return this.#obs[key];
     }
 
-    findOneWithRoutes_V3(params: {
+    findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceRoutesDto> {
@@ -151,7 +149,7 @@ export class ServiceQuery {
                 )
                 .pipe(
                     shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => ServiceDtoBuilder.toRoutesDto(res.body)),
+                    map((res) => ServiceRoutesDtoBuilder.buildFromModel(res.body)),
                 );
         }
 

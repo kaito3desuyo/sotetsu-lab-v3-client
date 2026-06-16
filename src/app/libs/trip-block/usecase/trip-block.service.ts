@@ -15,44 +15,44 @@ export class TripBlockService {
         private readonly tripBlockQuery: TripBlockQuery,
     ) {}
 
-    findManyByFilter_V3(params: {
+    findManyByFilter(params: {
         calendarId: string;
         tripDirection: number;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto[]> {
-        return this.tripBlockQuery.findManyByFilter_V3(params);
+        return this.tripBlockQuery.findManyByFilter(params);
     }
 
-    findOneById_V3(params: {
+    findOneById(params: {
         id: string;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto> {
-        return this.tripBlockQuery.findOneById_V3(params);
+        return this.tripBlockQuery.findOneById(params);
     }
 
-    createMany_V3(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
-        return this.tripBlockCommand.createMany_V3(body);
+    createMany(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
+        return this.tripBlockCommand.createMany(body);
     }
 
-    replaceOne_V3(
+    replaceOne(
         tripBlockId: string,
         body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.replaceOne_V3(tripBlockId, body);
+        return this.tripBlockCommand.replaceOne(tripBlockId, body);
     }
 
-    addTripToTripBlock_V3(
+    addTripToTripBlock(
         tripBlockId: string,
         body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.addTripToTripBlock_V3(tripBlockId, body);
+        return this.tripBlockCommand.addTripToTripBlock(tripBlockId, body);
     }
 
-    deleteTripFromTripBlock_V3(
+    deleteTripFromTripBlock(
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.deleteTripFromTripBlock_V3(
+        return this.tripBlockCommand.deleteTripFromTripBlock(
             tripBlockId,
             body,
         );
