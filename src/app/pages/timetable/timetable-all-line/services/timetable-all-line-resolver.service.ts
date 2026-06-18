@@ -54,8 +54,8 @@ export class TimetableAllLineResolverService {
             ),
             mergeMap(() =>
                 forkJoin([
-                    this.#timetableAllLineService.fetchStationsV2(),
-                    this.#timetableAllLineService.fetchTripBlocksV2(),
+                    this.#timetableAllLineService.fetchStations(),
+                    this.#timetableAllLineService.fetchTripBlocks(),
                 ]),
             ),
             map(() => undefined),

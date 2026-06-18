@@ -20,7 +20,7 @@ export class TimetableAllLineService {
         private readonly timetableAllLineStateQuery: TimetableAllLineStateQuery,
     ) {}
 
-    fetchStationsV2(): Observable<void> {
+    fetchStations(): Observable<void> {
         const serviceId = this.serviceListStateQuery.serviceId;
         return this.serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
@@ -30,7 +30,7 @@ export class TimetableAllLineService {
         );
     }
 
-    fetchTripBlocksV2(): Observable<void> {
+    fetchTripBlocks(): Observable<void> {
         const calendarId = this.timetableAllLineStateQuery.calendarId;
         const tripDirection = this.timetableAllLineStateQuery.tripDirection;
         const tripBlockId = this.timetableAllLineStateQuery.tripBlockId;
@@ -52,7 +52,7 @@ export class TimetableAllLineService {
         );
     }
 
-    addTripToTripBlockV2(params: {
+    addTripToTripBlock(params: {
         tripBlockId: string;
         tripId: string;
     }): Observable<void> {
@@ -61,7 +61,7 @@ export class TimetableAllLineService {
             .pipe(map(() => undefined));
     }
 
-    deleteTripFromTripBlockV2(params: {
+    deleteTripFromTripBlock(params: {
         tripBlockId: string;
         tripId: string;
         holdAsAnotherTripBlock?: boolean;

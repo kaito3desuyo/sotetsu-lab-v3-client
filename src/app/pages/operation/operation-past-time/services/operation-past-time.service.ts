@@ -26,8 +26,6 @@ export class OperationPastTimeService {
     readonly #operationPastTimeStateStore = inject(OperationPastTimeStateStore);
     readonly #operationPastTimeStateQuery = inject(OperationPastTimeStateQuery);
 
-    // v2
-
     fetchCalendarByDate(): Observable<void> {
         const dates = this.#operationPastTimeStateQuery.dates;
 
@@ -50,7 +48,7 @@ export class OperationPastTimeService {
         );
     }
 
-    fetchFormationsV2(): Observable<void> {
+    fetchFormations(): Observable<void> {
         const dates = this.#operationPastTimeStateQuery.dates;
 
         if (!dates.length) {
