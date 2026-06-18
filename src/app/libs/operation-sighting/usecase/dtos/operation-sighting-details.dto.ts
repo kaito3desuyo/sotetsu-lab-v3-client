@@ -2,6 +2,20 @@ import { Expose, Type } from 'class-transformer';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 
+export class OperationSightingInvalidationDetailsDto {
+    @Expose()
+    operationSightingInvalidationId: string;
+
+    @Expose()
+    operationSightingId: string;
+
+    @Expose()
+    createdAt?: string;
+
+    @Expose()
+    updatedAt?: string;
+}
+
 export class OperationSightingDetailsDto {
     @Expose({ name: 'id' })
     operationSightingId: string;
@@ -28,4 +42,8 @@ export class OperationSightingDetailsDto {
     @Expose()
     @Type(() => FormationDetailsDto)
     formation?: FormationDetailsDto;
+
+    @Expose()
+    @Type(() => OperationSightingInvalidationDetailsDto)
+    invalidation?: OperationSightingInvalidationDetailsDto | null;
 }

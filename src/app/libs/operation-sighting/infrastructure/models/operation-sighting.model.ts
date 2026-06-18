@@ -2,6 +2,20 @@ import { Expose, Type } from 'class-transformer';
 import { FormationModel } from 'src/app/libs/formation/infrastructure/models/formation.model';
 import { OperationModel } from 'src/app/libs/operation/infrastructure/models/operation.model';
 
+export class OperationSightingInvalidationModel {
+    @Expose()
+    operationSightingInvalidationId: string;
+
+    @Expose()
+    operationSightingId: string;
+
+    @Expose()
+    createdAt?: string;
+
+    @Expose()
+    updatedAt?: string;
+}
+
 export class OperationSightingModel {
     @Expose({ name: 'operationSightingId' })
     id: string;
@@ -28,4 +42,8 @@ export class OperationSightingModel {
     @Expose()
     @Type(() => FormationModel)
     formation?: FormationModel;
+
+    @Expose()
+    @Type(() => OperationSightingInvalidationModel)
+    invalidation?: OperationSightingInvalidationModel | null;
 }

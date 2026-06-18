@@ -47,6 +47,10 @@ export class OperationRealTimeService {
     fetchStations(): Observable<void> {
         const routes = OperationRealTimeStore.routes;
 
+        if (!routes.length) {
+            return of(undefined);
+        }
+
         return forkJoin(
             routes.map(({ routeId }) =>
                 this.#routeService.findOneWithStations({ routeId }),
@@ -147,6 +151,10 @@ export class OperationRealTimeService {
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
 
+        if (!operations.length) {
+            return of(undefined);
+        }
+
         return from(operations).pipe(
             mergeMap(
                 ({ operationNumber }) =>
@@ -173,6 +181,10 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         const formations = OperationRealTimeStore.formations;
+
+        if (!formations.length) {
+            return of(undefined);
+        }
 
         return from(formations).pipe(
             mergeMap(
@@ -251,6 +263,10 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
+
+        if (!operations.length) {
+            return of(undefined);
+        }
 
         return from(operations).pipe(
             mergeMap(

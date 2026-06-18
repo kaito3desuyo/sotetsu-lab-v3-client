@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -27,15 +27,18 @@ export class OperationTableService {
             map((operations) =>
                 operations.filter((o) => o.operationNumber !== '100'),
             ),
-            switchMap((operations: OperationDetailsDto[]) =>
-                forkJoin(
+            switchMap((operations: OperationDetailsDto[]) => {
+                if (!operations.length) {
+                    return of([]);
+                }
+                return forkJoin(
                     operations.map((operation) =>
                         this.#operationService.findOneWithTrips({
                             operationId: operation.operationId,
                         }),
                     ),
-                ),
-            ),
+                );
+            }),
             tap((operationTrips) => {
                 this.#operationTableStateStore.setOperationTrips(operationTrips);
             }),

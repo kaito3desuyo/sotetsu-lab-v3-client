@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -57,9 +57,16 @@ export class TimetableStationService {
     }
 
     fetchTripBlocks(): Observable<void> {
-        const tripBlockIds = this.#timetableStationStateQuery.trips.map(
-            (o) => o.tripBlockId,
-        );
+        const tripBlockIds = [
+            ...new Set(
+                this.#timetableStationStateQuery.trips.map((o) => o.tripBlockId),
+            ),
+        ];
+
+        if (tripBlockIds.length === 0) {
+            this.#timetableStationStateStore.setTripBlocks([]);
+            return of(undefined);
+        }
 
         return forkJoin(
             tripBlockIds.map((id) => this.#tripBlockService.findOneById({ id })),
@@ -106,6 +113,13 @@ export class TimetableStationService {
         const operations = this.#timetableStationStateQuery.operations.filter(
             (o) => operationIds.includes(o.operationId),
         );
+
+        if (operations.length === 0) {
+            this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
+                [],
+            );
+            return of(undefined);
+        }
 
         return forkJoin(
             operations.map(({ operationNumber }) =>

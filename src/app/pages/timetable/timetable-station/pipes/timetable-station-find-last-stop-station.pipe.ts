@@ -10,12 +10,17 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 })
 export class TimetableStationFindLastStopStationPipe implements PipeTransform {
     transform(trip: TripDetailsDto): StationDetailsDto['stationId'] {
+        if (!trip.tripBlock?.trips?.length) {
+            const fallbackTime = maxBy(trip.times, (o) => o.stopSequence);
+            return fallbackTime?.stationId;
+        }
+
         const searchingTrip = trip.tripBlock.trips.find(
             (o) => o.tripId === trip.tripId,
         );
 
         const searchingTripFinalStopTime = maxBy(
-            searchingTrip.times,
+            (searchingTrip ?? trip).times,
             (o) => o.stopSequence,
         );
 

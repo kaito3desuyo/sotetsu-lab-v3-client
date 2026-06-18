@@ -15,7 +15,7 @@
         <div class="tw-h-[70vh] tw-overflow-auto">
             <table class="tw-border-collapse tw-whitespace-nowrap">
                 <tbody>
-                    @for (item of timetableData(); track item.hour) {
+                    @for (item of timetableData(); track item.day + ':' + item.hour) {
                         <tr
                             class="[&:nth-child(even)>td]:tw-bg-grey-100 [&:nth-child(even)>th]:tw-bg-grey-100 [&:nth-child(odd)>td]:tw-bg-white [&:nth-child(odd)>th]:tw-bg-white"
                         >
@@ -54,14 +54,14 @@
                                                 },
                                             ]"
                                         >
+                                            @let stationTime = stationId() | findById: { array: trip.times, propertyName: 'stationId' };
                                             @if (
-                                                !trip.times[0].departureTime &&
-                                                trip.times[0].arrivalTime
+                                                !stationTime?.departureTime &&
+                                                stationTime?.arrivalTime
                                             ) {
                                                 <span class="tw-underline">
                                                     {{
-                                                        trip.times[0]
-                                                            .arrivalTime
+                                                        stationTime.arrivalTime
                                                             | dateFns
                                                                 : {
                                                                       format: 'mm',
@@ -72,11 +72,10 @@
                                                 </span>
                                             }
 
-                                            @if (trip.times[0].departureTime) {
+                                            @if (stationTime?.departureTime) {
                                                 <span class="tw-no-underline">
                                                     {{
-                                                        trip.times[0]
-                                                            .departureTime
+                                                        stationTime.departureTime
                                                             | dateFns
                                                                 : {
                                                                       format: 'mm',

@@ -100,9 +100,12 @@ export class TimetableEditFormService {
 
         return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
             tap((tripBlock: TripBlockDetailsDto) => {
-                this.#timetableEditFormStateStore.setTripDirection(
-                    tripBlock.trips[0].tripDirection as ETripDirection,
-                );
+                const firstTrip = tripBlock.trips?.[0];
+                if (firstTrip) {
+                    this.#timetableEditFormStateStore.setTripDirection(
+                        firstTrip.tripDirection as ETripDirection,
+                    );
+                }
                 this.#timetableEditFormStateStore.setTripBlocks([tripBlock]);
             }),
             map(() => undefined),

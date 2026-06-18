@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { select, setProps } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import { minBy } from 'lodash-es';
-import { zip } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { createElfStore } from 'src/app/core/utils/elf-store';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -153,10 +153,13 @@ export class TimetableStationStateQuery {
         select((state) => state.tripDirection),
     );
     readonly trips$ = this.#store.state.pipe(select((state) => state.trips));
-    readonly timetableData$ = zip(
+    readonly timetableData$ = combineLatest([
         this.#store.state.pipe(select((state) => state.trips)),
         this.#store.state.pipe(select((state) => state.tripBlocks)),
-    ).pipe(map(this.#sortTrips), map(this.#generateTableData));
+    ]).pipe(
+        map(([trips, tripBlocks]) => this.#sortTrips([trips, tripBlocks])),
+        map((trips) => this.#generateTableData(trips)),
+    );
     readonly tripClasses$ = this.#store.state.pipe(
         select((state) => state.tripClasses),
     );
@@ -208,7 +211,9 @@ export class TimetableStationStateQuery {
     #extractOperationIds(trips: TripDetailsDto[]): string[] {
         return Array.from(
             new Set(
-                trips.map((trip) => trip.tripOperationLists[0].operationId),
+                trips
+                    .filter((trip) => trip.tripOperationLists?.length)
+                    .map((trip) => trip.tripOperationLists?.[0]?.operationId),
             ),
         );
     }
@@ -217,6 +222,8 @@ export class TimetableStationStateQuery {
         TripDetailsDto[],
         TripBlockDetailsDto[],
     ]): TripDetailsDto[] {
+        const { stationId } = this.#store.state.getValue();
+
         return trips
             .map((o) => ({
                 ...o,
@@ -228,9 +235,10 @@ export class TimetableStationStateQuery {
                 ...o,
                 tripBlock: {
                     ...o.tripBlock,
-                    trips: o.tripBlock.trips.sort((a, b) => {
+                    trips: (o.tripBlock?.trips ?? []).sort((a, b) => {
                         const aTime = minBy(a.times, (o2) => o2.stopSequence);
                         const bTime = minBy(b.times, (o2) => o2.stopSequence);
+                        if (!aTime || !bTime) return 0;
                         const format = 'HH:mm:ss';
                         return (
                             dayjs(aTime.departureTime, format)
@@ -244,14 +252,16 @@ export class TimetableStationStateQuery {
                 },
             }))
             .sort((a, b) => {
+                const aStationTime = a.times.find((t) => t.stationId === stationId);
+                const bStationTime = b.times.find((t) => t.stationId === stationId);
                 const aDay =
-                    a.times[0].departureDays || a.times[0].arrivalDays || null;
+                    aStationTime?.departureDays ?? aStationTime?.arrivalDays ?? null;
                 const aTime =
-                    a.times[0].departureTime || a.times[0].arrivalTime || null;
+                    aStationTime?.departureTime ?? aStationTime?.arrivalTime ?? null;
                 const bDay =
-                    b.times[0].departureDays || b.times[0].arrivalDays || null;
+                    bStationTime?.departureDays ?? bStationTime?.arrivalDays ?? null;
                 const bTime =
-                    b.times[0].departureTime || b.times[0].arrivalTime || null;
+                    bStationTime?.departureTime ?? bStationTime?.arrivalTime ?? null;
 
                 const diff =
                     dayjs(aTime, 'HH:mm:ss')
@@ -260,15 +270,6 @@ export class TimetableStationStateQuery {
                     dayjs(bTime, 'HH:mm:ss')
                         .add(bDay - 1, 'days')
                         .unix();
-
-                // 比較する時刻が同一で、発着どちらかの時刻がnullのtripは先に表示する
-                // if (
-                //     diff === 0 &&
-                //     (b.times[0].departureTime === null ||
-                //         b.times[0].arrivalTime === null)
-                // ) {
-                //     return 1;
-                // }
 
                 return diff;
             });
@@ -279,6 +280,7 @@ export class TimetableStationStateQuery {
         hour: string;
         trips: TripDetailsDto[];
     }[] {
+        const { stationId } = this.#store.state.getValue();
         const data: {
             day: number;
             hour: string;
@@ -286,13 +288,14 @@ export class TimetableStationStateQuery {
         }[] = [];
 
         for (const trip of trips) {
+            const stationTime = trip.times.find((t) => t.stationId === stationId);
             const day =
-                trip.times[0].departureDays ||
-                trip.times[0].arrivalDays ||
+                stationTime?.departureDays ??
+                stationTime?.arrivalDays ??
                 null;
             const time =
-                trip.times[0].departureTime ||
-                trip.times[0].arrivalTime ||
+                stationTime?.departureTime ??
+                stationTime?.arrivalTime ??
                 null;
             const hour = dayjs(time, 'HH:mm:ss').format('H');
 
