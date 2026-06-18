@@ -129,6 +129,4 @@ async fetchData(): Promise<void> {
 
 ## HTTP / 認証
 
-`AuthInterceptor` が `x-sotetsu-lab-authorization` ヘッダーを付与する。API エンドポイントは `/v2/` と `/v3/` の 2 バージョンが存在し、新しいライブラリメソッドは `/v3/` を使う。クエリ文字列は `@nestjsx/crud-request`（`RequestQueryBuilder`）で構築する。インフラクエリは `md5(JSON.stringify(params))` をキーに `shareReplay` でキャッシュし、`forceReload: true` でキャッシュを破棄できる。
-
-`libs/` に残る `_V3` サフィックスのメソッドは v2 と共存するための命名。v2 版を削除した場合はサフィックスを除去してよいが、`grep` で他ページからの v2 版参照がないことを確認すること。
+`AuthInterceptor` が `x-sotetsu-lab-authorization` ヘッダーを付与する。API エンドポイントは `/v3/` を使用する（v2 は全て移行済み）。インフラクエリは `HttpParams` でクエリパラメータを構築し、`md5(JSON.stringify(params))` をキーに `shareReplay` でキャッシュし、`forceReload: true` でキャッシュを破棄できる。
