@@ -56,7 +56,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
 
     readonly isHolidayCalendar = computed(() => {
         const calendar = this.calendar();
-        return calendar.sunday || calendar.saturday;
+        return !!calendar && (calendar.sunday || calendar.saturday);
     });
 
     @ViewChild('svgElement') svgElement: ElementRef;
