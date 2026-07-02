@@ -8,7 +8,7 @@ describe('TimetableEditFormPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableEditFormPComponent],
+            imports: [TimetableEditFormPComponent],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TimetableEditFormPComponent);

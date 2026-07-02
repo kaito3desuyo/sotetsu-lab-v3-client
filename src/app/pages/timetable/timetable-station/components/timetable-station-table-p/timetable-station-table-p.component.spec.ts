@@ -8,13 +8,21 @@ describe('TimetableStationTablePComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableStationTablePComponent],
+            imports: [TimetableStationTablePComponent],
         }).compileComponents();
     });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(TimetableStationTablePComponent);
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('calendar', {} as any);
+        fixture.componentRef.setInput('stationName', '');
+        fixture.componentRef.setInput('tripDirection', 0);
+        fixture.componentRef.setInput('tripClasses', []);
+        fixture.componentRef.setInput('stations', []);
+        fixture.componentRef.setInput('timetableData', []);
+        fixture.componentRef.setInput('operations', []);
+        fixture.componentRef.setInput('operationSightingTimeCrossSections', []);
         fixture.detectChanges();
     });
 

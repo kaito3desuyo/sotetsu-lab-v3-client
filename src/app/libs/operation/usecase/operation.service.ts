@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
 import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
 import { OperationDetailsDto } from './dtos/operation-details.dto';
@@ -10,12 +8,6 @@ import { OperationTripsDto } from './dtos/operation-trips.dto';
 @Injectable({ providedIn: 'root' })
 export class OperationService {
     constructor(private readonly operationQuery: OperationQuery) {}
-
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<OperationDetailsDto> | OperationDetailsDto[]> {
-        return this.operationQuery.findMany(qb);
-    }
 
     findManyByCalendarId(params: {
         calendarId: string;
@@ -32,13 +24,6 @@ export class OperationService {
         return this.operationQuery.findManyBySpecificPeriod(params);
     }
 
-    findOne(
-        operationId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<OperationDetailsDto> {
-        return this.operationQuery.findOne(operationId, qb);
-    }
-
     findOneWithCurrentPosition(params: {
         operationId: string;
         searchTime?: string;
@@ -47,10 +32,10 @@ export class OperationService {
         return this.operationQuery.findOneWithCurrentPosition(params);
     }
 
-    findOneWithTrips(
-        operationId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<OperationTripsDto> {
-        return this.operationQuery.findOneWithTrips(operationId, qb);
+    findOneWithTrips(params: {
+        operationId: string;
+        forceReload?: boolean;
+    }): Observable<OperationTripsDto> {
+        return this.operationQuery.findOneWithTrips(params);
     }
 }

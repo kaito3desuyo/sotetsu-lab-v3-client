@@ -11,7 +11,7 @@ describe('OperationRealTimeComponent', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            declarations: [OperationRealTimeComponent],
+            imports: [OperationRealTimeComponent],
         }).compileComponents();
     }));
 

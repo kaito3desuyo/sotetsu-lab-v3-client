@@ -33,7 +33,7 @@ export class OperationRealTimeService {
 
     fetchRoutes(): Observable<void> {
         return this.#serviceService
-            .findOneWithRoutes_V3({
+            .findOneWithRoutes({
                 serviceId: '8d9d2a20-48ad-438b-83a4-ba8727b4708c',
             })
             .pipe(
@@ -47,9 +47,13 @@ export class OperationRealTimeService {
     fetchStations(): Observable<void> {
         const routes = OperationRealTimeStore.routes;
 
+        if (!routes.length) {
+            return of(undefined);
+        }
+
         return forkJoin(
             routes.map(({ routeId }) =>
-                this.#routeService.findOneWithStations_V3({ routeId }),
+                this.#routeService.findOneWithStations({ routeId }),
             ),
         ).pipe(
             map((data) =>
@@ -70,7 +74,7 @@ export class OperationRealTimeService {
     }
 
     fetchTripClasses(): Observable<void> {
-        return this.#tripClassService.findMany_V3({}).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((data) => {
                 OperationRealTimeStore.setTripClasses(data);
             }),
@@ -130,7 +134,7 @@ export class OperationRealTimeService {
         const date = generateBaseDate(Date.now());
 
         return this.#formationService
-            .findManyBySpecificPeriod_V3({
+            .findManyBySpecificPeriod({
                 startDate: date,
                 endDate: date,
             })
@@ -146,6 +150,10 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
+
+        if (!operations.length) {
+            return of(undefined);
+        }
 
         return from(operations).pipe(
             mergeMap(
@@ -173,6 +181,10 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         const formations = OperationRealTimeStore.formations;
+
+        if (!formations.length) {
+            return of(undefined);
+        }
 
         return from(formations).pipe(
             mergeMap(
@@ -251,6 +263,10 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         const operations = OperationRealTimeStore.operations;
+
+        if (!operations.length) {
+            return of(undefined);
+        }
 
         return from(operations).pipe(
             mergeMap(

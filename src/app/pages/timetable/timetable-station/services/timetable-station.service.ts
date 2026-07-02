@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -12,7 +11,6 @@ import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TripService } from 'src/app/libs/trip/usecase/trip.service';
 import {
@@ -48,98 +46,32 @@ export class TimetableStationService {
         const calendarId = this.#timetableStationStateQuery.calendarId;
         const tripDirection = this.#timetableStationStateQuery.tripDirection;
 
-        const qb = new RequestQueryBuilder()
-            .setJoin([{ field: 'times' }, { field: 'tripOperationLists' }])
-            .search({
-                $and: [
-                    {
-                        calendarId: {
-                            $eq: calendarId,
-                        },
-                    },
-                    {
-                        tripDirection: {
-                            $eq: tripDirection,
-                        },
-                    },
-                    {
-                        ['times.stationId']: {
-                            $eq: stationId,
-                        },
-                    },
-                    {
-                        $or: [
-                            {
-                                ['times.pickupType']: {
-                                    $eq: 0,
-                                },
-                            },
-                            {
-                                ['times.dropoffType']: {
-                                    $eq: 0,
-                                },
-                            },
-                            {
-                                $and: [
-                                    {
-                                        ['times.pickupType']: {
-                                            $eq: 1,
-                                        },
-                                    },
-                                    {
-                                        ['times.dropoffType']: {
-                                            $eq: 1,
-                                        },
-                                    },
-                                    {
-                                        $or: [
-                                            {
-                                                ['times.departureTime']: {
-                                                    $notnull: true,
-                                                },
-                                            },
-                                            {
-                                                ['times.arrivalTime']: {
-                                                    $notnull: true,
-                                                },
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            })
-            .sortBy([
-                { field: 'times.arrivalDays', order: 'ASC' },
-                { field: 'times.arrivalTime', order: 'ASC' },
-                { field: 'times.departureDays', order: 'ASC' },
-                { field: 'times.departureTime', order: 'ASC' },
-            ]);
-
-        return this.#tripService.findMany(qb).pipe(
-            tap((data: TripDetailsDto[]) => {
-                this.#timetableStationStateStore.setTrips(data);
-            }),
-            map(() => undefined),
-        );
+        return this.#tripService
+            .findManyByStationId({ stationId, calendarId, tripDirection })
+            .pipe(
+                tap((data: TripDetailsDto[]) => {
+                    this.#timetableStationStateStore.setTrips(data);
+                }),
+                map(() => undefined),
+            );
     }
 
     fetchTripBlocks(): Observable<void> {
-        const tripBlockIds = this.#timetableStationStateQuery.trips.map(
-            (o) => o.tripBlockId,
-        );
+        const tripBlockIds = [
+            ...new Set(
+                this.#timetableStationStateQuery.trips.map((o) => o.tripBlockId),
+            ),
+        ];
 
-        const qb = new RequestQueryBuilder().setJoin([
-            { field: 'trips' },
-            { field: 'trips.times' },
-        ]);
+        if (tripBlockIds.length === 0) {
+            this.#timetableStationStateStore.setTripBlocks([]);
+            return of(undefined);
+        }
 
         return forkJoin(
-            tripBlockIds.map((id) => this.#tripBlockService.findOne(id, qb)),
+            tripBlockIds.map((id) => this.#tripBlockService.findOneById({ id })),
         ).pipe(
-            tap((data: TripBlockDetailsDto[]) => {
+            tap((data) => {
                 this.#timetableStationStateStore.setTripBlocks(data);
             }),
             map(() => undefined),
@@ -147,9 +79,7 @@ export class TimetableStationService {
     }
 
     fetchTripClasses(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
-        return this.#tripClassService.findMany(qb).pipe(
+        return this.#tripClassService.findMany({}).pipe(
             tap((data: TripClassDetailsDto[]) => {
                 this.#timetableStationStateStore.setTripClasses(data);
             }),
@@ -158,9 +88,7 @@ export class TimetableStationService {
     }
 
     fetchStations(): Observable<void> {
-        const qb = new RequestQueryBuilder();
-
-        return this.#stationService.findMany(qb).pipe(
+        return this.#stationService.findMany({}).pipe(
             tap((data: StationDetailsDto[]) => {
                 this.#timetableStationStateStore.setStations(data);
             }),
@@ -171,20 +99,8 @@ export class TimetableStationService {
     fetchOperations(): Observable<void> {
         const calendarId = this.#timetableStationStateQuery.calendarId;
 
-        const qb = new RequestQueryBuilder().setFilter([
-            {
-                field: 'calendarId',
-                operator: CondOperator.EQUALS,
-                value: calendarId, // this.todaysCalendarListStateQuery.todaysCalendarId,
-            },
-            {
-                field: 'operationNumber',
-                operator: CondOperator.NOT_EQUALS,
-                value: '100',
-            },
-        ]);
-
-        return this.#operationService.findMany(qb).pipe(
+        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
+            map((data) => data.filter((o) => o.operationNumber !== '100')),
             tap((data: OperationDetailsDto[]) => {
                 this.#timetableStationStateStore.setOperations(data);
             }),
@@ -197,6 +113,13 @@ export class TimetableStationService {
         const operations = this.#timetableStationStateQuery.operations.filter(
             (o) => operationIds.includes(o.operationId),
         );
+
+        if (operations.length === 0) {
+            this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
+                [],
+            );
+            return of(undefined);
+        }
 
         return forkJoin(
             operations.map(({ operationNumber }) =>

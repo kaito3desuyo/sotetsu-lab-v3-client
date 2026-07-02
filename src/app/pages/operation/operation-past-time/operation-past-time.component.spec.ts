@@ -1,24 +1,36 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { EMPTY } from 'rxjs';
 
+import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationPastTimeComponent } from './operation-past-time.component';
 
 describe('OperationPastTimeComponent', () => {
     let component: OperationPastTimeComponent;
     let fixture: ComponentFixture<OperationPastTimeComponent>;
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
-            declarations: [OperationPastTimeComponent],
-        }).compileComponents();
-    }));
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationPastTimeComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: OperationSearchCardService,
+                    useValue: {
+                        receiveSearchOperationTableEvent: () => EMPTY,
+                        receiveSearchOperationRouteDiagramEvent: () => EMPTY,
+                    },
+                },
+            ],
+        })
+            .overrideComponent(OperationPastTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(OperationPastTimeComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
     });
 
     it('should create', () => {

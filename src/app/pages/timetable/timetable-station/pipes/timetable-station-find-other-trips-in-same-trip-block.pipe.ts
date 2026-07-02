@@ -9,6 +9,6 @@ export class TimetableStationFindOtherTripsInSameTripBlockPipe
     implements PipeTransform
 {
     transform(trip: TripDetailsDto): TripDetailsDto[] {
-        return trip.tripBlock.trips.filter((o) => o.tripId !== trip.tripId);
+        return (trip.tripBlock?.trips ?? []).filter((o) => o.tripId !== trip.tripId);
     }
 }

@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { ServiceQuery } from '../infrastructure/queries/service.query';
 import { ServiceAgenciesDto } from './dtos/service-agencies.dto';
 import { ServiceDetailsDto } from './dtos/service-details.dto';
@@ -12,32 +10,31 @@ import { ServiceStationsDto } from './dtos/service-stations.dto';
 export class ServiceService {
     constructor(private readonly serviceQuery: ServiceQuery) {}
 
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<ServiceDetailsDto> | ServiceDetailsDto[]> {
-        return this.serviceQuery.findMany(qb);
+    findMany(params?: {
+        serviceName?: string;
+        forceReload?: boolean;
+    }): Observable<ServiceDetailsDto[]> {
+        return this.serviceQuery.findMany(params);
     }
 
-    findOneWithStations(
-        serviceId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<ServiceStationsDto> {
-        return this.serviceQuery.findOneWithStations(serviceId, qb);
+    findOneWithStations(params: {
+        serviceId: string;
+        forceReload?: boolean;
+    }): Observable<ServiceStationsDto> {
+        return this.serviceQuery.findOneWithStations(params);
     }
 
-    // v3
-
-    findOneWithAgencies_V3(params: {
+    findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceAgenciesDto> {
-        return this.serviceQuery.findOneWithAgencies_V3(params);
+        return this.serviceQuery.findOneWithAgencies(params);
     }
 
-    findOneWithRoutes_V3(params: {
+    findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceRoutesDto> {
-        return this.serviceQuery.findOneWithRoutes_V3(params);
+        return this.serviceQuery.findOneWithRoutes(params);
     }
 }

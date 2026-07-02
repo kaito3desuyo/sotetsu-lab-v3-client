@@ -8,7 +8,7 @@ describe('LibraryVehicleHeaderCComponent', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            declarations: [LibraryVehicleHeaderCComponent],
+            imports: [LibraryVehicleHeaderCComponent],
         }).compileComponents();
     }));
 

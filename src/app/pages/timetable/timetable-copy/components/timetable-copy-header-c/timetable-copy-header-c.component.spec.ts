@@ -8,7 +8,7 @@ describe('TimetableCopyHeaderCComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableCopyHeaderCComponent],
+            imports: [TimetableCopyHeaderCComponent],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TimetableCopyHeaderCComponent);

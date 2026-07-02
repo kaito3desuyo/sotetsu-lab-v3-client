@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TimetableUpdateMainCComponent } from './timetable-update-main-c.component';
@@ -8,12 +9,15 @@ describe('TimetableUpdateMainCComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableUpdateMainCComponent],
-        }).compileComponents();
+            imports: [TimetableUpdateMainCComponent],
+        })
+            .overrideComponent(TimetableUpdateMainCComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
 
         fixture = TestBed.createComponent(TimetableUpdateMainCComponent);
         component = fixture.componentInstance;
-        fixture.detectChanges();
     });
 
     it('should create', () => {

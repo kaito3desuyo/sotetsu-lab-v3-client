@@ -8,13 +8,14 @@ describe('CalendarSelectDialogMainPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CalendarSelectDialogMainPComponent],
+            imports: [CalendarSelectDialogMainPComponent],
         }).compileComponents();
     });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(CalendarSelectDialogMainPComponent);
         component = fixture.componentInstance;
+        fixture.componentRef.setInput('calendars', []);
         fixture.detectChanges();
     });
 

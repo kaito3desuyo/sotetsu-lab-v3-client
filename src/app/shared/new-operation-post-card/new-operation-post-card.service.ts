@@ -16,7 +16,7 @@ export class NewOperationPostCardService {
 
     fetchServiceAgencies(): Observable<void> {
         return this.#serviceService
-            .findOneWithAgencies_V3({
+            .findOneWithAgencies({
                 serviceId: environment.serviceId,
             })
             .pipe(

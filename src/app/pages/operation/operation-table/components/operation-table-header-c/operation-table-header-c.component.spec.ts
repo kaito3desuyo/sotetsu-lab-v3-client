@@ -8,7 +8,7 @@ describe('OperationTableHeaderCComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [OperationTableHeaderCComponent],
+            imports: [OperationTableHeaderCComponent],
         }).compileComponents();
     });
 

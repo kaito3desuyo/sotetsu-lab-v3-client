@@ -8,7 +8,7 @@ describe('TimetableUpdateHeaderPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableUpdateHeaderPComponent],
+            imports: [TimetableUpdateHeaderPComponent],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TimetableUpdateHeaderPComponent);

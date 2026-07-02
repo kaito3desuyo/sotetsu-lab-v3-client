@@ -38,7 +38,7 @@ export class OperationPastTimeResolverService {
             mergeMap(() =>
                 forkJoin([
                     this.#operationPastTimeService.fetchCalendarByDate(),
-                    this.#operationPastTimeService.fetchFormationsV2(),
+                    this.#operationPastTimeService.fetchFormations(),
                     // this.#operationPastTimeService.fetchOperationSightingsV2(),
 
                     this.#operationPastTimeService.fetchOperationsV3(),

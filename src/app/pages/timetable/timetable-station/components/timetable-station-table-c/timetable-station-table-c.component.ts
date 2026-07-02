@@ -35,4 +35,7 @@ export class TimetableStationTableCComponent {
     readonly operationSightingTimeCrossSections = toSignal(
         this.#timetableStationStateQuery.operationSightingTimeCrossSections$,
     );
+    readonly stationId = toSignal(
+        this.#timetableStationStateQuery.stationId$,
+    );
 }

@@ -53,6 +53,7 @@ export class TimetableStationTablePComponent {
     readonly operations = input.required<OperationDetailsDto[]>();
     readonly operationSightingTimeCrossSections =
         input.required<OperationSightingTimeCrossSectionDto[]>();
+    readonly stationId = input.required<StationDetailsDto['stationId']>();
 
     readonly isHolidayCalendar = computed(() => {
         const calendar = this.calendar();

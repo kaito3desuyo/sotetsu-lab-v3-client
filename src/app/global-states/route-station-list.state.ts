@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { createStore } from '@ngneat/elf';
 import {
     selectEntities,
@@ -24,25 +23,12 @@ export class RouteStationListStateStore {
     readonly #routeService = inject(RouteService);
 
     fetch(): Observable<void> {
-        const qb = RequestQueryBuilder.create()
-            .setJoin([
-                { field: 'routeStationLists' },
-                { field: 'routeStationLists.station' },
-                { field: 'operatingSystems' },
-                { field: 'operatingSystems.service' },
-            ])
-            .setFilter([
-                {
-                    field: 'operatingSystems.service.serviceName',
-                    operator: CondOperator.EQUALS,
-                    value: '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
-                },
-            ])
-            .sortBy([
-                { field: 'routeStationLists.stationSequence', order: 'ASC' },
-            ]);
-
-        return this.#routeService.findMany(qb).pipe(
+        return this.#routeService
+            .findMany({
+                serviceName:
+                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
+            })
+            .pipe(
             tap((data: RouteDetailsDto[]) => {
                 state.update(
                     setEntities(

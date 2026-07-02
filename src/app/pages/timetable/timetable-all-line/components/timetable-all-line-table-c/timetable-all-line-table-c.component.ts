@@ -118,13 +118,13 @@ export class TimetableAllLineTableCComponent {
 
                 const result = await tryCatchAsync(
                     this.#timetableAllLineService
-                        .deleteTripFromTripBlockV2({
+                        .deleteTripFromTripBlock({
                             tripBlockId: trip.tripBlockId,
                             tripId: trip.tripId,
                         })
                         .pipe(
                             switchMap(() =>
-                                this.#timetableAllLineService.fetchTripBlocksV2(),
+                                this.#timetableAllLineService.fetchTripBlocks(),
                             ),
                         ),
                 );
@@ -162,13 +162,13 @@ export class TimetableAllLineTableCComponent {
 
                     const result = await tryCatchAsync(
                         this.#timetableAllLineService
-                            .addTripToTripBlockV2({
+                            .addTripToTripBlock({
                                 tripBlockId: base.tripBlockId,
                                 tripId: target.tripId,
                             })
                             .pipe(
                                 switchMap(() =>
-                                    this.#timetableAllLineService.fetchTripBlocksV2(),
+                                    this.#timetableAllLineService.fetchTripBlocks(),
                                 ),
                             ),
                     );
@@ -207,14 +207,14 @@ export class TimetableAllLineTableCComponent {
 
                     const result = await tryCatchAsync(
                         this.#timetableAllLineService
-                            .deleteTripFromTripBlockV2({
+                            .deleteTripFromTripBlock({
                                 tripBlockId: base.tripBlockId,
                                 tripId: target.tripId,
                                 holdAsAnotherTripBlock: true,
                             })
                             .pipe(
                                 switchMap(() =>
-                                    this.#timetableAllLineService.fetchTripBlocksV2(),
+                                    this.#timetableAllLineService.fetchTripBlocks(),
                                 ),
                             ),
                     );

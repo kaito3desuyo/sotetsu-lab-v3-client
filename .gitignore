@@ -45,3 +45,9 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
+
+# Code graph index
+.codegraph/
+
+# Temporary working files
+.context/

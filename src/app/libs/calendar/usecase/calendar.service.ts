@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { CalendarQuery } from '../infrastructure/queries/calendar.query';
 import { CalendarDetailsDto } from './dtos/calendar-details.dto';
 
@@ -9,17 +7,11 @@ import { CalendarDetailsDto } from './dtos/calendar-details.dto';
 export class CalendarService {
     constructor(private readonly calendarQuery: CalendarQuery) {}
 
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
-        return this.calendarQuery.findMany(qb);
-    }
-
-    findManyBySpecificDate(
-        qb: RequestQueryBuilder,
-        params: { date: string },
-    ): Observable<Pagination<CalendarDetailsDto> | CalendarDetailsDto[]> {
-        return this.calendarQuery.findManyBySpecificDate(qb, params);
+    findMany(params?: {
+        serviceName?: string;
+        forceReload?: boolean;
+    }): Observable<CalendarDetailsDto[]> {
+        return this.calendarQuery.findMany(params);
     }
 
     findOne(params: {

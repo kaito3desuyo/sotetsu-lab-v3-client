@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable } from 'rxjs';
-import { Pagination } from 'src/app/core/utils/pagination';
 import { FormationQuery } from '../infrastructure/queries/formation.query';
 import { FormationDetailsDto } from './dtos/formation-details.dto';
 
@@ -9,25 +7,18 @@ import { FormationDetailsDto } from './dtos/formation-details.dto';
 export class FormationService {
     constructor(private readonly formationQuery: FormationQuery) {}
 
-    findManyBySpeficicDate(
-        qb: RequestQueryBuilder,
-        params: { date: string },
-    ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpeficicDate(qb, params);
+    findManyBySpecificDate(params: {
+        date: string;
+        forceReload?: boolean;
+    }): Observable<FormationDetailsDto[]> {
+        return this.formationQuery.findManyBySpecificDate(params);
     }
 
-    findManyBySpecificPeriod(
-        qb: RequestQueryBuilder,
-        params: { startDate: string; endDate: string },
-    ): Observable<Pagination<FormationDetailsDto> | FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificPeriod(qb, params);
-    }
-
-    findManyBySpecificPeriod_V3(params: {
+    findManyBySpecificPeriod(params: {
         startDate: string;
         endDate: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificPeriod_V3(params);
+        return this.formationQuery.findManyBySpecificPeriod(params);
     }
 }

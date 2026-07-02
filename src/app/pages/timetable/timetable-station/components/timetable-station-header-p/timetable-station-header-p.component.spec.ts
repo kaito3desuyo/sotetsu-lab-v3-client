@@ -8,7 +8,7 @@ describe('TimetableStationHeaderPComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [TimetableStationHeaderPComponent],
+            imports: [TimetableStationHeaderPComponent],
         }).compileComponents();
     });
 

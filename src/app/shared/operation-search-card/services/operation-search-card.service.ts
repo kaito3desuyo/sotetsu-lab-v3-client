@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { CondOperator, RequestQueryBuilder } from '@nestjsx/crud-request';
 import { Observable, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -53,20 +52,11 @@ export class OperationSearchCardService {
 
     fetchOperations(): Observable<void> {
         const calendarId = this.#operationSearchCardStateQuery.calendarId;
-        const qb = RequestQueryBuilder.create().setFilter([
-            {
-                field: 'calendarId',
-                operator: CondOperator.EQUALS,
-                value: calendarId,
-            },
-            {
-                field: 'operationNumber',
-                operator: CondOperator.NOT_EQUALS,
-                value: '100',
-            },
-        ]);
 
-        return this.#operationService.findMany(qb).pipe(
+        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
+            map((operations) =>
+                operations.filter((o) => o.operationNumber !== '100'),
+            ),
             tap((operations: OperationDetailsDto[]) => {
                 this.#operationSearchCardStateStore.setOperations(operations);
             }),

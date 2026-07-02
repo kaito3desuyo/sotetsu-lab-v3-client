@@ -1,6 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from '../../services/operation-route-diagram.service';
 import { OperationRouteDiagramStateQuery } from '../../states/operation-route-diagram.state';
@@ -33,10 +32,12 @@ export class OperationRouteDiagramDrawingContainerComponent {
         this.#operationRouteDiagramStateQuery.stations$,
     );
 
-    readonly drawingDisplayed = toSignal(
-        this.#operationRouteDiagramStateQuery.operationId$.pipe(
-            map((id) => !!id),
-        ),
+    readonly drawingDisplayed = computed(
+        () =>
+            !!this.calendar() &&
+            !!this.operation() &&
+            !!this.stations()?.length &&
+            !!this.tripOperationLists(),
     );
 
     onReceiveClickNavigateTimetable(

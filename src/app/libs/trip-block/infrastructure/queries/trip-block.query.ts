@@ -1,56 +1,87 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { RequestQueryBuilder } from '@nestjsx/crud-request';
+import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Pagination } from 'src/app/core/utils/pagination';
+import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
-import { buildTripBlockDetailsDto } from '../builders/trip-block-dto.builder';
+import { TripBlockDtoBuilder } from '../builders/trip-block.dto.builder';
 import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockQuery {
-    private readonly apiUrl = environment.apiUrl + '/v2/trip-blocks';
+    readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
+    #obs: Record<string, Observable<any>> = {};
 
     constructor(private readonly http: HttpClient) {}
 
-    findMany(
-        qb: RequestQueryBuilder,
-    ): Observable<Pagination<TripBlockDetailsDto> | TripBlockDetailsDto[]> {
-        const httpParams = new HttpParams({ fromString: qb.query() });
+    findManyByFilter(params: {
+        calendarId: string;
+        tripDirection: number;
+        forceReload?: boolean;
+    }): Observable<TripBlockDetailsDto[]> {
+        const { calendarId, tripDirection, forceReload } = params;
 
-        return this.http
-            .get<TripBlockModel[]>(this.apiUrl, {
-                params: httpParams,
-                observe: 'response',
-            })
-            .pipe(
-                map((res) => {
-                    return Pagination.isApiPaginated(res)
-                        ? Pagination.create(
-                              res.body.map((o) => buildTripBlockDetailsDto(o)),
-                              Pagination.getApiPageSettings(res),
-                          )
-                        : res.body.map((o) => buildTripBlockDetailsDto(o));
-                }),
-            );
+        const key = md5(
+            JSON.stringify({
+                name: 'findManyByFilter',
+                calendarId,
+                tripDirection,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            const httpParams = new HttpParams({
+                fromObject: {
+                    calendarId,
+                    tripDirection: String(tripDirection),
+                },
+            });
+            this.#obs[key] = this.http
+                .get<TripBlockModel[]>(this.#v3ApiUrl, {
+                    params: httpParams,
+                    observe: 'response',
+                })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
     }
 
-    findOne(
-        tripBlockId: string,
-        qb: RequestQueryBuilder,
-    ): Observable<TripBlockDetailsDto> {
-        const httpParams = new HttpParams({ fromString: qb.query() });
+    findOneById(params: {
+        id: string;
+        forceReload?: boolean;
+    }): Observable<TripBlockDetailsDto> {
+        const { id, forceReload } = params;
 
-        return this.http
-            .get<TripBlockModel>(this.apiUrl + '/' + tripBlockId, {
-                params: httpParams,
-            })
-            .pipe(
-                map((data) => {
-                    return buildTripBlockDetailsDto(data);
-                }),
-            );
+        const key = md5(JSON.stringify({ name: 'findOneById', id }));
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<TripBlockModel>(`${this.#v3ApiUrl}/${id}`, {
+                    observe: 'response',
+                })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) => TripBlockDtoBuilder.buildFromModel(res.body)),
+                );
+        }
+
+        return this.#obs[key];
     }
+
 }
+
