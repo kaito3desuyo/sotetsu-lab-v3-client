@@ -11,6 +11,7 @@ import { Title } from '@angular/platform-browser';
 import {
     NavigationCancel,
     NavigationEnd,
+    NavigationError,
     NavigationStart,
     Router,
 } from '@angular/router';
@@ -18,6 +19,7 @@ import { interval } from 'rxjs';
 import { filter, first, map, switchMap } from 'rxjs/operators';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
+import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
 import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
 import { LayoutComponent } from './layout/layout.component';
@@ -38,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #socketService = inject(SocketService);
     readonly #gaService = inject(GoogleAnalyticsService);
     readonly #loadingService = inject(LoadingService);
+    readonly #notificationService = inject(NotificationService);
     readonly #tokenStateStore = inject(TokenStateStore);
     readonly #tokenStateQuery = inject(TokenStateQuery);
 
@@ -73,6 +76,21 @@ export class AppComponent implements OnInit, OnDestroy {
             )
             .subscribe(() => {
                 this.#loadingService.close();
+            });
+
+        this.#router.events
+            .pipe(
+                filter<NavigationError>(
+                    (ev) => ev instanceof NavigationError,
+                ),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => {
+                this.#loadingService.close();
+                this.#notificationService.open(
+                    'ページの読み込みに失敗しました',
+                    'OK',
+                );
             });
 
         // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {

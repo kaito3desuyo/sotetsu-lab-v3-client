@@ -1,0 +1,21 @@
+<div
+    class="tw-flex tw-flex-col tw-items-center tw-gap-3 tw-px-6 tw-py-10 tw-text-center"
+>
+    @if (icon()) {
+        <mat-icon
+            class="tw-text-primary-200"
+            style="width: 48px; height: 48px; font-size: 48px"
+            aria-hidden="true"
+        >
+            {{ icon() }}
+        </mat-icon>
+    }
+    <p class="tw-m-0 tw-text-base tw-font-bold tw-text-black">
+        {{ message() }}
+    </p>
+    @if (actionLabel()) {
+        <button mat-flat-button color="primary" (click)="actionClick.emit()">
+            {{ actionLabel() }}
+        </button>
+    }
+</div>

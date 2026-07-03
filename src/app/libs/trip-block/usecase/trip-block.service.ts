@@ -23,6 +23,22 @@ export class TripBlockService {
         return this.tripBlockQuery.findManyByFilter(params);
     }
 
+    /**
+     * 指定 calendarId の上下（tripDirection=0/1）バルクデータをまとめて取得する。
+     * N1/N2/N3 が同一メソッドを呼べばキャッシュが効き、ページ間遷移で再取得しない。
+     */
+    findManyByCalendarId(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<Record<number, TripBlockDetailsDto[]>> {
+        return this.tripBlockQuery.findManyByCalendarId(params);
+    }
+
+    /** ダイヤ改正等でバルクキャッシュ（findManyByFilter / findManyByCalendarId）を失効させる。 */
+    invalidateAll(): void {
+        this.tripBlockQuery.invalidateAll();
+    }
+
     findOneById(params: {
         id: string;
         forceReload?: boolean;

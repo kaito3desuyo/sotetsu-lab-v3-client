@@ -1,0 +1,20 @@
+<div class="tw-overflow-x-auto">
+    <mat-chip-listbox
+        [multiple]="mode() === 'multiple'"
+        [value]="listboxValue()"
+        (change)="onChange($event)"
+    >
+        @for (option of options(); track option.value) {
+            <mat-chip-option
+                [value]="option.value"
+                [disabled]="option.disabled ?? false"
+                [style.background-color]="option.color ?? null"
+            >
+                @if (isSingle()) {
+                    <span class="tw-mr-1" aria-hidden="true">●</span>
+                }
+                {{ option.label }}
+            </mat-chip-option>
+        }
+    </mat-chip-listbox>
+</div>

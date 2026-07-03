@@ -59,7 +59,9 @@ export class TimetableStationService {
     fetchTripBlocks(): Observable<void> {
         const tripBlockIds = [
             ...new Set(
-                this.#timetableStationStateQuery.trips.map((o) => o.tripBlockId),
+                this.#timetableStationStateQuery.trips
+                    .map((o) => o.tripBlockId)
+                    .filter((id): id is string => id !== undefined && id !== null),
             ),
         ];
 

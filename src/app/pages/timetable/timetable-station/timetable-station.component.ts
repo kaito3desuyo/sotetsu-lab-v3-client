@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RxState } from '@rx-angular/state';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { TitleService } from 'src/app/core/services/title.service';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 import { TimetableStationHeaderCComponent } from './components/timetable-station-header-c/timetable-station-header-c.component';
@@ -20,6 +21,7 @@ export class TimetableStationComponent {
     readonly #state = inject<RxState<{}>>(RxState);
     readonly #titleService = inject(TitleService);
     readonly #timetableSearchCardService = inject(TimetableSearchCardService);
+    readonly #notificationService = inject(NotificationService);
 
     constructor() {
         this.#state.hold(this.#route.data, ({ title }) => {
@@ -29,26 +31,44 @@ export class TimetableStationComponent {
         this.#state.hold(
             this.#timetableSearchCardService.receiveSearchTimetableEvent(),
             (state) => {
-                if (state.searchByStation) {
-                    this.#router.navigate([
-                        'timetable',
-                        'station',
-                        {
-                            calendar_id: state.calendarId,
-                            station_id: state.stationId,
-                            trip_direction: state.tripDirection,
-                        },
-                    ]);
-                } else {
-                    this.#router.navigate([
-                        'timetable',
-                        'all-line',
-                        {
-                            calendar_id: state.calendarId,
-                            trip_direction: state.tripDirection,
-                        },
-                    ]);
-                }
+                const navigation = state.searchByStation
+                    ? this.#router.navigate([
+                          'timetable',
+                          'station',
+                          {
+                              calendar_id: state.calendarId,
+                              station_id: state.stationId,
+                              trip_direction: state.tripDirection,
+                          },
+                      ])
+                    : this.#router.navigate([
+                          'timetable',
+                          'all-line',
+                          {
+                              calendar_id: state.calendarId,
+                              trip_direction: state.tripDirection,
+                          },
+                      ]);
+
+                navigation
+                    .then((succeeded) => {
+                        if (!succeeded) {
+                            console.error(
+                                'timetable navigation did not complete',
+                            );
+                            this.#notificationService.open(
+                                'ページの遷移に失敗しました',
+                                'OK',
+                            );
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('timetable navigation failed', error);
+                        this.#notificationService.open(
+                            'ページの遷移に失敗しました',
+                            'OK',
+                        );
+                    });
             },
         );
     }

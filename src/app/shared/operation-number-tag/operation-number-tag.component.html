@@ -1,0 +1,16 @@
+@if (link()) {
+    <a
+        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black tw-no-underline"
+        [style.background-color]="operationNumber() | operationNumberColor"
+        [routerLink]="link()"
+    >
+        {{ operationNumber() }}
+    </a>
+} @else {
+    <span
+        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black"
+        [style.background-color]="operationNumber() | operationNumberColor"
+    >
+        {{ operationNumber() }}
+    </span>
+}
