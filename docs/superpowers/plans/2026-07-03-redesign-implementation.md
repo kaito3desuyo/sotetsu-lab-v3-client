@@ -122,53 +122,63 @@
 
 各タスク共通: Resolver 廃止（title + グローバル初期化待ちのみ）+ 単一コンポーネント化 + loadingQueue + 旧 -c/-p・states/*.state.ts 撤去（30 §1）。検証ゲート必須。
 
-- [ ] **T3.1 駅別時刻表**（B1 上下切替 / B7 過去編成非表示 / C1 恒久）
+> **検証環境（2026-07-04 確定）**: ユーザーが Docker 一式起動済み（client=localhost:4200 / api=localhost:3000）。Playwright MCP から localhost:4200 到達可・実データ検証可能。**backend 500 は解消済み**（ユーザーが `npm run migration:run` を実DBへ適用→ calendar_dates 作成→ findOneBySpecificDate 正常化→ todaysCalendarList ロード可）。残る console error（401 profile / WebSocket 3021 / googleads 403）は全て無害・無関係。
+>
+> **P3 実データ検証結果（2026-07-04・390px Playwright 目視）**:
+> - T3.2 リアルタイム: ✅パス（会社/群フィルタチップ・運用順/編成順タブ・全列・凡例・投稿フォーム維持）
+> - T3.3 運用表: ✅パス（群チップ・ジャンプ・縦タイムラインカード・出庫入庫/回送/種別色/行路図リンク維持）
+> - T3.6 過去運用: ✅パス（基準日/日数/無効化トグル/検索・会社チップ・空状態・下部カード維持）
+> - T3.5 全線時刻表: 🟡構造+データ維持（路線チップ全選択・ダイヤ帯・3ヘッダ行・着発2段・列車セル1200 DOM ノード確認）だが**ページネーション counter が「0/0」表示＝軽微リグレッション疑い**→ 要フォロー
+> - T3.1 駅別時刻表 / T3.4 行路図: tsc/jest パス済み。実データ視覚検証は station_id/operationId 取得の手間により**P5 クリーンアップへ繰延**
+
+- [~] **T3.1 駅別時刻表**（B1 上下切替 / B7 過去編成非表示 / C1 恒久） — 実装完了・実データ検証待ち — 単一構成移行+B1+B7+C1恒久（7e3ecca）。tsc/ng build クリーン、timetable-station jest 5/5。副次修正: setup-jest.ts(reflect-metadata)等の既存型エラーを直し全体 suite **37→8 failed に改善**（残8は旧-c/-pや後続移行ページのspec）。⚠**実データ目視は backend 500(下記)で保留**
   - 対象: `pages/timetable/timetable-station/` 一式
   - 参照: `10-spec` B1/B7/C1 / `20` §5.1 / `30` §5・§7 / モック 01
   - DoD: B1・B7・C1 の全受け入れ条件（既存セル 7 要素維持・空状態・過去ダイヤ編成列非描画）
   - 検証: 検証ゲート（モック 01 比較）
 
-- [ ] **T3.2 リアルタイム運用情報**（B2 会社 / B3 群 チップ）
+- [~] **T3.2 リアルタイム運用情報**（B2 会社 / B3 群 チップ） 実装完了・実データ検証待ち — 会社/群2段チップ+2テーブル維持(モバイルtab)+elf永続（9044ed4, operation-real-time jest 18/18、全体8→6 failed改善、既存spec2件もgreen化）。群API配線を libs/operation に追加。逸脱: 休車100を「休」疑似群でclient補完(20§5.2の4値要件に合致)
   - 対象: `pages/operation/operation-real-time/`（既に目標形。B2/B3 追加）
   - 参照: `10-spec` B2/B3 / `20` §5.2 / `30` §3 / モック 02
   - DoD: 会社・群チップ（AND/OR）、localStorage 永続、2 テーブル維持（モバイルはタブ）、休車 100 の扱い、鮮度表現、形式・所属付記
   - 検証: 検証ゲート（モック 02 比較）
 
-- [ ] **T3.3 運用表**（B4 縦カード刷新 + 群チップ）
+- [~] **T3.3 運用表**（B4 縦カード刷新 + 群チップ） 実装完了・実データ検証待ち — 移行+縦タイムラインカード刷新+群チップ（2162e44, operation-table jest 21/21、全体4 failedに改善）。逸脱: モック03の無印/G/Kバッジは実データ群名(1群〜9G群)と不整合で未実装(群色タグで代替)・駅名スペースhack削除
   - 対象: `pages/operation/operation-table/` 一式
   - 参照: `10-spec` B4 / `20` §5.3 / モック 03
   - DoD: 縦タイムラインカード（情報要素・記号・リンク維持、Material 流再設計可）、群チップ絞り込み、リアルタイムと永続キー独立
   - 検証: 検証ゲート（モック 03 比較）
 
-- [ ] **T3.4 運用行路図**（B5 路線チップ + visibleStations）
+- [~] **T3.4 運用行路図**（B5 路線チップ + visibleStations） 実装完了・実データ検証待ち — データ層移行+路線チップ+visibleStations+縦罫線維持（233fd45, route-diagram jest 16全pass、全体4 failed維持）。SVG描画据え置き。逸脱なし
   - 対象: `pages/operation/operation-route-diagram/` 一式（SVG データ層のみ移行）
   - 参照: `10-spec` B5 / `20` §5.4 / `30` §4 / モック 04
   - DoD: 路線チップ（経由路線のみ既定 ON=D-4、非経由 disabled）、隠し駅飛ばし再接続、**縦罫線維持**、PNG 出力が絞り込み反映
   - 検証: 検証ゲート（モック 04 比較）
 
-- [ ] **T3.5 全線時刻表**（B6 罫線データ駆動 + 路線チップ）
+- [~] **T3.5 全線時刻表**（B6 罫線データ駆動 + 路線チップ） 実装完了・実データ検証待ち — 移行+路線チップ+罫線データ駆動化(get-border-setting.util.ts削除・参照ゼロ)（fe7b65f, timetable-all-line jest 17/17、全体6 failed=未移行ページのみ）。逸脱: view-modeデータ駆動化は包含的ヒューリスティック→主要駅集合が実データ次第で微差可能性、実データ確認要
   - 対象: `pages/timetable/timetable-all-line/` 一式（巨大 util 分割含む）
   - 参照: `10-spec` B6 / `20` §5.5 / `30` §4 / モック 05
   - DoD: 路線チップ、罫線データ駆動（`get-border-setting.util.ts` 参照残存ゼロ）、着発 2 段 rowspan・記号・ページネーション・操作 4 行維持
   - 検証: 検証ゲート（モック 05 比較）
 
-- [ ] **T3.6 過去の運用情報**（B9 刷新 + 会社チップ）
+- [~] **T3.6 過去の運用情報**（B9 刷新 + 会社チップ） 実装完了・実データ検証中 — 移行+残骸削除+会社チップ+長押しメニュー（d9a953d, operation-past-time jest 19/19、全体2 failedに改善）。逸脱: header据え置き・会社チップ永続なし(B9 DoD明記なし)
   - 対象: `pages/operation/operation-past-time/` 一式（-c/-p 残骸削除）
   - 参照: `10-spec` B9 / `20` §5.12 / モック 13
   - DoD: 検索(URL 互換)・マトリクス(sticky・複数目撃・赤枠)・無効化/復元メニュー(権限制御・モバイル長押し)・会社チップ・下部カード維持
   - 検証: 検証ゲート（モック 13 比較）
 
-- [ ] **T3.7 列車情報入力統合**（B8 add/copy/update 統合）
-  - 対象: `pages/timetable/timetable-add|copy|update/` → 単一コンポーネント + モード統合
+- [x] **T3.7 列車情報入力統合**（B8 add/copy/update 統合）✅ commit `27330ff`
+  - 対象: `pages/timetable/timetable-add|copy|update/` → 単一 `timetable-edit-form/` に統合（旧 `shared/timetable-edit-form/` も削除・`timetable.route.ts` を ADD/COPY/UPDATE 3 ルートへ集約）
   - 参照: `10-spec` B8 / `20` §5.6 / `30` §1 / モック 06
   - DoD: 路線チップ絞り込み・trip-block 単位コピー(一括オフセット)・モバイル 1 列車 1 画面・モード別保存 API・elf persist-state 下書き復元
-  - 検証: 検証ゲート（モック 06 比較）
+  - 検証: jest 7/7 suites・34/34 tests pass（自分で `--json` 実測確認）／tsc 新規プロダクションコードにエラー無し（既存の spec 型衝突は無関係）。実データ検証（モック 06 比較・Playwright）は [~] 未実施
 
-- [ ] **T3.8 ダッシュボード**（N3）
-  - 対象: `pages/dashboard/` を単一コンポーネントで作り直し
+- [x] **T3.8 ダッシュボード**（N3）✅ commit `e56d645`
+  - 対象: `pages/dashboard/` を単一コンポーネントで作り直し（旧 `-c/-p` = dashboard-main-c / dashboard-description-p 削除）
   - 参照: `15-spec` N3 / `20` §5.10 / `35` §7 / モック 11
   - DoD: 今日の状況カード(ダイヤ名・時計・計画走行本数=estimatePositions・目撃投稿数)・クイックタイル 4(指定順)・最新目撃 3・既存 6 カード折りたたみ全維持(指定順)・広告枠
-  - 検証: 検証ゲート（モック 11 比較）
+  - 検証: jest 5/5 suites・14/14 tests pass（`--json` 実測確認）／tsc(app) 0 エラー。実データ検証（モック 11 比較・Playwright）は [~] 未実施
+  - 実装判断メモ: ①計画走行本数は全路線統合駅軸(`build-network-station-axis.util.ts`)で算出（単一路線基準にすべきなら要再検討）②目撃位置は各 sighting の operationId で current-position API を個別取得(最大3件・新規API無し)③クイックタイルの `/train-location`(N2)・`/diagram`(N1) はページ未実装のためリンク先ルートは **P4 で登録必要** ④サイト説明の初回展開は elf persistState(`hasVisitedBefore`)
 
 ---
 
