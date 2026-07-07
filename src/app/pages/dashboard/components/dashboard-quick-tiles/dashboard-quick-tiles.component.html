@@ -1,0 +1,16 @@
+<div class="tw-grid tw-grid-cols-2 tw-gap-4">
+    @for (tile of tiles; track tile.title) {
+        <a
+            [routerLink]="tile.link"
+            class="tw-flex tw-flex-col tw-gap-2 tw-p-4 tw-text-white tw-no-underline tw-shadow-md"
+            [class.tw-bg-primary-500]="!tile.accent"
+            [class.tw-bg-accent-500]="tile.accent"
+        >
+            <mat-icon class="!tw-h-8 !tw-w-8 tw-text-[32px]">
+                {{ tile.icon }}
+            </mat-icon>
+            <span class="tw-text-base tw-font-bold">{{ tile.title }}</span>
+            <span class="tw-text-xs tw-opacity-80">{{ tile.subtitle }}</span>
+        </a>
+    }
+</div>

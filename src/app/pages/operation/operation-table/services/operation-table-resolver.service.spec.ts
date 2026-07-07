@@ -1,7 +1,8 @@
 import { TestBed, inject } from '@angular/core/testing';
 
-import { OperationTableStateStore } from '../states/operation-table.state';
-import { OperationTableService } from './operation-table.service';
+import { TitleService } from 'src/app/core/services/title.service';
+import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
+import { of } from 'rxjs';
 import { OperationTableResolverService } from './operation-table-resolver.service';
 
 describe('Service: OperationTableResolver', () => {
@@ -9,8 +10,11 @@ describe('Service: OperationTableResolver', () => {
         TestBed.configureTestingModule({
             providers: [
                 OperationTableResolverService,
-                { provide: OperationTableService, useValue: {} },
-                { provide: OperationTableStateStore, useValue: {} },
+                { provide: TitleService, useValue: { setTitle: () => {} } },
+                {
+                    provide: InitializeStateQuery,
+                    useValue: { isInitialized$: of(true) },
+                },
             ],
         });
     });

@@ -1,9 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { EMPTY } from 'rxjs';
 
 import { OperationRouteDiagramService } from '../../services/operation-route-diagram.service';
-import { OperationRouteDiagramStateQuery } from '../../states/operation-route-diagram.state';
 import { OperationRouteDiagramDrawingContainerComponent } from './operation-route-diagram-drawing-container.component';
 
 describe('OperationRouteDiagramDrawingContainerComponent', () => {
@@ -17,16 +15,6 @@ describe('OperationRouteDiagramDrawingContainerComponent', () => {
                 {
                     provide: OperationRouteDiagramService,
                     useValue: { emitNavigateTimetableEvent: () => {} },
-                },
-                {
-                    provide: OperationRouteDiagramStateQuery,
-                    useValue: {
-                        calendar$: EMPTY,
-                        operation$: EMPTY,
-                        tripOperationLists$: EMPTY,
-                        stations$: EMPTY,
-                        operationId$: EMPTY,
-                    },
                 },
             ],
         })

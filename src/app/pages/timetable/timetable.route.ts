@@ -18,22 +18,22 @@ export const TIMETABLE_ROUTES: Routes = [
     {
         path: 'add/:calendarId',
         loadChildren: () =>
-            import('./timetable-add/timetable-add.route').then(
-                (mod) => mod.TIMETABLE_ADD_ROUTES,
+            import('./timetable-edit-form/timetable-edit-form.route').then(
+                (mod) => mod.TIMETABLE_EDIT_FORM_ADD_ROUTES,
             ),
     },
     {
-        path: 'copy',
+        path: 'copy/:calendarId',
         loadChildren: () =>
-            import('./timetable-copy/timetable-copy.route').then(
-                (mod) => mod.TIMETABLE_COPY_ROUTES,
+            import('./timetable-edit-form/timetable-edit-form.route').then(
+                (mod) => mod.TIMETABLE_EDIT_FORM_COPY_ROUTES,
             ),
     },
     {
-        path: 'update',
+        path: 'update/:calendarId',
         loadChildren: () =>
-            import('./timetable-update/timetable-update.route').then(
-                (mod) => mod.TIMETABLE_UPDATE_ROUTES,
+            import('./timetable-edit-form/timetable-edit-form.route').then(
+                (mod) => mod.TIMETABLE_EDIT_FORM_UPDATE_ROUTES,
             ),
     },
 ];

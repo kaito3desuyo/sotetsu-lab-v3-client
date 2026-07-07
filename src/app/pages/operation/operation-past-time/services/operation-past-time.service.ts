@@ -9,12 +9,9 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import {
-    OperationPastTimeStateQuery,
-    OperationPastTimeStateStore,
-} from '../states/operation-past-time.state';
-import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { OperationPastTimeStore } from '../stores/operation-past-time.store';
 
 @Injectable()
 export class OperationPastTimeService {
@@ -23,14 +20,12 @@ export class OperationPastTimeService {
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #operationPastTimeStateStore = inject(OperationPastTimeStateStore);
-    readonly #operationPastTimeStateQuery = inject(OperationPastTimeStateQuery);
 
     fetchCalendarByDate(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
-            this.#operationPastTimeStateStore.setCalendars([]);
+            OperationPastTimeStore.setCalendars([]);
             return of(undefined);
         }
 
@@ -42,17 +37,17 @@ export class OperationPastTimeService {
             ),
         ).pipe(
             tap((calendars) => {
-                this.#operationPastTimeStateStore.setCalendars(calendars);
+                OperationPastTimeStore.setCalendars(calendars);
             }),
             map(() => undefined),
         );
     }
 
     fetchFormations(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
-            this.#operationPastTimeStateStore.setFormations([]);
+            OperationPastTimeStore.setFormations([]);
             return of(undefined);
         }
 
@@ -64,7 +59,7 @@ export class OperationPastTimeService {
             .pipe(
                 tap((formations: FormationDetailsDto[]) => {
                     const agencies = this.#agencyListStateQuery.agencies;
-                    this.#operationPastTimeStateStore.setFormations(
+                    OperationPastTimeStore.setFormations(
                         [...formations].sort(
                             (a, b) =>
                                 agencies.findIndex(
@@ -80,9 +75,8 @@ export class OperationPastTimeService {
             );
     }
 
-    // v3
     fetchOperationsV3(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
             return of(undefined);
@@ -95,16 +89,15 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((operations: OperationDetailsDto[]) => {
-                    this.#operationPastTimeStateStore.setOperations(operations);
+                    OperationPastTimeStore.setOperations(operations);
                 }),
                 map(() => undefined),
             );
     }
 
     fetchOperationSightingsV3(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
-        const includeInvalidated =
-            this.#operationPastTimeStateQuery.includeInvalidated;
+        const dates = OperationPastTimeStore.dates;
+        const includeInvalidated = OperationPastTimeStore.includeInvalidated;
 
         if (!dates.length) {
             return of(undefined);
@@ -118,9 +111,7 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((sightings: OperationSightingDetailsDto[]) => {
-                    this.#operationPastTimeStateStore.setOperationSightings(
-                        sightings,
-                    );
+                    OperationPastTimeStore.setOperationSightings(sightings);
                 }),
                 map(() => undefined),
             );

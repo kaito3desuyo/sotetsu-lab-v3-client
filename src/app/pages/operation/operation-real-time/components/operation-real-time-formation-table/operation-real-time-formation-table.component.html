@@ -1,3 +1,9 @@
+@if (filteredFormations().length === 0) {
+    <app-empty-state
+        icon="filter_alt_off"
+        message="条件に一致する編成がありません"
+    ></app-empty-state>
+} @else {
 <table class="tw-h-full tw-w-full tw-border-collapse tw-bg-white">
     <thead>
         <tr
@@ -11,7 +17,7 @@
         </tr>
     </thead>
     <tbody>
-        @for (formation of formations(); track formation.formationId) {
+        @for (formation of filteredFormations(); track formation.formationId) {
             <tr
                 class="tw-h-12 [&>td+td]:tw-pl-4 [&>td.formationNumber]:tw-w-10 [&>td.operationNumber]:tw-w-9 [&>td:first-child]:tw-pl-6 [&>td:last-child]:tw-pr-6 [&>td]:tw-h-full [&>td]:tw-border-0 [&>td]:tw-border-t [&>td]:tw-border-solid [&>td]:tw-border-t-grey-300 [&>td]:tw-p-0 [&>td]:tw-text-sm"
             >
@@ -481,3 +487,4 @@
         }
     </tbody>
 </table>
+}

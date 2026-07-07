@@ -1,27 +1,37 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import {
-    OperationTableStateQuery,
-    OperationTableStateStore,
-} from '../states/operation-table.state';
+import { OperationTableStore } from '../stores/operation-table.store';
 
 @Injectable()
 export class OperationTableService {
+    readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
     readonly #stationService = inject(StationService);
     readonly #tripClassService = inject(TripClassService);
-    readonly #operationTableStateStore = inject(OperationTableStateStore);
-    readonly #operationTableStateQuery = inject(OperationTableStateQuery);
+
+    fetchCalendar(): Observable<void> {
+        const calendarId = OperationTableStore.calendarId;
+
+        return this.#calendarService.findOne({ calendarId }).pipe(
+            tap((calendar: CalendarDetailsDto) => {
+                OperationTableStore.setCalendar(calendar);
+            }),
+            map(() => undefined),
+        );
+    }
 
     fetchOperationTrips(): Observable<void> {
-        const calendarId = this.#operationTableStateQuery.calendarId;
+        const calendarId = OperationTableStore.calendarId;
 
         return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
             map((operations) =>
@@ -40,7 +50,7 @@ export class OperationTableService {
                 );
             }),
             tap((operationTrips) => {
-                this.#operationTableStateStore.setOperationTrips(operationTrips);
+                OperationTableStore.setOperationTrips(operationTrips);
             }),
             map(() => undefined),
         );
@@ -48,18 +58,27 @@ export class OperationTableService {
 
     fetchStations(): Observable<void> {
         return this.#stationService.findMany({}).pipe(
-            tap((stations: StationDetailsDto[]) =>
-                this.#operationTableStateStore.setStations(stations),
-            ),
+            tap((stations: StationDetailsDto[]) => {
+                OperationTableStore.setStations(stations);
+            }),
             map(() => undefined),
         );
     }
 
-    fetchTripClass(): Observable<void> {
+    fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
-            tap((tripClasses: TripClassDetailsDto[]) =>
-                this.#operationTableStateStore.setTripClasses(tripClasses),
-            ),
+            tap((tripClasses: TripClassDetailsDto[]) => {
+                OperationTableStore.setTripClasses(tripClasses);
+            }),
+            map(() => undefined),
+        );
+    }
+
+    fetchOperationGroups(): Observable<void> {
+        return this.#operationService.findManyGroups().pipe(
+            tap((operationGroups: OperationGroupDto[]) => {
+                OperationTableStore.setOperationGroups(operationGroups);
+            }),
             map(() => undefined),
         );
     }

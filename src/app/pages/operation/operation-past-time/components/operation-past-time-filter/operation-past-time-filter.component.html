@@ -1,0 +1,11 @@
+<div>
+    <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+        会社で絞り込み（行の表示のみ）
+    </p>
+    <app-filter-chips
+        mode="multiple"
+        [options]="agencyOptions()"
+        [selected]="selectedAgencyIds()"
+        (selectedChange)="onAgencyChange($event)"
+    ></app-filter-chips>
+</div>

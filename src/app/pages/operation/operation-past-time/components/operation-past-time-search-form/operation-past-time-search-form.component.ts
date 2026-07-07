@@ -21,7 +21,7 @@ import { Router } from '@angular/router';
 import { format, parse } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { omitBy } from 'es-toolkit';
-import { OperationPastTimeStateQuery } from '../../states/operation-past-time.state';
+import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
 import { OperationPastTimeSearchForm } from '../../types/operation-past-time.type';
 
 @Injectable()
@@ -56,7 +56,6 @@ class CustomDateFnsAdapter extends DateFnsAdapter {
 export class OperationPastTimeSearchFormComponent {
     readonly #router = inject(Router);
     readonly #fb = inject(FormBuilder);
-    readonly #operationPastTimeStateQuery = inject(OperationPastTimeStateQuery);
 
     readonly maxDate = new Date();
     readonly form: OperationPastTimeSearchForm = this.#fb.group({
@@ -71,12 +70,10 @@ export class OperationPastTimeSearchFormComponent {
         includeInvalidated: this.#fb.control<boolean>(false),
     });
 
-    readonly referenceDate = toSignal(
-        this.#operationPastTimeStateQuery.referenceDate$,
-    );
-    readonly days = toSignal(this.#operationPastTimeStateQuery.days$);
+    readonly referenceDate = toSignal(OperationPastTimeStore.referenceDate$);
+    readonly days = toSignal(OperationPastTimeStore.days$);
     readonly includeInvalidated = toSignal(
-        this.#operationPastTimeStateQuery.includeInvalidated$,
+        OperationPastTimeStore.includeInvalidated$,
     );
 
     constructor() {

@@ -7,12 +7,14 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTabsModule } from '@angular/material/tabs';
 import { interval, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
 import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
+import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
 import { OperationRealTimeHeaderComponent } from './components/operation-real-time-header/operation-real-time-header.component';
 import { OperationRealTimeLegendComponent } from './components/operation-real-time-legend/operation-real-time-legend.component';
@@ -30,8 +32,10 @@ OperationRealTimeStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        MatTabsModule,
         OperationRealTimeHeaderComponent,
         OperationRealTimeControllerComponent,
+        OperationRealTimeFilterComponent,
         OperationRealTimeOperationTableComponent,
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
@@ -77,6 +81,9 @@ export class OperationRealTimeComponent {
         );
         await lastValueFrom(
             this.#operationRealTimeService.fetchCurrentPositions(),
+        );
+        await lastValueFrom(
+            this.#operationRealTimeService.fetchOperationGroups(),
         );
         OperationRealTimeStore.disableLoading();
 

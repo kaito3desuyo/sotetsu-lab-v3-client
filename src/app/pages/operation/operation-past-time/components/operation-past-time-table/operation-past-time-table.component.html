@@ -35,7 +35,7 @@
                 </thead>
                 <tbody>
                     @for (
-                        formation of formations();
+                        formation of visibleFormations();
                         track formation.formationId
                     ) {
                         <tr>
@@ -78,20 +78,18 @@
                                                                       outputPropertyName:
                                                                           'operationNumber',
                                                                   };
-                                                    @let bgColor =
-                                                        operationNumber
-                                                            | newOperationNumberColor;
                                                     @let borderEnabled =
                                                         sighting.invalidation !==
                                                         null;
-                                                    <app-new-operation-number-link
-                                                        [text]="operationNumber"
-                                                        [bgColor]="bgColor"
+                                                    <app-operation-number-tag
+                                                        [operationNumber]="
+                                                            operationNumber
+                                                        "
                                                         [borderEnabled]="
                                                             borderEnabled
                                                         "
                                                         [borderColor]="
-                                                            'rgb(183, 28, 28)'
+                                                            invalidatedBorderColor
                                                         "
                                                         [link]="[
                                                             '/operation',
@@ -127,7 +125,7 @@
                                                                     ),
                                                             },
                                                         ]"
-                                                    ></app-new-operation-number-link>
+                                                    ></app-operation-number-tag>
                                                 }
                                             </div>
                                         }

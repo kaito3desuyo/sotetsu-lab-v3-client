@@ -1,0 +1,537 @@
+@if (calendar()) {
+<article class="tw-bg-white tw-shadow-md">
+    <header
+        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
+        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+    >
+        <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
+            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
+            改正<br />
+            {{ calendar().calendarName }}
+            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
+        </h3>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+        <mat-paginator
+            [length]="pageSettings().length"
+            [pageIndex]="pageSettings().pageIndex"
+            [pageSize]="pageSettings().pageSize"
+            [pageSizeOptions]="[10, 20, 50, 100]"
+            (page)="page.emit($event)"
+        ></mat-paginator>
+
+        <div
+            class="tw-h-[70vh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+        >
+            <table
+                class="tw-border-collapse tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
+            >
+                <thead>
+                    <tr class="tw-sticky tw-top-0 tw-z-20 tw-h-6">
+                        <th
+                            class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            colspan="2"
+                        >
+                            <span class="tw-sticky">列車番号</span>
+                        </th>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <th
+                                class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            >
+                                <span
+                                    class="tw-relative"
+                                    style="
+                                        display: inline-block;
+                                        transform-origin: center;
+                                        margin: -9999px;
+                                    "
+                                    [ngStyle]="{
+                                        transform:
+                                            'scale(' +
+                                            (trip.tripNumber.length > 3
+                                                ? 3 / trip.tripNumber.length
+                                                : 1) +
+                                            ', 1)',
+                                    }"
+                                >
+                                    {{ trip.tripNumber }}
+                                </span>
+                            </th>
+                        }
+                    </tr>
+                    <tr class="tw-sticky tw-top-6 tw-z-20 tw-h-6">
+                        <th
+                            class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            colspan="2"
+                        >
+                            <span class="tw-sticky">運用番号</span>
+                        </th>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <th
+                                class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            >
+                                @if (trip.tripOperationLists.length) {
+                                    <app-operation-number-tag
+                                        class="tw-relative"
+                                        [operationNumber]="
+                                            trip.tripOperationLists[0].operation
+                                                .operationNumber
+                                        "
+                                        [link]="[
+                                            '/operation/route-diagram',
+                                            {
+                                                operation_id:
+                                                    trip.tripOperationLists[0]
+                                                        .operationId,
+                                            },
+                                        ]"
+                                    ></app-operation-number-tag>
+                                } @else {
+                                    <span class="tw-relative"> 不明 </span>
+                                }
+                            </th>
+                        }
+                    </tr>
+                    <tr class="tw-sticky tw-top-12 tw-z-20 tw-h-6">
+                        <th
+                            class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            colspan="2"
+                        >
+                            <span class="tw-sticky">種別</span>
+                        </th>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <th
+                                class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            >
+                                <span
+                                    class="tw-relative"
+                                    style="
+                                        display: inline-block;
+                                        transform-origin: center;
+                                        margin: -9999px;
+                                    "
+                                    [ngStyle]="{
+                                        color: trip.tripClass.tripClassColor,
+                                        transform:
+                                            'scale(' +
+                                            ((
+                                                trip.tripClass.tripClassName
+                                                | antiBrackets
+                                            ).length > 2
+                                                ? 2 /
+                                                  (
+                                                      trip.tripClass
+                                                          .tripClassName
+                                                      | antiBrackets
+                                                  ).length
+                                                : 1) +
+                                            ', 1)',
+                                    }"
+                                >
+                                    {{
+                                        trip.tripClass.tripClassName
+                                            | antiBrackets
+                                    }}
+                                </span>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (station of stations(); track station.stationId) {
+                        @let viewMode = viewModes().get(station.stationId);
+                        @let borderSetting =
+                            bordersAfter().get(station.stationId) ?? false;
+
+                        @if (
+                            viewMode ===
+                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                            (tripDirection() === tripDirectionEnum.INBOUND &&
+                                viewMode ===
+                                    staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
+                            (tripDirection() === tripDirectionEnum.OUTBOUND &&
+                                viewMode ===
+                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL)
+                        ) {
+                            <tr class="tw-h-6">
+                                <td
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    [ngClass]="{
+                                        'tw-border-b before:tw-border-b':
+                                            borderSetting === true ||
+                                            (tripDirection() ===
+                                                tripDirectionEnum.INBOUND &&
+                                                viewMode ===
+                                                    staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
+                                            (tripDirection() ===
+                                                tripDirectionEnum.OUTBOUND &&
+                                                viewMode ===
+                                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
+                                    }"
+                                    [rowSpan]="
+                                        viewMode ===
+                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL
+                                            ? 2
+                                            : 1
+                                    "
+                                >
+                                    <span
+                                        class="tw-relative tw-text-[10px]"
+                                        style="
+                                            display: inline-block;
+                                            line-height: 1;
+                                            margin-right: 4px;
+                                        "
+                                    >
+                                        {{
+                                            station
+                                                | timetableAllLineGetStationNumbering
+                                        }}
+                                    </span>
+
+                                    <span
+                                        class="tw-relative"
+                                        style="
+                                            display: inline-block;
+                                            transform-origin: right;
+                                        "
+                                        [ngStyle]="{
+                                            transform:
+                                                'scale(' +
+                                                (station.stationName.length > 4
+                                                    ? 4 /
+                                                      station.stationName.length
+                                                    : 1) +
+                                                ', 1)',
+                                            marginLeft:
+                                                (station.stationName.length > 4
+                                                    ? (station.stationName
+                                                          .length -
+                                                          4) *
+                                                      16 *
+                                                      -1
+                                                    : 0) + 'px',
+                                        }"
+                                    >
+                                        {{ station.stationName }}
+                                    </span>
+                                </td>
+                                <td
+                                    class="tw-sticky tw-left-[154px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    [ngClass]="{
+                                        'tw-border-b before:tw-border-b':
+                                            borderSetting === true ||
+                                            viewMode ===
+                                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                            (tripDirection() ===
+                                                tripDirectionEnum.INBOUND &&
+                                                viewMode ===
+                                                    staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
+                                            (tripDirection() ===
+                                                tripDirectionEnum.OUTBOUND &&
+                                                viewMode ===
+                                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
+                                    }"
+                                >
+                                    <span class="tw-relative">着</span>
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        [ngClass]="{
+                                            'tw-border-b':
+                                                borderSetting === true ||
+                                                viewMode ===
+                                                    staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                                (tripDirection() ===
+                                                    tripDirectionEnum.INBOUND &&
+                                                    viewMode ===
+                                                        staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
+                                                (tripDirection() ===
+                                                    tripDirectionEnum.OUTBOUND &&
+                                                    viewMode ===
+                                                        staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
+                                        }"
+                                        [ngStyle]="{
+                                            color: trip.tripClass
+                                                .tripClassColor,
+                                        }"
+                                    >
+                                        {{
+                                            {
+                                                tripDirection: tripDirection(),
+                                                mode: 'arrival',
+                                                station: station,
+                                                trip: trip,
+                                                stations: stations(),
+                                                trips: trips(),
+                                                viewModes: viewModes(),
+                                                bordersAfter: bordersAfter(),
+                                            } | timetableAllLineGetTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
+                        }
+
+                        @if (
+                            viewMode ===
+                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                            viewMode === staitonViewModeEnum.ONLY_DEPARTURE
+                        ) {
+                            <tr class="tw-h-6">
+                                @if (
+                                    viewMode ===
+                                    staitonViewModeEnum.ONLY_DEPARTURE
+                                ) {
+                                    <td
+                                        class="tw-sticky tw-left-0 tw-z-0 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                        [ngClass]="{
+                                            'tw-border-b before:tw-border-b':
+                                                borderSetting,
+                                        }"
+                                    >
+                                        <span
+                                            class="tw-relative tw-text-[10px]"
+                                            style="
+                                                display: inline-block;
+                                                line-height: 1;
+                                                margin-right: 4px;
+                                            "
+                                        >
+                                            {{
+                                                station
+                                                    | timetableAllLineGetStationNumbering
+                                            }}
+                                        </span>
+
+                                        <span
+                                            class="tw-relative"
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: right;
+                                            "
+                                            [ngStyle]="{
+                                                transform:
+                                                    'scale(' +
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? 4 /
+                                                          station.stationName
+                                                              .length
+                                                        : 1) +
+                                                    ', 1)',
+                                                marginLeft:
+                                                    (station.stationName
+                                                        .length > 4
+                                                        ? (station.stationName
+                                                              .length -
+                                                              4) *
+                                                          16 *
+                                                          -1
+                                                        : 0) + 'px',
+                                            }"
+                                        >
+                                            {{ station.stationName }}
+                                        </span>
+                                    </td>
+                                }
+
+                                <td
+                                    class="tw-sticky tw-left-[154px] tw-z-0 tw-border-0 tw-border-solid !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    [ngClass]="{
+                                        'tw-border-b before:tw-border-b':
+                                            borderSetting,
+                                    }"
+                                >
+                                    <span class="tw-relative">発</span>
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        [ngClass]="{
+                                            'tw-border-b': borderSetting,
+                                        }"
+                                        [ngStyle]="{
+                                            color: trip.tripClass
+                                                .tripClassColor,
+                                        }"
+                                    >
+                                        {{
+                                            {
+                                                tripDirection: tripDirection(),
+                                                mode: 'departure',
+                                                station: station,
+                                                trip: trip,
+                                                stations: stations(),
+                                                trips: trips(),
+                                                viewModes: viewModes(),
+                                                bordersAfter: bordersAfter(),
+                                            } | timetableAllLineGetTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td
+                            colspan="2"
+                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        ></td>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <td
+                                class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                            >
+                                <button
+                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                    mat-icon-button
+                                    matTooltip="編集する"
+                                    (click)="clickEditButton.emit(trip)"
+                                >
+                                    <mat-icon>edit</mat-icon>
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                    <tr>
+                        <td
+                            colspan="2"
+                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        ></td>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <td
+                                class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                            >
+                                <button
+                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                    mat-icon-button
+                                    matTooltip="コピーして新規作成"
+                                    (click)="clickCopyButton.emit(trip)"
+                                >
+                                    <mat-icon>content_copy</mat-icon>
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                    <tr>
+                        <td
+                            colspan="2"
+                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        ></td>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <td
+                                class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                            >
+                                <button
+                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                    mat-icon-button
+                                    matTooltip="削除する"
+                                    [disabled]="isFeatureDate()"
+                                    (click)="clickDeleteButton.emit(trip)"
+                                >
+                                    <mat-icon>delete</mat-icon>
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                    <tr>
+                        <td
+                            colspan="2"
+                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-[calc(100%_-_0.5px)] before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-b before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        ></td>
+
+                        @for (trip of trips(); track trip.tripId) {
+                            <td
+                                class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-b tw-border-solid tw-border-grey-300 tw-text-center"
+                            >
+                                @if (!groupingBaseTrip()) {
+                                    <button
+                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                        mat-icon-button
+                                        matTooltip="この列車を基準として列車をグルーピングする"
+                                        (click)="groupingBaseTrip.set(trip)"
+                                    >
+                                        <mat-icon>link</mat-icon>
+                                    </button>
+                                } @else {
+                                    @if (
+                                        groupingBaseTrip() &&
+                                        trip.tripId ===
+                                            groupingBaseTrip().tripId
+                                    ) {
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="キャンセル"
+                                            (click)="
+                                                groupingBaseTrip.set(undefined)
+                                            "
+                                        >
+                                            <mat-icon>clear</mat-icon>
+                                        </button>
+                                    }
+
+                                    @if (
+                                        groupingBaseTrip() &&
+                                        trip.tripId !==
+                                            groupingBaseTrip().tripId &&
+                                        trip.tripBlockId !==
+                                            groupingBaseTrip().tripBlockId
+                                    ) {
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="グループに追加する"
+                                            (click)="
+                                                clickAddTripInGroup.emit({
+                                                    base: groupingBaseTrip(),
+                                                    target: trip,
+                                                })
+                                            "
+                                        >
+                                            <mat-icon>add</mat-icon>
+                                        </button>
+                                    }
+
+                                    @if (
+                                        groupingBaseTrip() &&
+                                        trip.tripId !==
+                                            groupingBaseTrip().tripId &&
+                                        trip.tripBlockId ===
+                                            groupingBaseTrip().tripBlockId
+                                    ) {
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="グループから除外する"
+                                            (click)="
+                                                clickDeleteTripInGroup.emit({
+                                                    base: groupingBaseTrip(),
+                                                    target: trip,
+                                                })
+                                            "
+                                        >
+                                            <mat-icon>remove</mat-icon>
+                                        </button>
+                                    }
+                                }
+                            </td>
+                        }
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</article>
+}

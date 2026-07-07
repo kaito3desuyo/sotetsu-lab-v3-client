@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { provideRouter } from '@angular/router';
 import { OperationNumberTagComponent } from './operation-number-tag.component';
 
@@ -90,5 +91,121 @@ describe('OperationNumberTagComponent', () => {
         expect(anchor.getAttribute('href')).toBe(
             '/operation/route-diagram;operation_id=123',
         );
+    });
+
+    describe('borderEnabled（B9: 無効化済み目撃の赤枠表現）', () => {
+        it('borderEnabled 指定時は枠クラス・枠色が適用される', () => {
+            fixture.componentRef.setInput('operationNumber', '53');
+            fixture.componentRef.setInput('borderEnabled', true);
+            fixture.componentRef.setInput('borderColor', 'rgb(183, 28, 28)');
+            fixture.detectChanges();
+
+            const el = getTagEl();
+            expect(el.classList.contains('tw-border')).toBe(true);
+            expect(el.style.borderColor).toBe('rgb(183, 28, 28)');
+        });
+
+        it('borderEnabled 未指定時は枠クラスが付かない', () => {
+            fixture.componentRef.setInput('operationNumber', '53');
+            fixture.detectChanges();
+
+            expect(getTagEl().classList.contains('tw-border')).toBe(false);
+        });
+    });
+
+    describe('contextMenus（B9: 右クリック/長押しコンテキストメニュー）', () => {
+        let mockTrigger: { openMenu: jest.Mock };
+
+        beforeEach(() => {
+            mockTrigger = { openMenu: jest.fn() };
+        });
+
+        it('contextMenus 未指定時は右クリックしてもメニューを開かない', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.detectChanges();
+
+            const event = { preventDefault: jest.fn() } as unknown as MouseEvent;
+            component.onContextMenu(
+                event,
+                mockTrigger as unknown as MatMenuTrigger,
+            );
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(mockTrigger.openMenu).not.toHaveBeenCalled();
+        });
+
+        it('contextMenus 指定時は右クリックでメニューを開く', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            const event = { preventDefault: jest.fn() } as unknown as MouseEvent;
+            component.onContextMenu(
+                event,
+                mockTrigger as unknown as MatMenuTrigger,
+            );
+
+            expect(event.preventDefault).toHaveBeenCalled();
+            expect(mockTrigger.openMenu).toHaveBeenCalled();
+        });
+
+        it('長押し（既定500ms）でメニューを開く（モバイル: contextmenu 非対応の代替）', () => {
+            jest.useFakeTimers();
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            jest.advanceTimersByTime(500);
+
+            expect(mockTrigger.openMenu).toHaveBeenCalled();
+            jest.useRealTimers();
+        });
+
+        it('長押し発火前に touchend すればメニューを開かない', () => {
+            jest.useFakeTimers();
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            component.onTouchEnd({
+                preventDefault: jest.fn(),
+            } as unknown as TouchEvent);
+            jest.advanceTimersByTime(500);
+
+            expect(mockTrigger.openMenu).not.toHaveBeenCalled();
+            jest.useRealTimers();
+        });
+
+        it('長押しでメニューが開いた後の click はナビゲーションを抑止する', () => {
+            jest.useFakeTimers();
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('link', [
+                '/operation',
+                'route-diagram',
+            ]);
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            jest.advanceTimersByTime(500);
+
+            const clickEvent = {
+                preventDefault: jest.fn(),
+            } as unknown as MouseEvent;
+            component.onClick(clickEvent);
+
+            expect(clickEvent.preventDefault).toHaveBeenCalled();
+            jest.useRealTimers();
+        });
     });
 });

@@ -4,8 +4,8 @@ import { provideRouter } from '@angular/router';
 import { EMPTY } from 'rxjs';
 
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
+import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
-import { OperationRouteDiagramStateQuery } from './states/operation-route-diagram.state';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
 
 describe('OperationRouteDiagramComponent', () => {
@@ -25,10 +25,20 @@ describe('OperationRouteDiagramComponent', () => {
                     },
                 },
                 {
-                    provide: OperationRouteDiagramService,
-                    useValue: { receiveNavigateTimetableEvent: () => EMPTY },
+                    provide: OperationSearchCardStateStore,
+                    useValue: {
+                        setCalendarId: () => {},
+                        setOperationId: () => {},
+                    },
                 },
-                { provide: OperationRouteDiagramStateQuery, useValue: {} },
+                {
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        receiveNavigateTimetableEvent: () => EMPTY,
+                        fetchOperationTrips: () => EMPTY,
+                        fetchStations: () => EMPTY,
+                    },
+                },
             ],
         })
             .overrideComponent(OperationRouteDiagramComponent, {

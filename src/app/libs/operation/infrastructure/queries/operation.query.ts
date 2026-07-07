@@ -8,13 +8,16 @@ import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/bu
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
+import { OperationGroupDto } from '../../usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import {
     OperationDtoBuilder,
     OperationsDtoBuilder,
 } from '../builders/operation.dto.builder';
 import { OperationCurrentPositionDtoBuilder } from '../builders/operation-current-position.dto.builder';
+import { OperationGroupsDtoBuilder } from '../builders/operation-group.dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
+import { OperationGroupModel } from '../models/operation-group.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
 
@@ -186,5 +189,30 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
+    findManyGroups(params?: {
+        forceReload?: boolean;
+    }): Observable<OperationGroupDto[]> {
+        const { forceReload } = params ?? {};
+        const key = md5(JSON.stringify({ name: 'findManyGroups' }));
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<
+                    OperationGroupModel[]
+                >(`${this.#v3ApiUrl}/groups`, { observe: 'response' })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        OperationGroupsDtoBuilder.buildFromModels(res.body),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
 }
 

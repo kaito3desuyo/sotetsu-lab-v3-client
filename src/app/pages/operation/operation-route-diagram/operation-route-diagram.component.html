@@ -1,8 +1,22 @@
+@if (isLoading()) {
+    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
 <main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
     <header>
-        <app-operation-route-diagram-header-c></app-operation-route-diagram-header-c>
+        <app-operation-route-diagram-header></app-operation-route-diagram-header>
     </header>
     <div>
-        <app-operation-route-diagram-main-c></app-operation-route-diagram-main-c>
+        <app-operation-route-diagram-route-filter></app-operation-route-diagram-route-filter>
+    </div>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <app-operation-route-diagram-drawing-container></app-operation-route-diagram-drawing-container>
+        <ng-adsense [adSlot]="6189336070"></ng-adsense>
+        <app-operation-search-card-c></app-operation-search-card-c>
     </div>
 </main>

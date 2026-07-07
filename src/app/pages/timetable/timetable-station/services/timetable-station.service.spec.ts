@@ -1,12 +1,13 @@
 /* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 
-import { TestBed, inject, waitForAsync } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { TestBed, inject } from '@angular/core/testing';
 import { TimetableStationService } from './timetable-station.service';
 
 describe('Service: TimetableStation', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [TimetableStationService],
+            providers: [provideHttpClient(), TimetableStationService],
         });
     });
 

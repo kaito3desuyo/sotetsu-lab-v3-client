@@ -1,0 +1,32 @@
+<div class="tw-flex tw-flex-col tw-gap-3 md:tw-flex-row md:tw-items-end md:tw-justify-between">
+    <div>
+        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+            運用群で絞り込む（カードの表示/非表示のみ）
+        </p>
+        <app-filter-chips
+            mode="multiple"
+            [options]="groupOptions()"
+            [selected]="selectedGroupNames()"
+            (selectedChange)="onGroupChange($event)"
+        ></app-filter-chips>
+    </div>
+
+    <mat-form-field
+        subscriptSizing="dynamic"
+        class="tw-w-full md:tw-w-40"
+    >
+        <mat-label>ジャンプ</mat-label>
+        <mat-select
+            (selectionChange)="onJumpChange($event.value)"
+        >
+            @for (
+                operationTrip of operationTrips();
+                track operationTrip.operation.operationNumber
+            ) {
+                <mat-option [value]="operationTrip.operation.operationNumber">
+                    {{ operationTrip.operation.operationNumber }}
+                </mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+</div>

@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
 import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
 import { OperationDetailsDto } from './dtos/operation-details.dto';
+import { OperationGroupDto } from './dtos/operation-group.dto';
 import { OperationTripsDto } from './dtos/operation-trips.dto';
 
 @Injectable({ providedIn: 'root' })
@@ -37,5 +38,11 @@ export class OperationService {
         forceReload?: boolean;
     }): Observable<OperationTripsDto> {
         return this.operationQuery.findOneWithTrips(params);
+    }
+
+    findManyGroups(params?: {
+        forceReload?: boolean;
+    }): Observable<OperationGroupDto[]> {
+        return this.operationQuery.findManyGroups(params);
     }
 }

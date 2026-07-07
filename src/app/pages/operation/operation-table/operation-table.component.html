@@ -1,8 +1,60 @@
+@if (isLoading()) {
+    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
 <main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
     <header>
-        <app-operation-table-header-c></app-operation-table-header-c>
+        <h2 class="mat-h2 !tw-m-0">運用表</h2>
     </header>
+
+    @if (calendar()) {
+        <div
+            class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-rounded tw-px-4 tw-shadow-md"
+            [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+        >
+            <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
+                {{ calendar().startDate | date: 'yyyy年MM月dd日' }} 改正
+                {{ calendar().calendarName }}
+            </h3>
+        </div>
+    }
+
     <div>
-        <app-operation-table-main-c></app-operation-table-main-c>
+        <app-operation-table-filter
+            [operationTrips]="operationTrips()"
+            (jump)="onJump($event)"
+        ></app-operation-table-filter>
     </div>
+
+    @if (isEmpty()) {
+        <app-empty-state
+            icon="event_busy"
+            message="このダイヤには運用情報が登録されていません"
+        ></app-empty-state>
+    } @else {
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            @for (
+                operationTrip of operationTrips();
+                track operationTrip.operation.operationNumber
+            ) {
+                @if (isCardVisible(operationTrip.operation.operationNumber)) {
+                    <app-operation-table-card
+                        [operationTrip]="operationTrip"
+                        [stations]="stations()"
+                        [tripClasses]="tripClasses()"
+                        [calendarId]="calendarId()"
+                    ></app-operation-table-card>
+                }
+            }
+        </div>
+    }
+
+    <ng-adsense [adSlot]="6887340076"></ng-adsense>
+
+    <app-operation-search-card-c></app-operation-search-card-c>
 </main>

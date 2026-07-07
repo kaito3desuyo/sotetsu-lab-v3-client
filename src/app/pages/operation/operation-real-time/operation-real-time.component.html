@@ -14,7 +14,14 @@
     <div>
         <app-operation-real-time-controller></app-operation-real-time-controller>
     </div>
-    <div class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-gap-16">
+    <div>
+        <app-operation-real-time-filter></app-operation-real-time-filter>
+    </div>
+
+    <!-- デスクトップ: 運用順・編成順テーブルを横並び表示 -->
+    <div
+        class="tw-hidden md:tw-flex md:tw-flex-row md:tw-gap-16"
+    >
         <div
             class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
         >
@@ -26,6 +33,22 @@
         >
             <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
         </div>
+    </div>
+
+    <!-- モバイル: mat-tab で運用順｜編成順を切替表示 -->
+    <div class="md:tw-hidden">
+        <mat-tab-group>
+            <mat-tab label="運用順">
+                <div class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md">
+                    <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
+                </div>
+            </mat-tab>
+            <mat-tab label="編成順">
+                <div class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md">
+                    <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
     </div>
     <div>
         <app-operation-real-time-legend></app-operation-real-time-legend>

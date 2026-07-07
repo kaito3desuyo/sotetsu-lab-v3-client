@@ -7,6 +7,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
 import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import {
     OperationRealTimeTableColumn,
@@ -14,6 +15,11 @@ import {
 } from '../../enums/operation-real-time.enum';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
+import {
+    matchesAgencyFilter,
+    matchesGroupFilter,
+    withRetiredGroup,
+} from '../../utils/operation-real-time-filter.util';
 
 @Component({
     selector: 'app-operation-real-time-formation-table',
@@ -25,6 +31,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
         MatIconModule,
         MatTooltipModule,
         NewOperationNumberLinkComponent,
+        EmptyStateComponent,
         DateFnsPipe,
         NewFindByIdPipe,
         NewAntiBracketsPipe,
@@ -57,6 +64,41 @@ export class OperationRealTimeFormationTableComponent {
     readonly isVisibleSightingHistories = toSignal(
         OperationRealTimeStore.isVisibleSightingHistories$,
     );
+    readonly selectedAgencyIds = toSignal(
+        OperationRealTimeStore.selectedAgencyIds$,
+        { initialValue: [] },
+    );
+    readonly selectedGroupNames = toSignal(
+        OperationRealTimeStore.selectedGroupNames$,
+        { initialValue: [] },
+    );
+    readonly operationGroups = toSignal(OperationRealTimeStore.operationGroups$, {
+        initialValue: [],
+    });
+
+    readonly filteredFormations = computed(() => {
+        const formations = this.formations() ?? [];
+        const selectedAgencyIds = this.selectedAgencyIds();
+        const selectedGroupNames = this.selectedGroupNames();
+        const groups = withRetiredGroup(this.operationGroups());
+        const timeCrossSections = this.timeCrossSections() ?? {};
+
+        return formations.filter((formation) => {
+            if (!matchesAgencyFilter(formation.agencyId, selectedAgencyIds)) {
+                return false;
+            }
+
+            const expectedOperationNumber =
+                timeCrossSections[formation.formationNumber]?.expectedSighting
+                    ?.operation?.operationNumber;
+
+            return matchesGroupFilter(
+                expectedOperationNumber,
+                selectedGroupNames,
+                groups,
+            );
+        });
+    });
 
     readonly displayedColumns = computed(() => {
         const isVisibleSightingHistories = this.isVisibleSightingHistories();

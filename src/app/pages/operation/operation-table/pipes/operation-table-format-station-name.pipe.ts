@@ -1,5 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+/**
+ * 運用表: 長い駅名を短縮表示する（B4・縦カード刷新に伴い、旧固定幅テーブルの
+ * scaleX 縮小表示用だった 2 文字駅名への全角スペース挿入は廃止した。
+ * 情報要素としての駅名短縮マップのみ維持する）。
+ */
 @Pipe({
     standalone: true,
     name: 'operationTableFormatStationName',
@@ -12,10 +17,6 @@ export class OperationTableFormatStationNamePipe implements PipeTransform {
 
         if (stationNameMap.has(stationName)) {
             return stationNameMap.get(stationName);
-        }
-
-        if (stationName.length === 2) {
-            return stationName[0] + '　' + stationName[1];
         }
 
         return stationName;

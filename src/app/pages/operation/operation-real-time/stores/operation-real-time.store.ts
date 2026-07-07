@@ -10,6 +10,7 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -21,6 +22,9 @@ type StoreProps = {
     calendar: CalendarDetailsDto;
     operations: OperationDetailsDto[];
     formations: FormationDetailsDto[];
+    operationGroups: OperationGroupDto[];
+    selectedAgencyIds: string[];
+    selectedGroupNames: string[];
     operationSightingTimeCrossSections: Record<
         string,
         OperationSightingTimeCrossSectionDto
@@ -48,6 +52,9 @@ const store = createStore(
         calendar: null,
         operations: [],
         formations: [],
+        operationGroups: [],
+        selectedAgencyIds: [],
+        selectedGroupNames: [],
         operationSightingTimeCrossSections: {},
         formationSightingTimeCrossSections: {},
         operationSightingHistories: {},
@@ -87,6 +94,15 @@ export const OperationRealTimeStore = {
     },
     setFormations(formations: FormationDetailsDto[]): void {
         store.update(setProp('formations', () => formations));
+    },
+    setOperationGroups(operationGroups: OperationGroupDto[]): void {
+        store.update(setProp('operationGroups', () => operationGroups));
+    },
+    setSelectedAgencyIds(agencyIds: string[]): void {
+        store.update(setProp('selectedAgencyIds', () => agencyIds));
+    },
+    setSelectedGroupNames(groupNames: string[]): void {
+        store.update(setProp('selectedGroupNames', () => groupNames));
     },
     setOperationSightingTimeCrossSection(
         operationNumber: string,
@@ -200,6 +216,11 @@ export const OperationRealTimeStore = {
                     );
                 }),
         ),
+    ),
+    operationGroups$: store.pipe(select((state) => state.operationGroups)),
+    selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),
+    selectedGroupNames$: store.pipe(
+        select((state) => state.selectedGroupNames),
     ),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),

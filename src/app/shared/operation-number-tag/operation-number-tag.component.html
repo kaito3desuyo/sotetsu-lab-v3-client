@@ -2,7 +2,16 @@
     <a
         class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black tw-no-underline"
         [style.background-color]="operationNumber() | operationNumberColor"
+        [class.tw-border]="borderEnabled()"
+        [class.tw-border-solid]="borderEnabled()"
+        [style.border-color]="borderEnabled() ? borderColor() : null"
         [routerLink]="link()"
+        (contextmenu)="onContextMenu($event, menuTrigger)"
+        (touchstart)="onTouchStart(menuTrigger)"
+        (touchend)="onTouchEnd($event)"
+        (touchmove)="onTouchCancel()"
+        (touchcancel)="onTouchCancel()"
+        (click)="onClick($event)"
     >
         {{ operationNumber() }}
     </a>
@@ -10,7 +19,33 @@
     <span
         class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black"
         [style.background-color]="operationNumber() | operationNumberColor"
+        [class.tw-border]="borderEnabled()"
+        [class.tw-border-solid]="borderEnabled()"
+        [style.border-color]="borderEnabled() ? borderColor() : null"
+        (contextmenu)="onContextMenu($event, menuTrigger)"
+        (touchstart)="onTouchStart(menuTrigger)"
+        (touchend)="onTouchEnd($event)"
+        (touchmove)="onTouchCancel()"
+        (touchcancel)="onTouchCancel()"
     >
         {{ operationNumber() }}
     </span>
 }
+
+<button
+    #menuTrigger="matMenuTrigger"
+    [matMenuTriggerFor]="menu"
+    type="button"
+    tabindex="-1"
+    aria-hidden="true"
+    class="tw-hidden"
+></button>
+
+<mat-menu #menu="matMenu">
+    @for (item of contextMenus() ?? []; track $index) {
+        <button mat-menu-item [disabled]="item.disabled" (click)="item.onClick()">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.text }}</span>
+        </button>
+    }
+</mat-menu>

@@ -9,6 +9,8 @@ import {
     withEntities,
 } from '@ngneat/elf-entities';
 import dayjs from 'dayjs';
+import 'dayjs/plugin/isSameOrAfter';
+import 'dayjs/plugin/isSameOrBefore';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';

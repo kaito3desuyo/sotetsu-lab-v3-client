@@ -1,3 +1,13 @@
-<main class="tw-p-4 md:tw-p-16">
-    <app-dashboard-main-c></app-dashboard-main-c>
+@if (isLoading()) {
+    <mat-progress-bar
+        mode="indeterminate"
+        class="tw-fixed tw-inset-x-0 tw-top-0 tw-z-50"
+    ></mat-progress-bar>
+}
+
+<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
+    <app-dashboard-status-card></app-dashboard-status-card>
+    <app-dashboard-quick-tiles></app-dashboard-quick-tiles>
+    <app-dashboard-latest-sightings></app-dashboard-latest-sightings>
+    <app-dashboard-collapsible-cards></app-dashboard-collapsible-cards>
 </main>

@@ -1,11 +1,9 @@
-import { getBorderSetting } from './get-border-setting.util';
+import { deriveStationViewModes } from './get-view-mode.util';
 import { getTime } from './get-time.util';
-import { getViewMode } from './get-view-mode.util';
 import { sortTrips } from './sort-trips.util';
 
 export const TimetableAllLineUtil = {
     sortTrips,
     getTime,
-    getViewMode,
-    getBorderSetting,
+    deriveStationViewModes,
 } as const;

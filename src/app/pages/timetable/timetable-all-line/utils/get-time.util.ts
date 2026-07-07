@@ -2,8 +2,6 @@ import { format, parse } from 'date-fns';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
-import { getBorderSetting } from './get-border-setting.util';
-import { getViewMode } from './get-view-mode.util';
 
 function _formatTime(timeString: string): string {
     const date = parse(timeString, 'HH:mm:ss', new Date());
@@ -21,6 +19,8 @@ export function getTime({
     trip,
     stations,
     trips,
+    viewModes,
+    bordersAfter,
 }: {
     tripDirection: 0 | 1;
     mode: 'arrival' | 'departure';
@@ -28,6 +28,8 @@ export function getTime({
     trip: TripDetailsDto;
     stations: StationDetailsDto[];
     trips: TripDetailsDto[];
+    viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
+    bordersAfter: ReadonlyMap<string, boolean>;
 }): string {
     const time = trip.times.find((o) => {
         return o.stationId === station.stationId;
@@ -36,7 +38,7 @@ export function getTime({
         (o) => o.stationId === station.stationId,
     );
     const tripIndex = trips.findIndex((o) => o.tripId === trip.tripId);
-    const viewMode = getViewMode(station, tripDirection);
+    const viewMode = viewModes.get(station.stationId);
 
     if (time) {
         switch (true) {
@@ -52,15 +54,9 @@ export function getTime({
                 }
 
                 const minus1Trip = trips[tripIndex - 1];
-                // const plus1Time = trip.times.find((o) => {
-                //     return (
-                //         o.stationId === stations[stationIndex + 1].stationId
-                //     );
-                // });
                 if (
                     minus1Trip &&
                     minus1Trip.tripBlockId === trip.tripBlockId &&
-                    // plus1Time &&
                     minus1Trip.times.some(
                         (o) => o.stationId === station.stationId,
                     )
@@ -148,14 +144,11 @@ export function getTime({
         const minus1Station = stations[stationIndex - 1];
 
         if (minus1Station) {
-            const minus1StationViewMode = getViewMode(
-                minus1Station,
-                tripDirection,
+            const minus1StationViewMode = viewModes.get(
+                minus1Station.stationId,
             );
-            const minus1BorderSetting = getBorderSetting(
-                minus1Station,
-                tripDirection,
-            );
+            const minus1BorderSetting =
+                bordersAfter.get(minus1Station.stationId) ?? false;
             const minus1Time = trip.times.find((o) => {
                 return o.stationId === minus1Station.stationId;
             });
@@ -179,10 +172,7 @@ export function getTime({
 
         if (plus1Station) {
             const minus1Trip = trips[tripIndex - 1];
-            const plus1StationViewMode = getViewMode(
-                plus1Station,
-                tripDirection,
-            );
+            const plus1StationViewMode = viewModes.get(plus1Station.stationId);
             const plus1Time = trip.times.find((o) => {
                 return o.stationId === plus1Station.stationId;
             });

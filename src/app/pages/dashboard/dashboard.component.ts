@@ -1,72 +1,85 @@
-import { Component, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { RxState } from '@rx-angular/state';
-import { TitleService } from 'src/app/core/services/title.service';
-import OPERATION_SEARCH_CARD_PROVIDERS from 'src/app/shared/operation-search-card/operation-search-card.provider';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { Router } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
-import TIMETABLE_POST_CARD_PROVIDERS from 'src/app/shared/timetable-post-card/timetable-post-card.provider';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import TIMETABLE_SEARCH_CARD_PROVIDERS from 'src/app/shared/timetable-search-card/timetable-search-card.provider';
-import { DashboardMainCComponent } from './components/dashboard-main-c/dashboard-main-c.component';
+import { DashboardCollapsibleCardsComponent } from './components/dashboard-collapsible-cards/dashboard-collapsible-cards.component';
+import { DashboardLatestSightingsComponent } from './components/dashboard-latest-sightings/dashboard-latest-sightings.component';
+import { DashboardQuickTilesComponent } from './components/dashboard-quick-tiles/dashboard-quick-tiles.component';
+import { DashboardStatusCardComponent } from './components/dashboard-status-card/dashboard-status-card.component';
+import { DashboardService } from './services/dashboard.service';
+import { DashboardStore } from './stores/dashboard.store';
 
 @Component({
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
-    styleUrls: ['./dashboard.component.scss'],
-    providers: [
-        ...OPERATION_SEARCH_CARD_PROVIDERS,
-        ...TIMETABLE_SEARCH_CARD_PROVIDERS,
-        ...TIMETABLE_POST_CARD_PROVIDERS,
-        RxState,
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [
+        MatProgressBarModule,
+        DashboardStatusCardComponent,
+        DashboardQuickTilesComponent,
+        DashboardLatestSightingsComponent,
+        DashboardCollapsibleCardsComponent,
     ],
-    imports: [DashboardMainCComponent],
 })
 export class DashboardComponent {
-    private readonly router = inject(Router);
-    private readonly route = inject(ActivatedRoute);
-    private readonly state = inject(RxState);
-    private readonly titleService = inject(TitleService);
-    private readonly operationSearchCardService = inject(
-        OperationSearchCardService,
-    );
-    private readonly timetableSearchCardService = inject(
-        TimetableSearchCardService,
-    );
-    private readonly timetablePostCardService = inject(
-        TimetablePostCardService,
-    );
+    readonly #destroyRef = inject(DestroyRef);
+    readonly #router = inject(Router);
+    readonly #dashboardService = inject(DashboardService);
+    readonly #operationSearchCardService = inject(OperationSearchCardService);
+    readonly #timetableSearchCardService = inject(TimetableSearchCardService);
+    readonly #timetablePostCardService = inject(TimetablePostCardService);
+
+    readonly isLoading = toSignal(DashboardStore.isLoading$, {
+        initialValue: false,
+    });
 
     constructor() {
-        this.state.hold(this.route.data, ({ title }) => {
-            this.titleService.setTitle(title);
-        });
+        this.fetchData();
+        this.hookEvent();
+    }
 
-        this.state.hold(
-            this.operationSearchCardService.receiveSearchOperationTableEvent(),
-            (calendarId) => {
-                this.router.navigate([
+    async fetchData(): Promise<void> {
+        DashboardStore.enableLoading();
+        await lastValueFrom(this.#dashboardService.fetchTodaysCalendar());
+        await lastValueFrom(this.#dashboardService.fetchRunningTripCount());
+        await lastValueFrom(this.#dashboardService.fetchTodaysSightings());
+        await lastValueFrom(
+            this.#dashboardService.fetchLatestSightingPositions(),
+        );
+        DashboardStore.disableLoading();
+    }
+
+    hookEvent(): void {
+        this.#operationSearchCardService
+            .receiveSearchOperationTableEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((calendarId) => {
+                this.#router.navigate([
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            },
-        );
+            });
 
-        this.state.hold(
-            this.operationSearchCardService.receiveSearchOperationRouteDiagramEvent(),
-            (operationId) => {
-                this.router.navigate([
+        this.#operationSearchCardService
+            .receiveSearchOperationRouteDiagramEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((operationId) => {
+                this.#router.navigate([
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            },
-        );
+            });
 
-        this.state.hold(
-            this.timetableSearchCardService.receiveSearchTimetableEvent(),
-            (state) => {
+        this.#timetableSearchCardService
+            .receiveSearchTimetableEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((state) => {
                 if (state.searchByStation) {
-                    this.router.navigate([
+                    this.#router.navigate([
                         'timetable',
                         'station',
                         {
@@ -76,7 +89,7 @@ export class DashboardComponent {
                         },
                     ]);
                 } else {
-                    this.router.navigate([
+                    this.#router.navigate([
                         'timetable',
                         'all-line',
                         {
@@ -85,19 +98,18 @@ export class DashboardComponent {
                         },
                     ]);
                 }
-            },
-        );
+            });
 
-        this.state.hold(
-            this.timetablePostCardService.receiveMoveTimetableAddEvent(),
-            (state) => {
-                this.router.navigate([
+        this.#timetablePostCardService
+            .receiveMoveTimetableAddEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((state) => {
+                this.#router.navigate([
                     'timetable',
                     'add',
                     state.calendarId,
                     { trip_direction: state.tripDirection },
                 ]);
-            },
-        );
+            });
     }
 }

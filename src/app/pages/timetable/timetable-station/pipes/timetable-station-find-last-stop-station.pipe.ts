@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import dayjs from 'dayjs';
+import 'dayjs/plugin/isSameOrAfter';
 import { maxBy, minBy } from 'lodash-es';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';

@@ -13,10 +13,7 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TripService } from 'src/app/libs/trip/usecase/trip.service';
-import {
-    TimetableStationStateQuery,
-    TimetableStationStateStore,
-} from '../../timetable-station/states/timetable-station.state';
+import { TimetableStationStore } from '../stores/timetable-station.store';
 
 @Injectable()
 export class TimetableStationService {
@@ -27,30 +24,28 @@ export class TimetableStationService {
     readonly #tripClassService = inject(TripClassService);
     readonly #operationService = inject(OperationService);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #timetableStationStateStore = inject(TimetableStationStateStore);
-    readonly #timetableStationStateQuery = inject(TimetableStationStateQuery);
 
     fetchCalendar(): Observable<void> {
-        const calendarId = this.#timetableStationStateQuery.calendarId;
+        const calendarId = TimetableStationStore.calendarId;
 
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((data: CalendarDetailsDto) => {
-                this.#timetableStationStateStore.setCalendar(data);
+                TimetableStationStore.setCalendar(data);
             }),
             map(() => undefined),
         );
     }
 
     fetchTrips(): Observable<void> {
-        const stationId = this.#timetableStationStateQuery.stationId;
-        const calendarId = this.#timetableStationStateQuery.calendarId;
-        const tripDirection = this.#timetableStationStateQuery.tripDirection;
+        const stationId = TimetableStationStore.stationId;
+        const calendarId = TimetableStationStore.calendarId;
+        const tripDirection = TimetableStationStore.tripDirection;
 
         return this.#tripService
             .findManyByStationId({ stationId, calendarId, tripDirection })
             .pipe(
                 tap((data: TripDetailsDto[]) => {
-                    this.#timetableStationStateStore.setTrips(data);
+                    TimetableStationStore.setTrips(data);
                 }),
                 map(() => undefined),
             );
@@ -59,14 +54,14 @@ export class TimetableStationService {
     fetchTripBlocks(): Observable<void> {
         const tripBlockIds = [
             ...new Set(
-                this.#timetableStationStateQuery.trips
+                TimetableStationStore.trips
                     .map((o) => o.tripBlockId)
                     .filter((id): id is string => id !== undefined && id !== null),
             ),
         ];
 
         if (tripBlockIds.length === 0) {
-            this.#timetableStationStateStore.setTripBlocks([]);
+            TimetableStationStore.setTripBlocks([]);
             return of(undefined);
         }
 
@@ -74,7 +69,7 @@ export class TimetableStationService {
             tripBlockIds.map((id) => this.#tripBlockService.findOneById({ id })),
         ).pipe(
             tap((data) => {
-                this.#timetableStationStateStore.setTripBlocks(data);
+                TimetableStationStore.setTripBlocks(data);
             }),
             map(() => undefined),
         );
@@ -83,7 +78,7 @@ export class TimetableStationService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((data: TripClassDetailsDto[]) => {
-                this.#timetableStationStateStore.setTripClasses(data);
+                TimetableStationStore.setTripClasses(data);
             }),
             map(() => undefined),
         );
@@ -92,34 +87,36 @@ export class TimetableStationService {
     fetchStations(): Observable<void> {
         return this.#stationService.findMany({}).pipe(
             tap((data: StationDetailsDto[]) => {
-                this.#timetableStationStateStore.setStations(data);
+                TimetableStationStore.setStations(data);
             }),
             map(() => undefined),
         );
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = this.#timetableStationStateQuery.calendarId;
+        const calendarId = TimetableStationStore.calendarId;
 
         return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
             map((data) => data.filter((o) => o.operationNumber !== '100')),
             tap((data: OperationDetailsDto[]) => {
-                this.#timetableStationStateStore.setOperations(data);
+                TimetableStationStore.setOperations(data);
             }),
             map(() => undefined),
         );
     }
 
+    /**
+     * B7: 過去ダイヤ表示時は呼び出し側（コンポーネント）がこのメソッド自体を呼ばず、
+     * ストアへ空配列を設定する。ここでは「今日有効なダイヤ」表示時のフェッチのみを担う。
+     */
     fetchOperationSightingTimeCrossSections(): Observable<void> {
-        const operationIds = this.#timetableStationStateQuery.operationIds;
-        const operations = this.#timetableStationStateQuery.operations.filter(
-            (o) => operationIds.includes(o.operationId),
+        const operationIds = TimetableStationStore.operationIds;
+        const operations = TimetableStationStore.operations.filter((o) =>
+            operationIds.includes(o.operationId),
         );
 
         if (operations.length === 0) {
-            this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
-                [],
-            );
+            TimetableStationStore.setOperationSightingTimeCrossSections([]);
             return of(undefined);
         }
 
@@ -131,7 +128,7 @@ export class TimetableStationService {
             ),
         ).pipe(
             tap((data) => {
-                this.#timetableStationStateStore.setOperationSightingTimeCrossSections(
+                TimetableStationStore.setOperationSightingTimeCrossSections(
                     data,
                 );
             }),

@@ -1,0 +1,9 @@
+<div>
+    <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">路線</p>
+    <app-filter-chips
+        mode="multiple"
+        [options]="routeOptions()"
+        [selected]="selectedRouteIds()"
+        (selectedChange)="onChange($event)"
+    ></app-filter-chips>
+</div>

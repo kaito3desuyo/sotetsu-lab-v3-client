@@ -1,10 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
-import {
-    TimetableAllLineStateQuery,
-    TimetableAllLineStateStore,
-} from '../states/timetable-all-line.state';
-import { TimetableAllLineService } from './timetable-all-line.service';
+import { EMPTY } from 'rxjs';
+import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
 import { TimetableAllLineResolverService } from './timetable-all-line-resolver.service';
 
 describe('TimetableAllLineResolverService', () => {
@@ -14,9 +11,10 @@ describe('TimetableAllLineResolverService', () => {
         TestBed.configureTestingModule({
             providers: [
                 TimetableAllLineResolverService,
-                { provide: TimetableAllLineService, useValue: {} },
-                { provide: TimetableAllLineStateStore, useValue: {} },
-                { provide: TimetableAllLineStateQuery, useValue: {} },
+                {
+                    provide: InitializeStateQuery,
+                    useValue: { isInitialized$: EMPTY },
+                },
             ],
         });
         service = TestBed.inject(TimetableAllLineResolverService);

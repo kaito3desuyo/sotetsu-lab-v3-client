@@ -1,0 +1,32 @@
+@if (isLoading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
+    <app-timetable-edit-form-trips
+        [serviceId]="serviceId()"
+        [calendarId]="calendarId()"
+        [calendar]="calendar()"
+        [mode]="mode()"
+        [tripDirection]="tripDirection()"
+        [stations]="stations()"
+        [visibleStationIds]="visibleStationIds()"
+        [routes]="routes()"
+        [selectedRouteIds]="selectedRouteIds()"
+        [operations]="operations()"
+        [tripClasses]="tripClasses()"
+        [trips]="trips()"
+        [copySourceCandidates]="copySourceCandidates()"
+        [selectedTripBlockId]="selectedTripBlockId()"
+        [lastSubmittedAt]="lastSubmittedAt()"
+        [restoreTrips]="restoreTrips()"
+        (clickSubmit)="onReceiveClickSubmit($event)"
+        (toggleIsSaveTripsIndividually)="
+            onToggleIsSaveTripsIndividually($event)
+        "
+        (selectedRouteIdsChange)="onRouteFilterChange($event)"
+        (selectCopySource)="onSelectCopySource($event)"
+        (formValueChange)="onFormValueChange($event)"
+        (restored)="onDraftRestored()"
+    ></app-timetable-edit-form-trips>
+</main>

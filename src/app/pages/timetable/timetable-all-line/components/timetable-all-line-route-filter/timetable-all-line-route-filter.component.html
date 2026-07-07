@@ -1,0 +1,8 @@
+@if (routeOptions().length) {
+    <app-filter-chips
+        mode="multiple"
+        [options]="routeOptions()"
+        [selected]="selectedRouteIds()"
+        (selectedChange)="onChange($event)"
+    ></app-filter-chips>
+}
