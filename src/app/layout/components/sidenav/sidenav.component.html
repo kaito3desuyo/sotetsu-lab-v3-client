@@ -25,6 +25,9 @@
         </mat-form-field>
         <a matRipple [routerLink]="inboundTimetableLink()"> 上り </a>
         <a matRipple [routerLink]="outboundTimetableLink()"> 下り </a>
+        <h3>ダイヤグラム</h3>
+        <a matRipple [routerLink]="['/train-diagram']"> ダイヤグラム（時刻-距離図） </a>
+        <a matRipple [routerLink]="['/train-location']"> 列車位置情報 </a>
         <h3>運用情報</h3>
         <a matRipple routerLink="/operation/real-time">
             リアルタイム運用情報

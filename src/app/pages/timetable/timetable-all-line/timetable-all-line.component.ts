@@ -150,8 +150,8 @@ export class TimetableAllLineComponent {
             'timetable',
             'update',
             {
-                calendarId: trip.calendarId,
-                tripBlockId: trip.tripBlockId,
+                calendar_id: trip.calendarId,
+                trip_block_id: trip.tripBlockId,
             },
         ]);
     }
@@ -164,7 +164,7 @@ export class TimetableAllLineComponent {
             this.#router.navigate([
                 'timetable',
                 'copy',
-                { calendarId, tripBlockId: trip.tripBlockId },
+                { calendar_id: calendarId, trip_block_id: trip.tripBlockId },
             ]);
         });
     }

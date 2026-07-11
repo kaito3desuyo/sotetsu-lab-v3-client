@@ -1,0 +1,143 @@
+<div class="tw-mb-1 tw-text-right tw-text-[10px] tw-text-grey-500">
+    Ctrl+スクロールで縦縮尺 ／ Ctrl+Shift+スクロールで横縮尺
+</div>
+<div
+    class="tw-overflow-x-auto tw-bg-white"
+    style="touch-action: pan-x pan-y"
+    (wheel)="onWheel($event)"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd($event)"
+>
+    <div class="tw-flex tw-flex-row" [style.min-height.px]="svgHeight()">
+        <div
+            class="tw-sticky tw-left-0 tw-z-10 tw-shrink-0 tw-bg-white"
+            [style.width.px]="stationLabelWidth"
+            [style.height.px]="svgHeight()"
+        >
+            <div class="tw-relative tw-h-full tw-w-full">
+                @for (row of stationRows(); track $index) {
+                    <div
+                        class="tw-absolute tw-left-0 tw-w-full tw-truncate tw-px-1 tw-text-xs tw-leading-none"
+                        [style.top.px]="row.y - 6"
+                    >
+                        {{ row.stationName }}
+                    </div>
+                }
+            </div>
+        </div>
+
+        <svg
+            class="tw-max-w-none tw-shrink-0"
+            [attr.width]="svgWidth()"
+            [attr.height]="svgHeight()"
+            [attr.viewBox]="'0 0 ' + svgWidth() + ' ' + svgHeight()"
+            [style.min-width.px]="svgWidth()"
+        >
+            <rect
+                x="0"
+                y="0"
+                [attr.width]="svgWidth()"
+                [attr.height]="svgHeight()"
+                fill="white"
+                (click)="onBackgroundClick()"
+            ></rect>
+
+            @for (mark of timeGridMarks(); track mark.x) {
+                <line
+                    [attr.x1]="mark.x"
+                    y1="0"
+                    [attr.x2]="mark.x"
+                    [attr.y2]="svgHeight()"
+                    stroke="#e0e0e0"
+                    stroke-width="1"
+                ></line>
+                <text
+                    [attr.x]="mark.x + 2"
+                    [attr.y]="timeLabelY"
+                    class="tw-fill-grey-600"
+                    style="font-size: 10px"
+                >
+                    {{ mark.label }}
+                </text>
+            }
+
+            @for (row of stationRows(); track $index) {
+                <line
+                    x1="0"
+                    [attr.y1]="row.y"
+                    [attr.x2]="svgWidth()"
+                    [attr.y2]="row.y"
+                    stroke="#eeeeee"
+                    stroke-width="1"
+                ></line>
+            }
+
+            @for (line of orderedLines(); track line.tripId) {
+                @for (segment of line.segments; track $index) {
+                    @if (isSelected(line.tripId)) {
+                        <polyline
+                            [attr.points]="pointsAttr(segment)"
+                            fill="none"
+                            stroke="#ffffff"
+                            stroke-width="9"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            opacity="0.9"
+                        ></polyline>
+                    }
+                    <polyline
+                        [attr.points]="pointsAttr(segment)"
+                        fill="none"
+                        [attr.stroke]="line.tripClassColor"
+                        [attr.stroke-width]="isSelected(line.tripId) ? 4 : 2"
+                        [attr.stroke-dasharray]="line.isDeadhead ? '6 4' : null"
+                        [attr.opacity]="lineOpacity(line.tripId)"
+                        style="cursor: pointer"
+                        (click)="onLineClick(line.tripId)"
+                    ></polyline>
+                }
+
+                @for (label of line.throughLabels; track label.text) {
+                    <text
+                        [attr.x]="label.x + (label.anchor === 'start' ? 4 : -4)"
+                        [attr.y]="label.y - 4"
+                        [attr.text-anchor]="label.anchor === 'start' ? 'start' : 'end'"
+                        style="font-size: 10px"
+                        class="tw-fill-grey-700"
+                    >
+                        {{ label.text }}
+                    </text>
+                }
+
+                @if (isSelected(line.tripId) && firstPoint(line); as point) {
+                    <text
+                        [attr.x]="point.x + 4"
+                        [attr.y]="point.y - 4"
+                        style="font-size: 11px; font-weight: bold"
+                        class="tw-fill-primary-700"
+                    >
+                        {{ line.tripNumber }}
+                    </text>
+                }
+            }
+
+            @if (isTodaySelected()) {
+                <g [attr.transform]="'translate(' + cursorX() + ', 0)'">
+                    <line
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        [attr.y2]="svgHeight()"
+                        stroke="rgb(217, 83, 79)"
+                        stroke-width="2"
+                    ></line>
+                    <polygon
+                        points="-5,0 5,0 0,8"
+                        fill="rgb(217, 83, 79)"
+                    ></polygon>
+                </g>
+            }
+        </svg>
+    </div>
+</div>

@@ -87,8 +87,8 @@ describe('estimatePositions', () => {
         ]);
     });
 
-    it('24 時超え（arrivalDays/departureDays=1）を跨いだ駅間を正しく補間する', () => {
-        // 2026-07-04 23:50 発 → 2026-07-05 00:10（=24:10）着 の深夜便を 23:55 時点で見る
+    it('24 時超え（days は 1-based。当日=1 / 翌日分=2）を跨いだ駅間を正しく補間する', () => {
+        // 2026-07-04 23:50 発（営業日当日=day 1）→ 2026-07-05 00:10（=24:10・翌日分=day 2）着 を 23:55 時点で見る
         const at = new Date(2026, 6, 4, 23, 55, 0);
         const tripBlocks = [
             tripBlock([
@@ -96,13 +96,13 @@ describe('estimatePositions', () => {
                     time({
                         stationId: 'A',
                         stopSequence: 1,
-                        departureDays: 0,
+                        departureDays: 1,
                         departureTime: '23:50:00',
                     }),
                     time({
                         stationId: 'B',
                         stopSequence: 2,
-                        arrivalDays: 1,
+                        arrivalDays: 2,
                         arrivalTime: '00:10:00',
                     }),
                 ]),
@@ -119,7 +119,7 @@ describe('estimatePositions', () => {
 
     it('4 時境界: 深夜 0:30 は前日ダイヤの 24:30 として算出される', () => {
         // wall-clock は 2026-07-05 00:30。鉄道日的には前日(2026-07-04)の営業日が継続中で、
-        // 当該 trip の時刻は departureDays=1 '00:20:00'(=24:20) / arrivalDays=1 '00:40:00'(=24:40) として記録されている。
+        // 当該 trip の時刻は翌日分(day 2) '00:20:00'(=24:20) / '00:40:00'(=24:40) として記録されている。
         const at = new Date(2026, 6, 5, 0, 30, 0);
         const tripBlocks = [
             tripBlock([
@@ -127,13 +127,13 @@ describe('estimatePositions', () => {
                     time({
                         stationId: 'A',
                         stopSequence: 1,
-                        departureDays: 1,
+                        departureDays: 2,
                         departureTime: '00:20:00',
                     }),
                     time({
                         stationId: 'B',
                         stopSequence: 2,
-                        arrivalDays: 1,
+                        arrivalDays: 2,
                         arrivalTime: '00:40:00',
                     }),
                 ]),
@@ -266,5 +266,29 @@ describe('estimatePositions', () => {
         ];
 
         expect(estimatePositions(tripBlocks, AXIS_ABC, at)).toEqual([]);
+    });
+
+    it('発着とも null の通過駅を含んでもクラッシュせず、前後駅間の補間に吸収される（実データ回帰）', () => {
+        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                    // 通過駅 B: API は欠落時刻を null で返す（DTO型は string? だが実体は null）
+                    time({
+                        stationId: 'B',
+                        stopSequence: 2,
+                        arrivalTime: null as unknown as string,
+                        departureTime: null as unknown as string,
+                    }),
+                    time({ stationId: 'C', stopSequence: 3, arrivalTime: '08:20:00' }),
+                ]),
+            ]),
+        ];
+
+        // B は除外され A→C 区間で内分（08:10 は A発08:00〜C着08:20 の中点 = 0.5）
+        expect(estimatePositions(tripBlocks, AXIS_ABC, at)).toEqual([
+            { type: 'between', tripId: 'T1', fromStationId: 'A', toStationId: 'C', progress: 0.5 },
+        ]);
     });
 });

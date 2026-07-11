@@ -1,0 +1,49 @@
+<a
+    [routerLink]="card().detailLink"
+    class="tw-flex tw-w-40 tw-flex-col tw-gap-0.5 tw-rounded tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-grey-900 tw-shadow tw-no-underline"
+>
+    <!-- 上段: 種別・列車番号・行き先（左寄せ）+ 運用番号（右端） -->
+    <span class="tw-flex tw-items-center tw-justify-between tw-gap-1">
+        <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
+            <span
+                class="tw-inline-block tw-shrink-0 tw-rounded tw-px-1.5 tw-py-0.5 tw-text-[10px] tw-text-white"
+                [style.background-color]="card().tripClassColor"
+            >
+                {{ card().tripClassName }}
+            </span>
+            <span class="tw-shrink-0 tw-text-grey-600">{{
+                card().tripNumber
+            }}</span>
+            <span class="tw-truncate tw-font-bold"
+                >{{ card().destinationName }} 行</span
+            >
+        </span>
+        @if (card().operationNumber) {
+            <span class="tw-shrink-0 tw-font-bold tw-text-grey-800"
+                >運用{{ card().operationNumber }}</span
+            >
+        }
+    </span>
+
+    <!-- 下段: 進行方向矢印（左。停車中は併記）+ 所属会社・編成番号（右端） -->
+    <span
+        class="tw-flex tw-items-center tw-justify-between tw-gap-1 tw-text-grey-600"
+    >
+        <span class="tw-flex tw-shrink-0 tw-items-center tw-gap-1">
+            <span aria-hidden="true">{{
+                card().direction === 'inbound' ? '▲' : '▼'
+            }}</span>
+            @if (status() === 'stopped') {
+                <span class="tw-font-bold tw-text-primary-700">停車中</span>
+            }
+        </span>
+        @if (card().formationNumber) {
+            <span class="tw-truncate">
+                @if (card().formationAgencyName) {
+                    <span>{{ card().formationAgencyName }} </span>
+                }
+                <span>編成{{ card().formationNumber }}</span>
+            </span>
+        }
+    </span>
+</a>

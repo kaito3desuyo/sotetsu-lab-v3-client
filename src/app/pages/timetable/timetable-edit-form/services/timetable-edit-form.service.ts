@@ -38,6 +38,11 @@ export class TimetableEditFormService {
     fetchCalendar(): Observable<void> {
         const calendarId = TimetableEditFormStore.calendarId;
 
+        // calendar 未指定では /v3/calendars/null を叩かない。
+        if (!calendarId) {
+            return of(undefined);
+        }
+
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((data: CalendarDetailsDto) => {
                 TimetableEditFormStore.setCalendar(data);

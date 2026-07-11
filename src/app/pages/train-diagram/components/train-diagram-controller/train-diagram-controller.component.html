@@ -1,0 +1,77 @@
+<app-collapsible-panel
+    class="tw-sticky tw-top-0 tw-z-20"
+    label="表示設定"
+    [summary]="collapsedSummary()"
+>
+    <div class="tw-flex tw-flex-row tw-flex-wrap tw-gap-3">
+        <mat-form-field subscriptSizing="dynamic" class="tw-w-full sm:tw-w-56">
+            <mat-label>ダイヤ</mat-label>
+            <mat-select
+                [value]="calendarId()"
+                (selectionChange)="onCalendarChange($event.value)"
+            >
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy年MM月dd日改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field subscriptSizing="dynamic" class="tw-w-full sm:tw-w-40">
+            <mat-label>時間帯</mat-label>
+            <mat-select
+                [value]="currentWindowValue()"
+                (selectionChange)="onWindowChange($event.value)"
+            >
+                @for (option of windowOptions; track option.value) {
+                    <mat-option [value]="option.value">
+                        {{ option.label }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <mat-button-toggle-group
+            class="tw-self-center"
+            [value]="directionFilter()"
+            (change)="onDirectionFilterChange($event.value)"
+            aria-label="方向"
+        >
+            <mat-button-toggle value="up">上り</mat-button-toggle>
+            <mat-button-toggle value="down">下り</mat-button-toggle>
+            <mat-button-toggle value="both">両方</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <mat-button-toggle-group
+            class="tw-self-center"
+            [value]="zoomLevel()"
+            (change)="onZoomChange($event.value)"
+            aria-label="時間軸ズーム"
+        >
+            <mat-button-toggle value="narrow">縮小</mat-button-toggle>
+            <mat-button-toggle value="standard">標準</mat-button-toggle>
+            <mat-button-toggle value="wide">拡大</mat-button-toggle>
+        </mat-button-toggle-group>
+    </div>
+
+    <div>
+        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+            路線（複数選択）
+        </p>
+        <app-filter-chips
+            mode="multiple"
+            [options]="routeOptions()"
+            [selected]="selectedRouteIds()"
+            (selectedChange)="onRouteChange($event)"
+        ></app-filter-chips>
+    </div>
+</app-collapsible-panel>

@@ -28,6 +28,11 @@ export class TimetableStationService {
     fetchCalendar(): Observable<void> {
         const calendarId = TimetableStationStore.calendarId;
 
+        // calendar 未選択（初期状態など）では /v3/calendars/null を叩かない。
+        if (!calendarId) {
+            return of(undefined);
+        }
+
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((data: CalendarDetailsDto) => {
                 TimetableStationStore.setCalendar(data);
@@ -40,6 +45,11 @@ export class TimetableStationService {
         const stationId = TimetableStationStore.stationId;
         const calendarId = TimetableStationStore.calendarId;
         const tripDirection = TimetableStationStore.tripDirection;
+
+        // 駅・ダイヤ未選択（初期状態）では /v3/trips/station/null を叩かない。
+        if (!stationId || !calendarId) {
+            return of(undefined);
+        }
 
         return this.#tripService
             .findManyByStationId({ stationId, calendarId, tripDirection })

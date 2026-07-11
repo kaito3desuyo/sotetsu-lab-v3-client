@@ -20,6 +20,7 @@ import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.con
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
+import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { ETimetableAllLineStationViewMode } from '../../enums/timetable-all-line.enum';
 import { TimetableAllLineGetStationNumberingPipe } from '../../pipes/timetable-all-line-get-station-numbering.pipe';
 import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-time.pipe';
@@ -43,6 +44,7 @@ import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-
         OperationNumberTagComponent,
         TimetableAllLineGetStationNumberingPipe,
         TimetableAllLineGetTimePipe,
+        TripClassBaseNamePipe,
     ],
 })
 export class TimetableAllLineTableComponent {

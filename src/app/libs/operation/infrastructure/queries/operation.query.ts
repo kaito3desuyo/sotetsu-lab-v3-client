@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { omitBy } from 'es-toolkit';
 import { md5 } from 'js-md5';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { environment } from 'src/environments/environment';
@@ -33,6 +33,11 @@ export class OperationQuery {
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
         const { calendarId, forceReload } = params;
+
+        // calendarId 未指定では /v3/operations/calendar/null を叩かず空配列を返す。
+        if (!calendarId) {
+            return of([]);
+        }
 
         const key = md5(
             JSON.stringify({

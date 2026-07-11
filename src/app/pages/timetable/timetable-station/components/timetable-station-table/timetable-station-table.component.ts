@@ -13,6 +13,7 @@ import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
+import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
 import { TimetableStationStore } from '../../stores/timetable-station.store';
@@ -30,6 +31,7 @@ import { TimetableStationStore } from '../../stores/timetable-station.store';
         OperationNumberTagComponent,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
+        TripClassBaseNamePipe,
     ],
 })
 export class TimetableStationTableComponent {

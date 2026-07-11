@@ -15,8 +15,7 @@ type QuickTile = {
  * 左上=リアルタイム運用情報 / 右上=列車位置情報（accent色）/
  * 左下=駅別時刻表 / 右下=ダイヤグラム。
  *
- * 列車位置情報（/train-location）・ダイヤグラム（/diagram）は N1/N2 ページ実装待ちのため、
- * 現時点ではリンク先ルートが未実装（他タスクで実装される想定）。
+ * 列車位置情報（/train-location）・ダイヤグラム（/train-diagram）へ遷移する。
  */
 @Component({
     selector: 'app-dashboard-quick-tiles',
@@ -51,7 +50,7 @@ export class DashboardQuickTilesComponent {
             icon: 'ssid_chart',
             title: 'ダイヤグラム',
             subtitle: '全列車を斜め線で俯瞰',
-            link: ['/diagram'],
+            link: ['/train-diagram'],
             accent: false,
         },
     ];

@@ -1,0 +1,42 @@
+<div class="tw-flex tw-flex-row tw-items-start tw-gap-3 tw-p-3">
+    <div class="tw-flex tw-flex-1 tw-flex-col tw-gap-2">
+        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
+            <span
+                class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-sm tw-font-bold tw-text-white"
+                [style.background-color]="info().tripClassColor"
+            >
+                {{ info().tripClassName | tripClassBaseName }} {{ info().tripNumber }}
+            </span>
+            <span class="tw-text-sm">{{ info().destinationName }} 行</span>
+        </div>
+
+        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm">
+            @if (info().operationNumber) {
+                <app-operation-number-tag
+                    [operationNumber]="info().operationNumber ?? ''"
+                    [link]="['/operation', 'route-diagram', { operation_id: info().operationId ?? '' }]"
+                ></app-operation-number-tag>
+            }
+            @if (info().formationNumber) {
+                <span>編成 {{ info().formationNumber }}</span>
+            }
+        </div>
+
+        <a
+            [routerLink]="info().detailLink"
+            (click)="closed.emit()"
+            class="tw-text-sm tw-font-bold tw-text-primary-500"
+        >
+            この列車の詳細へ ›
+        </a>
+    </div>
+
+    <button
+        type="button"
+        class="tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-transparent"
+        aria-label="閉じる"
+        (click)="closed.emit()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+</div>

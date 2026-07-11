@@ -1,0 +1,46 @@
+<div class="tw-flex tw-h-full tw-flex-col">
+    @if (isLoading()) {
+        <mat-progress-bar
+            mode="indeterminate"
+            class="tw-fixed tw-inset-x-0 tw-top-0 tw-z-30"
+        ></mat-progress-bar>
+    }
+
+    <app-train-diagram-controller
+        [calendarId]="calendarId()"
+        [selectedRouteIds]="selectedRouteIds()"
+        [windowStartHour]="windowStartHour()"
+        [zoomLevel]="zoomLevel()"
+        [directionFilter]="directionFilter()"
+        (calendarIdChange)="onCalendarIdChange($event)"
+        (routeIdsChange)="onRouteIdsChange($event)"
+        (windowStartHourChange)="onWindowStartHourChange($event)"
+        (zoomLevelChange)="onZoomLevelChange($event)"
+        (directionFilterChange)="onDirectionFilterChange($event)"
+    ></app-train-diagram-controller>
+
+    <app-train-diagram-legend
+        [tripClasses]="tripClasses()"
+        [showCurrentTimeCursor]="isTodaySelected()"
+    ></app-train-diagram-legend>
+
+    <app-train-diagram-chart
+        [stations]="stationAxisStations()"
+        [axis]="stationAxis()"
+        [routeIdsByStation]="routeIdsByStation()"
+        [tripBlocksByDirection]="filteredTripBlocksByDirection()"
+        [windowStartHour]="windowStartHour()"
+        [pxPerMinute]="pxPerMinute()"
+        [selectedTripId]="selectedTripId()"
+        [isTodaySelected]="isTodaySelected()"
+        (tripSelected)="onTripSelected($event)"
+        (tripActivated)="onTripActivated($event)"
+    ></app-train-diagram-chart>
+
+    @if (selectedTripInfo(); as info) {
+        <app-train-diagram-info-panel
+            [info]="info"
+            (closed)="onInfoPanelClosed()"
+        ></app-train-diagram-info-panel>
+    }
+</div>

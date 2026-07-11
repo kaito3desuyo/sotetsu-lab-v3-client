@@ -71,7 +71,7 @@
                                 },
                             ]"
                         >
-                            {{ row.tripClassName }} {{ row.tripNumber }}
+                            {{ row.tripClassName | tripClassBaseName }} {{ row.tripNumber }}
                         </a>
                         @if (row.depotOut) {
                             <span

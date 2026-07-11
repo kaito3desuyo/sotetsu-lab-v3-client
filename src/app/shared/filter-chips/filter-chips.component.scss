@@ -2,3 +2,9 @@
 ::ng-deep .mdc-evolution-chip-set__chips {
     flex-wrap: nowrap;
 }
+
+// 単一選択モードは選択マーカーを ✓ でなく ● で表す（R-4）ため、
+// MDC 標準のチェックマーク（graphic）は出さない
+::ng-deep .filter-chips-single .mdc-evolution-chip__graphic {
+    display: none;
+}

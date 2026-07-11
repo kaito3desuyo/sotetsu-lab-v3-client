@@ -1,0 +1,184 @@
+<div class="tw-mx-auto tw-flex tw-max-w-2xl tw-flex-col">
+    <div
+        class="tw-mb-2 tw-flex tw-flex-row tw-justify-between tw-px-1 tw-text-xs tw-font-bold tw-text-grey-600"
+    >
+        <span>▲ 上り（在線 左側）</span>
+        <span>下り（在線 右側） ▼</span>
+    </div>
+
+    @for (row of rows(); track rowKey(row)) {
+        @if (row.kind === 'station') {
+            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                <div
+                    class="tw-flex tw-min-h-11 tw-flex-1 tw-flex-col tw-items-end tw-gap-1 tw-py-1"
+                >
+                    @if (row.leftCards.length > 1) {
+                        <button
+                            type="button"
+                            cdkOverlayOrigin
+                            #leftTrigger="cdkOverlayOrigin"
+                            class="tw-rounded tw-bg-primary-700 tw-px-2 tw-py-1 tw-text-xs tw-font-bold tw-text-white"
+                            (click)="toggleExpand(rowKey(row) + ':left')"
+                        >
+                            🚈 {{ row.leftCards.length }}本停車中
+                            {{ isExpanded(rowKey(row) + ':left') ? '▴' : '▾' }}
+                        </button>
+                        <!-- 展開はオーバーレイで行い、駅軸のレイアウト・高さに影響させない -->
+                        <ng-template
+                            cdkConnectedOverlay
+                            [cdkConnectedOverlayOrigin]="leftTrigger"
+                            [cdkConnectedOverlayOpen]="
+                                isExpanded(rowKey(row) + ':left')
+                            "
+                            [cdkConnectedOverlayPositions]="leftOverlayPositions"
+                            [cdkConnectedOverlayHasBackdrop]="true"
+                            cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+                            [cdkConnectedOverlayViewportMargin]="8"
+                            [cdkConnectedOverlayPush]="true"
+                            (backdropClick)="closeExpand(rowKey(row) + ':left')"
+                            (overlayKeydown)="
+                                onOverlayKeydown($event, rowKey(row) + ':left')
+                            "
+                        >
+                            <div
+                                class="tw-flex tw-max-h-80 tw-flex-col tw-gap-1 tw-overflow-y-auto tw-rounded tw-border tw-border-grey-200 tw-bg-white tw-p-2 tw-shadow-lg"
+                            >
+                                @for (card of row.leftCards; track card.tripId) {
+                                    <app-train-location-card
+                                        [card]="card"
+                                        status="stopped"
+                                    ></app-train-location-card>
+                                }
+                            </div>
+                        </ng-template>
+                    } @else {
+                        @for (card of row.leftCards; track card.tripId) {
+                            <app-train-location-card
+                                [card]="card"
+                                status="stopped"
+                            ></app-train-location-card>
+                        }
+                    }
+                </div>
+
+                <div class="tw-flex tw-w-5 tw-shrink-0 tw-flex-col tw-items-center">
+                    <span
+                        class="tw-block tw-rounded-full tw-bg-primary-900"
+                        [class.tw-h-4]="row.isMajor"
+                        [class.tw-w-4]="row.isMajor"
+                        [class.tw-h-2]="!row.isMajor"
+                        [class.tw-w-2]="!row.isMajor"
+                    ></span>
+                </div>
+
+                <div
+                    class="tw-flex tw-min-h-11 tw-flex-1 tw-flex-col tw-items-start tw-gap-1 tw-py-1"
+                >
+                    @if (row.rightCards.length > 1) {
+                        <button
+                            type="button"
+                            cdkOverlayOrigin
+                            #rightTrigger="cdkOverlayOrigin"
+                            class="tw-rounded tw-bg-primary-700 tw-px-2 tw-py-1 tw-text-xs tw-font-bold tw-text-white"
+                            (click)="toggleExpand(rowKey(row) + ':right')"
+                        >
+                            🚈 {{ row.rightCards.length }}本停車中
+                            {{ isExpanded(rowKey(row) + ':right') ? '▴' : '▾' }}
+                        </button>
+                        <!-- 展開はオーバーレイで行い、駅軸のレイアウト・高さに影響させない -->
+                        <ng-template
+                            cdkConnectedOverlay
+                            [cdkConnectedOverlayOrigin]="rightTrigger"
+                            [cdkConnectedOverlayOpen]="
+                                isExpanded(rowKey(row) + ':right')
+                            "
+                            [cdkConnectedOverlayPositions]="rightOverlayPositions"
+                            [cdkConnectedOverlayHasBackdrop]="true"
+                            cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+                            [cdkConnectedOverlayViewportMargin]="8"
+                            [cdkConnectedOverlayPush]="true"
+                            (backdropClick)="closeExpand(rowKey(row) + ':right')"
+                            (overlayKeydown)="
+                                onOverlayKeydown($event, rowKey(row) + ':right')
+                            "
+                        >
+                            <div
+                                class="tw-flex tw-max-h-80 tw-flex-col tw-gap-1 tw-overflow-y-auto tw-rounded tw-border tw-border-grey-200 tw-bg-white tw-p-2 tw-shadow-lg"
+                            >
+                                @for (card of row.rightCards; track card.tripId) {
+                                    <app-train-location-card
+                                        [card]="card"
+                                        status="stopped"
+                                    ></app-train-location-card>
+                                }
+                            </div>
+                        </ng-template>
+                    } @else {
+                        @for (card of row.rightCards; track card.tripId) {
+                            <app-train-location-card
+                                [card]="card"
+                                status="stopped"
+                            ></app-train-location-card>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div
+                class="tw-py-0.5 tw-text-center tw-text-xs tw-text-grey-800"
+                [class.tw-font-bold]="row.isMajor"
+                [class.tw-text-sm]="row.isMajor"
+            >
+                {{ row.stationName }}
+            </div>
+
+            @if (row.interchangeRoutes.length > 0) {
+                <div
+                    class="tw-mb-1 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-justify-center tw-gap-1"
+                >
+                    @for (interchange of row.interchangeRoutes; track interchange.routeId) {
+                        <a
+                            [routerLink]="[
+                                '/train-location',
+                                { route_id: interchange.routeId }
+                            ]"
+                            class="tw-rounded-full tw-bg-grey-200 tw-px-2 tw-py-0.5 tw-text-[10px] tw-text-grey-800 tw-no-underline"
+                        >
+                            {{ interchange.routeName }}
+                        </a>
+                    }
+                </div>
+            }
+        } @else {
+            <div class="tw-flex tw-h-20 tw-flex-row">
+                <div class="tw-relative tw-flex-1">
+                    @for (entry of row.leftCards; track entry.card.tripId) {
+                        <div
+                            class="tw-absolute tw-right-0 tw--translate-y-1/2"
+                            [style.top.%]="entry.topProgress * 100"
+                        >
+                            <app-train-location-card
+                                [card]="entry.card"
+                                status="between"
+                            ></app-train-location-card>
+                        </div>
+                    }
+                </div>
+                <div class="tw-w-0.5 tw-shrink-0 tw-bg-primary-900"></div>
+                <div class="tw-relative tw-flex-1">
+                    @for (entry of row.rightCards; track entry.card.tripId) {
+                        <div
+                            class="tw-absolute tw-left-0 tw--translate-y-1/2"
+                            [style.top.%]="entry.topProgress * 100"
+                        >
+                            <app-train-location-card
+                                [card]="entry.card"
+                                status="between"
+                            ></app-train-location-card>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

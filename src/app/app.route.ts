@@ -43,6 +43,36 @@ export const APP_ROUTES: Routes = [
         runGuardsAndResolvers: 'always',
     },
     {
+        // N1 ダイヤグラム: D-10（35-architecture-new-pages.md §4）によりサイドナビの
+        // トップレベルに置く。パス・物理配置ともユーザー指示（2026-07-07）で変更:
+        // 仕様§98 の /diagram → /train-diagram、仕様§2 の pages/timetable/timetable-diagram/
+        // → pages/train-diagram/（N2 の pages/train-location/ と対称にするため）。
+        path: 'train-diagram',
+        loadChildren: () =>
+            import('./pages/train-diagram/train-diagram.route').then(
+                (mod) => mod.TRAIN_DIAGRAM_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
+        // N2 列車位置情報: D-10（35-architecture-new-pages.md §4）によりサイドナビの
+        // トップレベルに置く。物理配置は pages/train-location/（N1 の pages/train-diagram/ と対称）。
+        path: 'train-location',
+        loadChildren: () =>
+            import('./pages/train-location/train-location.route').then(
+                (mod) => mod.TRAIN_LOCATION_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
         path: 'library',
         loadChildren: () =>
             import('./pages/library/library.route').then(

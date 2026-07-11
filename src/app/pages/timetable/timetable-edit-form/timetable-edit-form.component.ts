@@ -105,7 +105,7 @@ export class TimetableEditFormComponent {
             .subscribe((paramMap) => {
                 const mode = this.#route.snapshot.data
                     .mode as ETimetableEditFormMode;
-                const calendarId = paramMap.get('calendarId');
+                const calendarId = paramMap.get('calendar_id');
                 const tripDirection = paramMap.has('trip_direction')
                     ? (Number(
                           paramMap.get('trip_direction'),

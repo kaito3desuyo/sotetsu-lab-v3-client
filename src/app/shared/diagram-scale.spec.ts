@@ -1,6 +1,11 @@
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { buildStationAxis, stationToY, timeToX } from './diagram-scale';
+import {
+    buildSegmentMinutesMap,
+    buildStationAxis,
+    stationToY,
+    timeToX,
+} from './diagram-scale';
 
 function makeStation(stationId: string, stationSequence: number): any {
     return { stationId, stationSequence };
@@ -12,6 +17,7 @@ function makeTime(
     departureTime: string | undefined,
     days = 0,
 ): any {
+    // stopSequence は省略（全て undefined → 安定ソートで作成順を軸順とする）。
     return {
         stationId,
         arrivalTime,
@@ -19,6 +25,14 @@ function makeTime(
         departureTime,
         departureDays: days,
     };
+}
+
+/** 単一 trip の times から軸を作るヘルパ（buildSegmentMinutesMap 経由）。 */
+function axisFromTrip(
+    stations: readonly RouteStationDto[],
+    times: readonly TimeDetailsDto[],
+) {
+    return buildStationAxis(stations, buildSegmentMinutesMap([times]));
 }
 
 describe('timeToX', () => {
@@ -48,7 +62,7 @@ describe('buildStationAxis / stationToY', () => {
             makeTime('st3', '10:15:00', undefined), // st2->st3: 10分（終着）
         ];
 
-        const axis = buildStationAxis(stations, times);
+        const axis = axisFromTrip(stations, times);
 
         expect(stationToY('st1', axis)).toBe(0);
         expect(stationToY('st2', axis)).toBe(5);
@@ -66,8 +80,8 @@ describe('buildStationAxis / stationToY', () => {
             makeStation('st3', 3),
             makeStation('st4', 4),
         ];
-        // representativeTripTimes が空 = どの駅間も導出不能
-        const axis = buildStationAxis(stations, []);
+        // tripsTimes が空 = どの駅間も導出不能
+        const axis = buildStationAxis(stations, new Map());
 
         expect(stationToY('st1', axis)).toBe(0);
         expect(stationToY('st2', axis)).toBe(1);
@@ -89,7 +103,7 @@ describe('buildStationAxis / stationToY', () => {
             // st4 の times なし → st3->st4 はフォールバック対象
         ];
 
-        const axis = buildStationAxis(stations, times);
+        const axis = axisFromTrip(stations, times);
 
         expect(stationToY('st1', axis)).toBe(0);
         expect(stationToY('st2', axis)).toBe(4);
@@ -108,7 +122,7 @@ describe('buildStationAxis / stationToY', () => {
             makeTime('st2', '00:03:00', undefined, 1), // 翌日0:03着 = 5分後
         ];
 
-        const axis = buildStationAxis(stations, times);
+        const axis = axisFromTrip(stations, times);
 
         expect(stationToY('st1', axis)).toBe(0);
         expect(stationToY('st2', axis)).toBe(5);
@@ -126,7 +140,7 @@ describe('buildStationAxis / stationToY', () => {
             makeTime('st3', '10:15:00', undefined),
         ];
 
-        const axis = buildStationAxis(stations, times);
+        const axis = axisFromTrip(stations, times);
 
         expect(stationToY('st1', axis)).toBe(0);
         expect(stationToY('st2', axis)).toBe(5);
@@ -134,7 +148,139 @@ describe('buildStationAxis / stationToY', () => {
     });
 
     it('駅軸に存在しない stationId を指定すると例外を投げる', () => {
-        const axis = buildStationAxis([makeStation('st1', 1)], []);
+        const axis = buildStationAxis([makeStation('st1', 1)], new Map());
         expect(() => stationToY('unknown', axis)).toThrow();
+    });
+
+    it('routesOrderedStationIds を渡すと、base で隣接しない路線内ペアの接続駅を複製挿入する', () => {
+        // base（網羅駅軸）: yokohama, futamatagawa, izumino1, izumino2, hoshigaoka
+        // 本線の順序付き駅列は futamatagawa の次に hoshigaoka が来るが、
+        // base 上では間に izumino1/izumino2 が挟まるため隣接しない
+        // → hoshigaoka の直前に futamatagawa の複製が挿入されるはず。
+        const stations: RouteStationDto[] = [
+            makeStation('yokohama', 1),
+            makeStation('futamatagawa', 2),
+            makeStation('izumino1', 3),
+            makeStation('izumino2', 4),
+            makeStation('hoshigaoka', 5),
+        ];
+        const mainRoute = [
+            'yokohama',
+            'futamatagawa',
+            'hoshigaoka',
+        ];
+        const izuminoRoute = [
+            'futamatagawa',
+            'izumino1',
+            'izumino2',
+        ];
+
+        const axis = buildStationAxis(stations, new Map(), [
+            mainRoute,
+            izuminoRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'yokohama',
+            'futamatagawa',
+            'izumino1',
+            'izumino2',
+            'futamatagawa',
+            'hoshigaoka',
+        ]);
+        // 複製された futamatagawa（末尾から2番目）は hoshigaoka の直前に y を持つ
+        expect(axis[4].y).toBeLessThan(axis[5].y);
+        // 元の並び順（yokohama→futamatagawa→izumino1→izumino2→hoshigaoka）は維持される
+        expect(axis[0].y).toBeLessThan(axis[1].y);
+        expect(axis[1].y).toBeLessThan(axis[2].y);
+        expect(axis[2].y).toBeLessThan(axis[3].y);
+    });
+
+    it('軸が路線順の逆向き（軸 [C,B,A]・路線順 [A,B,C]）でも複製は発生しない（隣接判定は方向非依存）', () => {
+        // networkStations のキュレート順が route_station_lists の並びと逆方向の路線
+        // （川越線・三田線等）を想定。逆隣接ペアを非隣接と誤判定すると全駅が交互二重化する。
+        const stations: RouteStationDto[] = [
+            makeStation('stC', 1),
+            makeStation('stB', 2),
+            makeStation('stA', 3),
+        ];
+        const reversedRoute = ['stA', 'stB', 'stC'];
+
+        const axis = buildStationAxis(stations, new Map(), [reversedRoute]);
+
+        expect(axis.map((e) => e.stationId)).toEqual(['stC', 'stB', 'stA']);
+    });
+
+    it('降順路線でも複製の連鎖（ドミノ）が起きない: base=[K,L,M,N,X,Z]・route=[Z,N,M,L,K] → N が Z の直前に複製されるだけ', () => {
+        // route-station-list.state の desc ソート路線（埼京線・川越線等）を想定。
+        // 向き正規化がないと、(Z,N) の複製挿入が (N,M) の逆隣接を分断し、
+        // 以降 (M,L)→(L,K) と挿入が連鎖して路線全体が交互二重化する。
+        const stations: RouteStationDto[] = [
+            makeStation('stK', 1),
+            makeStation('stL', 2),
+            makeStation('stM', 3),
+            makeStation('stN', 4),
+            makeStation('stX', 5), // 他路線の駅（K..N と Z の間に挟まる）
+            makeStation('stZ', 6),
+        ];
+        const descRoute = ['stZ', 'stN', 'stM', 'stL', 'stK'];
+
+        const axis = buildStationAxis(stations, new Map(), [descRoute]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'stK',
+            'stL',
+            'stM',
+            'stN',
+            'stX',
+            'stN',
+            'stZ',
+        ]);
+    });
+
+    it('順方向 route=[K,L,M,N,Z] でも降順と同一結果になる（向きに対して対称）', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('stK', 1),
+            makeStation('stL', 2),
+            makeStation('stM', 3),
+            makeStation('stN', 4),
+            makeStation('stX', 5),
+            makeStation('stZ', 6),
+        ];
+        const ascRoute = ['stK', 'stL', 'stM', 'stN', 'stZ'];
+
+        const axis = buildStationAxis(stations, new Map(), [ascRoute]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'stK',
+            'stL',
+            'stM',
+            'stN',
+            'stX',
+            'stN',
+            'stZ',
+        ]);
+    });
+
+    it('真の分岐ペア（軸 [X, A, m1, m2, B]・路線順 […A,B…]）では従来どおり A が B の直前に複製される', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('stX', 1),
+            makeStation('stA', 2),
+            makeStation('m1', 3),
+            makeStation('m2', 4),
+            makeStation('stB', 5),
+        ];
+        const route = ['stX', 'stA', 'stB'];
+
+        const axis = buildStationAxis(stations, new Map(), [route]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'stX',
+            'stA',
+            'm1',
+            'm2',
+            'stA',
+            'stB',
+        ]);
     });
 });

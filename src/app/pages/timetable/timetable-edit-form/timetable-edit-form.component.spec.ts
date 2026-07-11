@@ -44,7 +44,7 @@ describe('TimetableEditFormComponent', () => {
                     useValue: {
                         paramMap: of(
                             new Map([
-                                ['calendarId', 'calendar-1'],
+                                ['calendar_id', 'calendar-1'],
                                 ['trip_direction', '0'],
                             ]),
                         ),

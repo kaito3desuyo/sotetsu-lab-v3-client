@@ -1,0 +1,61 @@
+<app-collapsible-panel
+    class="tw-sticky tw-top-0 tw-z-20"
+    label="表示設定"
+    [summary]="collapsedSummary()"
+>
+    <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-3">
+        <mat-form-field subscriptSizing="dynamic" class="tw-w-full sm:tw-w-56">
+            <mat-label>ダイヤ</mat-label>
+            <mat-select
+                [value]="calendarId()"
+                [disabled]="isCalendarSelectDisabled()"
+                (selectionChange)="onCalendarChange($event.value)"
+            >
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy年MM月dd日改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        <mat-button-toggle-group
+            class="tw-self-center"
+            [value]="mode()"
+            (change)="onModeChange($event.value)"
+            aria-label="時刻モード"
+        >
+            <mat-button-toggle value="now">現在時刻</mat-button-toggle>
+            <mat-button-toggle value="specified">時刻指定</mat-button-toggle>
+        </mat-button-toggle-group>
+    </div>
+
+    <div>
+        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+            路線（単一選択）
+        </p>
+        <app-filter-chips
+            mode="single"
+            [options]="routeOptions()"
+            [selected]="selectedRouteIdValue()"
+            (selectedChange)="onRouteChange($event)"
+        ></app-filter-chips>
+    </div>
+
+    <p class="tw-m-0 tw-text-xs tw-text-grey-600">
+        時刻表に基づく計画位置です（実在線ではありません）。実在線は
+        <a
+            routerLink="/operation/real-time"
+            class="tw-text-primary-500 tw-underline"
+            >リアルタイム運用情報</a
+        >へ。
+    </p>
+</app-collapsible-panel>

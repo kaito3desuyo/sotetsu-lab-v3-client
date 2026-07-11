@@ -1,20 +1,33 @@
 <div class="tw-overflow-x-auto">
     <mat-chip-listbox
+        class="tw-list-none"
+        [class.filter-chips-single]="isSingle()"
         [multiple]="mode() === 'multiple'"
         [value]="listboxValue()"
         (change)="onChange($event)"
     >
-        @for (option of options(); track option.value) {
-            <mat-chip-option
-                [value]="option.value"
-                [disabled]="option.disabled ?? false"
-                [style.background-color]="option.color ?? null"
-            >
-                @if (isSingle()) {
-                    <span class="tw-mr-1" aria-hidden="true">●</span>
-                }
-                {{ option.label }}
-            </mat-chip-option>
+        @for (group of groupedOptions(); track group.group) {
+            @if (hasGroups() && group.group) {
+                <span
+                    class="tw-mt-1 tw-w-full tw-pl-2 tw-text-xs tw-font-bold tw-text-grey-600"
+                >
+                    {{ group.group }}
+                </span>
+            }
+            @for (option of group.options; track option.value) {
+                <mat-chip-option
+                    [value]="option.value"
+                    [disabled]="option.disabled ?? false"
+                    [style.background-color]="option.color ?? null"
+                >
+                    <!-- R-4: 単一選択は ✓ でなく選択中チップの ● マーカーで表す
+                         （全チップに付けると箇条書きの点に見えるため選択中のみ） -->
+                    @if (isSingle() && isSelectedValue(option.value)) {
+                        <span class="tw-mr-1" aria-hidden="true">●</span>
+                    }
+                    {{ option.label }}
+                </mat-chip-option>
+            }
         }
     </mat-chip-listbox>
 </div>

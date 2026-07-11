@@ -22,6 +22,11 @@ export class OperationTableService {
     fetchCalendar(): Observable<void> {
         const calendarId = OperationTableStore.calendarId;
 
+        // calendar 未選択（初期状態など）では /v3/calendars/null を叩かない。
+        if (!calendarId) {
+            return of(undefined);
+        }
+
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((calendar: CalendarDetailsDto) => {
                 OperationTableStore.setCalendar(calendar);
@@ -32,6 +37,11 @@ export class OperationTableService {
 
     fetchOperationTrips(): Observable<void> {
         const calendarId = OperationTableStore.calendarId;
+
+        // calendar 未選択では /v3/operations/calendar/null を叩かない。
+        if (!calendarId) {
+            return of(undefined);
+        }
 
         return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
             map((operations) =>

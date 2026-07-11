@@ -9,6 +9,7 @@ import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
+import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import {
     OperationRealTimeTableColumn,
     OperationRealTimeTableColumnLabel,
@@ -36,6 +37,7 @@ import {
         NewAntiBracketsPipe,
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
+        TripClassBaseNamePipe,
     ],
 })
 export class OperationRealTimeOperationTableComponent {

@@ -6,8 +6,8 @@ import { ETimetableEditFormMode } from './special/enums/timetable-edit-form.enum
 /**
  * B8-5 / 30-architecture.md §1.2: add/copy/update の 3 ページを
  * 単一コンポーネント（TimetableEditFormComponent）+ mode に統合する。
- * URL のパス構造（add|copy|update/:calendarId、trip_direction/trip_block_id は
- * matrix param）は移行前と同じ形（timetable-station 等と同じ matrix param 慣習）を踏襲する。
+ * URL は add|copy|update の各パス直下で calendar_id / trip_direction / trip_block_id を
+ * すべて matrix param で受ける（timetable-station 等と同じ matrix param 慣習・snake_case）。
  */
 function buildRoutes(mode: ETimetableEditFormMode, title: string): Routes {
     return [

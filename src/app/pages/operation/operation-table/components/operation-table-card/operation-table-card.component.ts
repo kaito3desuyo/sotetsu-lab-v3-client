@@ -6,6 +6,7 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table-format-station-name.pipe';
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';
 
@@ -48,6 +49,7 @@ type TripRow = {
         DateFnsPipe,
         OperationTableFormatStationNamePipe,
         OperationTableFormatTripClassNamePipe,
+        TripClassBaseNamePipe,
     ],
 })
 export class OperationTableCardComponent {

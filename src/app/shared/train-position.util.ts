@@ -28,20 +28,30 @@ export type TrainPosition =
  * 発着時刻の実体化。arrivalTime/departureTime の片方が欠落している場合
  * （通過駅・起終点駅）はもう片方で代用する。
  */
+/**
+ * trip times の days は **1-based**（day 1 = 運行の営業日当日、day 2 = 24 時超えの翌日分）で
+ * 実データが格納されている。toAbsoluteTime は 0 始まりの日オフセットを取るため、-1 して渡す
+ * （営業日 = getRailwayDate(at) の 0 時基準に一致させる）。欠落時は day 1（オフセット 0）とみなす。
+ */
+function dayOffset(days: number | null | undefined): number {
+    return (days ?? 1) - 1;
+}
+
 function resolveArrival(base: Date, time: TimeDetailsDto): Date | undefined {
     const value = time.arrivalTime ?? time.departureTime;
-    if (value === undefined) {
+    // API の欠落時刻は null で来る（undefined ではない）ため == null で両方を捉える。
+    if (value == null) {
         return undefined;
     }
-    return toAbsoluteTime(base, time.arrivalDays ?? time.departureDays ?? 0, value);
+    return toAbsoluteTime(base, dayOffset(time.arrivalDays ?? time.departureDays), value);
 }
 
 function resolveDeparture(base: Date, time: TimeDetailsDto): Date | undefined {
     const value = time.departureTime ?? time.arrivalTime;
-    if (value === undefined) {
+    if (value == null) {
         return undefined;
     }
-    return toAbsoluteTime(base, time.departureDays ?? time.arrivalDays ?? 0, value);
+    return toAbsoluteTime(base, dayOffset(time.departureDays ?? time.arrivalDays), value);
 }
 
 /**
@@ -56,9 +66,10 @@ function extractStopsOnAxis(
     return times
         .filter(
             (t) =>
-                t.stationId !== undefined &&
+                t.stationId != null &&
                 axisStationIds.has(t.stationId) &&
-                (t.arrivalTime !== undefined || t.departureTime !== undefined),
+                // 発着とも欠落（null/undefined）の通過駅は除外し、前後駅間の補間に吸収させる。
+                (t.arrivalTime != null || t.departureTime != null),
         )
         .sort((a, b) => (a.stopSequence ?? 0) - (b.stopSequence ?? 0));
 }
