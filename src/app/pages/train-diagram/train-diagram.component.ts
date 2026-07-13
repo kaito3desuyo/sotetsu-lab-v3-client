@@ -13,6 +13,7 @@ import { lastValueFrom } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
 import { TrainDiagramControllerComponent } from './components/train-diagram-controller/train-diagram-controller.component';
 import { TrainDiagramInfoPanelComponent } from './components/train-diagram-info-panel/train-diagram-info-panel.component';
 import { TrainDiagramLegendComponent } from './components/train-diagram-legend/train-diagram-legend.component';
@@ -43,6 +44,7 @@ TrainDiagramStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        LoadingComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
         TrainDiagramChartComponent,
@@ -266,9 +268,20 @@ export class TrainDiagramComponent {
             });
     }
 
-    /** 既定 = 全路線（route_ids 未指定時。全線時刻表の initializeSelectedRouteIds と同じ既定）。 */
+    /**
+     * 既定表示路線（route_ids 未指定時）。全 20 路線を出すと駅ラベルが判読不能になるため
+     * （mockup-08）、相鉄自社線（本線・いずみ野線・厚木線・新横浜線）のみを既定にする。
+     * これらは直通で連続するため 1 枚のダイヤグラムとして自然に繋がる。該当路線が
+     * 見つからない場合（データ未取得等）は全路線にフォールバックする。
+     */
     #defaultRouteIds(): string[] {
-        return this.#routeStations().map((route) => route.routeId);
+        const sotetsuRouteNames = ['本線', 'いずみ野線', '厚木線', '新横浜線'];
+        const sotetsuRouteIds = this.#routeStations()
+            .filter((route) => sotetsuRouteNames.includes(route.routeName))
+            .map((route) => route.routeId);
+        return sotetsuRouteIds.length
+            ? sotetsuRouteIds
+            : this.#routeStations().map((route) => route.routeId);
     }
 
     /** matrix param `direction` を検証して方向フィルタに復元する（不正/未指定は既定 'both'）。 */
@@ -279,18 +292,26 @@ export class TrainDiagramComponent {
     async fetchData(flags: { refetchTripBlocks: boolean }): Promise<void> {
         TrainDiagramStore.enableLoading();
 
-        if (!this.#firstLoadDone()) {
-            await lastValueFrom(this.#timetableDiagramService.fetchTripClasses());
-            await lastValueFrom(
-                this.#timetableDiagramService.fetchNetworkStations(),
-            );
+        // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
+        // （finally が無いと isLoading が true のまま回復不能になる）
+        try {
+            if (!this.#firstLoadDone()) {
+                await lastValueFrom(
+                    this.#timetableDiagramService.fetchTripClasses(),
+                );
+                await lastValueFrom(
+                    this.#timetableDiagramService.fetchNetworkStations(),
+                );
+            }
+            if (flags.refetchTripBlocks) {
+                await lastValueFrom(
+                    this.#timetableDiagramService.fetchTripBlocks(),
+                );
+            }
+            this.#firstLoadDone.set(true);
+        } finally {
+            TrainDiagramStore.disableLoading();
         }
-        if (flags.refetchTripBlocks) {
-            await lastValueFrom(this.#timetableDiagramService.fetchTripBlocks());
-        }
-
-        TrainDiagramStore.disableLoading();
-        this.#firstLoadDone.set(true);
     }
 
     onCalendarIdChange(calendarId: string): void {

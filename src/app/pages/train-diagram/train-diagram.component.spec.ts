@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainDiagramComponent } from './train-diagram.component';
@@ -79,6 +79,42 @@ describe('TrainDiagramComponent', () => {
 
     it('onTripActivated: 対象 trip が無くても例外を投げない', () => {
         expect(() => component.onTripActivated('unknown')).not.toThrow();
+    });
+
+    it('ロード中はチャート（本文）を出さず中央スピナーを表示する', () => {
+        TrainDiagramStore.enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-train-diagram-chart'),
+        ).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector('app-loading'),
+        ).toBeTruthy();
+
+        TrainDiagramStore.disableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-train-diagram-chart'),
+        ).toBeTruthy();
+        expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
+    });
+
+    it('fetchData: フェッチが reject しても isLoading が回復する（try/finally）', async () => {
+        const service = TestBed.inject(TrainDiagramService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        service.fetchTripBlocks = () =>
+            throwError(() => new Error('fetch failed'));
+
+        await expect(
+            component.fetchData({ refetchTripBlocks: true }),
+        ).rejects.toThrow('fetch failed');
+
+        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(
+            false,
+        );
     });
 
     it('filteredTripBlocksByDirection: directionFilter に応じて chart へ渡す列車を絞る', () => {

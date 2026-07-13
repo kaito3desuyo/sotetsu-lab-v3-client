@@ -109,4 +109,21 @@ describe('OperationTableCardComponent', () => {
         const rows = component.rows();
         expect(rows[1].depotIn).toBe(true);
     });
+
+    it('groupName 未指定時はヘッダに群バッジを表示しない（モック03）', () => {
+        const badge = fixture.nativeElement.querySelector(
+            'header .tw-bg-black\\/10',
+        );
+        expect(badge).toBeNull();
+    });
+
+    it('groupName 指定時はヘッダに実データの群名バッジを表示する（モック03）', () => {
+        fixture.componentRef.setInput('groupName', '9G群');
+        fixture.detectChanges();
+
+        const badge = fixture.nativeElement.querySelector(
+            'header .tw-bg-black\\/10',
+        );
+        expect(badge?.textContent.trim()).toBe('9G群');
+    });
 });

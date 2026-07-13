@@ -39,7 +39,8 @@ export class OperationSearchCardPComponent {
 
     readonly selectCalendarId = output<CalendarDetailsDto['calendarId']>();
     readonly selectOperationId = output<OperationDetailsDto['operationId']>();
-    readonly clickSearch = output<void>();
     readonly clickSearchOperationTable =
         output<CalendarDetailsDto['calendarId']>();
+    readonly clickSearchRouteDiagram =
+        output<OperationDetailsDto['operationId']>();
 }

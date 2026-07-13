@@ -1,10 +1,12 @@
 <app-header
     class="tw-sticky tw-top-0 tw-z-30 tw-block tw-shadow-md"
+    [pageTitle]="pageTitle()"
     (clickButton)="toggle()"
 ></app-header>
 
 <app-sidenav
     class="tw-fixed tw-top-0 tw-z-20 tw-block tw-h-screen tw-w-64 tw-pt-12 tw-shadow-md md:tw-pt-16"
+    [@.disabled]="prefersReducedMotion"
     [@openClose]="isOpen() ? 'open' : 'close'"
 >
 </app-sidenav>
@@ -12,6 +14,7 @@
 @if (isVisibled()) {
     <div
         class="tw-fixed tw-top-0 tw-z-10 tw-h-screen tw-w-screen"
+        [@.disabled]="prefersReducedMotion"
         [@openClose]="isOpen() ? 'shadow' : 'clear'"
         (click)="toggle()"
     ></div>

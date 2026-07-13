@@ -15,8 +15,8 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RxState } from '@rx-angular/state';
@@ -46,7 +46,7 @@ type Form = FormGroup<{
         MatFormFieldModule,
         MatSelectModule,
         MatSlideToggleModule,
-        MatRadioModule,
+        MatButtonToggleModule,
         MatButtonModule,
         DateFnsPipe,
     ]
@@ -54,6 +54,8 @@ type Form = FormGroup<{
 export class TimetableSearchCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;
     readonly #state = inject<RxState<{}>>(RxState);
+
+    readonly tripDirectionEnum = ETripDirection;
 
     readonly form: Form = this.#fb.group({
         calendarId: this.#fb.control('', [Validators.required]),

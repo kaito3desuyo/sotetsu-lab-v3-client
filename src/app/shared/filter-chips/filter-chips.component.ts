@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    ElementRef,
+    afterRenderEffect,
+    computed,
+    input,
+    output,
+    signal,
+    viewChild,
+} from '@angular/core';
 import { MatChipListboxChange, MatChipsModule } from '@angular/material/chips';
 import { FilterChipOption, FilterChipValue } from './filter-chip-option.type';
 
@@ -11,6 +21,9 @@ import { FilterChipOption, FilterChipValue } from './filter-chip-option.type';
  * - mode: 'multiple' の場合は複数選択、'single' の場合は排他選択（R-4: 選択中チップの
  *   先頭に ✓ の代わりの ● マーカーを表示し「モード切替」であることを分ける。
  *   非選択チップには付けない — 全チップに付けると箇条書きの点に見えるため）
+ * - scrollMode: true の場合はチップを折り返さず横スクロール可能な 1 行に収め、
+ *   左右に薄い矢印インジケータを表示する（mockup-05 全線時刻表の路線チップ準拠）。
+ *   既定 false（従来どおりの折返し表示）
  */
 @Component({
     selector: 'app-filter-chips',
@@ -18,14 +31,26 @@ import { FilterChipOption, FilterChipValue } from './filter-chip-option.type';
     styleUrl: './filter-chips.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatChipsModule],
-    host: { class: 'tw-block' },
+    host: {
+        class: 'tw-block',
+        '(window:resize)': 'updateScrollIndicators()',
+    },
 })
 export class FilterChipsComponent {
     readonly mode = input<'multiple' | 'single'>('multiple');
     readonly options = input.required<FilterChipOption[]>();
     readonly selected = input<FilterChipValue[]>([]);
+    /** true でチップを横スクロール 1 行表示にする（既定は折返し表示） */
+    readonly scrollMode = input<boolean>(false);
 
     readonly selectedChange = output<FilterChipValue[]>();
+
+    // signal query は ES private（#）にできない Angular 制約があるため protected
+    protected readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');
+
+    /** 左右の矢印インジケータ表示可否（scrollMode 時のみ更新される） */
+    protected readonly canScrollLeft = signal(false);
+    protected readonly canScrollRight = signal(false);
 
     protected readonly isSingle = computed(() => this.mode() === 'single');
 
@@ -56,6 +81,15 @@ export class FilterChipsComponent {
         FilterChipValue | FilterChipValue[]
     >(() => (this.isSingle() ? this.selected()[0] : this.selected()));
 
+    constructor() {
+        // options / scrollMode の変化後（描画完了後）にスクロール可否を測り直す
+        afterRenderEffect(() => {
+            this.options();
+            this.scrollMode();
+            this.updateScrollIndicators();
+        });
+    }
+
     protected isSelectedValue(value: FilterChipValue): boolean {
         return this.selected().includes(value);
     }
@@ -73,5 +107,20 @@ export class FilterChipsComponent {
         }
 
         this.selectedChange.emit((value as FilterChipValue[]) ?? []);
+    }
+
+    /** スクロール位置から左右矢印インジケータの表示可否を更新する。 */
+    protected updateScrollIndicators(): void {
+        if (!this.scrollMode()) {
+            return;
+        }
+        const el = this.scroller()?.nativeElement;
+        if (!el) {
+            return;
+        }
+        this.canScrollLeft.set(el.scrollLeft > 0);
+        this.canScrollRight.set(
+            el.scrollLeft + el.clientWidth < el.scrollWidth - 1,
+        );
     }
 }

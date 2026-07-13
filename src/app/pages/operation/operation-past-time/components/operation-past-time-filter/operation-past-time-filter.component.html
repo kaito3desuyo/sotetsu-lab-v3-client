@@ -4,6 +4,7 @@
     </p>
     <app-filter-chips
         mode="multiple"
+        [scrollMode]="true"
         [options]="agencyOptions()"
         [selected]="selectedAgencyIds()"
         (selectedChange)="onAgencyChange($event)"

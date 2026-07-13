@@ -16,7 +16,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { addDays, getHours, parse, subDays } from 'date-fns';
@@ -46,7 +46,7 @@ type Form = FormGroup<{
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatRadioModule,
+        MatButtonToggleModule,
         MatSelectModule,
         MatButtonModule,
         MatSnackBarModule,

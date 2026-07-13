@@ -13,6 +13,7 @@ import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/con
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
+import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
 
 describe('TimetableAllLineComponent', () => {
@@ -53,5 +54,35 @@ describe('TimetableAllLineComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+
+    it('ロード中はチップ・テーブルを出さず中央スピナーを表示する（偽の「0 / 0」を出さない）', () => {
+        TimetableAllLineStore.enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-timetable-all-line-table'),
+        ).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector(
+                'app-timetable-all-line-route-filter',
+            ),
+        ).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector('app-loading'),
+        ).toBeTruthy();
+
+        TimetableAllLineStore.disableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-timetable-all-line-table'),
+        ).toBeTruthy();
+        expect(
+            fixture.nativeElement.querySelector(
+                'app-timetable-all-line-route-filter',
+            ),
+        ).toBeTruthy();
+        expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
     });
 });

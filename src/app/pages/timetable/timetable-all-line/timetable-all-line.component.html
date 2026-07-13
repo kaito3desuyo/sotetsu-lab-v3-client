@@ -1,25 +1,31 @@
 <main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-2 md:tw-p-16">
+<!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
+         偽表示になるため、ロード完了までチップ・テーブルを出さず
+         中央スピナーを表示する（20-design-ui.md §4） -->
     @if (isLoading()) {
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <div class="tw-flex tw-justify-center tw-py-16">
+            <app-loading></app-loading>
+        </div>
+    } @else {
+        <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
+
+        <app-timetable-all-line-table
+            [calendar]="calendar()"
+            [tripDirection]="tripDirection()"
+            [stations]="stations()"
+            [trips]="trips()"
+            [pageSettings]="pageSettings()"
+            [viewModes]="viewModes()"
+            [bordersAfter]="bordersAfter()"
+            (page)="onPaged($event)"
+            (clickEditButton)="onClickedEditButton($event)"
+            (clickCopyButton)="onClickedCopyButton($event)"
+            (clickDeleteButton)="onClickedDeleteButton($event)"
+            (clickAddTripInGroup)="onClickedAddTripInGroup($event)"
+            (clickDeleteTripInGroup)="onClickedDeleteTripInGroup($event)"
+        ></app-timetable-all-line-table>
     }
-
-    <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
-
-    <app-timetable-all-line-table
-        [calendar]="calendar()"
-        [tripDirection]="tripDirection()"
-        [stations]="stations()"
-        [trips]="trips()"
-        [pageSettings]="pageSettings()"
-        [viewModes]="viewModes()"
-        [bordersAfter]="bordersAfter()"
-        (page)="onPaged($event)"
-        (clickEditButton)="onClickedEditButton($event)"
-        (clickCopyButton)="onClickedCopyButton($event)"
-        (clickDeleteButton)="onClickedDeleteButton($event)"
-        (clickAddTripInGroup)="onClickedAddTripInGroup($event)"
-        (clickDeleteTripInGroup)="onClickedDeleteTripInGroup($event)"
-    ></app-timetable-all-line-table>
 
     <ng-adsense [adSlot]="1363071722"></ng-adsense>
 

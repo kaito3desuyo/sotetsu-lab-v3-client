@@ -16,6 +16,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
@@ -37,6 +38,7 @@ TimetableAllLineStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        LoadingComponent,
         AdsenseModule,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
@@ -134,11 +136,17 @@ export class TimetableAllLineComponent {
 
         TimetableAllLineStore.enableLoading();
 
-        await lastValueFrom(this.#timetableAllLineService.fetchStations());
-        await lastValueFrom(this.#timetableAllLineService.fetchTripBlocks());
-
-        TimetableAllLineStore.initializeSelectedRouteIds();
-        TimetableAllLineStore.disableLoading();
+        // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
+        // （finally が無いと isLoading が true のまま回復不能になる）
+        try {
+            await lastValueFrom(this.#timetableAllLineService.fetchStations());
+            await lastValueFrom(
+                this.#timetableAllLineService.fetchTripBlocks(),
+            );
+            TimetableAllLineStore.initializeSelectedRouteIds();
+        } finally {
+            TimetableAllLineStore.disableLoading();
+        }
     }
 
     onPaged(pageSettings: PageEvent): void {

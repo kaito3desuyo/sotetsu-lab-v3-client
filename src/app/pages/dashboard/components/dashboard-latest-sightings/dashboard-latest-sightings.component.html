@@ -17,25 +17,30 @@
                     [routerLink]="['/operation', 'real-time']"
                     class="tw-flex tw-flex-row tw-items-center tw-gap-3 tw-py-2 tw-text-black tw-no-underline"
                 >
-                    @if (item.sighting.operation?.operationNumber) {
+                    @if (item.operationNumber) {
                         <app-new-operation-number-link
-                            [text]="item.sighting.operation!.operationNumber!"
+                            [text]="item.operationNumber"
                             [bgColor]="
-                                item.sighting.operation!.operationNumber!
-                                    | newOperationNumberColor
+                                item.operationNumber | newOperationNumberColor
                             "
                         ></app-new-operation-number-link>
+                    } @else {
+                        <span
+                            class="tw-shrink-0 tw-text-sm tw-text-grey-600"
+                        >
+                            不明
+                        </span>
                     }
 
                     <span class="tw-w-14 tw-shrink-0 tw-text-sm tw-font-bold">
-                        {{ item.sighting.formation?.formationNumber ?? '不明' }}
+                        {{ item.formationNumber ?? '不明' }}
                     </span>
 
                     <span class="tw-flex-grow tw-text-sm">
                         {{ item.positionLabel || '-' }}
                     </span>
 
-                    <span class="tw-shrink-0 tw-text-xs tw-text-grey-600">
+                    <span class="tw-shrink-0 tw-text-xs tw-tabular-nums tw-text-grey-600">
                         @if (item.sighting.sightingTime) {
                             {{
                                 item.sighting.sightingTime

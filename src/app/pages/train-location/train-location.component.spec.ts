@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainLocationComponent } from './train-location.component';
@@ -111,5 +111,44 @@ describe('TrainLocationComponent', () => {
             fixture.nativeElement.querySelector('div.tw-flex-1');
         expect(content.classList).toContain('max-sm:tw-px-1');
         expect(content.classList).toContain('tw-p-3');
+    });
+
+    it('ロード中は駅軸（本文）を出さず中央スピナーを表示する', () => {
+        TrainLocationStore.enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-train-location-line'),
+        ).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector('app-loading'),
+        ).toBeTruthy();
+
+        TrainLocationStore.disableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('app-train-location-line'),
+        ).toBeTruthy();
+        expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
+    });
+
+    it('fetchData: フェッチが reject しても isLoading が回復する（try/finally）', async () => {
+        const service = TestBed.inject(TrainLocationService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        service.fetchTripBlocks = () =>
+            throwError(() => new Error('fetch failed'));
+
+        await expect(
+            component.fetchData({
+                refetchTripBlocks: true,
+                refetchStationAxis: false,
+            }),
+        ).rejects.toThrow('fetch failed');
+
+        expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(
+            false,
+        );
     });
 });

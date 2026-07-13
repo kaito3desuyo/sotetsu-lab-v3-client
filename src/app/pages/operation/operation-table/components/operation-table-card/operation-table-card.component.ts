@@ -57,6 +57,8 @@ export class OperationTableCardComponent {
     readonly stations = input.required<StationDetailsDto[]>();
     readonly tripClasses = input.required<TripClassDetailsDto[]>();
     readonly calendarId = input.required<string | null>();
+    /** 運用番号が属する群名（実データそのまま）。モック 03: ヘッダの運用番号バッジ。未解決なら非表示。 */
+    readonly groupName = input<string>();
 
     readonly #formatStationName = new OperationTableFormatStationNamePipe();
     readonly #formatTripClassName = new OperationTableFormatTripClassNamePipe();

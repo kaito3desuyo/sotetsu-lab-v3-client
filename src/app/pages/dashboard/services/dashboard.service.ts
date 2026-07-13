@@ -10,6 +10,7 @@ import { OperationSightingService } from 'src/app/libs/operation-sighting/usecas
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { estimatePositions } from 'src/app/shared/train-position.util';
+import { buildDashboardMiniDiagram } from '../utils/build-dashboard-mini-diagram.util';
 import { buildNetworkStationAxis } from '../utils/build-network-station-axis.util';
 import { DashboardStore } from '../stores/dashboard.store';
 
@@ -67,12 +68,16 @@ export class DashboardService {
             tap(({ tripBlocksByDirection, routes }) => {
                 const tripBlocks = Object.values(tripBlocksByDirection).flat();
                 const stationAxis = buildNetworkStationAxis(routes);
+                const now = new Date();
                 const positions = estimatePositions(
                     tripBlocks,
                     stationAxis,
-                    new Date(),
+                    now,
                 );
                 DashboardStore.setRunningTripCount(positions.length);
+                DashboardStore.setMiniDiagramLines(
+                    buildDashboardMiniDiagram(tripBlocks, stationAxis, now),
+                );
             }),
             map(() => undefined),
         );

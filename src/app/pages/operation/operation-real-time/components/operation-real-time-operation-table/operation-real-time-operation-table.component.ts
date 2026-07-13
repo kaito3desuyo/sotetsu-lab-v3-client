@@ -1,20 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
-import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
-import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
-import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
-import {
-    OperationRealTimeTableColumn,
-    OperationRealTimeTableColumnLabel,
-} from '../../enums/operation-real-time.enum';
-import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
+import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import {
     matchesAgencyFilter,
@@ -26,25 +14,14 @@ import {
     templateUrl: './operation-real-time-operation-table.component.html',
     styleUrl: './operation-real-time-operation-table.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        RouterLink,
-        MatIconModule,
-        MatTooltipModule,
-        NewOperationNumberLinkComponent,
-        EmptyStateComponent,
-        DateFnsPipe,
-        NewFindByIdPipe,
-        NewAntiBracketsPipe,
-        NewOperationNumberColorPipe,
-        OperationRealTimeDayCountPipe,
-        TripClassBaseNamePipe,
-    ],
+    imports: [EmptyStateComponent, OperationRealTimeOperationCardComponent],
 })
 export class OperationRealTimeOperationTableComponent {
-    readonly operationRealTimeTableColumn = OperationRealTimeTableColumn;
-    readonly operationRealTimeTableColumnLabel =
-        OperationRealTimeTableColumnLabel;
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
+    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
     readonly stations = toSignal(OperationRealTimeStore.stations$);
     readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
     readonly calendar = toSignal(OperationRealTimeStore.calendar$);
@@ -109,28 +86,6 @@ export class OperationRealTimeOperationTableComponent {
         });
     });
 
-    readonly displayedColumns = computed(() => {
-        const isVisibleSightingHistories = this.isVisibleSightingHistories();
-        const isVisibleCurrentPosition = this.isVisibleCurrentPosition();
-
-        return [
-            OperationRealTimeTableColumn.OPERATION_NUMBER,
-            OperationRealTimeTableColumn.FORMATION_NUMBER,
-            OperationRealTimeTableColumn.SIGHTING_HISTORIES,
-            OperationRealTimeTableColumn.CURRENT_POSITION,
-            OperationRealTimeTableColumn.SIGHTING_TIME,
-            OperationRealTimeTableColumn.UPDATED_AT,
-        ].filter((column) => {
-            if (column === OperationRealTimeTableColumn.SIGHTING_HISTORIES) {
-                return isVisibleSightingHistories;
-            }
-            if (column === OperationRealTimeTableColumn.CURRENT_POSITION) {
-                return isVisibleCurrentPosition;
-            }
-            return true;
-        });
-    });
-
     readonly queryTimeCrossSectionByOperationNumber = (
         operationNumber: string,
     ) =>
@@ -141,7 +96,7 @@ export class OperationRealTimeOperationTableComponent {
     readonly queryHistoriesByOperationNumber = (operationNumber: string) =>
         computed(() => {
             const histories = this.histories();
-            return [...(histories[operationNumber] ?? [])].reverse();
+            return histories[operationNumber] ?? [];
         });
     readonly queryCurrentPositionByOperationNumber = (
         operationNumber: string,

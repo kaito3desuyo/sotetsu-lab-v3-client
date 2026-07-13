@@ -20,4 +20,22 @@ describe('HeaderComponent', () => {
     it('should create', () => {
         expect(component).toBeTruthy();
     });
+
+    it('pageTitle 未指定時はロゴ表記「Sotetsu Lab.」を表示する', () => {
+        fixture.detectChanges();
+
+        const h1: HTMLElement = fixture.nativeElement.querySelector('h1');
+        expect(h1.textContent?.trim()).toBe('Sotetsu Lab.');
+    });
+
+    it('pageTitle 指定時はツールバーにページ名を表示する', () => {
+        fixture.componentRef.setInput('pageTitle', 'ダイヤグラム');
+        fixture.detectChanges();
+
+        const h1: HTMLElement = fixture.nativeElement.querySelector('h1');
+        expect(h1.textContent?.trim()).toBe('ダイヤグラム');
+        expect(fixture.nativeElement.textContent).not.toContain(
+            'Sotetsu Lab.',
+        );
+    });
 });

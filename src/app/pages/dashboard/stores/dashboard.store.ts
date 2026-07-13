@@ -1,10 +1,11 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { debounceTime } from 'rxjs';
+import { debounceTime, map } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
+import { MiniDiagramLine } from '../utils/build-dashboard-mini-diagram.util';
 
 type StoreProps = {
     todaysCalendar: CalendarDetailsDto | null;
@@ -12,6 +13,8 @@ type StoreProps = {
     sightingCountToday: number;
     latestSightings: OperationSightingDetailsDto[];
     latestSightingPositions: Record<string, OperationCurrentPositionDto>;
+    /** 最上部カード背景のミニダイヤグラム線分（±30分・実データ）。永続化しない。 */
+    miniDiagramLines: MiniDiagramLine[];
     /** 「サイト説明」パネルを初回訪問時のみ自動展開するための既訪問フラグ */
     hasVisitedBefore: boolean;
     loadingQueue: boolean[];
@@ -25,6 +28,7 @@ const store = createStore(
         sightingCountToday: 0,
         latestSightings: [],
         latestSightingPositions: {},
+        miniDiagramLines: [],
         hasVisitedBefore: false,
         loadingQueue: [],
     }),
@@ -33,7 +37,19 @@ const store = createStore(
 const persist = persistState(store, {
     key: 'DashboardStore',
     storage: localForage,
-    source: () => store.pipe(debounceTime(1000)),
+    // loadingQueue は永続化しない（ロード中にタブを閉じると非空 queue が保存・
+    // 復元され、次回訪問時に isLoading が true のまま回復不能になるため）
+    source: () =>
+        store.pipe(
+            debounceTime(1000),
+            map(
+                ({
+                    loadingQueue: _loadingQueue,
+                    miniDiagramLines: _miniDiagramLines,
+                    ...rest
+                }) => rest,
+            ),
+        ),
 });
 
 export const DashboardStore = {
@@ -62,6 +78,9 @@ export const DashboardStore = {
             })),
         );
     },
+    setMiniDiagramLines(lines: MiniDiagramLine[]): void {
+        store.update(setProp('miniDiagramLines', () => lines));
+    },
     markVisited(): void {
         store.update(setProp('hasVisitedBefore', () => true));
     },
@@ -81,6 +100,7 @@ export const DashboardStore = {
     latestSightingPositions$: store.pipe(
         select((state) => state.latestSightingPositions),
     ),
+    miniDiagramLines$: store.pipe(select((state) => state.miniDiagramLines)),
     hasVisitedBefore$: store.pipe(select((state) => state.hasVisitedBefore)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 

@@ -44,13 +44,21 @@ export class DashboardComponent {
 
     async fetchData(): Promise<void> {
         DashboardStore.enableLoading();
-        await lastValueFrom(this.#dashboardService.fetchTodaysCalendar());
-        await lastValueFrom(this.#dashboardService.fetchRunningTripCount());
-        await lastValueFrom(this.#dashboardService.fetchTodaysSightings());
-        await lastValueFrom(
-            this.#dashboardService.fetchLatestSightingPositions(),
-        );
-        DashboardStore.disableLoading();
+
+        // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
+        // （finally が無いと isLoading が true のまま回復不能になる）
+        try {
+            await lastValueFrom(this.#dashboardService.fetchTodaysCalendar());
+            await lastValueFrom(
+                this.#dashboardService.fetchRunningTripCount(),
+            );
+            await lastValueFrom(this.#dashboardService.fetchTodaysSightings());
+            await lastValueFrom(
+                this.#dashboardService.fetchLatestSightingPositions(),
+            );
+        } finally {
+            DashboardStore.disableLoading();
+        }
     }
 
     hookEvent(): void {

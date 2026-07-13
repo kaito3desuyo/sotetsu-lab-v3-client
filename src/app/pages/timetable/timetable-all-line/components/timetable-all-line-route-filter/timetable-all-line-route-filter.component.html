@@ -1,6 +1,8 @@
 @if (routeOptions().length) {
+    <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
     <app-filter-chips
         mode="multiple"
+        [scrollMode]="true"
         [options]="routeOptions()"
         [selected]="selectedRouteIds()"
         (selectedChange)="onChange($event)"

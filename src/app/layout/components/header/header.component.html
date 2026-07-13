@@ -9,11 +9,19 @@
     >
         <mat-icon>menu</mat-icon>
     </button>
-    <h1
-        class="tw-font-[Quicksand,sans-serif] tw-text-lg tw-font-normal md:tw-text-2xl"
-    >
-        Sotetsu Lab.
-    </h1>
+<!-- ページ名があればツールバーに表示し、ホーム等では従来のロゴ表記に
+         フォールバックする（モック 01〜13 のトップバー準拠） -->
+    @if (pageTitle()) {
+        <h1 class="tw-text-lg tw-font-bold md:tw-text-2xl">
+            {{ pageTitle() }}
+        </h1>
+    } @else {
+        <h1
+            class="tw-font-[Quicksand,sans-serif] tw-text-lg tw-font-normal md:tw-text-2xl"
+        >
+            Sotetsu Lab.
+        </h1>
+    }
     <div class="tw-grow"></div>
     @if (isLoggedIn()) {
         <div>

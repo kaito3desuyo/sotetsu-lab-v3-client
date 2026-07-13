@@ -1,0 +1,230 @@
+@let stationTime = stationId() | findById: { array: trip().times, propertyName: 'stationId' };
+
+<div
+    class="tw-flex tw-min-w-0 tw-flex-col tw-gap-1 tw-rounded tw-p-1.5 hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.06]"
+>
+    <!-- 1段目: 分 + 種別バッジ + 行先 -->
+    <div
+        class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-1.5 tw-gap-y-0.5"
+    >
+        <a
+            matRipple
+            class="tw-rounded tw-text-2xl tw-font-bold tw-leading-none tw-tabular-nums tw-no-underline"
+            [ngStyle]="{
+                color:
+                    trip().tripClassId
+                    | findById
+                        : {
+                              array: tripClasses(),
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassColor',
+                          },
+            }"
+            [routerLink]="[
+                '/timetable/all-line',
+                {
+                    calendar_id: calendarId(),
+                    trip_direction: trip().tripDirection,
+                    trip_block_id: trip().tripBlockId,
+                },
+            ]"
+        >
+            @if (!stationTime?.departureTime && stationTime?.arrivalTime) {
+                <span class="tw-underline">
+                    {{
+                        stationTime.arrivalTime
+                            | dateFns: { format: 'mm', parseFormat: 'HH:mm:ss' }
+                    }}
+                </span>
+            }
+
+            @if (stationTime?.departureTime) {
+                <span class="tw-no-underline">
+                    {{
+                        stationTime.departureTime
+                            | dateFns: { format: 'mm', parseFormat: 'HH:mm:ss' }
+                    }}
+                </span>
+            }
+        </a>
+
+        <span
+            class="tw-inline-block tw-shrink-0 tw-rounded tw-px-1.5 tw-py-0.5 tw-text-xs tw-font-bold tw-leading-tight tw-text-white"
+            [style.background-color]="
+                trip().tripClassId
+                    | findById
+                        : {
+                              array: tripClasses(),
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassColor',
+                          }
+            "
+        >
+            {{
+                trip().tripClassId
+                    | findById
+                        : {
+                              array: tripClasses(),
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassName',
+                          }
+                    | antiBrackets
+                    | tripClassBaseName
+            }}
+        </span>
+
+        <span class="tw-min-w-0 tw-truncate tw-text-sm tw-leading-tight">
+            {{
+                trip()
+                    | timetableStationFindLastStopStation
+                    | findById
+                        : {
+                              array: stations(),
+                              propertyName: 'stationId',
+                              outputPropertyName: 'stationName',
+                          }
+            }}
+        </span>
+    </div>
+
+    <!-- 2段目: 列車番号 + 運用番号チップ + 充当編成番号 -->
+    <div
+        class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1.5 tw-text-xs tw-leading-tight tw-text-grey-600"
+    >
+        <span>{{ trip().tripNumber }}</span>
+
+        @if (trip().tripOperationLists.length !== 0) {
+            <app-operation-number-tag
+                [operationNumber]="
+                    trip().tripOperationLists[0].operationId
+                        | findById
+                            : {
+                                  array: operations(),
+                                  propertyName: 'operationId',
+                                  outputPropertyName: 'operationNumber',
+                              }
+                "
+                [link]="[
+                    '/operation',
+                    'route-diagram',
+                    { operation_id: trip().tripOperationLists[0].operationId },
+                ]"
+            ></app-operation-number-tag>
+
+            @if (showCurrentFormation()) {
+                <span>
+                    @if (
+                        trip().tripOperationLists[0].operationId
+                            | findById
+                                : {
+                                      array: operations(),
+                                      propertyName: 'operationId',
+                                      outputPropertyName: 'operationNumber',
+                                  }
+                            | findById
+                                : {
+                                      array: operationSightingTimeCrossSections(),
+                                      propertyName:
+                                          'expectedSighting.operation.operationNumber',
+                                      outputPropertyName:
+                                          'expectedSighting.formation.formationNumber',
+                                  }
+                    ) {
+                        {{
+                            trip().tripOperationLists[0].operationId
+                                | findById
+                                    : {
+                                          array: operations(),
+                                          propertyName: 'operationId',
+                                          outputPropertyName: 'operationNumber',
+                                      }
+                                | findById
+                                    : {
+                                          array: operationSightingTimeCrossSections(),
+                                          propertyName:
+                                              'expectedSighting.operation.operationNumber',
+                                          outputPropertyName:
+                                              'expectedSighting.formation.formationNumber',
+                                      }
+                        }}{{
+                            (trip().tripOperationLists[0].operationId
+                                | findById
+                                    : {
+                                          array: operations(),
+                                          propertyName: 'operationId',
+                                          outputPropertyName: 'operationNumber',
+                                      }
+                                | findById
+                                    : {
+                                          array: operationSightingTimeCrossSections(),
+                                          propertyName:
+                                              'expectedSighting.operation.operationNumber',
+                                          outputPropertyName:
+                                              'latestSighting.sightingTime',
+                                      }
+                                | calculateDayCountFromToday) !== 0
+                                ? '?'
+                                : ''
+                        }}
+                    } @else {
+                        不明
+                    }
+                </span>
+            }
+        }
+    </div>
+
+    <!-- 3段目: 同一tripBlock内の他列車情報 -->
+    @for (
+        otherTrip of trip() | timetableStationFindOtherTripsInSameTripBlock;
+        track otherTrip.tripId
+    ) {
+        <div class="tw-text-[11px] tw-leading-tight tw-text-grey-500">
+            ⬎
+            {{
+                (otherTrip.times | minBy: { propertyName: 'stopSequence' })
+                    .stationId
+                    | findById
+                        : {
+                              array: stations(),
+                              propertyName: 'stationId',
+                              outputPropertyName: 'stationName',
+                          }
+            }}から{{
+                (otherTrip.times | maxBy: { propertyName: 'stopSequence' })
+                    .stationId
+                    | findById
+                        : {
+                              array: stations(),
+                              propertyName: 'stationId',
+                              outputPropertyName: 'stationName',
+                          }
+            }}まで（
+            <span
+                [ngStyle]="{
+                    color:
+                        otherTrip.tripClassId
+                        | findById
+                            : {
+                                  array: tripClasses(),
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassColor',
+                              },
+                }"
+            >
+                {{
+                    otherTrip.tripClassId
+                        | findById
+                            : {
+                                  array: tripClasses(),
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassName',
+                              }
+                        | antiBrackets
+                        | tripClassBaseName
+                }}
+            </span>
+            {{ otherTrip.tripNumber }}）
+        </div>
+    }
+</div>

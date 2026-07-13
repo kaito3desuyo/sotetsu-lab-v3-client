@@ -13,6 +13,35 @@
     >
         <h2 class="mat-h2 !tw-m-0">駅別時刻表</h2>
 
+        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
+            <mat-form-field class="tw-w-32">
+                <mat-label>駅</mat-label>
+                <mat-select
+                    [value]="stationId()"
+                    (valueChange)="onStationChange($event)"
+                >
+                    @for (station of stationOptions(); track station.stationId) {
+                        <mat-option [value]="station.stationId">
+                            {{ station.stationName }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="tw-w-40">
+                <mat-label>ダイヤ</mat-label>
+                <mat-select
+                    [value]="calendarId()"
+                    (valueChange)="onCalendarChange($event)"
+                >
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+
         <mat-button-toggle-group
             [value]="tripDirection()"
             (change)="onDirectionChange($event.value)"

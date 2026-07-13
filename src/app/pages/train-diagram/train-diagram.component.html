@@ -24,18 +24,28 @@
         [showCurrentTimeCursor]="isTodaySelected()"
     ></app-train-diagram-legend>
 
-    <app-train-diagram-chart
-        [stations]="stationAxisStations()"
-        [axis]="stationAxis()"
-        [routeIdsByStation]="routeIdsByStation()"
-        [tripBlocksByDirection]="filteredTripBlocksByDirection()"
-        [windowStartHour]="windowStartHour()"
-        [pxPerMinute]="pxPerMinute()"
-        [selectedTripId]="selectedTripId()"
-        [isTodaySelected]="isTodaySelected()"
-        (tripSelected)="onTripSelected($event)"
-        (tripActivated)="onTripActivated($event)"
-    ></app-train-diagram-chart>
+<!-- trip-blocks バルク取得（数 MB）中はチャートが白紙に見えるため、
+         ロード完了まで本文を出さず中央スピナーを表示する（20-design-ui.md §4） -->
+    @if (isLoading()) {
+        <div
+            class="tw-flex tw-flex-1 tw-items-center tw-justify-center tw-py-16"
+        >
+            <app-loading></app-loading>
+        </div>
+    } @else {
+        <app-train-diagram-chart
+            [stations]="stationAxisStations()"
+            [axis]="stationAxis()"
+            [routeIdsByStation]="routeIdsByStation()"
+            [tripBlocksByDirection]="filteredTripBlocksByDirection()"
+            [windowStartHour]="windowStartHour()"
+            [pxPerMinute]="pxPerMinute()"
+            [selectedTripId]="selectedTripId()"
+            [isTodaySelected]="isTodaySelected()"
+            (tripSelected)="onTripSelected($event)"
+            (tripActivated)="onTripActivated($event)"
+        ></app-train-diagram-chart>
+    }
 
     @if (selectedTripInfo(); as info) {
         <app-train-diagram-info-panel

@@ -1,33 +1,59 @@
-<div class="tw-overflow-x-auto">
-    <mat-chip-listbox
-        class="tw-list-none"
-        [class.filter-chips-single]="isSingle()"
-        [multiple]="mode() === 'multiple'"
-        [value]="listboxValue()"
-        (change)="onChange($event)"
+<div class="tw-relative">
+    <div
+        #scroller
+        class="tw-overflow-x-auto"
+        (scroll)="updateScrollIndicators()"
     >
-        @for (group of groupedOptions(); track group.group) {
-            @if (hasGroups() && group.group) {
-                <span
-                    class="tw-mt-1 tw-w-full tw-pl-2 tw-text-xs tw-font-bold tw-text-grey-600"
-                >
-                    {{ group.group }}
-                </span>
+        <mat-chip-listbox
+            class="tw-list-none"
+            [class.filter-chips-single]="isSingle()"
+            [class.filter-chips-scroll]="scrollMode()"
+            [multiple]="mode() === 'multiple'"
+            [value]="listboxValue()"
+            (change)="onChange($event)"
+        >
+            @for (group of groupedOptions(); track group.group) {
+                @if (hasGroups() && group.group) {
+                    <span
+                        class="tw-mt-1 tw-w-full tw-pl-2 tw-text-xs tw-font-bold tw-text-grey-600"
+                    >
+                        {{ group.group }}
+                    </span>
+                }
+                @for (option of group.options; track option.value) {
+                    <mat-chip-option
+                        [value]="option.value"
+                        [disabled]="option.disabled ?? false"
+                        [style.background-color]="option.color ?? null"
+                    >
+                        <!-- R-4: 単一選択は ✓ でなく選択中チップの ● マーカーで表す
+                             （全チップに付けると箇条書きの点に見えるため選択中のみ） -->
+                        @if (isSingle() && isSelectedValue(option.value)) {
+                            <span class="tw-mr-1" aria-hidden="true">●</span>
+                        }
+                        {{ option.label }}
+                    </mat-chip-option>
+                }
             }
-            @for (option of group.options; track option.value) {
-                <mat-chip-option
-                    [value]="option.value"
-                    [disabled]="option.disabled ?? false"
-                    [style.background-color]="option.color ?? null"
-                >
-                    <!-- R-4: 単一選択は ✓ でなく選択中チップの ● マーカーで表す
-                         （全チップに付けると箇条書きの点に見えるため選択中のみ） -->
-                    @if (isSingle() && isSelectedValue(option.value)) {
-                        <span class="tw-mr-1" aria-hidden="true">●</span>
-                    }
-                    {{ option.label }}
-                </mat-chip-option>
-            }
-        }
-    </mat-chip-listbox>
+        </mat-chip-listbox>
+    </div>
+
+    <!-- scrollMode: 見切れ方向を示す薄い矢印インジケータ（mockup-05）。
+         装飾のみ（クリック不可）なので pointer-events を切る -->
+    @if (scrollMode() && canScrollLeft()) {
+        <span
+            class="filter-chips-arrow tw-pointer-events-none tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-bg-gradient-to-r tw-from-white tw-to-transparent tw-pr-3 tw-text-xs tw-text-grey-500"
+            aria-hidden="true"
+        >
+            ◀
+        </span>
+    }
+    @if (scrollMode() && canScrollRight()) {
+        <span
+            class="filter-chips-arrow tw-pointer-events-none tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-bg-gradient-to-l tw-from-white tw-to-transparent tw-pl-3 tw-text-xs tw-text-grey-500"
+            aria-hidden="true"
+        >
+            ▶
+        </span>
+    }
 </div>

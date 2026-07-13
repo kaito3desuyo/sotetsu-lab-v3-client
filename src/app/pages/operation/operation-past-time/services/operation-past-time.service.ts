@@ -60,15 +60,25 @@ export class OperationPastTimeService {
                 tap((formations: FormationDetailsDto[]) => {
                     const agencies = this.#agencyListStateQuery.agencies;
                     OperationPastTimeStore.setFormations(
-                        [...formations].sort(
-                            (a, b) =>
+                        [...formations].sort((a, b) => {
+                            const agencyDiff =
                                 agencies.findIndex(
                                     (v) => v.agencyId === a.agencyId,
                                 ) -
                                 agencies.findIndex(
                                     (v) => v.agencyId === b.agencyId,
-                                ),
-                        ),
+                                );
+                            if (agencyDiff !== 0) {
+                                return agencyDiff;
+                            }
+                            // 会社内は編成番号の数値順（API 返却順のままだと
+                            // 東急・相鉄の一部で番号が前後するため）。
+                            return (a.formationNumber ?? '').localeCompare(
+                                b.formationNumber ?? '',
+                                undefined,
+                                { numeric: true },
+                            );
+                        }),
                     );
                 }),
                 map(() => undefined),

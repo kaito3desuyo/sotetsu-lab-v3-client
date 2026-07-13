@@ -1,27 +1,26 @@
-<div class="tw-h-9 tw-w-9 tw-rounded-full tw-bg-white tw-text-sm">
-    <div
-        class="tw-h-full tw-w-full tw-rounded-full"
-        [style.background-color]="bgColor()"
-        [class.tw-border]="borderEnabled()"
-        [class.tw-border-solid]="borderEnabled()"
-        [style.border-color]="borderColor()"
+<!-- 角型タグ（mockup 準拠。群色地・黒文字・可変幅）。無効化時は赤枠（borderEnabled）。 -->
+<div
+    class="tw-inline-flex tw-h-7 tw-min-w-9 tw-items-center tw-justify-center tw-rounded tw-text-sm tw-leading-none"
+    [style.background-color]="bgColor()"
+    [class.tw-border-2]="borderEnabled()"
+    [class.tw-border-solid]="borderEnabled()"
+    [style.border-color]="borderColor()"
+>
+    <a
+        class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded tw-px-1.5 tw-text-black"
+        [class.tw-no-underline]="textStyle() !== 'underline'"
+        [class.tw-font-bold]="textStyle() === 'bold'"
+        [class.tw-underline]="textStyle() === 'underline'"
+        [class.hover:tw-bg-grey-500]="link() !== undefined"
+        [class.hover:tw-bg-opacity-20]="link() !== undefined"
+        [routerLink]="link()"
+        [matContextMenuTriggerFor]="menu"
+        [matContextMenuTriggerDisabled]="
+            contextMenus() === undefined || contextMenus()?.length === 0
+        "
     >
-        <a
-            class="tw-flex tw-h-full tw-w-full tw-items-center tw-justify-center tw-rounded-full tw-text-black"
-            [class.tw-no-underline]="textStyle() !== 'underline'"
-            [class.tw-font-bold]="textStyle() === 'bold'"
-            [class.tw-underline]="textStyle() === 'underline'"
-            [class.hover:tw-bg-grey-500]="link() !== undefined"
-            [class.hover:tw-bg-opacity-20]="link() !== undefined"
-            [routerLink]="link()"
-            [matContextMenuTriggerFor]="menu"
-            [matContextMenuTriggerDisabled]="
-                contextMenus() === undefined || contextMenus()?.length === 0
-            "
-        >
-            {{ text() }}
-        </a>
-    </div>
+        {{ text() }}
+    </a>
 </div>
 
 <mat-menu #menu="matMenu">

@@ -3,6 +3,7 @@
         <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">所属会社</p>
         <app-filter-chips
             mode="multiple"
+            [scrollMode]="true"
             [options]="agencyOptions()"
             [selected]="selectedAgencyIds()"
             (selectedChange)="onAgencyChange($event)"
@@ -12,6 +13,7 @@
         <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">運用群</p>
         <app-filter-chips
             mode="multiple"
+            [scrollMode]="true"
             [options]="groupOptions()"
             [selected]="selectedGroupNames()"
             (selectedChange)="onGroupChange($event)"

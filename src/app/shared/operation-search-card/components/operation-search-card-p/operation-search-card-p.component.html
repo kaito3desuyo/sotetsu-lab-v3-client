@@ -17,55 +17,67 @@
             </a>
             <a matRipple routerLink="/operation/past-time"> 過去の運用情報 </a>
             <h3>運用表／運用行路図</h3>
-            <mat-form-field>
-                <mat-label>ダイヤ</mat-label>
-                <mat-select
-                    [value]="calendarId()"
-                    (valueChange)="selectCalendarId.emit($event)"
+            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                <mat-form-field class="tw-flex-grow">
+                    <mat-label>ダイヤ</mat-label>
+                    <mat-select
+                        [value]="calendarId()"
+                        (valueChange)="selectCalendarId.emit($event)"
+                    >
+                        @for (calendar of calendars(); track calendar.calendarId) {
+                            <mat-option [value]="calendar.calendarId">
+                                {{
+                                    calendar.startDate
+                                        | dateFns
+                                            : {
+                                                  format: 'yyyy年MM月dd日改正',
+                                                  parseFormat: 'yyyy-MM-dd',
+                                              }
+                                }}
+                                {{ calendar.calendarName }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <button
+                    type="button"
+                    mat-stroked-button
+                    color="primary"
+                    [disabled]="!calendarId()"
+                    (click)="clickSearchOperationTable.emit(calendarId())"
                 >
-                    @for (calendar of calendars(); track calendar.calendarId) {
-                        <mat-option [value]="calendar.calendarId">
-                            {{
-                                calendar.startDate
-                                    | dateFns
-                                        : {
-                                              format: 'yyyy年MM月dd日改正',
-                                              parseFormat: 'yyyy-MM-dd',
-                                          }
-                            }}
-                            {{ calendar.calendarName }}
-                        </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>運用番号</mat-label>
-                <mat-select
-                    [value]="operationId()"
-                    (valueChange)="selectOperationId.emit($event)"
-                >
-                    <mat-option [value]="null">選択しない</mat-option>
+                    運用表
+                </button>
+            </div>
+            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                <mat-form-field class="tw-flex-grow">
+                    <mat-label>運用番号</mat-label>
+                    <mat-select
+                        [value]="operationId()"
+                        (valueChange)="selectOperationId.emit($event)"
+                    >
+                        <mat-option [value]="null">選択しない</mat-option>
 
-                    @for (
-                        operation of operations();
-                        track operation.operationId
-                    ) {
-                        <mat-option [value]="operation.operationId">
-                            {{ operation.operationNumber }}運
-                        </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
+                        @for (
+                            operation of operations();
+                            track operation.operationId
+                        ) {
+                            <mat-option [value]="operation.operationId">
+                                {{ operation.operationNumber }}運
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <button
+                    type="button"
+                    mat-stroked-button
+                    color="primary"
+                    [disabled]="!operationId()"
+                    (click)="clickSearchRouteDiagram.emit(operationId())"
+                >
+                    行路図
+                </button>
+            </div>
         </div>
     </section>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
-            type="button"
-            color="primary"
-            mat-raised-button
-            (click)="clickSearch.emit()"
-        >
-            検索
-        </button>
-    </footer>
 </article>

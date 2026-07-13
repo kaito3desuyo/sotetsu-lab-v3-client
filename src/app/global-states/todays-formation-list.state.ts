@@ -59,7 +59,17 @@ export class TodaysFormationListStateQuery {
                 const agencies = this.#agencyListStateQuery.agencies;
                 const getIndex = (agencyId: string) =>
                     agencies.findIndex((v) => v.agencyId === agencyId);
-                return getIndex(a.agencyId) - getIndex(b.agencyId);
+                const agencyDiff = getIndex(a.agencyId) - getIndex(b.agencyId);
+                if (agencyDiff !== 0) {
+                    return agencyDiff;
+                }
+                // 会社内は編成番号の数値順（API 返却順のままだと東急・相鉄の
+                // 一部で番号が前後するため）。
+                return (a.formationNumber ?? '').localeCompare(
+                    b.formationNumber ?? '',
+                    undefined,
+                    { numeric: true },
+                );
             }),
         ),
     );

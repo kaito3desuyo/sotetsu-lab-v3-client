@@ -23,6 +23,14 @@
     ></app-train-location-clock>
 
     <div class="tw-flex-1 tw-overflow-y-auto tw-p-3 max-sm:tw-px-1">
-        <app-train-location-line [rows]="rows()"></app-train-location-line>
+        <!-- trip-blocks バルク取得（数 MB）中は駅軸が白紙に見えるため、
+             ロード完了まで本文を出さず中央スピナーを表示する（20-design-ui.md §4） -->
+        @if (isLoading()) {
+            <div class="tw-flex tw-justify-center tw-py-16">
+                <app-loading></app-loading>
+            </div>
+        } @else {
+            <app-train-location-line [rows]="rows()"></app-train-location-line>
+        }
     </div>
 </div>

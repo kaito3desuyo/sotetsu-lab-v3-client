@@ -50,7 +50,12 @@ export class OperationSearchCardCComponent {
     readonly onSelectedOperationId$ = new Subject<
         OperationDetailsDto['operationId']
     >();
-    readonly onClickedSearch$ = new Subject<void>();
+    readonly onClickOperationTable$ = new Subject<
+        CalendarDetailsDto['calendarId']
+    >();
+    readonly onClickRouteDiagram$ = new Subject<
+        OperationDetailsDto['operationId']
+    >();
 
     constructor() {
         this.#state.hold(
@@ -76,23 +81,26 @@ export class OperationSearchCardCComponent {
             },
         );
 
-        this.#state.hold(this.onClickedSearch$.asObservable(), () => {
-            const calendarId = this.#operationSearchCardStateQuery.calendarId;
-            const operationId = this.#operationSearchCardStateQuery.operationId;
+        this.#state.hold(
+            this.onClickOperationTable$.asObservable(),
+            (calendarId) => {
+                if (calendarId) {
+                    this.#operationSearchCardService.emitSearchOperationTableEvent(
+                        calendarId,
+                    );
+                }
+            },
+        );
 
-            if (operationId) {
-                this.#operationSearchCardService.emitSearchOperationRouteDiagramEvent(
-                    operationId,
-                );
-                return;
-            }
-
-            if (calendarId) {
-                this.#operationSearchCardService.emitSearchOperationTableEvent(
-                    calendarId,
-                );
-                return;
-            }
-        });
+        this.#state.hold(
+            this.onClickRouteDiagram$.asObservable(),
+            (operationId) => {
+                if (operationId) {
+                    this.#operationSearchCardService.emitSearchOperationRouteDiagramEvent(
+                        operationId,
+                    );
+                }
+            },
+        );
     }
 }

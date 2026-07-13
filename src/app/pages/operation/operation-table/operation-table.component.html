@@ -12,22 +12,15 @@
         <h2 class="mat-h2 !tw-m-0">運用表</h2>
     </header>
 
-    @if (calendar()) {
-        <div
-            class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-rounded tw-px-4 tw-shadow-md"
-            [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
-        >
-            <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-                {{ calendar().startDate | date: 'yyyy年MM月dd日' }} 改正
-                {{ calendar().calendarName }}
-            </h3>
-        </div>
-    }
-
+    <!-- モック 03: 青バナーを廃し、ダイヤ select＋ジャンプ select を常設。
+         改正日・ダイヤ名は select の選択値として表示を維持する -->
     <div>
         <app-operation-table-filter
             [operationTrips]="operationTrips()"
+            [calendars]="calendars()"
+            [calendarId]="calendarId()"
             (jump)="onJump($event)"
+            (calendarChange)="onCalendarChange($event)"
         ></app-operation-table-filter>
     </div>
 
@@ -48,6 +41,11 @@
                         [stations]="stations()"
                         [tripClasses]="tripClasses()"
                         [calendarId]="calendarId()"
+                        [groupName]="
+                            groupNameFor(
+                                operationTrip.operation.operationNumber
+                            )
+                        "
                     ></app-operation-table-card>
                 }
             }

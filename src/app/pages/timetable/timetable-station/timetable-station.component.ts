@@ -7,11 +7,15 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdsenseModule } from 'ng2-adsense';
 import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
@@ -33,7 +37,9 @@ TimetableStationStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatButtonToggleModule,
+        MatFormFieldModule,
         MatProgressBarModule,
+        MatSelectModule,
         AdsenseModule,
         EmptyStateComponent,
         TimetableStationTableComponent,
@@ -52,6 +58,16 @@ export class TimetableStationComponent {
     );
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
+    );
+    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+
+    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
+        initialValue: [],
+    });
+    readonly stationOptions = toSignal(
+        this.#routeStationListStateQuery.stations$,
+        { initialValue: [] },
     );
 
     readonly tripDirectionEnum = ETripDirection;
@@ -87,10 +103,45 @@ export class TimetableStationComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const calendarId = paramMap.get('calendar_id');
-                const stationId = paramMap.get('station_id');
+                const rawCalendarId = paramMap.get('calendar_id');
+                const rawStationId = paramMap.get('station_id');
+                const rawTripDirection = paramMap.get('trip_direction');
+
+                // 既定表示（mockup-01）: パラメータ不足時は 横浜 / 今日のダイヤ / 上り へ補完
+                if (!rawCalendarId || !rawStationId || rawTripDirection === null) {
+                    const defaultCalendarId =
+                        rawCalendarId ??
+                        this.#todaysCalendarListStateQuery.todaysCalendarId;
+                    const defaultStationId =
+                        rawStationId ??
+                        this.stationOptions().find(
+                            (s) => s.stationName === '横浜',
+                        )?.stationId ??
+                        this.stationOptions()[0]?.stationId;
+                    const defaultTripDirection =
+                        rawTripDirection ?? String(ETripDirection.INBOUND);
+
+                    if (defaultCalendarId && defaultStationId) {
+                        this.#router.navigate(
+                            [
+                                'timetable',
+                                'station',
+                                {
+                                    calendar_id: defaultCalendarId,
+                                    station_id: defaultStationId,
+                                    trip_direction: defaultTripDirection,
+                                },
+                            ],
+                            { replaceUrl: true },
+                        );
+                        return;
+                    }
+                }
+
+                const calendarId = rawCalendarId;
+                const stationId = rawStationId;
                 const tripDirection = Number(
-                    paramMap.get('trip_direction'),
+                    rawTripDirection,
                 ) as ETripDirection;
 
                 TimetableStationStore.setCalendarId(calendarId);
@@ -154,6 +205,34 @@ export class TimetableStationComponent {
         }
 
         TimetableStationStore.disableLoading();
+    }
+
+    onStationChange(stationId: string): void {
+        if (stationId === this.stationId()) return;
+        const navigation = this.#router.navigate([
+            'timetable',
+            'station',
+            {
+                calendar_id: this.calendarId(),
+                station_id: stationId,
+                trip_direction: this.tripDirection(),
+            },
+        ]);
+        this.#handleNavigationResult(navigation);
+    }
+
+    onCalendarChange(calendarId: string): void {
+        if (calendarId === this.calendarId()) return;
+        const navigation = this.#router.navigate([
+            'timetable',
+            'station',
+            {
+                calendar_id: calendarId,
+                station_id: this.stationId(),
+                trip_direction: this.tripDirection(),
+            },
+        ]);
+        this.#handleNavigationResult(navigation);
     }
 
     onDirectionChange(tripDirection: ETripDirection): void {

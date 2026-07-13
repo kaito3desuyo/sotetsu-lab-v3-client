@@ -12,39 +12,34 @@
     </header>
     <div class="tw-flex-grow">
         <div class="tw-flex tw-flex-col tw-gap-4">
-            <div class="tw-flex tw-flex-row tw-gap-4">
-                <mat-form-field appearance="fill" class="tw-w-28">
-                    <mat-label>所属</mat-label>
-                    <mat-select formControlName="agencyId">
-                        @for (agency of agencies(); track agency.agencyId) {
-                            <mat-option [value]="agency.agencyId">
-                                {{ agency.agencyName }}
-                            </mat-option>
-                        }
-                    </mat-select>
-                    @if (sightingForm.get('agencyId').hasError('required')) {
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
+            <mat-form-field appearance="fill" class="tw-w-full">
+                <mat-label>所属</mat-label>
+                <mat-select formControlName="agencyId">
+                    @for (agency of agencies(); track agency.agencyId) {
+                        <mat-option [value]="agency.agencyId">
+                            {{ agency.agencyName }}
+                        </mat-option>
                     }
-                </mat-form-field>
+                </mat-select>
+                @if (sightingForm.get('agencyId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
 
-                <mat-form-field appearance="fill" class="tw-flex-grow">
-                    <mat-label>編成番号 or 車両番号</mat-label>
-                    <input
-                        matInput
-                        formControlName="formationOrVehicleNumber"
-                    />
-                    <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
-                    @if (
-                        sightingForm
-                            .get('formationOrVehicleNumber')
-                            .hasError('required')
-                    ) {
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
-                    }
-                </mat-form-field>
-            </div>
+            <mat-form-field appearance="fill" class="tw-w-full">
+                <mat-label>編成番号 or 車両番号</mat-label>
+                <input matInput formControlName="formationOrVehicleNumber" />
+                <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
+                @if (
+                    sightingForm
+                        .get('formationOrVehicleNumber')
+                        .hasError('required')
+                ) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="fill" class="tw-w-full">
                 <mat-label>運用番号</mat-label>
                 <input matInput formControlName="operationNumber" />
                 <mat-hint> 休車の場合は'100'を入力 </mat-hint>
@@ -53,19 +48,19 @@
                 }
             </mat-form-field>
 
-            <mat-radio-group
-                class="tw-flex tw-flex-row tw-gap-4"
+            <mat-button-toggle-group
                 formControlName="timeSetting"
+                aria-label="時刻設定切替"
             >
-                <mat-radio-button value="currentTime">
+                <mat-button-toggle value="currentTime">
                     現在時刻
-                </mat-radio-button>
-                <mat-radio-button value="specifiedTime">
+                </mat-button-toggle>
+                <mat-button-toggle value="specifiedTime">
                     指定時刻
-                </mat-radio-button>
-            </mat-radio-group>
+                </mat-button-toggle>
+            </mat-button-toggle-group>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field appearance="fill" class="tw-w-full">
                 <mat-label>目撃時刻</mat-label>
                 <input type="time" matInput formControlName="sightingTime" />
                 <mat-hint>

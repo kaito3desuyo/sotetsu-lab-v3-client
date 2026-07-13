@@ -18,6 +18,7 @@ import { interval, lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
 import { estimatePositions } from 'src/app/shared/train-position.util';
 import { TrainLocationClockComponent } from './components/train-location-clock/train-location-clock.component';
 import { TrainLocationControllerComponent } from './components/train-location-controller/train-location-controller.component';
@@ -48,6 +49,7 @@ TrainLocationStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        LoadingComponent,
         TrainLocationControllerComponent,
         TrainLocationClockComponent,
         TrainLocationLineComponent,
@@ -289,20 +291,28 @@ export class TrainLocationComponent {
     }): Promise<void> {
         TrainLocationStore.enableLoading();
 
-        if (!this.#firstLoadDone()) {
-            await lastValueFrom(this.#trainLocationService.fetchTripClasses());
+        // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
+        // （finally が無いと isLoading が true のまま回復不能になる）
+        try {
+            if (!this.#firstLoadDone()) {
+                await lastValueFrom(
+                    this.#trainLocationService.fetchTripClasses(),
+                );
+            }
+            if (flags.refetchTripBlocks) {
+                await lastValueFrom(
+                    this.#trainLocationService.fetchTripBlocks(),
+                );
+            }
+            if (flags.refetchStationAxis) {
+                await lastValueFrom(
+                    this.#trainLocationService.fetchStationAxis(),
+                );
+            }
+            this.#firstLoadDone.set(true);
+        } finally {
+            TrainLocationStore.disableLoading();
         }
-        if (flags.refetchTripBlocks) {
-            await lastValueFrom(this.#trainLocationService.fetchTripBlocks());
-        }
-        if (flags.refetchStationAxis) {
-            await lastValueFrom(
-                this.#trainLocationService.fetchStationAxis(),
-            );
-        }
-
-        TrainLocationStore.disableLoading();
-        this.#firstLoadDone.set(true);
     }
 
     onCalendarIdChange(calendarId: string): void {

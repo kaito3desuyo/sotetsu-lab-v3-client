@@ -147,6 +147,14 @@ body {
     text-align: center;
 }
 
+// R-8: :focus-visible の可視化（キーボード操作時のフォーカスリングを保証する）。
+// Material コンポーネントが :focus 系セレクタで outline: none を返す場合があるため
+// !important で確実に上書きする。
+:focus-visible {
+    outline: 2px solid #001556 !important;
+    outline-offset: 2px !important;
+}
+
 .weekday {
     background: rgb(66, 139, 202) !important;
 }

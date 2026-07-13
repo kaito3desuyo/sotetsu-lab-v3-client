@@ -31,13 +31,17 @@
                 }
             </mat-form-field>
 
-            <mat-radio-group
-                class="tw-flex tw-flex-row tw-gap-4"
+            <mat-button-toggle-group
                 formControlName="tripDirection"
+                aria-label="上り・下り切替"
             >
-                <mat-radio-button [value]="0">上り</mat-radio-button>
-                <mat-radio-button [value]="1">下り</mat-radio-button>
-            </mat-radio-group>
+                <mat-button-toggle [value]="tripDirectionEnum.INBOUND">
+                    上り
+                </mat-button-toggle>
+                <mat-button-toggle [value]="tripDirectionEnum.OUTBOUND">
+                    下り
+                </mat-button-toggle>
+            </mat-button-toggle-group>
 
             <mat-slide-toggle formControlName="searchByStation">
                 駅を指定して検索する
@@ -65,11 +69,12 @@
             </mat-form-field>
         </form>
     </div>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
+    <footer class="tw-flex tw-flex-col">
         <button
             type="button"
-            color="primary"
+            color="accent"
             mat-raised-button
+            class="!tw-h-11 tw-w-full"
             [disabled]="form.invalid"
             (click)="clickSearch.emit(form.value)"
         >

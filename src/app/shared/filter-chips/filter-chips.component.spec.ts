@@ -162,4 +162,118 @@ describe('FilterChipsComponent', () => {
             expect(isChipSelected(1)).toBe(true);
         });
     });
+
+    describe('scrollMode', () => {
+        /** スクロールコンテナに幅・スクロール量をモックして scroll イベントを発火する */
+        function mockScrollMetrics(metrics: {
+            scrollLeft: number;
+            clientWidth: number;
+            scrollWidth: number;
+        }): void {
+            const scroller: HTMLElement =
+                fixture.nativeElement.querySelector('.tw-overflow-x-auto');
+            Object.defineProperty(scroller, 'clientWidth', {
+                value: metrics.clientWidth,
+                configurable: true,
+            });
+            Object.defineProperty(scroller, 'scrollWidth', {
+                value: metrics.scrollWidth,
+                configurable: true,
+            });
+            Object.defineProperty(scroller, 'scrollLeft', {
+                value: metrics.scrollLeft,
+                configurable: true,
+                writable: true,
+            });
+            scroller.dispatchEvent(new Event('scroll'));
+            fixture.detectChanges();
+        }
+
+        beforeEach(() => {
+            fixture.componentRef.setInput('scrollMode', true);
+            fixture.detectChanges();
+        });
+
+        it('チップセットに 1 行表示用の filter-chips-scroll クラスを付与する', () => {
+            const listbox: HTMLElement =
+                fixture.nativeElement.querySelector('mat-chip-listbox');
+            expect(listbox.classList).toContain('filter-chips-scroll');
+        });
+
+        it('既定（scrollMode 未指定）では filter-chips-scroll クラスを付与しない（折返し表示を維持）', () => {
+            fixture.componentRef.setInput('scrollMode', false);
+            fixture.detectChanges();
+
+            const listbox: HTMLElement =
+                fixture.nativeElement.querySelector('mat-chip-listbox');
+            expect(listbox.classList).not.toContain('filter-chips-scroll');
+            expect(
+                fixture.nativeElement.querySelector('.filter-chips-arrow'),
+            ).toBeNull();
+        });
+
+        it('右にはみ出しているときは右矢印のみ表示する', () => {
+            mockScrollMetrics({
+                scrollLeft: 0,
+                clientWidth: 200,
+                scrollWidth: 500,
+            });
+
+            const arrows = fixture.nativeElement.querySelectorAll(
+                '.filter-chips-arrow',
+            ) as NodeListOf<HTMLElement>;
+            expect(arrows.length).toBe(1);
+            expect(arrows[0].textContent).toContain('▶');
+        });
+
+        it('中間位置では左右両方の矢印を表示する', () => {
+            mockScrollMetrics({
+                scrollLeft: 100,
+                clientWidth: 200,
+                scrollWidth: 500,
+            });
+
+            const arrows = fixture.nativeElement.querySelectorAll(
+                '.filter-chips-arrow',
+            ) as NodeListOf<HTMLElement>;
+            expect(arrows.length).toBe(2);
+            expect(arrows[0].textContent).toContain('◀');
+            expect(arrows[1].textContent).toContain('▶');
+        });
+
+        it('右端までスクロールすると左矢印のみ表示する', () => {
+            mockScrollMetrics({
+                scrollLeft: 300,
+                clientWidth: 200,
+                scrollWidth: 500,
+            });
+
+            const arrows = fixture.nativeElement.querySelectorAll(
+                '.filter-chips-arrow',
+            ) as NodeListOf<HTMLElement>;
+            expect(arrows.length).toBe(1);
+            expect(arrows[0].textContent).toContain('◀');
+        });
+
+        it('はみ出しが無いときは矢印を表示しない', () => {
+            mockScrollMetrics({
+                scrollLeft: 0,
+                clientWidth: 500,
+                scrollWidth: 500,
+            });
+
+            expect(
+                fixture.nativeElement.querySelector('.filter-chips-arrow'),
+            ).toBeNull();
+        });
+
+        it('チップ選択の挙動は scrollMode でも変わらない', () => {
+            const emitted: unknown[][] = [];
+            component.selectedChange.subscribe((value) => emitted.push(value));
+
+            clickChip(0);
+
+            expect(emitted[0]).toEqual(['a']);
+        });
+    });
 });

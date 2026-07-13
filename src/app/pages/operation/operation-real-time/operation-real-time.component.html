@@ -20,15 +20,11 @@
 
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示 -->
     <div class="tw-hidden md:tw-flex md:tw-flex-row md:tw-gap-16">
-        <div
-            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
-        >
+        <div class="md:tw-flex-1 md:tw-self-start">
             <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
         </div>
 
-        <div
-            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
-        >
+        <div class="md:tw-flex-1 md:tw-self-start">
             <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
         </div>
     </div>
@@ -37,16 +33,12 @@
     <div class="md:tw-hidden">
         <mat-tab-group>
             <mat-tab label="運用順">
-                <div
-                    class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md"
-                >
+                <div class="tw-pt-3">
                     <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
                 </div>
             </mat-tab>
             <mat-tab label="編成順">
-                <div
-                    class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md"
-                >
+                <div class="tw-pt-3">
                     <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
                 </div>
             </mat-tab>

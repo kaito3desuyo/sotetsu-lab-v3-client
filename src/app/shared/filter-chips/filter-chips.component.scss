@@ -1,5 +1,9 @@
-// 横スクロール可能な1行に収める（20-design-ui.md §5.2）
-::ng-deep .mdc-evolution-chip-set__chips {
+// scrollMode（.filter-chips-scroll）: チップを折り返さず横スクロール可能な
+// 1 行に収める（mockup-05 全線時刻表の路線チップ）。
+// Material 本体の `.mdc-evolution-chip-set__chips { flex-flow: wrap }`
+// (0,1,0) に CSS 順序へ依存せず勝てるよう、クラス付きの (0,2,0) で上書きする。
+// 既定（折返し表示）のスタイルは変更しない。
+::ng-deep .filter-chips-scroll .mdc-evolution-chip-set__chips {
     flex-wrap: nowrap;
 }
 
