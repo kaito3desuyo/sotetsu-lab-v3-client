@@ -1,16 +1,16 @@
 <div class="tw-mx-auto tw-flex tw-max-w-2xl tw-flex-col">
     <div
-        class="tw-mb-2 tw-flex tw-flex-row tw-justify-between tw-px-1 tw-text-xs tw-font-bold tw-text-grey-600"
+        class="tw-mb-1 tw-flex tw-flex-row tw-justify-between tw-px-1 tw-text-xs tw-font-bold tw-text-grey-600"
     >
-        <span>▲ 上り（在線 左側）</span>
-        <span>下り（在線 右側） ▼</span>
+        <span>◀ 上り（{{ originStationName() }}方面・在線 左側）</span>
+        <span>在線 右側・下り ▶</span>
     </div>
 
     @for (row of rows(); track rowKey(row)) {
         @if (row.kind === 'station') {
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 <div
-                    class="tw-flex tw-min-h-11 tw-flex-1 tw-flex-col tw-items-end tw-gap-1 tw-py-1"
+                    class="tw-flex tw-min-h-5 tw-flex-1 tw-flex-col tw-items-end tw-gap-1"
                 >
                     @if (row.leftCards.length > 1) {
                         <button
@@ -72,7 +72,7 @@
                 </div>
 
                 <div
-                    class="tw-flex tw-min-h-11 tw-flex-1 tw-flex-col tw-items-start tw-gap-1 tw-py-1"
+                    class="tw-flex tw-min-h-5 tw-flex-1 tw-flex-col tw-items-start tw-gap-1"
                 >
                     @if (row.rightCards.length > 1) {
                         <button
@@ -150,15 +150,24 @@
                 </div>
             }
         } @else {
-            <div class="tw-flex tw-h-20 tw-flex-row">
+            <!-- 駅間ゾーン: topProgress をそのまま top% にすると近接進捗の複数在線が
+                 重なるため、resolveBetweenRowLayout で衝突回避済みの px 位置を使う（98 G8）。
+                 密集時は行自体を伸長する（heightPx）ため、ページの縦スクロールで全件に辿り着ける。 -->
+            <div
+                class="tw-flex tw-flex-row"
+                [style.height.px]="betweenLayout(row).heightPx"
+            >
                 <div class="tw-relative tw-flex-1">
-                    @for (entry of row.leftCards; track entry.card.tripId) {
+                    @for (
+                        positioned of betweenLayout(row).left;
+                        track positioned.entry.card.tripId
+                    ) {
                         <div
-                            class="tw-absolute tw-right-0 tw--translate-y-1/2"
-                            [style.top.%]="entry.topProgress * 100"
+                            class="tw-absolute tw-right-0"
+                            [style.top.px]="positioned.topPx"
                         >
                             <app-train-location-card
-                                [card]="entry.card"
+                                [card]="positioned.entry.card"
                                 status="between"
                             ></app-train-location-card>
                         </div>
@@ -166,13 +175,16 @@
                 </div>
                 <div class="tw-w-0.5 tw-shrink-0 tw-bg-primary-900"></div>
                 <div class="tw-relative tw-flex-1">
-                    @for (entry of row.rightCards; track entry.card.tripId) {
+                    @for (
+                        positioned of betweenLayout(row).right;
+                        track positioned.entry.card.tripId
+                    ) {
                         <div
-                            class="tw-absolute tw-left-0 tw--translate-y-1/2"
-                            [style.top.%]="entry.topProgress * 100"
+                            class="tw-absolute tw-left-0"
+                            [style.top.px]="positioned.topPx"
                         >
                             <app-train-location-card
-                                [card]="entry.card"
+                                [card]="positioned.entry.card"
                                 status="between"
                             ></app-train-location-card>
                         </div>

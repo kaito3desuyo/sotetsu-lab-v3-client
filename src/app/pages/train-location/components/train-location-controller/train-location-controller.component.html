@@ -27,15 +27,13 @@
             </mat-select>
         </mat-form-field>
 
-        <mat-button-toggle-group
-            class="tw-self-center"
+        <!-- G0-3: 現在時刻/時刻指定は全幅2セグメントトグル（shared/segment-toggle） -->
+        <app-segment-toggle
+            class="tw-w-full sm:tw-w-48"
+            [options]="modeOptions"
             [value]="mode()"
-            (change)="onModeChange($event.value)"
-            aria-label="時刻モード"
-        >
-            <mat-button-toggle value="now">現在時刻</mat-button-toggle>
-            <mat-button-toggle value="specified">時刻指定</mat-button-toggle>
-        </mat-button-toggle-group>
+            (valueChange)="onModeChange($event)"
+        ></app-segment-toggle>
     </div>
 
     <div>

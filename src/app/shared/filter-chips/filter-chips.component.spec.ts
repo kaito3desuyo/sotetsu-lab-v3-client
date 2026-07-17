@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { FilterChipOption } from './filter-chip-option.type';
@@ -107,6 +108,23 @@ describe('FilterChipsComponent', () => {
         it('● マーカーを表示しない', () => {
             const text: string = fixture.nativeElement.textContent;
             expect(text).not.toContain('●');
+        });
+
+        it('既定の selectedColor（primary）が全チップに適用される（98 G0-2: 紺塗り選択）', () => {
+            const chipOptions = fixture.debugElement.queryAll(
+                By.css('mat-chip-option'),
+            );
+            expect(chipOptions[0].nativeElement).toHaveClass('mat-primary');
+        });
+
+        it('selectedColor に accent を指定するとオレンジ塗り選択用のクラスが適用される', () => {
+            fixture.componentRef.setInput('selectedColor', 'accent');
+            fixture.detectChanges();
+
+            const chipOptions = fixture.debugElement.queryAll(
+                By.css('mat-chip-option'),
+            );
+            expect(chipOptions[0].nativeElement).toHaveClass('mat-accent');
         });
     });
 

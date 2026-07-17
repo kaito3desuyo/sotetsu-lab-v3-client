@@ -1,7 +1,7 @@
 <article class="tw-bg-white tw-shadow-md">
     <header
         class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+        [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
             {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
@@ -11,43 +11,38 @@
         </h3>
     </header>
     <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
-        <div class="tw-h-full tw-max-h-[60vh] tw-overflow-auto">
+        <div class="tw-w-full tw-overflow-x-auto">
             <div class="tw-sticky tw-top-0 tw-z-10 tw-w-fit tw-bg-white">
-                <svg
-                    [attr.width]="50 + stations().length * 60 + 10 + 'px'"
-                    [attr.height]="120 + 'px'"
-                >
+                <svg [attr.width]="svgWidth()" [attr.height]="HEADER_HEIGHT">
+                    <ng-container
+                        *ngTemplateOutlet="stationHeaderTpl"
+                    ></ng-container>
                     <ng-container
                         *ngTemplateOutlet="
-                            new_stations;
-                            context: { stations: stations() }
+                            boundaryTpl;
+                            context: { offset: 0, height: HEADER_HEIGHT }
                         "
                     ></ng-container>
                 </svg>
             </div>
             <div>
-                <svg
-                    [attr.width]="50 + stations().length * 60 + 10 + 'px'"
-                    [attr.height]="tripOperationLists().length * 40 + 15 + 'px'"
-                >
+                <svg [attr.width]="svgWidth()" [attr.height]="bodyHeight()">
                     <ng-container
                         *ngTemplateOutlet="
-                            new_stationsBar;
-                            context: {
-                                stations: stations(),
-                                tripOperationLists: tripOperationLists(),
-                                offset: 0,
-                            }
+                            gridlinesTpl;
+                            context: { offset: 0, height: bodyHeight() }
                         "
                     ></ng-container>
                     <ng-container
                         *ngTemplateOutlet="
-                            new_trips;
-                            context: {
-                                stations: stations(),
-                                tripOperationLists: tripOperationLists(),
-                                offset: 0,
-                            }
+                            boundaryTpl;
+                            context: { offset: 0, height: bodyHeight() }
+                        "
+                    ></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="
+                            bandsTpl;
+                            context: { offset: 0 }
                         "
                     ></ng-container>
                 </svg>
@@ -55,9 +50,10 @@
         </div>
 
         <div>
-            <button mat-raised-button color="primary" (click)="downloadAsPng()">
-                画像としてダウンロードする
-            </button>
+            <app-button
+                variant="secondary"
+                (buttonClick)="downloadAsPng()"
+            >画像としてダウンロードする</app-button>
         </div>
 
         @if (drawingSVGForOutput()) {
@@ -69,35 +65,34 @@
                             'Yu Gothic Medium', sans-serif;
                     "
                     #svgElement
-                    [attr.width]="50 + stations().length * 60 + 10 + 'px'"
-                    [attr.height]="
-                        tripOperationLists().length * 40 + 160 - 20 + 'px'
-                    "
+                    [attr.width]="svgWidth()"
+                    [attr.height]="HEADER_HEIGHT + bodyHeight()"
                 >
                     <ng-container
-                        *ngTemplateOutlet="
-                            new_stations;
-                            context: { stations: stations() }
-                        "
+                        *ngTemplateOutlet="stationHeaderTpl"
                     ></ng-container>
                     <ng-container
                         *ngTemplateOutlet="
-                            new_stationsBar;
+                            gridlinesTpl;
                             context: {
-                                stations: stations(),
-                                tripOperationLists: tripOperationLists(),
-                                offset: 130,
+                                offset: HEADER_HEIGHT,
+                                height: bodyHeight(),
                             }
                         "
                     ></ng-container>
                     <ng-container
                         *ngTemplateOutlet="
-                            new_trips;
+                            boundaryTpl;
                             context: {
-                                stations: stations(),
-                                tripOperationLists: tripOperationLists(),
-                                offset: 130,
+                                offset: 0,
+                                height: HEADER_HEIGHT + bodyHeight(),
                             }
+                        "
+                    ></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="
+                            bandsTpl;
+                            context: { offset: HEADER_HEIGHT }
                         "
                     ></ng-container>
                 </svg>
@@ -106,392 +101,205 @@
     </div>
 </article>
 
-<ng-template #new_stations let-stations="stations">
+<!-- G6: 駅名ヘッダー（縦書き圧縮＝1 文字ずつ縦積み。390px フィットのため列間隔は動的） -->
+<ng-template #stationHeaderTpl>
     <svg>
-        @for (station of stations; track station.stationId; let i = $index) {
-            <g font-size="16">
-                <text
-                    [attr.x]="
-                        i * 60 +
-                        ',' +
-                        i * 60 +
-                        ',' +
-                        i * 60 +
-                        ',' +
-                        i * 60 +
-                        ',' +
-                        i * 60 +
-                        ',' +
-                        i * 60
-                    "
-                    y="16, 16, 16, 16, 16, 16"
-                    dx="50, 50, 50, 50, 50, 50"
-                    dy="0, 20, 40, 60, 80, 100"
-                    fill="black"
-                >
-                    {{
-                        station.stationName
-                            | operationRouteDiagramFormatStationName
-                            | padding: { num: 6 }
-                    }}
-                </text>
-            </g>
+        @for (col of stationColumns(); track col.stationId) {
+            <text
+                [attr.x]="col.xList"
+                y="0,0,0,0,0,0"
+                dy="0,13,26,39,52,65"
+                font-size="11"
+                fill="#001556"
+            >{{
+                col.stationName
+                    | operationRouteDiagramFormatStationName
+                    | padding: { num: STATION_LABEL_CHARS }
+            }}</text>
         }
     </svg>
 </ng-template>
 
-<ng-template
-    #new_stationsBar
-    let-stations="stations"
-    let-tripOperationLists="tripOperationLists"
-    let-offset="offset"
->
+<!-- G6: 駅ごとの薄い縦グリッド線（判読補助） -->
+<ng-template #gridlinesTpl let-offset="offset" let-height="height">
     <svg>
-        @for (station of stations; track station.stationId; let i = $index) {
-            <g font-size="16">
-                <line
-                    [attr.x1]="i * 60 + 50 + 8"
-                    [attr.x2]="i * 60 + 50 + 8"
-                    [attr.y1]="offset"
-                    [attr.y2]="offset + tripOperationLists.length * (40 + 16)"
-                    stroke="black"
-                    stroke-dasharray="10 7"
-                    stroke-opacity="0.12"
-                ></line>
-            </g>
+        @for (col of stationColumns(); track col.stationId) {
+            <line
+                [attr.x1]="col.x"
+                [attr.x2]="col.x"
+                [attr.y1]="offset"
+                [attr.y2]="offset + height"
+                stroke="black"
+                stroke-dasharray="4 4"
+                stroke-opacity="0.1"
+            ></line>
         }
     </svg>
 </ng-template>
 
-<ng-template
-    #new_trips
-    let-stations="stations"
-    let-tripOperationLists="tripOperationLists"
-    let-offset="offset"
->
+<!-- G6: 路線境界の二重縦罫線（データ駆動: borderAfterStation を再利用） -->
+<ng-template #boundaryTpl let-offset="offset" let-height="height">
     <svg>
-        @for (
-            tripOperationList of tripOperationLists;
-            track tripOperationList.tripOperationListId;
-            let i = $index
-        ) {
-            <g>
-                <ng-template
-                    #time
-                    let-type="type"
-                    let-stationIndex="stationIndex"
-                    let-time="time"
-                >
-                    <svg>
-                        <text
-                            class="tw-tabular-nums"
-                            font-size="14"
-                            [attr.x]="
-                                stationIndex
-                                    ? stationIndex * 60 +
-                                      60 +
-                                      (type === 'left'
-                                          ? -47.5
-                                          : type === 'right'
-                                            ? 12.5
-                                            : 0)
-                                    : 0
-                            "
-                            [attr.y]="offset + 30 + i * 40"
-                            fill="black"
-                        >
-                            {{
-                                time
-                                    | dateFns
-                                        : {
-                                              format: 'HHmm',
-                                              parseFormat: 'HH:mm:ss',
-                                          }
-                            }}
-                        </text>
-                    </svg>
-                </ng-template>
+        @for (x of boundaryXs(); track x) {
+            <line
+                [attr.x1]="x - 1.5"
+                [attr.x2]="x - 1.5"
+                [attr.y1]="offset"
+                [attr.y2]="offset + height"
+                stroke="#001556"
+                stroke-width="1"
+            ></line>
+            <line
+                [attr.x1]="x + 1.5"
+                [attr.x2]="x + 1.5"
+                [attr.y1]="offset"
+                [attr.y2]="offset + height"
+                stroke="#001556"
+                stroke-width="1"
+            ></line>
+        }
+    </svg>
+</ng-template>
 
-                <ng-template #tripNumber>
-                    <svg>
-                        <text
-                            class="tw-cursor-pointer"
-                            font-size="14"
-                            fill="black"
-                            [attr.x]="
-                                (((tripOperationList.startTime.stationId
-                                    | findById
-                                        : {
-                                              array: stations,
-                                              propertyName: 'stationId',
-                                              outputPropertyName: 'index',
-                                          }) +
-                                    (tripOperationList.endTime.stationId
-                                        | findById
-                                            : {
-                                                  array: stations,
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName: 'index',
-                                              })) /
-                                    2 +
-                                    1) *
-                                    60 -
-                                (tripOperationList.trip.tripNumber.length / 2) *
-                                    9
-                            "
-                            [attr.y]="offset + 30 + i * 40 - 10"
-                            (click)="
-                                clickNavigateTimetable.emit({
-                                    tripBlockId:
-                                        tripOperationList.trip.tripBlockId,
-                                    tripDirection:
-                                        tripOperationList.trip.tripDirection,
-                                })
-                            "
-                        >
-                            {{ tripOperationList.trip.tripNumber }}
-                        </text>
-                    </svg>
-                </ng-template>
-
-                <ng-template #line>
+<!-- G6: 行路帯本体。種別×塗り言語（優等=紺塗り白字/快速等=白地種別色枠/回送=点線灰）・
+     両端の発着時刻・出庫/入庫のオレンジタグ+○/△・列間の接続線を描画する。 -->
+<ng-template #bandsTpl let-offset="offset">
+    <svg>
+        @for (row of bandRows(); track row.tripOperationListId; let i = $index) {
+            <g
+                class="tw-cursor-pointer"
+                (click)="onClickBand(row)"
+            >
+                @if (row.style === 'nonRevenue') {
                     <line
-                        [attr.x1]="
-                            (tripOperationList.startTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'index',
-                                      }) *
-                                60 +
-                            50 +
-                            8
-                        "
-                        [attr.x2]="
-                            (tripOperationList.endTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'index',
-                                      }) *
-                                60 +
-                            50 +
-                            8
-                        "
-                        [attr.y1]="i * 40 + offset + 30 - 5"
-                        [attr.y2]="i * 40 + offset + 30 - 5"
-                        dy="16"
-                        [attr.stroke]="
-                            tripOperationList.trip.tripClass.tripClassColor
-                        "
-                        [attr.stroke-dasharray]="
-                            tripOperationList.trip.tripClass.tripClassName ===
-                            '回送'
-                                ? '5 3'
-                                : ''
-                        "
-                        stroke-width="2px"
+                        [attr.x1]="row.leftX"
+                        [attr.x2]="row.rightX"
+                        [attr.y1]="row.centerY + offset"
+                        [attr.y2]="row.centerY + offset"
+                        stroke="#9e9e9e"
+                        stroke-width="2"
+                        stroke-dasharray="5 3"
                     ></line>
-                </ng-template>
-
-                <ng-template #depot>
-                    @if (tripOperationList.trip.depotOut) {
-                        <circle
-                            [attr.cx]="
-                                (tripOperationList.startTime.stationId
-                                    | findById
-                                        : {
-                                              array: stations,
-                                              propertyName: 'stationId',
-                                              outputPropertyName: 'index',
-                                          }) *
-                                    60 +
-                                60 -
-                                2
-                            "
-                            [attr.cy]="offset + 30 + i * 40 - 5"
-                            r="8"
-                            stroke="black"
-                            fill="white"
-                            stroke-width="2px"
-                        ></circle>
-                    }
-                    <!--  -->
-                    @if (tripOperationList.trip.depotIn) {
-                        <polygon
-                            [attr.points]="
-                                (tripOperationList.endTime.stationId
-                                    | findById
-                                        : {
-                                              array: stations,
-                                              propertyName: 'stationId',
-                                              outputPropertyName: 'index',
-                                          }) *
-                                    60 +
-                                60 -
-                                2 +
-                                ',' +
-                                (offset + 30 + i * 40 - 12) +
-                                ' ' +
-                                ((tripOperationList.endTime.stationId
-                                    | findById
-                                        : {
-                                              array: stations,
-                                              propertyName: 'stationId',
-                                              outputPropertyName: 'index',
-                                          }) *
-                                    60 +
-                                    60 -
-                                    10) +
-                                ',' +
-                                (offset + 30 + i * 40 + 1) +
-                                ' ' +
-                                ((tripOperationList.endTime.stationId
-                                    | findById
-                                        : {
-                                              array: stations,
-                                              propertyName: 'stationId',
-                                              outputPropertyName: 'index',
-                                          }) *
-                                    60 +
-                                    60 +
-                                    6) +
-                                ',' +
-                                (offset + 30 + i * 40 + 1)
-                            "
-                            stroke="black"
-                            fill="white"
-                            stroke-width="2px"
-                        ></polygon>
-                    }
-                </ng-template>
-
-                <ng-template #connector>
-                    <line
-                        [attr.x1]="
-                            (tripOperationList.endTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'index',
-                                      }) *
-                                60 +
-                            50 +
-                            8
-                        "
-                        [attr.x2]="
-                            (tripOperationList.endTime.stationId
-                                | findById
-                                    : {
-                                          array: stations,
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'index',
-                                      }) *
-                                60 +
-                            50 +
-                            8
-                        "
-                        [attr.y1]="i * 40 + offset + 30 - 5"
-                        [attr.y2]="(i + 1) * 40 + offset + 30 - 5"
-                        dy="16"
-                        stroke="black"
-                        stroke-width="1px"
-                    ></line>
-                </ng-template>
-
-                @switch (tripOperationList.trip.tripDirection) {
-                    <!--  -->
-                    @case (tripDirectionEnum.INBOUND) {
-                        <ng-container
-                            *ngTemplateOutlet="
-                                time;
-                                context: {
-                                    type: 'left',
-                                    stationIndex:
-                                        (tripOperationList.startTime.stationId
-                                        | findById
-                                            : {
-                                                  array: stations,
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName: 'index',
-                                              }),
-                                    time: tripOperationList.startTime
-                                        .departureTime,
-                                }
-                            "
-                        ></ng-container>
-
-                        <ng-container
-                            *ngTemplateOutlet="
-                                time;
-                                context: {
-                                    type: 'right',
-                                    stationIndex:
-                                        (tripOperationList.endTime.stationId
-                                        | findById
-                                            : {
-                                                  array: stations,
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName: 'index',
-                                              }),
-                                    time: tripOperationList.endTime.arrivalTime,
-                                }
-                            "
-                        ></ng-container>
-                    }
-                    <!--  -->
-                    @case (tripDirectionEnum.OUTBOUND) {
-                        <ng-container
-                            *ngTemplateOutlet="
-                                time;
-                                context: {
-                                    type: 'left',
-                                    stationIndex:
-                                        (tripOperationList.endTime.stationId
-                                        | findById
-                                            : {
-                                                  array: stations,
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName: 'index',
-                                              }),
-                                    time: tripOperationList.endTime.arrivalTime,
-                                }
-                            "
-                        ></ng-container>
-
-                        <ng-container
-                            *ngTemplateOutlet="
-                                time;
-                                context: {
-                                    type: 'right',
-                                    stationIndex:
-                                        (tripOperationList.startTime.stationId
-                                        | findById
-                                            : {
-                                                  array: stations,
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName: 'index',
-                                              }),
-                                    time: tripOperationList.startTime
-                                        .departureTime,
-                                }
-                            "
-                        ></ng-container>
-                    }
-                    <!--  -->
+                } @else {
+                    <!-- G6: 旅客列車は種別を問わず白地+種別色(tripClassColor)の
+                         角丸枠で統一。種別の区別は枠色/文字色のみ（モック04実測）。 -->
+                    <rect
+                        [attr.x]="row.leftX"
+                        [attr.y]="row.bandTop + offset"
+                        [attr.width]="row.rightX - row.leftX"
+                        [attr.height]="BAND_HEIGHT"
+                        rx="6"
+                        fill="#ffffff"
+                        [attr.stroke]="row.color"
+                        stroke-width="2"
+                    ></rect>
                 }
 
-                <ng-container *ngTemplateOutlet="tripNumber"></ng-container>
+                <text
+                    text-anchor="middle"
+                    [attr.x]="(row.leftX + row.rightX) / 2"
+                    [attr.y]="row.centerY + offset + 4"
+                    font-size="10"
+                    font-weight="700"
+                    [attr.fill]="
+                        row.style === 'nonRevenue' ? '#757575' : row.color
+                    "
+                >{{ row.label }}</text>
 
-                <ng-container *ngTemplateOutlet="line"></ng-container>
+                @if (row.leftTime) {
+                    <text
+                        class="tw-tabular-nums"
+                        text-anchor="end"
+                        [attr.x]="row.leftX - 2"
+                        [attr.y]="row.bandTop + offset + BAND_HEIGHT + 12"
+                        font-size="10"
+                        fill="black"
+                    >{{
+                        row.leftTime
+                            | dateFns
+                                : { format: 'HHmm', parseFormat: 'HH:mm:ss' }
+                    }}</text>
+                }
+                @if (row.rightTime) {
+                    <text
+                        class="tw-tabular-nums"
+                        text-anchor="start"
+                        [attr.x]="row.rightX + 2"
+                        [attr.y]="row.bandTop + offset + BAND_HEIGHT + 12"
+                        font-size="10"
+                        fill="black"
+                    >{{
+                        row.rightTime
+                            | dateFns
+                                : { format: 'HHmm', parseFormat: 'HH:mm:ss' }
+                    }}</text>
+                }
 
-                <ng-container *ngTemplateOutlet="depot"></ng-container>
+                @if (row.depotOut) {
+                    <circle
+                        [attr.cx]="row.depotOutX"
+                        [attr.cy]="row.centerY + offset"
+                        r="6"
+                        stroke="#001556"
+                        fill="white"
+                        stroke-width="2"
+                    ></circle>
+                    <rect
+                        [attr.x]="row.depotOutX - 17"
+                        [attr.y]="row.bandTop + offset - 16"
+                        width="34"
+                        height="14"
+                        rx="3"
+                        fill="#ee7b35"
+                    ></rect>
+                    <text
+                        text-anchor="middle"
+                        [attr.x]="row.depotOutX"
+                        [attr.y]="row.bandTop + offset - 6"
+                        font-size="9"
+                        fill="white"
+                    >出庫</text>
+                }
+                @if (row.depotIn) {
+                    <polygon
+                        [attr.points]="
+                            (row.depotInX - 6) +
+                            ',' + (row.centerY + offset - 5) + ' ' +
+                            (row.depotInX + 6) +
+                            ',' + (row.centerY + offset - 5) + ' ' +
+                            row.depotInX +
+                            ',' + (row.centerY + offset + 6)
+                        "
+                        stroke="#001556"
+                        fill="white"
+                        stroke-width="2"
+                    ></polygon>
+                    <rect
+                        [attr.x]="row.depotInX - 17"
+                        [attr.y]="row.bandTop + offset - 16"
+                        width="34"
+                        height="14"
+                        rx="3"
+                        fill="#ee7b35"
+                    ></rect>
+                    <text
+                        text-anchor="middle"
+                        [attr.x]="row.depotInX"
+                        [attr.y]="row.bandTop + offset - 6"
+                        font-size="9"
+                        fill="white"
+                    >入庫</text>
+                }
 
-                @if (!tripOperationList.trip.depotIn) {
-                    <ng-container *ngTemplateOutlet="connector"></ng-container>
+                @if (!row.depotIn && bandRows()[i + 1]) {
+                    <line
+                        [attr.x1]="row.depotInX"
+                        [attr.x2]="row.depotInX"
+                        [attr.y1]="row.centerY + offset"
+                        [attr.y2]="bandRows()[i + 1].centerY + offset"
+                        stroke="black"
+                        stroke-width="1"
+                    ></line>
                 }
             </g>
         }

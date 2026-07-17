@@ -58,38 +58,49 @@ export class OperationRealTimeComponent {
 
     async fetchData(): Promise<void> {
         OperationRealTimeStore.enableLoading();
-        await lastValueFrom(this.#operationRealTimeService.fetchRoutes());
-        await lastValueFrom(this.#operationRealTimeService.fetchStations());
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchTripClasses(),
-        );
-        await lastValueFrom(this.#operationRealTimeService.fetchCalendar());
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchOperations(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchFormations(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchSightingHistories(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchCurrentPositions(),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchOperationGroups(),
-        );
-        OperationRealTimeStore.disableLoading();
+        try {
+            // 運用群は他フェッチに依存しないため最初に取得する。
+            // 旧実装は目撃・在線の大量リクエストの後（チェーン末尾）だったため、
+            // チェーン途中の 1 失敗や離脱で群チップが「休」のみに退化していた（98 §G2 A3）
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchOperationGroups(),
+            );
+            await lastValueFrom(this.#operationRealTimeService.fetchRoutes());
+            await lastValueFrom(this.#operationRealTimeService.fetchStations());
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchTripClasses(),
+            );
+            await lastValueFrom(this.#operationRealTimeService.fetchCalendar());
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchOperations(),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchFormations(),
+            );
+            // 現在位置は operations にのみ依存するため、
+            // 目撃断面の大量リクエストより先に取得する（98 §G2 A4: 現在位置行の復旧）
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchCurrentPositions(),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchSightingHistories(),
+            );
 
-        if (firstLoading()) {
-            OperationRealTimeStore.setFinalUpdateTime();
-            firstLoading.set(false);
+            if (firstLoading()) {
+                OperationRealTimeStore.setFinalUpdateTime();
+                firstLoading.set(false);
+            }
+        } catch (error) {
+            console.error(error);
+            this.#notification.open('データの取得に失敗しました', 'OK');
+        } finally {
+            OperationRealTimeStore.disableLoading();
         }
     }
 

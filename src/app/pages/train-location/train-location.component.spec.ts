@@ -58,6 +58,8 @@ describe('TrainLocationComponent', () => {
         TrainLocationStore.setSelectedRouteId(null);
         TrainLocationStore.setMode('now');
         TrainLocationStore.setSpecifiedTime(null);
+        TrainLocationStore.setStationAxisStations([]);
+        TrainLocationStore.setTripBlocksByDirection({});
         TrainLocationStore.resetLoading();
     });
 
@@ -113,6 +115,24 @@ describe('TrainLocationComponent', () => {
         expect(content.classList).toContain('tw-p-3');
     });
 
+    it('免責文（R-7 短縮版）をページ最下部に常設表示する（ロード状態に依存しない）', () => {
+        // 通常時
+        fixture.detectChanges();
+        const footer: HTMLElement =
+            fixture.nativeElement.querySelector('footer');
+        expect(footer).toBeTruthy();
+        expect(footer.textContent).toContain(
+            'ダイヤ通りに走った場合の位置です',
+        );
+        expect(footer.textContent).toContain('リアルタイム運用情報');
+
+        // ロード中も消えない（常設）
+        TrainLocationStore.enableLoading();
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('footer')).toBeTruthy();
+        TrainLocationStore.disableLoading();
+    });
+
     it('ロード中は駅軸（本文）を出さず中央スピナーを表示する', () => {
         TrainLocationStore.enableLoading();
         fixture.detectChanges();
@@ -131,6 +151,22 @@ describe('TrainLocationComponent', () => {
             fixture.nativeElement.querySelector('app-train-location-line'),
         ).toBeTruthy();
         expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
+    });
+
+    it('G12: 在線列車が0本のとき、駅ラインを残したまま空文脈メッセージを重ねて表示する', () => {
+        // ロード完了・在線列車なし（tripBlocks 空 = positions 0）の状態。
+        TrainLocationStore.disableLoading();
+        fixture.detectChanges();
+
+        expect(component.hasNoTrainsInService()).toBe(true);
+        // 駅ライン（方位を示す有用コンテンツ）は消えず残る（情報削減禁止）
+        expect(
+            fixture.nativeElement.querySelector('app-train-location-line'),
+        ).toBeTruthy();
+        // 空文脈メッセージ（app-empty-state）が重ねて表示される
+        expect(
+            fixture.nativeElement.querySelector('app-empty-state'),
+        ).toBeTruthy();
     });
 
     it('fetchData: フェッチが reject しても isLoading が回復する（try/finally）', async () => {

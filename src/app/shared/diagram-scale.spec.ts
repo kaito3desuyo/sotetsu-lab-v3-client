@@ -3,6 +3,7 @@ import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto'
 import {
     buildSegmentMinutesMap,
     buildStationAxis,
+    enforceMinimumRowGap,
     stationToY,
     timeToX,
 } from './diagram-scale';
@@ -282,5 +283,80 @@ describe('buildStationAxis / stationToY', () => {
             'stA',
             'stB',
         ]);
+    });
+
+    it('接続駅の複製で生じる継ぎ目区間は、平均ではなく実測区間の最小値でフォールバックする（G7: 不自然な空白帯の解消）', () => {
+        // 本線 futamatagawa->hoshigaoka の実測は無し（フォールバック対象）。
+        // 既知区間は 1分（短距離）と 20分（優等の長距離通過）。
+        // 平均（10.5分）だと継ぎ目が不自然に間延びするため、最小値（1分）を使う。
+        const stations: RouteStationDto[] = [
+            makeStation('yokohama', 1),
+            makeStation('futamatagawa', 2),
+            makeStation('izumino1', 3),
+            makeStation('hoshigaoka', 4),
+        ];
+        const mainRoute = ['yokohama', 'futamatagawa', 'hoshigaoka'];
+        const izuminoRoute = ['futamatagawa', 'izumino1'];
+
+        const segmentMinutes = new Map<string, number>([
+            ['yokohama futamatagawa', 1],
+            ['futamatagawa izumino1', 20],
+        ]);
+
+        const axis = buildStationAxis(stations, segmentMinutes, [
+            mainRoute,
+            izuminoRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'yokohama',
+            'futamatagawa',
+            'izumino1',
+            'futamatagawa',
+            'hoshigaoka',
+        ]);
+        // 継ぎ目区間（izumino1 -> futamatagawa(複製)）は最小値 1分でフォールバックする
+        const junctionY = axis[3].y;
+        const izuminoY = axis[2].y;
+        expect(junctionY - izuminoY).toBe(1);
+    });
+});
+
+describe('enforceMinimumRowGap', () => {
+    it('最小間隔未満の区間のみ底上げする（広い区間はそのまま）', () => {
+        const entries = [
+            { stationId: 'st1', y: 0 },
+            { stationId: 'st2', y: 2 }, // 狭すぎる（2px）
+            { stationId: 'st3', y: 100 }, // 十分広い
+        ];
+
+        const result = enforceMinimumRowGap(entries, 20);
+
+        expect(result.map((e) => e.y)).toEqual([0, 20, 100]);
+    });
+
+    it('連続して狭い区間が続く場合も累積して底上げする', () => {
+        const entries = [
+            { stationId: 'st1', y: 0 },
+            { stationId: 'st2', y: 1 },
+            { stationId: 'st3', y: 2 },
+            { stationId: 'st4', y: 3 },
+        ];
+
+        const result = enforceMinimumRowGap(entries, 10);
+
+        expect(result.map((e) => e.y)).toEqual([0, 10, 20, 30]);
+    });
+
+    it('全区間が最小間隔以上ならそのまま返す', () => {
+        const entries = [
+            { stationId: 'st1', y: 0 },
+            { stationId: 'st2', y: 30 },
+            { stationId: 'st3', y: 60 },
+        ];
+
+        const result = enforceMinimumRowGap(entries, 10);
+
+        expect(result.map((e) => e.y)).toEqual([0, 30, 60]);
     });
 });

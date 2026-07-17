@@ -12,22 +12,58 @@
     </header>
     <div class="tw-flex-grow">
         <div class="tw-flex tw-flex-col tw-gap-4">
-            <mat-form-field appearance="fill" class="tw-w-full">
-                <mat-label>所属</mat-label>
-                <mat-select formControlName="agencyId">
-                    @for (agency of agencies(); track agency.agencyId) {
-                        <mat-option [value]="agency.agencyId">
-                            {{ agency.agencyName }}
-                        </mat-option>
+            <div class="tw-flex tw-flex-row tw-gap-4">
+                <mat-form-field class="tw-flex-1">
+                    <mat-label>所属</mat-label>
+                    <mat-select formControlName="agencyId">
+                        @for (agency of agencies(); track agency.agencyId) {
+                            <mat-option [value]="agency.agencyId">
+                                {{ agency.agencyName }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                    @if (sightingForm.get('agencyId').hasError('required')) {
+                        <mat-error> <strong>必須項目</strong>です </mat-error>
                     }
-                </mat-select>
-                @if (sightingForm.get('agencyId').hasError('required')) {
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
-                }
-            </mat-form-field>
+                </mat-form-field>
 
-            <mat-form-field appearance="fill" class="tw-w-full">
-                <mat-label>編成番号 or 車両番号</mat-label>
+                <mat-form-field class="tw-flex-1">
+                    <mat-label>運用番号</mat-label>
+                    <mat-select formControlName="operationNumber">
+                        @for (
+                            operation of operations();
+                            track operation.operationId
+                        ) {
+                            <mat-option [value]="operation.operationNumber">
+                                {{ operation.operationNumber }}
+                            </mat-option>
+                        }
+                        <mat-option value="100">100（休）</mat-option>
+                    </mat-select>
+                    @if (
+                        sightingForm
+                            .get('operationNumber')
+                            .hasError('required')
+                    ) {
+                        <mat-error> <strong>必須項目</strong>です </mat-error>
+                    }
+                </mat-form-field>
+            </div>
+
+            <app-segment-toggle
+                [options]="formationOrVehicleTypeOptions"
+                [value]="formationOrVehicleType()"
+                (valueChange)="onFormationOrVehicleTypeChange($event)"
+            ></app-segment-toggle>
+
+            <mat-form-field class="tw-w-full">
+                <mat-label>
+                    {{
+                        formationOrVehicleType() === 'formation'
+                            ? '編成番号'
+                            : '車両番号'
+                    }}
+                </mat-label>
                 <input matInput formControlName="formationOrVehicleNumber" />
                 <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
                 @if (
@@ -39,47 +75,37 @@
                 }
             </mat-form-field>
 
-            <mat-form-field appearance="fill" class="tw-w-full">
-                <mat-label>運用番号</mat-label>
-                <input matInput formControlName="operationNumber" />
-                <mat-hint> 休車の場合は'100'を入力 </mat-hint>
-                @if (sightingForm.get('operationNumber').hasError('required')) {
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
-                }
-            </mat-form-field>
+            <app-segment-toggle
+                [options]="timeSettingOptions"
+                [value]="timeSetting()"
+                (valueChange)="onTimeSettingChange($event)"
+            ></app-segment-toggle>
 
-            <mat-button-toggle-group
-                formControlName="timeSetting"
-                aria-label="時刻設定切替"
-            >
-                <mat-button-toggle value="currentTime">
-                    現在時刻
-                </mat-button-toggle>
-                <mat-button-toggle value="specifiedTime">
-                    指定時刻
-                </mat-button-toggle>
-            </mat-button-toggle-group>
+            @if (timeSetting() === 'specifiedTime') {
+                <mat-form-field class="tw-w-full">
+                    <mat-label>目撃時刻</mat-label>
+                    <input
+                        type="time"
+                        matInput
+                        formControlName="sightingTime"
+                    />
+                    @if (
+                        sightingForm.get('sightingTime').hasError('required')
+                    ) {
+                        <mat-error> <strong>必須項目</strong>です </mat-error>
+                    }
+                </mat-form-field>
+            }
 
-            <mat-form-field appearance="fill" class="tw-w-full">
-                <mat-label>目撃時刻</mat-label>
-                <input type="time" matInput formControlName="sightingTime" />
-                <mat-hint>
-                    当日分の入力は 04:00 ～ 現時刻（最大：翌03:59）まで
-                </mat-hint>
-                @if (sightingForm.get('sightingTime').hasError('required')) {
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
-                }
-            </mat-form-field>
+            <p class="tw-m-0 tw-text-sm tw-text-grey-700">
+                深夜帯の入力は 04:00 ～ 翌 03:59
+                を1営業日として扱う。「休」（運用番号 100）の投稿も可能。
+            </p>
         </div>
     </div>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
-            type="submit"
-            color="primary"
-            mat-raised-button
-            [disabled]="sightingForm.invalid"
-        >
-            送信
-        </button>
+    <footer class="tw-flex tw-flex-col">
+        <app-button type="submit" [disabled]="sightingForm.invalid">
+            投稿する
+        </app-button>
     </footer>
 </form>

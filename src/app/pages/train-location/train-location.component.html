@@ -30,7 +30,33 @@
                 <app-loading></app-loading>
             </div>
         } @else {
+            <!-- G12: 在線列車が0本でも駅ライン（方位を示す有用なコンテンツ）は
+                 残したまま、空文脈を知らせるメッセージを上に重ねる（情報削減禁止）。
+                 操作部（コントローラ/時計）は常に操作可能（C1 準拠）。 -->
+            @if (hasNoTrainsInService()) {
+                <app-empty-state
+                    icon="train"
+                    message="現在この路線を走行中の列車はありません"
+                    [subtitle]="emptyStateSubtitle()"
+                    [actionLabel]="emptyStateActionLabel()"
+                    (actionClick)="onEmptyStateAction()"
+                ></app-empty-state>
+            }
             <app-train-location-line [rows]="rows()"></app-train-location-line>
         }
     </div>
+
+    <!-- 免責文（N2 受け入れ条件・98 G8: 最下部固定で常設。文言は R-7 短縮版）。
+         操作部（collapsible-panel）内の免責はモバイルで折り畳まれると視界から
+         消えるため、折り畳み・ロード状態に依存しないページ最下部で常時表示する。 -->
+    <footer
+        class="tw-shrink-0 tw-border-0 tw-border-t tw-border-solid tw-border-grey-200 tw-bg-grey-50 tw-px-3 tw-py-2 tw-text-center tw-text-xs tw-text-grey-600"
+    >
+        ダイヤ通りに走った場合の位置です。実在線は
+        <a
+            routerLink="/operation/real-time"
+            class="tw-text-primary-500 tw-underline"
+            >リアルタイム運用情報</a
+        >へ。
+    </footer>
 </div>

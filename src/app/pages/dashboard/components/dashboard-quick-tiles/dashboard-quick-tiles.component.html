@@ -2,7 +2,11 @@
     @for (tile of tiles; track tile.title) {
         <a
             [routerLink]="tile.link"
-            class="tw-flex tw-flex-col tw-gap-2 tw-bg-primary-500 tw-p-4 tw-text-white tw-no-underline tw-shadow-md"
+            [class]="
+                tile.accent
+                    ? 'tw-flex tw-flex-col tw-gap-2 tw-bg-accent-500 tw-p-4 tw-text-white tw-no-underline tw-shadow-md'
+                    : 'tw-flex tw-flex-col tw-gap-2 tw-bg-primary-500 tw-p-4 tw-text-white tw-no-underline tw-shadow-md'
+            "
         >
             <mat-icon class="!tw-h-8 !tw-w-8 tw-text-[32px]">
                 {{ tile.icon }}

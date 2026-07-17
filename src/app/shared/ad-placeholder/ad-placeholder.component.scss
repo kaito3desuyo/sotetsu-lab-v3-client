@@ -1,0 +1,11 @@
+// G0-9: 広告崩壊時（localhost の AdSense 403 等）に高さが不定になるのを防ぐため、
+// 斜線パターンの背景を常設する（実広告はこの上に重なって描画される）。
+.ad-placeholder-stripes {
+    background-image: repeating-linear-gradient(
+        45deg,
+        #e0e0e0 0,
+        #e0e0e0 1px,
+        transparent 1px,
+        transparent 10px
+    );
+}

@@ -2,9 +2,5 @@
   display: block;
 }
 
-// R-5: 検索ボタンはオレンジ（accent）地 + 白文字。
-// オレンジ地の文字は 15px 以上 + bold のみ（AA コントラスト確保）
-button[mat-raised-button][color='accent'] {
-  --mat-button-protected-label-text-size: 15px;
-  --mat-button-protected-label-text-weight: 700;
-}
+// 検索ボタンは app-button（primary variant）に統一（98 G0-4）。
+// オレンジ地・15px 以上・bold は app-button.component.scss 側で担保する。

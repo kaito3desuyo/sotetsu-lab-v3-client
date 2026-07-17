@@ -1,7 +1,7 @@
 <article class="tw-bg-white tw-shadow-md">
     <header
         class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+        [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
             {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
@@ -12,9 +12,8 @@
         </h3>
     </header>
     <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
-        <div
-            class="tw-flex tw-max-h-[70vh] tw-flex-col tw-overflow-y-auto tw-overflow-x-hidden"
-        >
+        <!-- G5 と同方針: 内部縦スクロールは設けずページ全開で描画する（mockup-01） -->
+        <div class="tw-flex tw-flex-col">
             @for (
                 item of timetableData();
                 track item.day + ':' + item.hour;

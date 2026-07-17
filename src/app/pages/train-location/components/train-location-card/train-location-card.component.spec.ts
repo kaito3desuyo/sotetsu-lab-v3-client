@@ -36,15 +36,17 @@ describe('TrainLocationCardComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('status="stopped" のとき「停車中」を表示する', () => {
+    it('status="stopped" のとき「停車中」を表示し、進行方向矢印は表示しない（モック09準拠）', () => {
         fixture.componentRef.setInput('card', card());
         fixture.componentRef.setInput('status', 'stopped');
         fixture.detectChanges();
 
         expect(fixture.nativeElement.textContent).toContain('停車中');
+        expect(fixture.nativeElement.textContent).not.toContain('▲');
+        expect(fixture.nativeElement.textContent).not.toContain('▼');
     });
 
-    it('2段構成: 上段に種別・列車番号・行き先・運用番号、下段に矢印・所属会社・編成番号を表示する', () => {
+    it('2段構成（モック09準拠）: 上段に種別・行き先・運用番号、下段に列車番号・矢印・所属会社・編成番号を表示する', () => {
         fixture.componentRef.setInput(
             'card',
             card({
@@ -62,10 +64,11 @@ describe('TrainLocationCardComponent', () => {
 
         const [top, bottom] = rows;
         expect(top.textContent).toContain('各停');
-        expect(top.textContent).toContain('1234');
         expect(top.textContent).toContain('横浜 行');
         expect(top.textContent).toContain('運用54');
+        expect(top.textContent).not.toContain('1234');
 
+        expect(bottom.textContent).toContain('1234');
         expect(bottom.textContent).toContain('▲');
         expect(bottom.textContent).toContain('相模鉄道');
         expect(bottom.textContent).toContain('10708');
@@ -78,7 +81,7 @@ describe('TrainLocationCardComponent', () => {
         );
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('編成9999');
+        expect(fixture.nativeElement.textContent).toContain('9999');
         expect(fixture.nativeElement.textContent).not.toContain('相模鉄道');
     });
 
@@ -98,17 +101,22 @@ describe('TrainLocationCardComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('▼');
     });
 
-    it('formationNumber が無ければ「編成」表示を出さない', () => {
+    it('formationNumber が無ければ充当編成表示欄を出さない', () => {
         fixture.componentRef.setInput('card', card({ formationNumber: undefined }));
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).not.toContain('編成');
+        expect(
+            fixture.nativeElement.querySelector('span.tw-truncate.tw-font-bold.tw-text-grey-900'),
+        ).toBeNull();
     });
 
-    it('formationNumber があれば表示する', () => {
+    it('formationNumber があれば無加工の値をそのまま表示する', () => {
         fixture.componentRef.setInput('card', card({ formationNumber: '9999' }));
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('編成9999');
+        expect(fixture.nativeElement.textContent).toContain('9999');
+        expect(
+            fixture.nativeElement.querySelector('span.tw-truncate.tw-font-bold.tw-text-grey-900'),
+        ).not.toBeNull();
     });
 });

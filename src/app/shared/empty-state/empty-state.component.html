@@ -13,6 +13,11 @@
     <p class="tw-m-0 tw-text-base tw-font-bold tw-text-black">
         {{ message() }}
     </p>
+    @if (subtitle()) {
+        <p class="tw-m-0 tw-text-sm tw-text-grey-600">
+            {{ subtitle() }}
+        </p>
+    }
     @if (actionLabel()) {
         <button mat-flat-button color="primary" (click)="actionClick.emit()">
             {{ actionLabel() }}

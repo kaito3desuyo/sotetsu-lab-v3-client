@@ -12,10 +12,20 @@
             class="tw-flex tw-flex-col [&>*]:tw-mx-[-16px] [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100 [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal"
         >
             <h3>目撃情報</h3>
-            <a matRipple routerLink="/operation/real-time">
+            <a
+                matRipple
+                routerLink="/operation/real-time"
+                class="tw-text-primary-500 tw-underline"
+            >
                 リアルタイム運用情報
             </a>
-            <a matRipple routerLink="/operation/past-time"> 過去の運用情報 </a>
+            <a
+                matRipple
+                routerLink="/operation/past-time"
+                class="tw-text-primary-500 tw-underline"
+            >
+                過去の運用情報
+            </a>
             <h3>運用表／運用行路図</h3>
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 <mat-form-field class="tw-flex-grow">
@@ -39,15 +49,14 @@
                         }
                     </mat-select>
                 </mat-form-field>
-                <button
-                    type="button"
-                    mat-stroked-button
-                    color="primary"
+                <app-button
+                    variant="secondary"
+                    [fullWidth]="false"
                     [disabled]="!calendarId()"
-                    (click)="clickSearchOperationTable.emit(calendarId())"
+                    (buttonClick)="clickSearchOperationTable.emit(calendarId())"
                 >
                     運用表
-                </button>
+                </app-button>
             </div>
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 <mat-form-field class="tw-flex-grow">
@@ -68,15 +77,14 @@
                         }
                     </mat-select>
                 </mat-form-field>
-                <button
-                    type="button"
-                    mat-stroked-button
-                    color="primary"
+                <app-button
+                    variant="secondary"
+                    [fullWidth]="false"
                     [disabled]="!operationId()"
-                    (click)="clickSearchRouteDiagram.emit(operationId())"
+                    (buttonClick)="clickSearchRouteDiagram.emit(operationId())"
                 >
                     行路図
-                </button>
+                </app-button>
             </div>
         </div>
     </section>

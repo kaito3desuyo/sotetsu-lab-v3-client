@@ -87,9 +87,9 @@ export class OperationRealTimeOperationCardComponent {
     });
 
     /**
-     * 編成の「所属会社・形式」付記（例: 相鉄12000）を組み立てる（設計書 §5.2）。
-     * 「系/形」等の厳密表記は避け、会社名＋形式番号を連結するだけにする。
-     * formationNumber 文字列自体は加工しない。
+     * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
+     * 「10000系・相鉄」形式）。vehicle_type は素の形式番号（例: 10000）なので
+     * 「系」を付けて会社名と「・」で連結する。formationNumber 文字列自体は加工しない。
      */
     readonly formationAnnotation = computed(() => {
         const formationId = this.expectedSightingFormation()?.formationId;
@@ -106,8 +106,11 @@ export class OperationRealTimeOperationCardComponent {
             ? this.agencies().find((a) => a.agencyId === formation.agencyId)
                   ?.agencyName
             : undefined;
-        return [agencyName, formation.vehicleType]
+        const vehicleTypePart = formation.vehicleType
+            ? `${formation.vehicleType}系`
+            : undefined;
+        return [vehicleTypePart, agencyName]
             .filter((part) => !!part)
-            .join('');
+            .join('・');
     });
 }

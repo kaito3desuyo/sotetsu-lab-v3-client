@@ -22,7 +22,18 @@ type StoreProps = {
     tripClasses: TripClassDetailsDto[];
     stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
-    operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[];
+    /**
+     * G1（充当編成「不明」バグ修正）: operation-real-time と同じキー付け方に統一する。
+     * 配列で保持し expectedSighting.operation.operationNumber に一致するものを
+     * 都度スキャンして探す旧実装は、その nested プロパティが API レスポンスで
+     * 常に requestした operationNumber と一致する保証がなく「不明」の主因だった。
+     * リクエストに使った operationNumber をそのままキーにした Record にすることで
+     * 取得結果と紐付けを一致させる（operation-real-time.store.ts と同一パターン）。
+     */
+    operationSightingTimeCrossSections: Record<
+        string,
+        OperationSightingTimeCrossSectionDto
+    >;
     loadingQueue: boolean[];
 };
 
@@ -38,7 +49,7 @@ const store = createStore(
         tripClasses: [],
         stations: [],
         operations: [],
-        operationSightingTimeCrossSections: [],
+        operationSightingTimeCrossSections: {},
         loadingQueue: [],
     }),
 );
@@ -180,14 +191,20 @@ export const TimetableStationStore = {
     setOperations(operations: OperationDetailsDto[]): void {
         store.update(setProp('operations', () => operations));
     },
-    setOperationSightingTimeCrossSections(
-        operationSightingTimeCrossSections: OperationSightingTimeCrossSectionDto[],
+    setOperationSightingTimeCrossSection(
+        operationNumber: string,
+        timeCrossSection: OperationSightingTimeCrossSectionDto,
     ): void {
         store.update(
-            setProp(
-                'operationSightingTimeCrossSections',
-                () => operationSightingTimeCrossSections,
-            ),
+            setProp('operationSightingTimeCrossSections', (state) => ({
+                ...state,
+                [operationNumber]: timeCrossSection,
+            })),
+        );
+    },
+    resetOperationSightingTimeCrossSections(): void {
+        store.update(
+            setProp('operationSightingTimeCrossSections', () => ({})),
         );
     },
     enableLoading(): void {
@@ -247,10 +264,19 @@ export const TimetableStationStore = {
     get trips(): TripDetailsDto[] {
         return store.getValue().trips;
     },
+    get tripBlocks(): TripBlockDetailsDto[] {
+        return store.getValue().tripBlocks;
+    },
     get operationIds(): string[] {
         return extractOperationIds(store.getValue().trips);
     },
     get operations(): OperationDetailsDto[] {
         return store.getValue().operations;
+    },
+    get operationSightingTimeCrossSections(): Record<
+        string,
+        OperationSightingTimeCrossSectionDto
+    > {
+        return store.getValue().operationSightingTimeCrossSections;
     },
 } as const;

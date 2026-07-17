@@ -7,7 +7,6 @@ import {
     output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
@@ -22,6 +21,8 @@ import {
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
+import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
+import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TrainLocationMode } from '../../stores/train-location.store';
 
 /** 折り畳み時の要約に使う時刻モードの表示名 */
@@ -42,14 +43,21 @@ const MODE_LABELS: Record<TrainLocationMode, string> = {
     imports: [
         MatFormFieldModule,
         MatSelectModule,
-        MatButtonToggleModule,
         DateFnsPipe,
         FilterChipsComponent,
         RouterLink,
         CollapsiblePanelComponent,
+        SegmentToggleComponent,
     ],
 })
 export class TrainLocationControllerComponent {
+    /** 現在時刻/時刻指定 全幅2セグメントトグルの選択肢（98 G0-3・mockup-09） */
+    readonly modeOptions: readonly [SegmentToggleOption, SegmentToggleOption] =
+        [
+            { value: 'now', label: '現在時刻' },
+            { value: 'specified', label: '時刻指定' },
+        ];
+
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
@@ -128,8 +136,8 @@ export class TrainLocationControllerComponent {
         this.calendarIdChange.emit(calendarId);
     }
 
-    onModeChange(mode: TrainLocationMode): void {
-        this.modeChange.emit(mode);
+    onModeChange(mode: FilterChipValue): void {
+        this.modeChange.emit(mode as TrainLocationMode);
     }
 
     onRouteChange(values: FilterChipValue[]): void {

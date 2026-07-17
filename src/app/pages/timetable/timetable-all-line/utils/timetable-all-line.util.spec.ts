@@ -197,7 +197,7 @@ describe('TimetableAllLineUtil.getTime', () => {
                 viewModes,
                 bordersAfter: new Map(),
             }),
-        ).toBe('-930');
+        ).toBe('930');
     });
 });
 

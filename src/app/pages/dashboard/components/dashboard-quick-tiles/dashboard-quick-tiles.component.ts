@@ -13,7 +13,8 @@ type QuickTile = {
 /**
  * クイックタイル 4 枚（N3・07-03 指定順）。
  * 左上=リアルタイム運用情報 / 右上=列車位置情報 / 左下=駅別時刻表 / 右下=ダイヤグラム。
- * mockup-11 では 4 枚とも紺（accent なし）。背景にミニダイヤの斜線を敷く。
+ * mockup-11（G10）では 4 枚中 1 枚（列車位置情報）のみオレンジ塗りのアクセント、
+ * 残り 3 枚は紺塗り。背景にミニダイヤの斜線を敷く。
  *
  * 列車位置情報（/train-location）・ダイヤグラム（/train-diagram）へ遷移する。
  */
@@ -37,7 +38,7 @@ export class DashboardQuickTilesComponent {
             title: '列車位置情報',
             subtitle: 'いまどこを走っているか',
             link: ['/train-location'],
-            accent: false,
+            accent: true,
         },
         {
             icon: 'schedule',

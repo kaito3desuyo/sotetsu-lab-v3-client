@@ -1,7 +1,16 @@
 <div class="tw-p-4 tw-shadow-md">
-    @if (tableDisplayed()) {
+    @if (tableDisplayed() && !hasResults()) {
+        <!-- G12: 検索条件に一致する編成/日付が0件の空状態（mockup-07 の3点セット）。
+             次アクションは会社チップ絞り込みの解除（表示フィルタなので即座に全編成へ戻せる）。 -->
+        <app-empty-state
+            icon="search_off"
+            message="この条件に一致する運用情報はありません"
+            actionLabel="会社の絞り込みを解除する"
+            (actionClick)="onResetAgencyFilter()"
+        ></app-empty-state>
+    } @else if (tableDisplayed()) {
         <div
-            class="tw-max-h-[60dvh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+            class="tw-overflow-x-auto tw-border tw-border-solid tw-border-grey-300"
         >
             <table class="tw-border-collapse [&_td]:tw-p-2 [&_th]:tw-p-2">
                 <thead>
@@ -138,6 +147,11 @@
             </table>
         </div>
     } @else {
-        <p class="tw-m-0">基準日と日数を設定して検索してください</p>
+        <app-empty-state
+            icon="search"
+            message="基準日と日数を設定して検索してください"
+            actionLabel="本日から7日間を検索する"
+            (actionClick)="onDefaultSearch()"
+        ></app-empty-state>
     }
 </div>

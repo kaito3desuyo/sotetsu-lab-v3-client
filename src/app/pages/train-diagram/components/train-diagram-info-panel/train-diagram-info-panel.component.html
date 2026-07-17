@@ -20,6 +20,14 @@
             @if (info().formationNumber) {
                 <span>編成 {{ info().formationNumber }}</span>
             }
+            @if (info().sightingTime; as sightingTime) {
+                <span class="tw-text-grey-500">
+                    （目撃
+                    {{
+                        sightingTime | dateFns: { format: 'MM/dd', parseISO: true }
+                    }}）
+                </span>
+            }
         </div>
 
         <a

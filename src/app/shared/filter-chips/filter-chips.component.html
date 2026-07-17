@@ -24,6 +24,7 @@
                     <mat-chip-option
                         [value]="option.value"
                         [disabled]="option.disabled ?? false"
+                        [color]="option.selectedColor ?? selectedColor()"
                         [style.background-color]="option.color ?? null"
                     >
                         <!-- R-4: 単一選択は ✓ でなく選択中チップの ● マーカーで表す

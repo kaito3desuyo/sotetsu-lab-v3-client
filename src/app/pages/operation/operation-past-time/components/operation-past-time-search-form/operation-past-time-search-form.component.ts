@@ -11,7 +11,6 @@ import {
     DateFnsAdapter,
     MatDateFnsModule,
 } from '@angular/material-date-fns-adapter';
-import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,6 +20,7 @@ import { Router } from '@angular/router';
 import { format, parse } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { omitBy } from 'es-toolkit';
+import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
 import { OperationPastTimeSearchForm } from '../../types/operation-past-time.type';
 
@@ -42,8 +42,8 @@ class CustomDateFnsAdapter extends DateFnsAdapter {
         MatInputModule,
         MatDatepickerModule,
         MatDateFnsModule,
-        MatButtonModule,
         MatSlideToggleModule,
+        AppButtonComponent,
     ],
     providers: [
         { provide: MAT_DATE_LOCALE, useValue: ja },

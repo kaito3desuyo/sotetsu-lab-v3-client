@@ -12,3 +12,56 @@
 ::ng-deep .filter-chips-single .mdc-evolution-chip__graphic {
     display: none;
 }
+
+// G0-2: 絞り込みチップの角型化・状態別配色。
+// MatChip の M2 テーマは背景色・角丸を CSS カスタムプロパティのカスケードで
+// 決めており、そのカスケード順序に依存すると環境差で選択状態が灰のまま
+// 視認できなくなる（98 G0-2 実測バグ）。さらにテーマは
+// `--mat-chip-container-shape-radius` を要素側に直接セットするため、
+// :host での変数上書き（継承）は負ける（T6.5 差し戻しで実測）。
+// よって MDC 標準の構造クラスに対して色・角丸とも直接指定して確実に上書きする
+// （:host ::ng-deep で本コンポーネントの subtree のみに限定）。
+:host ::ng-deep {
+    // 角型（角丸 2px）。外側コンテナの border-radius と、
+    // 枠線を描く ::before（var 参照）の両方に効かせる
+    .mat-mdc-standard-chip {
+        border-radius: 2px !important;
+        --mat-chip-container-shape-radius: 2px;
+    }
+
+    .mdc-evolution-chip:not(.mdc-evolution-chip--selected):not(
+            .mdc-evolution-chip--disabled
+        ) {
+        background-color: #ffffff !important;
+        border: 1px solid #9e9e9e;
+    }
+
+    .mdc-evolution-chip--selected:not(.mdc-evolution-chip--disabled) {
+        &.mat-primary {
+            background-color: #001556 !important;
+
+            .mdc-evolution-chip__text-label,
+            .mdc-evolution-chip__checkmark {
+                color: #ffffff !important;
+            }
+        }
+
+        &.mat-accent {
+            background-color: #ee7b35 !important;
+
+            .mdc-evolution-chip__text-label,
+            .mdc-evolution-chip__checkmark {
+                color: #ffffff !important;
+            }
+        }
+    }
+
+    .mdc-evolution-chip--disabled {
+        background-color: #e0e0e0 !important;
+        opacity: 1 !important;
+
+        .mdc-evolution-chip__text-label {
+            color: rgba(0, 0, 0, 0.38) !important;
+        }
+    }
+}

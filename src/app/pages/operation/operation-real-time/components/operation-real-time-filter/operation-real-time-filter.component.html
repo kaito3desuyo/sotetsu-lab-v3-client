@@ -1,22 +1,12 @@
-<div class="tw-flex tw-flex-col tw-gap-2">
-    <div>
-        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">所属会社</p>
-        <app-filter-chips
-            mode="multiple"
-            [scrollMode]="true"
-            [options]="agencyOptions()"
-            [selected]="selectedAgencyIds()"
-            (selectedChange)="onAgencyChange($event)"
-        ></app-filter-chips>
-    </div>
-    <div>
-        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">運用群</p>
-        <app-filter-chips
-            mode="multiple"
-            [scrollMode]="true"
-            [options]="groupOptions()"
-            [selected]="selectedGroupNames()"
-            (selectedChange)="onGroupChange($event)"
-        ></app-filter-chips>
-    </div>
+<div>
+    <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+        絞り込み（表示のみ・取得と購読は全件のまま）
+    </p>
+    <app-filter-chips
+        mode="multiple"
+        [scrollMode]="true"
+        [options]="chipOptions()"
+        [selected]="selectedValues()"
+        (selectedChange)="onChipsChange($event)"
+    ></app-filter-chips>
 </div>

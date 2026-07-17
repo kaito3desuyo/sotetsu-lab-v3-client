@@ -1,5 +1,6 @@
+<!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
+     本文の h1/h2 重複は置かない。最終更新時刻は情報削減禁止で維持 -->
 <div class="tw-flex tw-flex-col tw-gap-2">
-    <h2 class="mat-h2 !tw-m-0">リアルタイム運用情報</h2>
     <small class="tw-tabular-nums">
         最終更新時刻：{{
             finalUpdateTime() | dateFns: { format: 'yyyy/MM/dd HH:mm:ss' }

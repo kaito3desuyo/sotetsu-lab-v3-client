@@ -55,4 +55,23 @@ describe('OperationRealTimeFilterComponent', () => {
         fixture.detectChanges();
         expect(component.selectedGroupNames()).toEqual(['1群']);
     });
+
+    it('chipOptions は運用群チップにオレンジ（accent）の選択色を付けて1行に統合する', () => {
+        const options = component.chipOptions();
+        expect(options.map((o) => o.value)).toEqual(['1群', '9G群', '休']);
+        expect(options.every((o) => o.selectedColor === 'accent')).toBe(true);
+    });
+
+    it('onChipsChange は群名のみをストアの選択群へ振り分ける', () => {
+        component.onChipsChange(['1群', '休']);
+        fixture.detectChanges();
+        expect(component.selectedGroupNames()).toEqual(['1群', '休']);
+        expect(component.selectedAgencyIds()).toEqual([]);
+    });
+
+    it('selectedValues は会社と群の選択値を連結して返す', () => {
+        component.onGroupChange(['9G群']);
+        fixture.detectChanges();
+        expect(component.selectedValues()).toEqual(['9G群']);
+    });
 });

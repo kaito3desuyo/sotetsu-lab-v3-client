@@ -24,6 +24,9 @@ import { FilterChipOption, FilterChipValue } from './filter-chip-option.type';
  * - scrollMode: true の場合はチップを折り返さず横スクロール可能な 1 行に収め、
  *   左右に薄い矢印インジケータを表示する（mockup-05 全線時刻表の路線チップ準拠）。
  *   既定 false（従来どおりの折返し表示）
+ * - selectedColor: 選択中チップの塗り色（98 G0-2: 紺塗り or オレンジ塗り）。
+ *   既定 'primary'（紺）。ページによってはオレンジ塗り（'accent'）が必要
+ *   （例: 運用表の群チップ）
  */
 @Component({
     selector: 'app-filter-chips',
@@ -42,6 +45,8 @@ export class FilterChipsComponent {
     readonly selected = input<FilterChipValue[]>([]);
     /** true でチップを横スクロール 1 行表示にする（既定は折返し表示） */
     readonly scrollMode = input<boolean>(false);
+    /** 選択中チップの塗り色（98 G0-2: 紺塗り='primary' / オレンジ塗り='accent'） */
+    readonly selectedColor = input<'primary' | 'accent'>('primary');
 
     readonly selectedChange = output<FilterChipValue[]>();
 

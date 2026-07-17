@@ -90,10 +90,11 @@ export class OperationRealTimeFormationCardComponent {
     });
 
     /**
-     * 編成の「所属会社・形式」付記（例: 相鉄12000）を組み立てる（設計書 §5.2）。
-     * 編成順カードでは formation 自身が行エンティティのため、運用順カードのように
-     * formations() 配列から探す必要はなく、agencyId から会社名を引くだけでよい。
-     * 「系/形」等の厳密表記は避け、会社名＋形式番号を連結するだけにする。
+     * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
+     * 「10000系・相鉄」形式）。編成順カードでは formation 自身が行エンティティの
+     * ため、運用順カードのように formations() 配列から探す必要はなく、
+     * agencyId から会社名を引くだけでよい。vehicle_type は素の形式番号
+     * （例: 10000）なので「系」を付けて会社名と「・」で連結する。
      * formationNumber 文字列自体は加工しない。
      */
     readonly formationAnnotation = computed(() => {
@@ -102,8 +103,11 @@ export class OperationRealTimeFormationCardComponent {
             ? this.agencies().find((a) => a.agencyId === agencyId)
                   ?.agencyName
             : undefined;
-        return [agencyName, this.formation().vehicleType]
+        const vehicleTypePart = this.formation().vehicleType
+            ? `${this.formation().vehicleType}系`
+            : undefined;
+        return [vehicleTypePart, agencyName]
             .filter((part) => !!part)
-            .join('');
+            .join('・');
     });
 }

@@ -10,16 +10,15 @@
         <a
             matRipple
             class="tw-rounded tw-text-2xl tw-font-bold tw-leading-none tw-tabular-nums tw-no-underline"
-            [ngStyle]="{
-                color:
-                    trip().tripClassId
+            [style.color]="
+                trip().tripClassId
                     | findById
                         : {
                               array: tripClasses(),
                               propertyName: 'tripClassId',
                               outputPropertyName: 'tripClassColor',
-                          },
-            }"
+                          }
+            "
             [routerLink]="[
                 '/timetable/all-line',
                 {
@@ -88,6 +87,27 @@
     </div>
 
     <!-- 2段目: 列車番号 + 運用番号チップ + 充当編成番号 -->
+    @let operationNumber =
+        trip().tripOperationLists[0]?.operationId
+            | findById
+                : {
+                      array: operations(),
+                      propertyName: 'operationId',
+                      outputPropertyName: 'operationNumber',
+                  };
+    <!--
+        G1（充当編成「不明」バグ修正）: operation-real-time と同じ紐付けロジックに統一。
+        crossSection はリクエストに使った operationNumber をキーにした Record（ストア参照）
+        なので、配列を expectedSighting.operation.operationNumber でスキャンする旧実装
+        （API レスポンスにその nested プロパティが無い/一致しない場合があり「不明」の主因
+        だった）をやめ、operationNumber での直接キー引きに置き換える。
+    -->
+    @let timeCrossSection =
+        operationNumber ? operationSightingTimeCrossSections()[operationNumber] : undefined;
+    @let currentFormationNumber = timeCrossSection?.expectedSighting?.formation?.formationNumber;
+    @let currentFormationDayCount =
+        timeCrossSection?.latestSighting?.sightingTime | calculateDayCountFromToday;
+
     <div
         class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1.5 tw-text-xs tw-leading-tight tw-text-grey-600"
     >
@@ -95,15 +115,7 @@
 
         @if (trip().tripOperationLists.length !== 0) {
             <app-operation-number-tag
-                [operationNumber]="
-                    trip().tripOperationLists[0].operationId
-                        | findById
-                            : {
-                                  array: operations(),
-                                  propertyName: 'operationId',
-                                  outputPropertyName: 'operationNumber',
-                              }
-                "
+                [operationNumber]="operationNumber"
                 [link]="[
                     '/operation',
                     'route-diagram',
@@ -113,59 +125,9 @@
 
             @if (showCurrentFormation()) {
                 <span>
-                    @if (
-                        trip().tripOperationLists[0].operationId
-                            | findById
-                                : {
-                                      array: operations(),
-                                      propertyName: 'operationId',
-                                      outputPropertyName: 'operationNumber',
-                                  }
-                            | findById
-                                : {
-                                      array: operationSightingTimeCrossSections(),
-                                      propertyName:
-                                          'expectedSighting.operation.operationNumber',
-                                      outputPropertyName:
-                                          'expectedSighting.formation.formationNumber',
-                                  }
-                    ) {
-                        {{
-                            trip().tripOperationLists[0].operationId
-                                | findById
-                                    : {
-                                          array: operations(),
-                                          propertyName: 'operationId',
-                                          outputPropertyName: 'operationNumber',
-                                      }
-                                | findById
-                                    : {
-                                          array: operationSightingTimeCrossSections(),
-                                          propertyName:
-                                              'expectedSighting.operation.operationNumber',
-                                          outputPropertyName:
-                                              'expectedSighting.formation.formationNumber',
-                                      }
-                        }}{{
-                            (trip().tripOperationLists[0].operationId
-                                | findById
-                                    : {
-                                          array: operations(),
-                                          propertyName: 'operationId',
-                                          outputPropertyName: 'operationNumber',
-                                      }
-                                | findById
-                                    : {
-                                          array: operationSightingTimeCrossSections(),
-                                          propertyName:
-                                              'expectedSighting.operation.operationNumber',
-                                          outputPropertyName:
-                                              'latestSighting.sightingTime',
-                                      }
-                                | calculateDayCountFromToday) !== 0
-                                ? '?'
-                                : ''
-                        }}
+                    @if (currentFormationNumber) {
+                        {{ currentFormationNumber
+                        }}{{ currentFormationDayCount !== 0 ? '?' : '' }}
                     } @else {
                         不明
                     }
@@ -174,13 +136,13 @@
         }
     </div>
 
-    <!-- 3段目: 同一tripBlock内の他列車情報 -->
+    <!-- 3段目: 通し運行脚注行（同一tripBlock内の他列車情報。mockup-01 の「↪ 〜から〜まで（各停6501）」） -->
     @for (
         otherTrip of trip() | timetableStationFindOtherTripsInSameTripBlock;
         track otherTrip.tripId
     ) {
         <div class="tw-text-[11px] tw-leading-tight tw-text-grey-500">
-            ⬎
+            ↪
             {{
                 (otherTrip.times | minBy: { propertyName: 'stopSequence' })
                     .stationId
@@ -201,16 +163,15 @@
                           }
             }}まで（
             <span
-                [ngStyle]="{
-                    color:
-                        otherTrip.tripClassId
+                [style.color]="
+                    otherTrip.tripClassId
                         | findById
                             : {
                                   array: tripClasses(),
                                   propertyName: 'tripClassId',
                                   outputPropertyName: 'tripClassColor',
-                              },
-                }"
+                              }
+                "
             >
                 {{
                     otherTrip.tripClassId

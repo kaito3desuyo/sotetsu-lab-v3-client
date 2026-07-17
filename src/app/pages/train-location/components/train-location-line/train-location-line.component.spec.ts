@@ -3,6 +3,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
 import { TrainLocationRow } from '../../interfaces/train-location-row.interface';
+import {
+    BETWEEN_ROW_BASE_HEIGHT_PX,
+    BETWEEN_ROW_CARD_HEIGHT_PX,
+} from '../../utils/resolve-between-row-layout.util';
 import { TrainLocationLineComponent } from './train-location-line.component';
 
 function card(tripId: string): TrainLocationCard {
@@ -181,7 +185,7 @@ describe('TrainLocationLineComponent', () => {
         expect(fixture.nativeElement.querySelector('a')).toBeNull();
     });
 
-    it('between 行のカードは topProgress を top% に反映する', () => {
+    it('between 行のカードは衝突回避レイアウト（resolveBetweenRowLayout）の px 位置を反映する', () => {
         const rows: TrainLocationRow[] = [
             {
                 kind: 'between',
@@ -197,6 +201,58 @@ describe('TrainLocationLineComponent', () => {
         const positioned: HTMLElement = fixture.nativeElement.querySelector(
             'app-train-location-card',
         ).parentElement;
-        expect(positioned.style.top).toBe('40%');
+        const usableHeightPx =
+            BETWEEN_ROW_BASE_HEIGHT_PX - BETWEEN_ROW_CARD_HEIGHT_PX;
+        expect(positioned.style.top).toBe(`${0.4 * usableHeightPx}px`);
+    });
+
+    it('98 G8: 同一区間・同一方向に近接進捗の複数在線があってもカードが重ならない（衝突回避）', () => {
+        const rows: TrainLocationRow[] = [
+            {
+                kind: 'between',
+                fromStationId: 'a',
+                toStationId: 'b',
+                leftCards: [
+                    { card: card('t1'), topProgress: 0.5 },
+                    { card: card('t2'), topProgress: 0.5 },
+                    { card: card('t3'), topProgress: 0.5 },
+                ],
+                rightCards: [],
+            },
+        ];
+        fixture.componentRef.setInput('rows', rows);
+        fixture.detectChanges();
+
+        const positionedElements: HTMLElement[] = Array.from(
+            fixture.nativeElement.querySelectorAll('app-train-location-card'),
+        ).map((el) => (el as HTMLElement).parentElement as HTMLElement);
+        expect(positionedElements).toHaveLength(3);
+
+        const tops = positionedElements
+            .map((el) => parseFloat(el.style.top))
+            .sort((a, b) => a - b);
+        for (let i = 1; i < tops.length; i++) {
+            expect(tops[i] - tops[i - 1]).toBeGreaterThanOrEqual(
+                BETWEEN_ROW_CARD_HEIGHT_PX,
+            );
+        }
+    });
+
+    it('起点駅名（駅軸先頭の駅行）を上り方面ラベルに表示する', () => {
+        const rows: TrainLocationRow[] = [
+            {
+                kind: 'station',
+                stationId: 'yokohama',
+                stationName: '横浜',
+                isMajor: true,
+                leftCards: [],
+                rightCards: [],
+                interchangeRoutes: [],
+            },
+        ];
+        fixture.componentRef.setInput('rows', rows);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.textContent).toContain('横浜方面');
     });
 });

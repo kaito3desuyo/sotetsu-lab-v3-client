@@ -39,7 +39,7 @@ export class TimetableStationTableComponent {
     });
     readonly operationSightingTimeCrossSections = toSignal(
         TimetableStationStore.operationSightingTimeCrossSections$,
-        { initialValue: [] },
+        { initialValue: {} },
     );
     readonly stationId = toSignal(TimetableStationStore.stationId$);
 

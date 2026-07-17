@@ -14,7 +14,12 @@ import { interval } from 'rxjs';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
-import { StationAxis, timeToX } from 'src/app/shared/diagram-scale';
+import {
+    StationAxis,
+    StationAxisEntry,
+    enforceMinimumRowGap,
+    timeToX,
+} from 'src/app/shared/diagram-scale';
 import {
     TripDiagramLine,
     TripDiagramPoint,
@@ -27,6 +32,12 @@ const AXIS_PX_PER_MINUTE = 6;
 const WINDOW_MINUTES = 60;
 const STATION_LABEL_WIDTH = 72;
 const OUT_OF_WINDOW_MARGIN_PX = 120;
+/**
+ * 駅ラベル行の最小ピクセル高さ（G7: 駅軸ラベルの重なり解消）。
+ * 12px の tw-text-xs ラベルが重ならない最小値。所要時間比は維持しつつ、
+ * 高速通過区間で駅間隔が潰れる場合のみこの値まで底上げする（enforceMinimumRowGap）。
+ */
+const MIN_ROW_HEIGHT_PX = 22;
 
 // ホイール/ピンチによる縮尺調整の範囲と 1 ノッチあたりの倍率。
 const AXIS_PX_PER_MINUTE_MIN = 2;
@@ -109,34 +120,48 @@ export class TrainDiagramChartComponent {
         () => new Map(this.stations().map((s) => [s.stationId, s.stationName])),
     );
 
-    readonly maxAxisMinutes = computed(() => {
+    /**
+     * ピクセル換算済みの駅軸（axis の y を axisPxPerMinute で乗算した後、
+     * enforceMinimumRowGap で最小行高を底上げしたもの）。
+     * stationRows（ラベル位置）と lines（列車線の y 座標）の両方がこれを参照することで、
+     * ラベルと線のズレなく「所要時間比を維持しつつ最小行高を確保」する（G7）。
+     */
+    readonly #pixelAxis = computed<StationAxisEntry[] | null>(() => {
         const axis = this.axis();
-        if (!axis || axis.length === 0) {
-            return 0;
+        if (!axis) {
+            return null;
         }
-        return Math.max(...axis.map((entry) => entry.y));
+        const axisPxPerMinute = this.#axisPxPerMinute();
+        const scaled = axis.map((entry) => ({
+            stationId: entry.stationId,
+            y: entry.y * axisPxPerMinute,
+        }));
+        return enforceMinimumRowGap(scaled, MIN_ROW_HEIGHT_PX);
     });
 
-    readonly svgHeight = computed(
-        () =>
-            HEADER_HEIGHT + this.maxAxisMinutes() * this.#axisPxPerMinute() + 24,
-    );
+    readonly svgHeight = computed(() => {
+        const pixelAxis = this.#pixelAxis();
+        const maxY =
+            pixelAxis && pixelAxis.length > 0
+                ? Math.max(...pixelAxis.map((entry) => entry.y))
+                : 0;
+        return HEADER_HEIGHT + maxY + 24;
+    });
 
     /**
      * 駅ラベル列（グリッド線含む）。axis 配列の各エントリをそのまま描画するため、
      * 分岐駅（複製挿入された接続駅）は複数行として二重表示される。
      */
     readonly stationRows = computed<StationRow[]>(() => {
-        const axis = this.axis();
-        if (!axis) {
+        const pixelAxis = this.#pixelAxis();
+        if (!pixelAxis) {
             return [];
         }
-        const axisPxPerMinute = this.#axisPxPerMinute();
         const nameById = this.#stationNameById();
-        return axis.map((entry) => ({
+        return pixelAxis.map((entry) => ({
             stationId: entry.stationId,
             stationName: nameById.get(entry.stationId) ?? '',
-            y: HEADER_HEIGHT + entry.y * axisPxPerMinute,
+            y: HEADER_HEIGHT + entry.y,
         }));
     });
 
@@ -156,8 +181,8 @@ export class TrainDiagramChartComponent {
     });
 
     readonly lines = computed<TripDiagramLine[]>(() => {
-        const axis = this.axis();
-        if (!axis) {
+        const pixelAxis = this.#pixelAxis();
+        if (!pixelAxis) {
             return [];
         }
 
@@ -166,7 +191,6 @@ export class TrainDiagramChartComponent {
         const base = new Date(this.#baseTime());
         const windowStart = new Date(this.#windowStartTime());
         const pxPerMinute = this.#horizontalPxPerMinute();
-        const axisPxPerMinute = this.#axisPxPerMinute();
         const width = this.svgWidth();
 
         const trips = Object.values(this.tripBlocksByDirection())
@@ -177,13 +201,15 @@ export class TrainDiagramChartComponent {
             .map((trip) =>
                 buildTripDiagramLine({
                     trip,
-                    axis,
+                    // pixelAxis は既に axisPxPerMinute で乗算 + 最小行高を適用済みのため、
+                    // ここでは axisPxPerMinute=1（二重乗算を避ける。stationRows と同一の y を使う）。
+                    axis: pixelAxis,
                     axisStationIds,
                     routeIdsByStation,
                     base,
                     windowStart,
                     pxPerMinute,
-                    axisPxPerMinute,
+                    axisPxPerMinute: 1,
                     headerHeight: HEADER_HEIGHT,
                 }),
             )

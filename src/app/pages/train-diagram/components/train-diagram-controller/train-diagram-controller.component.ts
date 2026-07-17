@@ -10,11 +10,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import type { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
 import {
     FilterChipOption,
@@ -60,7 +60,6 @@ const ZOOM_LEVEL_LABELS: Record<DiagramZoomLevel, string> = {
         MatFormFieldModule,
         MatSelectModule,
         MatButtonToggleModule,
-        DateFnsPipe,
         FilterChipsComponent,
         CollapsiblePanelComponent,
     ],
@@ -153,6 +152,14 @@ export class TrainDiagramControllerComponent {
             .filter((part) => !!part)
             .join(' / ');
     });
+
+    /**
+     * ダイヤ select の各 mat-option 表示に使う短縮ラベル（G0-7: 長い日付表記の truncate 解消）。
+     * 折り畳み時の要約（collapsedSummary）と同じ整形関数を再利用する。
+     */
+    calendarSummaryLabel(calendar: CalendarDetailsDto): string {
+        return formatCalendarSummaryLabel(calendar);
+    }
 
     onCalendarChange(calendarId: string): void {
         this.calendarIdChange.emit(calendarId);

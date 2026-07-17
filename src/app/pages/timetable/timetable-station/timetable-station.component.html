@@ -9,10 +9,11 @@
 
 <main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-2 md:tw-p-16">
     <header
-        class="tw-sticky tw-top-0 tw-z-10 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-justify-between tw-gap-4 tw-bg-grey-50 tw-py-2"
+        class="tw-sticky tw-top-0 tw-z-10 tw-flex tw-w-full tw-flex-col tw-gap-3 tw-bg-grey-50 tw-py-2"
     >
-        <h2 class="mat-h2 !tw-m-0">駅別時刻表</h2>
-
+        <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
+             本文の h1/h2 重複は置かない -->
+        <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01） -->
         <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
             <mat-form-field class="tw-w-32">
                 <mat-label>駅</mat-label>
@@ -42,25 +43,24 @@
             </mat-form-field>
         </div>
 
-        <mat-button-toggle-group
+        <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/segment-toggle） -->
+        <app-segment-toggle
+            [options]="tripDirectionOptions"
             [value]="tripDirection()"
-            (change)="onDirectionChange($event.value)"
-            aria-label="上り・下り切替"
-        >
-            <mat-button-toggle [value]="tripDirectionEnum.INBOUND">
-                {{ tripDirectionLabel.get(tripDirectionEnum.INBOUND) }}
-            </mat-button-toggle>
-            <mat-button-toggle [value]="tripDirectionEnum.OUTBOUND">
-                {{ tripDirectionLabel.get(tripDirectionEnum.OUTBOUND) }}
-            </mat-button-toggle>
-        </mat-button-toggle-group>
+            (valueChange)="onDirectionChange($event)"
+        ></app-segment-toggle>
     </header>
 
     <div>
         @if (isEmpty()) {
+            <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。
+                 次アクションは反対方向への切り替え（ダイヤ/方向を変えて再検索する動線）。 -->
             <app-empty-state
                 icon="train"
-                message="この駅の時刻データはありません"
+                message="この条件の列車情報はありません"
+                subtitle="ダイヤまたは方向を変えてお試しください。"
+                [actionLabel]="oppositeDirectionActionLabel()"
+                (actionClick)="onDirectionChange(oppositeDirection())"
             ></app-empty-state>
         } @else if (calendar()) {
             <app-timetable-station-table

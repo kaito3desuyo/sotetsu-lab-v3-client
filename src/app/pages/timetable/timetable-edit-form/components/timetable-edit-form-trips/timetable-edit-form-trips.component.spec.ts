@@ -103,4 +103,162 @@ describe('TimetableEditFormTripsComponent', () => {
         );
         expect(restoredSpy).toHaveBeenCalled();
     });
+
+    describe('G9: モバイル1駅1行の停/通トグルと行先導出', () => {
+        it('onToggleStopType は 経由なし(既定)→停→通→停 の順で循環する', () => {
+            const timeForm = (
+                component.tripsForm.controls[0].get('times') as FormArray
+            ).at(0) as any;
+
+            expect(timeForm.get('stopType').value).toBe(
+                'not-going-through',
+            );
+
+            component.onToggleStopType(timeForm);
+            expect(timeForm.get('stopType').value).toBe('stop');
+
+            component.onToggleStopType(timeForm);
+            expect(timeForm.get('stopType').value).toBe('pass');
+
+            component.onToggleStopType(timeForm);
+            expect(timeForm.get('stopType').value).toBe('stop');
+        });
+
+        it('isPassStopType は stopType=pass のときのみ true を返す', () => {
+            const timeForm = (
+                component.tripsForm.controls[0].get('times') as FormArray
+            ).at(0) as any;
+
+            expect(component.isPassStopType(timeForm)).toBe(false);
+
+            timeForm.get('stopType').setValue('pass');
+            expect(component.isPassStopType(timeForm)).toBe(true);
+        });
+
+        it('destinationLabel は経由なしを除いた最後の停車/通過駅名を返す（両方とも経由なしなら空文字）', () => {
+            const tripForm = component.tripsForm.controls[0];
+
+            expect(component.destinationLabel(tripForm)).toBe('');
+
+            const times = tripForm.get('times') as FormArray;
+            times.at(0).patchValue({ stopType: 'stop' });
+            expect(component.destinationLabel(tripForm)).toBe('横浜');
+
+            times.at(1).patchValue({ stopType: 'stop' });
+            expect(component.destinationLabel(tripForm)).toBe('二俣川');
+        });
+    });
+
+    describe('G9: 種別バッジ・下書き保存ボタン', () => {
+        it('selectedTripClass は tripClassId に一致する tripClasses の要素を返す', () => {
+            fixture.componentRef.setInput('tripClasses', [
+                {
+                    tripClassId: 'tc-1',
+                    tripClassName: '急行',
+                    tripClassColor: '#00a040',
+                },
+            ]);
+            fixture.detectChanges();
+
+            const tripForm = component.tripsForm.controls[0];
+            tripForm.get('tripClassId').setValue('tc-1');
+
+            expect(component.selectedTripClass(tripForm)?.tripClassName).toBe(
+                '急行',
+            );
+        });
+
+        it('onClickSaveDraft は formValueChange と saveDraftClick を emit する', () => {
+            const formValueChangeSpy = jest.fn();
+            const saveDraftClickSpy = jest.fn();
+            component.formValueChange.subscribe(formValueChangeSpy);
+            component.saveDraftClick.subscribe(saveDraftClickSpy);
+
+            component.onClickSaveDraft();
+
+            expect(formValueChangeSpy).toHaveBeenCalled();
+            expect(saveDraftClickSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe('G9 defect 2: 初期値取り込みブロックの表示と ADD モードのコピー元プリフィル', () => {
+        it('isInitialValueBlockVisible は ADD/COPY で true・UPDATE で false（mock06 新規画面で表示）', () => {
+            fixture.componentRef.setInput('mode', ETimetableEditFormMode.ADD);
+            fixture.detectChanges();
+            expect(component.isInitialValueBlockVisible()).toBe(true);
+
+            fixture.componentRef.setInput(
+                'mode',
+                ETimetableEditFormMode.COPY,
+            );
+            fixture.detectChanges();
+            expect(component.isInitialValueBlockVisible()).toBe(true);
+
+            fixture.componentRef.setInput(
+                'mode',
+                ETimetableEditFormMode.UPDATE,
+            );
+            fixture.detectChanges();
+            expect(component.isInitialValueBlockVisible()).toBe(false);
+        });
+
+        it('初期値取り込みブロックが ADD モードの DOM に描画される（既存列車からコピー・一括オフセット）', () => {
+            fixture.componentRef.setInput('mode', ETimetableEditFormMode.ADD);
+            fixture.detectChanges();
+
+            const text: string = fixture.nativeElement.textContent;
+            expect(text).toContain('初期値の取り込み');
+            expect(text).toContain('既存列車からコピー');
+            expect(text).toContain('一括オフセット');
+        });
+
+        it('ADD モードでコピー元 trips が渡されるとプリフィルされる（従前は空1件で無視していた）', () => {
+            fixture.componentRef.setInput('mode', ETimetableEditFormMode.ADD);
+            fixture.componentRef.setInput('trips', [
+                { tripId: 't1', tripNumber: '2303', times: [] },
+                { tripId: 't2', tripNumber: '2305', times: [] },
+            ]);
+            fixture.detectChanges();
+
+            expect(component.tripsForm.controls.length).toBe(2);
+            expect(
+                component.tripsForm.controls[0].get('tripNumber').value,
+            ).toBe('2303');
+        });
+
+        it('ADD モードでコピー元未選択（trips 空）なら従前どおり空1件で初期化される', () => {
+            fixture.componentRef.setInput('mode', ETimetableEditFormMode.ADD);
+            fixture.componentRef.setInput('trips', []);
+            fixture.detectChanges();
+
+            expect(component.tripsForm.controls.length).toBe(1);
+        });
+    });
+
+    describe('G9: 路線チップ折り畳みの要約テキスト', () => {
+        it('全路線選択時（既定）は「全路線」と表示する', () => {
+            fixture.componentRef.setInput('routes', [
+                { routeId: 'r1', routeName: '本線' },
+                { routeId: 'r2', routeName: 'いずみ野線' },
+            ]);
+            fixture.componentRef.setInput('selectedRouteIds', [
+                'r1',
+                'r2',
+            ]);
+            fixture.detectChanges();
+
+            expect(component.routeFilterSummary()).toBe('全路線');
+        });
+
+        it('一部路線のみ選択時は選択路線名を「、」区切りで表示する', () => {
+            fixture.componentRef.setInput('routes', [
+                { routeId: 'r1', routeName: '本線' },
+                { routeId: 'r2', routeName: 'いずみ野線' },
+            ]);
+            fixture.componentRef.setInput('selectedRouteIds', ['r1']);
+            fixture.detectChanges();
+
+            expect(component.routeFilterSummary()).toBe('本線');
+        });
+    });
 });

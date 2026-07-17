@@ -32,6 +32,17 @@
         >
             <app-loading></app-loading>
         </div>
+    } @else if (isEmpty()) {
+        <!-- G12: mockup-07 準拠の3点セット。操作部（コントローラ/凡例）はこの分岐の
+             外側にあり常に操作可能（C1 準拠）。 -->
+        <div class="tw-flex tw-flex-1 tw-items-center tw-justify-center">
+            <app-empty-state
+                icon="show_chart"
+                message="この条件の列車情報はありません"
+                actionLabel="表示条件をリセットする"
+                (actionClick)="onResetDiagramFilters()"
+            ></app-empty-state>
+        </div>
     } @else {
         <app-train-diagram-chart
             [stations]="stationAxisStations()"

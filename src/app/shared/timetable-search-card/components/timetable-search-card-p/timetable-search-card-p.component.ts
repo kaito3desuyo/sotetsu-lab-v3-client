@@ -6,7 +6,7 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
     FormControl,
@@ -14,8 +14,6 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -24,6 +22,9 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { AppButtonComponent } from '../../../app-button/app-button.component';
+import { SegmentToggleComponent } from '../../../segment-toggle/segment-toggle.component';
+import { SegmentToggleOption } from '../../../segment-toggle/segment-toggle-option.type';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 
@@ -46,8 +47,8 @@ type Form = FormGroup<{
         MatFormFieldModule,
         MatSelectModule,
         MatSlideToggleModule,
-        MatButtonToggleModule,
-        MatButtonModule,
+        SegmentToggleComponent,
+        AppButtonComponent,
         DateFnsPipe,
     ]
 })
@@ -57,6 +58,15 @@ export class TimetableSearchCardPComponent {
 
     readonly tripDirectionEnum = ETripDirection;
 
+    /** 上り/下り 全幅2セグメントトグルの選択肢（98 G0-3・モック10） */
+    readonly tripDirectionOptions: readonly [
+        SegmentToggleOption,
+        SegmentToggleOption,
+    ] = [
+        { value: ETripDirection.INBOUND, label: '上り' },
+        { value: ETripDirection.OUTBOUND, label: '下り' },
+    ];
+
     readonly form: Form = this.#fb.group({
         calendarId: this.#fb.control('', [Validators.required]),
         tripDirection: this.#fb.control(ETripDirection.INBOUND as number, [
@@ -65,6 +75,11 @@ export class TimetableSearchCardPComponent {
         searchByStation: this.#fb.control(false, [Validators.required]),
         stationId: this.#fb.control('', [Validators.required]),
     });
+
+    readonly tripDirection = toSignal(
+        this.form.get('tripDirection').valueChanges,
+        { initialValue: this.form.get('tripDirection').value },
+    );
 
     readonly calendars = input.required<CalendarDetailsDto[]>();
     readonly routeStationLists = input.required<RouteDetailsDto[]>();
@@ -87,5 +102,9 @@ export class TimetableSearchCardPComponent {
         this.#state.hold(toObservable(this.currentState), (state) => {
             this.form.patchValue(state);
         });
+    }
+
+    onTripDirectionChange(value: number): void {
+        this.form.get('tripDirection').setValue(value);
     }
 }

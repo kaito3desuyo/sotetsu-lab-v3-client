@@ -13,6 +13,7 @@ import {
 import {
     FormArray,
     FormBuilder,
+    FormsModule,
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
@@ -22,6 +23,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import {
@@ -46,6 +48,8 @@ import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
+import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
 import {
     FilterChipOption,
     FilterChipValue,
@@ -72,17 +76,21 @@ import { TimetableEditFormValidator } from '../../validators/timetable-edit-form
     imports: [
         CommonModule,
         ReactiveFormsModule,
+        FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatSelectModule,
         MatCheckboxModule,
         MatRadioModule,
         MatButtonModule,
+        MatMenuModule,
         MatSlideToggleModule,
         MatIconModule,
         MatChipsModule,
         PipesModule,
         FilterChipsComponent,
+        CollapsiblePanelComponent,
+        AppButtonComponent,
     ],
 })
 export class TimetableEditFormTripsComponent {
@@ -133,6 +141,8 @@ export class TimetableEditFormTripsComponent {
     readonly selectCopySource = output<string>();
     readonly formValueChange = output<unknown[]>();
     readonly restored = output<void>();
+    /** G9: sticky 下部バーの「下書き保存」明示クリック（自動保存に加えてユーザーへの確認手段） */
+    readonly saveDraftClick = output<void>();
 
     readonly offsetMinutes = signal<number>(0);
     readonly currentTripIndex = signal<number>(0);
@@ -165,6 +175,51 @@ export class TimetableEditFormTripsComponent {
     readonly isCopyMode = computed(
         () => this.mode() === ETimetableEditFormMode.COPY,
     );
+
+    /**
+     * G9: 初期値取り込みブロック（既存列車からコピー + 一括オフセット）の表示可否。
+     * mock06「列車情報入力（新規）」は新規（ADD）画面でこのブロックを常時表示するため、
+     * COPY 限定ではなく UPDATE 以外（ADD/COPY）で表示する。
+     */
+    readonly isInitialValueBlockVisible = computed(
+        () => this.mode() !== ETimetableEditFormMode.UPDATE,
+    );
+
+    /** G9: sticky 下部バー「この列車を登録/更新」のモード別ラベル */
+    readonly submitButtonLabel = computed(() =>
+        this.mode() === ETimetableEditFormMode.UPDATE
+            ? 'この列車を更新'
+            : 'この列車を登録',
+    );
+
+    /** G9: 路線チップ折り畳み時のヘッダー要約（保守的既定=全路線は「全路線」と表示） */
+    readonly routeFilterSummary = computed(() => {
+        const options = this.routeOptions();
+        const selected = this.selectedRouteIds();
+        if (
+            !options.length ||
+            selected.length === 0 ||
+            selected.length === options.length
+        ) {
+            return '全路線';
+        }
+        const selectedSet = new Set<FilterChipValue>(selected);
+        return options
+            .filter((o) => selectedSet.has(o.value))
+            .map((o) => o.label)
+            .join('、');
+    });
+
+    /** G9: 初期値取り込みブロックのプリフィル説明行に使うコピー元ラベル */
+    readonly selectedCopySourceLabel = computed(() => {
+        const blockId = this.selectedTripBlockId();
+        if (!blockId) return null;
+
+        const block = this.copySourceOptions().find(
+            (o) => o.tripBlockId === blockId,
+        );
+        return block ? this.tripBlockLabel(block) : null;
+    });
 
     constructor() {
         effect(() => {
@@ -248,6 +303,79 @@ export class TimetableEditFormTripsComponent {
         this.currentTripIndex.update((i) =>
             Math.min(this.tripsForm.controls.length - 1, i + 1),
         );
+    }
+
+    /**
+     * G9: 2×2 ヘッダーの種別バッジ用。tripClassId から色・名称を引く
+     * （tripClassColor は UI ハードコードしない）。
+     */
+    selectedTripClass(
+        tripForm: ITimetableEditFormTrip,
+    ): TripClassDetailsDto | undefined {
+        const tripClassId = tripForm.get('tripClassId').value;
+        return this.tripClasses().find(
+            (tripClass) => tripClass.tripClassId === tripClassId,
+        );
+    }
+
+    /**
+     * G9: 「行先」は API に保存する独立フィールドではなく、times の中で
+     * 最後に停車/通過する駅名から導出する読み取り専用の表示値
+     * （保存 API のペイロード契約は変更しない）。
+     */
+    destinationLabel(tripForm: ITimetableEditFormTrip): string {
+        const timesForm = tripForm.get(
+            'times',
+        ) as FormArray<ITimetableEditFormTripTime>;
+        const stations = this.stations();
+
+        let lastStationId: string | null = null;
+        for (const timeForm of timesForm.controls) {
+            if (
+                timeForm.get('stopType').value !==
+                ETimetableEditFormStopType.NOT_GOING_THROUGH
+            ) {
+                lastStationId = timeForm.get('stationId').value;
+            }
+        }
+
+        if (!lastStationId) return '';
+
+        return (
+            stations.find((s) => s.stationId === lastStationId)
+                ?.stationName ?? ''
+        );
+    }
+
+    isPassStopType(timeForm: ITimetableEditFormTripTime): boolean {
+        return (
+            timeForm.get('stopType').value ===
+            ETimetableEditFormStopType.PASS
+        );
+    }
+
+    /**
+     * G9: モバイルの1駅1行リストでは「経由なし」ラジオを廃止し（路線チップ
+     * 絞り込みが代替する）、停/通のコンパクトな2値切替のみをタップで循環させる。
+     * 既存の停/通判定・活性/非活性ロジック（#changeDisabledStateWhenChangeStopType）
+     * はデスクトップと共有のため変更しない。
+     */
+    onToggleStopType(timeForm: ITimetableEditFormTripTime): void {
+        const control = timeForm.get('stopType');
+        const next =
+            control.value === ETimetableEditFormStopType.STOP
+                ? ETimetableEditFormStopType.PASS
+                : ETimetableEditFormStopType.STOP;
+
+        control.setValue(next);
+        control.markAsDirty();
+        this.form.markAsDirty();
+    }
+
+    /** G9: sticky 下部バー「下書き保存」。自動保存（valueChanges 購読）に加え明示トリガーを提供する。 */
+    onClickSaveDraft(): void {
+        this.formValueChange.emit(this.tripsForm.getRawValue());
+        this.saveDraftClick.emit();
     }
 
     #loadTrips(trips: TripDetailsDto[]): void {
@@ -450,19 +578,15 @@ export class TimetableEditFormTripsComponent {
     #formInitialize(): void {
         this.#clearTripsForm();
 
-        switch (this.mode()) {
-            case ETimetableEditFormMode.ADD:
-                this.#add();
-                break;
-            case ETimetableEditFormMode.COPY:
-            case ETimetableEditFormMode.UPDATE:
-                for (const trip of this.trips()) {
-                    this.#add(trip);
-                }
-                if (this.tripsForm.controls.length === 0) {
-                    this.#add();
-                }
-                break;
+        // ADD/COPY/UPDATE いずれも、プリフィル対象 trips（COPY のコピー元、
+        // UPDATE の編集対象、ADD で「既存列車からコピー」を選んだ場合の
+        // コピー元）があれば読み込み、無ければ空の 1 件で初期化する。
+        // ADD で copy 元未選択のときは従前どおり空 1 件になる。
+        for (const trip of this.trips()) {
+            this.#add(trip);
+        }
+        if (this.tripsForm.controls.length === 0) {
+            this.#add();
         }
 
         this.currentTripIndex.set(0);

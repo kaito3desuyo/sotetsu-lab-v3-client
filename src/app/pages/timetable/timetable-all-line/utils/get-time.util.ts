@@ -5,10 +5,7 @@ import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.en
 
 function _formatTime(timeString: string): string {
     const date = parse(timeString, 'HH:mm:ss', new Date());
-    let time = format(date, 'Hmm');
-    if (time.length === 3) {
-        time = '-' + time;
-    }
+    const time = format(date, 'Hmm');
     return timeString ? time : '';
 }
 

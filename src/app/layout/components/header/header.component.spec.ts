@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 
@@ -37,5 +38,17 @@ describe('HeaderComponent', () => {
         expect(fixture.nativeElement.textContent).not.toContain(
             'Sotetsu Lab.',
         );
+    });
+
+    it('G0-6: リロードアイコンを表示する（「ようこそ」は維持したまま追加）', () => {
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).toHaveTextContent('ようこそ');
+
+        const icons: HTMLElement[] = Array.from(
+            fixture.nativeElement.querySelectorAll('mat-icon'),
+        );
+        const iconNames = icons.map((icon) => icon.textContent?.trim());
+        expect(iconNames).toContain('refresh');
     });
 });

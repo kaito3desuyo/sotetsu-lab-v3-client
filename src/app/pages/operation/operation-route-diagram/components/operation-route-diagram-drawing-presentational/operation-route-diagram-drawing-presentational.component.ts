@@ -9,20 +9,52 @@ import {
     signal,
     ViewChild,
 } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { RxState } from '@rx-angular/state';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { borderAfterStation } from 'src/app/core/utils/border-after-station.util';
 import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
+import { buildBandViewModels } from '../../utils/operation-route-diagram-build-band-view-models.util';
+import { computeColumnMetrics } from '../../utils/operation-route-diagram-fit-columns.util';
+
+// G6（モック04）: 描画ジオメトリ定数。実測値はモック04のピクセルサンプリング
+// （11 駅・4 行が 390px 幅に収まる比率）を基準に決めている。
+const HEADER_HEIGHT = 96;
+const ROW_HEIGHT = 50;
+const BAND_HEIGHT = 22;
+const ROW_BOTTOM_MARGIN = 24;
+// 出庫/入庫のオレンジタグは行の上に張り出すため、先頭行がボディ SVG の
+// 上端で欠けないよう最初の行だけ余白を確保する。
+const ROW_TOP_MARGIN = 18;
+const STATION_LABEL_CHARS = 6;
+
+export interface OperationRouteDiagramBandRow {
+    tripOperationListId: string;
+    tripBlockId?: string;
+    tripDirection?: number;
+    style: 'nonRevenue' | 'standard';
+    color: string;
+    label: string;
+    leftX: number;
+    rightX: number;
+    leftTime?: string;
+    rightTime?: string;
+    bandTop: number;
+    centerY: number;
+    depotOut: boolean;
+    depotIn: boolean;
+    depotOutX: number;
+    depotInX: number;
+}
 
 @Component({
     selector: 'app-operation-route-diagram-drawing-presentational',
@@ -32,16 +64,17 @@ import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operatio
     ],
     imports: [
         CommonModule,
-        MatButtonModule,
         PipesModule,
         DateFnsPipe,
         OperationRouteDiagramFormatStationNamePipe,
+        AppButtonComponent,
     ],
-    providers: [RxState],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationRouteDiagramDrawingPresentationalComponent {
-    readonly tripDirectionEnum = ETripDirection;
+    readonly HEADER_HEIGHT = HEADER_HEIGHT;
+    readonly BAND_HEIGHT = BAND_HEIGHT;
+    readonly STATION_LABEL_CHARS = STATION_LABEL_CHARS;
 
     readonly drawingSVGForOutput = signal(false);
 
@@ -59,7 +92,101 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         return !!calendar && (calendar.sunday || calendar.saturday);
     });
 
+    // G6: 「390px に全経由駅をフィット」させる列間隔（駅数に応じて自動で狭まる）。
+    readonly columnMetrics = computed(() =>
+        computeColumnMetrics(this.stations().length),
+    );
+
+    readonly svgWidth = computed(() => this.columnMetrics().width);
+
+    readonly bodyHeight = computed(
+        () =>
+            ROW_TOP_MARGIN +
+            this.tripOperationLists().length * ROW_HEIGHT +
+            ROW_BOTTOM_MARGIN,
+    );
+
+    // G6: 駅名の縦書き圧縮（1 文字ずつ縦積み）。SVG の `x`/`dy` は
+    // カンマ区切りで文字ごとの値を取れるため、`xList` に同じ x を
+    // 文字数分並べておくと `dy` の垂直オフセットだけで縦積みできる
+    // （padding パイプで 6 文字化した文字列と組み合わせる既存踏襲の手法）。
+    readonly stationColumns = computed(() => {
+        const metrics = this.columnMetrics();
+        return this.stations().map((station, index) => {
+            const x = metrics.leftPad + index * metrics.columnWidth;
+            return {
+                stationId: station.stationId,
+                stationName: station.stationName,
+                x,
+                xList: Array(STATION_LABEL_CHARS).fill(x).join(','),
+            };
+        });
+    });
+
+    // G6: 路線境界の二重縦罫線。境界判定はデータ駆動の borderAfterStation
+    // （B6 で導入・全線時刻表の罫線ロジックと共有）を再利用する。
+    readonly boundaryXs = computed<number[]>(() => {
+        const metrics = this.columnMetrics();
+        const flags = borderAfterStation(this.stations());
+
+        return flags.reduce<number[]>((xs, flag, index) => {
+            if (!flag) return xs;
+            return [...xs, metrics.leftPad + (index + 0.5) * metrics.columnWidth];
+        }, []);
+    });
+
+    // G6: 行路帯の座標・種別塗り分類・行先ラベルを純関数
+    // （buildBandViewModels）から組み立てる。座標計算そのものはこの
+    // computed の中だけで完結し、テンプレートにロジックを持たせない。
+    readonly bandRows = computed<OperationRouteDiagramBandRow[]>(() => {
+        const metrics = this.columnMetrics();
+
+        return buildBandViewModels(
+            this.tripOperationLists(),
+            this.stations(),
+        ).map((vm, index) => {
+            // 座標はボディ SVG ローカル原点（0 起点）で持つ。ヘッダー分の
+            // オフセットはテンプレート側（可視/PNG 出力の両方）で加算する
+            // （sticky なヘッダー SVG とボディ SVG を分離描画するため）。
+            // ROW_TOP_MARGIN は先頭行の出庫オレンジタグが上端で欠けないための余白。
+            const bandTop = ROW_TOP_MARGIN + index * ROW_HEIGHT;
+            const centerY = bandTop + BAND_HEIGHT / 2;
+            const label =
+                vm.style === 'nonRevenue'
+                    ? vm.tripNumber
+                    : `${vm.tripNumber} ${vm.tripClassName} ${vm.destinationStationName}`;
+
+            return {
+                tripOperationListId: vm.tripOperationListId,
+                tripBlockId: vm.tripBlockId,
+                tripDirection: vm.tripDirection,
+                style: vm.style,
+                color: vm.color,
+                label,
+                leftX: metrics.leftPad + vm.leftIndex * metrics.columnWidth,
+                rightX: metrics.leftPad + vm.rightIndex * metrics.columnWidth,
+                leftTime: vm.leftTime,
+                rightTime: vm.rightTime,
+                bandTop,
+                centerY,
+                depotOut: vm.depotOut,
+                depotIn: vm.depotIn,
+                depotOutX: metrics.leftPad + vm.depotOutIndex * metrics.columnWidth,
+                depotInX: metrics.leftPad + vm.depotInIndex * metrics.columnWidth,
+            };
+        });
+    });
+
     @ViewChild('svgElement') svgElement: ElementRef;
+
+    onClickBand(row: OperationRouteDiagramBandRow): void {
+        if (!row.tripBlockId || row.tripDirection === undefined) return;
+
+        this.clickNavigateTimetable.emit({
+            tripBlockId: row.tripBlockId,
+            tripDirection: row.tripDirection as ETripDirection,
+        });
+    }
 
     async downloadAsPng() {
         const name = `${dayjs(this.calendar().startDate, 'YYYY-MM-DD').format(

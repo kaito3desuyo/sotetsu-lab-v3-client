@@ -142,7 +142,9 @@ export class TimetableEditFormComponent {
             await lastValueFrom(
                 this.#timetableEditFormService.fetchTargetTripBlock(),
             );
-        } else if (this.mode() === ETimetableEditFormMode.COPY) {
+        } else {
+            // G9: ADD/COPY 両モードで「既存列車からコピー」を提供するため、
+            // コピー元候補（同一ダイヤ・同一方向の trip-block 一覧）を取得する。
             await lastValueFrom(
                 this.#timetableEditFormService.fetchCopySourceCandidates(),
             );
@@ -173,6 +175,11 @@ export class TimetableEditFormComponent {
 
     onDraftRestored(): void {
         this.restoreTrips.set(null);
+    }
+
+    /** G9: sticky 下部バー「下書き保存」の明示クリック時のフィードバック（保存自体は自動保存と同経路） */
+    onSaveDraftClick(): void {
+        this.#notification.open('下書きを保存しました', 'OK');
     }
 
     async onReceiveClickSubmit(

@@ -9,7 +9,7 @@
     </header>
     <div class="tw-flex-grow">
         <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
-            <mat-form-field appearance="fill">
+            <mat-form-field>
                 <mat-label>ダイヤ</mat-label>
                 <mat-select formControlName="calendarId">
                     @for (calendar of calendars(); track calendar.calendarId) {
@@ -31,23 +31,17 @@
                 }
             </mat-form-field>
 
-            <mat-button-toggle-group
-                formControlName="tripDirection"
-                aria-label="上り・下り切替"
-            >
-                <mat-button-toggle [value]="tripDirectionEnum.INBOUND">
-                    上り
-                </mat-button-toggle>
-                <mat-button-toggle [value]="tripDirectionEnum.OUTBOUND">
-                    下り
-                </mat-button-toggle>
-            </mat-button-toggle-group>
+            <app-segment-toggle
+                [options]="tripDirectionOptions"
+                [value]="tripDirection()"
+                (valueChange)="onTripDirectionChange($event)"
+            ></app-segment-toggle>
 
-            <mat-slide-toggle formControlName="searchByStation">
+            <mat-slide-toggle color="accent" formControlName="searchByStation">
                 駅を指定して検索する
             </mat-slide-toggle>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field>
                 <mat-label>駅名</mat-label>
                 <mat-select formControlName="stationId">
                     @for (rsl of routeStationLists(); track rsl.routeId) {
@@ -70,15 +64,12 @@
         </form>
     </div>
     <footer class="tw-flex tw-flex-col">
-        <button
+        <app-button
             type="button"
-            color="accent"
-            mat-raised-button
-            class="!tw-h-11 tw-w-full"
             [disabled]="form.invalid"
-            (click)="clickSearch.emit(form.value)"
+            (buttonClick)="clickSearch.emit(form.value)"
         >
             検索
-        </button>
+        </app-button>
     </footer>
 </article>

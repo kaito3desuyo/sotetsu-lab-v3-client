@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { AdsenseModule } from 'ng2-adsense';
+import { AdPlaceholderComponent } from 'src/app/shared/ad-placeholder/ad-placeholder.component';
 import { LibraryListCardCComponent } from 'src/app/shared/library-list-card/components/library-list-card-c/library-list-card-c.component';
 import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
@@ -20,7 +20,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatExpansionModule,
-        AdsenseModule,
+        AdPlaceholderComponent,
         OperationSearchCardCComponent,
         NewOperationPostCardComponent,
         TimetableSearchCardCComponent,

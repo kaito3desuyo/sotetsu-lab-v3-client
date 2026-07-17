@@ -30,6 +30,20 @@ describe('TrainDiagramChartComponent', () => {
         expect(component.lines()).toEqual([]);
     });
 
+    it('stationRows: 極端に狭い駅間（高速通過区間）でも最小行高まで底上げされ、駅名ラベルが重ならない（G7）', () => {
+        fixture.componentRef.setInput('axis', [
+            { stationId: 's1', y: 0 },
+            { stationId: 's2', y: 0.1 }, // ほぼ同一 y = 潰れて重なる区間
+            { stationId: 's3', y: 100 }, // 通常区間はそのまま比率維持
+        ]);
+        fixture.detectChanges();
+
+        const rows = component.stationRows();
+        expect(rows[1].y - rows[0].y).toBeGreaterThanOrEqual(22);
+        // 十分広い区間は底上げされず、所要時間比が維持される
+        expect(rows[2].y).toBeGreaterThan(rows[1].y + 500);
+    });
+
     it('onLineClick: 未選択の trip をクリックすると tripSelected を emit する', () => {
         const spy = jest.spyOn(component.tripSelected, 'emit');
         component.onLineClick('t1');

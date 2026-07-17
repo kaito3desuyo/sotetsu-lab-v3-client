@@ -1,0 +1,29 @@
+@if (variant() === 'primary') {
+    <button
+        mat-flat-button
+        [type]="type()"
+        [disabled]="disabled()"
+        class="app-button app-button-primary"
+        [class.tw-w-full]="fullWidth()"
+        (click)="buttonClick.emit()"
+    >
+        <ng-container [ngTemplateOutlet]="content"></ng-container>
+    </button>
+} @else {
+    <button
+        mat-stroked-button
+        [type]="type()"
+        [disabled]="disabled()"
+        class="app-button app-button-secondary"
+        [class.tw-w-full]="fullWidth()"
+        (click)="buttonClick.emit()"
+    >
+        <ng-container [ngTemplateOutlet]="content"></ng-container>
+    </button>
+}
+
+<!-- 投影内容は単一の ng-content に集約し、変種ごとの @if/@else ブランチへ
+     ngTemplateOutlet で流し込む。ng-content を各ブランチに二重に置くと、
+     補間（バインディング付き）の投影内容が片方のアウトレットにしか
+     結び付かず primary 側で空になる Angular の挙動を回避する。 -->
+<ng-template #content><ng-content></ng-content></ng-template>

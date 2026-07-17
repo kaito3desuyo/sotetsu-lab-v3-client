@@ -1,20 +1,22 @@
-<div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-3 tw-border-b tw-border-grey-200 tw-bg-white tw-px-3 tw-py-2 tw-text-xs">
+<div
+    class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] tw-gap-x-2 tw-gap-y-1 tw-border-b tw-border-grey-200 tw-bg-white tw-px-3 tw-py-2 tw-text-xs"
+>
     @for (entry of legendEntries(); track entry.label) {
-        <span class="tw-flex tw-items-center tw-gap-1">
+        <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
             <span
-                class="tw-inline-block tw-h-0.5 tw-w-4"
+                class="tw-inline-block tw-h-0.5 tw-w-4 tw-shrink-0"
                 [style.background-color]="entry.color"
             ></span>
-            {{ entry.label }}
+            <span class="tw-truncate">{{ entry.label }}</span>
         </span>
     }
     @if (showCurrentTimeCursor()) {
-        <span class="tw-flex tw-items-center tw-gap-1">
+        <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
             <span
-                class="tw-inline-block tw-h-0.5 tw-w-4"
+                class="tw-inline-block tw-h-0.5 tw-w-4 tw-shrink-0"
                 style="background-color: rgb(217, 83, 79)"
             ></span>
-            現在時刻
+            <span class="tw-truncate">現在時刻</span>
         </span>
     }
 </div>

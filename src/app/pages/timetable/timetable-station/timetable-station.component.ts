@@ -6,7 +6,6 @@ import {
     inject,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,9 +16,10 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
+import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
@@ -36,12 +36,12 @@ TimetableStationStore.resetLoading();
     styleUrls: ['./timetable-station.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        MatButtonToggleModule,
         MatFormFieldModule,
         MatProgressBarModule,
         MatSelectModule,
         AdsenseModule,
         EmptyStateComponent,
+        SegmentToggleComponent,
         TimetableStationTableComponent,
         TimetableSearchCardCComponent,
     ],
@@ -70,8 +70,14 @@ export class TimetableStationComponent {
         { initialValue: [] },
     );
 
-    readonly tripDirectionEnum = ETripDirection;
-    readonly tripDirectionLabel = tripDirectionLabel;
+    /** 上り/下り 全幅2セグメントトグルの選択肢（98 G0-3・mockup-01） */
+    readonly tripDirectionOptions: readonly [
+        SegmentToggleOption,
+        SegmentToggleOption,
+    ] = [
+        { value: ETripDirection.INBOUND, label: '上り' },
+        { value: ETripDirection.OUTBOUND, label: '下り' },
+    ];
 
     readonly isLoading = toSignal(TimetableStationStore.isLoading$);
     readonly calendarId = toSignal(TimetableStationStore.calendarId$);
@@ -97,6 +103,17 @@ export class TimetableStationComponent {
 
     readonly isEmpty = computed(
         () => !!this.calendar() && this.timetableData().length === 0,
+    );
+
+    /** G12: 空状態の次アクション（反対方向へ切り替え）に使う方向・ラベル（mockup-07 準拠）。 */
+    readonly oppositeDirection = computed(() =>
+        this.tripDirection() === ETripDirection.INBOUND
+            ? ETripDirection.OUTBOUND
+            : ETripDirection.INBOUND,
+    );
+    readonly oppositeDirectionActionLabel = computed(
+        () =>
+            `${this.oppositeDirection() === ETripDirection.OUTBOUND ? '下り' : '上り'}時刻表を表示する`,
     );
 
     constructor() {
@@ -188,23 +205,36 @@ export class TimetableStationComponent {
     async fetchData(): Promise<void> {
         TimetableStationStore.enableLoading();
 
-        await lastValueFrom(this.#timetableStationService.fetchCalendar());
-        await lastValueFrom(this.#timetableStationService.fetchTrips());
-        await lastValueFrom(this.#timetableStationService.fetchTripClasses());
-        await lastValueFrom(this.#timetableStationService.fetchStations());
-        await lastValueFrom(this.#timetableStationService.fetchOperations());
-        await lastValueFrom(this.#timetableStationService.fetchTripBlocks());
-
-        // B7: 過去ダイヤ表示時は編成関連（目撃クロスセクション）のフェッチ自体をスキップする
-        if (this.isTodaysCalendar()) {
+        try {
+            await lastValueFrom(this.#timetableStationService.fetchCalendar());
+            await lastValueFrom(this.#timetableStationService.fetchTrips());
             await lastValueFrom(
-                this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
+                this.#timetableStationService.fetchTripClasses(),
             );
-        } else {
-            TimetableStationStore.setOperationSightingTimeCrossSections([]);
-        }
+            await lastValueFrom(this.#timetableStationService.fetchStations());
+            await lastValueFrom(
+                this.#timetableStationService.fetchOperations(),
+            );
 
-        TimetableStationStore.disableLoading();
+            // T6.8 再差し戻し対応: 充当編成（本ページの最重要データ）は、重い
+            // tripBlocks バルク取得より先に取得する。tripBlocks 側の遅延・失敗が
+            // 充当編成の初回描画を巻き添えにしない順序に固定する。
+            // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
+            if (this.isTodaysCalendar()) {
+                await lastValueFrom(
+                    this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
+                );
+            } else {
+                TimetableStationStore.resetOperationSightingTimeCrossSections();
+            }
+
+            await lastValueFrom(
+                this.#timetableStationService.fetchTripBlocks(),
+            );
+        } finally {
+            // 途中の reject でローディングバーが永久残留しないことを保証する
+            TimetableStationStore.disableLoading();
+        }
     }
 
     onStationChange(stationId: string): void {
@@ -235,7 +265,8 @@ export class TimetableStationComponent {
         this.#handleNavigationResult(navigation);
     }
 
-    onDirectionChange(tripDirection: ETripDirection): void {
+    onDirectionChange(value: number | string): void {
+        const tripDirection = Number(value) as ETripDirection;
         if (tripDirection === this.tripDirection()) return;
 
         const navigation = this.#router.navigate([

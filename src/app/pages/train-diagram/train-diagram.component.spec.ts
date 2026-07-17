@@ -82,6 +82,11 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('ロード中はチャート（本文）を出さず中央スピナーを表示する', () => {
+        // G12: isEmpty() は「ロード完了後に列車が0件」を空状態として扱うため、
+        // ロード解除後もチャートを表示させるにはダミーの列車データが必要。
+        TrainDiagramStore.setTripBlocksByDirection({
+            0: [{ tripBlockId: 'b-1', trips: [{ tripId: 't-1' }] } as any],
+        });
         TrainDiagramStore.enableLoading();
         fixture.detectChanges();
 

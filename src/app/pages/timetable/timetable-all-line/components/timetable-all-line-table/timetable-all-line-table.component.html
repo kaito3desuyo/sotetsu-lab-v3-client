@@ -2,7 +2,7 @@
 <article class="tw-bg-white tw-shadow-md">
     <header
         class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-        [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
+        [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
     >
         <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
             {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
@@ -12,6 +12,7 @@
         </h3>
     </header>
     <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+        @if (trips().length) {
         <mat-paginator
             [length]="pageSettings().length"
             [pageIndex]="pageSettings().pageIndex"
@@ -20,8 +21,10 @@
             (page)="page.emit($event)"
         ></mat-paginator>
 
+        <!-- G5: 内部縦スクロールは廃止しページ全開にする（sticky ヘッダ行/列は維持）。
+             横方向のみこの div でスクロールする -->
         <div
-            class="tw-h-[70vh] tw-overflow-auto tw-border tw-border-solid tw-border-grey-300"
+            class="tw-overflow-x-auto tw-border tw-border-solid tw-border-grey-300"
         >
             <table
                 class="tw-border-collapse tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
@@ -46,7 +49,7 @@
                                         transform-origin: center;
                                         margin: -9999px;
                                     "
-                                    [ngStyle]="{
+                                    [style]="{
                                         transform:
                                             'scale(' +
                                             (trip.tripNumber.length > 3
@@ -113,28 +116,29 @@
                                         transform-origin: center;
                                         margin: -9999px;
                                     "
-                                    [ngStyle]="{
+                                    [style]="{
                                         color: trip.tripClass.tripClassColor,
                                         transform:
                                             'scale(' +
                                             ((
                                                 trip.tripClass.tripClassName
-                                                | antiBrackets
+                                                | tripClassShortName
                                             ).length > 2
                                                 ? 2 /
                                                   (
                                                       trip.tripClass
                                                           .tripClassName
-                                                      | antiBrackets
+                                                      | tripClassShortName
                                                   ).length
                                                 : 1) +
                                             ', 1)',
                                     }"
                                 >
+                                    <!-- G5: 種別行は短縮名（各駅停車→各停）。
+                                         select 等の選択肢は正式名維持 -->
                                     {{
                                         trip.tripClass.tripClassName
-                                            | antiBrackets
-                                            | tripClassBaseName
+                                            | tripClassShortName
                                     }}
                                 </span>
                             </th>
@@ -146,32 +150,32 @@
                         @let viewMode = viewModes().get(station.stationId);
                         @let borderSetting =
                             bordersAfter().get(station.stationId) ?? false;
-
-                        @if (
-                            viewMode ===
-                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                        @let isDirectionTerminusArrival =
                             (tripDirection() === tripDirectionEnum.INBOUND &&
                                 viewMode ===
                                     staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
                             (tripDirection() === tripDirectionEnum.OUTBOUND &&
                                 viewMode ===
-                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL)
+                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL);
+                        @let isArrivalBlockEnd =
+                            viewMode ===
+                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                            isDirectionTerminusArrival;
+
+                        @if (
+                            viewMode ===
+                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                            isDirectionTerminusArrival
                         ) {
                             <tr class="tw-h-6">
                                 <td
                                     class="tw-sticky tw-left-0 tw-z-10 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                    [ngClass]="{
-                                        'tw-border-b before:tw-border-b':
-                                            borderSetting === true ||
-                                            (tripDirection() ===
-                                                tripDirectionEnum.INBOUND &&
-                                                viewMode ===
-                                                    staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
-                                            (tripDirection() ===
-                                                tripDirectionEnum.OUTBOUND &&
-                                                viewMode ===
-                                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
-                                    }"
+                                    [class]="
+                                        stickyBottomBorderClass(
+                                            borderSetting,
+                                            isDirectionTerminusArrival
+                                        )
+                                    "
                                     [rowSpan]="
                                         viewMode ===
                                         staitonViewModeEnum.DEPARTURE_AND_ARRIVAL
@@ -199,7 +203,7 @@
                                             display: inline-block;
                                             transform-origin: right;
                                         "
-                                        [ngStyle]="{
+                                        [style]="{
                                             transform:
                                                 'scale(' +
                                                 (station.stationName.length > 4
@@ -222,20 +226,12 @@
                                 </td>
                                 <td
                                     class="tw-sticky tw-left-[154px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                    [ngClass]="{
-                                        'tw-border-b before:tw-border-b':
-                                            borderSetting === true ||
-                                            viewMode ===
-                                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
-                                            (tripDirection() ===
-                                                tripDirectionEnum.INBOUND &&
-                                                viewMode ===
-                                                    staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
-                                            (tripDirection() ===
-                                                tripDirectionEnum.OUTBOUND &&
-                                                viewMode ===
-                                                    staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
-                                    }"
+                                    [class]="
+                                        stickyBottomBorderClass(
+                                            borderSetting,
+                                            isArrivalBlockEnd
+                                        )
+                                    "
                                 >
                                     <span class="tw-relative">着</span>
                                 </td>
@@ -243,21 +239,13 @@
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
                                         class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
-                                        [ngClass]="{
-                                            'tw-border-b':
-                                                borderSetting === true ||
-                                                viewMode ===
-                                                    staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
-                                                (tripDirection() ===
-                                                    tripDirectionEnum.INBOUND &&
-                                                    viewMode ===
-                                                        staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
-                                                (tripDirection() ===
-                                                    tripDirectionEnum.OUTBOUND &&
-                                                    viewMode ===
-                                                        staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL),
-                                        }"
-                                        [ngStyle]="{
+                                        [class]="
+                                            cellBottomBorderClass(
+                                                borderSetting,
+                                                isArrivalBlockEnd
+                                            )
+                                        "
+                                        [style]="{
                                             color: trip.tripClass
                                                 .tripClassColor,
                                         }"
@@ -291,10 +279,12 @@
                                 ) {
                                     <td
                                         class="tw-sticky tw-left-0 tw-z-0 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                        [ngClass]="{
-                                            'tw-border-b before:tw-border-b':
+                                        [class]="
+                                            stickyBottomBorderClass(
                                                 borderSetting,
-                                        }"
+                                                false
+                                            )
+                                        "
                                     >
                                         <span
                                             class="tw-relative tw-text-[10px]"
@@ -316,7 +306,7 @@
                                                 display: inline-block;
                                                 transform-origin: right;
                                             "
-                                            [ngStyle]="{
+                                            [style]="{
                                                 transform:
                                                     'scale(' +
                                                     (station.stationName
@@ -344,10 +334,12 @@
 
                                 <td
                                     class="tw-sticky tw-left-[154px] tw-z-0 tw-border-0 tw-border-solid !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                    [ngClass]="{
-                                        'tw-border-b before:tw-border-b':
+                                    [class]="
+                                        stickyBottomBorderClass(
                                             borderSetting,
-                                    }"
+                                            false
+                                        )
+                                    "
                                 >
                                     <span class="tw-relative">発</span>
                                 </td>
@@ -355,10 +347,13 @@
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
                                         class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
-                                        [ngClass]="{
-                                            'tw-border-b': borderSetting,
-                                        }"
-                                        [ngStyle]="{
+                                        [class]="
+                                            cellBottomBorderClass(
+                                                borderSetting,
+                                                false
+                                            )
+                                        "
+                                        [style]="{
                                             color: trip.tripClass
                                                 .tripClassColor,
                                         }"
@@ -385,8 +380,10 @@
                     <tr>
                         <td
                             colspan="2"
-                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                        ></td>
+                            class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        >
+                            <span class="tw-relative tw-sticky">編集</span>
+                        </td>
 
                         @for (trip of trips(); track trip.tripId) {
                             <td
@@ -406,8 +403,10 @@
                     <tr>
                         <td
                             colspan="2"
-                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                        ></td>
+                            class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        >
+                            <span class="tw-relative tw-sticky">コピー</span>
+                        </td>
 
                         @for (trip of trips(); track trip.tripId) {
                             <td
@@ -427,8 +426,10 @@
                     <tr>
                         <td
                             colspan="2"
-                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                        ></td>
+                            class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        >
+                            <span class="tw-relative tw-sticky">削除</span>
+                        </td>
 
                         @for (trip of trips(); track trip.tripId) {
                             <td
@@ -449,8 +450,10 @@
                     <tr>
                         <td
                             colspan="2"
-                            class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-[calc(100%_-_0.5px)] before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-b before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                        ></td>
+                            class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-[calc(100%_-_0.5px)] before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-b before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                        >
+                            <span class="tw-relative tw-sticky">グループ</span>
+                        </td>
 
                         @for (trip of trips(); track trip.tripId) {
                             <td
@@ -533,6 +536,16 @@
                 </tfoot>
             </table>
         </div>
+        } @else {
+            <!-- G12: mockup-07 準拠の3点セット。次アクションは反対方向へ切り替え。 -->
+            <app-empty-state
+                icon="train"
+                message="この条件の列車情報はありません"
+                subtitle="ダイヤまたは方向を変えてお試しください。"
+                [actionLabel]="oppositeDirectionActionLabel()"
+                (actionClick)="toggleDirection.emit()"
+            ></app-empty-state>
+        }
     </div>
 </article>
 }

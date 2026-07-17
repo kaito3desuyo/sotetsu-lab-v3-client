@@ -1,19 +1,2 @@
-// モック 10 準拠: 上り/下りトグルは全幅 2 分割・選択側は紺（primary）
-mat-button-toggle-group {
-    width: 100%;
-    --mat-button-toggle-shape: 0;
-    --mat-button-toggle-selected-state-background-color: #001556;
-    --mat-button-toggle-selected-state-text-color: #ffffff;
-
-    mat-button-toggle {
-        flex: 1 1 0;
-    }
-}
-
-// モック 10 準拠: 検索ボタンはオレンジ（accent）地 + 白文字
-// R-5: オレンジ地の文字は 15px 以上 + bold のみ（AA コントラスト確保）
-button[mat-raised-button] {
-    --mat-button-protected-label-text-color: #ffffff;
-    --mat-button-protected-label-text-size: 15px;
-    --mat-button-protected-label-text-weight: 700;
-}
+// モック 10 準拠の見た目は app-segment-toggle / app-button（共通部品）に委譲。
+// このコンポーネント固有の Material 上書きは不要になった（98 G0-3/G0-4）。

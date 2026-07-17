@@ -3,8 +3,10 @@
     label="表示設定"
     [summary]="collapsedSummary()"
 >
-    <div class="tw-flex tw-flex-row tw-flex-wrap tw-gap-3">
-        <mat-form-field subscriptSizing="dynamic" class="tw-w-full sm:tw-w-56">
+    <!-- ダイヤ select + 時間帯 select を横並びに（G0-1/G0-7・G7）。tw-w-full だと flex-wrap で
+         モバイル幅で縦積みになってしまうため、tw-flex-1 で常に同一行に収める。 -->
+    <div class="tw-flex tw-flex-row tw-gap-2">
+        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-[3]">
             <mat-label>ダイヤ</mat-label>
             <mat-select
                 [value]="calendarId()"
@@ -12,21 +14,13 @@
             >
                 @for (calendar of calendars(); track calendar.calendarId) {
                     <mat-option [value]="calendar.calendarId">
-                        {{
-                            calendar.startDate
-                                | dateFns
-                                    : {
-                                          format: 'yyyy年MM月dd日改正',
-                                          parseFormat: 'yyyy-MM-dd',
-                                      }
-                        }}
-                        {{ calendar.calendarName }}
+                        {{ calendarSummaryLabel(calendar) }}
                     </mat-option>
                 }
             </mat-select>
         </mat-form-field>
 
-        <mat-form-field subscriptSizing="dynamic" class="tw-w-full sm:tw-w-40">
+        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-[2]">
             <mat-label>時間帯</mat-label>
             <mat-select
                 [value]="currentWindowValue()"
@@ -39,7 +33,9 @@
                 }
             </mat-select>
         </mat-form-field>
+    </div>
 
+    <div class="tw-flex tw-flex-row tw-flex-wrap tw-gap-3">
         <mat-button-toggle-group
             class="tw-self-center"
             [value]="directionFilter()"

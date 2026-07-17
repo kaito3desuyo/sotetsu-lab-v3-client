@@ -1,7 +1,20 @@
 import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+    signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TrainLocationRow } from '../../interfaces/train-location-row.interface';
+import {
+    TrainLocationBetweenRow,
+    TrainLocationRow,
+} from '../../interfaces/train-location-row.interface';
+import {
+    BetweenRowLayout,
+    resolveBetweenRowLayout,
+} from '../../utils/resolve-between-row-layout.util';
 import { TrainLocationCardComponent } from '../train-location-card/train-location-card.component';
 
 /**
@@ -26,6 +39,36 @@ export class TrainLocationLineComponent {
     readonly rows = input.required<TrainLocationRow[]>();
 
     readonly #expandedKeys = signal<ReadonlySet<string>>(new Set());
+
+    /** 起点駅名（駅軸の先頭駅。上り方面ラベル「上り（〇〇方面）」に使う） */
+    readonly originStationName = computed(() => {
+        const first = this.rows().find((row) => row.kind === 'station');
+        return first?.kind === 'station' ? first.stationName : '';
+    });
+
+    /**
+     * 駅間行（between）ごとの衝突回避レイアウトを事前計算する（98 G8）。
+     * rows() が変わらない限り再計算しない（Map の再構築コストを rows 変更時のみに限定する）。
+     */
+    readonly #betweenLayouts = computed(() => {
+        const map = new Map<TrainLocationBetweenRow, BetweenRowLayout>();
+        for (const row of this.rows()) {
+            if (row.kind === 'between') {
+                map.set(row, resolveBetweenRowLayout(row.leftCards, row.rightCards));
+            }
+        }
+        return map;
+    });
+
+    betweenLayout(row: TrainLocationBetweenRow): BetweenRowLayout {
+        return (
+            this.#betweenLayouts().get(row) ?? {
+                heightPx: 0,
+                left: [],
+                right: [],
+            }
+        );
+    }
 
     /** 左側（上り）: バッジ右端を基準に下へ、収まらなければ上へ出す */
     readonly leftOverlayPositions: ConnectedPosition[] = [

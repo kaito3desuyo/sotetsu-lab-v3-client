@@ -117,6 +117,11 @@ export class OperationRouteDiagramComponent {
             });
     }
 
+    /** G12: 空状態（運用番号未設定）の次アクション。運用表へ誘導する。 */
+    onEmptyStateActionClick(): void {
+        this.#router.navigate(['/operation/table']);
+    }
+
     async fetchData(): Promise<void> {
         if (!OperationRouteDiagramStore.operationId) return;
 

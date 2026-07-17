@@ -45,8 +45,11 @@ export class TimetableStationTripCellComponent {
     readonly tripClasses = input.required<TripClassDetailsDto[]>();
     readonly stations = input.required<StationDetailsDto[]>();
     readonly operations = input.required<OperationDetailsDto[]>();
+    /**
+     * G1: operationNumber をキーにした Record（stores/timetable-station.store.ts 参照）。
+     */
     readonly operationSightingTimeCrossSections = input.required<
-        OperationSightingTimeCrossSectionDto[]
+        Record<string, OperationSightingTimeCrossSectionDto>
     >();
 
     /**

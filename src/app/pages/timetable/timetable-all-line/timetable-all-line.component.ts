@@ -153,6 +153,16 @@ export class TimetableAllLineComponent {
         TimetableAllLineStore.setPageSettings(pageSettings);
     }
 
+    /** G12: 空状態の次アクション（反対方向へ切り替え。現在の calendar/route_ids 等は維持）。 */
+    onToggleDirection(): void {
+        const next = this.tripDirection() === 0 ? 1 : 0;
+        this.#router.navigate([
+            'timetable',
+            'all-line',
+            { ...this.#route.snapshot.params, trip_direction: next },
+        ]);
+    }
+
     onClickedEditButton(trip: TripDetailsDto): void {
         this.#router.navigate([
             'timetable',

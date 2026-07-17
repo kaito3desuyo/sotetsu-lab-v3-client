@@ -15,7 +15,9 @@
         <app-operation-route-diagram-route-filter></app-operation-route-diagram-route-filter>
     </div>
     <div class="tw-flex tw-flex-col tw-gap-4">
-        <app-operation-route-diagram-drawing-container></app-operation-route-diagram-drawing-container>
+        <app-operation-route-diagram-drawing-container
+            (emptyStateActionClick)="onEmptyStateActionClick()"
+        ></app-operation-route-diagram-drawing-container>
         <ng-adsense [adSlot]="6189336070"></ng-adsense>
         <app-operation-search-card-c></app-operation-search-card-c>
     </div>

@@ -134,8 +134,9 @@
             class="tw-col-start-2 tw-row-start-2 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 tw-text-xs tw-leading-4"
         >
             @if (!!current) {
+                <!-- mockup-02: 種別リンクは下線付き（98 §G2 A4「下線種別リンク」） -->
                 <a
-                    class="tw-whitespace-nowrap tw-no-underline"
+                    class="tw-whitespace-nowrap tw-underline"
                     [routerLink]="[
                         '/timetable',
                         'all-line',
@@ -210,9 +211,16 @@
                     </span>
                 }
 
-                <mat-icon class="!tw-h-4 !tw-w-4 tw-text-[16px] tw-leading-[normal]">
-                    arrow_forward
-                </mat-icon>
+                @if (!prev && !current && !!next) {
+                    <!-- mockup-02: 出庫前は「出庫前○ ・ かしわ台 20:31」の・区切り -->
+                    <span>・</span>
+                } @else {
+                    <mat-icon
+                        class="!tw-h-4 !tw-w-4 tw-text-[16px] tw-leading-[normal]"
+                    >
+                        arrow_forward
+                    </mat-icon>
+                }
 
                 <!-- TO -->
                 @if (!prev && !current && !!next) {
@@ -277,11 +285,13 @@
         </div>
     }
 
-    <!-- 右: 目撃時刻・最終更新時刻 -->
+    <!-- 右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
     <div
         class="tw-col-start-3 tw-row-start-1 tw-row-span-2 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-start tw-text-right"
     >
-        <div class="tw-flex tw-flex-col tw-items-end">
+        <div
+            class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
+        >
             <span class="tw-text-[10px] tw-leading-tight tw-text-grey-500">
                 目撃
             </span>
@@ -309,7 +319,9 @@
                 <span class="tw-text-xs tw-text-grey-600">不明</span>
             }
         </div>
-        <div class="tw-flex tw-flex-col tw-items-end">
+        <div
+            class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
+        >
             <span class="tw-text-[10px] tw-leading-tight tw-text-grey-500">
                 更新
             </span>

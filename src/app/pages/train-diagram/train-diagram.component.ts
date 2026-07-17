@@ -14,6 +14,7 @@ import { RouteStationListStateQuery } from 'src/app/global-states/route-station-
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { TrainDiagramControllerComponent } from './components/train-diagram-controller/train-diagram-controller.component';
 import { TrainDiagramInfoPanelComponent } from './components/train-diagram-info-panel/train-diagram-info-panel.component';
 import { TrainDiagramLegendComponent } from './components/train-diagram-legend/train-diagram-legend.component';
@@ -45,6 +46,7 @@ TrainDiagramStore.resetLoading();
     imports: [
         MatProgressBarModule,
         LoadingComponent,
+        EmptyStateComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
         TrainDiagramChartComponent,
@@ -106,6 +108,16 @@ export class TrainDiagramComponent {
     );
     readonly selectedTripId = toSignal(TrainDiagramStore.selectedTripId$, {
         initialValue: null,
+    });
+    /**
+     * G12: 表示条件（路線/方向/ダイヤ）に一致する列車が1本も無いか（ロード完了後のみ判定）。
+     * mockup-07 の空状態を chart の代わりに表示する。
+     */
+    readonly isEmpty = computed(() => {
+        if (this.isLoading()) return false;
+        return !Object.values(this.filteredTripBlocksByDirection())
+            .flat()
+            .some((block) => (block.trips?.length ?? 0) > 0);
     });
     readonly operationSightingTimeCrossSections = toSignal(
         TrainDiagramStore.operationSightingTimeCrossSections$,
@@ -177,10 +189,11 @@ export class TrainDiagramComponent {
             const tripOperationList = trip.tripOperationLists?.[0];
             const operationId = tripOperationList?.operationId;
             const operationNumber = tripOperationList?.operation?.operationNumber;
-            const formationNumber = operationNumber
+            const expectedSighting = operationNumber
                 ? this.operationSightingTimeCrossSections()[operationNumber]
-                      ?.expectedSighting?.formation?.formationNumber
+                      ?.expectedSighting
                 : undefined;
+            const formationNumber = expectedSighting?.formation?.formationNumber;
 
             return {
                 tripId,
@@ -192,6 +205,9 @@ export class TrainDiagramComponent {
                 operationNumber,
                 formationNumber: this.isTodaySelected()
                     ? formationNumber
+                    : undefined,
+                sightingTime: this.isTodaySelected()
+                    ? expectedSighting?.sightingTime
                     : undefined,
                 detailLink: [
                     '/timetable',
@@ -332,6 +348,14 @@ export class TrainDiagramComponent {
 
     onDirectionFilterChange(directionFilter: DiagramDirectionFilter): void {
         this.#navigate({ direction: directionFilter });
+    }
+
+    /** G12: 空状態の次アクション。方向フィルタ「両方」+ 既定路線に戻して再表示する。 */
+    onResetDiagramFilters(): void {
+        this.#navigate({
+            direction: 'both',
+            route_ids: this.#defaultRouteIds().join(','),
+        });
     }
 
     async onTripSelected(tripId: string | null): Promise<void> {

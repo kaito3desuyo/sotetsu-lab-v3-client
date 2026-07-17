@@ -12,13 +12,14 @@ import {
     toSignal,
 } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { interval, lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { estimatePositions } from 'src/app/shared/train-position.util';
 import { TrainLocationClockComponent } from './components/train-location-clock/train-location-clock.component';
 import { TrainLocationControllerComponent } from './components/train-location-controller/train-location-controller.component';
@@ -50,9 +51,11 @@ TrainLocationStore.resetLoading();
     imports: [
         MatProgressBarModule,
         LoadingComponent,
+        EmptyStateComponent,
         TrainLocationControllerComponent,
         TrainLocationClockComponent,
         TrainLocationLineComponent,
+        RouterLink,
     ],
 })
 export class TrainLocationComponent {
@@ -194,6 +197,26 @@ export class TrainLocationComponent {
         ),
     );
 
+    /**
+     * G12: ロード完了後に、その時刻に在線している列車（カード）が1本も無いか。
+     * 駅軸（駅ライン）は残したまま、この状態のとき空文脈メッセージを重ねて表示する。
+     * 単一路線選択で駅軸は常に非空のため「駅軸0件」ではなく「在線0本」で判定する。
+     */
+    readonly hasNoTrainsInService = computed(() => {
+        if (this.isLoading()) return false;
+        return this.positions().length === 0;
+    });
+    /** 時刻指定モードのみ「現在時刻に戻す」を次アクションとして提示する。 */
+    readonly emptyStateActionLabel = computed(() =>
+        this.mode() === 'specified' ? '現在時刻を表示する' : undefined,
+    );
+    /** 時刻指定モードでは時刻変更を促す補足文を出す（現在時刻モードでは省略）。 */
+    readonly emptyStateSubtitle = computed(() =>
+        this.mode() === 'specified'
+            ? '時刻を変えてお試しください。'
+            : undefined,
+    );
+
     readonly clockText = computed(() => format(this.at(), 'HH:mm:ss'));
     readonly timeInputValue = computed(() => {
         const parsed = parseTimeParam(this.specifiedTime());
@@ -324,6 +347,12 @@ export class TrainLocationComponent {
 
     onRouteIdChange(routeId: string): void {
         this.#navigate({ route_id: routeId });
+    }
+
+    /** G12: 空状態の次アクション（時刻指定モード時のみ）。現在時刻モードへ戻す。 */
+    onEmptyStateAction(): void {
+        if (this.mode() !== 'specified') return;
+        this.onModeChange('now');
     }
 
     onModeChange(mode: TrainLocationMode): void {
