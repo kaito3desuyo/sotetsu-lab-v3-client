@@ -1,16 +1,7 @@
 @if (calendar()) {
 <article class="tw-bg-white tw-shadow-md">
-    <header
-        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-        [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
-    >
-        <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
-            改正<br />
-            {{ calendar().calendarName }}
-            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
-        </h3>
-    </header>
+    <!-- P8-2 (98 §G0-8): 青帯バナーを廃止。改正日・ダイヤ名・方向は
+         app-timetable-search-card-c 側で表示済みのため削除しても情報削減にならない。 -->
     <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
         @if (trips().length) {
         <mat-paginator

@@ -88,8 +88,8 @@ export class OperationRealTimeOperationCardComponent {
 
     /**
      * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
-     * 「10000系・相鉄」形式）。vehicle_type は素の形式番号（例: 10000）なので
-     * 「系」を付けて会社名と「・」で連結する。formationNumber 文字列自体は加工しない。
+     * 「10000・相鉄」形式）。vehicle_type は素の形式番号（例: 10000）を
+     * そのまま会社名と「・」で連結する。formationNumber 文字列自体は加工しない。
      */
     readonly formationAnnotation = computed(() => {
         const formationId = this.expectedSightingFormation()?.formationId;
@@ -107,7 +107,7 @@ export class OperationRealTimeOperationCardComponent {
                   ?.agencyName
             : undefined;
         const vehicleTypePart = formation.vehicleType
-            ? `${formation.vehicleType}系`
+            ? formation.vehicleType
             : undefined;
         return [vehicleTypePart, agencyName]
             .filter((part) => !!part)

@@ -13,6 +13,17 @@
     display: none;
 }
 
+// P8-9: 上記で graphic を常時非表示にした結果、graphic 自身が持つ左余白
+// （padding-left: 6px 相当）も失われ、MDC 標準の
+// `.mdc-evolution-chip--with-primary-graphic .mdc-evolution-chip__action--primary`
+// が持つ padding-left: 0（右は 12px のまま）と相まってラベルが左に寄って
+// 見える（実測: 左余白 0〜1px / 右余白 12〜13px）。単一選択モードは選択有無を
+// 問わず graphic が常に非表示なので、action の左右パディングを右と同じ
+// 12px に揃えて対称化する（● マーカーはテキストラベル内の別要素のため影響しない）
+::ng-deep .filter-chips-single .mdc-evolution-chip__action--primary {
+    padding-left: 12px !important;
+}
+
 // G0-2: 絞り込みチップの角型化・状態別配色。
 // MatChip の M2 テーマは背景色・角丸を CSS カスタムプロパティのカスケードで
 // 決めており、そのカスケード順序に依存すると環境差で選択状態が灰のまま

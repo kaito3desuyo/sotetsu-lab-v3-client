@@ -56,13 +56,6 @@ export class HeaderComponent {
 
     clickButton = output<void>();
 
-    /** G0-6: 最新の情報に更新（ページ全体をリロードして initialDataResolver を再実行する） */
-    onClickReload(): void {
-        if (typeof window !== 'undefined') {
-            window.location.reload();
-        }
-    }
-
     onClickRegister(): void {
         this.#dialog.open(RegisterDialogComponent, {
             width: '360px',

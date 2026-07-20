@@ -1,6 +1,9 @@
 // G0-9: 広告崩壊時（localhost の AdSense 403 等）に高さが不定になるのを防ぐため、
 // 斜線パターンの背景を常設する（実広告はこの上に重なって描画される）。
 .ad-placeholder-stripes {
+    // P8-5: 横 gutter 0（flush）のページで width:100% + 左右 1px 枠が
+    // ビューポートを 2px 超過し横スクロールが出るのを防ぐ（枠を幅の内側に含める）。
+    box-sizing: border-box;
     background-image: repeating-linear-gradient(
         45deg,
         #e0e0e0 0,

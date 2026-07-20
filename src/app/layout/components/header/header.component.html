@@ -34,16 +34,6 @@
             <p class="tw-m-0 tw-text-xs">ようこそ<br />ゲスト さん</p>
         </div>
     }
-    <!-- G0-6: 最新の情報に更新するリロードアイコン（モック 01〜04 準拠）。
-         「ようこそ」は情報削減禁止で維持し、追加のみ行う -->
-    <button
-        mat-icon-button
-        (click)="onClickReload()"
-        class="!tw-shadow-none"
-        aria-label="最新の情報に更新"
-    >
-        <mat-icon>refresh</mat-icon>
-    </button>
     <button mat-icon-button [matMenuTriggerFor]="menu" class="!tw-shadow-none">
         <mat-icon>account_circle</mat-icon>
     </button>

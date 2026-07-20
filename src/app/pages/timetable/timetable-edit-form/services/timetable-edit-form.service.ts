@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -23,6 +24,7 @@ import {
     TimetableEditFormDraftStore,
 } from '../stores/timetable-edit-form-draft.store';
 import { TimetableEditFormStore } from '../stores/timetable-edit-form.store';
+import { timetableEditFormDefaultRouteIds } from '../utils/timetable-edit-form-default-route-ids.util';
 
 @Injectable()
 export class TimetableEditFormService {
@@ -32,6 +34,7 @@ export class TimetableEditFormService {
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
     #submittedEvent$ = new Subject<void>();
 
@@ -62,7 +65,11 @@ export class TimetableEditFormService {
         );
     }
 
-    /** B8-1: 路線チップの選択肢。初回取得時は全路線を選択済み状態にする（情報削減にならないよう既定は全表示）。 */
+    /**
+     * B8-1 → P8-4: 路線チップの選択肢。初回取得時の既定選択は「全路線」ではなく
+     * 自社（相鉄）路線のみに絞る（初期視界を占有しないため）。全路線は引き続き
+     * 折り畳みパネル内でユーザーが選択可能（情報削減はしない）。
+     */
     fetchRoutes(): Observable<void> {
         const serviceId = this.#serviceListStateQuery.serviceId;
 
@@ -71,7 +78,10 @@ export class TimetableEditFormService {
                 const routes = data.routes as RouteDetailsDto[];
                 TimetableEditFormStore.setRoutes(routes);
                 TimetableEditFormStore.setSelectedRouteIds(
-                    routes.map((route) => route.routeId),
+                    timetableEditFormDefaultRouteIds(
+                        routes,
+                        this.#agencyListStateQuery.agencies,
+                    ),
                 );
             }),
             map(() => undefined),

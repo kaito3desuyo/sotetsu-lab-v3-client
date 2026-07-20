@@ -12,6 +12,7 @@ import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.ser
 import { estimatePositions } from 'src/app/shared/train-position.util';
 import { buildDashboardMiniDiagram } from '../utils/build-dashboard-mini-diagram.util';
 import { buildNetworkStationAxis } from '../utils/build-network-station-axis.util';
+import { selectMajorStationIds } from '../utils/select-major-station-ids.util';
 import { DashboardStore } from '../stores/dashboard.store';
 
 @Injectable()
@@ -75,8 +76,17 @@ export class DashboardService {
                     now,
                 );
                 DashboardStore.setRunningTripCount(positions.length);
+                // ヒーロー背景ミニダイヤは主要駅（各線起終点＋乗換・分岐駅）のみの
+                // 粗い軸で描き、ラッシュ時の過密（約 474 線）を数十線に減らす。
+                // 計画走行本数（positions）は全駅軸のまま算出＝数値は不変。
+                const majorStationIds = selectMajorStationIds(routes);
                 DashboardStore.setMiniDiagramLines(
-                    buildDashboardMiniDiagram(tripBlocks, stationAxis, now),
+                    buildDashboardMiniDiagram(
+                        tripBlocks,
+                        stationAxis,
+                        now,
+                        majorStationIds,
+                    ),
                 );
             }),
             map(() => undefined),

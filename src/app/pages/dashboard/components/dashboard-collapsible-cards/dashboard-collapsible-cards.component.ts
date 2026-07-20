@@ -17,6 +17,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
 @Component({
     selector: 'app-dashboard-collapsible-cards',
     templateUrl: './dashboard-collapsible-cards.component.html',
+    styleUrl: './dashboard-collapsible-cards.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatExpansionModule,

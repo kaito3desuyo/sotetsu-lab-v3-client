@@ -7,6 +7,11 @@ import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-d
  * 現在時刻から ±30 分の窓に、実データ（当日ダイヤの全 trip の停車時刻）から
  * 斜め線（列車の走行線）を生成する純関数。x=時間・y=駅軸位置に正規化した
  * viewBox 座標（0..VIEW_W × 0..VIEW_H）の線分群を返す。現在時刻は x=VIEW_W/2。
+ *
+ * `majorStationIds` を渡すと y 軸を主要駅のみに間引き、各列車の線を主要駅の
+ * 点だけで結ぶ（中間駅を省く）。ラッシュ時に全駅軸だと約 474 線に達し密で
+ * 判読しづらいため、主要駅で粗くして数十線の疎な図にする（±30 分窓・現在時刻
+ * 線・実データは維持）。未指定なら従来どおり全駅軸で描く。
  */
 
 export type MiniDiagramLine = { x1: number; y1: number; x2: number; y2: number };
@@ -53,12 +58,19 @@ export function buildDashboardMiniDiagram(
     tripBlocks: readonly TripBlockDetailsDto[],
     stationAxis: readonly RouteStationDto[],
     now: Date,
+    majorStationIds?: ReadonlySet<string>,
 ): MiniDiagramLine[] {
     // 駅軸（重複を除いた初出順）→ y 座標マップ。
+    // majorStationIds 指定時は主要駅のみに間引く（中間駅は軸から省く）。
     const orderedStationIds: string[] = [];
     const seen = new Set<string>();
     for (const station of stationAxis) {
-        if (station.stationId && !seen.has(station.stationId)) {
+        if (
+            station.stationId &&
+            !seen.has(station.stationId) &&
+            (majorStationIds === undefined ||
+                majorStationIds.has(station.stationId))
+        ) {
             seen.add(station.stationId);
             orderedStationIds.push(station.stationId);
         }

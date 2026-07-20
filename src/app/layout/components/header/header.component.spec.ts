@@ -40,7 +40,7 @@ describe('HeaderComponent', () => {
         );
     });
 
-    it('G0-6: リロードアイコンを表示する（「ようこそ」は維持したまま追加）', () => {
+    it('P8-6: リロードアイコンは表示しない（「ようこそ」は維持する）', () => {
         fixture.detectChanges();
 
         expect(fixture.nativeElement).toHaveTextContent('ようこそ');
@@ -49,6 +49,6 @@ describe('HeaderComponent', () => {
             fixture.nativeElement.querySelectorAll('mat-icon'),
         );
         const iconNames = icons.map((icon) => icon.textContent?.trim());
-        expect(iconNames).toContain('refresh');
+        expect(iconNames).not.toContain('refresh');
     });
 });

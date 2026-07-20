@@ -21,7 +21,13 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
         OperationRouteDiagramStore.setStations([
             makeStation('かしわ台', ['本線']),
             makeStation('大和', ['本線']),
+            // 二俣川は本線といずみ野線の分岐駅。経由路線（本線）と同一駅で繋がる
+            // 「関連路線」としていずみ野線チップを残す根拠になる（P8-3）。
+            makeStation('二俣川', ['本線', 'いずみ野線']),
             makeStation('いずみ野', ['いずみ野線']),
+            // 厚木線はどの経由駅とも接続しない無関係路線。チップ自体が
+            // 表示されないことを P8-3 のテストで確認する。
+            makeStation('厚木', ['厚木線']),
         ]);
         OperationRouteDiagramStore.setOperationTrips({
             operation: {} as any,
@@ -55,7 +61,7 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('経由しない路線（いずみ野線）は disabled として渡される', () => {
+    it('経由しない関連路線（いずみ野線）は disabled として渡される', () => {
         const options = component.routeOptions();
 
         expect(
@@ -64,6 +70,12 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
         expect(options.find((o) => o.value === '本線')?.disabled).toBe(
             false,
         );
+    });
+
+    it('P8-3: 経由路線と接続しない無関係路線（厚木線）のチップは表示されない', () => {
+        const options = component.routeOptions();
+
+        expect(options.find((o) => o.value === '厚木線')).toBeUndefined();
     });
 
     it('onChange で選択路線をストアへ書き込む', () => {

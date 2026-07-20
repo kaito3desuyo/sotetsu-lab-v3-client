@@ -91,10 +91,10 @@ export class OperationRealTimeFormationCardComponent {
 
     /**
      * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
-     * 「10000系・相鉄」形式）。編成順カードでは formation 自身が行エンティティの
+     * 「10000・相鉄」形式）。編成順カードでは formation 自身が行エンティティの
      * ため、運用順カードのように formations() 配列から探す必要はなく、
      * agencyId から会社名を引くだけでよい。vehicle_type は素の形式番号
-     * （例: 10000）なので「系」を付けて会社名と「・」で連結する。
+     * （例: 10000）をそのまま会社名と「・」で連結する。
      * formationNumber 文字列自体は加工しない。
      */
     readonly formationAnnotation = computed(() => {
@@ -104,7 +104,7 @@ export class OperationRealTimeFormationCardComponent {
                   ?.agencyName
             : undefined;
         const vehicleTypePart = this.formation().vehicleType
-            ? `${this.formation().vehicleType}系`
+            ? this.formation().vehicleType
             : undefined;
         return [vehicleTypePart, agencyName]
             .filter((part) => !!part)

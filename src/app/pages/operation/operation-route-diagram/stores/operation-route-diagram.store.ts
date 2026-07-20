@@ -11,6 +11,7 @@ import {
     FilterChipOption,
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { relatedRouteIds } from '../utils/operation-route-diagram-related-route-ids.util';
 import { visitedRouteIds } from '../utils/operation-route-diagram-visited-route-ids.util';
 
 type StoreProps = {
@@ -104,19 +105,23 @@ export const OperationRouteDiagramStore = {
         visibleStations(stations, selectedRouteIds),
     )),
 
+    // P8-3: チップの表示自体を「当該運用に関連する路線」のみへ絞り込む。
+    // 関連路線の判定基準は operation-route-diagram-related-route-ids.util.ts 参照。
     routeOptions$: combineLatest([
         store.pipe(select((state) => state.stations)),
         store.pipe(select((state) => state.operationTrips)),
     ]).pipe(
         map(([stations, operationTrips]) => {
-            const visited = new Set(
-                visitedRouteIds(stations, operationTrips?.trips ?? []),
-            );
+            const trips = operationTrips?.trips ?? [];
+            const visited = new Set(visitedRouteIds(stations, trips));
+            const related = new Set(relatedRouteIds(stations, trips));
 
-            return extractRouteOptions(stations).map((option) => ({
-                ...option,
-                disabled: !visited.has(String(option.value)),
-            }));
+            return extractRouteOptions(stations)
+                .filter((option) => related.has(String(option.value)))
+                .map((option) => ({
+                    ...option,
+                    disabled: !visited.has(String(option.value)),
+                }));
         }),
     ),
 

@@ -74,7 +74,7 @@ describe('DashboardComponent', () => {
     it('ページコンテナ: sm 未満で左右余白を削減するクラスを持つ', () => {
         fixture.detectChanges();
         const main: HTMLElement = fixture.nativeElement.querySelector('main');
-        expect(main.classList).toContain('max-sm:tw-px-2');
+        expect(main.classList).toContain('max-sm:tw-px-0');
         expect(main.classList).toContain('tw-p-4');
         expect(main.classList).toContain('md:tw-p-16');
     });

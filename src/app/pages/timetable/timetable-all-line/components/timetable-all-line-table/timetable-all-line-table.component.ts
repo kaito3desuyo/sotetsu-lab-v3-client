@@ -89,11 +89,6 @@ export class TimetableAllLineTableComponent {
         return `${this.tripDirectionLabel.get(opposite)}時刻表を表示する`;
     });
 
-    readonly isHolidayCalendar = computed(() => {
-        const calendar = this.calendar();
-        return !!calendar && (calendar.sunday || calendar.saturday);
-    });
-
     readonly isFeatureDate = computed(() => {
         const date = this.calendar()?.startDate;
         return !!date && dayjs() > dayjs(date, 'YYYY-MM-DD');
