@@ -32,6 +32,10 @@ export interface OperationRouteDiagramBandViewModel {
     depotOutIndex: number;
     /** 入庫ノードの駅 index（endTime 側） */
     depotInIndex: number;
+    /** 出庫時刻（`HH:mm:ss`生値。常にトリップの startTime.departureTime） */
+    depotOutTime?: string;
+    /** 入庫時刻（`HH:mm:ss`生値。常にトリップの endTime.arrivalTime） */
+    depotInTime?: string;
 }
 
 const FALLBACK_COLOR = '#666666';
@@ -69,11 +73,25 @@ export function buildBandViewModels(
             ? tripOperationList.endTime?.arrivalTime
             : tripOperationList.startTime?.departureTime;
 
+        const style = classifyBandStyle(
+            tripOperationList.trip?.tripClass?.tripClassName,
+        );
+        // 99文書追補7 §5（P9-9）: 回送は表示側（drawing-presentational）で
+        // 「回送 <列番>」という文字列（standard行の「バッジ＋列番」に近いレイアウト）を
+        // 組み立てるため、tripNumber 自体に「回」を前置する必要が無くなった
+        // （前置すると「回送 回9432」のように二重表記になってしまう）。
+        // 既存データに稀に「回」が含まれる場合は取り除き、常に素の列番にする。
+        const rawTripNumber = tripOperationList.trip?.tripNumber ?? '';
+        const tripNumber =
+            style === 'nonRevenue'
+                ? rawTripNumber.replace(/^回/, '')
+                : rawTripNumber;
+
         return {
             tripOperationListId: tripOperationList.tripOperationListId,
             tripBlockId: tripOperationList.trip?.tripBlockId,
             tripDirection: tripOperationList.trip?.tripDirection,
-            tripNumber: tripOperationList.trip?.tripNumber ?? '',
+            tripNumber,
             tripClassName: baseTripClassName(
                 tripOperationList.trip?.tripClass?.tripClassName,
             ),
@@ -82,9 +100,7 @@ export function buildBandViewModels(
             rightIndex,
             leftTime,
             rightTime,
-            style: classifyBandStyle(
-                tripOperationList.trip?.tripClass?.tripClassName,
-            ),
+            style,
             color:
                 tripOperationList.trip?.tripClass?.tripClassColor ??
                 FALLBACK_COLOR,
@@ -92,6 +108,8 @@ export function buildBandViewModels(
             depotIn: !!tripOperationList.trip?.depotIn,
             depotOutIndex: startIndex,
             depotInIndex: endIndex,
+            depotOutTime: tripOperationList.startTime?.departureTime,
+            depotInTime: tripOperationList.endTime?.arrivalTime,
         };
     });
 }

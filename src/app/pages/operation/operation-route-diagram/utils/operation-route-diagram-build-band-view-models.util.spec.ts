@@ -190,4 +190,55 @@ describe('buildBandViewModels', () => {
 
         expect(vm.leftIndex).toBe(0);
     });
+
+    it('99文書追補7 §5（P9-9）: 回送の tripNumber は「回」を前置せず素の数字のまま返す（「回送」の語は表示側で別に前置する）', () => {
+        const [vm] = buildBandViewModels(
+            [
+                tripOperationList({
+                    trip: {
+                        ...tripOperationList().trip,
+                        tripNumber: '9432',
+                        tripClass: {
+                            tripClassId: 'tc-3',
+                            tripClassName: '回送',
+                            tripClassColor: '#9e9e9e',
+                        },
+                    },
+                }),
+            ],
+            stations,
+        );
+        expect(vm.tripNumber).toBe('9432');
+    });
+
+    it('99文書追補7 §5（P9-9）: 回送で tripNumber に既に「回」が含まれる場合は取り除く（表示側の「回送」と二重表記にしないため）', () => {
+        const [vm] = buildBandViewModels(
+            [
+                tripOperationList({
+                    trip: {
+                        ...tripOperationList().trip,
+                        tripNumber: '回9301',
+                        tripClass: {
+                            tripClassId: 'tc-3',
+                            tripClassName: '回送',
+                            tripClassColor: '#9e9e9e',
+                        },
+                    },
+                }),
+            ],
+            stations,
+        );
+        expect(vm.tripNumber).toBe('9301');
+    });
+
+    it('旅客列車では tripNumber をそのまま使う（「回」前置はしない）', () => {
+        const [vm] = buildBandViewModels([tripOperationList()], stations);
+        expect(vm.tripNumber).toBe('5001');
+    });
+
+    it('99文書G6-5: depotOutTime は startTime.departureTime、depotInTime は endTime.arrivalTime をそのまま返す', () => {
+        const [vm] = buildBandViewModels([tripOperationList()], stations);
+        expect(vm.depotOutTime).toBe('05:45:00');
+        expect(vm.depotInTime).toBe('06:40:00');
+    });
 });
