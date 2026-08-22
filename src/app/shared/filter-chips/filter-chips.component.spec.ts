@@ -20,9 +20,7 @@ describe('FilterChipsComponent', () => {
         const chipOptions = fixture.debugElement.queryAll(
             By.css('mat-chip-option'),
         );
-        const action = chipOptions[index].query(
-            By.css('.mat-mdc-chip-action'),
-        );
+        const action = chipOptions[index].query(By.css('.mat-mdc-chip-action'));
         action.nativeElement.click();
         fixture.detectChanges();
     }
@@ -110,21 +108,23 @@ describe('FilterChipsComponent', () => {
             expect(text).not.toContain('●');
         });
 
-        it('既定の selectedColor（primary）が全チップに適用される（98 G0-2: 紺塗り選択）', () => {
+        it('既定の selectedColor（accent＝オレンジ塗り）が全チップに適用される', () => {
+            // 全ページ共通でオレンジに統一する（ユーザー指示 2026-08-22）。
+            // 以前の既定は primary（紺）だった。
             const chipOptions = fixture.debugElement.queryAll(
                 By.css('mat-chip-option'),
             );
-            expect(chipOptions[0].nativeElement).toHaveClass('mat-primary');
+            expect(chipOptions[0].nativeElement).toHaveClass('mat-accent');
         });
 
-        it('selectedColor に accent を指定するとオレンジ塗り選択用のクラスが適用される', () => {
-            fixture.componentRef.setInput('selectedColor', 'accent');
+        it('selectedColor に primary を指定すると紺塗り選択用のクラスが適用される', () => {
+            fixture.componentRef.setInput('selectedColor', 'primary');
             fixture.detectChanges();
 
             const chipOptions = fixture.debugElement.queryAll(
                 By.css('mat-chip-option'),
             );
-            expect(chipOptions[0].nativeElement).toHaveClass('mat-accent');
+            expect(chipOptions[0].nativeElement).toHaveClass('mat-primary');
         });
     });
 
@@ -188,8 +188,9 @@ describe('FilterChipsComponent', () => {
             clientWidth: number;
             scrollWidth: number;
         }): void {
-            const scroller: HTMLElement =
-                fixture.nativeElement.querySelector('.tw-overflow-x-auto');
+            const scroller: HTMLElement = fixture.nativeElement.querySelector(
+                '.tw-overflow-x-auto',
+            );
             Object.defineProperty(scroller, 'clientWidth', {
                 value: metrics.clientWidth,
                 configurable: true,

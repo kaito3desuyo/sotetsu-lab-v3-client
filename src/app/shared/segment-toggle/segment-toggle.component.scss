@@ -10,7 +10,7 @@
     .mat-button-toggle-group {
         display: flex !important;
         width: 100%;
-        border: 1px solid #001556 !important;
+        border: 1px solid var(--color-structure) !important;
         border-radius: 4px !important;
         overflow: hidden;
     }
@@ -21,10 +21,15 @@
 
     // 2セグメント間の仕切り線（紺）
     .mat-button-toggle + .mat-button-toggle {
-        border-left: 1px solid #001556 !important;
+        border-left: 1px solid var(--color-structure) !important;
     }
 
+    // box-sizing は必ず border-box にする。Tailwind の preflight を切っている
+    // ため既定が content-box で、`width: 100%` に Material 由来の左右 padding
+    // 12px が**外側へ足される**。結果ラベルが 24px はみ出し、text-align:center
+    // の文字が 12px 右へずれる（2026-08-22 実測・ユーザー指摘）。
     .mat-button-toggle-label-content {
+        box-sizing: border-box;
         width: 100%;
         text-align: center;
         font-size: 0.875rem;
@@ -32,6 +37,7 @@
     }
 
     .mat-button-toggle-button {
+        box-sizing: border-box;
         width: 100%;
     }
 
@@ -39,14 +45,14 @@
     .mat-button-toggle:not(.mat-button-toggle-checked):not(
             .mat-button-toggle-disabled
         ) {
-        background-color: #ffffff !important;
-        color: #001556 !important;
+        background-color: var(--color-paper) !important;
+        color: var(--color-structure) !important;
     }
 
     // 選択状態: 紺塗り白字
     .mat-button-toggle-checked:not(.mat-button-toggle-disabled) {
-        background-color: #001556 !important;
-        color: #ffffff !important;
+        background-color: var(--color-structure) !important;
+        color: var(--color-paper) !important;
     }
 
     .mat-button-toggle-disabled {

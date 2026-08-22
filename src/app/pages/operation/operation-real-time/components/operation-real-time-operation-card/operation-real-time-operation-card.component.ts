@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
@@ -16,6 +21,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
 
 /**
@@ -40,6 +46,7 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripClassBaseNamePipe,
+        TripClassChipComponent,
     ],
 })
 export class OperationRealTimeOperationCardComponent {
@@ -58,6 +65,15 @@ export class OperationRealTimeOperationCardComponent {
     readonly calendarId = input<string | undefined>(undefined);
     readonly isVisibleSightingHistories = input<boolean>(false);
     readonly isVisibleCurrentPosition = input<boolean>(false);
+    /**
+     * 目撃データを取得中かどうか。
+     *
+     * 目撃系の入力（timeCrossSection 等）は運用データより遅れて到着するため、
+     * 未到着と「目撃が無い」を区別せず一律「不明」を描画すると、初回表示で全件
+     * 「不明」を出したあと実データへ差し替わる（audit M4）。取得中は確定値を
+     * 出さず骨組みを描く。
+     */
+    readonly isSightingLoading = input<boolean>(false);
 
     readonly latestSighting = computed(
         () => this.timeCrossSection()?.latestSighting,
@@ -81,8 +97,7 @@ export class OperationRealTimeOperationCardComponent {
         const latestId = this.latestSighting()?.operationSightingId;
         return this.reversedHistories().some(
             (history) =>
-                !formationVm ||
-                latestId !== history.operationSightingId,
+                !formationVm || latestId !== history.operationSightingId,
         );
     });
 

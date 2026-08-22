@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
@@ -16,6 +21,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
 
 /**
@@ -43,6 +49,7 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripClassBaseNamePipe,
+        TripClassChipComponent,
     ],
 })
 export class OperationRealTimeFormationCardComponent {
@@ -61,6 +68,11 @@ export class OperationRealTimeFormationCardComponent {
     readonly calendarId = input<string | undefined>(undefined);
     readonly isVisibleSightingHistories = input<boolean>(false);
     readonly isVisibleCurrentPosition = input<boolean>(false);
+    /**
+     * 目撃データを取得中かどうか。未到着と「目撃が無い」を区別し、取得中は
+     * 「不明」という確定値を出さず骨組みを描く（audit M4）。
+     */
+    readonly isSightingLoading = input<boolean>(false);
 
     readonly latestSighting = computed(
         () => this.timeCrossSection()?.latestSighting,
@@ -84,8 +96,7 @@ export class OperationRealTimeFormationCardComponent {
         const latestId = this.latestSighting()?.operationSightingId;
         return this.reversedHistories().some(
             (history) =>
-                !expectedOperation ||
-                latestId !== history.operationSightingId,
+                !expectedOperation || latestId !== history.operationSightingId,
         );
     });
 
@@ -100,8 +111,7 @@ export class OperationRealTimeFormationCardComponent {
     readonly formationAnnotation = computed(() => {
         const agencyId = this.formation().agencyId;
         const agencyName = agencyId
-            ? this.agencies().find((a) => a.agencyId === agencyId)
-                  ?.agencyName
+            ? this.agencies().find((a) => a.agencyId === agencyId)?.agencyName
             : undefined;
         const vehicleTypePart = this.formation().vehicleType
             ? this.formation().vehicleType

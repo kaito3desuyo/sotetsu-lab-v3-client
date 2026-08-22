@@ -5,41 +5,61 @@
         mat-mini-fab
         (click)="clickButton.emit()"
         color="primary"
+        aria-label="メニューを開く"
         class="!tw-shadow-none"
     >
         <mat-icon>menu</mat-icon>
     </button>
-<!-- ページ名があればツールバーに表示し、ホーム等では従来のロゴ表記に
+    <!-- ページ名があればツールバーに表示し、ホーム等では従来のロゴ表記に
          フォールバックする（モック 01〜13 のトップバー準拠） -->
+    <!-- 余白取りの空 div をやめ、h1 自身を伸ばして右端の要素を押し出す。
+         空のスペーサーは幅 0 でも両隣に gap を作るため、320px でヘッダーの
+         要素合計がちょうど viewport 幅に達し、h1 が 3px 足りず折り返していた。 -->
     @if (pageTitle()) {
-        <h1 class="tw-text-lg tw-font-bold md:tw-text-2xl">
+        <h1 class="tw-grow tw-text-lg tw-font-bold md:tw-text-2xl">
             {{ pageTitle() }}
         </h1>
     } @else {
         <h1
-            class="tw-font-[Quicksand,sans-serif] tw-text-lg tw-font-normal md:tw-text-2xl"
+            class="tw-grow tw-font-[Quicksand,sans-serif] tw-text-lg tw-font-normal md:tw-text-2xl"
         >
             Sotetsu Lab.
         </h1>
     }
-    <div class="tw-grow"></div>
+    <!-- 挨拶は md 未満で隠す。390px では h1 を 2 行に折り返させ、320px では
+         挨拶自体が 4 行になってヘッダー高からはみ出しクリップされていた。
+         情報は削らず、下のアカウントメニュー先頭に同じ表示名を出す。 -->
     @if (isLoggedIn()) {
-        <div>
+        <div class="tw-hidden md:tw-block">
             <p class="tw-m-0 tw-text-xs">
                 ようこそ<br />{{ displayName() }} さん
             </p>
         </div>
     } @else {
-        <div>
+        <div class="tw-hidden md:tw-block">
             <p class="tw-m-0 tw-text-xs">ようこそ<br />ゲスト さん</p>
         </div>
     }
-    <button mat-icon-button [matMenuTriggerFor]="menu" class="!tw-shadow-none">
+    <button
+        mat-icon-button
+        [matMenuTriggerFor]="menu"
+        aria-label="アカウントメニューを開く"
+        class="!tw-shadow-none"
+    >
         <mat-icon>account_circle</mat-icon>
     </button>
 </header>
 
 <mat-menu #menu="matMenu">
+    <!-- md 未満ではヘッダーの挨拶を隠すため、表示名の行き場をここに用意する -->
+    <div
+        class="tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-px-4 tw-py-2 tw-text-xs tw-text-muted"
+    >
+        ようこそ
+        <span class="tw-text-sm tw-font-bold tw-text-ink">
+            {{ isLoggedIn() ? displayName() : 'ゲスト' }} さん
+        </span>
+    </div>
     @if (isLoggedIn()) {
         <!-- <button mat-menu-item (click)="onClickOpenProfileDialog()">
             <mat-icon>person</mat-icon>

@@ -16,7 +16,6 @@ import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-c
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
-import { OperationRealTimeHeaderComponent } from './components/operation-real-time-header/operation-real-time-header.component';
 import { OperationRealTimeLegendComponent } from './components/operation-real-time-legend/operation-real-time-legend.component';
 import { OperationRealTimeOperationTableComponent } from './components/operation-real-time-operation-table/operation-real-time-operation-table.component';
 import { OperationRealTimeService } from './services/operation-real-time.service';
@@ -33,7 +32,6 @@ OperationRealTimeStore.resetLoading();
     imports: [
         MatProgressBarModule,
         MatTabsModule,
-        OperationRealTimeHeaderComponent,
         OperationRealTimeControllerComponent,
         OperationRealTimeFilterComponent,
         OperationRealTimeOperationTableComponent,

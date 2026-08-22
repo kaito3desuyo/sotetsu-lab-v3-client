@@ -1,7 +1,10 @@
-<div class="tw-mb-1 tw-text-right tw-text-[10px] tw-text-grey-500">
+<!-- 左右の inset は凡例（px-3）と揃える。0 だと右端の文字が画面の縁に
+     密着して切れて見える。文字色は muted（10px グレーは 2.68:1 だった）。 -->
+<div class="tw-mb-1 tw-px-3 tw-text-right tw-text-[10px] tw-text-muted">
     Ctrl+スクロールで縦縮尺 ／ Ctrl+Shift+スクロールで横縮尺
 </div>
 <div
+    #scrollHost
     class="tw-overflow-x-auto tw-bg-white"
     style="touch-action: pan-x pan-y"
     (wheel)="onWheel($event)"
@@ -102,7 +105,9 @@
                     <text
                         [attr.x]="label.x + (label.anchor === 'start' ? 4 : -4)"
                         [attr.y]="label.y - 4"
-                        [attr.text-anchor]="label.anchor === 'start' ? 'start' : 'end'"
+                        [attr.text-anchor]="
+                            label.anchor === 'start' ? 'start' : 'end'
+                        "
                         style="font-size: 10px"
                         class="tw-fill-grey-700"
                     >

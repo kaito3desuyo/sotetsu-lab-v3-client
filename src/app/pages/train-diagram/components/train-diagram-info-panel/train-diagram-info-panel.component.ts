@@ -1,9 +1,15 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    input,
+    output,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-selected-trip-info.interface';
 
 /**
@@ -21,11 +27,11 @@ import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-sel
         MatIconModule,
         OperationNumberTagComponent,
         TripClassBaseNamePipe,
+        TripClassChipComponent,
         DateFnsPipe,
     ],
     host: {
-        class:
-            'tw-fixed tw-inset-x-0 tw-bottom-0 tw-z-30 tw-rounded-t-xl tw-border tw-border-grey-200 tw-bg-white tw-shadow-lg',
+        class: 'tw-fixed tw-inset-x-0 tw-bottom-0 tw-z-30 tw-rounded-t-xl tw-border tw-border-grey-200 tw-bg-white tw-shadow-lg',
     },
 })
 export class TrainDiagramInfoPanelComponent {

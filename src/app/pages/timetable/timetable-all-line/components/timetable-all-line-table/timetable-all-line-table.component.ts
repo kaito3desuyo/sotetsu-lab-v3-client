@@ -21,6 +21,7 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassShortNamePipe } from 'src/app/shared/pipes/trip-class-short-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { ETimetableAllLineStationViewMode } from '../../enums/timetable-all-line.enum';
 import { TimetableAllLineGetStationNumberingPipe } from '../../pipes/timetable-all-line-get-station-numbering.pipe';
 import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-time.pipe';
@@ -45,6 +46,7 @@ import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-
         TimetableAllLineGetStationNumberingPipe,
         TimetableAllLineGetTimePipe,
         TripClassShortNamePipe,
+        TripClassChipComponent,
     ],
 })
 export class TimetableAllLineTableComponent {
@@ -58,9 +60,7 @@ export class TimetableAllLineTableComponent {
     readonly trips = input.required<TripDetailsDto[]>();
     readonly pageSettings = input.required<PageEvent>();
     readonly viewModes =
-        input.required<
-            ReadonlyMap<string, ETimetableAllLineStationViewMode>
-        >();
+        input.required<ReadonlyMap<string, ETimetableAllLineStationViewMode>>();
     readonly bordersAfter = input.required<ReadonlyMap<string, boolean>>();
 
     readonly page = output<PageEvent>();

@@ -1,3 +1,8 @@
 .angular
 dist
 src/assets
+
+# SVG の <text> を含むテンプレート。prettier が `>{{ … }}</text>` を改行すると
+# textContent に空白が混入し、`t.textContent === '急行'` 等の比較が壊れる
+# （2026-08-22 に spec 8件が失敗して発覚）。整形が挙動を変えるので対象外にする。
+src/app/pages/operation/operation-route-diagram/components/operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component.html

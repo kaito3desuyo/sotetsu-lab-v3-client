@@ -1,20 +1,28 @@
 <div class="tw-flex tw-flex-row tw-items-start tw-gap-3 tw-p-3">
     <div class="tw-flex tw-flex-1 tw-flex-col tw-gap-2">
         <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
-            <span
-                class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-sm tw-font-bold tw-text-white"
-                [style.background-color]="info().tripClassColor"
-            >
-                {{ info().tripClassName | tripClassBaseName }} {{ info().tripNumber }}
+            <!-- 種別チップに列車番号を同居させない（ユーザー指示 2026-08-22） -->
+            <app-trip-class-chip
+                [label]="info().tripClassName"
+                [color]="info().tripClassColor"
+            ></app-trip-class-chip>
+            <span class="tw-text-sm tw-font-bold tw-tabular-nums">
+                {{ info().tripNumber }}
             </span>
             <span class="tw-text-sm">{{ info().destinationName }} 行</span>
         </div>
 
-        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm">
+        <div
+            class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
+        >
             @if (info().operationNumber) {
                 <app-operation-number-tag
                     [operationNumber]="info().operationNumber ?? ''"
-                    [link]="['/operation', 'route-diagram', { operation_id: info().operationId ?? '' }]"
+                    [link]="[
+                        '/operation',
+                        'route-diagram',
+                        { operation_id: info().operationId ?? '' },
+                    ]"
                 ></app-operation-number-tag>
             }
             @if (info().formationNumber) {
@@ -24,7 +32,8 @@
                 <span class="tw-text-grey-500">
                     （目撃
                     {{
-                        sightingTime | dateFns: { format: 'MM/dd', parseISO: true }
+                        sightingTime
+                            | dateFns: { format: 'MM/dd', parseISO: true }
                     }}）
                 </span>
             }
@@ -41,7 +50,7 @@
 
     <button
         type="button"
-        class="tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-transparent"
+        class="tw-bg-transparent tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0"
         aria-label="閉じる"
         (click)="closed.emit()"
     >

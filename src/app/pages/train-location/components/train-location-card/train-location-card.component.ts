@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
 
 /**
@@ -11,7 +12,7 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
     templateUrl: './train-location-card.component.html',
     styleUrl: './train-location-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink],
+    imports: [RouterLink, TripClassChipComponent],
     host: { class: 'tw-block' },
 })
 export class TrainLocationCardComponent {

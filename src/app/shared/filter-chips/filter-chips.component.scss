@@ -40,29 +40,42 @@
         --mat-chip-container-shape-radius: 2px;
     }
 
+    // 枠線は**全状態で 1px 引く**。色だけを状態で変える。
+    // 以前は未選択にだけ border を付けていたため、選択すると上下の枠 2px が
+    // 消えてチップの高さが 34px → 32px と縮み、同じ行に並ぶチップの縦幅が
+    // 不揃いになっていた（2026-08-22 実測・ユーザー指摘）。
+    // box-sizing が content-box なので、枠線の有無がそのまま外形に効く。
+    .mdc-evolution-chip:not(.mdc-evolution-chip--disabled) {
+        border: 1px solid var(--color-rule-strong);
+    }
+
     .mdc-evolution-chip:not(.mdc-evolution-chip--selected):not(
             .mdc-evolution-chip--disabled
         ) {
-        background-color: #ffffff !important;
-        border: 1px solid #9e9e9e;
+        background-color: var(--color-paper) !important;
     }
 
     .mdc-evolution-chip--selected:not(.mdc-evolution-chip--disabled) {
         &.mat-primary {
-            background-color: #001556 !important;
+            background-color: var(--color-structure) !important;
+            // 塗りと同色の枠にして、高さを保ったまま塗り一色に見せる
+            border-color: var(--color-structure);
 
             .mdc-evolution-chip__text-label,
             .mdc-evolution-chip__checkmark {
-                color: #ffffff !important;
+                color: var(--color-paper) !important;
             }
         }
 
+        // オレンジ地の文字・✓ は暗色。白字は 2.79:1 で AA 不合格
+        // （docs/design.md 色の掟 2）
         &.mat-accent {
-            background-color: #ee7b35 !important;
+            background-color: var(--color-accent) !important;
+            border-color: var(--color-accent);
 
             .mdc-evolution-chip__text-label,
             .mdc-evolution-chip__checkmark {
-                color: #ffffff !important;
+                color: var(--color-accent-ink) !important;
             }
         }
     }

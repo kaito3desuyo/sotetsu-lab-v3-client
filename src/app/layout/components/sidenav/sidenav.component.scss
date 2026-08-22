@@ -1,0 +1,44 @@
+// N3 Side-rail の見た目（docs/design.md「Navigation / Footer」）。
+// 色は必ず src/tokens.css のトークンを参照する。生値を書かない。
+:host ::ng-deep {
+    // グループ見出し。リンクと同サイズ・同ウェイトで並んでいたため階層が読めなかった
+    .mat-mdc-subheader {
+        margin: 0;
+        padding: var(--space-md) var(--space-sm) var(--space-3xs);
+        color: var(--color-muted);
+        font-size: var(--text-xs);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .mat-mdc-list-item {
+        border-left: 3px solid transparent;
+
+        .mat-mdc-list-item-title {
+            color: var(--color-ink);
+            font-size: var(--text-sm);
+        }
+
+        &:hover {
+            background-color: var(--color-paper-2);
+        }
+    }
+
+    // 現在地。routerLinkActive が付く。以前は現在ページが一切示されていなかった
+    .mat-mdc-list-item.is-active {
+        border-left-color: var(--color-accent-deep);
+        background-color: var(--color-paper-3);
+
+        .mat-mdc-list-item-title {
+            font-weight: 700;
+        }
+    }
+
+    // 駅名セレクトはリンク列と混ざらないよう領域として沈める
+    .station-filter {
+        margin: 0 var(--space-2xs) var(--space-2xs);
+        padding: var(--space-2xs);
+        border-radius: var(--radius-card);
+        background-color: var(--color-paper-2);
+    }
+}

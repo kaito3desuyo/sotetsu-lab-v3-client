@@ -11,6 +11,7 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
 
@@ -36,6 +37,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
         TripClassBaseNamePipe,
+        TripClassChipComponent,
     ],
 })
 export class TimetableStationTripCellComponent {
@@ -48,9 +50,8 @@ export class TimetableStationTripCellComponent {
     /**
      * G1: operationNumber をキーにした Record（stores/timetable-station.store.ts 参照）。
      */
-    readonly operationSightingTimeCrossSections = input.required<
-        Record<string, OperationSightingTimeCrossSectionDto>
-    >();
+    readonly operationSightingTimeCrossSections =
+        input.required<Record<string, OperationSightingTimeCrossSectionDto>>();
 
     /**
      * B7: 過去ダイヤ表示時は false になり、充当編成（6）自体を描画しない。

@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -8,7 +13,12 @@ import {
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
-import { withRetiredGroup } from '../../utils/operation-real-time-filter.util';
+import {
+    deriveGroupName,
+    deriveGroupNames,
+    RETIRED_GROUP_NAME,
+    RETIRED_OPERATION_NUMBER,
+} from '../../utils/operation-real-time-filter.util';
 
 /**
  * リアルタイム運用情報: 会社（B2）・運用群（B3）絞り込みチップ行。
@@ -35,7 +45,13 @@ export class OperationRealTimeFilterComponent {
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
     });
-    readonly operationGroups = toSignal(OperationRealTimeStore.operationGroups$, {
+    /**
+     * 群チップの出所は API の群定義ではなく**実在する運用番号**。
+     * API `/v3/operations/groups` は本来 15 群あるべきところ 5 群しか返しておらず、
+     * 実データ 93 運用番号のうち 60 件がどのチップでも絞り込めなかった
+     * （2026-08-22 実測）。群名は運用番号から規則で導出する。
+     */
+    readonly operations = toSignal(OperationRealTimeStore.operations$, {
         initialValue: [],
     });
     readonly selectedAgencyIds = toSignal(
@@ -54,35 +70,33 @@ export class OperationRealTimeFilterComponent {
         })),
     );
 
-    readonly groupOptions = computed<FilterChipOption[]>(() =>
-        withRetiredGroup(this.operationGroups()).map((group) => ({
-            value: group.groupName,
-            label: group.groupName,
-            color: this.#operationNumberColorPipe.transform(
-                group.operationNumbers[0],
-            ),
-        })),
-    );
-
     /**
-     * 会社（選択=紺塗り）→運用群（選択=オレンジ塗り）の順に 1 行へ統合した
-     * チップオプション（98 §G2「モックの選択色 2 系統を踏襲」）。
+     * 実在する運用番号 → 群名。休（運用番号 100）は API にも運用一覧にも
+     * 現れない場合があるため、従来どおり常に末尾へ足す。
      */
-    readonly chipOptions = computed<FilterChipOption[]>(() => [
-        ...this.agencyOptions().map((option) => ({
-            ...option,
-            selectedColor: 'primary' as const,
-        })),
-        ...this.groupOptions().map((option) => ({
-            ...option,
-            selectedColor: 'accent' as const,
-        })),
-    ]);
+    readonly groupOptions = computed<FilterChipOption[]>(() => {
+        const operationNumbers = this.operations().map(
+            (operation) => operation.operationNumber,
+        );
+        const groupNames = deriveGroupNames([
+            ...operationNumbers,
+            RETIRED_OPERATION_NUMBER,
+        ]);
 
-    readonly selectedValues = computed<FilterChipValue[]>(() => [
-        ...this.selectedAgencyIds(),
-        ...this.selectedGroupNames(),
-    ]);
+        return groupNames.map((groupName) => ({
+            value: groupName,
+            label: groupName,
+            // 見本色は群の代表運用番号から引く。休は専用色を持つ。
+            color: this.#operationNumberColorPipe.transform(
+                groupName === RETIRED_GROUP_NAME
+                    ? RETIRED_OPERATION_NUMBER
+                    : (operationNumbers.find(
+                          (operationNumber) =>
+                              deriveGroupName(operationNumber) === groupName,
+                      ) ?? ''),
+            ),
+        }));
+    });
 
     onAgencyChange(values: FilterChipValue[]): void {
         OperationRealTimeStore.setSelectedAgencyIds(values as string[]);
@@ -90,17 +104,5 @@ export class OperationRealTimeFilterComponent {
 
     onGroupChange(values: FilterChipValue[]): void {
         OperationRealTimeStore.setSelectedGroupNames(values as string[]);
-    }
-
-    /** 混在 1 行チップの選択値を会社と運用群へ振り分けてストアに書き込む。 */
-    onChipsChange(values: FilterChipValue[]): void {
-        const agencyIds = new Set(
-            this.agencyOptions().map((option) => option.value),
-        );
-        const groupNames = new Set(
-            this.groupOptions().map((option) => option.value),
-        );
-        this.onAgencyChange(values.filter((value) => agencyIds.has(value)));
-        this.onGroupChange(values.filter((value) => groupNames.has(value)));
     }
 }

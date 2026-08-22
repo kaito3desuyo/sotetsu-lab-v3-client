@@ -29,7 +29,7 @@
               "src/robots.txt",
               "src/sitemap.xml"
             ],
-            "styles": ["src/styles.scss"],
+            "styles": ["src/tokens.css", "src/styles.scss"],
             "scripts": [],
 
             "browser": "src/main.ts",

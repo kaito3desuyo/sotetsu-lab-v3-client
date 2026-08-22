@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -7,7 +12,6 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import {
     matchesAgencyFilter,
     matchesGroupFilter,
-    withRetiredGroup,
 } from '../../utils/operation-real-time-filter.util';
 
 @Component({
@@ -22,6 +26,13 @@ export class OperationRealTimeFormationTableComponent {
 
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
+    });
+    /**
+     * 目撃データの取得中フラグ。カードへ渡して、未到着と「目撃が無い」を
+     * 区別させる（audit M4）。ページ上部の進捗バーと同じ出所。
+     */
+    readonly isLoading = toSignal(OperationRealTimeStore.isLoading$, {
+        initialValue: false,
     });
     readonly stations = toSignal(OperationRealTimeStore.stations$);
     readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
@@ -51,15 +62,11 @@ export class OperationRealTimeFormationTableComponent {
         OperationRealTimeStore.selectedGroupNames$,
         { initialValue: [] },
     );
-    readonly operationGroups = toSignal(OperationRealTimeStore.operationGroups$, {
-        initialValue: [],
-    });
 
     readonly filteredFormations = computed(() => {
         const formations = this.formations() ?? [];
         const selectedAgencyIds = this.selectedAgencyIds();
         const selectedGroupNames = this.selectedGroupNames();
-        const groups = withRetiredGroup(this.operationGroups());
         const timeCrossSections = this.timeCrossSections() ?? {};
 
         return formations.filter((formation) => {
@@ -74,7 +81,6 @@ export class OperationRealTimeFormationTableComponent {
             return matchesGroupFilter(
                 expectedOperationNumber,
                 selectedGroupNames,
-                groups,
             );
         });
     });
@@ -98,8 +104,8 @@ export class OperationRealTimeFormationTableComponent {
             const timeCrossSections = this.timeCrossSections();
             const currentPositions = this.currentPositions();
             const expectedOperationNumber =
-                timeCrossSections[formationNumber]?.expectedSighting
-                    ?.operation?.operationNumber;
+                timeCrossSections[formationNumber]?.expectedSighting?.operation
+                    ?.operationNumber;
             return expectedOperationNumber
                 ? (currentPositions[expectedOperationNumber] ?? undefined)
                 : undefined;

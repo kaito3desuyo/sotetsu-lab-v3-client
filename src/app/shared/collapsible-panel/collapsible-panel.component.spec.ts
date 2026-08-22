@@ -25,6 +25,11 @@ function mockMatchMedia(matches: boolean): void {
 describe('CollapsiblePanelComponent', () => {
     let fixture: ComponentFixture<HostComponent>;
 
+    /**
+     * @param matchesDesktop sm 以上の幅として matchMedia を偽装するか。
+     *   既定の開閉状態はビューポート幅に依存しないため、この値によって
+     *   初期状態が変わらないことを検証する目的で残している。
+     */
     async function setup(matchesDesktop: boolean): Promise<void> {
         mockMatchMedia(matchesDesktop);
         await TestBed.configureTestingModule({
@@ -56,29 +61,30 @@ describe('CollapsiblePanelComponent', () => {
         return fixture.nativeElement.querySelector('button');
     }
 
-    it('デスクトップ（sm 以上）では既定で展開される', async () => {
-        await setup(true);
-        expect(panel().expanded()).toBe(true);
-        expect(contentEl().classList).not.toContain('tw-hidden');
-    });
-
-    it('モバイル（sm 未満）では既定で折り畳まれる', async () => {
-        await setup(false);
+    // docs/design.md「App 共通骨格」の②。操作部が本体をフォールド外へ押し出す
+    // 問題（audit C1）への対処として、既定はビューポート幅によらず折り畳み。
+    it.each([
+        ['デスクトップ（sm 以上）', true],
+        ['モバイル（sm 未満）', false],
+    ])('%s でも既定で折り畳まれる', async (_label, matchesDesktop) => {
+        await setup(matchesDesktop as boolean);
         expect(panel().expanded()).toBe(false);
         expect(contentEl().classList).toContain('tw-hidden');
     });
 
     it('ヘッダークリックで開閉が切り替わる', async () => {
         await setup(true);
-        headerButton().click();
-        fixture.detectChanges();
         expect(panel().expanded()).toBe(false);
-        expect(contentEl().classList).toContain('tw-hidden');
 
         headerButton().click();
         fixture.detectChanges();
         expect(panel().expanded()).toBe(true);
         expect(contentEl().classList).not.toContain('tw-hidden');
+
+        headerButton().click();
+        fixture.detectChanges();
+        expect(panel().expanded()).toBe(false);
+        expect(contentEl().classList).toContain('tw-hidden');
     });
 
     it('折り畳み時のみ要約をヘッダーに表示する', async () => {
@@ -99,9 +105,9 @@ describe('CollapsiblePanelComponent', () => {
 
     it('aria-expanded が開閉状態に追従する', async () => {
         await setup(true);
-        expect(headerButton().getAttribute('aria-expanded')).toBe('true');
+        expect(headerButton().getAttribute('aria-expanded')).toBe('false');
         headerButton().click();
         fixture.detectChanges();
-        expect(headerButton().getAttribute('aria-expanded')).toBe('false');
+        expect(headerButton().getAttribute('aria-expanded')).toBe('true');
     });
 });

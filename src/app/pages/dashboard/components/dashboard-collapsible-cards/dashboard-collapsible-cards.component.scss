@@ -1,6 +1,6 @@
 // P8-8: mat-expansion-panel 個々の既定 elevation（MDC box-shadow）を無効化する。
 // 6枚パネルが各々影を持つと 8px 間隔の隙間や隣接カードとの境界で影が二重化して見えるため、
-// パネル単体の影を消し、テンプレート側の tw-shadow-md（アコーディオン全体を1つの面として扱う）
+// パネル単体の影を消し、テンプレート側の（アコーディオン全体を1つの面として扱う）
 // と tw-divide-y の区切り線に統一する。mat-expansion-panel は ViewEncapsulation.None の
 // グローバルスタイルで box-shadow を当てているため、コンポーネント側からの上書きが必要。
 :host ::ng-deep .mat-expansion-panel {

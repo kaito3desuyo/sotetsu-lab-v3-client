@@ -1,5 +1,7 @@
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-0 md:tw-p-16">
-<!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
          偽表示になるため、ロード完了までチップ・テーブルを出さず
          中央スピナーを表示する（20-design-ui.md §4） -->
     @if (isLoading()) {
@@ -28,7 +30,10 @@
         ></app-timetable-all-line-table>
     }
 
-    <ng-adsense [adSlot]="1363071722"></ng-adsense>
-
+    <!-- 検索カードを広告より前に置く。時刻表が未選択のとき、このページで唯一の
+         操作要素である検索カードが 280px の広告に押し下げられてフォールド外に
+         出ていた（audit M5）。 -->
     <app-timetable-search-card-c></app-timetable-search-card-c>
+
+    <ng-adsense [adSlot]="1363071722"></ng-adsense>
 </main>

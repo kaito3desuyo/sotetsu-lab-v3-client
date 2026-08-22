@@ -1,5 +1,5 @@
 <article
-    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
+    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-rounded-card tw-bg-white tw-p-4"
 >
     <header>
         <h2 class="tw-m-0 tw-text-2xl tw-font-normal">列車を追加</h2>
@@ -40,14 +40,14 @@
         </form>
     </div>
     <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
-            type="button"
-            color="primary"
-            mat-raised-button
+        <!-- ボタン規約（app-button）に寄せる。紺塗りは規約外の第 3 の語彙だった（audit M6） -->
+        <app-button
+            variant="primary"
+            [fullWidth]="false"
             [disabled]="form.invalid"
-            (click)="clickMoveTimetableAdd.emit(form.value)"
+            (buttonClick)="clickMoveTimetableAdd.emit(form.value)"
         >
             列車情報入力へ移る
-        </button>
+        </app-button>
     </footer>
 </article>

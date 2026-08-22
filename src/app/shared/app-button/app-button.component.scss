@@ -16,30 +16,32 @@
         }
     }
 
-    // 主アクション: オレンジ塗り・白字（disabled でも同色を維持し不透明度のみ下げる）
+    // 主アクション: オレンジ塗り・暗色字（disabled でも同色を維持し不透明度のみ下げる）
+    // 文字色は白ではなく --color-accent-ink。白字はオレンジ地で 2.79:1 と AA 不合格、
+    // 暗色字なら 6.38:1。accent の L=70.3% > 50% のため docs/design.md 色の掟 2 が暗色を定める。
     .app-button-primary.mat-mdc-unelevated-button {
-        background-color: #ee7b35 !important;
-        color: #ffffff !important;
+        background-color: var(--color-accent) !important;
+        color: var(--color-accent-ink) !important;
         border: 0;
 
         &.mat-mdc-button-disabled {
-            background-color: #ee7b35 !important;
-            color: #ffffff !important;
+            background-color: var(--color-accent) !important;
+            color: var(--color-accent-ink) !important;
             opacity: 0.5;
         }
     }
 
     // 副アクション: 白地紺枠（disabled でも同色を維持し不透明度のみ下げる）
     .app-button-secondary.mat-mdc-outlined-button {
-        background-color: #ffffff !important;
-        color: #001556 !important;
-        border-color: #001556 !important;
+        background-color: var(--color-paper) !important;
+        color: var(--color-structure) !important;
+        border-color: var(--color-structure) !important;
         border-width: 2px !important;
 
         &.mat-mdc-button-disabled {
-            background-color: #ffffff !important;
-            color: #001556 !important;
-            border-color: #001556 !important;
+            background-color: var(--color-paper) !important;
+            color: var(--color-structure) !important;
+            border-color: var(--color-structure) !important;
             opacity: 0.5;
         }
     }

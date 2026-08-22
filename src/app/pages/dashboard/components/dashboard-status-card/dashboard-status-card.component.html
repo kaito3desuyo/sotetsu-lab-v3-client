@@ -1,5 +1,5 @@
 <section
-    class="tw-relative tw-flex tw-flex-col tw-gap-3 tw-overflow-hidden tw-bg-white tw-p-4 tw-shadow-md"
+    class="tw-relative tw-flex tw-flex-col tw-gap-3 tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-4"
 >
     <!-- ミニダイヤグラム背景（mockup-11）: ±30分の実データ走行線を紺8%で敷き、中央に現在時刻の赤線。装飾のため aria-hidden。 -->
     <svg
@@ -37,7 +37,9 @@
             <span class="tw-text-xs tw-text-grey-600">
                 {{ businessDateLabel() }}
             </span>
-            <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-2">
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-2"
+            >
                 <span class="tw-text-lg tw-font-bold tw-text-primary-500">
                     {{ todaysCalendar()?.calendarName ?? '読み込み中...' }}
                 </span>
@@ -57,8 +59,8 @@
         <div
             class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-rounded tw-bg-grey-100 tw-p-3"
         >
-<!-- データ確定前は「—」を表示して偽の 0 と区別する -->
-            <span class="tw-tabular-nums tw-text-3xl tw-font-bold">
+            <!-- データ確定前は「—」を表示して偽の 0 と区別する -->
+            <span class="tw-text-3xl tw-font-bold tw-tabular-nums">
                 {{ isLoading() ? '—' : runningTripCount() }}
             </span>
             <span class="tw-text-xs tw-text-grey-600">
@@ -68,7 +70,7 @@
         <div
             class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-rounded tw-bg-grey-100 tw-p-3"
         >
-            <span class="tw-tabular-nums tw-text-3xl tw-font-bold">
+            <span class="tw-text-3xl tw-font-bold tw-tabular-nums">
                 {{ isLoading() ? '—' : sightingCountToday() }}
             </span>
             <span class="tw-text-xs tw-text-grey-600">本日の目撃投稿</span>

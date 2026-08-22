@@ -1,48 +1,117 @@
-<nav class="tw-h-full tw-w-full tw-bg-white">
-    <div
-        class="tw-flex tw-flex-col [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100 [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal"
-    >
-        <a matRipple routerLink="/"> TOP </a>
-        <h3>時刻表</h3>
-        <mat-form-field>
-            <mat-label>駅名</mat-label>
-            <mat-select [formControl]="stationId">
-                <mat-option [value]="null"> 選択しない（全線検索） </mat-option>
-
-                @for (route of routeStations(); track route.routeId) {
-                    <mat-optgroup [label]="route.routeName">
-                        @for (
-                            rsl of route.routeStationLists;
-                            track rsl.routeStationListId
-                        ) {
-                            <mat-option [value]="rsl.stationId">
-                                {{ rsl.station.stationName }}
-                            </mat-option>
-                        }
-                    </mat-optgroup>
-                }
-            </mat-select>
-        </mat-form-field>
-        <a matRipple [routerLink]="inboundTimetableLink()"> 上り </a>
-        <a matRipple [routerLink]="outboundTimetableLink()"> 下り </a>
-        <h3>ダイヤグラム</h3>
-        <a matRipple [routerLink]="['/train-diagram']"> ダイヤグラム（時刻-距離図） </a>
-        <a matRipple [routerLink]="['/train-location']"> 列車位置情報 </a>
-        <h3>運用情報</h3>
-        <a matRipple routerLink="/operation/real-time">
-            リアルタイム運用情報
-        </a>
-        <a matRipple routerLink="/operation/past-time"> 過去の運用情報 </a>
+<!-- N3 Side-rail（docs/design.md）。手組みの <a> 羅列をやめ mat-nav-list に寄せる。
+     素の <a> は preflight 無効下でブラウザ既定の青下線のまま出ており、
+     現在地の表示も無かった（audit C5）。 -->
+<nav
+    class="tw-h-full tw-w-full tw-overflow-y-auto tw-bg-white"
+    aria-label="メインナビゲーション"
+>
+    <mat-nav-list>
         <a
-            matRipple
+            mat-list-item
+            routerLink="/"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: true }"
+        >
+            <span matListItemTitle>TOP</span>
+        </a>
+
+        <h3 matSubheader>時刻表</h3>
+        <!-- 駅名セレクトは上り/下りリンクの遷移先を決める機能を持つため残す。
+             リンクと同列に並べず、時刻表グループに属するフォーム領域として囲う。 -->
+        <div class="station-filter">
+            <mat-form-field subscriptSizing="dynamic" class="tw-w-full">
+                <mat-label>駅名</mat-label>
+                <mat-select [formControl]="stationId">
+                    <mat-option [value]="null">
+                        選択しない（全線検索）
+                    </mat-option>
+
+                    @for (route of routeStations(); track route.routeId) {
+                        <mat-optgroup [label]="route.routeName">
+                            @for (
+                                rsl of route.routeStationLists;
+                                track rsl.routeStationListId
+                            ) {
+                                <mat-option [value]="rsl.stationId">
+                                    {{ rsl.station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <!-- 上り/下りは同一パスで trip_direction だけが違う。routerLinkActive の
+             既定（部分一致）では matrix パラメータを持たない URL が両方に一致し、
+             2 件同時に現在地として光ってしまうため exact 一致を指定する。 -->
+        <a
+            mat-list-item
+            [routerLink]="inboundTimetableLink()"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="timetableLinkActiveOptions"
+            aria-label="上り時刻表を開く"
+        >
+            <span matListItemTitle>上り</span>
+        </a>
+        <a
+            mat-list-item
+            [routerLink]="outboundTimetableLink()"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="timetableLinkActiveOptions"
+            aria-label="下り時刻表を開く"
+        >
+            <span matListItemTitle>下り</span>
+        </a>
+
+        <h3 matSubheader>ダイヤグラム</h3>
+        <a
+            mat-list-item
+            [routerLink]="['/train-diagram']"
+            routerLinkActive="is-active"
+        >
+            <span matListItemTitle>ダイヤグラム（時刻-距離図）</span>
+        </a>
+        <a
+            mat-list-item
+            [routerLink]="['/train-location']"
+            routerLinkActive="is-active"
+        >
+            <span matListItemTitle>列車位置情報</span>
+        </a>
+
+        <h3 matSubheader>運用情報</h3>
+        <a
+            mat-list-item
+            routerLink="/operation/real-time"
+            routerLinkActive="is-active"
+        >
+            <span matListItemTitle>リアルタイム運用情報</span>
+        </a>
+        <a
+            mat-list-item
+            routerLink="/operation/past-time"
+            routerLinkActive="is-active"
+        >
+            <span matListItemTitle>過去の運用情報</span>
+        </a>
+        <a
+            mat-list-item
             [routerLink]="[
                 '/operation/table',
                 { calendar_id: todaysCalendarId() },
             ]"
+            routerLinkActive="is-active"
         >
-            運用表
+            <span matListItemTitle>運用表</span>
         </a>
-        <h3>ライブラリ</h3>
-        <a matRipple routerLink="/library/vehicle"> 相鉄の車両 </a>
-    </div>
+
+        <h3 matSubheader>ライブラリ</h3>
+        <a
+            mat-list-item
+            routerLink="/library/vehicle"
+            routerLinkActive="is-active"
+        >
+            <span matListItemTitle>相鉄の車両</span>
+        </a>
+    </mat-nav-list>
 </nav>

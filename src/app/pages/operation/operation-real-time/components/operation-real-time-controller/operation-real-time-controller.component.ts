@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { lastValueFrom } from 'rxjs';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 
@@ -12,10 +13,20 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
     templateUrl: './operation-real-time-controller.component.html',
     styleUrl: './operation-real-time-controller.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatSlideToggleModule, MatButtonModule, MatIconModule],
+    imports: [
+        MatSlideToggleModule,
+        MatButtonModule,
+        MatIconModule,
+        DateFnsPipe,
+    ],
 })
 export class OperationRealTimeControllerComponent {
     readonly #operationRealTimeService = inject(OperationRealTimeService);
+
+    /** 再読み込みボタンの真横に出す最終更新時刻（ユーザー指示 2026-08-22）。 */
+    readonly finalUpdateTime = toSignal(
+        OperationRealTimeStore.finalUpdateTime$,
+    );
 
     readonly isEnableAutoReload = toSignal(
         OperationRealTimeStore.isEnableAutoReload$,

@@ -1,12 +1,11 @@
 <article
     [id]="'operation-card-' + operationTrip().operation.operationNumber"
-    class="tw-scroll-mt-20 tw-overflow-hidden tw-rounded tw-bg-white tw-shadow-md"
+    class="tw-scroll-mt-20 tw-overflow-hidden tw-rounded-card tw-bg-white"
 >
     <header
         class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-px-4 tw-py-2"
         [style.background-color]="
-            operationTrip().operation.operationNumber
-                | operationNumberColor
+            operationTrip().operation.operationNumber | operationNumberColor
         "
     >
         <div class="tw-flex tw-min-w-0 tw-flex-1 tw-items-center tw-gap-2">
@@ -39,9 +38,16 @@
     </header>
 
     <ul class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-gap-0 tw-p-4">
-        @for (row of rows(); track row.tripOperationListId; let first = $first; let last = $last) {
+        @for (
+            row of rows();
+            track row.tripOperationListId;
+            let first = $first;
+            let last = $last
+        ) {
             <li class="tw-flex tw-flex-row tw-items-stretch tw-gap-3">
-                <div class="tw-flex tw-w-6 tw-flex-shrink-0 tw-flex-col tw-items-center">
+                <div
+                    class="tw-flex tw-w-6 tw-flex-shrink-0 tw-flex-col tw-items-center"
+                >
                     <div
                         class="tw-w-0.5 tw-flex-1"
                         [class.tw-bg-transparent]="first"
@@ -51,7 +57,7 @@
                         class="tw-my-1 tw-flex-shrink-0 tw-rounded-full"
                         [class]="
                             row.depotOut || row.depotIn
-                                ? 'tw-h-4 tw-w-4 tw-bg-orange-500'
+                                ? 'tw-h-4 tw-w-4 tw-bg-accent-deep'
                                 : 'tw-h-3 tw-w-3 tw-border-2 tw-border-solid tw-border-primary-500 tw-bg-white'
                         "
                     ></div>
@@ -64,12 +70,10 @@
 
                 <div class="tw-flex tw-flex-1 tw-flex-col tw-gap-1 tw-pb-4">
                     <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+                        <!-- 種別チップに列車番号を同居させず、番号は隣の要素に出す
+                             （ユーザー指示 2026-08-22）。 -->
                         <a
-                            class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-white tw-no-underline"
-                            [class.tw-bg-grey-500]="row.isDeadhead"
-                            [style.background-color]="
-                                row.isDeadhead ? null : row.tripClassColor
-                            "
+                            class="tw-inline-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-ink tw-no-underline"
                             [routerLink]="[
                                 '/timetable',
                                 'all-line',
@@ -80,18 +84,31 @@
                                 },
                             ]"
                         >
-                            {{ row.tripClassName | tripClassBaseName }} {{ row.tripNumber }}
+                            <app-trip-class-chip
+                                [label]="row.tripClassName"
+                                [color]="
+                                    row.isDeadhead ? null : row.tripClassColor
+                                "
+                            ></app-trip-class-chip>
+                            <span class="tw-tabular-nums">{{
+                                row.tripNumber
+                            }}</span>
                         </a>
+                        <!-- 出庫/入庫は種別に付く修飾であって主データではない。
+                             行の他の文字と同じ 14px に揃え、塗りはブランドの accent、
+                             文字は accent-ink（docs/design.md 色の掟 2）。
+                             旧実装は Material の orange-500 に白文字で 2.16:1、
+                             かつ隣の種別チップより大きく、主従が逆転していた。 -->
                         @if (row.depotOut) {
                             <span
-                                class="tw-rounded tw-bg-orange-500 tw-px-1.5 tw-py-0.5 tw-text-base tw-font-bold tw-text-white"
+                                class="tw-rounded tw-bg-accent-500 tw-px-1.5 tw-py-0.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-accent-ink"
                             >
                                 出庫
                             </span>
                         }
                         @if (row.depotIn) {
                             <span
-                                class="tw-rounded tw-bg-orange-500 tw-px-1.5 tw-py-0.5 tw-text-base tw-font-bold tw-text-white"
+                                class="tw-rounded tw-bg-accent-500 tw-px-1.5 tw-py-0.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-accent-ink"
                             >
                                 入庫
                             </span>
@@ -104,7 +121,11 @@
                         {{
                             row.startTime
                                 ? (row.startTime
-                                  | dateFns: { format: 'HH:mm', parseFormat: 'HH:mm:ss' })
+                                  | dateFns
+                                      : {
+                                            format: 'HH:mm',
+                                            parseFormat: 'HH:mm:ss',
+                                        })
                                 : '？？:？？'
                         }}
                         {{ row.startStationName }}
@@ -112,7 +133,11 @@
                         {{
                             row.endTime
                                 ? (row.endTime
-                                  | dateFns: { format: 'HH:mm', parseFormat: 'HH:mm:ss' })
+                                  | dateFns
+                                      : {
+                                            format: 'HH:mm',
+                                            parseFormat: 'HH:mm:ss',
+                                        })
                                 : '？？:？？'
                         }}
                         {{ row.endStationName }}

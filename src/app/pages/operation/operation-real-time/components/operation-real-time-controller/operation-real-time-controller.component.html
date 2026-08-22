@@ -1,6 +1,8 @@
 <!-- mockup-02 / 98 §G2: トグル3個（自動更新/履歴/現在位置）を1行にコンパクト配置。
      右端の再読み込みボタンは情報削減禁止で維持 -->
-<div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 sm:tw-gap-x-4">
+<div
+    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 sm:tw-gap-x-4"
+>
     <mat-slide-toggle
         color="accent"
         [checked]="isEnableAutoReload()"
@@ -23,9 +25,20 @@
         現在位置
     </mat-slide-toggle>
     <span class="tw-flex-1"></span>
+    <!-- 最終更新時刻は再読み込みボタンの真横に置く（ユーザー指示 2026-08-22）。
+         「いつのデータか」と「更新する」は同じ関心事であり、離すと
+         ページ先頭の独立した1行ぶんの高さを無駄にしていた。 -->
+    <small
+        class="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-text-ink-2"
+    >
+        最終更新
+        {{ finalUpdateTime() | dateFns: { format: 'yyyy/MM/dd HH:mm:ss' } }}
+    </small>
+    <!-- color="accent" を外して accent-deep にする。紙の上のオレンジ前景は
+         2.79:1 で WCAG 1.4.11 の 3:1 に届かない（docs/design.md 色の掟 1）。 -->
     <button
         mat-icon-button
-        color="accent"
+        class="!tw-text-accent-deep"
         aria-label="目撃情報を再読み込み"
         (click)="reload()"
     >

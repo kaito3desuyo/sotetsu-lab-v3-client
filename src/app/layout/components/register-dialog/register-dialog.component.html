@@ -6,7 +6,12 @@
     <header class="tw-flex tw-flex-row tw-items-center">
         <h2 class="tw-m-0 tw-text-2xl tw-font-normal">新規登録</h2>
         <div class="tw-flex-grow"></div>
-        <button mat-icon-button type="button" (click)="onClickClose()">
+        <button
+            mat-icon-button
+            type="button"
+            aria-label="新規登録ダイアログを閉じる"
+            (click)="onClickClose()"
+        >
             <mat-icon>close</mat-icon>
         </button>
     </header>
@@ -57,6 +62,12 @@
                 mat-icon-button
                 matSuffix
                 type="button"
+                [attr.aria-label]="
+                    passwordVisible()
+                        ? 'パスワードを隠す'
+                        : 'パスワードを表示する'
+                "
+                [attr.aria-pressed]="passwordVisible()"
                 (click)="togglePasswordVisibility()"
             >
                 <mat-icon>{{
@@ -87,6 +98,12 @@
                 mat-icon-button
                 matSuffix
                 type="button"
+                [attr.aria-label]="
+                    confirmPasswordVisible()
+                        ? '確認用パスワードを隠す'
+                        : '確認用パスワードを表示する'
+                "
+                [attr.aria-pressed]="confirmPasswordVisible()"
                 (click)="toggleConfirmPasswordVisibility()"
             >
                 <mat-icon>{{

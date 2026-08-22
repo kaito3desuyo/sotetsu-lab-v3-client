@@ -1,4 +1,13 @@
-@let stationTime = stationId() | findById: { array: trip().times, propertyName: 'stationId' };
+@let stationTime =
+    stationId() | findById: { array: trip().times, propertyName: 'stationId' };
+@let tripClassColor =
+    trip().tripClassId
+        | findById
+            : {
+                  array: tripClasses(),
+                  propertyName: 'tripClassId',
+                  outputPropertyName: 'tripClassColor',
+              };
 
 <div
     class="tw-flex tw-min-w-0 tw-flex-col tw-gap-1 tw-rounded tw-p-1.5 hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.06]"
@@ -9,7 +18,7 @@
     >
         <a
             matRipple
-            class="tw-rounded tw-text-2xl tw-font-bold tw-leading-none tw-tabular-nums tw-no-underline"
+            class="tw-rounded tw-text-2xl tw-font-bold tw-tabular-nums tw-leading-none tw-no-underline"
             [style.color]="
                 trip().tripClassId
                     | findById
@@ -47,19 +56,8 @@
             }
         </a>
 
-        <span
-            class="tw-inline-block tw-shrink-0 tw-rounded tw-px-1.5 tw-py-0.5 tw-text-xs tw-font-bold tw-leading-tight tw-text-white"
-            [style.background-color]="
-                trip().tripClassId
-                    | findById
-                        : {
-                              array: tripClasses(),
-                              propertyName: 'tripClassId',
-                              outputPropertyName: 'tripClassColor',
-                          }
-            "
-        >
-            {{
+        <app-trip-class-chip
+            [label]="
                 trip().tripClassId
                     | findById
                         : {
@@ -68,9 +66,9 @@
                               outputPropertyName: 'tripClassName',
                           }
                     | antiBrackets
-                    | tripClassBaseName
-            }}
-        </span>
+            "
+            [color]="tripClassColor"
+        ></app-trip-class-chip>
 
         <span class="tw-min-w-0 tw-truncate tw-text-sm tw-leading-tight">
             {{
@@ -103,10 +101,14 @@
         だった）をやめ、operationNumber での直接キー引きに置き換える。
     -->
     @let timeCrossSection =
-        operationNumber ? operationSightingTimeCrossSections()[operationNumber] : undefined;
-    @let currentFormationNumber = timeCrossSection?.expectedSighting?.formation?.formationNumber;
+        operationNumber
+            ? operationSightingTimeCrossSections()[operationNumber]
+            : undefined;
+    @let currentFormationNumber =
+        timeCrossSection?.expectedSighting?.formation?.formationNumber;
     @let currentFormationDayCount =
-        timeCrossSection?.latestSighting?.sightingTime | calculateDayCountFromToday;
+        timeCrossSection?.latestSighting?.sightingTime
+            | calculateDayCountFromToday;
 
     <div
         class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1.5 tw-text-xs tw-leading-tight tw-text-grey-600"
@@ -162,18 +164,11 @@
                               outputPropertyName: 'stationName',
                           }
             }}まで（
-            <span
-                [style.color]="
-                    otherTrip.tripClassId
-                        | findById
-                            : {
-                                  array: tripClasses(),
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassColor',
-                              }
-                "
-            >
-                {{
+            <!-- 脚注も種別は塗りチップに統一する（ユーザー指示 2026-08-22）。
+                 従来は種別色の文字だった。 -->
+            <app-trip-class-chip
+                size="sm"
+                [label]="
                     otherTrip.tripClassId
                         | findById
                             : {
@@ -182,10 +177,19 @@
                                   outputPropertyName: 'tripClassName',
                               }
                         | antiBrackets
-                        | tripClassBaseName
-                }}
-            </span>
-            {{ otherTrip.tripNumber }}）
+                "
+                [color]="
+                    otherTrip.tripClassId
+                        | findById
+                            : {
+                                  array: tripClasses(),
+                                  propertyName: 'tripClassId',
+                                  outputPropertyName: 'tripClassColor',
+                              }
+                "
+            ></app-trip-class-chip>
+            <span class="tw-tabular-nums">{{ otherTrip.tripNumber }}</span
+            >）
         </div>
     }
 </div>

@@ -1,4 +1,6 @@
-<div class="tw-flex tw-h-full tw-flex-col">
+<!-- 図そのものが本文なので外周 gutter は持たない（他ページの main とは
+     意図的に異なる。docs/design.md「余白の掟」参照）。ただし landmark は揃える。 -->
+<main class="tw-flex tw-h-full tw-flex-col">
     @if (isLoading()) {
         <mat-progress-bar
             mode="indeterminate"
@@ -24,7 +26,7 @@
         [showCurrentTimeCursor]="isTodaySelected()"
     ></app-train-diagram-legend>
 
-<!-- trip-blocks バルク取得（数 MB）中はチャートが白紙に見えるため、
+    <!-- trip-blocks バルク取得（数 MB）中はチャートが白紙に見えるため、
          ロード完了まで本文を出さず中央スピナーを表示する（20-design-ui.md §4） -->
     @if (isLoading()) {
         <div
@@ -64,4 +66,4 @@
             (closed)="onInfoPanelClosed()"
         ></app-train-diagram-info-panel>
     }
-</div>
+</main>

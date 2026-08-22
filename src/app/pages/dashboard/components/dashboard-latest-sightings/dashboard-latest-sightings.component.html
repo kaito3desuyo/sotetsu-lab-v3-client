@@ -1,4 +1,6 @@
-<section class="tw-flex tw-flex-col tw-gap-2 tw-bg-white tw-p-4 tw-shadow-md">
+<section
+    class="tw-flex tw-flex-col tw-gap-2 tw-rounded-card tw-bg-white tw-p-4"
+>
     <h2 class="tw-m-0 tw-text-base tw-font-bold">最新の目撃情報</h2>
 
     @if (items().length === 0) {
@@ -9,10 +11,7 @@
         <div
             class="tw-flex tw-flex-col tw-divide-y tw-divide-solid tw-divide-grey-300"
         >
-            @for (
-                item of items();
-                track item.sighting.operationSightingId
-            ) {
+            @for (item of items(); track item.sighting.operationSightingId) {
                 <a
                     [routerLink]="['/operation', 'real-time']"
                     class="tw-flex tw-flex-row tw-items-center tw-gap-3 tw-py-2 tw-text-black tw-no-underline"
@@ -25,9 +24,7 @@
                             "
                         ></app-new-operation-number-link>
                     } @else {
-                        <span
-                            class="tw-shrink-0 tw-text-sm tw-text-grey-600"
-                        >
+                        <span class="tw-shrink-0 tw-text-sm tw-text-grey-600">
                             不明
                         </span>
                     }
@@ -40,7 +37,9 @@
                         {{ item.positionLabel || '-' }}
                     </span>
 
-                    <span class="tw-shrink-0 tw-text-xs tw-tabular-nums tw-text-grey-600">
+                    <span
+                        class="tw-shrink-0 tw-text-xs tw-tabular-nums tw-text-grey-600"
+                    >
                         @if (item.sighting.sightingTime) {
                             {{
                                 item.sighting.sightingTime

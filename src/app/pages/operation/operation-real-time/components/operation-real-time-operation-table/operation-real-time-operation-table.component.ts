@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -21,6 +26,13 @@ export class OperationRealTimeOperationTableComponent {
 
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
+    });
+    /**
+     * 目撃データの取得中フラグ。カードへ渡して、未到着と「目撃が無い」を
+     * 区別させる（audit M4）。ページ上部の進捗バーと同じ出所。
+     */
+    readonly isLoading = toSignal(OperationRealTimeStore.isLoading$, {
+        initialValue: false,
     });
     readonly stations = toSignal(OperationRealTimeStore.stations$);
     readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
@@ -50,15 +62,11 @@ export class OperationRealTimeOperationTableComponent {
         OperationRealTimeStore.selectedGroupNames$,
         { initialValue: [] },
     );
-    readonly operationGroups = toSignal(OperationRealTimeStore.operationGroups$, {
-        initialValue: [],
-    });
 
     readonly filteredOperations = computed(() => {
         const operations = this.operations() ?? [];
         const selectedAgencyIds = this.selectedAgencyIds();
         const selectedGroupNames = this.selectedGroupNames();
-        const groups = this.operationGroups();
         const timeCrossSections = this.timeCrossSections() ?? {};
         const formations = this.formations() ?? [];
 
@@ -67,7 +75,6 @@ export class OperationRealTimeOperationTableComponent {
                 !matchesGroupFilter(
                     operation.operationNumber,
                     selectedGroupNames,
-                    groups,
                 )
             ) {
                 return false;

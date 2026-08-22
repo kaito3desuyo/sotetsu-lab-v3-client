@@ -5,10 +5,7 @@
     ></app-empty-state>
 } @else {
     <div class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-2">
-        @for (
-            operation of filteredOperations();
-            track operation.operationId
-        ) {
+        @for (operation of filteredOperations(); track operation.operationId) {
             <app-operation-real-time-operation-card
                 [operation]="operation"
                 [timeCrossSection]="
@@ -17,9 +14,7 @@
                     )()
                 "
                 [histories]="
-                    queryHistoriesByOperationNumber(
-                        operation.operationNumber
-                    )()
+                    queryHistoriesByOperationNumber(operation.operationNumber)()
                 "
                 [currentPosition]="
                     queryCurrentPositionByOperationNumber(
@@ -33,6 +28,7 @@
                 [calendarId]="calendar()?.calendarId"
                 [isVisibleSightingHistories]="isVisibleSightingHistories()"
                 [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
+                [isSightingLoading]="isLoading()"
             ></app-operation-real-time-operation-card>
         }
     </div>

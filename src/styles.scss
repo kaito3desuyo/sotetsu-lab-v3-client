@@ -121,6 +121,12 @@ body {
     margin: 0;
     font-family: $sotetsu-lab-v3-client-font-family;
     font-feature-settings: 'pkna';
+
+    // カードの境界は影ではなく**面の明度差**で作る（ユーザー判断 2026-08-22）。
+    // 以前はページもカードも #ffffff で、影だけが唯一の境界だった。
+    // ページ地をひとつ沈めることで、白いカードが影なしで浮き上がる。
+    // 詳細は docs/design.md「面の掟」。
+    background-color: var(--color-paper-2);
 }
 
 .mat-sidenav {
@@ -150,9 +156,40 @@ body {
 // R-8: :focus-visible の可視化（キーボード操作時のフォーカスリングを保証する）。
 // Material コンポーネントが :focus 系セレクタで outline: none を返す場合があるため
 // !important で確実に上書きする。
+//
+// リング色は面の明度で使い分ける（docs/design.md 色の掟 3）。
+// 旧実装は #001556 単色で、同色の primary-500 を敷いたヘッダー上ではリングが
+// 背景に完全に溶けていた（実測 1.00:1）。
 :focus-visible {
-    outline: 2px solid #001556 !important;
+    outline: 2px solid var(--color-focus) !important;
     outline-offset: 2px !important;
+}
+
+// 濃色面（ヘッダー等）では明色リングに切り替える（structure 上で 9.5:1）
+header :focus-visible,
+.tw-bg-primary-500 :focus-visible {
+    outline-color: var(--color-focus-on-dark) !important;
+}
+
+// 種別色チップの白文字を、塗り色を一切変えずに読ませるための縁取り。
+// paint-order: stroke fill で縁を先に描くため、字面（フィル）が痩せない。
+//
+// 太さは em 指定。チップは 10px（sm）と 12px（md）の2サイズあり、px 固定だと
+// 小さい方だけ相対的に太くなる。旧実装の 2px は 10px の文字に対して 0.2em あり、
+// 「送」「急」「停」のような画数の多い漢字の内側の空きが埋まって潰れていた（実測）。
+// 0.08em は 10px→0.8px / 12px→0.96px となり、輪郭を出しつつ字面を潰さない。
+.trip-class-chip-label {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 0.08em var(--color-ink-deep);
+}
+
+// 何も描画しないコンポーネントホスト（内部の @if が false で、コメントノードだけが
+// 残った状態）が flex の gap を消費して、ページ先頭に幽霊余白を作るのを防ぐ。
+// 全線時刻表の未選択時、`route-filter` と `all-line-table` が高さ0のまま
+// flex item として並び、本文が 32px（gap 16px × 2）下がっていた。
+// hr / img 等の置換要素は :empty でも高さを持つため除外する。
+main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
+    display: none;
 }
 
 .weekday {

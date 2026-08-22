@@ -5,10 +5,7 @@
     ></app-empty-state>
 } @else {
     <div class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-2">
-        @for (
-            formation of filteredFormations();
-            track formation.formationId
-        ) {
+        @for (formation of filteredFormations(); track formation.formationId) {
             <app-operation-real-time-formation-card
                 [formation]="formation"
                 [timeCrossSection]="
@@ -17,9 +14,7 @@
                     )()
                 "
                 [histories]="
-                    queryHistoriesByFormationNumber(
-                        formation.formationNumber
-                    )()
+                    queryHistoriesByFormationNumber(formation.formationNumber)()
                 "
                 [currentPosition]="
                     queryCurrentPositionByFormationNumber(
@@ -33,6 +28,7 @@
                 [calendarId]="calendar()?.calendarId"
                 [isVisibleSightingHistories]="isVisibleSightingHistories()"
                 [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
+                [isSightingLoading]="isLoading()"
             ></app-operation-real-time-formation-card>
         }
     </div>

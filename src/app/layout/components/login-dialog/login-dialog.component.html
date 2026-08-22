@@ -2,7 +2,12 @@
     <header class="tw-flex tw-flex-row tw-items-center">
         <h2 class="tw-m-0 tw-text-2xl tw-font-normal">ログイン</h2>
         <div class="tw-flex-grow"></div>
-        <button mat-icon-button type="button" (click)="onClickClose()">
+        <button
+            mat-icon-button
+            type="button"
+            aria-label="ログインダイアログを閉じる"
+            (click)="onClickClose()"
+        >
             <mat-icon>close</mat-icon>
         </button>
     </header>
@@ -37,6 +42,12 @@
                 mat-icon-button
                 matSuffix
                 type="button"
+                [attr.aria-label]="
+                    passwordVisible()
+                        ? 'パスワードを隠す'
+                        : 'パスワードを表示する'
+                "
+                [attr.aria-pressed]="passwordVisible()"
                 (click)="togglePasswordVisibility()"
             >
                 <mat-icon>{{

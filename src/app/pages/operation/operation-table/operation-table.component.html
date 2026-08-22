@@ -7,7 +7,9 @@
     </div>
 }
 
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-0 md:tw-p-16">
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
     <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
          本文の h1/h2 重複は置かない -->
     <!-- モック 03: 青バナーを廃し、ダイヤ select＋ジャンプ select を常設。
@@ -28,7 +30,13 @@
             message="このダイヤには運用情報が登録されていません"
         ></app-empty-state>
     } @else {
-        <div class="tw-flex tw-flex-col tw-gap-4">
+        <!-- 広い画面では 2 面付けにする（docs/design.md「運用カードの2面付け」/ audit M1）。
+             1 運用 = 1 カードの縦構造は維持したまま、1456px 幅で約 1100px あった
+             死に幅を縮め、縦スクロール量を半分にする。
+             カードごとに高さが大きく違うため items-start で各カードの高さを保つ。 -->
+        <div
+            class="tw-grid tw-grid-cols-1 tw-items-start tw-gap-4 xl:tw-grid-cols-2"
+        >
             @for (
                 operationTrip of operationTrips();
                 track operationTrip.operation.operationNumber

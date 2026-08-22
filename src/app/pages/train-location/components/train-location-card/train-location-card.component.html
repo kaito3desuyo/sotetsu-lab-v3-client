@@ -1,22 +1,22 @@
 <a
     [routerLink]="card().detailLink"
-    class="tw-flex tw-w-40 tw-flex-col tw-gap-0.5 tw-rounded tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-grey-900 tw-shadow tw-no-underline"
+    class="tw-flex tw-w-40 tw-flex-col tw-gap-0.5 tw-rounded tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-grey-900 tw-no-underline tw-shadow"
 >
     <!-- 上段（モック09準拠）: 種別バッジ+行き先（左寄せ）+ 運用番号（右端。実装の補足情報として維持） -->
     <span class="tw-flex tw-items-center tw-justify-between tw-gap-1">
         <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
-            <span
-                class="tw-inline-block tw-shrink-0 tw-rounded tw-px-1.5 tw-py-0.5 tw-text-[10px] tw-text-white"
-                [style.background-color]="card().tripClassColor"
-            >
-                {{ card().tripClassName }}
-            </span>
+            <app-trip-class-chip
+                size="sm"
+                [label]="card().tripClassName"
+                [color]="card().tripClassColor"
+            ></app-trip-class-chip>
             <span class="tw-truncate tw-font-bold"
                 >{{ card().destinationName }} 行</span
             >
         </span>
         @if (card().operationNumber) {
-            <span class="tw-shrink-0 tw-text-[10px] tw-font-bold tw-text-grey-600"
+            <span
+                class="tw-shrink-0 tw-text-[10px] tw-font-bold tw-text-grey-600"
                 >運用{{ card().operationNumber }}</span
             >
         }
@@ -41,8 +41,8 @@
             <span class="tw-truncate tw-font-bold tw-text-grey-900">
                 @if (card().formationAgencyName) {
                     <span class="tw-font-normal tw-text-grey-500"
-                        >{{ card().formationAgencyName }} </span
-                    >
+                        >{{ card().formationAgencyName }}
+                    </span>
                 }
                 <span>{{ card().formationNumber }}</span>
             </span>

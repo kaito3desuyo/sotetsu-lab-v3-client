@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
@@ -7,6 +12,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
+import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table-format-station-name.pipe';
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';
 
@@ -50,6 +56,7 @@ type TripRow = {
         OperationTableFormatStationNamePipe,
         OperationTableFormatTripClassNamePipe,
         TripClassBaseNamePipe,
+        TripClassChipComponent,
     ],
 })
 export class OperationTableCardComponent {
@@ -92,8 +99,7 @@ export class OperationTableCardComponent {
                 );
 
                 return {
-                    tripOperationListId:
-                        tripOperationList.tripOperationListId,
+                    tripOperationListId: tripOperationList.tripOperationListId,
                     tripDirection: trip.tripDirection,
                     tripBlockId: trip.tripBlockId,
                     tripNumber: trip.tripNumber,

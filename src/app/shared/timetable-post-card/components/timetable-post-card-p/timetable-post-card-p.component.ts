@@ -18,6 +18,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { RxState } from '@rx-angular/state';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { ITimetablePostCardForm } from '../../interfaces/timetable-post-card-form.interface';
@@ -40,7 +41,8 @@ type Form = FormGroup<{
         MatRadioModule,
         MatButtonModule,
         DateFnsPipe,
-    ]
+        AppButtonComponent,
+    ],
 })
 export class TimetablePostCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;

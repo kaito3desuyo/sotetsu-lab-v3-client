@@ -7,12 +7,20 @@
 @let prev = positionVm?.prev;
 @let current = positionVm?.current;
 @let next = positionVm?.next;
+@let showsHistories = isVisibleSightingHistories() && hasVisibleHistories();
+@let showsPosition =
+    isVisibleCurrentPosition() && (!!prev || !!current || !!next);
 
+<!-- 2 行構成（ユーザー指示 2026-08-22）:
+       1 行目: 運用番号 | 編成番号 | 目撃/更新
+       2 行目: 履歴・現在位置（**カードの左端から**全幅を使う）
+     以前は履歴が編成番号と同じセルに積まれ、目撃/更新が 2 行ぶん縦に伸びていた。
+     下段は主キーの列に合わせず左端から始める（ユーザー指示 2026-08-22）。 -->
 <div
-    class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-start tw-gap-x-3 tw-gap-y-1 tw-rounded-lg tw-border tw-border-solid tw-border-grey-300 tw-bg-white tw-p-3 tw-shadow-sm"
+    class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-start tw-gap-x-3 tw-gap-y-1 tw-rounded-card tw-bg-white tw-p-3"
 >
     <!-- 運用番号チップ -->
-    <div class="tw-col-start-1 tw-row-start-1 tw-row-span-2 tw-self-start">
+    <div class="tw-col-start-1 tw-row-start-1 tw-self-start">
         <app-new-operation-number-link
             [text]="operation().operationNumber"
             [bgColor]="operation().operationNumber | newOperationNumberColor"
@@ -24,14 +32,14 @@
         ></app-new-operation-number-link>
     </div>
 
-    <!-- 中央上段: 編成番号・所属会社/形式・目撃履歴 -->
+    <!-- 上段中央: 編成番号・所属会社/形式。
+         編成番号（主データ）と形式・会社（修飾）は縦2段に分ける
+         （ユーザー指示 2026-08-22）。横並びだと主従が読み取りにくい。 -->
     <div
         class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-w-0 tw-flex-col tw-gap-0.5"
     >
         @if (formationVm) {
-            <div
-                class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-1.5"
-            >
+            <div class="tw-flex tw-flex-col tw-items-start">
                 <span
                     class="tw-text-base tw-leading-tight"
                     [class.tw-font-bold]="dayCount === 0"
@@ -52,257 +60,346 @@
                     </span>
                 }
             </div>
+        } @else if (isSightingLoading()) {
+            <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
+            <span
+                class="tw-inline-flex tw-items-center"
+                aria-label="充当編成を取得中"
+            >
+                <span
+                    class="tw-h-4 tw-w-14 tw-rounded tw-bg-paper-3"
+                    aria-hidden="true"
+                ></span>
+            </span>
         } @else {
             <span class="tw-text-base tw-text-grey-600">不明</span>
         }
+    </div>
 
-        @if (isVisibleSightingHistories() && hasVisibleHistories()) {
-            <div
-                class="tw-flex tw-max-w-full tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-overflow-x-auto"
-            >
-                <span class="tw-text-[10px] tw-leading-tight tw-text-grey-500">
+    <!-- 下段: 履歴・現在位置 -->
+    @if (showsHistories || showsPosition) {
+        <div
+            class="tw-col-span-3 tw-col-start-1 tw-row-start-2 tw-grid tw-min-w-0 tw-grid-cols-[auto_1fr] tw-items-center tw-gap-x-2 tw-gap-y-1"
+        >
+            @if (showsHistories) {
+                <span
+                    class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
+                >
                     履歴
                 </span>
-                @for (
-                    history of reversedHistories();
-                    track history.operationSightingId
-                ) {
-                    @if (
-                        !formationVm ||
-                        sightingVm?.operationSightingId !==
-                            history.operationSightingId
+                <div
+                    class="tw-flex tw-min-w-0 tw-max-w-full tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-overflow-x-auto"
+                >
+                    @for (
+                        history of reversedHistories();
+                        track history.operationSightingId
                     ) {
-                        @let historyDayCount =
-                            history.sightingTime | operationRealTimeDayCount;
-                        <span
-                            class="tw-inline-flex tw-items-center tw-gap-0.5 tw-whitespace-nowrap tw-rounded tw-bg-grey-100 tw-px-1 tw-py-0.5"
-                            [matTooltip]="
+                        @if (
+                            !formationVm ||
+                            sightingVm?.operationSightingId !==
+                                history.operationSightingId
+                        ) {
+                            @let historyDayCount =
                                 history.sightingTime
-                                    | dateFns
-                                        : {
-                                              format: '目撃：yyyy/MM/dd HH:mm:ss',
-                                              parseISO: true,
-                                          }
-                            "
-                        >
-                            <mat-icon
-                                class="!tw-h-3.5 !tw-w-3.5 tw-min-w-3.5 tw-text-[14px] tw-text-grey-500"
-                            >
-                                arrow_back
-                            </mat-icon>
-                            <span class="tw-text-xs tw-text-grey-600">
-                                {{
-                                    history.formationId
-                                        | newFindById
-                                            : {
-                                                  array: formations(),
-                                                  propertyName: 'formationId',
-                                                  outputPropertyName:
-                                                      'formationNumber',
-                                              }
-                                }}
-                            </span>
+                                    | operationRealTimeDayCount;
                             <span
-                                class="tw-text-[10px] tw-leading-tight tw-tabular-nums"
-                                [style.color]="
-                                    historyDayCount === 0
-                                        ? '#f44336'
-                                        : historyDayCount === 1
-                                          ? '#4caf50'
-                                          : 'initial'
-                                "
-                            >
-                                {{
+                                class="tw-inline-flex tw-items-center tw-gap-0.5 tw-whitespace-nowrap tw-rounded tw-bg-grey-100 tw-px-1 tw-py-0.5"
+                                [matTooltip]="
                                     history.sightingTime
                                         | dateFns
                                             : {
-                                                  format: 'MM/dd HH:mm',
+                                                  format: '目撃：yyyy/MM/dd HH:mm:ss',
                                                   parseISO: true,
+                                              }
+                                "
+                            >
+                                <mat-icon
+                                    class="!tw-h-3.5 !tw-w-3.5 tw-min-w-3.5 tw-text-[14px] tw-text-muted"
+                                >
+                                    arrow_back
+                                </mat-icon>
+                                <span class="tw-text-xs tw-text-grey-600">
+                                    {{
+                                        history.formationId
+                                            | newFindById
+                                                : {
+                                                      array: formations(),
+                                                      propertyName:
+                                                          'formationId',
+                                                      outputPropertyName:
+                                                          'formationNumber',
+                                                  }
+                                    }}
+                                </span>
+                                <span
+                                    class="tw-text-[10px] tw-tabular-nums tw-leading-tight"
+                                    [style.color]="
+                                        historyDayCount === 0
+                                            ? 'var(--color-recency-today)'
+                                            : historyDayCount === 1
+                                              ? 'var(--color-recency-yesterday)'
+                                              : 'initial'
+                                    "
+                                >
+                                    {{
+                                        history.sightingTime
+                                            | dateFns
+                                                : {
+                                                      format: 'MM/dd HH:mm',
+                                                      parseISO: true,
+                                                  }
+                                    }}
+                                </span>
+                            </span>
+                        }
+                    }
+                </div>
+            }
+
+            @if (showsPosition) {
+                <!-- 見出し列は auto 幅。「履歴」と「現在位置」のうち広いほうに
+                     揃うので、どちらも折り返さず 1 行で出る（ユーザー指示 2026-08-22）。 -->
+                <span
+                    class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
+                >
+                    現在位置
+                </span>
+                <!-- 種別・列番 / 発着 を縦2段にする（ユーザー指示 2026-08-22）。
+                     運行中の列車が無いとき（出庫前・入庫済）は種別と列番自体が
+                     出ないので、自然に1段になる。 -->
+                <div
+                    class="tw-flex tw-flex-col tw-items-start tw-gap-0.5 tw-text-xs tw-leading-4"
+                >
+                    @if (!!current) {
+                        <!-- 種別は全ページ共通の塗りチップ、列車番号はチップの外
+                     （ユーザー指示 2026-08-22）。 -->
+                        <a
+                            class="tw-inline-flex tw-items-center tw-gap-1 tw-whitespace-nowrap tw-text-ink tw-no-underline"
+                            [routerLink]="[
+                                '/timetable',
+                                'all-line',
+                                {
+                                    calendar_id: calendarId(),
+                                    trip_direction: current.trip.tripDirection,
+                                    trip_block_id: current.trip.tripBlockId,
+                                },
+                            ]"
+                        >
+                            <app-trip-class-chip
+                                size="sm"
+                                [label]="
+                                    current.trip.tripClassId
+                                        | newFindById
+                                            : {
+                                                  array: tripClasses(),
+                                                  propertyName: 'tripClassId',
+                                                  outputPropertyName:
+                                                      'tripClassName',
+                                              }
+                                        | newAntiBrackets
+                                "
+                                [color]="
+                                    current.trip.tripClassId
+                                        | newFindById
+                                            : {
+                                                  array: tripClasses(),
+                                                  propertyName: 'tripClassId',
+                                                  outputPropertyName:
+                                                      'tripClassColor',
+                                              }
+                                "
+                            ></app-trip-class-chip>
+                            <span class="tw-tabular-nums tw-underline">
+                                {{ current.trip.tripNumber }}
+                            </span>
+                        </a>
+                    }
+
+                    <span
+                        class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-whitespace-nowrap"
+                    >
+                        <!-- FROM -->
+                        @if (!prev && !current && !!next) {
+                            @if (!!next.trip.depotOut) {
+                                <span>出庫前○</span>
+                            } @else {
+                                <span>不明？</span>
+                            }
+                        }
+                        @if (!prev && !!current && !next) {
+                            <span>
+                                {{
+                                    current.startTime.stationId
+                                        | newFindById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                                {{
+                                    current.startTime.departureTime
+                                        | dateFns
+                                            : {
+                                                  format: 'HH:mm',
+                                                  parseFormat: 'HH:mm:ss',
                                               }
                                 }}
                             </span>
-                        </span>
-                    }
-                }
-            </div>
-        }
-    </div>
-
-    <!-- 中央下段: 種別・列番・現在位置区間 -->
-    @if (isVisibleCurrentPosition() && (!!prev || !!current || !!next)) {
-        <div
-            class="tw-col-start-2 tw-row-start-2 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 tw-text-xs tw-leading-4"
-        >
-            @if (!!current) {
-                <!-- mockup-02: 種別リンクは下線付き（98 §G2 A4「下線種別リンク」） -->
-                <a
-                    class="tw-whitespace-nowrap tw-underline"
-                    [routerLink]="[
-                        '/timetable',
-                        'all-line',
-                        {
-                            calendar_id: calendarId(),
-                            trip_direction: current.trip.tripDirection,
-                            trip_block_id: current.trip.tripBlockId,
-                        },
-                    ]"
-                    [style.color]="
-                        current.trip.tripClassId
-                            | newFindById
-                                : {
-                                      array: tripClasses(),
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassColor',
-                                  }
-                    "
-                >
-                    {{
-                        current.trip.tripClassId
-                            | newFindById
-                                : {
-                                      array: tripClasses(),
-                                      propertyName: 'tripClassId',
-                                      outputPropertyName: 'tripClassName',
-                                  }
-                            | newAntiBrackets
-                            | tripClassBaseName
-                    }}
-                    {{ current.trip.tripNumber }}
-                </a>
-            }
-
-            <span
-                class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-whitespace-nowrap"
-            >
-                <!-- FROM -->
-                @if (!prev && !current && !!next) {
-                    @if (!!next.trip.depotOut) {
-                        <span>出庫前○</span>
-                    } @else {
-                        <span>不明？</span>
-                    }
-                }
-                @if (!prev && !!current && !next) {
-                    <span>
-                        {{
-                            current.startTime.stationId
-                                | newFindById
-                                    : {
-                                          array: stations(),
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'stationName',
-                                      }
-                        }}
-                        {{ current.startTime.departureTime }}
-                    </span>
-                }
-                @if (!!prev && !current) {
-                    <span>
-                        {{
-                            prev.endTime.stationId
-                                | newFindById
-                                    : {
-                                          array: stations(),
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'stationName',
-                                      }
-                        }}
-                        {{ prev.endTime.arrivalTime }}
-                    </span>
-                }
-
-                @if (!prev && !current && !!next) {
-                    <!-- mockup-02: 出庫前は「出庫前○ ・ かしわ台 20:31」の・区切り -->
-                    <span>・</span>
-                } @else {
-                    <mat-icon
-                        class="!tw-h-4 !tw-w-4 tw-text-[16px] tw-leading-[normal]"
-                    >
-                        arrow_forward
-                    </mat-icon>
-                }
-
-                <!-- TO -->
-                @if (!prev && !current && !!next) {
-                    <span>
-                        {{
-                            next.startTime.stationId
-                                | newFindById
-                                    : {
-                                          array: stations(),
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'stationName',
-                                      }
-                        }}
-                        {{ next.startTime.departureTime }}
-                    </span>
-                }
-                @if (!prev && !!current && !next) {
-                    <span>
-                        {{
-                            current.endTime.stationId
-                                | newFindById
-                                    : {
-                                          array: stations(),
-                                          propertyName: 'stationId',
-                                          outputPropertyName: 'stationName',
-                                      }
-                        }}
-                        {{ current.endTime.arrivalTime }}
-                    </span>
-                }
-                @if (!!prev && !current && !!next) {
-                    <span>
-                        @if (prev.endTime.stationId === next.startTime.stationId) {
-                            @if (prev.trip.depotIn) {
-                                一時入庫
-                            } @else {
-                                停車中
-                            }
-                        } @else {
-                            {{
-                                next.startTime.stationId
-                                    | newFindById
-                                        : {
-                                              array: stations(),
-                                              propertyName: 'stationId',
-                                              outputPropertyName:
-                                                  'stationName',
-                                          }
-                            }}
                         }
-                        {{ next.startTime.departureTime }}
+                        @if (!!prev && !current) {
+                            <span>
+                                {{
+                                    prev.endTime.stationId
+                                        | newFindById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                                {{
+                                    prev.endTime.arrivalTime
+                                        | dateFns
+                                            : {
+                                                  format: 'HH:mm',
+                                                  parseFormat: 'HH:mm:ss',
+                                              }
+                                }}
+                            </span>
+                        }
+
+                        <!-- 区切りは状態によらず常に矢印。以前は出庫前だけ「・」に
+                             していたが誤りだった（ユーザー指摘 2026-08-22）。
+                             mockup-02 の該当行は `出庫前 ○ → かしわ台 20:31` と
+                             矢印であり、「・」は同ファイルの**凡例行**で
+                             「出庫前 ○ ・ 入庫済 △」と 2 項目を区切っていたもの。
+                             凡例の区切り文字を位置行に持ち込んでしまっていた。
+                             入庫済側は矢印だったので内部でも不整合だった。 -->
+                        <!-- translate-y は -1px の光学補正。箱の中心は前後の文字と
+                             揃っている（実測で 3 要素とも同じ中心 Y）が、Material
+                             Icons の矢印グリフは箱の中でやや下寄りに描かれるため、
+                             12px の文字の光学中心より低く見える。実カードを zoom:4 で
+                             -1.5 / -1 / -0.5 / 0 / +1px と比べて -1px が最も揃った。
+                             ※手で組み直した見本で比べると上下の判定が逆に出る。
+                               この種の光学補正は必ず実物の要素で確認すること。 -->
+                        <mat-icon
+                            class="!tw-h-4 !tw-w-4 tw-translate-y-[-1px] tw-text-[16px] tw-leading-[normal]"
+                        >
+                            arrow_forward
+                        </mat-icon>
+
+                        <!-- TO -->
+                        @if (!prev && !current && !!next) {
+                            <span>
+                                {{
+                                    next.startTime.stationId
+                                        | newFindById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                                {{
+                                    next.startTime.departureTime
+                                        | dateFns
+                                            : {
+                                                  format: 'HH:mm',
+                                                  parseFormat: 'HH:mm:ss',
+                                              }
+                                }}
+                            </span>
+                        }
+                        @if (!prev && !!current && !next) {
+                            <span>
+                                {{
+                                    current.endTime.stationId
+                                        | newFindById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                                {{
+                                    current.endTime.arrivalTime
+                                        | dateFns
+                                            : {
+                                                  format: 'HH:mm',
+                                                  parseFormat: 'HH:mm:ss',
+                                              }
+                                }}
+                            </span>
+                        }
+                        @if (!!prev && !current && !!next) {
+                            <span>
+                                @if (
+                                    prev.endTime.stationId ===
+                                    next.startTime.stationId
+                                ) {
+                                    @if (prev.trip.depotIn) {
+                                        一時入庫
+                                    } @else {
+                                        停車中
+                                    }
+                                } @else {
+                                    {{
+                                        next.startTime.stationId
+                                            | newFindById
+                                                : {
+                                                      array: stations(),
+                                                      propertyName: 'stationId',
+                                                      outputPropertyName:
+                                                          'stationName',
+                                                  }
+                                    }}
+                                }
+                                {{
+                                    next.startTime.departureTime
+                                        | dateFns
+                                            : {
+                                                  format: 'HH:mm',
+                                                  parseFormat: 'HH:mm:ss',
+                                              }
+                                }}
+                            </span>
+                        }
+                        @if (!!prev && !current && !next) {
+                            @if (prev.trip.depotIn) {
+                                <span>入庫済△</span>
+                            } @else {
+                                <span>不明？</span>
+                            }
+                        }
                     </span>
-                }
-                @if (!!prev && !current && !next) {
-                    @if (prev.trip.depotIn) {
-                        <span>入庫済△</span>
-                    } @else {
-                        <span>不明？</span>
-                    }
-                }
-            </span>
+                </div>
+            }
         </div>
     }
 
-    <!-- 右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
+    <!-- 上段右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
     <div
-        class="tw-col-start-3 tw-row-start-1 tw-row-span-2 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-start tw-text-right"
+        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-start tw-text-right"
     >
         <div
             class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
         >
-            <span class="tw-text-[10px] tw-leading-tight tw-text-grey-500">
+            <span class="tw-text-[10px] tw-leading-tight tw-text-muted">
                 目撃
             </span>
             @if (sightingTime) {
                 <span
-                    class="tw-whitespace-nowrap tw-text-xs tw-leading-tight tw-tabular-nums"
+                    class="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-tight"
                     [style.color]="
                         (sightingTime | operationRealTimeDayCount) === 0
-                            ? '#f44336'
+                            ? 'var(--color-recency-today)'
                             : (sightingTime | operationRealTimeDayCount) === 1
-                              ? '#4caf50'
+                              ? 'var(--color-recency-yesterday)'
                               : 'initial'
                     "
                 >
@@ -315,6 +412,11 @@
                                   }
                     }}
                 </span>
+            } @else if (isSightingLoading()) {
+                <span
+                    class="tw-inline-block tw-h-3 tw-w-16 tw-rounded tw-bg-paper-3"
+                    aria-label="目撃時刻を取得中"
+                ></span>
             } @else {
                 <span class="tw-text-xs tw-text-grey-600">不明</span>
             }
@@ -322,17 +424,17 @@
         <div
             class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
         >
-            <span class="tw-text-[10px] tw-leading-tight tw-text-grey-500">
+            <span class="tw-text-[10px] tw-leading-tight tw-text-muted">
                 更新
             </span>
             @if (updatedAt) {
                 <span
-                    class="tw-whitespace-nowrap tw-text-xs tw-leading-tight tw-tabular-nums"
+                    class="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-tight"
                     [style.color]="
                         (updatedAt | operationRealTimeDayCount) === 0
-                            ? '#f44336'
+                            ? 'var(--color-recency-today)'
                             : (updatedAt | operationRealTimeDayCount) === 1
-                              ? '#4caf50'
+                              ? 'var(--color-recency-yesterday)'
                               : 'initial'
                     "
                 >
@@ -345,6 +447,11 @@
                                   }
                     }}
                 </span>
+            } @else if (isSightingLoading()) {
+                <span
+                    class="tw-inline-block tw-h-3 tw-w-16 tw-rounded tw-bg-paper-3"
+                    aria-label="更新時刻を取得中"
+                ></span>
             } @else {
                 <span class="tw-text-xs tw-text-grey-600">不明</span>
             }

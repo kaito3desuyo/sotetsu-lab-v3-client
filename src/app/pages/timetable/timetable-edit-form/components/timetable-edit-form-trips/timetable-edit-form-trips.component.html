@@ -1,4 +1,4 @@
-<article class="tw-bg-white tw-shadow-md">
+<article class="tw-rounded-card tw-bg-white">
     @if (calendar()) {
         <header
             class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
@@ -51,10 +51,7 @@
                         }
                     </mat-menu>
 
-                    <mat-form-field
-                        class="tw-w-32"
-                        subscriptSizing="dynamic"
-                    >
+                    <mat-form-field class="tw-w-32" subscriptSizing="dynamic">
                         <mat-label>一括オフセット（分）</mat-label>
                         <input
                             matInput
@@ -80,9 +77,8 @@
                         コピー元: {{ label }}
                         @if (offsetMinutes()) {
                             （時刻を
-                            {{ offsetMinutes() > 0 ? '+' : '' }}{{
-                                offsetMinutes()
-                            }}
+                            {{ offsetMinutes() > 0 ? '+' : ''
+                            }}{{ offsetMinutes() }}
                             分してプリフィル済み）
                         }
                     </p>
@@ -145,11 +141,15 @@
                                             <button
                                                 type="button"
                                                 mat-icon-button
+                                                [attr.aria-label]="
+                                                    i +
+                                                    1 +
+                                                    '本目の列車を削除する'
+                                                "
                                                 (click)="onClickRemove(i)"
                                                 [disabled]="
                                                     tripsForm.controls
-                                                        .length === 1 &&
-                                                    i === 0
+                                                        .length === 1 && i === 0
                                                 "
                                             >
                                                 <mat-icon>remove</mat-icon>
@@ -157,6 +157,7 @@
                                             <button
                                                 type="button"
                                                 mat-icon-button
+                                                aria-label="列車を追加する"
                                                 [disabled]="
                                                     i !==
                                                     tripsForm.controls.length -
@@ -240,6 +241,8 @@
                                                     tripClass of tripClasses();
                                                     track tripClass.tripClassId
                                                 ) {
+                                                    <!-- セレクトの種別は塗りチップにしない（ユーザー指示 2026-08-22）。
+                                                         選択肢は系統付きの正式名をそのまま出す。 -->
                                                     <mat-option
                                                         [value]="
                                                             tripClass.tripClassId
@@ -301,16 +304,13 @@
                                         [ngStyle]="{
                                             transform:
                                                 'scale(' +
-                                                (station.stationName.length >
-                                                4
+                                                (station.stationName.length > 4
                                                     ? 4 /
-                                                      station.stationName
-                                                          .length
+                                                      station.stationName.length
                                                     : 1) +
                                                 ', 1)',
                                             marginLeft:
-                                                (station.stationName.length >
-                                                4
+                                                (station.stationName.length > 4
                                                     ? (station.stationName
                                                           .length -
                                                           4) *
@@ -355,9 +355,7 @@
                                                                     type.value
                                                                 "
                                                             >
-                                                                {{
-                                                                    type.label
-                                                                }}
+                                                                {{ type.label }}
                                                             </mat-radio-button>
                                                         }
                                                     </mat-radio-group>
@@ -409,6 +407,7 @@
                         <button
                             type="button"
                             mat-icon-button
+                            aria-label="前の列車を表示する"
                             [disabled]="currentTripIndex() === 0"
                             (click)="onPrevTrip()"
                         >
@@ -421,6 +420,7 @@
                         <button
                             type="button"
                             mat-icon-button
+                            aria-label="次の列車を表示する"
                             [disabled]="
                                 currentTripIndex() ===
                                 tripsForm.controls.length - 1
@@ -451,33 +451,25 @@
                                 class="tw-flex tw-flex-col tw-gap-3"
                             >
                                 <!-- G9: 種別/行先/列車番号/運用番号 の2×2コンパクトoutlinedヘッダー -->
-                                <div
-                                    class="tw-grid tw-grid-cols-2 tw-gap-x-2"
-                                >
-                                    <mat-form-field
-                                        subscriptSizing="dynamic"
-                                    >
+                                <div class="tw-grid tw-grid-cols-2 tw-gap-x-2">
+                                    <mat-form-field subscriptSizing="dynamic">
                                         <mat-label>種別</mat-label>
                                         <mat-select
                                             formControlName="tripClassId"
                                         >
                                             <mat-select-trigger>
                                                 @if (
-                                                    selectedTripClass(
-                                                        tripForm
-                                                    );
+                                                    selectedTripClass(tripForm);
                                                     as tc
                                                 ) {
+                                                    <!-- セレクトの種別は塗りチップにしない（ユーザー指示 2026-08-22） -->
                                                     <span
-                                                        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-xs tw-text-white"
-                                                        [style.background-color]="
+                                                        [style.color]="
                                                             tc.tripClassColor ??
                                                             null
                                                         "
                                                     >
-                                                        {{
-                                                            tc.tripClassName
-                                                        }}
+                                                        {{ tc.tripClassName }}
                                                     </span>
                                                 }
                                             </mat-select-trigger>
@@ -491,8 +483,7 @@
                                                     "
                                                 >
                                                     <span
-                                                        class="tw-inline-block tw-rounded tw-px-1.5 tw-py-0.5 tw-text-xs tw-text-white"
-                                                        [style.background-color]="
+                                                        [style.color]="
                                                             tripClass.tripClassColor ??
                                                             null
                                                         "
@@ -506,22 +497,16 @@
                                         </mat-select>
                                     </mat-form-field>
 
-                                    <mat-form-field
-                                        subscriptSizing="dynamic"
-                                    >
+                                    <mat-form-field subscriptSizing="dynamic">
                                         <mat-label>行先</mat-label>
                                         <input
                                             matInput
                                             readonly
-                                            [value]="
-                                                destinationLabel(tripForm)
-                                            "
+                                            [value]="destinationLabel(tripForm)"
                                         />
                                     </mat-form-field>
 
-                                    <mat-form-field
-                                        subscriptSizing="dynamic"
-                                    >
+                                    <mat-form-field subscriptSizing="dynamic">
                                         <mat-label>列車番号</mat-label>
                                         <input
                                             matInput
@@ -529,9 +514,7 @@
                                         />
                                     </mat-form-field>
 
-                                    <mat-form-field
-                                        subscriptSizing="dynamic"
-                                    >
+                                    <mat-form-field subscriptSizing="dynamic">
                                         <mat-label>運用番号</mat-label>
                                         <mat-select
                                             formControlName="operationId"
@@ -603,9 +586,7 @@
                                             tripForm
                                                 .get('times')
                                                 ?.at(
-                                                    stations().indexOf(
-                                                        station
-                                                    )
+                                                    stations().indexOf(station)
                                                 );
                                             as timeForm
                                         ) {
@@ -621,11 +602,9 @@
 
                                                 <button
                                                     type="button"
-                                                    class="tw-w-14 tw-shrink-0 tw-border-0 tw-bg-transparent tw-p-0 tw-text-right tw-text-xs"
+                                                    class="tw-bg-transparent tw-w-14 tw-shrink-0 tw-border-0 tw-p-0 tw-text-right tw-text-xs"
                                                     [class.tw-text-grey-500]="
-                                                        isPassStopType(
-                                                            timeForm
-                                                        )
+                                                        isPassStopType(timeForm)
                                                     "
                                                     (click)="
                                                         onToggleStopType(
@@ -634,9 +613,7 @@
                                                     "
                                                 >
                                                     @if (
-                                                        isPassStopType(
-                                                            timeForm
-                                                        )
+                                                        isPassStopType(timeForm)
                                                     ) {
                                                         通過
                                                     } @else {
@@ -686,15 +663,15 @@
                 >
                     クリア
                 </button>
-                <button
-                    type="submit"
+                <!-- ボタン規約（app-button）に寄せる。紺塗りは規約外だった（audit M6） -->
+                <app-button
                     class="tw-w-32"
-                    mat-raised-button
-                    color="primary"
+                    type="submit"
+                    variant="primary"
                     [disabled]="form.invalid"
                 >
                     保存する
-                </button>
+                </app-button>
             </div>
 
             <!-- G9: モバイル sticky 下部バー（下書き保存 outlined + この列車を登録/更新 オレンジ全幅相当） -->

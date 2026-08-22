@@ -2,7 +2,12 @@
     <h2 class="mat-h2">
         {{ data().title }}
     </h2>
-    <button mat-icon-button (click)="clickClose.emit()" tabindex="-1">
+    <button
+        mat-icon-button
+        aria-label="ダイアログを閉じる"
+        (click)="clickClose.emit()"
+        tabindex="-1"
+    >
         <mat-icon>clear</mat-icon>
     </button>
 </div>

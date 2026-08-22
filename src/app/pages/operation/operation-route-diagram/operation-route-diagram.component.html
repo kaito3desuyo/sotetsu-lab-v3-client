@@ -7,18 +7,24 @@
     </div>
 }
 
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-0 md:tw-p-16">
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
     <header>
         <app-operation-route-diagram-header></app-operation-route-diagram-header>
     </header>
     <div>
         <app-operation-route-diagram-route-filter></app-operation-route-diagram-route-filter>
     </div>
+    <!-- 運用番号を選ぶ手段（検索カード）を広告より前に置く。
+         運用番号が未設定のとき、「運用番号を設定して検索してください」という空状態と
+         実際に設定できるコントロールの間に 280px の広告が挟まっており、
+         このページ上で操作できること自体が見えなかった（audit C6）。 -->
     <div class="tw-flex tw-flex-col tw-gap-4">
         <app-operation-route-diagram-drawing-container
             (emptyStateActionClick)="onEmptyStateActionClick()"
         ></app-operation-route-diagram-drawing-container>
-        <ng-adsense [adSlot]="6189336070"></ng-adsense>
         <app-operation-search-card-c></app-operation-search-card-c>
+        <ng-adsense [adSlot]="6189336070"></ng-adsense>
     </div>
 </main>

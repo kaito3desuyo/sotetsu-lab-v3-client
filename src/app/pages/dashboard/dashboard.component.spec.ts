@@ -71,12 +71,20 @@ describe('DashboardComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('ページコンテナ: sm 未満で左右余白を削減するクラスを持つ', () => {
+    it('ページコンテナ: 外周 gutter が段階的に広がるクラス列を持つ', () => {
         fixture.detectChanges();
         const main: HTMLElement = fixture.nativeElement.querySelector('main');
-        expect(main.classList).toContain('max-sm:tw-px-0');
+        // docs/design.md「余白の掟 1」。全ページの main がこの1本のクラス列を共有する。
+        // 旧実装は md 以上が一律 tw-p-16（64px）で、768px では左右で画面の 17% を
+        // 余白に使っていた。
         expect(main.classList).toContain('tw-p-4');
-        expect(main.classList).toContain('md:tw-p-16');
+        expect(main.classList).toContain('md:tw-p-6');
+        expect(main.classList).toContain('lg:tw-p-8');
+        expect(main.classList).toContain('xl:tw-p-16');
+        // スマホの横 gutter は 0 にしない（2026-08-22 にユーザー判断で撤回）。
+        // 16px は Material の画面マージン既定と一致し、gutter の階段が
+        // 16 → 24 → 32 → 64 と単調に並ぶ。
+        expect(main.classList).not.toContain('max-sm:tw-px-0');
     });
 
     it('fetchData: フェッチが reject しても isLoading が回復する（try/finally）', async () => {

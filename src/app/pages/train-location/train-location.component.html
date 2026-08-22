@@ -1,4 +1,6 @@
-<div class="tw-flex tw-h-full tw-flex-col">
+<!-- 図そのものが本文なので外周 gutter は持たない（他ページの main とは
+     意図的に異なる。docs/design.md「余白の掟」参照）。ただし landmark は揃える。 -->
+<main class="tw-flex tw-h-full tw-flex-col">
     @if (isLoading()) {
         <mat-progress-bar
             mode="indeterminate"
@@ -59,4 +61,4 @@
             >リアルタイム運用情報</a
         >へ。
     </footer>
-</div>
+</main>

@@ -3,7 +3,6 @@ import {
     Component,
     DestroyRef,
     inject,
-    signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -24,7 +23,6 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
@@ -39,9 +37,6 @@ type Form = FormGroup<{
     timeSetting: FormControl<'currentTime' | 'specifiedTime'>;
     sightingTime: FormControl<string>;
 }>;
-
-/** 編成番号/車両番号トグルの選択肢（98 G4。UI表示切替のみ・formControl は共通のまま） */
-type FormationOrVehicleType = 'formation' | 'vehicle';
 
 @Component({
     selector: 'app-new-operation-post-card',
@@ -66,9 +61,6 @@ export class NewOperationPostCardComponent {
     readonly #error = inject(ErrorHandlerService);
     readonly #socket = inject(SocketService);
     readonly #newOperationPostCardService = inject(NewOperationPostCardService);
-    readonly #todaysOperationListStateQuery = inject(
-        TodaysOperationListStateQuery,
-    );
 
     readonly sightingForm: Form = this.#fb.group({
         agencyId: this.#fb.control('', [Validators.required]),
@@ -84,10 +76,6 @@ export class NewOperationPostCardComponent {
     });
 
     readonly agencies = toSignal(OperationPostCardStore.agencies$);
-    readonly operations = toSignal(
-        this.#todaysOperationListStateQuery.todaysOperationsSorted$,
-        { initialValue: [] },
-    );
 
     readonly timeSetting = toSignal(
         this.sightingForm.get('timeSetting').valueChanges,
@@ -99,18 +87,6 @@ export class NewOperationPostCardComponent {
     ] = [
         { value: 'currentTime', label: '現在時刻' },
         { value: 'specifiedTime', label: '時刻指定' },
-    ];
-
-    /** 編成番号/車両番号トグル（98 G4 DoD: トグル復元）。API に送る formControl は変えず、入力欄のラベルのみ切替 */
-    readonly formationOrVehicleType = signal<FormationOrVehicleType>(
-        'formation',
-    );
-    readonly formationOrVehicleTypeOptions: readonly [
-        SegmentToggleOption,
-        SegmentToggleOption,
-    ] = [
-        { value: 'formation', label: '編成番号' },
-        { value: 'vehicle', label: '車両番号' },
     ];
 
     constructor() {
@@ -126,10 +102,6 @@ export class NewOperationPostCardComponent {
 
     onTimeSettingChange(value: 'currentTime' | 'specifiedTime'): void {
         this.sightingForm.get('timeSetting').setValue(value);
-    }
-
-    onFormationOrVehicleTypeChange(value: FormationOrVehicleType): void {
-        this.formationOrVehicleType.set(value);
     }
 
     hookEvent(): void {
@@ -210,7 +182,6 @@ export class NewOperationPostCardComponent {
                 timeSetting: 'currentTime',
                 sightingTime: '',
             });
-            this.formationOrVehicleType.set('formation');
 
             this.#socket.emit('sendSighting', result);
 

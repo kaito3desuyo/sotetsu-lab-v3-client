@@ -2,12 +2,15 @@ import {
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    ElementRef,
+    afterNextRender,
     computed,
     inject,
     input,
     linkedSignal,
     output,
     signal,
+    viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
@@ -20,6 +23,7 @@ import {
     enforceMinimumRowGap,
     timeToX,
 } from 'src/app/shared/diagram-scale';
+import { DIAGRAM_ZOOM_LEVELS } from '../../stores/train-diagram.store';
 import {
     TripDiagramLine,
     TripDiagramPoint,
@@ -101,8 +105,52 @@ export class TrainDiagramChartComponent {
     readonly #horizontalPxPerMinute = linkedSignal(() => this.pxPerMinute());
     readonly #axisPxPerMinute = signal(AXIS_PX_PER_MINUTE);
 
+    // NG1053 により viewChild は ES private（#）フィールドに置けないため、
+    // 本フィールドのみ TS の private を使う。
+    private readonly scrollHost =
+        viewChild.required<ElementRef<HTMLDivElement>>('scrollHost');
+    /** 横スクロール領域のうち SVG が使える幅（駅ラベル列を除く）。ResizeObserver で追従する。 */
+    readonly #availableChartWidth = signal(0);
+
+    /** 60 分ぶんがコンテナ幅にちょうど収まる縮尺。未計測時は 0。 */
+    readonly #fitPxPerMinute = computed(() => {
+        const available = this.#availableChartWidth();
+        return available > 0 ? available / WINDOW_MINUTES : 0;
+    });
+
+    /**
+     * ズーム段（絶対 px/分）をコンテナ幅に合わせて底上げする倍率。
+     *
+     * 表示窓は常に 60 分固定なので、横方向の縮尺は「何分ぶん見えるか」ではなく
+     * 密度・可読性だけを決める。よって標準段はコンテナ幅ちょうどが正しい既定になる。
+     * 幅が標準描画（10px/分 = 600px）より狭いモバイルでは 1 倍のままとし、
+     * 既存の挙動を変えない。
+     */
+    readonly #widthScale = computed(() => {
+        const fit = this.#fitPxPerMinute();
+        if (fit <= 0) {
+            return 1;
+        }
+        return Math.max(1, fit / DIAGRAM_ZOOM_LEVELS.standard);
+    });
+
+    /**
+     * 時間軸の実効縮尺。
+     *
+     * 標準縮尺は 10px/分 = 600px 固定だったため、1456px 幅では右側 856px が常に
+     * 空いていた（audit M2）。ズーム段に #widthScale を掛けて幅に追随させ、
+     * さらに fit を下限に敷いて空白が出ないようにする。
+     * 拡大側は下限に飲まれず、はみ出した分は従来どおり横スクロールする。
+     */
+    readonly #effectivePxPerMinute = computed(() =>
+        Math.max(
+            this.#fitPxPerMinute(),
+            this.#horizontalPxPerMinute() * this.#widthScale(),
+        ),
+    );
+
     readonly svgWidth = computed(
-        () => WINDOW_MINUTES * this.#horizontalPxPerMinute(),
+        () => WINDOW_MINUTES * this.#effectivePxPerMinute(),
     );
     readonly stationLabelWidth = STATION_LABEL_WIDTH;
     readonly timeLabelY = HEADER_HEIGHT - 12;
@@ -167,9 +215,13 @@ export class TrainDiagramChartComponent {
 
     readonly timeGridMarks = computed<TimeGridMark[]>(() => {
         const startHour = this.windowStartHour();
-        const pxPerMinute = this.#horizontalPxPerMinute();
+        const pxPerMinute = this.#effectivePxPerMinute();
         const marks: TimeGridMark[] = [];
-        for (let minuteOffset = 0; minuteOffset <= WINDOW_MINUTES; minuteOffset += 10) {
+        for (
+            let minuteOffset = 0;
+            minuteOffset <= WINDOW_MINUTES;
+            minuteOffset += 10
+        ) {
             const hour = startHour + Math.floor(minuteOffset / 60);
             const minute = minuteOffset % 60;
             marks.push({
@@ -190,7 +242,7 @@ export class TrainDiagramChartComponent {
         const routeIdsByStation = this.routeIdsByStation();
         const base = new Date(this.#baseTime());
         const windowStart = new Date(this.#windowStartTime());
-        const pxPerMinute = this.#horizontalPxPerMinute();
+        const pxPerMinute = this.#effectivePxPerMinute();
         const width = this.svgWidth();
 
         const trips = Object.values(this.tripBlocksByDirection())
@@ -228,7 +280,7 @@ export class TrainDiagramChartComponent {
     readonly cursorX = computed(() =>
         timeToX(
             (this.#now().getTime() - this.#windowStartTime()) / (60 * 1000),
-            this.#horizontalPxPerMinute(),
+            this.#effectivePxPerMinute(),
         ),
     );
 
@@ -253,6 +305,23 @@ export class TrainDiagramChartComponent {
             .subscribe(() => {
                 this.#now.set(new Date());
             });
+
+        // コンテナ幅を観測して時間軸の実効縮尺に反映する（#effectivePxPerMinute）。
+        // ResizeObserver が無い環境（jsdom 等）では観測せず、利用者指定の縮尺のみで描画する。
+        afterNextRender(() => {
+            if (typeof ResizeObserver === 'undefined') {
+                return;
+            }
+            const host = this.scrollHost().nativeElement;
+            const observer = new ResizeObserver((entries) => {
+                const width = entries[0]?.contentRect.width ?? 0;
+                this.#availableChartWidth.set(
+                    Math.max(0, width - STATION_LABEL_WIDTH),
+                );
+            });
+            observer.observe(host);
+            this.#destroyRef.onDestroy(() => observer.disconnect());
+        });
     }
 
     pointsAttr(segment: TripDiagramPoint[]): string {
@@ -310,7 +379,11 @@ export class TrainDiagramChartComponent {
             return;
         }
         this.#axisPxPerMinute.update((value) =>
-            clamp(value * factor, AXIS_PX_PER_MINUTE_MIN, AXIS_PX_PER_MINUTE_MAX),
+            clamp(
+                value * factor,
+                AXIS_PX_PER_MINUTE_MIN,
+                AXIS_PX_PER_MINUTE_MAX,
+            ),
         );
     }
 
