@@ -52,7 +52,7 @@
     .mdc-evolution-chip:not(.mdc-evolution-chip--selected):not(
             .mdc-evolution-chip--disabled
         ) {
-        background-color: var(--color-paper) !important;
+        background-color: var(--color-control) !important;
     }
 
     .mdc-evolution-chip--selected:not(.mdc-evolution-chip--disabled) {

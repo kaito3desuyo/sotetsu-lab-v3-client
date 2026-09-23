@@ -10,9 +10,8 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <header>
-        <app-operation-past-time-header></app-operation-past-time-header>
-    </header>
+    <!-- ページ名はトップバーだけに出す（G0-5）。中身の無い header を置いていたため
+         main の gap 16px がひとつ余分に空いていた -->
     <div class="tw-flex tw-flex-col tw-gap-4">
         <app-operation-past-time-search-form></app-operation-past-time-search-form>
         <app-operation-past-time-filter></app-operation-past-time-filter>

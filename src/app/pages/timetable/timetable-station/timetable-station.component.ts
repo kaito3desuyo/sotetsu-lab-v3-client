@@ -12,7 +12,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdsenseModule } from 'ng2-adsense';
 import { lastValueFrom } from 'rxjs';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -20,6 +22,7 @@ import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
+import { buildStationGroups } from 'src/app/shared/station-groups.util';
 import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
 import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
@@ -40,6 +43,7 @@ TimetableStationStore.resetLoading();
         MatProgressBarModule,
         MatSelectModule,
         AdsenseModule,
+        DateFnsPipe,
         EmptyStateComponent,
         SegmentToggleComponent,
         TimetableStationTableComponent,
@@ -61,6 +65,7 @@ export class TimetableStationComponent {
     );
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
     readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
@@ -68,6 +73,18 @@ export class TimetableStationComponent {
     readonly stationOptions = toSignal(
         this.#routeStationListStateQuery.stations$,
         { initialValue: [] },
+    );
+    readonly #routeStations = toSignal(
+        this.#routeStationListStateQuery.routeStations$,
+        { initialValue: [] },
+    );
+    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+
+    /** 駅 select の選択肢（「会社名 路線名」でまとめる。検索カードと共通）。 */
+    readonly stationGroups = computed(() =>
+        buildStationGroups(this.#routeStations(), this.#agencies()),
     );
 
     /** 上り/下り 全幅2セグメントトグルの選択肢（98 G0-3・mockup-01） */
@@ -100,6 +117,13 @@ export class TimetableStationComponent {
         const calendarId = this.calendarId();
         return !!calendarId && this.todaysCalendarIds().includes(calendarId);
     });
+
+    /** ダイヤ select の選択中表示（改正日 + ダイヤ名）に使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.calendarId(),
+        ),
+    );
 
     readonly isEmpty = computed(
         () => !!this.calendar() && this.timetableData().length === 0,

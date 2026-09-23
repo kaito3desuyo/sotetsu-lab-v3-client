@@ -27,7 +27,7 @@ import { PanelCardComponent } from '../../../panel-card/panel-card.component';
 import { SegmentToggleComponent } from '../../../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../../../segment-toggle/segment-toggle-option.type';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
-import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
+import { StationGroup } from '../../../station-groups.util';
 
 type Form = FormGroup<{
     calendarId: FormControl<string>;
@@ -84,7 +84,8 @@ export class TimetableSearchCardPComponent {
     );
 
     readonly calendars = input.required<CalendarDetailsDto[]>();
-    readonly routeStationLists = input.required<RouteDetailsDto[]>();
+    /** 駅 select の選択肢（「会社名 路線名」でまとめる。駅別時刻表と共通）。 */
+    readonly stationGroups = input.required<StationGroup[]>();
     readonly currentState = input.required<ITimetableSearchCardForm>();
 
     readonly clickSearch = output<ITimetableSearchCardForm>();

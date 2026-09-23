@@ -5,6 +5,8 @@ import { TimetableStationTripCellComponent } from './timetable-station-trip-cell
 /**
  * 実データ相当のミニマムな trip（横浜・上りの 各停6436。同一 tripBlock に
  * 回送9436 を持つ通し運行）。値は dev DB の実例（trip_number 6436/9436）に基づく。
+ * 9436 は 6436 より**前**の区間。↪ に「この先」だけを出す確認のため、6436 の後に
+ * 横浜を出る回送 9437 を架空で足している（dev DB の実例ではない）。
  */
 const times6436 = [
     {
@@ -52,6 +54,31 @@ const trip9436 = {
     tripOperationLists: [],
 };
 
+const trip9437 = {
+    tripId: 'trip-9437',
+    tripNumber: '9437',
+    tripClassId: 'class-kaisou',
+    tripDirection: 1,
+    tripBlockId: 'block-1',
+    times: [
+        {
+            timeId: 'time-5',
+            stationId: 'yokohama',
+            stopSequence: 1,
+            departureTime: '06:55:00',
+            departureDays: 1,
+        },
+        {
+            timeId: 'time-6',
+            stationId: 'kashiwadai',
+            stopSequence: 20,
+            arrivalTime: '07:40:00',
+            arrivalDays: 1,
+        },
+    ],
+    tripOperationLists: [],
+};
+
 const trip6436 = {
     tripId: 'trip-6436',
     tripNumber: '6436',
@@ -71,6 +98,7 @@ const trip6436 = {
                 times: times6436,
                 tripOperationLists: [],
             },
+            trip9437,
         ],
     },
 } as never;
@@ -123,13 +151,15 @@ describe('TimetableStationTripCellComponent', () => {
         return fixture;
     }
 
-    it('通し運行の脚注行（↪ 〜から〜まで（種別 列番））を描画する', async () => {
+    it('通し運行の脚注行（↪ 種別 列番 発駅 → 着駅）を「この先」の列車だけ描画する', async () => {
         const fixture = await createFixture();
         const text = (fixture.nativeElement as HTMLElement).textContent;
 
         expect(text).toContain('↪');
-        expect(text).toContain('かしわ台から湘南台まで（');
-        expect(text).toContain('9436');
+        // 矢印は mat-icon のリガチャ（arrow_forward）なので textContent に名前で出る
+        expect(text).toMatch(/9437\s*横浜\s*arrow_forward\s*かしわ台/);
+        // 前の区間（回送 9436 かしわ台 → 湘南台）は出さない
+        expect(text).not.toContain('9436');
     });
 
     it('充当編成を operationNumber キーの Record から直接引いて表示する', async () => {

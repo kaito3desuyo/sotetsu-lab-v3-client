@@ -1,4 +1,4 @@
-<div class="tw-p-4">
+<article class="tw-overflow-clip tw-rounded-card tw-bg-white">
     @if (tableDisplayed() && !hasResults()) {
         <!-- G12: 検索条件に一致する編成/日付が0件の空状態（mockup-07 の3点セット）。
              次アクションは会社チップ絞り込みの解除（表示フィルタなので即座に全編成へ戻せる）。 -->
@@ -9,22 +9,30 @@
             (actionClick)="onResetAgencyFilter()"
         ></app-empty-state>
     } @else if (tableDisplayed()) {
+        <!-- 縦も横もカードの中でスクロールさせ、日付の行と編成の列を常に見せる
+             （ユーザー判断 2026-09-24）。ページのスクロールに任せると、横スクロールの箱が
+             スクロールコンテナになるため日付の行の sticky が効かず、下へ行くと流れて消えていた。
+             高さは「画面 − トップバー（48 / md 64px）− 上下 16px」。
+             罫線は border-collapse だと sticky のセルから外れて消えるので、
+             separate + 各セルの右・下の罫で引く -->
         <div
-            class="tw-overflow-x-auto tw-border tw-border-solid tw-border-grey-300"
+            class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
         >
-            <table class="tw-border-collapse [&_td]:tw-p-2 [&_th]:tw-p-2">
+            <table
+                class="tw-border-separate tw-border-spacing-0 [&_td]:tw-border-0 [&_td]:tw-border-b [&_td]:tw-border-r [&_td]:tw-border-solid [&_td]:tw-border-rule [&_td]:tw-p-2 [&_th]:tw-border-0 [&_th]:tw-border-b [&_th]:tw-border-r [&_th]:tw-border-solid [&_th]:tw-border-rule [&_th]:tw-bg-white [&_th]:tw-p-2"
+            >
                 <thead>
-                    <tr class="tw-sticky tw-top-0 tw-z-20">
+                    <tr>
                         <th
-                            class="tw-sticky tw-left-0 tw-z-30 tw-whitespace-nowrap before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                            class="tw-sticky tw-left-0 tw-top-0 tw-z-30 tw-whitespace-nowrap tw-text-sm"
                         >
-                            <span class="tw-sticky">編成＼日付</span>
+                            編成＼日付
                         </th>
                         @for (calendar of calendars(); track calendar.date) {
                             <th
-                                class="tw-sticky before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                class="tw-sticky tw-top-0 tw-z-20 tw-whitespace-nowrap tw-text-center"
                             >
-                                <span class="tw-sticky tw-tabular-nums">
+                                <span class="tw-block tw-tabular-nums">
                                     {{
                                         calendar.date
                                             | dateFns
@@ -33,10 +41,11 @@
                                                       parseFormat: 'yyyy-MM-dd',
                                                   }
                                     }}
-                                    <br />
-                                    <small>
-                                        {{ calendar.calendar.calendarName }}
-                                    </small>
+                                </span>
+                                <span
+                                    class="tw-block tw-text-xs tw-font-normal tw-text-muted"
+                                >
+                                    {{ calendar.calendar.calendarName }}
                                 </span>
                             </th>
                         }
@@ -48,48 +57,64 @@
                         track formation.formationId
                     ) {
                         <tr>
+                            <!-- 行が折り返しで高くなっても、編成番号は 1 段目のタグと並べる。
+                                 行の高さはタグの段（22px）に合わせる -->
                             <th
-                                class="tw-sticky tw-left-0 tw-z-10 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-whitespace-nowrap tw-align-top tw-tabular-nums tw-leading-[22px]"
                             >
-                                <span class="tw-sticky">{{
-                                    formation.formationNumber
-                                }}</span>
+                                {{ formation.formationNumber }}
                             </th>
                             @for (
                                 calendar of calendars();
                                 track calendar.date
                             ) {
-                                <td
-                                    class="tw-relative before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                >
-                                    <div class="tw-sticky">
-                                        @if (
-                                            operationSightings()?.[
-                                                formation.formationId
-                                            ]?.[calendar.date]
-                                        ) {
-                                            <div
-                                                class="tw-flex tw-flex-row tw-gap-2"
-                                            >
-                                                @for (
-                                                    sighting of operationSightings()[
-                                                        formation.formationId
-                                                    ][calendar.date];
-                                                    track sighting.operationSightingId
-                                                ) {
-                                                    @let operationNumber =
-                                                        sighting.operationId
-                                                            | newFindById
-                                                                : {
-                                                                      array: operations(),
-                                                                      propertyName:
-                                                                          'operationId',
-                                                                      outputPropertyName:
-                                                                          'operationNumber',
-                                                                  };
-                                                    @let borderEnabled =
-                                                        sighting.invalidation !==
-                                                        null;
+                                <!-- マスの幅は全日付で同じ 8rem（2 桁のタグ 3 個ぶん。1440px で 7 日が収まる幅）。
+                                     入らなければ折り返す。目撃の順番（API が目撃時刻の古い順で
+                                     返す）が読めるよう、2 個目からは前に › を置く。› は後ろの
+                                     タグと 1 塊にして、行末に取り残されないようにする
+                                     （4 案を実物で比較してユーザーが選択 2026-09-24） -->
+                                <td class="tw-align-top">
+                                    @if (
+                                        operationSightings()?.[
+                                            formation.formationId
+                                        ]?.[calendar.date]
+                                    ) {
+                                        <div
+                                            class="tw-flex tw-w-[8rem] tw-flex-row tw-flex-wrap tw-items-center tw-gap-y-1"
+                                        >
+                                            @for (
+                                                sighting of operationSightings()[
+                                                    formation.formationId
+                                                ][calendar.date];
+                                                track sighting.operationSightingId;
+                                                let first = $first
+                                            ) {
+                                                @let operationNumber =
+                                                    sighting.operationId
+                                                        | newFindById
+                                                            : {
+                                                                  array: operations(),
+                                                                  propertyName:
+                                                                      'operationId',
+                                                                  outputPropertyName:
+                                                                      'operationNumber',
+                                                              };
+                                                @let borderEnabled =
+                                                    sighting.invalidation !==
+                                                    null;
+                                                <!-- 段の高さは 22px に丸める。タグの実寸 21.5px のままだと
+                                                     行の高さが端数になり、sticky な編成の列で下罫が
+                                                     ところどころ消えた（390px で実測） -->
+                                                <span
+                                                    class="tw-inline-flex tw-h-[22px] tw-items-center"
+                                                >
+                                                    @if (!first) {
+                                                        <span
+                                                            aria-hidden="true"
+                                                            class="tw-px-1 tw-text-muted"
+                                                            >›</span
+                                                        >
+                                                    }
                                                     <app-operation-number-tag
                                                         [operationNumber]="
                                                             operationNumber
@@ -135,10 +160,10 @@
                                                             },
                                                         ]"
                                                     ></app-operation-number-tag>
-                                                }
-                                            </div>
-                                        }
-                                    </div>
+                                                </span>
+                                            }
+                                        </div>
+                                    }
                                 </td>
                             }
                         </tr>
@@ -150,8 +175,8 @@
         <app-empty-state
             icon="search"
             message="基準日と日数を設定して検索してください"
-            actionLabel="本日から7日間を検索する"
+            actionLabel="直近7日間を検索する"
             (actionClick)="onDefaultSearch()"
         ></app-empty-state>
     }
-</div>
+</article>

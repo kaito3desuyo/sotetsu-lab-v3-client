@@ -1,6 +1,8 @@
 <form [formGroup]="form" (ngSubmit)="onClickSearch()">
-    <div class="tw-flex tw-flex-col tw-gap-3">
-        <div class="tw-flex tw-flex-row tw-items-end tw-gap-2">
+    <!-- 幅は駅別時刻表の選択欄と同じ 40rem まで。1440px で全幅に伸ばすと
+         「2026/09/23」と「7 日間」のために 1300px の入力欄になっていた -->
+    <div class="tw-flex tw-flex-col tw-gap-3 md:tw-max-w-[40rem]">
+        <div class="tw-flex tw-flex-row tw-items-start tw-gap-2">
             <mat-form-field
                 class="tw-min-w-0 tw-flex-[1.4]"
                 subscriptSizing="dynamic"
@@ -34,7 +36,11 @@
                     [max]="30"
                     formControlName="days"
                 />
-                <span matTextSuffix class="tw-whitespace-nowrap">日間</span>
+                <!-- 空のときはラベル「日数」が欄の中に座り、320px では後置の「日間」と
+                     重なっていた。値が入ってラベルが枠の上へ退いてから出す -->
+                @if (form.get('days').value) {
+                    <span matTextSuffix class="tw-whitespace-nowrap">日間</span>
+                }
                 @if (form.get('days').hasError('required')) {
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 } @else if (
@@ -51,14 +57,16 @@
                 type="submit"
                 [disabled]="form.invalid"
                 [fullWidth]="false"
-                class="tw-mb-1 tw-shrink-0"
+                class="tw-mt-2.5 tw-shrink-0"
             >
                 検索
             </app-button>
         </div>
 
-        <mat-slide-toggle formControlName="includeInvalidated">
-            無効化された目撃情報を表示する
+        <!-- 無効化された目撃は表の中で赤枠のタグになるが、その意味をどこにも書いて
+             いなかったので、切り替えの文言に含める（凡例を別に置くほどの量ではない） -->
+        <mat-slide-toggle color="accent" formControlName="includeInvalidated">
+            無効化された目撃情報を赤枠で表示する
         </mat-slide-toggle>
     </div>
 </form>

@@ -1,44 +1,54 @@
-<article class="tw-rounded-card tw-bg-white">
-    <!-- P8-2 (98 §G0-8): 青帯バナーを廃止。改正日・ダイヤ名・方向・駅名は
-         親ページの駅/ダイヤ select・上下トグルと app-timetable-search-card-c
-         側で表示済みのため削除しても情報削減にならない。 -->
-    <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
-        <!-- G5 と同方針: 内部縦スクロールは設けずページ全開で描画する（mockup-01） -->
-        <div class="tw-flex tw-flex-col">
-            @for (
-                item of timetableData();
-                track item.day + ':' + item.hour;
-                let idx = $index
-            ) {
-                <div
-                    class="tw-flex tw-flex-row tw-border-b tw-border-solid tw-border-grey-200 last:tw-border-b-0"
-                    [class.tw-bg-grey-100]="idx % 2 === 1"
+<!-- P8-2 (98 §G0-8): 青帯バナーを廃止。改正日・ダイヤ名・方向・駅名は
+     親ページの駅/ダイヤ select・上下トグルと app-timetable-search-card-c
+     側で表示済みのため削除しても情報削減にならない。 -->
+<!-- 時の帯をカードの縁まで出すため内側の余白を持たない。角丸は overflow-clip で効かせる。
+     overflow-hidden はスクロールコンテナを作って時の sticky を殺すので使わない（面の掟） -->
+<article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+    <!-- G5 と同方針: 内部縦スクロールは設けずページ全開で描画する（mockup-01） -->
+    <!-- 時ごとの縞は付けない（全部白。ユーザー指示 2026-09-23）。時の境目は上罫で示す -->
+    @for (item of timetableData(); track item.day + ':' + item.hour) {
+        <div
+            class="tw-flex tw-flex-row tw-border-0 tw-border-t tw-border-solid tw-border-rule first:tw-border-t-0"
+        >
+            <!-- 時の数字は行の中でトップバー + 上り/下りトグルの直下に貼り付ける
+                 （ユーザー指示 2026-09-23）。top はトップバー 48/64px + トグルの帯 66px。
+                 帯（紺）は行の高さいっぱいに伸ばしたまま、数字だけが動く -->
+            <div
+                class="tw-flex tw-w-14 tw-flex-shrink-0 tw-flex-col tw-items-center tw-self-stretch tw-bg-structure tw-text-3xl tw-font-bold tw-text-white max-[359px]:tw-w-10"
+            >
+                <span
+                    class="tw-sticky tw-top-[114px] tw-py-2 md:tw-top-[130px]"
                 >
-                    <div
-                        class="tw-sticky tw-left-0 tw-z-10 tw-flex tw-w-14 tw-flex-shrink-0 tw-items-center tw-justify-center tw-self-stretch tw-bg-primary-500 tw-py-2 tw-text-3xl tw-font-bold tw-text-white"
-                    >
-                        {{ item.hour }}
-                    </div>
-                    <div
-                        class="tw-grid tw-min-w-0 tw-flex-1 tw-grid-cols-2 tw-content-start tw-gap-x-2 tw-gap-y-1 tw-p-2 lg:tw-grid-cols-3"
-                    >
-                        @for (trip of item.trips; track trip.tripId) {
-                            <app-timetable-station-trip-cell
-                                [trip]="trip"
-                                [calendarId]="calendar().calendarId"
-                                [stationId]="stationId()"
-                                [tripClasses]="tripClasses()"
-                                [stations]="stations()"
-                                [operations]="operations()"
-                                [operationSightingTimeCrossSections]="
-                                    operationSightingTimeCrossSections()
-                                "
-                                [showCurrentFormation]="showCurrentFormation()"
-                            ></app-timetable-station-trip-cell>
-                        }
-                    </div>
-                </div>
-            }
+                    {{ item.hour }}
+                </span>
+            </div>
+            <!-- 列数は幅に応じて自動（ユーザー判断 2026-09-23）。以前は 2 列 / lg で 3 列の
+                 固定で、1440px では 1 列 390px に中身 150px ほどしか入らず間延びしていた。
+                 最小幅 14rem（224px）は、セルの右の列の 1 段目「種別 列番 行き先」を改行しない
+                 （同日）ための値。実データの最長「回送 9200 羽沢横浜国大」159px + 左の列
+                 （分・運用）44px + 列間 8px + セルの余白 12px。その代わり約 520px 未満の
+                 スマホは 1 列になる（ユーザー判断 2026-09-23）。min(…,100%) は 1 列でも使える幅より
+                 広くならないための上限（320px で 224px のセルがページを横にはみ出させていた）。
+                 360px 未満だけ時の帯を 40px・左右の余白を 4px に詰める（計 24px）。320px では
+                 最長の 1 段目が右の列に入りきらず、改行しない指定のためはみ出していた -->
+            <div
+                class="tw-grid tw-min-w-0 tw-flex-1 tw-grid-cols-[repeat(auto-fill,minmax(min(14rem,100%),1fr))] tw-content-start tw-gap-x-2 tw-gap-y-1 tw-p-2 max-[359px]:tw-px-1"
+            >
+                @for (trip of item.trips; track trip.tripId) {
+                    <app-timetable-station-trip-cell
+                        [trip]="trip"
+                        [calendarId]="calendar().calendarId"
+                        [stationId]="stationId()"
+                        [tripClasses]="tripClasses()"
+                        [stations]="stations()"
+                        [operations]="operations()"
+                        [operationSightingTimeCrossSections]="
+                            operationSightingTimeCrossSections()
+                        "
+                        [showCurrentFormation]="showCurrentFormation()"
+                    ></app-timetable-station-trip-cell>
+                }
+            </div>
         </div>
-    </div>
+    }
 </article>

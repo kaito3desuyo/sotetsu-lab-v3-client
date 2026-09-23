@@ -166,9 +166,30 @@ body {
 }
 
 // 濃色面（ヘッダー等）では明色リングに切り替える（structure 上で 9.5:1）
-header :focus-visible,
-.tw-bg-primary-500 :focus-visible {
+// 要素名 `header` では指定しない。ダイアログや各ページの白い面にも <header> があり、
+// そこでは明色リングが白地に溶けて見えなくなっていた（2026-09-23）。トップバーは
+// tw-bg-primary-500 を持つので下のクラスだけで足りる
+.tw-bg-primary-500 :focus-visible,
+.tw-bg-structure :focus-visible {
     outline-color: var(--color-focus-on-dark) !important;
+}
+
+// メニューは開いた直後に Material がパネル（または先頭の項目）へプログラムでフォーカスを
+// 移す。フォーカスを持てない要素（過去の運用情報の「休」タグなど）を右クリックして開くと
+// これが :focus-visible に当たり、マウス操作なのにパネルに赤いリングが出ていた（2026-09-24）。
+// パネル自体にはリングを出さず、項目はキーボードで移ったとき（cdk-keyboard-focused）だけ出す
+.mat-mdc-menu-panel:focus-visible,
+.mat-mdc-menu-item:focus-visible:not(.cdk-keyboard-focused) {
+    outline: none !important;
+}
+
+// 入力欄（outline）の中を操作部品共通の白で塗る（ユーザー指示 2026-09-23）。
+// Material 既定は透明で、ページ地（paper-2）の上では灰色、カードの上では白と
+// 置き場所しだいで色が変わっていた。角丸は枠線（notched outline）と同じ値にして、
+// 塗りの角が枠の外へはみ出さないようにする。
+.mat-mdc-form-field .mdc-text-field--outlined {
+    background-color: var(--color-control);
+    border-radius: var(--mdc-outlined-text-field-container-shape, 4px);
 }
 
 // 種別色チップの白文字を、塗り色を一切変えずに読ませるための縁取り。

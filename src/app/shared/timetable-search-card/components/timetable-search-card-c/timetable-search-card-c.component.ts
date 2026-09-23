@@ -5,9 +5,11 @@ import {
     inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { buildStationGroups } from '../../../station-groups.util';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
 import { TimetableSearchCardService } from '../../services/timetable-search-card.service';
 import { TimetableSearchCardStateQuery } from '../../states/timetable-search-card.state';
@@ -22,6 +24,7 @@ import { TimetableSearchCardPComponent } from '../timetable-search-card-p/timeta
 })
 export class TimetableSearchCardCComponent {
     private readonly calendarListStateQuery = inject(CalendarListStateQuery);
+    private readonly agencyListStateQuery = inject(AgencyListStateQuery);
     private readonly routeStationListStateQuery = inject(
         RouteStationListStateQuery,
     );
@@ -36,8 +39,16 @@ export class TimetableSearchCardCComponent {
     );
 
     readonly calendars = toSignal(this.calendarListStateQuery.calendars$);
-    readonly routeStationLists = toSignal(
+    private readonly routeStations = toSignal(
         this.routeStationListStateQuery.routeStations$,
+        { initialValue: [] },
+    );
+    private readonly agencies = toSignal(this.agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+    /** 駅 select の選択肢を「会社名 路線名」でまとめる（ユーザー指示 2026-09-23）。 */
+    readonly stationGroups = computed(() =>
+        buildStationGroups(this.routeStations(), this.agencies()),
     );
     private readonly rawState = toSignal(
         this.timetableSearchCardStateQuery.formState$,

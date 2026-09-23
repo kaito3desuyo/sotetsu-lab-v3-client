@@ -1,5 +1,4 @@
 import { firstValueFrom } from 'rxjs';
-import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
 import { TimetableStationStore } from './timetable-station.store';
 
 const trip6436 = {
@@ -50,13 +49,11 @@ describe('TimetableStationStore', () => {
         expect(data).toHaveLength(1);
         expect(data[0].hour).toBe('6');
 
+        // 付与された tripBlock を直接見る。↪ に出すかどうか（この先の列車だけ）は
+        // TimetableStationFindOtherTripsInSameTripBlockPipe の責務で、その spec で確かめる
         const trip = data[0].trips[0];
-        const others =
-            new TimetableStationFindOtherTripsInSameTripBlockPipe().transform(
-                trip,
-            );
+        const tripNumbers = trip.tripBlock.trips.map((o) => o.tripNumber);
 
-        expect(others).toHaveLength(1);
-        expect(others[0].tripNumber).toBe('9436');
+        expect(tripNumbers).toEqual(['9436', '6436']);
     });
 });

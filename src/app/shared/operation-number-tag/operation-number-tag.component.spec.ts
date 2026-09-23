@@ -68,6 +68,15 @@ describe('OperationNumberTagComponent', () => {
         expect(getTagEl().style.backgroundColor).toBe('rgba(0, 0, 0, 0.12)');
     });
 
+    it('運用番号 100（休車）は「休」と出し、link があってもリンクにしない', () => {
+        fixture.componentRef.setInput('operationNumber', '100');
+        fixture.componentRef.setInput('link', ['/operation', 'route-diagram']);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('a')).toBeNull();
+        expect(getTagEl().textContent.trim()).toBe('休');
+    });
+
     it('link 未指定時は a タグを描画しない', () => {
         fixture.componentRef.setInput('operationNumber', '1001');
         fixture.detectChanges();
@@ -94,30 +103,72 @@ describe('OperationNumberTagComponent', () => {
     });
 
     describe('borderEnabled（B9: 無効化済み目撃の赤枠表現）', () => {
-        it('borderEnabled 指定時は枠クラス・枠色が適用される', () => {
+        // 枠は inset の影で描く（border だと枠のあるタグだけ 2px 高くなるため）
+        it('borderEnabled 指定時は枠色の inset の影が付き、border は使わない', () => {
             fixture.componentRef.setInput('operationNumber', '53');
             fixture.componentRef.setInput('borderEnabled', true);
             fixture.componentRef.setInput('borderColor', 'rgb(183, 28, 28)');
             fixture.detectChanges();
 
             const el = getTagEl();
-            expect(el.classList.contains('tw-border')).toBe(true);
-            expect(el.style.borderColor).toBe('rgb(183, 28, 28)');
+            expect(el.style.boxShadow).toBe('inset 0 0 0 1px rgb(183, 28, 28)');
+            expect(el.classList.contains('tw-border')).toBe(false);
         });
 
-        it('borderEnabled 未指定時は枠クラスが付かない', () => {
+        it('borderEnabled 未指定時は枠の影が付かない', () => {
             fixture.componentRef.setInput('operationNumber', '53');
             fixture.detectChanges();
 
-            expect(getTagEl().classList.contains('tw-border')).toBe(false);
+            expect(getTagEl().style.boxShadow).toBe('');
         });
     });
 
     describe('contextMenus（B9: 右クリック/長押しコンテキストメニュー）', () => {
         let mockTrigger: { openMenu: jest.Mock };
 
+        const touchAt = (x: number, y: number) =>
+            ({ touches: [{ clientX: x, clientY: y }] }) as unknown as TouchEvent;
+
         beforeEach(() => {
             mockTrigger = { openMenu: jest.fn() };
+        });
+
+        it('右クリックした座標にメニューの起点を置く', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            component.onContextMenu(
+                {
+                    preventDefault: jest.fn(),
+                    clientX: 320,
+                    clientY: 480,
+                } as unknown as MouseEvent,
+                mockTrigger as unknown as MatMenuTrigger,
+            );
+            fixture.detectChanges();
+
+            const trigger: HTMLButtonElement =
+                fixture.nativeElement.querySelector('button[aria-hidden]');
+            expect(trigger.style.left).toBe('320px');
+            expect(trigger.style.top).toBe('480px');
+        });
+
+        it('長押しした座標にメニューの起点を置く', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('contextMenus', [
+                { icon: 'block', text: '無効化', onClick: () => {} },
+            ]);
+            fixture.detectChanges();
+
+            component.onTouchStart(
+                touchAt(120, 240),
+                mockTrigger as unknown as MatMenuTrigger,
+            );
+
+            expect(component.menuPosition()).toEqual({ x: 120, y: 240 });
         });
 
         it('contextMenus 未指定時は右クリックしてもメニューを開かない', () => {
@@ -159,7 +210,10 @@ describe('OperationNumberTagComponent', () => {
             ]);
             fixture.detectChanges();
 
-            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            component.onTouchStart(
+                touchAt(0, 0),
+                mockTrigger as unknown as MatMenuTrigger,
+            );
             jest.advanceTimersByTime(500);
 
             expect(mockTrigger.openMenu).toHaveBeenCalled();
@@ -174,7 +228,10 @@ describe('OperationNumberTagComponent', () => {
             ]);
             fixture.detectChanges();
 
-            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            component.onTouchStart(
+                touchAt(0, 0),
+                mockTrigger as unknown as MatMenuTrigger,
+            );
             component.onTouchEnd({
                 preventDefault: jest.fn(),
             } as unknown as TouchEvent);
@@ -196,7 +253,10 @@ describe('OperationNumberTagComponent', () => {
             ]);
             fixture.detectChanges();
 
-            component.onTouchStart(mockTrigger as unknown as MatMenuTrigger);
+            component.onTouchStart(
+                touchAt(0, 0),
+                mockTrigger as unknown as MatMenuTrigger,
+            );
             jest.advanceTimersByTime(500);
 
             const clickEvent = {

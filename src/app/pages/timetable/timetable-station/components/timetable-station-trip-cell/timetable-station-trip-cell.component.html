@@ -9,16 +9,45 @@
                   outputPropertyName: 'tripClassColor',
               };
 
+<!-- 分の列（左）と列車の列（右）の 2 列（ユーザー判断 2026-09-23）。
+     左: 分 / 運用番号 / 充当編成番号 を縦に積む。運用の段が単独でセルの左端に置かれて
+     浮いて見えていたのを、分の下に束ねて「この時刻の列車を、どの運用・編成が走るか」を
+     一塊で読ませる。
+     右: 種別・列車番号・行き先（改行しない）と、同じ運行の種別変更・直通（↪）。 -->
 <div
-    class="tw-flex tw-min-w-0 tw-flex-col tw-gap-1 tw-rounded tw-p-1.5 hover:tw-bg-grey-500 hover:tw-bg-opacity-[0.06]"
+    class="tw-grid tw-min-w-0 tw-grid-cols-[2.75rem_minmax(0,1fr)] tw-gap-x-2 tw-p-1.5"
 >
-    <!-- 1段目: 分 + 種別バッジ + 行先 -->
-    <div
-        class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-1.5 tw-gap-y-0.5"
-    >
+    @let operationNumber =
+        trip().tripOperationLists[0]?.operationId
+            | findById
+                : {
+                      array: operations(),
+                      propertyName: 'operationId',
+                      outputPropertyName: 'operationNumber',
+                  };
+    <!--
+        G1（充当編成「不明」バグ修正）: operation-real-time と同じ紐付けロジックに統一。
+        crossSection はリクエストに使った operationNumber をキーにした Record（ストア参照）
+        なので、配列を expectedSighting.operation.operationNumber でスキャンする旧実装
+        （API レスポンスにその nested プロパティが無い/一致しない場合があり「不明」の主因
+        だった）をやめ、operationNumber での直接キー引きに置き換える。
+    -->
+    @let timeCrossSection =
+        operationNumber
+            ? operationSightingTimeCrossSections()[operationNumber]
+            : undefined;
+    @let currentFormationNumber =
+        timeCrossSection?.expectedSighting?.formation?.formationNumber;
+    @let currentFormationDayCount =
+        timeCrossSection?.latestSighting?.sightingTime
+            | calculateDayCountFromToday;
+
+    <!-- 左の列: 幅 2.75rem 固定。運用番号チップ（最大「95G」）と充当編成番号（最大
+         「21104?」）が入る幅で、セルごとに右の列の左端がガタつかないようにする -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-gap-1">
         <a
             matRipple
-            class="tw-rounded tw-text-2xl tw-font-bold tw-tabular-nums tw-leading-none tw-no-underline"
+            class="tw-flex tw-h-6 tw-items-center tw-rounded tw-text-2xl tw-font-bold tw-tabular-nums tw-leading-none tw-no-underline"
             [style.color]="
                 trip().tripClassId
                     | findById
@@ -56,65 +85,6 @@
             }
         </a>
 
-        <app-trip-class-chip
-            [label]="
-                trip().tripClassId
-                    | findById
-                        : {
-                              array: tripClasses(),
-                              propertyName: 'tripClassId',
-                              outputPropertyName: 'tripClassName',
-                          }
-                    | antiBrackets
-            "
-            [color]="tripClassColor"
-        ></app-trip-class-chip>
-
-        <span class="tw-min-w-0 tw-truncate tw-text-sm tw-leading-tight">
-            {{
-                trip()
-                    | timetableStationFindLastStopStation
-                    | findById
-                        : {
-                              array: stations(),
-                              propertyName: 'stationId',
-                              outputPropertyName: 'stationName',
-                          }
-            }}
-        </span>
-    </div>
-
-    <!-- 2段目: 列車番号 + 運用番号チップ + 充当編成番号 -->
-    @let operationNumber =
-        trip().tripOperationLists[0]?.operationId
-            | findById
-                : {
-                      array: operations(),
-                      propertyName: 'operationId',
-                      outputPropertyName: 'operationNumber',
-                  };
-    <!--
-        G1（充当編成「不明」バグ修正）: operation-real-time と同じ紐付けロジックに統一。
-        crossSection はリクエストに使った operationNumber をキーにした Record（ストア参照）
-        なので、配列を expectedSighting.operation.operationNumber でスキャンする旧実装
-        （API レスポンスにその nested プロパティが無い/一致しない場合があり「不明」の主因
-        だった）をやめ、operationNumber での直接キー引きに置き換える。
-    -->
-    @let timeCrossSection =
-        operationNumber
-            ? operationSightingTimeCrossSections()[operationNumber]
-            : undefined;
-    @let currentFormationNumber =
-        timeCrossSection?.expectedSighting?.formation?.formationNumber;
-    @let currentFormationDayCount =
-        timeCrossSection?.latestSighting?.sightingTime
-            | calculateDayCountFromToday;
-
-    <div
-        class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1.5 tw-text-xs tw-leading-tight tw-text-grey-600"
-    >
-        <span>{{ trip().tripNumber }}</span>
-
         @if (trip().tripOperationLists.length !== 0) {
             <app-operation-number-tag
                 [operationNumber]="operationNumber"
@@ -126,7 +96,9 @@
             ></app-operation-number-tag>
 
             @if (showCurrentFormation()) {
-                <span>
+                <span
+                    class="tw-text-xs tw-tabular-nums tw-leading-tight tw-text-muted"
+                >
                     @if (currentFormationNumber) {
                         {{ currentFormationNumber
                         }}{{ currentFormationDayCount !== 0 ? '?' : '' }}
@@ -138,38 +110,17 @@
         }
     </div>
 
-    <!-- 3段目: 通し運行脚注行（同一tripBlock内の他列車情報。mockup-01 の「↪ 〜から〜まで（各停6501）」） -->
-    @for (
-        otherTrip of trip() | timetableStationFindOtherTripsInSameTripBlock;
-        track otherTrip.tripId
-    ) {
-        <div class="tw-text-[11px] tw-leading-tight tw-text-grey-500">
-            ↪
-            {{
-                (otherTrip.times | minBy: { propertyName: 'stopSequence' })
-                    .stationId
-                    | findById
-                        : {
-                              array: stations(),
-                              propertyName: 'stationId',
-                              outputPropertyName: 'stationName',
-                          }
-            }}から{{
-                (otherTrip.times | maxBy: { propertyName: 'stopSequence' })
-                    .stationId
-                    | findById
-                        : {
-                              array: stations(),
-                              propertyName: 'stationId',
-                              outputPropertyName: 'stationName',
-                          }
-            }}まで（
-            <!-- 脚注も種別は塗りチップに統一する（ユーザー指示 2026-08-22）。
-                 従来は種別色の文字だった。 -->
+    <!-- 右の列 -->
+    <div class="tw-flex tw-min-w-0 tw-flex-col tw-gap-1">
+        <!-- 種別・列車番号・行き先は改行しない（ユーザー指示 2026-09-23）。入る幅は列の
+             最小幅（timetable-station-table）で確保する。行き先は省略もしない（情報削減禁止）。
+             高さは分と同じ 24px にして、分と縦の中心をそろえる -->
+        <div
+            class="tw-flex tw-h-6 tw-flex-row tw-items-center tw-gap-x-1.5 tw-whitespace-nowrap"
+        >
             <app-trip-class-chip
-                size="sm"
                 [label]="
-                    otherTrip.tripClassId
+                    trip().tripClassId
                         | findById
                             : {
                                   array: tripClasses(),
@@ -178,18 +129,126 @@
                               }
                         | antiBrackets
                 "
-                [color]="
-                    otherTrip.tripClassId
+                [color]="tripClassColor"
+            ></app-trip-class-chip>
+
+            <span
+                class="tw-text-xs tw-tabular-nums tw-leading-tight tw-text-muted"
+                >{{ trip().tripNumber }}</span
+            >
+
+            <span class="tw-text-sm tw-leading-tight">
+                {{
+                    trip()
+                        | timetableStationFindLastStopStation
                         | findById
                             : {
-                                  array: tripClasses(),
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassColor',
+                                  array: stations(),
+                                  propertyName: 'stationId',
+                                  outputPropertyName: 'stationName',
                               }
-                "
-            ></app-trip-class-chip>
-            <span class="tw-tabular-nums">{{ otherTrip.tripNumber }}</span
-            >）
+                }}
+            </span>
         </div>
-    }
+
+        <!-- 同一 tripBlock 内で、この列車より後に走る列車（この先の種別変更・直通）だけを出す。
+             前の区間は出さない（ユーザー判断 2026-09-23。判定はパイプ側）。
+             「↪ [種別] [列番]  発駅 → 着駅」で、
+             operation/real-time の位置表示（app-trip-position）と同じ並び・大きさ・矢印に
+             そろえる（ユーザー指示 2026-09-23）。以前は mockup-01 の「↪ 〜から〜まで
+             （各停6501）」の文章形だった。時刻は出さない（この駅の時刻は分の欄が表している） -->
+        @let otherTrips =
+            trip() | timetableStationFindOtherTripsInSameTripBlock;
+        <!-- ↪ と ↪ の間は 8px、1 段目から最初の ↪ までは 4px（ユーザー指示 2026-09-23）。
+             ↪ が続くと 2 行ずつが同じ間隔で並び、1 本の境目が記号しか無かった -->
+        @if (otherTrips.length !== 0) {
+            <div class="tw-flex tw-flex-col tw-gap-2">
+                @for (otherTrip of otherTrips; track otherTrip.tripId) {
+                    <!-- 「↪」の列 + 2 行。発駅 → 着駅 は必ず 2 行目に置き、左端を種別チップに
+                         そろえる（ユーザー指示 2026-09-23）。幅しだいで割れたり割れなかったり
+                         していたのをやめ、どのセルでも同じ形に読ませる -->
+                    <div
+                        class="tw-grid tw-grid-cols-[auto_minmax(0,1fr)] tw-items-center tw-gap-x-1 tw-gap-y-0.5 tw-text-xs tw-leading-4 tw-text-muted"
+                    >
+                        <span aria-hidden="true">↪</span>
+                        <span
+                            class="tw-inline-flex tw-items-center tw-gap-1 tw-whitespace-nowrap"
+                        >
+                            <!-- 脚注も種別は塗りチップに統一する（ユーザー指示 2026-08-22）。 -->
+                            <app-trip-class-chip
+                                size="sm"
+                                [label]="
+                                    otherTrip.tripClassId
+                                        | findById
+                                            : {
+                                                  array: tripClasses(),
+                                                  propertyName: 'tripClassId',
+                                                  outputPropertyName:
+                                                      'tripClassName',
+                                              }
+                                        | antiBrackets
+                                "
+                                [color]="
+                                    otherTrip.tripClassId
+                                        | findById
+                                            : {
+                                                  array: tripClasses(),
+                                                  propertyName: 'tripClassId',
+                                                  outputPropertyName:
+                                                      'tripClassColor',
+                                              }
+                                "
+                            ></app-trip-class-chip>
+                            <span class="tw-tabular-nums">{{
+                                otherTrip.tripNumber
+                            }}</span>
+                        </span>
+
+                        <span
+                            class="tw-col-start-2 tw-inline-flex tw-flex-row tw-items-center tw-gap-1 tw-whitespace-nowrap"
+                        >
+                            <span>
+                                {{
+                                    (
+                                        otherTrip.times
+                                        | minBy
+                                            : { propertyName: 'stopSequence' }
+                                    ).stationId
+                                        | findById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                            </span>
+                            <!-- 矢印と -1px の光学補正は app-trip-position と同じ値 -->
+                            <mat-icon
+                                class="!tw-h-4 !tw-w-4 tw-translate-y-[-1px] tw-text-[16px] tw-leading-[normal]"
+                            >
+                                arrow_forward
+                            </mat-icon>
+                            <span>
+                                {{
+                                    (
+                                        otherTrip.times
+                                        | maxBy
+                                            : { propertyName: 'stopSequence' }
+                                    ).stationId
+                                        | findById
+                                            : {
+                                                  array: stations(),
+                                                  propertyName: 'stationId',
+                                                  outputPropertyName:
+                                                      'stationName',
+                                              }
+                                }}
+                            </span>
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
 </div>

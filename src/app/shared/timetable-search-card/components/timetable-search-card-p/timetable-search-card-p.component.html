@@ -36,14 +36,14 @@
             <mat-form-field>
                 <mat-label>駅名</mat-label>
                 <mat-select formControlName="stationId">
-                    @for (rsl of routeStationLists(); track rsl.routeId) {
-                        <mat-optgroup [label]="rsl.routeName">
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
                             @for (
-                                rsl2 of rsl.routeStationLists;
-                                track rsl2.stationId
+                                station of group.stations;
+                                track station.stationId
                             ) {
-                                <mat-option [value]="rsl2.stationId">
-                                    {{ rsl2.station.stationName }}
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
                                 </mat-option>
                             }
                         </mat-optgroup>

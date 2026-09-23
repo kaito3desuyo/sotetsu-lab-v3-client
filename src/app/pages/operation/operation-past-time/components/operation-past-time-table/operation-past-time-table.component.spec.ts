@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
@@ -73,6 +73,38 @@ describe('OperationPastTimeTableComponent', () => {
         fixture.detectChanges();
 
         expect(component.tableDisplayed()).toBe(true);
+    });
+
+    it('onDefaultSearch: 直近 7 日間（6 日前を基準日に 7 日間）で検索する', () => {
+        jest.useFakeTimers().setSystemTime(new Date(2026, 8, 24, 12, 0));
+        const navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+
+        component.onDefaultSearch();
+
+        expect(navigate).toHaveBeenCalledWith([
+            'operation',
+            'past-time',
+            { reference_date: '2026-09-18', days: 7 },
+        ]);
+        jest.useRealTimers();
+    });
+
+    it('onDefaultSearch: 4 時前は前日を「本日」として数える（運行日）', () => {
+        jest.useFakeTimers().setSystemTime(new Date(2026, 8, 24, 0, 37));
+        const navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+
+        component.onDefaultSearch();
+
+        expect(navigate).toHaveBeenCalledWith([
+            'operation',
+            'past-time',
+            { reference_date: '2026-09-17', days: 7 },
+        ]);
+        jest.useRealTimers();
     });
 
     it('contextMenuDisabled: manager/editor 以外は true（B9 の権限制御維持）', () => {

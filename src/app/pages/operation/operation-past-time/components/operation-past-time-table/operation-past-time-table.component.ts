@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { format } from 'date-fns';
+import { format, subDays, subHours } from 'date-fns';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -136,13 +136,21 @@ export class OperationPastTimeTableComponent {
         OperationPastTimeStore.setSelectedAgencyIds([]);
     }
 
-    /** G12: 検索前空状態の次アクション。本日を基準日に7日間で検索する。 */
+    /**
+     * G12: 検索前空状態の次アクション。直近 7 日間（6 日前〜本日）を検索する。
+     *
+     * 日付は基準日から先へ並ぶので、本日を基準日にすると本日以外の 6 日が未来で
+     * 空になっていた（ユーザー指摘 2026-09-24）。基準日を 6 日前にする。
+     * 「本日」は運行日で数える。目撃の日付と同じく 4 時までは前日とみなす
+     * （0〜4 時に押すと、まだ何も無い暦の翌日が最後の列になっていた）。
+     */
     onDefaultSearch(): void {
-        const today = format(new Date(), 'yyyy-MM-dd');
+        const operatingDay = subHours(new Date(), 4);
+        const referenceDate = format(subDays(operatingDay, 6), 'yyyy-MM-dd');
         this.#router.navigate([
             'operation',
             'past-time',
-            { reference_date: today, days: 7 },
+            { reference_date: referenceDate, days: 7 },
         ]);
     }
 }

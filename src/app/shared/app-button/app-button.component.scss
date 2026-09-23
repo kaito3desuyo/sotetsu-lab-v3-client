@@ -36,13 +36,13 @@
 
     // 副アクション: 白地紺枠（disabled でも同色を維持し不透明度のみ下げる）
     .app-button-secondary.mat-mdc-outlined-button {
-        background-color: var(--color-paper) !important;
+        background-color: var(--color-control) !important;
         color: var(--color-structure) !important;
         border-color: var(--color-structure) !important;
         border-width: 2px !important;
 
         &.mat-mdc-button-disabled {
-            background-color: var(--color-paper) !important;
+            background-color: var(--color-control) !important;
             color: var(--color-structure) !important;
             border-color: var(--color-structure) !important;
             opacity: 0.5;

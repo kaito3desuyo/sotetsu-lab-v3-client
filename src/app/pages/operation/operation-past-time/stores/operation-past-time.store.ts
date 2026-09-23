@@ -52,7 +52,8 @@ const store = createStore(
     }),
 );
 
-function generateDates(referenceDate: string, days: number): string[] {
+/** 基準日**から**先へ N 日間を返す（v2 以来の仕様。ユーザー確認 2026-09-24）。 */
+export function generateDates(referenceDate: string, days: number): string[] {
     if (!referenceDate || !days) return [];
 
     const initializeTime = flow(

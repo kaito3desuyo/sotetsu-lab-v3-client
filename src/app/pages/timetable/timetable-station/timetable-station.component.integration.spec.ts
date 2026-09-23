@@ -14,6 +14,7 @@ import {
 } from '@angular/router';
 import { EMPTY, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -149,6 +150,7 @@ async function setup(overrides?: {
                     stations$: of([
                         { stationId: YOKOHAMA, stationName: '横浜' },
                     ]),
+                    routeStations$: of([]),
                 },
             },
             // ---- libs モック（初回ロードの実解決順序・非同期性をエミュレート） ----
@@ -228,6 +230,7 @@ async function setup(overrides?: {
                     MatFormFieldModule,
                     MatProgressBarModule,
                     MatSelectModule,
+                    DateFnsPipe,
                     EmptyStateComponent,
                     SegmentToggleComponent,
                     TimetableStationTableComponent,

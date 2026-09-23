@@ -11,7 +11,6 @@ import { lastValueFrom } from 'rxjs';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
-import { OperationPastTimeHeaderComponent } from './components/operation-past-time-header/operation-past-time-header.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
@@ -26,7 +25,6 @@ OperationPastTimeStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
-        OperationPastTimeHeaderComponent,
         OperationPastTimeSearchFormComponent,
         OperationPastTimeFilterComponent,
         OperationPastTimeTableComponent,

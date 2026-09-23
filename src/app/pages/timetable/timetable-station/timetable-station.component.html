@@ -10,51 +10,87 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
+    <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
+         本文の h1/h2 重複は置かない -->
+    <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01）。ただし sm 未満は縦に積む。
+         ダイヤの選択中表示「2026.3.14改正 土休日ダイヤ」は約 270px 要り、390px で
+         横に並べると改正日の途中で省略される（2026-09-23 実測） -->
     <header
-        class="tw-sticky tw-top-0 tw-z-10 tw-flex tw-w-full tw-flex-col tw-gap-3 tw-bg-grey-50 tw-py-2"
+        class="tw-grid tw-grid-cols-1 tw-gap-x-2 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[40rem]"
     >
-        <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
-             本文の h1/h2 重複は置かない -->
-        <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01） -->
-        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
-            <mat-form-field class="tw-w-32">
-                <mat-label>駅</mat-label>
-                <mat-select
-                    [value]="stationId()"
-                    (valueChange)="onStationChange($event)"
-                >
-                    @for (
-                        station of stationOptions();
-                        track station.stationId
-                    ) {
-                        <mat-option [value]="station.stationId">
-                            {{ station.stationName }}
-                        </mat-option>
+        <mat-form-field class="tw-w-full">
+            <mat-label>駅</mat-label>
+            <mat-select
+                [value]="stationId()"
+                (valueChange)="onStationChange($event)"
+            >
+                @for (group of stationGroups(); track group.routeId) {
+                    <mat-optgroup [label]="group.label">
+                        @for (
+                            station of group.stations;
+                            track station.stationId
+                        ) {
+                            <mat-option [value]="station.stationId">
+                                {{ station.stationName }}
+                            </mat-option>
+                        }
+                    </mat-optgroup>
+                }
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="tw-w-full">
+            <mat-label>ダイヤ</mat-label>
+            <!-- ダイヤ名だけでは同名の「平日ダイヤ」が改正ごとに並び、選び分けられない
+                 （ユーザー指摘 2026-09-23）。選択肢は検索カードと同じ「改正日 + ダイヤ名」、
+                 選択中の表示は幅に収まるよう改正日を短く書く -->
+            <mat-select
+                [value]="calendarId()"
+                (valueChange)="onCalendarChange($event)"
+            >
+                <mat-select-trigger>
+                    @if (selectedCalendar(); as selected) {
+                        {{
+                            selected.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy.M.d改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ selected.calendarName }}
                     }
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field class="tw-w-40">
-                <mat-label>ダイヤ</mat-label>
-                <mat-select
-                    [value]="calendarId()"
-                    (valueChange)="onCalendarChange($event)"
-                >
-                    @for (calendar of calendars(); track calendar.calendarId) {
-                        <mat-option [value]="calendar.calendarId">
-                            {{ calendar.calendarName }}
-                        </mat-option>
-                    }
-                </mat-select>
-            </mat-form-field>
-        </div>
+                </mat-select-trigger>
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy年MM月dd日改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </header>
 
-        <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/segment-toggle） -->
+    <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/segment-toggle）。
+         長い時刻表を読みながら切り替えられるよう、これだけトップバーの直下に貼り付ける
+         （ユーザー判断 2026-09-23）。上下 8px の地は負マージンで打ち消し、gap を変えない。
+         z は 1: ドロワーの遮光幕（z-10）より下に置く。帯の下の角は scss の
+         .sticky-direction-band（潜り込むカードの角丸を保つ） -->
+    <div
+        class="sticky-direction-band tw-sticky tw-top-12 tw-z-[1] -tw-my-2 tw-bg-paper-2 tw-py-2 md:tw-top-16"
+    >
         <app-segment-toggle
             [options]="tripDirectionOptions"
             [value]="tripDirection()"
             (valueChange)="onDirectionChange($event)"
         ></app-segment-toggle>
-    </header>
+    </div>
 
     <div>
         @if (isEmpty()) {

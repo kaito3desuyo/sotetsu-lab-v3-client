@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+    signal,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
@@ -13,11 +19,18 @@ import { OperationNumberTagContextMenu } from './operation-number-tag-context-me
  * 適用したタグとして運用番号を描画する。色は UI 側でハードコードせず既存 pipe に委譲する。
  *
  * 行路図等へのリンクは任意（`link` 未指定時はタグのみ表示）。
+ * 運用番号 100 は休車なので「休」と出し、リンクも張らない（行路図が無い。
+ * real-time の編成順カードと同じ扱い。ユーザー指摘 2026-09-24）。
  * 形状は角型固定（丸型に固定しない方針 = 20-design-ui.md §1）。
  *
  * `contextMenus` 指定時、右クリック（デスクトップ）/ 長押し（モバイル）でコンテキスト
  * メニューを開ける（20-design-ui.md §5.12）。`contextmenu` DOM イベントはタッチでは
  * 発火しないため、モバイルは touch イベントで独自にタイマー判定する。
+ *
+ * メニューは右クリック・長押しした位置に開く。以前はトリガーを `display: none` の
+ * ボタンにしていたため位置が取れず、メニューが画面左上 (0, 0) に出ていた
+ * （ユーザー指摘 2026-09-24）。トリガーは見えない 0×0 の固定配置要素にして、
+ * 開く直前にポインタの座標へ動かす。
  */
 @Component({
     selector: 'app-operation-number-tag',
@@ -35,6 +48,15 @@ export class OperationNumberTagComponent {
     readonly contextMenus = input<OperationNumberTagContextMenu[]>(undefined);
     readonly longPressMs = input<number>(500);
 
+    /** 休車（運用番号 100）か。 */
+    readonly isRetired = computed(() => this.operationNumber() === '100');
+    readonly label = computed(() =>
+        this.isRetired() ? '休' : this.operationNumber(),
+    );
+
+    /** メニューを開く位置（ビューポート座標）。トリガーをここへ置く。 */
+    readonly menuPosition = signal({ x: 0, y: 0 });
+
     #longPressTimer: ReturnType<typeof setTimeout> | null = null;
     #longPressTriggered = false;
 
@@ -46,11 +68,17 @@ export class OperationNumberTagComponent {
         if (!this.hasContextMenu()) return;
 
         event.preventDefault();
+        this.menuPosition.set({ x: event.clientX, y: event.clientY });
         trigger.openMenu();
     }
 
-    onTouchStart(trigger: MatMenuTrigger): void {
+    onTouchStart(event: TouchEvent, trigger: MatMenuTrigger): void {
         if (!this.hasContextMenu()) return;
+
+        const touch = event.touches[0];
+        if (touch) {
+            this.menuPosition.set({ x: touch.clientX, y: touch.clientY });
+        }
 
         this.#clearLongPressTimer();
         this.#longPressTriggered = false;

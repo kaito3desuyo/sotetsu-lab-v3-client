@@ -41,11 +41,11 @@
         width: 100%;
     }
 
-    // 未選択（通常）状態: 白地紺文字
+    // 未選択（通常）状態: 白地紺文字（地は操作部品共通の --color-control）
     .mat-button-toggle:not(.mat-button-toggle-checked):not(
             .mat-button-toggle-disabled
         ) {
-        background-color: var(--color-paper) !important;
+        background-color: var(--color-control) !important;
         color: var(--color-structure) !important;
     }
 
