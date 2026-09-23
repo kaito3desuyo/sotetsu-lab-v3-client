@@ -24,6 +24,7 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 import { SocketService } from 'src/app/core/services/socket.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { AppButtonComponent } from '../app-button/app-button.component';
+import { PanelCardComponent } from '../panel-card/panel-card.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
 import { LoadingService } from '../app-shared/loading/loading.service';
@@ -51,6 +52,7 @@ type Form = FormGroup<{
         MatSnackBarModule,
         SegmentToggleComponent,
         AppButtonComponent,
+        PanelCardComponent,
     ],
 })
 export class NewOperationPostCardComponent {

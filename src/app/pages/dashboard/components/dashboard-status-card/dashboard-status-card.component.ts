@@ -12,17 +12,12 @@ import { ja } from 'date-fns/locale';
 import { interval } from 'rxjs';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { DashboardStore } from '../../stores/dashboard.store';
-import {
-    MINI_DIAGRAM_VIEW_H,
-    MINI_DIAGRAM_VIEW_W,
-} from '../../utils/build-dashboard-mini-diagram.util';
 
 /**
  * 「今日の状況」カード（N3 最上部）。
  * 営業日・適用ダイヤ名・現在時刻・計画走行本数・本日の目撃投稿数を表示する。
  *
- * スタットはデータ確定前（isLoading 中）は「—」プレースホルダを表示し、
- * 偽の 0 と区別する。
+ * スタットはデータ確定前（isLoading 中）は骨組みを表示し、偽の 0 と区別する。
  */
 @Component({
     selector: 'app-dashboard-status-card',
@@ -38,6 +33,9 @@ export class DashboardStatusCardComponent {
     readonly todaysCalendar = toSignal(DashboardStore.todaysCalendar$, {
         initialValue: null,
     });
+    readonly todaysDayName = toSignal(DashboardStore.todaysDayName$, {
+        initialValue: null,
+    });
     readonly runningTripCount = toSignal(DashboardStore.runningTripCount$, {
         initialValue: 0,
     });
@@ -45,13 +43,6 @@ export class DashboardStatusCardComponent {
         DashboardStore.sightingCountToday$,
         { initialValue: 0 },
     );
-    readonly miniDiagramLines = toSignal(DashboardStore.miniDiagramLines$, {
-        initialValue: [],
-    });
-    readonly miniDiagramViewBox = `0 0 ${MINI_DIAGRAM_VIEW_W} ${MINI_DIAGRAM_VIEW_H}`;
-    /** 現在時刻は窓の中央（x=VIEW_W/2）。 */
-    readonly miniDiagramNowX = MINI_DIAGRAM_VIEW_W / 2;
-    readonly miniDiagramViewH = MINI_DIAGRAM_VIEW_H;
 
     readonly #now = signal(new Date());
 

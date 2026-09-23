@@ -1,20 +1,25 @@
 :host {
     // 現在地への導線は「リンク」に見せない（audit M7）。
     // このカードは各運用ページ下部に共通で置かれるため、そのページ自身への
-    // リンクが並んでいた。下線と色を落とし、現在地であることを示す。
+    // リンクが並んでいた。色を落として押せなくし、現在地であることを示す。
     a.is-current {
-        color: var(--color-muted);
-        text-decoration: none;
-        font-weight: 700;
-        cursor: default;
         pointer-events: none;
 
-        &::after {
-            content: '（表示中）';
-            margin-left: var(--space-2xs);
+        ::ng-deep .mdc-list-item__primary-text {
             color: var(--color-muted);
-            font-size: var(--text-xs);
-            font-weight: 400;
+            font-weight: 700;
+
+            &::after {
+                content: '（表示中）';
+                margin-left: var(--space-2xs);
+                color: var(--color-muted);
+                font-size: var(--text-xs);
+                font-weight: 400;
+            }
+        }
+
+        mat-icon {
+            display: none;
         }
     }
 }

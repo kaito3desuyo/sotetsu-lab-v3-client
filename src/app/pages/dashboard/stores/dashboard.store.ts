@@ -5,16 +5,18 @@ import { debounceTime, map } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
-import { MiniDiagramLine } from '../utils/build-dashboard-mini-diagram.util';
+import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 type StoreProps = {
     todaysCalendar: CalendarDetailsDto | null;
+    /** 今日（鉄道日）が何の日か（祝日名・年末年始・特別ダイヤ）。該当しなければ null */
+    todaysDayName: string | null;
     runningTripCount: number;
     sightingCountToday: number;
     latestSightings: OperationSightingDetailsDto[];
     latestSightingPositions: Record<string, OperationCurrentPositionDto>;
-    /** 最上部カード背景のミニダイヤグラム線分（±30分・実データ）。永続化しない。 */
-    miniDiagramLines: MiniDiagramLine[];
+    /** 目撃時の位置に出す種別チップの名称・色の解決用 */
+    tripClasses: TripClassDetailsDto[];
     /** 「サイト説明」パネルを初回訪問時のみ自動展開するための既訪問フラグ */
     hasVisitedBefore: boolean;
     loadingQueue: boolean[];
@@ -24,11 +26,12 @@ const store = createStore(
     { name: 'DashboardStore' },
     withProps<StoreProps>({
         todaysCalendar: null,
+        todaysDayName: null,
         runningTripCount: 0,
         sightingCountToday: 0,
         latestSightings: [],
         latestSightingPositions: {},
-        miniDiagramLines: [],
+        tripClasses: [],
         hasVisitedBefore: false,
         loadingQueue: [],
     }),
@@ -42,13 +45,7 @@ const persist = persistState(store, {
     source: () =>
         store.pipe(
             debounceTime(1000),
-            map(
-                ({
-                    loadingQueue: _loadingQueue,
-                    miniDiagramLines: _miniDiagramLines,
-                    ...rest
-                }) => rest,
-            ),
+            map(({ loadingQueue: _loadingQueue, ...rest }) => rest),
         ),
 });
 
@@ -57,6 +54,9 @@ export const DashboardStore = {
 
     setTodaysCalendar(calendar: CalendarDetailsDto | null): void {
         store.update(setProp('todaysCalendar', () => calendar));
+    },
+    setTodaysDayName(name: string | null): void {
+        store.update(setProp('todaysDayName', () => name));
     },
     setRunningTripCount(count: number): void {
         store.update(setProp('runningTripCount', () => count));
@@ -78,8 +78,8 @@ export const DashboardStore = {
             })),
         );
     },
-    setMiniDiagramLines(lines: MiniDiagramLine[]): void {
-        store.update(setProp('miniDiagramLines', () => lines));
+    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+        store.update(setProp('tripClasses', () => tripClasses));
     },
     markVisited(): void {
         store.update(setProp('hasVisitedBefore', () => true));
@@ -92,6 +92,7 @@ export const DashboardStore = {
     },
 
     todaysCalendar$: store.pipe(select((state) => state.todaysCalendar)),
+    todaysDayName$: store.pipe(select((state) => state.todaysDayName)),
     runningTripCount$: store.pipe(select((state) => state.runningTripCount)),
     sightingCountToday$: store.pipe(
         select((state) => state.sightingCountToday),
@@ -100,7 +101,7 @@ export const DashboardStore = {
     latestSightingPositions$: store.pipe(
         select((state) => state.latestSightingPositions),
     ),
-    miniDiagramLines$: store.pipe(select((state) => state.miniDiagramLines)),
+    tripClasses$: store.pipe(select((state) => state.tripClasses)),
     hasVisitedBefore$: store.pipe(select((state) => state.hasVisitedBefore)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 

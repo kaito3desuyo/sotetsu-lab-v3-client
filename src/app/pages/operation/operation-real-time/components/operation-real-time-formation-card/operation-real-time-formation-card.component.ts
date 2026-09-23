@@ -6,9 +6,7 @@ import {
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
 import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
@@ -21,7 +19,8 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
-import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
+import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
+import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
 
 /**
@@ -30,8 +29,8 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
  * 「編成番号を主役」にした並びへ入れ替える: 左チップは運用番号（休車=運用番号100は
  * 「休」表示・リンク無効化。旧 operation-real-time-formation-table の <table> 実装の
  * ロジックをそのまま踏襲）、中央は編成番号＋所属会社/形式＋種別列番＋現在位置。
- * 現在位置の状態判定（prev/current/next）・目撃鮮度の色分け・履歴表示は
- * 運用順カードと同一ロジック。
+ * 目撃鮮度の色分け・履歴表示は運用順カードと同一ロジック。現在位置は
+ * 共有部品 app-trip-position で運用順カードと同じ表示を使う。
  */
 @Component({
     selector: 'app-operation-real-time-formation-card',
@@ -39,17 +38,15 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     styleUrl: './operation-real-time-formation-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        RouterLink,
         MatIconModule,
         MatTooltipModule,
         NewOperationNumberLinkComponent,
         DateFnsPipe,
         NewFindByIdPipe,
-        NewAntiBracketsPipe,
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripClassBaseNamePipe,
-        TripClassChipComponent,
+        TripPositionComponent,
     ],
 })
 export class OperationRealTimeFormationCardComponent {
@@ -101,23 +98,10 @@ export class OperationRealTimeFormationCardComponent {
     });
 
     /**
-     * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
-     * 「10000・相鉄」形式）。編成順カードでは formation 自身が行エンティティの
-     * ため、運用順カードのように formations() 配列から探す必要はなく、
-     * agencyId から会社名を引くだけでよい。vehicle_type は素の形式番号
-     * （例: 10000）をそのまま会社名と「・」で連結する。
-     * formationNumber 文字列自体は加工しない。
+     * 編成の「形式・所属会社」付記（例: 10000・相鉄）。編成順カードでは
+     * formation 自身が行エンティティなので、配列から探さずそのまま渡す。
      */
-    readonly formationAnnotation = computed(() => {
-        const agencyId = this.formation().agencyId;
-        const agencyName = agencyId
-            ? this.agencies().find((a) => a.agencyId === agencyId)?.agencyName
-            : undefined;
-        const vehicleTypePart = this.formation().vehicleType
-            ? this.formation().vehicleType
-            : undefined;
-        return [vehicleTypePart, agencyName]
-            .filter((part) => !!part)
-            .join('・');
-    });
+    readonly formationAnnotation = computed(() =>
+        formatFormationAnnotation(this.formation(), this.agencies()),
+    );
 }

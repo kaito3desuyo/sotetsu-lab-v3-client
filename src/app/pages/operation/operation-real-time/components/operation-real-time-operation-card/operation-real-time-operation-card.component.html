@@ -20,7 +20,7 @@
     class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-start tw-gap-x-3 tw-gap-y-1 tw-rounded-card tw-bg-white tw-p-3"
 >
     <!-- 運用番号チップ -->
-    <div class="tw-col-start-1 tw-row-start-1 tw-self-start">
+    <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
         <app-new-operation-number-link
             [text]="operation().operationNumber"
             [bgColor]="operation().operationNumber | newOperationNumberColor"
@@ -33,13 +33,15 @@
     </div>
 
     <!-- 上段中央: 編成番号・所属会社/形式。
-         編成番号（主データ）と形式・会社（修飾）は縦2段に分ける
-         （ユーザー指示 2026-08-22）。横並びだと主従が読み取りにくい。 -->
+         横 1 行に並べ、入らなければ形式・会社が折り返す（ユーザー判断 2026-09-23）。
+         縦 2 段は編成番号が主キーの編成順カードだけ（docs/design.md）。 -->
     <div
-        class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-w-0 tw-flex-col tw-gap-0.5"
+        class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-w-0 tw-flex-col tw-gap-0.5 tw-self-center"
     >
         @if (formationVm) {
-            <div class="tw-flex tw-flex-col tw-items-start">
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-2"
+            >
                 <span
                     class="tw-text-base tw-leading-tight"
                     [class.tw-font-bold]="dayCount === 0"
@@ -79,7 +81,7 @@
     <!-- 下段: 履歴・現在位置 -->
     @if (showsHistories || showsPosition) {
         <div
-            class="tw-col-span-3 tw-col-start-1 tw-row-start-2 tw-grid tw-min-w-0 tw-grid-cols-[auto_1fr] tw-items-center tw-gap-x-2 tw-gap-y-1"
+            class="tw-col-span-3 tw-col-start-1 tw-row-start-2 tw-grid tw-min-w-0 tw-grid-cols-[2.5rem_1fr] tw-items-center tw-gap-x-2 tw-gap-y-1"
         >
             @if (showsHistories) {
                 <span
@@ -157,234 +159,28 @@
             }
 
             @if (showsPosition) {
-                <!-- 見出し列は auto 幅。「履歴」と「現在位置」のうち広いほうに
-                     揃うので、どちらも折り返さず 1 行で出る（ユーザー指示 2026-08-22）。 -->
+                <!-- 見出し列は 2.5rem 固定（一番長い「現在位置」の幅）。文字数に
+                     よらず本文の左端をカード・ページ間でそろえる（docs/design.md）。 -->
                 <span
                     class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
                 >
                     現在位置
                 </span>
-                <!-- 種別・列番 / 発着 を縦2段にする（ユーザー指示 2026-08-22）。
-                     運行中の列車が無いとき（出庫前・入庫済）は種別と列番自体が
-                     出ないので、自然に1段になる。 -->
-                <div
-                    class="tw-flex tw-flex-col tw-items-start tw-gap-0.5 tw-text-xs tw-leading-4"
-                >
-                    @if (!!current) {
-                        <!-- 種別は全ページ共通の塗りチップ、列車番号はチップの外
-                     （ユーザー指示 2026-08-22）。 -->
-                        <a
-                            class="tw-inline-flex tw-items-center tw-gap-1 tw-whitespace-nowrap tw-text-ink tw-no-underline"
-                            [routerLink]="[
-                                '/timetable',
-                                'all-line',
-                                {
-                                    calendar_id: calendarId(),
-                                    trip_direction: current.trip.tripDirection,
-                                    trip_block_id: current.trip.tripBlockId,
-                                },
-                            ]"
-                        >
-                            <app-trip-class-chip
-                                size="sm"
-                                [label]="
-                                    current.trip.tripClassId
-                                        | newFindById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassName',
-                                              }
-                                        | newAntiBrackets
-                                "
-                                [color]="
-                                    current.trip.tripClassId
-                                        | newFindById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassColor',
-                                              }
-                                "
-                            ></app-trip-class-chip>
-                            <span class="tw-tabular-nums tw-underline">
-                                {{ current.trip.tripNumber }}
-                            </span>
-                        </a>
-                    }
-
-                    <span
-                        class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-whitespace-nowrap"
-                    >
-                        <!-- FROM -->
-                        @if (!prev && !current && !!next) {
-                            @if (!!next.trip.depotOut) {
-                                <span>出庫前○</span>
-                            } @else {
-                                <span>不明？</span>
-                            }
-                        }
-                        @if (!prev && !!current && !next) {
-                            <span>
-                                {{
-                                    current.startTime.stationId
-                                        | newFindById
-                                            : {
-                                                  array: stations(),
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName:
-                                                      'stationName',
-                                              }
-                                }}
-                                {{
-                                    current.startTime.departureTime
-                                        | dateFns
-                                            : {
-                                                  format: 'HH:mm',
-                                                  parseFormat: 'HH:mm:ss',
-                                              }
-                                }}
-                            </span>
-                        }
-                        @if (!!prev && !current) {
-                            <span>
-                                {{
-                                    prev.endTime.stationId
-                                        | newFindById
-                                            : {
-                                                  array: stations(),
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName:
-                                                      'stationName',
-                                              }
-                                }}
-                                {{
-                                    prev.endTime.arrivalTime
-                                        | dateFns
-                                            : {
-                                                  format: 'HH:mm',
-                                                  parseFormat: 'HH:mm:ss',
-                                              }
-                                }}
-                            </span>
-                        }
-
-                        <!-- 区切りは状態によらず常に矢印。以前は出庫前だけ「・」に
-                             していたが誤りだった（ユーザー指摘 2026-08-22）。
-                             mockup-02 の該当行は `出庫前 ○ → かしわ台 20:31` と
-                             矢印であり、「・」は同ファイルの**凡例行**で
-                             「出庫前 ○ ・ 入庫済 △」と 2 項目を区切っていたもの。
-                             凡例の区切り文字を位置行に持ち込んでしまっていた。
-                             入庫済側は矢印だったので内部でも不整合だった。 -->
-                        <!-- translate-y は -1px の光学補正。箱の中心は前後の文字と
-                             揃っている（実測で 3 要素とも同じ中心 Y）が、Material
-                             Icons の矢印グリフは箱の中でやや下寄りに描かれるため、
-                             12px の文字の光学中心より低く見える。実カードを zoom:4 で
-                             -1.5 / -1 / -0.5 / 0 / +1px と比べて -1px が最も揃った。
-                             ※手で組み直した見本で比べると上下の判定が逆に出る。
-                               この種の光学補正は必ず実物の要素で確認すること。 -->
-                        <mat-icon
-                            class="!tw-h-4 !tw-w-4 tw-translate-y-[-1px] tw-text-[16px] tw-leading-[normal]"
-                        >
-                            arrow_forward
-                        </mat-icon>
-
-                        <!-- TO -->
-                        @if (!prev && !current && !!next) {
-                            <span>
-                                {{
-                                    next.startTime.stationId
-                                        | newFindById
-                                            : {
-                                                  array: stations(),
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName:
-                                                      'stationName',
-                                              }
-                                }}
-                                {{
-                                    next.startTime.departureTime
-                                        | dateFns
-                                            : {
-                                                  format: 'HH:mm',
-                                                  parseFormat: 'HH:mm:ss',
-                                              }
-                                }}
-                            </span>
-                        }
-                        @if (!prev && !!current && !next) {
-                            <span>
-                                {{
-                                    current.endTime.stationId
-                                        | newFindById
-                                            : {
-                                                  array: stations(),
-                                                  propertyName: 'stationId',
-                                                  outputPropertyName:
-                                                      'stationName',
-                                              }
-                                }}
-                                {{
-                                    current.endTime.arrivalTime
-                                        | dateFns
-                                            : {
-                                                  format: 'HH:mm',
-                                                  parseFormat: 'HH:mm:ss',
-                                              }
-                                }}
-                            </span>
-                        }
-                        @if (!!prev && !current && !!next) {
-                            <span>
-                                @if (
-                                    prev.endTime.stationId ===
-                                    next.startTime.stationId
-                                ) {
-                                    @if (prev.trip.depotIn) {
-                                        一時入庫
-                                    } @else {
-                                        停車中
-                                    }
-                                } @else {
-                                    {{
-                                        next.startTime.stationId
-                                            | newFindById
-                                                : {
-                                                      array: stations(),
-                                                      propertyName: 'stationId',
-                                                      outputPropertyName:
-                                                          'stationName',
-                                                  }
-                                    }}
-                                }
-                                {{
-                                    next.startTime.departureTime
-                                        | dateFns
-                                            : {
-                                                  format: 'HH:mm',
-                                                  parseFormat: 'HH:mm:ss',
-                                              }
-                                }}
-                            </span>
-                        }
-                        @if (!!prev && !current && !next) {
-                            @if (prev.trip.depotIn) {
-                                <span>入庫済△</span>
-                            } @else {
-                                <span>不明？</span>
-                            }
-                        }
-                    </span>
-                </div>
+                <!-- 種別・列番と発着は横並び、入らなければ折り返す
+                     （ユーザー判断 2026-09-23。docs/design.md）。 -->
+                <app-trip-position
+                    [position]="positionVm"
+                    [stations]="stations()"
+                    [tripClasses]="tripClasses()"
+                    [calendarId]="calendarId()"
+                ></app-trip-position>
             }
         </div>
     }
 
     <!-- 上段右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
     <div
-        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-start tw-text-right"
+        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-center tw-text-right"
     >
         <div
             class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"

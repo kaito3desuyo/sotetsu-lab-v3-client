@@ -16,6 +16,8 @@ import { MatButtonModule } from '@angular/material/button';
     styleUrl: './app-button.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatButtonModule, NgTemplateOutlet],
+    // 内容幅のボタンは横並びの中で縮ませない（ラベルが潰れるため）
+    host: { '[class.tw-shrink-0]': '!fullWidth()' },
 })
 export class AppButtonComponent {
     readonly variant = input<'primary' | 'secondary'>('primary');

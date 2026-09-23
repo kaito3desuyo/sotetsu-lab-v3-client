@@ -1,79 +1,86 @@
+<!-- 背景のミニダイヤグラム（±30分の走行線 + 現在時刻の赤線。mockup-11）は
+     くどいので撤去した（ユーザー判断 2026-09-23） -->
 <section
-    class="tw-relative tw-flex tw-flex-col tw-gap-3 tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-4"
+    class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
 >
-    <!-- ミニダイヤグラム背景（mockup-11）: ±30分の実データ走行線を紺8%で敷き、中央に現在時刻の赤線。装飾のため aria-hidden。 -->
-    <svg
-        class="tw-pointer-events-none tw-absolute tw-inset-0 tw-h-full tw-w-full"
-        [attr.viewBox]="miniDiagramViewBox"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-    >
-        @for (line of miniDiagramLines(); track $index) {
-            <line
-                [attr.x1]="line.x1"
-                [attr.y1]="line.y1"
-                [attr.x2]="line.x2"
-                [attr.y2]="line.y2"
-                stroke="#001556"
-                stroke-width="1"
-                stroke-opacity="0.08"
-            ></line>
-        }
-        <line
-            [attr.x1]="miniDiagramNowX"
-            y1="0"
-            [attr.x2]="miniDiagramNowX"
-            [attr.y2]="miniDiagramViewH"
-            stroke="#d9534f"
-            stroke-width="1"
-            stroke-opacity="0.5"
-        ></line>
-    </svg>
-
-    <div
-        class="tw-relative tw-flex tw-flex-row tw-items-start tw-justify-between tw-gap-4"
-    >
+    <div class="tw-flex tw-flex-row tw-items-start tw-justify-between tw-gap-4">
         <div class="tw-flex tw-flex-col tw-gap-1">
-            <span class="tw-text-xs tw-text-grey-600">
-                {{ businessDateLabel() }}
-            </span>
+            <!-- 祝日・年末年始・特別ダイヤなら日付の右に何の日か（ユーザー指示 2026-09-23）。
+                 祝日の赤の慣習に寄せ、紙の上の指標色 accent-deep（5.76:1）で出す -->
             <div
                 class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-2"
             >
-                <span class="tw-text-lg tw-font-bold tw-text-primary-500">
-                    {{ todaysCalendar()?.calendarName ?? '読み込み中...' }}
+                <span class="tw-text-xs tw-text-muted">
+                    {{ businessDateLabel() }}
                 </span>
+                @if (todaysDayName(); as dayName) {
+                    <span class="tw-text-xs tw-font-bold tw-text-accent-deep">
+                        {{ dayName }}
+                    </span>
+                }
+            </div>
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-2"
+            >
+                @if (todaysCalendar(); as calendar) {
+                    <span class="tw-text-lg tw-font-bold tw-text-structure">
+                        {{ calendar.calendarName }}
+                    </span>
+                } @else {
+                    <span
+                        class="tw-inline-block tw-h-6 tw-w-24 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                        aria-label="読み込み中"
+                    ></span>
+                }
                 @if (revisionLabel()) {
-                    <span class="tw-text-xs tw-text-grey-600">
+                    <span class="tw-text-xs tw-text-muted">
                         {{ revisionLabel() }}
                     </span>
                 }
             </div>
         </div>
-        <span class="tw-text-4xl tw-tabular-nums tw-text-primary-500">
+        <span
+            class="tw-text-4xl tw-font-bold tw-tabular-nums tw-text-structure"
+        >
             {{ clockLabel() }}
         </span>
     </div>
 
-    <div class="tw-relative tw-grid tw-grid-cols-2 tw-gap-3">
+    <div class="tw-grid tw-grid-cols-2 tw-gap-3">
         <div
-            class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-rounded tw-bg-grey-100 tw-p-3"
+            class="tw-flex tw-flex-col tw-gap-1 tw-rounded-control tw-bg-paper-2 tw-p-3"
         >
-            <!-- データ確定前は「—」を表示して偽の 0 と区別する -->
-            <span class="tw-text-3xl tw-font-bold tw-tabular-nums">
-                {{ isLoading() ? '—' : runningTripCount() }}
-            </span>
-            <span class="tw-text-xs tw-text-grey-600">
-                走行中の列車（計画）
-            </span>
+            <!-- データ確定前は骨組みを出し、偽の 0 と区別する -->
+            @if (isLoading()) {
+                <span
+                    class="tw-block tw-h-9 tw-w-12 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    aria-label="読み込み中"
+                ></span>
+            } @else {
+                <span
+                    class="tw-text-3xl tw-font-bold tw-tabular-nums tw-text-structure"
+                >
+                    {{ runningTripCount() }}
+                </span>
+            }
+            <span class="tw-text-xs tw-text-muted">走行中の列車（計画）</span>
         </div>
         <div
-            class="tw-flex tw-flex-col tw-items-center tw-gap-1 tw-rounded tw-bg-grey-100 tw-p-3"
+            class="tw-flex tw-flex-col tw-gap-1 tw-rounded-control tw-bg-paper-2 tw-p-3"
         >
-            <span class="tw-text-3xl tw-font-bold tw-tabular-nums">
-                {{ isLoading() ? '—' : sightingCountToday() }}
-            </span>
-            <span class="tw-text-xs tw-text-grey-600">本日の目撃投稿</span>
+            @if (isLoading()) {
+                <span
+                    class="tw-block tw-h-9 tw-w-12 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    aria-label="読み込み中"
+                ></span>
+            } @else {
+                <span
+                    class="tw-text-3xl tw-font-bold tw-tabular-nums tw-text-structure"
+                >
+                    {{ sightingCountToday() }}
+                </span>
+            }
+            <span class="tw-text-xs tw-text-muted">本日の目撃投稿</span>
         </div>
     </div>
 </section>

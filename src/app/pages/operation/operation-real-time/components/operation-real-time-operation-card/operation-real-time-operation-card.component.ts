@@ -6,9 +6,7 @@ import {
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
 import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
@@ -21,14 +19,14 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
-import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
+import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
+import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
 
 /**
  * リアルタイム運用情報・運用順の1運用=1カード。
- * mockup-02 準拠のカードUI。現在位置の状態判定（prev/current/next からの
- * 出庫前○ / 一時入庫 / 停車中 / 入庫済△ / 走行中 / 不明？の導出）は
- * 旧 operation-real-time-operation-table の <table> 実装のロジックをそのまま踏襲する。
+ * mockup-02 準拠のカードUI。現在位置の表示と状態判定（出庫前○ / 一時入庫 /
+ * 停車中 / 入庫済△ / 走行中 / 不明？）は共有部品 app-trip-position が持つ。
  */
 @Component({
     selector: 'app-operation-real-time-operation-card',
@@ -36,17 +34,15 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     styleUrl: './operation-real-time-operation-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        RouterLink,
         MatIconModule,
         MatTooltipModule,
         NewOperationNumberLinkComponent,
         DateFnsPipe,
         NewFindByIdPipe,
-        NewAntiBracketsPipe,
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripClassBaseNamePipe,
-        TripClassChipComponent,
+        TripPositionComponent,
     ],
 })
 export class OperationRealTimeOperationCardComponent {
@@ -101,31 +97,15 @@ export class OperationRealTimeOperationCardComponent {
         );
     });
 
-    /**
-     * 編成の「形式・所属会社」付記を組み立てる（設計書 §5.2 / mockup-02 の
-     * 「10000・相鉄」形式）。vehicle_type は素の形式番号（例: 10000）を
-     * そのまま会社名と「・」で連結する。formationNumber 文字列自体は加工しない。
-     */
+    /** 編成の「形式・所属会社」付記（例: 10000・相鉄）。 */
     readonly formationAnnotation = computed(() => {
         const formationId = this.expectedSightingFormation()?.formationId;
         if (!formationId) {
             return '';
         }
-        const formation = this.formations().find(
-            (f) => f.formationId === formationId,
+        return formatFormationAnnotation(
+            this.formations().find((f) => f.formationId === formationId),
+            this.agencies(),
         );
-        if (!formation) {
-            return '';
-        }
-        const agencyName = formation.agencyId
-            ? this.agencies().find((a) => a.agencyId === formation.agencyId)
-                  ?.agencyName
-            : undefined;
-        const vehicleTypePart = formation.vehicleType
-            ? formation.vehicleType
-            : undefined;
-        return [vehicleTypePart, agencyName]
-            .filter((part) => !!part)
-            .join('・');
     });
 }

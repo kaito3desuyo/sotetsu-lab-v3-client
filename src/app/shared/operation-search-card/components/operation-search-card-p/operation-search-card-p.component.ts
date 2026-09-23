@@ -6,14 +6,16 @@ import {
     output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatRippleModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterModule } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { AppButtonComponent } from '../../../app-button/app-button.component';
+import { PanelCardComponent } from '../../../panel-card/panel-card.component';
 
 @Component({
     selector: 'app-operation-search-card-p',
@@ -26,10 +28,12 @@ import { AppButtonComponent } from '../../../app-button/app-button.component';
         RouterModule,
         MatFormFieldModule,
         MatSelectModule,
-        MatRippleModule,
+        MatIconModule,
+        MatListModule,
         AppButtonComponent,
+        PanelCardComponent,
         DateFnsPipe,
-    ]
+    ],
 })
 export class OperationSearchCardPComponent {
     readonly calendarId = input.required<CalendarDetailsDto['calendarId']>();
@@ -43,4 +47,14 @@ export class OperationSearchCardPComponent {
         output<CalendarDetailsDto['calendarId']>();
     readonly clickSearchRouteDiagram =
         output<OperationDetailsDto['operationId']>();
+
+    /** 運用番号まで選んでいれば運用行路図、ダイヤだけなら運用表へ移る。 */
+    submit(): void {
+        const operationId = this.operationId();
+        if (operationId) {
+            this.clickSearchRouteDiagram.emit(operationId);
+            return;
+        }
+        this.clickSearchOperationTable.emit(this.calendarId());
+    }
 }

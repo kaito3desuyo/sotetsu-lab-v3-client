@@ -6,13 +6,14 @@ import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
+import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { estimatePositions } from 'src/app/shared/train-position.util';
-import { buildDashboardMiniDiagram } from '../utils/build-dashboard-mini-diagram.util';
 import { buildNetworkStationAxis } from '../utils/build-network-station-axis.util';
-import { selectMajorStationIds } from '../utils/select-major-station-ids.util';
+import { pickDayName } from '../utils/pick-day-name.util';
 import { DashboardStore } from '../stores/dashboard.store';
 
 @Injectable()
@@ -25,6 +26,8 @@ export class DashboardService {
     readonly #tripBlockService = inject(TripBlockService);
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #operationService = inject(OperationService);
+    readonly #tripClassService = inject(TripClassService);
+    readonly #calendarDateService = inject(CalendarDateService);
 
     /** 今日有効なダイヤ（todaysCalendarList 由来）を取得する。 */
     fetchTodaysCalendar(): Observable<void> {
@@ -42,6 +45,27 @@ export class DashboardService {
             }),
             map(() => undefined),
         );
+    }
+
+    /**
+     * 今日（鉄道日）が何の日か（祝日名・年末年始・特別ダイヤ）を取得する（calendar_dates.memo）。
+     * 取れなくても画面の他の要素には影響しないので、失敗時は非表示にして継続する。
+     */
+    fetchTodaysDayName(): Observable<void> {
+        const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+
+        return this.#calendarDateService
+            .findMany({ from: date, to: date })
+            .pipe(
+                tap((calendarDates) => {
+                    DashboardStore.setTodaysDayName(pickDayName(calendarDates));
+                }),
+                catchError(() => {
+                    DashboardStore.setTodaysDayName(null);
+                    return of(undefined);
+                }),
+                map(() => undefined),
+            );
     }
 
     /**
@@ -69,25 +93,12 @@ export class DashboardService {
             tap(({ tripBlocksByDirection, routes }) => {
                 const tripBlocks = Object.values(tripBlocksByDirection).flat();
                 const stationAxis = buildNetworkStationAxis(routes);
-                const now = new Date();
                 const positions = estimatePositions(
                     tripBlocks,
                     stationAxis,
-                    now,
+                    new Date(),
                 );
                 DashboardStore.setRunningTripCount(positions.length);
-                // ヒーロー背景ミニダイヤは主要駅（各線起終点＋乗換・分岐駅）のみの
-                // 粗い軸で描き、ラッシュ時の過密（約 474 線）を数十線に減らす。
-                // 計画走行本数（positions）は全駅軸のまま算出＝数値は不変。
-                const majorStationIds = selectMajorStationIds(routes);
-                DashboardStore.setMiniDiagramLines(
-                    buildDashboardMiniDiagram(
-                        tripBlocks,
-                        stationAxis,
-                        now,
-                        majorStationIds,
-                    ),
-                );
             }),
             map(() => undefined),
         );
@@ -144,5 +155,15 @@ export class DashboardService {
                     : of(undefined),
             ),
         ).pipe(map(() => undefined));
+    }
+
+    /** 目撃時の位置に出す種別チップのため、種別一覧を取得する。 */
+    fetchTripClasses(): Observable<void> {
+        return this.#tripClassService.findMany({}).pipe(
+            tap((tripClasses) => {
+                DashboardStore.setTripClasses(tripClasses);
+            }),
+            map(() => undefined),
+        );
     }
 }

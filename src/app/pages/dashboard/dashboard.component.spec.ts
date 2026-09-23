@@ -26,9 +26,11 @@ describe('DashboardComponent', () => {
                     provide: DashboardService,
                     useValue: {
                         fetchTodaysCalendar: () => of(undefined),
+                        fetchTodaysDayName: () => of(undefined),
                         fetchRunningTripCount: () => of(undefined),
                         fetchTodaysSightings: () => of(undefined),
                         fetchLatestSightingPositions: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
                     },
                 },
             ],

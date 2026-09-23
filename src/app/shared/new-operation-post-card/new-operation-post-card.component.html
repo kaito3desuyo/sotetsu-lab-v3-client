@@ -1,18 +1,13 @@
-<form
-    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-rounded-card tw-bg-white tw-p-4"
-    [formGroup]="sightingForm"
-    #formGroupDirective="ngForm"
-    (ngSubmit)="submit(formGroupDirective)"
->
-    <header>
-        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">運用情報を投稿する</h2>
-        <p class="tw-m-0 tw-text-sm tw-text-grey-700">
-            各編成の運用充当状況を投稿できます。
-        </p>
-    </header>
-    <div class="tw-flex-grow">
-        <div class="tw-flex tw-flex-col tw-gap-4">
-            <!-- 所属と編成番号は横並び（ユーザー指示 2026-08-22）。
+<app-panel-card heading="運用情報を投稿する">
+    <form
+        class="tw-flex tw-flex-col tw-gap-4"
+        [formGroup]="sightingForm"
+        #formGroupDirective="ngForm"
+        (ngSubmit)="submit(formGroupDirective)"
+    >
+        <div class="tw-flex-grow">
+            <div class="tw-flex tw-flex-col tw-gap-4">
+                <!-- 所属と編成番号は横並び（ユーザー指示 2026-08-22）。
                  狭い画面では縦に落とす。
 
                  編成番号/車両番号の 2 値トグルは撤去した（ユーザー判断 2026-08-22）。
@@ -20,86 +15,99 @@
                  送信する値も検証も同一だった。打つ前に 1 クリック増えるだけなので、
                  改修前と同じ「編成番号 or 車両番号」の単一入力に戻す。
                  98 §G4 の「トグル復元」はこれで覆る。 -->
-            <div class="tw-flex tw-flex-col tw-gap-4 sm:tw-flex-row">
-                <mat-form-field class="tw-min-w-0 sm:tw-flex-1">
-                    <mat-label>所属</mat-label>
-                    <mat-select formControlName="agencyId">
-                        @for (agency of agencies(); track agency.agencyId) {
-                            <mat-option [value]="agency.agencyId">
-                                {{ agency.agencyName }}
-                            </mat-option>
+                <div class="tw-flex tw-flex-col tw-gap-4 sm:tw-flex-row">
+                    <mat-form-field class="tw-min-w-0 sm:tw-flex-1">
+                        <mat-label>所属</mat-label>
+                        <mat-select formControlName="agencyId">
+                            @for (agency of agencies(); track agency.agencyId) {
+                                <mat-option [value]="agency.agencyId">
+                                    {{ agency.agencyName }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                        @if (
+                            sightingForm.get('agencyId').hasError('required')
+                        ) {
+                            <mat-error>
+                                <strong>必須項目</strong>です
+                            </mat-error>
                         }
-                    </mat-select>
-                    @if (sightingForm.get('agencyId').hasError('required')) {
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
-                    }
-                </mat-form-field>
+                    </mat-form-field>
 
-                <mat-form-field class="tw-min-w-0 sm:tw-flex-1">
-                    <mat-label>編成番号 or 車両番号</mat-label>
-                    <input
-                        matInput
-                        formControlName="formationOrVehicleNumber"
-                    />
-                    <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
+                    <mat-form-field class="tw-min-w-0 sm:tw-flex-1">
+                        <mat-label>編成番号 or 車両番号</mat-label>
+                        <input
+                            matInput
+                            formControlName="formationOrVehicleNumber"
+                        />
+                        <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
+                        @if (
+                            sightingForm
+                                .get('formationOrVehicleNumber')
+                                .hasError('required')
+                        ) {
+                            <mat-error>
+                                <strong>必須項目</strong>です
+                            </mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <!-- 運用番号は select ではなく直接入力（ユーザー判断 2026-08-22）。
+                 位置も編成番号の下（改修前と同じ並び）に戻した。
+                 98 §G4 は「運用番号は select（モック）」としていたが、
+                 選択より打ったほうが速いという実利用側の判断で覆す。 -->
+                <mat-form-field class="tw-w-full">
+                    <mat-label>運用番号</mat-label>
+                    <input matInput formControlName="operationNumber" />
+                    <mat-hint>休車の場合は「100」を入力</mat-hint>
                     @if (
-                        sightingForm
-                            .get('formationOrVehicleNumber')
-                            .hasError('required')
+                        sightingForm.get('operationNumber').hasError('required')
                     ) {
                         <mat-error> <strong>必須項目</strong>です </mat-error>
                     }
                 </mat-form-field>
-            </div>
 
-            <!-- 運用番号は select ではなく直接入力（ユーザー判断 2026-08-22）。
-                 位置も編成番号の下（改修前と同じ並び）に戻した。
-                 98 §G4 は「運用番号は select（モック）」としていたが、
-                 選択より打ったほうが速いという実利用側の判断で覆す。 -->
-            <mat-form-field class="tw-w-full">
-                <mat-label>運用番号</mat-label>
-                <input matInput formControlName="operationNumber" />
-                <mat-hint>休車の場合は「100」を入力</mat-hint>
-                @if (sightingForm.get('operationNumber').hasError('required')) {
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
-                }
-            </mat-form-field>
+                <app-segment-toggle
+                    [options]="timeSettingOptions"
+                    [value]="timeSetting()"
+                    (valueChange)="onTimeSettingChange($event)"
+                ></app-segment-toggle>
 
-            <app-segment-toggle
-                [options]="timeSettingOptions"
-                [value]="timeSetting()"
-                (valueChange)="onTimeSettingChange($event)"
-            ></app-segment-toggle>
-
-            @if (timeSetting() === 'specifiedTime') {
-                <mat-form-field class="tw-w-full">
-                    <mat-label>目撃時刻</mat-label>
-                    <input
-                        type="time"
-                        matInput
-                        formControlName="sightingTime"
-                    />
-                    <!-- 深夜帯の注記はカード末尾の独立した段落ではなく、
+                @if (timeSetting() === 'specifiedTime') {
+                    <mat-form-field class="tw-w-full">
+                        <mat-label>目撃時刻</mat-label>
+                        <input
+                            type="time"
+                            matInput
+                            formControlName="sightingTime"
+                        />
+                        <!-- 深夜帯の注記はカード末尾の独立した段落ではなく、
                          それが効く入力欄の説明として出す（ユーザー指示 2026-08-22）。
                          時刻を指定するときにしか関係しない話なので、
                          現在時刻モードでは目撃時刻ごと出ない。
                          注記のもう半分「「休」（運用番号 100）の投稿も可能」は
                          運用番号欄の hint「休車の場合は「100」を入力」と同義なので落とした。 -->
-                    <mat-hint>
-                        04:00 ～ 翌 03:59 を1営業日として扱います
-                    </mat-hint>
-                    @if (
-                        sightingForm.get('sightingTime').hasError('required')
-                    ) {
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
-                    }
-                </mat-form-field>
-            }
+                        <mat-hint>
+                            04:00 ～ 翌 03:59 を1営業日として扱います
+                        </mat-hint>
+                        @if (
+                            sightingForm
+                                .get('sightingTime')
+                                .hasError('required')
+                        ) {
+                            <mat-error>
+                                <strong>必須項目</strong>です
+                            </mat-error>
+                        }
+                    </mat-form-field>
+                }
+            </div>
         </div>
-    </div>
-    <footer class="tw-flex tw-flex-col">
-        <app-button type="submit" [disabled]="sightingForm.invalid">
-            投稿する
-        </app-button>
-    </footer>
-</form>
+        <footer class="tw-flex tw-flex-col">
+            <app-button type="submit" [disabled]="sightingForm.invalid">
+                投稿する
+            </app-button>
+        </footer>
+    </form>
+</app-panel-card>

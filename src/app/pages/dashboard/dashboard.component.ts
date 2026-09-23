@@ -49,6 +49,7 @@ export class DashboardComponent {
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
             await lastValueFrom(this.#dashboardService.fetchTodaysCalendar());
+            await lastValueFrom(this.#dashboardService.fetchTodaysDayName());
             await lastValueFrom(
                 this.#dashboardService.fetchRunningTripCount(),
             );
@@ -56,6 +57,7 @@ export class DashboardComponent {
             await lastValueFrom(
                 this.#dashboardService.fetchLatestSightingPositions(),
             );
+            await lastValueFrom(this.#dashboardService.fetchTripClasses());
         } finally {
             DashboardStore.disableLoading();
         }

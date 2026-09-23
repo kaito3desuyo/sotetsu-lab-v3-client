@@ -23,6 +23,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { AppButtonComponent } from '../../../app-button/app-button.component';
+import { PanelCardComponent } from '../../../panel-card/panel-card.component';
 import { SegmentToggleComponent } from '../../../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../../../segment-toggle/segment-toggle-option.type';
 import { ITimetableSearchCardForm } from '../../interfaces/timetable-search-card-form.interface';
@@ -48,6 +49,7 @@ type Form = FormGroup<{
         MatSelectModule,
         MatSlideToggleModule,
         SegmentToggleComponent,
+        PanelCardComponent,
         AppButtonComponent,
         DateFnsPipe,
     ]
