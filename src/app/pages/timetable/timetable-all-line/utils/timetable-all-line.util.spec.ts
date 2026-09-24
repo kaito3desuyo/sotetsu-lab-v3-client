@@ -43,72 +43,87 @@ function makeTripBlock(tripBlockId: string, trips: any[]): any {
     return { tripBlockId, trips };
 }
 
+/** 本番と同じ駅一覧の判定（getViewMode）で駅 → 表示モードの Map を作る。 */
 function viewModesOf(
     stations: any[],
-    trips: any[],
+    _trips: any[],
     tripDirection: 0 | 1,
 ): Map<string, ETimetableAllLineStationViewMode> {
-    return TimetableAllLineUtil.deriveStationViewModes(
-        stations,
-        trips,
-        tripDirection,
+    return new Map(
+        stations.map((station) => [
+            station.stationId,
+            TimetableAllLineUtil.getViewMode(station, tripDirection),
+        ]),
     );
 }
 
-describe('TimetableAllLineUtil.deriveStationViewModes（データ駆動）', () => {
-    it('着時刻と発時刻が異なる列車がある駅は DEPARTURE_AND_ARRIVAL', () => {
-        const station = makeStation('大和', ['本線']);
-        const trip = makeTrip('t1', 'tb1', [
-            makeTime('大和', '10:00:00', '10:02:00'),
-        ]);
-        const modes = viewModesOf([station], [trip], 0);
-        expect(modes.get('大和')).toBe(
-            ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL,
-        );
+describe('TimetableAllLineUtil.getViewMode', () => {
+    describe('tripDirection 0 (inbound)', () => {
+        it('returns DEPARTURE_AND_ARRIVAL for 二俣川（本線／いずみ野線）', () => {
+            const station = makeStation('二俣川', ['本線', 'いずみ野線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 0)).toBe(
+                ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL,
+            );
+        });
+
+        it('returns ONLY_INBOUND_ARRIVAL for 横浜（本線）', () => {
+            const station = makeStation('横浜', ['本線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 0)).toBe(
+                ETimetableAllLineStationViewMode.ONLY_INBOUND_ARRIVAL,
+            );
+        });
+
+        it('returns ONLY_DEPARTURE for a regular station', () => {
+            const station = makeStation('かしわ台', ['本線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 0)).toBe(
+                ETimetableAllLineStationViewMode.ONLY_DEPARTURE,
+            );
+        });
     });
 
-    it('複数路線に跨る分岐・接続駅は DEPARTURE_AND_ARRIVAL', () => {
-        const station = makeStation('二俣川', ['本線', 'いずみ野線']);
-        const trip = makeTrip('t1', 'tb1', [
-            makeTime('二俣川', '10:00:00', '10:00:00'),
-        ]);
-        const modes = viewModesOf([station], [trip], 1);
-        expect(modes.get('二俣川')).toBe(
-            ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL,
-        );
-    });
+    describe('tripDirection 1 (outbound)', () => {
+        it('returns DEPARTURE_AND_ARRIVAL for 二俣川（本線／いずみ野線）', () => {
+            const station = makeStation('二俣川', ['本線', 'いずみ野線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 1)).toBe(
+                ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL,
+            );
+        });
 
-    it('到着のみで当駅発が無い終端駅は方向別 ARRIVAL（上り = INBOUND）', () => {
+        it('returns ONLY_OUTBOUND_ARRIVAL for 海老名（本線）', () => {
+            const station = makeStation('海老名', ['本線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 1)).toBe(
+                ETimetableAllLineStationViewMode.ONLY_OUTBOUND_ARRIVAL,
+            );
+        });
+
+        it('returns ONLY_DEPARTURE for a regular station', () => {
+            const station = makeStation('かしわ台', ['本線']);
+            expect(TimetableAllLineUtil.getViewMode(station, 1)).toBe(
+                ETimetableAllLineStationViewMode.ONLY_DEPARTURE,
+            );
+        });
+    });
+});
+
+describe('TimetableAllLineUtil.getBorderSetting', () => {
+    it('returns true for 横浜（本線）tripDirection 0', () => {
         const station = makeStation('横浜', ['本線']);
-        const trip = makeTrip('t1', 'tb1', [
-            makeTime('横浜', '10:00:00', null as any),
-        ]);
-        const modes = viewModesOf([station], [trip], 0);
-        expect(modes.get('横浜')).toBe(
-            ETimetableAllLineStationViewMode.ONLY_INBOUND_ARRIVAL,
-        );
+        expect(TimetableAllLineUtil.getBorderSetting(station, 0)).toBe(true);
     });
 
-    it('到着のみで当駅発が無い終端駅は方向別 ARRIVAL（下り = OUTBOUND）', () => {
-        const station = makeStation('海老名', ['本線']);
-        const trip = makeTrip('t1', 'tb1', [
-            makeTime('海老名', '10:00:00', null as any),
-        ]);
-        const modes = viewModesOf([station], [trip], 1);
-        expect(modes.get('海老名')).toBe(
-            ETimetableAllLineStationViewMode.ONLY_OUTBOUND_ARRIVAL,
-        );
-    });
-
-    it('単一路線・発時刻のみの通常駅は ONLY_DEPARTURE', () => {
+    it('returns false for a regular station tripDirection 0', () => {
         const station = makeStation('かしわ台', ['本線']);
-        const trip = makeTrip('t1', 'tb1', [
-            makeTime('かしわ台', null as any, '10:01:00'),
-        ]);
-        const modes = viewModesOf([station], [trip], 0);
-        expect(modes.get('かしわ台')).toBe(
-            ETimetableAllLineStationViewMode.ONLY_DEPARTURE,
-        );
+        expect(TimetableAllLineUtil.getBorderSetting(station, 0)).toBe(false);
+    });
+
+    it('returns true for 海老名（本線）tripDirection 1', () => {
+        const station = makeStation('海老名', ['本線']);
+        expect(TimetableAllLineUtil.getBorderSetting(station, 1)).toBe(true);
+    });
+
+    it('returns false for a regular station tripDirection 1', () => {
+        const station = makeStation('かしわ台', ['本線']);
+        expect(TimetableAllLineUtil.getBorderSetting(station, 1)).toBe(false);
     });
 });
 
@@ -197,7 +212,7 @@ describe('TimetableAllLineUtil.getTime', () => {
                 viewModes,
                 bordersAfter: new Map(),
             }),
-        ).toBe('930');
+        ).toBe('-930');
     });
 });
 
@@ -229,5 +244,126 @@ describe('TimetableAllLineUtil.sortTrips', () => {
         );
         expect(result[0].tripBlockId).toBe('tb2');
         expect(result[1].tripBlockId).toBe('tb1');
+    });
+
+    /** 並べた結果をブロック ID の列にする */
+    const ids = (blocks: any[]): string[] => blocks.map((b) => b.tripBlockId);
+
+    it('支線と本線の列車は、合流駅の時刻の順に並べる（始発の早さではない）', () => {
+        // 上り: 湘南台（支線）・海老名（本線）→ 二俣川で合流。表の上から 湘南台, 海老名, 二俣川
+        const stations = [
+            makeStation('湘南台', ['いずみ野線']),
+            makeStation('海老名', ['本線']),
+            makeStation('二俣川', ['本線', 'いずみ野線']),
+        ];
+        const branch = makeTripBlock('branch', [
+            makeTrip('b', 'branch', [
+                makeTime('湘南台', null as any, '05:00:00'),
+                makeTime('二俣川', '05:23:00', '05:24:00'),
+            ]),
+        ]);
+        const main = makeTripBlock('main', [
+            makeTrip('m', 'main', [
+                makeTime('海老名', null as any, '05:01:00'),
+                makeTime('二俣川', '05:20:00', '05:21:00'),
+            ]),
+        ]);
+        expect(
+            ids(TimetableAllLineUtil.sortTrips(stations, [branch, main])),
+        ).toEqual(['main', 'branch']);
+    });
+
+    it('共通駅の着が同分なら、先に出る方を前にする', () => {
+        const stations = [makeStation('西谷', ['本線'])];
+        const early = makeTripBlock('early', [
+            makeTrip('e', 'early', [makeTime('西谷', '09:03:00', '09:03:00')]),
+        ]);
+        const late = makeTripBlock('late', [
+            makeTrip('l', 'late', [makeTime('西谷', '09:03:00', '09:05:00')]),
+        ]);
+        expect(
+            ids(TimetableAllLineUtil.sortTrips(stations, [late, early])),
+        ).toEqual(['early', 'late']);
+    });
+
+    it('共通の駅が無い列車は始発時刻で並べ、比べられる相手との順も守る', () => {
+        // 厚木→かしわ台の回送（5:15 発・かしわ台 5:22 着）は、かしわ台 5:19 の列車の後ろ・
+        // 5:31 の列車の前。共通駅の無い横浜発 5:18 の列車は始発時刻どおり回送より後ろ
+        const stations = [
+            makeStation('厚木', ['厚木線']),
+            makeStation('海老名', ['本線']),
+            makeStation('かしわ台', ['本線']),
+            makeStation('横浜', ['本線']),
+        ];
+        const block = (id: string, times: any[]) =>
+            makeTripBlock(id, [makeTrip(id, id, times)]);
+        const before = block('before', [
+            makeTime('海老名', null as any, '05:16:00'),
+            makeTime('かしわ台', null as any, '05:19:00'),
+        ]);
+        const deadhead = block('deadhead', [
+            makeTime('厚木', null as any, '05:15:00'),
+            makeTime('かしわ台', '05:22:00', null as any),
+        ]);
+        const after = block('after', [
+            makeTime('厚木', null as any, '05:24:00'),
+            makeTime('かしわ台', '05:31:00', null as any),
+        ]);
+        const other = block('other', [
+            makeTime('横浜', null as any, '05:18:00'),
+        ]);
+        expect(
+            ids(
+                TimetableAllLineUtil.sortTrips(stations, [
+                    after,
+                    other,
+                    deadhead,
+                    before,
+                ]),
+            ),
+        ).toEqual(['before', 'deadhead', 'other', 'after']);
+    });
+
+    it('入力の順番によらず同じ並びを返す', () => {
+        const stations = [
+            makeStation('A', ['本線']),
+            makeStation('B', ['本線']),
+            makeStation('C', ['支線']),
+        ];
+        const blocks = [
+            ['x', 'A', '10:00:00'],
+            ['y', 'B', '10:05:00'],
+            ['z', 'C', '09:50:00'],
+            ['w', 'A', '10:10:00'],
+        ].map(([id, station, time]) =>
+            makeTripBlock(id, [
+                makeTrip(id, id, [makeTime(station, null as any, time)]),
+            ]),
+        );
+        const forward = ids(TimetableAllLineUtil.sortTrips(stations, blocks));
+        const backward = ids(
+            TimetableAllLineUtil.sortTrips(stations, [...blocks].reverse()),
+        );
+        expect(backward).toEqual(forward);
+    });
+
+    it('ブロックを重複させず、ブロック内の列車の並びは変えない', () => {
+        const stations = [
+            makeStation('A', ['本線']),
+            makeStation('B', ['本線']),
+        ];
+        const through = makeTripBlock('through', [
+            makeTrip('t1', 'through', [makeTime('A', null as any, '10:00:00')]),
+            makeTrip('t2', 'through', [makeTime('B', null as any, '10:10:00')]),
+        ]);
+        const single = makeTripBlock('single', [
+            makeTrip('s', 'single', [makeTime('A', null as any, '09:00:00')]),
+        ]);
+        const result = TimetableAllLineUtil.sortTrips(stations, [
+            through,
+            single,
+        ]);
+        expect(ids(result)).toEqual(['single', 'through']);
+        expect(result[1].trips.map((t: any) => t.tripId)).toEqual(['t1', 't2']);
     });
 });

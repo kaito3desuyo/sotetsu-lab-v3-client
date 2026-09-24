@@ -12,29 +12,35 @@
                     (page)="page.emit($event)"
                 ></mat-paginator>
 
-                <!-- G5: 内部縦スクロールは廃止しページ全開にする（sticky ヘッダ行/列は維持）。
-             横方向のみこの div でスクロールする -->
+                <!-- 縦にも横にも大きい表なので、この箱の中で縦横スクロールさせる
+                     （design.md 面の掟・2026-09-24）。横だけの箱にすると箱がスクロール
+                     コンテナになり、見出し 3 段の縦の sticky がページ基準で効かず流れて
+                     消えていた。高さは「画面 − トップバー − 16/32px」（過去の運用情報と同じ）。
+                     罫線は border-separate + 各セルの右・下で引く（面の掟）。以前は
+                     border-collapse の罫線が sticky のセルから外れて消えるのを、疑似要素で
+                     描き直して補っていた。外枠は表自身の罫線で閉じるので、箱には枠を付けない。
+                     見出しのセルは余白 0 で 3 段とも 24px ちょうどにする（運用番号のタグ 21.5px に
+                     UA の余白が乗ると 24.5px になり、sticky の位置とずれて隙間が透けた） -->
                 <div
-                    class="tw-overflow-x-auto tw-border tw-border-solid tw-border-grey-300"
+                    class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
                 >
                     <table
-                        class="tw-border-collapse tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
+                        class="tw-border-separate tw-border-spacing-0 tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
                     >
                         <thead>
-                            <tr class="tw-sticky tw-top-0 tw-z-20 tw-h-6">
+                            <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-top-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     colspan="2"
                                 >
-                                    <span class="tw-sticky">列車番号</span>
+                                    列車番号
                                 </th>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <th
-                                        class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                        class="tw-sticky tw-top-0 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     >
                                         <span
-                                            class="tw-relative"
                                             style="
                                                 display: inline-block;
                                                 transform-origin: center;
@@ -55,21 +61,20 @@
                                     </th>
                                 }
                             </tr>
-                            <tr class="tw-sticky tw-top-6 tw-z-20 tw-h-6">
+                            <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-top-6 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     colspan="2"
                                 >
-                                    <span class="tw-sticky">運用番号</span>
+                                    運用番号
                                 </th>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <th
-                                        class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                        class="tw-sticky tw-top-6 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     >
                                         @if (trip.tripOperationLists.length) {
                                             <app-operation-number-tag
-                                                class="tw-relative"
                                                 [operationNumber]="
                                                     trip.tripOperationLists[0]
                                                         .operation
@@ -86,55 +91,53 @@
                                                 ]"
                                             ></app-operation-number-tag>
                                         } @else {
-                                            <span class="tw-relative">
-                                                不明
-                                            </span>
+                                            <span>不明</span>
                                         }
                                     </th>
                                 }
                             </tr>
-                            <tr class="tw-sticky tw-top-12 tw-z-20 tw-h-6">
+                            <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-z-30 before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-top-12 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     colspan="2"
                                 >
-                                    <span class="tw-sticky">種別</span>
+                                    種別
                                 </th>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <th
-                                        class="tw-relative tw-w-[40px] tw-min-w-[40px] before:tw-absolute before:tw-left-[-0.5px] before:tw-top-[-0.5px] before:tw-h-[calc(100%_-_1px)] before:tw-w-[calc(100%_-_1px)] before:tw-border before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                        class="tw-sticky tw-top-12 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     >
                                         <!-- 種別は全ページ共通の塗りチップに統一する
                                      （ユーザー指示 2026-08-22）。従来は種別色の文字だった。
-                                     列幅 40px に収めるための横方向スケールは踏襲する。
-                                     G5: 種別行は短縮名（各駅停車→各停）。
-                                     select 等の選択肢は正式名維持 -->
+                                     G5: 種別行は短縮名（各駅停車→各停）。select 等の選択肢は正式名維持。
+                                     大きさは md（12px）。sm（10px）は列車番号・運用番号より小さく見えた
+                                     （2026-09-24）。2 文字で 36px に収まり、3 文字以上は横に縮める。
+                                     縦は、セル全面に重ねた枠の中央に置いてそろえる（行のベースラインに
+                                     合わせていた頃は 1.7px 下にずれた）。重ねた枠は幅を持たないので、
+                                     縮める前のチップが列の幅を押し広げることもない -->
                                         <span
-                                            class="tw-relative"
-                                            style="
-                                                display: inline-block;
-                                                transform-origin: center;
-                                                margin: -9999px;
-                                            "
-                                            [style.transform]="
-                                                'scale(' +
-                                                ((
-                                                    trip.tripClass.tripClassName
-                                                    | tripClassShortName
-                                                ).length > 2
-                                                    ? 2 /
-                                                      (
-                                                          trip.tripClass
-                                                              .tripClassName
-                                                          | tripClassShortName
-                                                      ).length
-                                                    : 1) +
-                                                ', 1)'
-                                            "
+                                            class="tw-absolute tw-inset-0 tw-flex tw-items-center tw-justify-center"
                                         >
                                             <app-trip-class-chip
-                                                size="sm"
+                                                class="tw-shrink-0"
+                                                size="md"
+                                                [style.transform]="
+                                                    'scale(' +
+                                                    ((
+                                                        trip.tripClass
+                                                            .tripClassName
+                                                        | tripClassShortName
+                                                    ).length > 2
+                                                        ? 2 /
+                                                          (
+                                                              trip.tripClass
+                                                                  .tripClassName
+                                                              | tripClassShortName
+                                                          ).length
+                                                        : 1) +
+                                                    ', 1)'
+                                                "
                                                 [label]="
                                                     trip.tripClass.tripClassName
                                                         | tripClassShortName
@@ -150,9 +153,66 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- 表の上端に列車ごとの始発駅と始発時刻、下端に終着時刻と終着駅を出す
+                                 （ユーザー指示 2026-09-24。絞り込みの有無によらず全列車）。駅名は外側、
+                                 時刻は本体の側。駅名は列が 40px なので紙の時刻表と同じく縦書き。
+                                 絞り込みで始発・終着が隠れた列車は、時刻の欄がここまで「経由なし」で伸びる -->
+                            <!-- 始発駅・始発時刻の 2 段は見出しの直下（72px = 24px × 3 段）に固定し、
+                                 下を二重罫線にして本体と分ける（ユーザー指示 2026-09-24）。始発時刻の段の
+                                 固定位置は、縦書きの駅名で高さの変わる始発駅の段を測って決める -->
+                            <tr #originNameRow>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-top-[72px] tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                >
+                                    始発駅
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-sticky tw-top-[72px] tw-z-20 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                    >
+                                        <ng-container
+                                            *ngTemplateOutlet="
+                                                endpointName;
+                                                context: {
+                                                    $implicit: endpoints().get(
+                                                        trip.tripId
+                                                    )?.originName,
+                                                }
+                                            "
+                                        ></ng-container>
+                                    </td>
+                                }
+                            </tr>
+                            <tr class="tw-h-6">
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b-[3px] tw-border-l tw-border-r tw-border-double tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    [style.top.px]="72 + originNameRowHeight()"
+                                >
+                                    始発時刻
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-sticky tw-z-20 tw-border-0 tw-border-b-[3px] tw-border-r tw-border-double tw-border-rule tw-bg-white tw-text-center"
+                                        [style.top.px]="
+                                            72 + originNameRowHeight()
+                                        "
+                                        [style.color]="
+                                            trip.tripClass.tripClassColor
+                                        "
+                                    >
+                                        {{
+                                            endpoints().get(trip.tripId)
+                                                ?.originTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
                             @for (
                                 station of stations();
-                                track station.stationId
+                                track station.stationId;
+                                let last = $last
                             ) {
                                 @let viewMode =
                                     viewModes().get(station.stationId);
@@ -173,6 +233,10 @@
                                         staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
                                     isDirectionTerminusArrival;
 
+                                <!-- 下の罫線は本番と同じ条件で引く: 駅名は「罫線の駅」か「方向の終着」、
+                                     着の行（着・時刻）は加えて「着発 2 段」、発の行は「罫線の駅」だけ。
+                                     着の見出しセルは常に下を引き、着と発を分ける。
+                                     ただし最後の駅の行の下は引かない（操作の段の上の罫線と重なって 2px になる） -->
                                 @if (
                                     viewMode ===
                                         staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
@@ -180,12 +244,11 @@
                                 ) {
                                     <tr class="tw-h-6">
                                         <td
-                                            class="tw-sticky tw-left-0 tw-z-10 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                            [class]="
-                                                stickyBottomBorderClass(
-                                                    borderSetting,
-                                                    isDirectionTerminusArrival
-                                                )
+                                            class="tw-sticky tw-left-0 tw-z-10 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                            [class.tw-border-b]="
+                                                (borderSetting ||
+                                                    isDirectionTerminusArrival) &&
+                                                !last
                                             "
                                             [rowSpan]="
                                                 viewMode ===
@@ -194,62 +257,24 @@
                                                     : 1
                                             "
                                         >
-                                            <span
-                                                class="tw-relative tw-text-[10px]"
-                                                style="
-                                                    display: inline-block;
-                                                    line-height: 1;
-                                                    margin-right: 4px;
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationName;
+                                                    context: {
+                                                        $implicit: station,
+                                                    }
                                                 "
-                                            >
-                                                {{
-                                                    station
-                                                        | timetableAllLineGetStationNumbering
-                                                }}
-                                            </span>
-
-                                            <span
-                                                class="tw-relative"
-                                                style="
-                                                    display: inline-block;
-                                                    transform-origin: right;
-                                                "
-                                                [style]="{
-                                                    transform:
-                                                        'scale(' +
-                                                        (station.stationName
-                                                            .length > 4
-                                                            ? 4 /
-                                                              station
-                                                                  .stationName
-                                                                  .length
-                                                            : 1) +
-                                                        ', 1)',
-                                                    marginLeft:
-                                                        (station.stationName
-                                                            .length > 4
-                                                            ? (station
-                                                                  .stationName
-                                                                  .length -
-                                                                  4) *
-                                                              16 *
-                                                              -1
-                                                            : 0) + 'px',
-                                                }"
-                                            >
-                                                {{ station.stationName }}
-                                            </span>
+                                            ></ng-container>
                                         </td>
                                         <td
-                                            class="tw-sticky tw-left-[154px] tw-z-10 tw-border-0 tw-border-solid tw-border-grey-300 !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-b before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                            [class]="
-                                                stickyBottomBorderClass(
-                                                    borderSetting,
-                                                    isArrivalBlockEnd
-                                                )
+                                            class="tw-sticky tw-left-[106px] tw-z-10 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-center"
+                                            [class.tw-border-b]="
+                                                viewMode ===
+                                                    staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                                !last
                                             "
                                         >
-                                            <span class="tw-relative">着</span>
+                                            着
                                         </td>
 
                                         @for (
@@ -257,17 +282,18 @@
                                             track trip.tripId
                                         ) {
                                             <td
-                                                class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
-                                                [class]="
-                                                    cellBottomBorderClass(
-                                                        borderSetting,
-                                                        isArrivalBlockEnd
-                                                    )
+                                                class="dia tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                                [class.tw-border-b]="
+                                                    (borderSetting ||
+                                                        isArrivalBlockEnd) &&
+                                                    (viewMode ===
+                                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                                        !last)
                                                 "
-                                                [style]="{
-                                                    color: trip.tripClass
-                                                        .tripClassColor,
-                                                }"
+                                                [style.color]="
+                                                    trip.tripClass
+                                                        .tripClassColor
+                                                "
                                             >
                                                 {{
                                                     {
@@ -300,72 +326,29 @@
                                             staitonViewModeEnum.ONLY_DEPARTURE
                                         ) {
                                             <td
-                                                class="tw-sticky tw-left-0 tw-z-0 tw-w-[146px] tw-min-w-[146px] tw-border-0 tw-border-solid !tw-px-1 tw-text-right before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-l before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                                [class]="
-                                                    stickyBottomBorderClass(
-                                                        borderSetting,
-                                                        false
-                                                    )
+                                                class="tw-sticky tw-left-0 tw-z-0 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                                [class.tw-border-b]="
+                                                    borderSetting && !last
                                                 "
                                             >
-                                                <span
-                                                    class="tw-relative tw-text-[10px]"
-                                                    style="
-                                                        display: inline-block;
-                                                        line-height: 1;
-                                                        margin-right: 4px;
+                                                <ng-container
+                                                    *ngTemplateOutlet="
+                                                        stationName;
+                                                        context: {
+                                                            $implicit: station,
+                                                        }
                                                     "
-                                                >
-                                                    {{
-                                                        station
-                                                            | timetableAllLineGetStationNumbering
-                                                    }}
-                                                </span>
-
-                                                <span
-                                                    class="tw-relative"
-                                                    style="
-                                                        display: inline-block;
-                                                        transform-origin: right;
-                                                    "
-                                                    [style]="{
-                                                        transform:
-                                                            'scale(' +
-                                                            (station.stationName
-                                                                .length > 4
-                                                                ? 4 /
-                                                                  station
-                                                                      .stationName
-                                                                      .length
-                                                                : 1) +
-                                                            ', 1)',
-                                                        marginLeft:
-                                                            (station.stationName
-                                                                .length > 4
-                                                                ? (station
-                                                                      .stationName
-                                                                      .length -
-                                                                      4) *
-                                                                  16 *
-                                                                  -1
-                                                                : 0) + 'px',
-                                                    }"
-                                                >
-                                                    {{ station.stationName }}
-                                                </span>
+                                                ></ng-container>
                                             </td>
                                         }
 
                                         <td
-                                            class="tw-sticky tw-left-[154px] tw-z-0 tw-border-0 tw-border-solid !tw-px-1 tw-text-center before:tw-absolute before:tw-left-0 before:tw-top-0 before:tw-h-full before:tw-w-full before:tw-border-0 before:tw-border-r before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
-                                            [class]="
-                                                stickyBottomBorderClass(
-                                                    borderSetting,
-                                                    false
-                                                )
+                                            class="tw-sticky tw-left-[106px] tw-z-0 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-center"
+                                            [class.tw-border-b]="
+                                                borderSetting && !last
                                             "
                                         >
-                                            <span class="tw-relative">発</span>
+                                            発
                                         </td>
 
                                         @for (
@@ -373,17 +356,14 @@
                                             track trip.tripId
                                         ) {
                                             <td
-                                                class="dia tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
-                                                [class]="
-                                                    cellBottomBorderClass(
-                                                        borderSetting,
-                                                        false
-                                                    )
+                                                class="dia tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                                [class.tw-border-b]="
+                                                    borderSetting && !last
                                                 "
-                                                [style]="{
-                                                    color: trip.tripClass
-                                                        .tripClassColor,
-                                                }"
+                                                [style.color]="
+                                                    trip.tripClass
+                                                        .tripClassColor
+                                                "
                                             >
                                                 {{
                                                     {
@@ -404,21 +384,70 @@
                                     </tr>
                                 }
                             }
+                            <!-- 終着時刻・終着駅の 2 段は箱の下端に固定し、上を二重罫線にする
+                                 （ユーザー指示 2026-09-24）。終着時刻の段は終着駅の段の高さぶん上に置く -->
+                            <tr class="tw-h-6">
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    [style.bottom.px]="terminusNameRowHeight()"
+                                >
+                                    終着時刻
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-sticky tw-z-20 tw-border-0 tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-white tw-text-center"
+                                        [style.bottom.px]="
+                                            terminusNameRowHeight()
+                                        "
+                                        [style.color]="
+                                            trip.tripClass.tripClassColor
+                                        "
+                                    >
+                                        {{
+                                            endpoints().get(trip.tripId)
+                                                ?.terminusTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
+                            <tr #terminusNameRow>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-bottom-0 tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                >
+                                    終着駅
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-sticky tw-bottom-0 tw-z-20 tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                    >
+                                        <ng-container
+                                            *ngTemplateOutlet="
+                                                endpointName;
+                                                context: {
+                                                    $implicit: endpoints().get(
+                                                        trip.tripId
+                                                    )?.terminusName,
+                                                }
+                                            "
+                                        ></ng-container>
+                                    </td>
+                                }
+                            </tr>
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
                                 >
-                                    <span class="tw-relative tw-sticky"
-                                        >編集</span
-                                    >
+                                    編集
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -439,16 +468,14 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
                                 >
-                                    <span class="tw-relative tw-sticky"
-                                        >コピー</span
-                                    >
+                                    コピー
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -469,16 +496,14 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-full before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
                                 >
-                                    <span class="tw-relative tw-sticky"
-                                        >削除</span
-                                    >
+                                    削除
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-solid tw-border-grey-300 tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -502,16 +527,14 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 !tw-px-1 tw-text-right tw-text-xs before:tw-absolute before:tw-left-[-0.5px] before:tw-top-0 before:tw-h-[calc(100%_-_0.5px)] before:tw-w-[calc(100%_-_0.5px)] before:tw-border-0 before:tw-border-x before:tw-border-b before:tw-border-solid before:tw-border-grey-300 before:tw-bg-white before:tw-content-['']"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
                                 >
-                                    <span class="tw-relative tw-sticky"
-                                        >グループ</span
-                                    >
+                                    グループ
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-x tw-border-b tw-border-solid tw-border-grey-300 tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-text-center"
                                     >
                                         @if (!groupingBaseTrip()) {
                                             <button
@@ -629,3 +652,50 @@
         </div>
     </article>
 }
+
+<!-- 駅名セルの中身（駅番号 + 駅名。5 文字以上は 4 文字幅に横方向へ縮める）。
+     着発 2 段の行と発のみの行で同じものを出すため 1 か所にまとめた。
+     駅番号は 1 つずつ縦に積む（ユーザー指示 2026-09-24「駅名列の幅を小さくしたい」）。
+     横に「MG13/SH03/TY13」と並べていた頃は、これが列の幅（154px）を決めていた。
+     番号 1 つは最大 29px（SR-26）なので列は 106px で済む。番号が 3 つの駅（日吉・目黒・
+     和光市・大崎・小竹向原）はどれも着発 2 段（48px）、2 つの駅は 1 段（24px）に収まる -->
+<ng-template #stationName let-station>
+    <span
+        class="tw-mr-1 tw-inline-flex tw-flex-col tw-items-end tw-align-middle tw-text-[10px] tw-leading-none"
+    >
+        @for (
+            numbering of station | timetableAllLineGetStationNumbering;
+            track numbering
+        ) {
+            <span>{{ numbering }}</span>
+        }
+    </span>
+    <span
+        class="tw-align-middle"
+        style="display: inline-block; transform-origin: right"
+        [style]="{
+            transform:
+                'scale(' +
+                (station.stationName.length > 4
+                    ? 4 / station.stationName.length
+                    : 1) +
+                ', 1)',
+            marginLeft:
+                (station.stationName.length > 4
+                    ? (station.stationName.length - 4) * 16 * -1
+                    : 0) + 'px',
+        }"
+    >
+        {{ station.stationName }}
+    </span>
+</ng-template>
+
+<!-- 始発駅・終着駅の駅名（縦書き） -->
+<ng-template #endpointName let-name>
+    @if (name) {
+        <span
+            class="tw-inline-block tw-text-xs tw-leading-none [writing-mode:vertical-rl]"
+            >{{ name }}</span
+        >
+    }
+</ng-template>

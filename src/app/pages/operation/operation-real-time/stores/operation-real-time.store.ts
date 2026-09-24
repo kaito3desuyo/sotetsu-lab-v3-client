@@ -17,6 +17,8 @@ import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-c
 
 type StoreProps = {
     routes: RouteDetailsDto[];
+    /** 編成順カードの会社の並び（agencyId）。相鉄と直通を始めた順（agenciesInThroughServiceOrder） */
+    agencyOrder: string[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     calendar: CalendarDetailsDto;
@@ -47,6 +49,7 @@ const store = createStore(
     { name: 'OperationRealTimeStore' },
     withProps<StoreProps>({
         routes: [],
+        agencyOrder: [],
         stations: [],
         tripClasses: [],
         calendar: null,
@@ -127,6 +130,9 @@ const persist = persistState(store, {
 export const OperationRealTimeStore = {
     persistInitialized$: persist.initialized$,
 
+    setAgencyOrder(agencyIds: string[]): void {
+        store.update(setProp('agencyOrder', () => agencyIds));
+    },
     setRoutes(routes: RouteDetailsDto[]): void {
         store.update(setProp('routes', () => routes));
     },
@@ -247,25 +253,24 @@ export const OperationRealTimeStore = {
                 ),
         ),
     ),
+    /**
+     * 編成順カードの並び。会社は相鉄と直通を始めた順（会社チップと同じ。2026-09-24）、会社内は編成番号の順。
+     * 以前の「相鉄・JR東日本・東急」の決め打ちはこの歴史による。ほかの会社に順位が無かったので、
+     * 一覧（THROUGH_SERVICE_AGENCY_ORDER）で持つようにした。
+     */
     formations$: store.pipe(
-        select((state) =>
-            state.formations
+        select((state) => {
+            const rank = (agencyId: string): number => {
+                const index = state.agencyOrder.indexOf(agencyId);
+                return index < 0 ? Infinity : index;
+            };
+            return state.formations
                 .sort(
                     (a, b) =>
                         Number(a.formationNumber) - Number(b.formationNumber),
                 )
-                .sort((a, b) => {
-                    const index = {
-                        相鉄: 0,
-                        JR東日本: 1,
-                        東急: 2,
-                    };
-
-                    return (
-                        index[a.agency.agencyName] - index[b.agency.agencyName]
-                    );
-                }),
-        ),
+                .sort((a, b) => rank(a.agencyId) - rank(b.agencyId));
+        }),
     ),
     operationGroups$: store.pipe(select((state) => state.operationGroups)),
     selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),

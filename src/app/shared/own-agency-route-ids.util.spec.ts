@@ -1,8 +1,8 @@
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
-import { timetableEditFormDefaultRouteIds } from './timetable-edit-form-default-route-ids.util';
+import { ownAgencyRouteIds } from './own-agency-route-ids.util';
 
-describe('timetableEditFormDefaultRouteIds', () => {
+describe('ownAgencyRouteIds', () => {
     const agencies = [
         { agencyId: 'agency-sotetsu', agencyName: '相鉄' },
         { agencyId: 'agency-jre', agencyName: 'JR東日本' },
@@ -17,7 +17,7 @@ describe('timetableEditFormDefaultRouteIds', () => {
     ] as RouteDetailsDto[];
 
     it('自社（相鉄）agencyId に属する路線のみを既定選択にする', () => {
-        expect(timetableEditFormDefaultRouteIds(routes, agencies)).toEqual([
+        expect(ownAgencyRouteIds(routes, agencies)).toEqual([
             'route-1',
             'route-2',
         ]);
@@ -28,13 +28,16 @@ describe('timetableEditFormDefaultRouteIds', () => {
             { agencyId: 'agency-jre', agencyName: 'JR東日本' },
         ] as AgencyDetailsDto[];
 
-        expect(
-            timetableEditFormDefaultRouteIds(routes, otherAgencies),
-        ).toEqual(['route-1', 'route-2', 'route-3', 'route-4']);
+        expect(ownAgencyRouteIds(routes, otherAgencies)).toEqual([
+            'route-1',
+            'route-2',
+            'route-3',
+            'route-4',
+        ]);
     });
 
     it('agency が未取得（空配列）の場合も全路線にフォールバックする', () => {
-        expect(timetableEditFormDefaultRouteIds(routes, [])).toEqual([
+        expect(ownAgencyRouteIds(routes, [])).toEqual([
             'route-1',
             'route-2',
             'route-3',
@@ -43,7 +46,7 @@ describe('timetableEditFormDefaultRouteIds', () => {
     });
 
     it('routes が空の場合は空配列を返す', () => {
-        expect(timetableEditFormDefaultRouteIds([], agencies)).toEqual([]);
+        expect(ownAgencyRouteIds([], agencies)).toEqual([]);
     });
 
     it('agencyId 未設定の路線は自社判定から除外される', () => {
@@ -52,8 +55,9 @@ describe('timetableEditFormDefaultRouteIds', () => {
             { routeId: 'route-5', agencyId: undefined },
         ] as RouteDetailsDto[];
 
-        expect(
-            timetableEditFormDefaultRouteIds(routesWithMissingAgency, agencies),
-        ).toEqual(['route-1', 'route-2']);
+        expect(ownAgencyRouteIds(routesWithMissingAgency, agencies)).toEqual([
+            'route-1',
+            'route-2',
+        ]);
     });
 });

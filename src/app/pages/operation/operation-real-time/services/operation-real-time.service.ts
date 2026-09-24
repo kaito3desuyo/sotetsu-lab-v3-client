@@ -12,6 +12,8 @@ import { toZonedTime } from 'date-fns-tz';
 import { flow } from 'es-toolkit';
 import { forkJoin, from, Observable, of } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -19,6 +21,7 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import { OperationRealTimeStore } from '../stores/operation-real-time.store';
 
 @Injectable()
@@ -30,6 +33,8 @@ export class OperationRealTimeService {
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
 
     fetchRoutes(): Observable<void> {
         return this.#serviceService
@@ -39,6 +44,12 @@ export class OperationRealTimeService {
             .pipe(
                 tap((data) => {
                     OperationRealTimeStore.setRoutes(data.routes);
+                    OperationRealTimeStore.setAgencyOrder(
+                        agenciesInThroughServiceOrder(
+                            this.#agencyListStateQuery.agencies,
+                            this.#routeStationListStateQuery.routeStations,
+                        ).map((agency) => agency.agencyId),
+                    );
                 }),
                 map(() => undefined),
             );

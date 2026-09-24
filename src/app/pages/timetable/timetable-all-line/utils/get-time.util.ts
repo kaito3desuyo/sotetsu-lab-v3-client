@@ -1,13 +1,8 @@
-import { format, parse } from 'date-fns';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
-
-function _formatTime(timeString: string): string {
-    const date = parse(timeString, 'HH:mm:ss', new Date());
-    const time = format(date, 'Hmm');
-    return timeString ? time : '';
-}
+import { formatDiaTime } from './format-dia-time.util';
+import { hiddenStopsAround } from './trip-endpoints.util';
 
 export function getTime({
     tripDirection,
@@ -65,7 +60,7 @@ export function getTime({
                     return '‥';
                 }
 
-                return _formatTime(time.arrivalTime);
+                return formatDiaTime(time.arrivalTime);
             case mode === 'arrival':
                 if (
                     time.pickupType === 1 &&
@@ -74,7 +69,7 @@ export function getTime({
                 ) {
                     return '↓';
                 }
-                return _formatTime(time.arrivalTime);
+                return formatDiaTime(time.arrivalTime);
             case mode === 'departure' &&
                 viewMode === ETimetableAllLineStationViewMode.ONLY_DEPARTURE:
                 if (
@@ -86,10 +81,10 @@ export function getTime({
                 }
 
                 if (!time.departureTime) {
-                    return _formatTime(time.arrivalTime);
+                    return formatDiaTime(time.arrivalTime);
                 }
 
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
             case mode === 'departure' &&
                 viewMode ===
                     ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL:
@@ -105,7 +100,7 @@ export function getTime({
                     return '‥';
                 }
 
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
             case mode === 'departure':
                 if (
                     time.pickupType === 1 &&
@@ -114,7 +109,7 @@ export function getTime({
                 ) {
                     return '↓';
                 }
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
         }
     } else {
         let isExistTimeBeforeStation = false;
@@ -135,6 +130,21 @@ export function getTime({
         }
 
         if (isExistTimeBeforeStation && isExistTimeAfterStation) {
+            return '|';
+        }
+
+        // 路線の絞り込みで始発駅・終着駅が隠れた列車は、表の上端・下端まで「経由なし」を
+        // 伸ばし、表の外から来て表の外へ出ることを示す（ユーザー指示 2026-09-24）。
+        // 終着の区切り「=」は出さない（列車は隠れた駅へ続いている）
+        const hidden = hiddenStopsAround(trip, viewModes);
+        if (
+            (!isExistTimeBeforeStation &&
+                isExistTimeAfterStation &&
+                hidden.before) ||
+            (isExistTimeBeforeStation &&
+                !isExistTimeAfterStation &&
+                hidden.after)
+        ) {
             return '|';
         }
 

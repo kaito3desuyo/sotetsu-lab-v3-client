@@ -5,10 +5,10 @@ import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.c
 import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
 
 /**
- * B6: 全線時刻表の路線絞り込みチップ（複数選択）。
+ * B6: 全線時刻表の路線絞り込みチップ（複数選択）。会社ごとにまとめて出す。
  *
- * 既定は全路線 ON（駅データ取得後に initializeSelectedRouteIds で設定される）。
- * 選択路線を絞ると表示駅行と罫線がデータ駆動で追従する（列＝列車は影響を受けない）。
+ * 既定は自社（相鉄）の路線だけ ON（駅データ取得後に initializeSelectedRouteIds で設定される）。
+ * 選択路線を絞ると表示駅の行が追従し、表示駅に停まらない列車は列から外れる。
  */
 @Component({
     selector: 'app-timetable-all-line-route-filter',

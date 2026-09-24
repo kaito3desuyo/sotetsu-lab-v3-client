@@ -16,6 +16,7 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
+import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
     FilterChipValue,
@@ -95,7 +96,12 @@ export class TrainLocationControllerComponent {
 
     readonly routeOptions = computed<FilterChipOption[]>(() => {
         const agencyNameById = this.#agencyNameById();
-        return this.routes().map((route) => ({
+        // 会社のまとまりは会社チップと同じ「相鉄と直通を始めた順」（会社の中は系統順のまま）
+        return sortByThroughServiceAgency(
+            this.routes(),
+            (route) => route.agencyId,
+            this.agencies(),
+        ).map((route) => ({
             value: route.routeId,
             label: route.routeName ?? '',
             // 会社名でグルーピング表示する（相鉄 / JR東日本 / 東急 …）

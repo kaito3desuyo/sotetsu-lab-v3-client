@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -11,11 +12,13 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import { OperationPastTimeStore } from '../stores/operation-past-time.store';
 
 @Injectable()
 export class OperationPastTimeService {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
@@ -58,7 +61,11 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((formations: FormationDetailsDto[]) => {
-                    const agencies = this.#agencyListStateQuery.agencies;
+                    // 会社の順は相鉄と直通を始めた順（会社チップと同じ。agenciesInThroughServiceOrder）
+                    const agencies = agenciesInThroughServiceOrder(
+                        this.#agencyListStateQuery.agencies,
+                        this.#routeStationListStateQuery.routeStations,
+                    );
                     OperationPastTimeStore.setFormations(
                         [...formations].sort((a, b) => {
                             const agencyDiff =

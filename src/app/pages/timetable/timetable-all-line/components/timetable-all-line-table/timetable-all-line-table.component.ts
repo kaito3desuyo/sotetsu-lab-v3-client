@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common';
 import {
+    afterRenderEffect,
     ChangeDetectionStrategy,
     Component,
     computed,
+    ElementRef,
     input,
     output,
     signal,
+    viewChild,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +28,7 @@ import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-clas
 import { ETimetableAllLineStationViewMode } from '../../enums/timetable-all-line.enum';
 import { TimetableAllLineGetStationNumberingPipe } from '../../pipes/timetable-all-line-get-station-numbering.pipe';
 import { TimetableAllLineGetTimePipe } from '../../pipes/timetable-all-line-get-time.pipe';
+import { TripEndpoints } from '../../utils/trip-endpoints.util';
 
 @Component({
     selector: 'app-timetable-all-line-table',
@@ -62,6 +66,8 @@ export class TimetableAllLineTableComponent {
     readonly viewModes =
         input.required<ReadonlyMap<string, ETimetableAllLineStationViewMode>>();
     readonly bordersAfter = input.required<ReadonlyMap<string, boolean>>();
+    /** 列車ごとの始発駅・終着駅とその時刻（表の上端・下端の行）。 */
+    readonly endpoints = input<ReadonlyMap<string, TripEndpoints>>(new Map());
 
     readonly page = output<PageEvent>();
     readonly clickEditButton = output<TripDetailsDto>();
@@ -80,6 +86,18 @@ export class TimetableAllLineTableComponent {
 
     readonly groupingBaseTrip = signal<TripDetailsDto | undefined>(undefined);
 
+    // signal query は ES private（#）にできない Angular 制約があるため protected
+    protected readonly originNameRow =
+        viewChild<ElementRef<HTMLElement>>('originNameRow');
+    protected readonly terminusNameRow =
+        viewChild<ElementRef<HTMLElement>>('terminusNameRow');
+    /**
+     * 始発駅・終着駅の段の高さ（px）。縦書きの駅名の長さで変わるので描画後に測り、
+     * 始発時刻の段の固定位置（top）と終着時刻の段の固定位置（bottom）に使う。
+     */
+    readonly originNameRowHeight = signal(0);
+    readonly terminusNameRowHeight = signal(0);
+
     /** G12: 空状態の次アクションラベル（mockup-07 準拠）。 */
     readonly oppositeDirectionActionLabel = computed(() => {
         const opposite =
@@ -89,41 +107,26 @@ export class TimetableAllLineTableComponent {
         return `${this.tripDirectionLabel.get(opposite)}時刻表を表示する`;
     });
 
+    constructor() {
+        afterRenderEffect(() => {
+            // 列車（ページ）や注釈が変わったら測り直す
+            this.trips();
+            this.endpoints();
+            const measure = (row: ElementRef<HTMLElement> | undefined) =>
+                row?.nativeElement.getBoundingClientRect().height ?? 0;
+            const origin = measure(this.originNameRow());
+            const terminus = measure(this.terminusNameRow());
+            if (origin !== this.originNameRowHeight()) {
+                this.originNameRowHeight.set(origin);
+            }
+            if (terminus !== this.terminusNameRowHeight()) {
+                this.terminusNameRowHeight.set(terminus);
+            }
+        });
+    }
+
     readonly isFeatureDate = computed(() => {
         const date = this.calendar()?.startDate;
         return !!date && dayjs() > dayjs(date, 'YYYY-MM-DD');
     });
-
-    /**
-     * 駅ブロック終端の罫線クラス（sticky セル用。実要素+::before の両方に効かせる）。
-     * mockup-05: 路線境界（isRouteBoundary）は太い二重線、方向限定の終端
-     * （枝線終点等の isBlockEnd）は従来どおりの通常線にする。
-     */
-    protected stickyBottomBorderClass(
-        isRouteBoundary: boolean,
-        isBlockEnd: boolean,
-    ): Record<string, boolean> {
-        const solid = isBlockEnd && !isRouteBoundary;
-        return {
-            'tw-border-b': solid,
-            'before:tw-border-b': solid,
-            'tw-border-b-[3px]': isRouteBoundary,
-            'before:tw-border-b-[3px]': isRouteBoundary,
-            'tw-border-double': isRouteBoundary,
-            'before:tw-border-double': isRouteBoundary,
-        };
-    }
-
-    /** 駅ブロック終端の罫線クラス（通常セル用。stickyBottomBorderClass の ::before 無し版）。 */
-    protected cellBottomBorderClass(
-        isRouteBoundary: boolean,
-        isBlockEnd: boolean,
-    ): Record<string, boolean> {
-        const solid = isBlockEnd && !isRouteBoundary;
-        return {
-            'tw-border-b': solid,
-            'tw-border-b-[3px]': isRouteBoundary,
-            'tw-border-double': isRouteBoundary,
-        };
-    }
 }

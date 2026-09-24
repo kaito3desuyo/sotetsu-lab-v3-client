@@ -24,7 +24,7 @@ import {
     TimetableEditFormDraftStore,
 } from '../stores/timetable-edit-form-draft.store';
 import { TimetableEditFormStore } from '../stores/timetable-edit-form.store';
-import { timetableEditFormDefaultRouteIds } from '../utils/timetable-edit-form-default-route-ids.util';
+import { ownAgencyRouteIds } from 'src/app/shared/own-agency-route-ids.util';
 
 @Injectable()
 export class TimetableEditFormService {
@@ -78,7 +78,7 @@ export class TimetableEditFormService {
                 const routes = data.routes as RouteDetailsDto[];
                 TimetableEditFormStore.setRoutes(routes);
                 TimetableEditFormStore.setSelectedRouteIds(
-                    timetableEditFormDefaultRouteIds(
+                    ownAgencyRouteIds(
                         routes,
                         this.#agencyListStateQuery.agencies,
                     ),

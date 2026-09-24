@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
     FilterChipValue,
@@ -23,20 +25,28 @@ import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
 })
 export class OperationPastTimeFilterComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
 
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
     });
+    readonly routes = toSignal(
+        this.#routeStationListStateQuery.routeStations$,
+        { initialValue: [] },
+    );
     readonly selectedAgencyIds = toSignal(
         OperationPastTimeStore.selectedAgencyIds$,
         { initialValue: [] },
     );
 
+    /** 会社は相鉄と直通を始めた順に並べる（agenciesInThroughServiceOrder）。 */
     readonly agencyOptions = computed<FilterChipOption[]>(() =>
-        this.agencies().map((agency) => ({
-            value: agency.agencyId,
-            label: agency.agencyName,
-        })),
+        agenciesInThroughServiceOrder(this.agencies(), this.routes()).map(
+            (agency) => ({
+                value: agency.agencyId,
+                label: agency.agencyName,
+            }),
+        ),
     );
 
     onAgencyChange(values: FilterChipValue[]): void {

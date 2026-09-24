@@ -56,7 +56,7 @@ describe('TimetableAllLineComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('ロード中はチップ・テーブルを出さず中央スピナーを表示する（偽の「0 / 0」を出さない）', () => {
+    it('ロード中はチップ・テーブルを出さず、合図はプログレスバーだけ（偽の「0 / 0」を出さない）', () => {
         TimetableAllLineStore.enableLoading();
         fixture.detectChanges();
 
@@ -69,8 +69,10 @@ describe('TimetableAllLineComponent', () => {
             ),
         ).toBeNull();
         expect(
-            fixture.nativeElement.querySelector('app-loading'),
+            fixture.nativeElement.querySelector('mat-progress-bar'),
         ).toBeTruthy();
+        // スピナーはプログレスバーと二重の合図なので出さない（2026-09-24）
+        expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
 
         TimetableAllLineStore.disableLoading();
         fixture.detectChanges();
@@ -83,6 +85,8 @@ describe('TimetableAllLineComponent', () => {
                 'app-timetable-all-line-route-filter',
             ),
         ).toBeTruthy();
-        expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 });

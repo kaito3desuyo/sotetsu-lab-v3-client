@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { createStore } from '@ngneat/elf';
 import {
+    getAllEntities,
     selectEntities,
     setEntities,
     withEntities,
@@ -74,6 +75,11 @@ export class RouteStationListStateQuery {
             return uniqBy(stations, (o) => o.stationId);
         }),
     );
+
+    /** 整列済みの路線（直通の系統順）。同期で読む必要がある並べ替え（会社の順など）に使う。 */
+    get routeStations(): RouteDetailsDto[] {
+        return state.query(getAllEntities());
+    }
 }
 
 const sort = [

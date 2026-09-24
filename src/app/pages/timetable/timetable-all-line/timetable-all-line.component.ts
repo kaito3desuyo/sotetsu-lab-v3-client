@@ -9,14 +9,15 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdsenseModule } from 'ng2-adsense';
-import { lastValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
@@ -38,7 +39,6 @@ TimetableAllLineStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
-        LoadingComponent,
         AdsenseModule,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
@@ -56,6 +56,8 @@ export class TimetableAllLineComponent {
     readonly #calendarSelectDialogService = inject(CalendarSelectDialogService);
     readonly #timetableAllLineService = inject(TimetableAllLineService);
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #timetableSearchCardService = inject(TimetableSearchCardService);
     readonly #timetableSearchCardStateStore = inject(
         TimetableSearchCardStateStore,
@@ -74,6 +76,9 @@ export class TimetableAllLineComponent {
         initialValue: new Map(),
     });
     readonly bordersAfter = toSignal(TimetableAllLineStore.bordersAfter$, {
+        initialValue: new Map(),
+    });
+    readonly endpoints = toSignal(TimetableAllLineStore.endpoints$, {
         initialValue: new Map(),
     });
     readonly calendar = toSignal(
@@ -139,6 +144,16 @@ export class TimetableAllLineComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
+            TimetableAllLineStore.setAgencies(
+                this.#agencyListStateQuery.agencies,
+            );
+            TimetableAllLineStore.setRouteOrder(
+                (
+                    await firstValueFrom(
+                        this.#routeStationListStateQuery.routeStations$,
+                    )
+                ).map((route) => route.routeId),
+            );
             await lastValueFrom(this.#timetableAllLineService.fetchStations());
             await lastValueFrom(
                 this.#timetableAllLineService.fetchTripBlocks(),

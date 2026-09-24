@@ -61,4 +61,31 @@ describe('buildStationGroups', () => {
 
         expect(buildStationGroups(routes, agencies)[0].label).toBe('埼京線');
     });
+
+    it('会社は直通を始めた順にまとめ、会社の中は routes の（系統）順を保つ', () => {
+        const withJr = [
+            ...agencies,
+            { agencyId: 'a-jre', agencyName: 'JR東日本' },
+        ] as AgencyDetailsDto[];
+        // 系統順: 相鉄 → 東急 → JR → 相鉄
+        const routes = [
+            { routeId: 'r-main', agencyId: 'a-sotetsu', routeName: '本線' },
+            { routeId: 'r-toyoko', agencyId: 'a-tokyu', routeName: '東横線' },
+            { routeId: 'r-saikyo', agencyId: 'a-jre', routeName: '埼京線' },
+            {
+                routeId: 'r-izumino',
+                agencyId: 'a-sotetsu',
+                routeName: 'いずみ野線',
+            },
+        ] as RouteDetailsDto[];
+
+        expect(
+            buildStationGroups(routes, withJr).map((group) => group.label),
+        ).toEqual([
+            '相鉄 本線',
+            '相鉄 いずみ野線',
+            'JR東日本 埼京線',
+            '東急 東横線',
+        ]);
+    });
 });

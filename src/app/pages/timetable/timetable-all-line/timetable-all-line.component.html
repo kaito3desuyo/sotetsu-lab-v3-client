@@ -2,12 +2,18 @@
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
     <!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
-         偽表示になるため、ロード完了までチップ・テーブルを出さず
-         中央スピナーを表示する（20-design-ui.md §4） -->
+         偽表示になるため、ロード完了までチップ・テーブルを出さない。
+         読み込み中の合図はロック済みページと同じくトップバー直下のプログレスバーだけ。
+         以前は中央にスピナーも出していたが、プログレスバーと二重の合図だったので外した
+         （2026-09-24） -->
     @if (isLoading()) {
-        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-        <div class="tw-flex tw-justify-center tw-py-16">
-            <app-loading></app-loading>
+        <div
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]"
+        >
+            <mat-progress-bar
+                color="accent"
+                mode="indeterminate"
+            ></mat-progress-bar>
         </div>
     } @else {
         <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
@@ -20,6 +26,7 @@
             [pageSettings]="pageSettings()"
             [viewModes]="viewModes()"
             [bordersAfter]="bordersAfter()"
+            [endpoints]="endpoints()"
             (page)="onPaged($event)"
             (clickEditButton)="onClickedEditButton($event)"
             (clickCopyButton)="onClickedCopyButton($event)"
