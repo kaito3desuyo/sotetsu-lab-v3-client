@@ -3,7 +3,11 @@ import { provideRouter } from '@angular/router';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { OperationTableCardComponent } from './operation-table-card.component';
+import {
+    edgePath,
+    OperationTableCardComponent,
+    TripRow,
+} from './operation-table-card.component';
 
 describe('OperationTableCardComponent', () => {
     let component: OperationTableCardComponent;
@@ -84,30 +88,102 @@ describe('OperationTableCardComponent', () => {
         expect(component.tripCount()).toBe(2);
     });
 
-    it('発→着の順に正規化した行を生成する（駅・時刻・種別+列番）', () => {
-        const rows = component.rows();
+    const tripRows = () =>
+        component.rows().filter((row): row is TripRow => row.kind === 'trip');
 
-        expect(rows[0]).toMatchObject({
-            startStationName: '海老名',
-            startTime: '05:15:00',
-            endStationName: '横浜',
-            endTime: '05:52:00',
+    it('上りは左に始点・右に終点、下りは左に終点・右に始点を置く（本番の折返し表）', () => {
+        const [inbound, outbound] = tripRows();
+
+        expect(inbound).toMatchObject({
+            left: { stationName: '海老名', time: '05:15:00' },
+            right: { stationName: '横浜', time: '05:52:00' },
             tripClassName: '快速',
             tripNumber: '2002',
             isDeadhead: false,
-            depotOut: false,
-            depotIn: false,
+        });
+        expect(outbound).toMatchObject({
+            left: { stationName: '海老名', time: '22:13:00' },
+            right: { stationName: '横浜', time: '22:09:00' },
         });
     });
 
-    it('回送は isDeadhead=true として判定される', () => {
-        const rows = component.rows();
-        expect(rows[1].isDeadhead).toBe(true);
+    it('折り返しは同じ側の端の線でつなぎ、入庫は線の代わりに △ の印を置く', () => {
+        const [inbound, outbound] = tripRows();
+
+        // 上りは横浜（右）で終わり、下りが横浜（右）から出る
+        expect(inbound.rightEdge).toMatchObject({
+            up: false,
+            down: true,
+            depot: null,
+        });
+        expect(outbound.rightEdge).toMatchObject({
+            up: true,
+            down: false,
+            depot: null,
+        });
+        // 入庫した後には続かない
+        expect(outbound.leftEdge).toEqual({
+            up: false,
+            down: false,
+            depot: 'in',
+            path: '',
+        });
+        expect(
+            fixture.nativeElement.querySelector('svg[aria-label="入庫"]'),
+        ).toBeTruthy();
     });
 
-    it('入庫フラグを維持する（情報要素の維持）', () => {
+    it('端の線は列の中央の縦線と、駅名の側へ出る横線の path にする', () => {
+        expect(edgePath({ up: true, down: false, depot: null }, 'left')).toBe(
+            'M8 0 V8 M8 8 H16',
+        );
+        expect(edgePath({ up: false, down: true, depot: null }, 'right')).toBe(
+            'M8 8 V16 M8 8 H0',
+        );
+        expect(edgePath({ up: false, down: false, depot: 'out' }, 'left')).toBe(
+            '',
+        );
+    });
+
+    it('同じ向きへ続けて走るときは、終点側から始点側へ渡すつなぎの行を挟む', () => {
+        const [first] = operationTrip.trips;
+        fixture.componentRef.setInput('operationTrip', {
+            ...operationTrip,
+            trips: [
+                first,
+                {
+                    ...first,
+                    tripOperationListId: 'tol-3',
+                    startTime: { stationId: 'st-1', departureTime: '06:00:00' },
+                    endTime: { stationId: 'st-2', arrivalTime: '06:30:00' },
+                    trip: { ...first.trip, tripNumber: '2004' },
+                },
+            ],
+        });
+        fixture.detectChanges();
+
         const rows = component.rows();
-        expect(rows[1].depotIn).toBe(true);
+        expect(rows.map((row) => row.kind)).toEqual(['trip', 'link', 'trip']);
+        expect(rows[1].rightEdge).toMatchObject({ up: true, down: false });
+        expect(rows[1].leftEdge).toMatchObject({ up: false, down: true });
+        expect(fixture.nativeElement.querySelectorAll('.op-row').length).toBe(
+            3,
+        );
+    });
+
+    it('回送は isDeadhead=true として判定される', () => {
+        expect(tripRows()[1].isDeadhead).toBe(true);
+    });
+
+    it('4 文字以上の駅名は 3 文字幅に横を詰める', () => {
+        fixture.componentRef.setInput('stations', [
+            { stationId: 'st-1', stationName: 'かしわ台' },
+            { stationId: 'st-2', stationName: '横浜' },
+        ]);
+        fixture.detectChanges();
+
+        expect(tripRows()[0].left.stationScale).toBeCloseTo(0.75);
+        expect(tripRows()[0].right.stationScale).toBe(1);
     });
 
     it('groupName 未指定時はヘッダに群バッジを表示しない（モック03）', () => {

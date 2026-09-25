@@ -33,6 +33,13 @@ export class OperationService {
         return this.operationQuery.findOneWithCurrentPosition(params);
     }
 
+    findManyWithTrips(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationTripsDto[]> {
+        return this.operationQuery.findManyWithTrips(params);
+    }
+
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;

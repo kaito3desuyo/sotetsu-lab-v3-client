@@ -1,10 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, Observable, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
-import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
-import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
@@ -38,27 +36,19 @@ export class OperationTableService {
     fetchOperationTrips(): Observable<void> {
         const calendarId = OperationTableStore.calendarId;
 
-        // calendar 未選択では /v3/operations/calendar/null を叩かない。
+        // calendar 未選択では /v3/operations/calendar/null/trips を叩かない。
         if (!calendarId) {
             return of(undefined);
         }
 
-        return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
-            map((operations) =>
-                operations.filter((o) => o.operationNumber !== '100'),
+        // ダイヤ内の全運用を列車つきで 1 回で取る。以前は運用の一覧を取ってから
+        // 運用ごとに /operations/:id/trips を呼び、1 画面で 104 本のリクエストが飛んでいた
+        return this.#operationService.findManyWithTrips({ calendarId }).pipe(
+            map((operationTrips) =>
+                operationTrips.filter(
+                    ({ operation }) => operation.operationNumber !== '100',
+                ),
             ),
-            switchMap((operations: OperationDetailsDto[]) => {
-                if (!operations.length) {
-                    return of([]);
-                }
-                return forkJoin(
-                    operations.map((operation) =>
-                        this.#operationService.findOneWithTrips({
-                            operationId: operation.operationId,
-                        }),
-                    ),
-                );
-            }),
             tap((operationTrips) => {
                 OperationTableStore.setOperationTrips(operationTrips);
             }),
@@ -79,15 +69,6 @@ export class OperationTableService {
         return this.#tripClassService.findMany({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
                 OperationTableStore.setTripClasses(tripClasses);
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchOperationGroups(): Observable<void> {
-        return this.#operationService.findManyGroups().pipe(
-            tap((operationGroups: OperationGroupDto[]) => {
-                OperationTableStore.setOperationGroups(operationGroups);
             }),
             map(() => undefined),
         );

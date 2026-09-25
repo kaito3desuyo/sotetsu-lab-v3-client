@@ -7,10 +7,6 @@ describe('OperationTableFilterComponent', () => {
     let fixture: ComponentFixture<OperationTableFilterComponent>;
 
     beforeEach(async () => {
-        OperationTableStore.setOperationGroups([
-            { groupName: '1群', operationNumbers: ['11', '12'] },
-            { groupName: '9G群', operationNumbers: ['91G', '92G'] },
-        ]);
         OperationTableStore.setSelectedGroupNames([]);
 
         await TestBed.configureTestingModule({
@@ -19,14 +15,19 @@ describe('OperationTableFilterComponent', () => {
 
         fixture = TestBed.createComponent(OperationTableFilterComponent);
         component = fixture.componentInstance;
-        fixture.componentRef.setInput('operationTrips', []);
+        fixture.componentRef.setInput(
+            'operationTrips',
+            ['11', '12', '91G', '92G', '79'].map((operationNumber) => ({
+                operation: { operationNumber },
+                trips: [],
+            })),
+        );
         fixture.componentRef.setInput('calendars', []);
         fixture.componentRef.setInput('calendarId', null);
         fixture.detectChanges();
     });
 
     afterEach(() => {
-        OperationTableStore.setOperationGroups([]);
         OperationTableStore.setSelectedGroupNames([]);
     });
 
@@ -34,9 +35,15 @@ describe('OperationTableFilterComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('運用群チップに「休」の疑似グループが末尾に追加される', () => {
+    it('運用群チップは運用番号から導き、「休」を末尾に足す（リアルタイム運用情報と同じ）', () => {
         const options = component.groupOptions();
-        expect(options.map((o) => o.value)).toEqual(['1群', '9G群', '休']);
+        // 79 は API の群定義から漏れていた運用番号。導出なら 7群として出る
+        expect(options.map((o) => o.value)).toEqual([
+            '1群',
+            '7群',
+            '9G群',
+            '休',
+        ]);
     });
 
     it('onGroupChange で選択群をストアへ書き込む（データ再取得はしない）', () => {
@@ -45,23 +52,9 @@ describe('OperationTableFilterComponent', () => {
         expect(component.selectedGroupNames()).toEqual(['1群']);
     });
 
-    it('onJumpChange で jump イベントを発火する', () => {
-        const spy = jest.fn();
-        component.jump.subscribe(spy);
-        component.onJumpChange('11');
-        expect(spy).toHaveBeenCalledWith('11');
-    });
-
-    it('onJumpChange: 空値では jump イベントを発火しない', () => {
-        const spy = jest.fn();
-        component.jump.subscribe(spy);
-        component.onJumpChange('');
-        expect(spy).not.toHaveBeenCalled();
-    });
-
-    it('群チップにパステル群色を付けない（モック 03: 選択色は scss の accent で統一）', () => {
+    it('群チップには群の見本色を付ける（リアルタイム運用情報と同じ）', () => {
         const options = component.groupOptions();
-        expect(options.every((o) => o.color === undefined)).toBe(true);
+        expect(options.every((o) => !!o.color)).toBe(true);
     });
 
     it('onCalendarChange で calendarChange イベントを発火する', () => {

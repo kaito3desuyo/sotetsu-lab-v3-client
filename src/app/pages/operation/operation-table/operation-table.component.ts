@@ -7,6 +7,7 @@ import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
@@ -16,9 +17,9 @@ import { OperationTableFilterComponent } from './components/operation-table-filt
 import { OperationTableService } from './services/operation-table.service';
 import { OperationTableStore } from './stores/operation-table.store';
 import {
+    deriveGroupName,
     matchesGroupFilter,
-    withRetiredGroup,
-} from './utils/operation-table-filter.util';
+} from 'src/app/shared/operation-group.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 OperationTableStore.resetLoading();
@@ -67,9 +68,6 @@ export class OperationTableComponent {
     readonly tripClasses = toSignal(OperationTableStore.tripClasses$, {
         initialValue: [],
     });
-    readonly operationGroups = toSignal(OperationTableStore.operationGroups$, {
-        initialValue: [],
-    });
     readonly selectedGroupNames = toSignal(
         OperationTableStore.selectedGroupNames$,
         { initialValue: [] },
@@ -78,21 +76,6 @@ export class OperationTableComponent {
     readonly isEmpty = computed(
         () => !!this.calendar() && this.operationTrips().length === 0,
     );
-
-    // モック 03: カードヘッダの運用番号バッジ用に、運用番号 → 群名（実データそのまま）を解決する。
-    // 休車（運用番号 100）は operationGroups API に含まれないため withRetiredGroup で補う
-    // （filter chip と同じ扱い。operation-table-filter.component.ts と同一パターン）。
-    readonly #groupNameByOperationNumber = computed(() => {
-        const map = new Map<string, string>();
-        for (const group of withRetiredGroup(this.operationGroups())) {
-            for (const operationNumber of group.operationNumbers) {
-                if (!map.has(operationNumber)) {
-                    map.set(operationNumber, group.groupName);
-                }
-            }
-        }
-        return map;
-    });
 
     constructor() {
         this.#route.paramMap
@@ -150,28 +133,57 @@ export class OperationTableComponent {
     async fetchData(): Promise<void> {
         OperationTableStore.enableLoading();
 
-        await lastValueFrom(this.#operationTableService.fetchCalendar());
-        await lastValueFrom(this.#operationTableService.fetchOperationTrips());
-        await lastValueFrom(this.#operationTableService.fetchStations());
-        await lastValueFrom(this.#operationTableService.fetchTripClasses());
-        await lastValueFrom(
-            this.#operationTableService.fetchOperationGroups(),
-        );
+        // 4 つは互いに依存しないので並行に取る。カードは全部そろってから 1 回だけ描く
+        // （順に取ると、届くたびに 104 枚・2,500 行余りを描き直していた）
+        const results = await Promise.allSettled([
+            lastValueFrom(this.#operationTableService.fetchCalendar()),
+            lastValueFrom(this.#operationTableService.fetchOperationTrips()),
+            lastValueFrom(this.#operationTableService.fetchStations()),
+            lastValueFrom(this.#operationTableService.fetchTripClasses()),
+        ]);
 
+        // 取得に失敗しても読み込み中を解く。ストアは通信断に備えて全体を保存しており、
+        // 取れなかった分は前回保存したデータでカードを出す
         OperationTableStore.disableLoading();
-    }
 
-    isCardVisible(operationNumber: string): boolean {
-        return matchesGroupFilter(
-            operationNumber,
-            this.selectedGroupNames(),
-            this.operationGroups(),
+        const failure = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
         );
+        if (failure) {
+            throw failure.reason;
+        }
     }
 
-    /** 運用番号が属する群名（実データそのまま）。未解決なら undefined（バッジ非表示）。 */
+    /**
+     * 運用群はリアルタイム運用情報と同じく運用番号から導く（shared/operation-group.util）。
+     * API `/v3/operations/groups` は 15 群のうち 5 群しか返さないので使わない。
+     */
+    isCardVisible(operationNumber: string): boolean {
+        return matchesGroupFilter(operationNumber, this.selectedGroupNames());
+    }
+
+    /**
+     * @defer の場所取りの高さ。カードと同じく、見出しと上下の余白（計 63px）+ 列車 1 本 32px
+     * + 同じ向きへ続けて走る所のつなぎの行 8px（operation-table-card と同じ判定）。
+     */
+    placeholderHeight(operationTrip: OperationTripsDto): number {
+        const trips = operationTrip.trips.map(({ trip }) => trip);
+        const links = trips.filter((trip, index) => {
+            const next = trips[index + 1];
+            return (
+                !!next &&
+                !trip.depotIn &&
+                !next.depotOut &&
+                next.tripDirection === trip.tripDirection
+            );
+        }).length;
+        return 63 + trips.length * 32 + links * 8;
+    }
+
+    /** カードヘッダの群バッジ。導けない運用番号なら undefined（バッジ非表示）。 */
     groupNameFor(operationNumber: string): string | undefined {
-        return this.#groupNameByOperationNumber().get(operationNumber);
+        return deriveGroupName(operationNumber) ?? undefined;
     }
 
     /** ダイヤ select 変更で calendar_id を差し替えて再取得する（モック 03） */
@@ -184,13 +196,6 @@ export class OperationTableComponent {
                 { calendar_id: calendarId },
             ]),
         );
-    }
-
-    onJump(operationNumber: string): void {
-        const target = document.getElementById(
-            `operation-card-${operationNumber}`,
-        );
-        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     #handleNavigationResult(navigation: Promise<boolean>): void {

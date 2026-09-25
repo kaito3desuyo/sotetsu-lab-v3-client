@@ -12,14 +12,13 @@
 >
     <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
          本文の h1/h2 重複は置かない -->
-    <!-- モック 03: 青バナーを廃し、ダイヤ select＋ジャンプ select を常設。
+    <!-- モック 03: 青バナーを廃し、ダイヤ select を常設。
          改正日・ダイヤ名は select の選択値として表示を維持する -->
     <div>
         <app-operation-table-filter
             [operationTrips]="operationTrips()"
             [calendars]="calendars()"
             [calendarId]="calendarId()"
-            (jump)="onJump($event)"
             (calendarChange)="onCalendarChange($event)"
         ></app-operation-table-filter>
     </div>
@@ -29,30 +28,39 @@
             icon="event_busy"
             message="このダイヤには運用情報が登録されていません"
         ></app-empty-state>
-    } @else {
-        <!-- 広い画面では 2 面付けにする（docs/design.md「運用カードの2面付け」/ audit M1）。
-             1 運用 = 1 カードの縦構造は維持したまま、1456px 幅で約 1100px あった
-             死に幅を縮め、縦スクロール量を半分にする。
-             カードごとに高さが大きく違うため items-start で各カードの高さを保つ。 -->
+    } @else if (!isLoading()) {
+        <!-- 折返し表のカードは幅 18.5rem 前後で敷き詰める（本番と同じく 1440 幅で 4 面）。
+             カードごとに高さが大きく違うため items-start で各カードの高さを保つ。
+             取得中は出さない: 運用・駅・種別がそろう前に描くと、届くたびに全カードを
+             描き直すうえ、ダイヤを替えたときに前のダイヤのカードが混ざって見える。 -->
         <div
-            class="tw-grid tw-grid-cols-1 tw-items-start tw-gap-4 xl:tw-grid-cols-2"
+            class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"
         >
             @for (
                 operationTrip of operationTrips();
                 track operationTrip.operation.operationNumber
             ) {
                 @if (isCardVisible(operationTrip.operation.operationNumber)) {
-                    <app-operation-table-card
-                        [operationTrip]="operationTrip"
-                        [stations]="stations()"
-                        [tripClasses]="tripClasses()"
-                        [calendarId]="calendarId()"
-                        [groupName]="
-                            groupNameFor(
-                                operationTrip.operation.operationNumber
-                            )
-                        "
-                    ></app-operation-table-card>
+                    <!-- 画面に入ったカードだけ描く（104 枚・2,500 行余りを一度に描くと約 1 秒かかる）。
+                         場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする -->
+                    @defer (on viewport; prefetch on idle) {
+                        <app-operation-table-card
+                            [operationTrip]="operationTrip"
+                            [stations]="stations()"
+                            [tripClasses]="tripClasses()"
+                            [calendarId]="calendarId()"
+                            [groupName]="
+                                groupNameFor(
+                                    operationTrip.operation.operationNumber
+                                )
+                            "
+                        ></app-operation-table-card>
+                    } @placeholder {
+                        <div
+                            class="tw-rounded-card tw-bg-white"
+                            [style.height.px]="placeholderHeight(operationTrip)"
+                        ></div>
+                    }
                 }
             }
         </div>

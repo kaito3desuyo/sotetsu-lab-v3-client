@@ -4,7 +4,6 @@ import localForage from 'localforage';
 import { debounceTime } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
-import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -15,7 +14,6 @@ type StoreProps = {
     operationTrips: OperationTripsDto[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
-    operationGroups: OperationGroupDto[];
     selectedGroupNames: string[];
     loadingQueue: boolean[];
 };
@@ -28,7 +26,6 @@ const store = createStore(
         operationTrips: [],
         stations: [],
         tripClasses: [],
-        operationGroups: [],
         selectedGroupNames: [],
         loadingQueue: [],
     }),
@@ -58,9 +55,6 @@ export const OperationTableStore = {
     },
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
         store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setOperationGroups(operationGroups: OperationGroupDto[]): void {
-        store.update(setProp('operationGroups', () => operationGroups));
     },
     setSelectedGroupNames(groupNames: string[]): void {
         store.update(setProp('selectedGroupNames', () => groupNames));
@@ -96,7 +90,6 @@ export const OperationTableStore = {
     ),
     stations$: store.pipe(select((state) => state.stations)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    operationGroups$: store.pipe(select((state) => state.operationGroups)),
     selectedGroupNames$: store.pipe(
         select((state) => state.selectedGroupNames),
     ),

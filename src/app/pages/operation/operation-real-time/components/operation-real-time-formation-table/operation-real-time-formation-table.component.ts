@@ -9,10 +9,8 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeFormationCardComponent } from '../operation-real-time-formation-card/operation-real-time-formation-card.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
-import {
-    matchesAgencyFilter,
-    matchesGroupFilter,
-} from '../../utils/operation-real-time-filter.util';
+import { matchesAgencyFilter } from '../../utils/operation-real-time-filter.util';
+import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
 
 @Component({
     selector: 'app-operation-real-time-formation-table',

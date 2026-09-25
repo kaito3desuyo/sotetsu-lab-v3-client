@@ -1,10 +1,11 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
@@ -31,7 +32,6 @@ describe('OperationTableComponent', () => {
                         fetchOperationTrips: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
-                        fetchOperationGroups: () => of(undefined),
                     },
                 },
                 {
@@ -70,7 +70,6 @@ describe('OperationTableComponent', () => {
     afterEach(() => {
         OperationTableStore.setCalendarId(null);
         OperationTableStore.setSelectedGroupNames([]);
-        OperationTableStore.setOperationGroups([]);
         OperationTableStore.resetLoading();
     });
 
@@ -131,35 +130,64 @@ describe('OperationTableComponent', () => {
         expect(component.isCardVisible('11')).toBe(true);
     });
 
-    it('onJump: 対象要素が無くても例外を投げない', () => {
-        createComponent();
-        expect(() => component.onJump('999')).not.toThrow();
-    });
-
-    it('groupNameFor: 運用番号が属する群の実データ群名をそのまま解決する', () => {
-        OperationTableStore.setOperationGroups([
-            { groupName: '9G群', operationNumbers: ['31'] },
-        ]);
+    it('groupNameFor: 群は運用番号から導く（リアルタイム運用情報と同じ規則）', () => {
         createComponent();
 
-        expect(component.groupNameFor('31')).toBe('9G群');
+        expect(component.groupNameFor('31')).toBe('3群');
+        expect(component.groupNameFor('91G')).toBe('9G群');
+        expect(component.groupNameFor('79')).toBe('7群');
     });
 
-    it('groupNameFor: 休車（運用番号100）は疑似グループ「休」を解決する', () => {
-        OperationTableStore.setOperationGroups([
-            { groupName: '9G群', operationNumbers: ['31'] },
-        ]);
+    it('groupNameFor: 休車（運用番号100）は「休」', () => {
         createComponent();
 
         expect(component.groupNameFor('100')).toBe('休');
     });
 
-    it('groupNameFor: 未解決なら undefined を返す（バッジ非表示）', () => {
-        OperationTableStore.setOperationGroups([
-            { groupName: '9G群', operationNumbers: ['31'] },
-        ]);
+    it('groupNameFor: 導けない運用番号なら undefined を返す（バッジ非表示）', () => {
         createComponent();
 
-        expect(component.groupNameFor('999')).toBeUndefined();
+        expect(component.groupNameFor('K11')).toBeUndefined();
+    });
+
+    it('fetchData: 取得に失敗しても読み込み中を解く（通信断では保存済みのデータでカードを出す）', async () => {
+        createComponent();
+        const service = TestBed.inject(OperationTableService);
+        jest.spyOn(service, 'fetchOperationTrips').mockReturnValue(
+            throwError(() => new Error('offline')),
+        );
+        const loading: boolean[] = [];
+        const subscription = OperationTableStore.isLoading$.subscribe((v) =>
+            loading.push(v),
+        );
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(loading[loading.length - 1]).toBe(false);
+        subscription.unsubscribe();
+    });
+
+    it('placeholderHeight: 見出しと余白 63px + 列車 32px + つなぎの行 8px', () => {
+        createComponent();
+        const trip = (tripDirection: number, depotIn = false) => ({
+            trip: { tripDirection, depotIn, depotOut: false },
+        });
+
+        // 上り → 上り（つなぎ）→ 下り（折り返し）→ 下りで入庫（つなぎ）→ 下り（入庫後なのでつながない）
+        const operationTrip = {
+            trips: [trip(0), trip(0), trip(1), trip(1, true), trip(1)],
+        } as unknown as OperationTripsDto;
+
+        expect(component.placeholderHeight(operationTrip)).toBe(
+            63 + 5 * 32 + 2 * 8,
+        );
+    });
+
+    it('isCardVisible: 選択した群の運用だけを出す', () => {
+        OperationTableStore.setSelectedGroupNames(['7群']);
+        createComponent();
+
+        expect(component.isCardVisible('79')).toBe(true);
+        expect(component.isCardVisible('11')).toBe(false);
     });
 });

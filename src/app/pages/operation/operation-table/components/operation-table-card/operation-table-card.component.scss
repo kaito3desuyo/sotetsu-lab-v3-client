@@ -4,4 +4,9 @@
     .monoscape {
         font-feature-settings: 'fwid' on;
     }
+
+    // 端の線・駅名 3 文字・時刻 4 桁・列車・時刻・駅名・端の線
+    .op-row {
+        grid-template-columns: 1rem 3em 2.5em minmax(0, 1fr) 2.5em 3em 1rem;
+    }
 }

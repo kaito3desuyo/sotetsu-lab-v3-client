@@ -1,5 +1,6 @@
 <div class="tw-flex tw-flex-col tw-gap-3">
-    <!-- モック 03: ダイヤ select ＋ ジャンプ select を横並びで常設 -->
+    <!-- ダイヤ select を常設。運用番号へのジャンプは 2026-09-25 に外した
+         （本番に無い機能で、運用群チップで十分に絞れるため） -->
     <div class="tw-flex tw-flex-row tw-items-start tw-gap-3">
         <mat-form-field
             subscriptSizing="dynamic"
@@ -25,33 +26,16 @@
                 }
             </mat-select>
         </mat-form-field>
-
-        <mat-form-field
-            subscriptSizing="dynamic"
-            class="tw-w-32 tw-flex-shrink-0 md:tw-w-40"
-        >
-            <mat-label>ジャンプ</mat-label>
-            <mat-select
-                (selectionChange)="onJumpChange($event.value)"
-            >
-                @for (
-                    operationTrip of operationTrips();
-                    track operationTrip.operation.operationNumber
-                ) {
-                    <mat-option [value]="operationTrip.operation.operationNumber">
-                        {{ operationTrip.operation.operationNumber }}
-                    </mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
     </div>
 
     <div>
         <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
             運用群で絞り込む（カードの表示/非表示のみ）
         </p>
+        <!-- リアルタイム運用情報と同じ運用群チップ（横スクロール 1 行・見本色付き） -->
         <app-filter-chips
             mode="multiple"
+            [scrollMode]="true"
             [options]="groupOptions()"
             [selected]="selectedGroupNames()"
             (selectedChange)="onGroupChange($event)"

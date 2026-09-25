@@ -5,7 +5,6 @@ import {
     inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
@@ -14,13 +13,8 @@ import {
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
+import { operationGroupOptions } from 'src/app/shared/operation-group.util';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
-import {
-    deriveGroupName,
-    deriveGroupNames,
-    RETIRED_GROUP_NAME,
-    RETIRED_OPERATION_NUMBER,
-} from '../../utils/operation-real-time-filter.util';
 
 /**
  * リアルタイム運用情報: 会社（B2）・運用群（B3）絞り込みチップ行。
@@ -43,7 +37,6 @@ import {
 export class OperationRealTimeFilterComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #operationNumberColorPipe = new NewOperationNumberColorPipe();
 
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
@@ -84,29 +77,11 @@ export class OperationRealTimeFilterComponent {
      * 実在する運用番号 → 群名。休（運用番号 100）は API にも運用一覧にも
      * 現れない場合があるため、従来どおり常に末尾へ足す。
      */
-    readonly groupOptions = computed<FilterChipOption[]>(() => {
-        const operationNumbers = this.operations().map(
-            (operation) => operation.operationNumber,
-        );
-        const groupNames = deriveGroupNames([
-            ...operationNumbers,
-            RETIRED_OPERATION_NUMBER,
-        ]);
-
-        return groupNames.map((groupName) => ({
-            value: groupName,
-            label: groupName,
-            // 見本色は群の代表運用番号から引く。休は専用色を持つ。
-            color: this.#operationNumberColorPipe.transform(
-                groupName === RETIRED_GROUP_NAME
-                    ? RETIRED_OPERATION_NUMBER
-                    : (operationNumbers.find(
-                          (operationNumber) =>
-                              deriveGroupName(operationNumber) === groupName,
-                      ) ?? ''),
-            ),
-        }));
-    });
+    readonly groupOptions = computed<FilterChipOption[]>(() =>
+        operationGroupOptions(
+            this.operations().map((operation) => operation.operationNumber),
+        ),
+    );
 
     onAgencyChange(values: FilterChipValue[]): void {
         OperationRealTimeStore.setSelectedAgencyIds(values as string[]);

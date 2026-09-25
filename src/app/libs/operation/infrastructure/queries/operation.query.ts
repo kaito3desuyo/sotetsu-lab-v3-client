@@ -155,6 +155,47 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
+    /** ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。 */
+    findManyWithTrips(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationTripsDto[]> {
+        const { calendarId, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findManyWithTrips',
+                calendarId,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<
+                    OperationTripsModel[]
+                >(`${this.#v3ApiUrl}/calendar/${calendarId}/trips`, { observe: 'response' })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        res.body.map((operationTrips) => ({
+                            operation: OperationDtoBuilder.buildFromModel(
+                                operationTrips.operation,
+                            ),
+                            trips: operationTrips.trips.map((o) =>
+                                TripOperationListDtoBuilder.buildFromModel(o),
+                            ),
+                        })),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;

@@ -1,7 +1,4 @@
-<article
-    [id]="'operation-card-' + operationTrip().operation.operationNumber"
-    class="tw-scroll-mt-20 tw-overflow-hidden tw-rounded-card tw-bg-white"
->
+<article class="tw-overflow-hidden tw-rounded-card tw-bg-white">
     <header
         class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-px-4 tw-py-2"
         [style.background-color]="
@@ -37,43 +34,60 @@
         </a>
     </header>
 
-    <ul class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-gap-0 tw-p-4">
-        @for (
-            row of rows();
-            track row.tripOperationListId;
-            let first = $first;
-            let last = $last
-        ) {
-            <li class="tw-flex tw-flex-row tw-items-stretch tw-gap-3">
+    <!-- 折返し表: 西側を左・横浜を右に置き、上りは左→右、下りは右→左（本番の構造） -->
+    <div class="tw-px-2 tw-py-3 tw-text-[13px] tw-leading-tight">
+        @for (row of rows(); track row.key) {
+            @if (row.kind === 'trip') {
                 <div
-                    class="tw-flex tw-w-6 tw-flex-shrink-0 tw-flex-col tw-items-center"
+                    class="op-row tw-grid tw-min-h-8 tw-items-center tw-gap-x-[3px]"
+                    [class.tw-text-grey-500]="row.isDeadhead"
+                    [attr.data-direction]="row.tripDirection"
                 >
-                    <div
-                        class="tw-w-0.5 tw-flex-1"
-                        [class.tw-bg-transparent]="first"
-                        [class.tw-bg-grey-400]="!first"
-                    ></div>
-                    <div
-                        class="tw-my-1 tw-flex-shrink-0 tw-rounded-full"
-                        [class]="
-                            row.depotOut || row.depotIn
-                                ? 'tw-h-4 tw-w-4 tw-bg-accent-deep'
-                                : 'tw-h-3 tw-w-3 tw-border-2 tw-border-solid tw-border-primary-500 tw-bg-white'
+                    <ng-container
+                        *ngTemplateOutlet="
+                            edge;
+                            context: { $implicit: row.leftEdge, side: 'left' }
                         "
-                    ></div>
-                    <div
-                        class="tw-w-0.5 tw-flex-1"
-                        [class.tw-bg-transparent]="last"
-                        [class.tw-bg-grey-400]="!last"
-                    ></div>
-                </div>
+                    ></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="
+                            station;
+                            context: { $implicit: row.left }
+                        "
+                    ></ng-container>
+                    <span class="monoscape tw-tabular-nums">{{
+                        row.left.time
+                            ? (row.left.time
+                              | dateFns
+                                  : { format: 'HHmm', parseFormat: 'HH:mm:ss' })
+                            : '????'
+                    }}</span>
 
-                <div class="tw-flex tw-flex-1 tw-flex-col tw-gap-1 tw-pb-4">
-                    <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+                    <!-- 発時刻から着時刻へ伸びる 1 本の矢印に種別・列番を載せる。
+                         余った幅は矢印線が吸う。線は種別色（回送は灰） -->
+                    <span
+                        class="tw-flex tw-min-w-0 tw-items-center tw-gap-1"
+                        [style.color]="
+                            row.isDeadhead
+                                ? 'var(--color-grey-400, #bdbdbd)'
+                                : row.tripClassColor
+                        "
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="
+                                arrow;
+                                context: {
+                                    $implicit: row.tripDirection === 1,
+                                    tail: false,
+                                }
+                            "
+                        ></ng-container>
                         <!-- 種別チップに列車番号を同居させず、番号は隣の要素に出す
-                             （ユーザー指示 2026-08-22）。 -->
+                             （ユーザー指示 2026-08-22） -->
                         <a
-                            class="tw-inline-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-ink tw-no-underline"
+                            class="tw-inline-flex tw-items-center tw-gap-1 tw-font-bold tw-no-underline"
+                            [class.tw-text-ink]="!row.isDeadhead"
+                            [class.tw-text-grey-500]="row.isDeadhead"
                             [routerLink]="[
                                 '/timetable',
                                 'all-line',
@@ -85,6 +99,7 @@
                             ]"
                         >
                             <app-trip-class-chip
+                                class="tw-shrink-0"
                                 [label]="row.tripClassName"
                                 [color]="
                                     row.isDeadhead ? null : row.tripClassColor
@@ -94,56 +109,144 @@
                                 row.tripNumber
                             }}</span>
                         </a>
-                        <!-- 出庫/入庫は種別に付く修飾であって主データではない。
-                             行の他の文字と同じ 14px に揃え、塗りはブランドの accent、
-                             文字は accent-ink（docs/design.md 色の掟 2）。
-                             旧実装は Material の orange-500 に白文字で 2.16:1、
-                             かつ隣の種別チップより大きく、主従が逆転していた。 -->
-                        @if (row.depotOut) {
-                            <span
-                                class="tw-rounded tw-bg-accent-500 tw-px-1.5 tw-py-0.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-accent-ink"
-                            >
-                                出庫
-                            </span>
-                        }
-                        @if (row.depotIn) {
-                            <span
-                                class="tw-rounded tw-bg-accent-500 tw-px-1.5 tw-py-0.5 tw-text-sm tw-font-bold tw-leading-tight tw-text-accent-ink"
-                            >
-                                入庫
-                            </span>
-                        }
-                    </div>
-                    <div
-                        class="monoscape tw-text-sm tw-tabular-nums"
-                        [class.tw-text-grey-500]="row.isDeadhead"
-                    >
-                        {{
-                            row.startTime
-                                ? (row.startTime
-                                  | dateFns
-                                      : {
-                                            format: 'HH:mm',
-                                            parseFormat: 'HH:mm:ss',
-                                        })
-                                : '？？:？？'
-                        }}
-                        {{ row.startStationName }}
-                        &rarr;
-                        {{
-                            row.endTime
-                                ? (row.endTime
-                                  | dateFns
-                                      : {
-                                            format: 'HH:mm',
-                                            parseFormat: 'HH:mm:ss',
-                                        })
-                                : '？？:？？'
-                        }}
-                        {{ row.endStationName }}
-                    </div>
+                        <ng-container
+                            *ngTemplateOutlet="
+                                arrow;
+                                context: {
+                                    $implicit: row.tripDirection === 0,
+                                    tail: true,
+                                }
+                            "
+                        ></ng-container>
+                    </span>
+
+                    <span class="monoscape tw-text-right tw-tabular-nums">{{
+                        row.right.time
+                            ? (row.right.time
+                              | dateFns
+                                  : { format: 'HHmm', parseFormat: 'HH:mm:ss' })
+                            : '????'
+                    }}</span>
+                    <ng-container
+                        *ngTemplateOutlet="
+                            station;
+                            context: { $implicit: row.right }
+                        "
+                    ></ng-container>
+                    <ng-container
+                        *ngTemplateOutlet="
+                            edge;
+                            context: { $implicit: row.rightEdge, side: 'right' }
+                        "
+                    ></ng-container>
                 </div>
-            </li>
+            } @else {
+                <!-- 同じ向きへ続けて走る: 終点側の線を次の列車の始点側へ渡す -->
+                <div class="op-row tw-relative tw-grid tw-h-2 tw-gap-x-[3px]">
+                    <ng-container
+                        *ngTemplateOutlet="
+                            edge;
+                            context: { $implicit: row.leftEdge }
+                        "
+                    ></ng-container>
+                    <span
+                        class="tw-absolute tw-inset-x-2 tw-top-1/2 tw-h-0.5 tw--translate-y-1/2 tw-bg-grey-400"
+                    ></span>
+                    <span class="tw-col-start-7 tw-flex tw-self-stretch">
+                        <ng-container
+                            *ngTemplateOutlet="
+                                edge;
+                                context: { $implicit: row.rightEdge }
+                            "
+                        ></ng-container>
+                    </span>
+                </div>
+            }
         }
-    </ul>
+    </div>
 </article>
+
+<ng-template #station let-end>
+    <!-- 駅名は 3 文字幅にそろえる。2 文字は両端に割り付け、4 文字以上は横に詰める -->
+    <span class="tw-block tw-w-[3em] tw-overflow-visible tw-whitespace-nowrap">
+        <span
+            class="tw-inline-block tw-origin-left tw-text-center [text-align-last:justify]"
+            [style.width.em]="3 / end.stationScale"
+            [style.transform]="
+                end.stationScale < 1 ? 'scaleX(' + end.stationScale + ')' : null
+            "
+            >{{ end.stationName }}</span
+        >
+    </span>
+</ng-template>
+
+<ng-template #edge let-edge>
+    <!-- 端の線（折り返し・つなぎ）は SVG の path 1 本。行の高さに合わせて伸ばし、
+         線の太さは vector-effect で保つ -->
+    <span class="tw-relative tw-block tw-w-4 tw-self-stretch">
+        @if (edge.path) {
+            <svg
+                class="tw-absolute tw-inset-0 tw-h-full tw-w-full tw-text-grey-400"
+                viewBox="0 0 16 16"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+            >
+                <path
+                    [attr.d]="edge.path"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    vector-effect="non-scaling-stroke"
+                />
+            </svg>
+        }
+        @if (edge.depot) {
+            <svg
+                class="tw-absolute tw-left-1/2 tw-top-1/2 tw-h-2.5 tw-w-2.5 tw--translate-x-1/2 tw--translate-y-1/2 tw-overflow-visible tw-text-ink"
+                viewBox="0 0 10 10"
+                role="img"
+                [attr.aria-label]="edge.depot === 'out' ? '出庫' : '入庫'"
+            >
+                <title>{{ edge.depot === 'out' ? '出庫' : '入庫' }}</title>
+                @if (edge.depot === 'out') {
+                    <circle
+                        cx="5"
+                        cy="5"
+                        r="4.25"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    />
+                } @else {
+                    <path
+                        d="M5 0.75 L9.5 9.25 H0.5 Z"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linejoin="round"
+                    />
+                }
+            </svg>
+        }
+    </span>
+</ng-template>
+
+<ng-template #arrow let-head let-tail="tail">
+    <!-- 向きの矢印線。head: 矢じりをこの線の外側の端に付けるか。tail: 右側の線か -->
+    <span
+        class="tw-flex tw-min-w-3 tw-flex-1 tw-items-center"
+        [class.tw-flex-row-reverse]="!tail"
+        aria-hidden="true"
+    >
+        <span class="tw-h-0.5 tw-flex-1 [background-color:currentColor]"></span>
+        @if (head) {
+            <svg
+                class="tw-h-2 tw-w-1.5 tw-shrink-0"
+                viewBox="0 0 6 8"
+                [class.tw-rotate-180]="!tail"
+            >
+                <path d="M0 0 L6 4 L0 8 Z" fill="currentColor" />
+            </svg>
+        }
+    </span>
+</ng-template>
