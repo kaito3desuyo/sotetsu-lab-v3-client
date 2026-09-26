@@ -7,15 +7,15 @@ import {
     output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
 import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
@@ -26,15 +26,10 @@ import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggl
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TrainLocationMode } from '../../stores/train-location.store';
 
-/** 折り畳み時の要約に使う時刻モードの表示名 */
-const MODE_LABELS: Record<TrainLocationMode, string> = {
-    now: '現在時刻',
-    specified: '時刻指定',
-};
-
 /**
- * N2 列車位置情報の操作部（5.8）: ダイヤ select + 現在時刻/時刻指定トグル + 路線チップ（単一選択）+ 免責表示。
- * ダイヤ select は現在時刻モードでは今日のダイヤに固定されるため無効化する（時刻指定モードのみ選択可）。
+ * 列車位置情報の表示設定。畳まず 2 行（ユーザー判断 2026-09-26）:
+ * 路線チップ（単一選択・横スクロール 1 行）と、時計＋時刻の操作（現在時刻/時刻指定・表示時刻・ダイヤ）。
+ * 現在時刻では今日のダイヤに固定されるので、ダイヤは選択欄ではなく字で示す。
  */
 @Component({
     selector: 'app-train-location-controller',
@@ -45,9 +40,9 @@ const MODE_LABELS: Record<TrainLocationMode, string> = {
         MatFormFieldModule,
         MatSelectModule,
         DateFnsPipe,
+        MatInputModule,
+        FormsModule,
         FilterChipsComponent,
-        RouterLink,
-        CollapsiblePanelComponent,
         SegmentToggleComponent,
     ],
 })
@@ -66,10 +61,13 @@ export class TrainLocationControllerComponent {
     readonly calendarId = input<string | null>(null);
     readonly selectedRouteId = input<string | null>(null);
     readonly mode = input<TrainLocationMode>('now');
+    readonly clockText = input<string>('--:--:--');
+    readonly timeInputValue = input<string>('00:00');
 
     readonly calendarIdChange = output<string>();
     readonly routeIdChange = output<string>();
     readonly modeChange = output<TrainLocationMode>();
+    readonly timeInputValueChange = output<string>();
 
     readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
@@ -81,8 +79,6 @@ export class TrainLocationControllerComponent {
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
     });
-
-    readonly isCalendarSelectDisabled = computed(() => this.mode() === 'now');
 
     readonly #agencyNameById = computed(
         () =>
@@ -115,27 +111,12 @@ export class TrainLocationControllerComponent {
         return id ? [id] : [];
     });
 
-    /**
-     * 折り畳み時にヘッダーへ表示する現在の設定の要約
-     * （時刻モード / 選択路線 / ダイヤ）。
-     */
-    readonly collapsedSummary = computed(() => {
+    /** 現在時刻のときに字で示すダイヤ（例 2026/3/14改正 土休日） */
+    readonly calendarLabel = computed(() => {
         const calendar = this.calendars().find(
             (c) => c.calendarId === this.calendarId(),
         );
-        const calendarLabel = calendar
-            ? formatCalendarSummaryLabel(calendar)
-            : 'ダイヤ未選択';
-
-        const selectedRouteId = this.selectedRouteId();
-        const routeLabel =
-            this.routeOptions().find(
-                (option) => String(option.value) === selectedRouteId,
-            )?.label ?? '路線未選択';
-
-        return [MODE_LABELS[this.mode()], routeLabel, calendarLabel].join(
-            ' / ',
-        );
+        return calendar ? formatCalendarSummaryLabel(calendar) : '';
     });
 
     onCalendarChange(calendarId: string): void {
@@ -144,6 +125,10 @@ export class TrainLocationControllerComponent {
 
     onModeChange(mode: FilterChipValue): void {
         this.modeChange.emit(mode as TrainLocationMode);
+    }
+
+    onTimeInputChange(value: string): void {
+        this.timeInputValueChange.emit(value);
     }
 
     onRouteChange(values: FilterChipValue[]): void {

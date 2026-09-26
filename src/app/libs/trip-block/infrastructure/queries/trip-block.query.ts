@@ -5,6 +5,7 @@ import { Observable, forkJoin } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
+import { TripBlockFields } from '../../usecase/trip-block-fields';
 import { TripBlockDtoBuilder } from '../builders/trip-block.dto.builder';
 import { TripBlockModel } from '../models/trip-block.model';
 
@@ -31,15 +32,17 @@ export class TripBlockQuery {
     findManyByFilter(params: {
         calendarId: string;
         tripDirection: number;
+        fields?: TripBlockFields;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto[]> {
-        const { calendarId, tripDirection, forceReload } = params;
+        const { calendarId, tripDirection, fields, forceReload } = params;
 
         const key = md5(
             JSON.stringify({
                 name: 'findManyByFilter',
                 calendarId,
                 tripDirection,
+                fields,
                 worldVersion: this.#worldVersion,
             }),
         );
@@ -53,6 +56,14 @@ export class TripBlockQuery {
                 fromObject: {
                     calendarId,
                     tripDirection: String(tripDirection),
+                    ...Object.fromEntries(
+                        Object.entries(fields ?? {}).map(
+                            ([resource, names]) => [
+                                `fields[${resource}]`,
+                                names.join(','),
+                            ],
+                        ),
+                    ),
                 },
             });
             this.#obs[key] = this.http
@@ -79,14 +90,16 @@ export class TripBlockQuery {
      */
     findManyByCalendarId(params: {
         calendarId: string;
+        fields?: TripBlockFields;
         forceReload?: boolean;
     }): Observable<Record<number, TripBlockDetailsDto[]>> {
-        const { calendarId, forceReload } = params;
+        const { calendarId, fields, forceReload } = params;
 
         const key = md5(
             JSON.stringify({
                 name: 'findManyByCalendarId',
                 calendarId,
+                fields,
                 worldVersion: this.#worldVersion,
             }),
         );
@@ -100,11 +113,13 @@ export class TripBlockQuery {
                 0: this.findManyByFilter({
                     calendarId,
                     tripDirection: 0,
+                    fields,
                     forceReload,
                 }),
                 1: this.findManyByFilter({
                     calendarId,
                     tripDirection: 1,
+                    fields,
                     forceReload,
                 }),
             }).pipe(shareReplay({ bufferSize: 1, refCount: true }));

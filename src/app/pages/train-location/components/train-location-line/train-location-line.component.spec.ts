@@ -1,8 +1,10 @@
-import { OverlayContainer } from '@angular/cdk/overlay';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
-import { TrainLocationRow } from '../../interfaces/train-location-row.interface';
+import {
+    TrainLocationRow,
+    TrainLocationStationRow,
+} from '../../interfaces/train-location-row.interface';
 import {
     BETWEEN_ROW_BASE_HEIGHT_PX,
     BETWEEN_ROW_CARD_HEIGHT_PX,
@@ -21,9 +23,33 @@ function card(tripId: string): TrainLocationCard {
     };
 }
 
+function stationRow(
+    o: Partial<TrainLocationStationRow>,
+): TrainLocationStationRow {
+    return {
+        kind: 'station',
+        stationId: 's',
+        stationName: '駅',
+        isMajor: false,
+        leftCards: [],
+        rightCards: [],
+        interchangeRoutes: [],
+        ...o,
+    };
+}
+
 describe('TrainLocationLineComponent', () => {
     let fixture: ComponentFixture<TrainLocationLineComponent>;
     let component: TrainLocationLineComponent;
+
+    function setRows(rows: TrainLocationRow[]): void {
+        fixture.componentRef.setInput('rows', rows);
+        fixture.detectChanges();
+    }
+
+    function el(): HTMLElement {
+        return fixture.nativeElement as HTMLElement;
+    }
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -41,143 +67,99 @@ describe('TrainLocationLineComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('同一駅に上り2本停車中の場合「2本停車中」バッジを表示し、タップでオーバーレイに2枚展開する', () => {
-        const rows: TrainLocationRow[] = [
-            {
-                kind: 'station',
-                stationId: 'yokohama',
-                stationName: '横浜',
-                isMajor: true,
-                leftCards: [card('t1'), card('t2')],
-                rightCards: [],
-                interchangeRoutes: [],
-            },
-        ];
-        fixture.componentRef.setInput('rows', rows);
-        fixture.detectChanges();
+    it('同じ駅・同じ向きに複数停車していても、吹き出しに畳まず全部のカードを並べる', () => {
+        setRows([
+            stationRow({
+                stationId: 's1',
+                leftCards: [card('a'), card('b'), card('c')],
+            }),
+        ]);
 
-        expect(fixture.nativeElement.textContent).toContain('2本停車中');
-        // 展開前は個別カード（tripNumber）が描画されていない
-        expect(fixture.nativeElement.textContent).not.toContain('t1');
-
-        const badge: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-        badge.click();
-        fixture.detectChanges();
-
-        // カードはオーバーレイコンテナに描画される（駅行の中には描画しない）
-        const overlayElement = TestBed.inject(OverlayContainer).getContainerElement();
-        expect(
-            overlayElement.querySelectorAll('app-train-location-card').length,
-        ).toBe(2);
-        expect(overlayElement.textContent).toContain('t1');
-        expect(overlayElement.textContent).toContain('t2');
+        expect(el().querySelectorAll('app-train-location-card')).toHaveLength(
+            3,
+        );
+        expect(el().textContent).not.toContain('本停車中');
     });
 
-    it('展開しても駅名セル（駅軸）側にはカードを追加しない（レイアウト非干渉）', () => {
-        const rows: TrainLocationRow[] = [
-            {
-                kind: 'station',
-                stationId: 'yokohama',
-                stationName: '横浜',
-                isMajor: true,
-                leftCards: [card('t1'), card('t2')],
-                rightCards: [],
-                interchangeRoutes: [],
-            },
-        ];
-        fixture.componentRef.setInput('rows', rows);
-        fixture.detectChanges();
+    it('駅の札を押すと stationSelect に stationId を出す', () => {
+        setRows([stationRow({ stationId: 's1', stationName: '二俣川' })]);
+        const emitted: string[] = [];
+        fixture.componentInstance.stationSelect.subscribe((id) =>
+            emitted.push(id),
+        );
 
-        const badge: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-        badge.click();
-        fixture.detectChanges();
+        (
+            el().querySelector(
+                'button[data-station-id="s1"]',
+            ) as HTMLButtonElement
+        ).click();
 
-        // 展開後もコンポーネント本体（駅行）にはカードが増えない
-        expect(
-            fixture.nativeElement.querySelectorAll('app-train-location-card')
-                .length,
-        ).toBe(0);
+        expect(emitted).toEqual(['s1']);
     });
 
-    it('再タップでオーバーレイを畳む', () => {
-        const rows: TrainLocationRow[] = [
-            {
-                kind: 'station',
-                stationId: 'yokohama',
-                stationName: '横浜',
-                isMajor: true,
-                leftCards: [card('t1'), card('t2')],
-                rightCards: [],
-                interchangeRoutes: [],
-            },
-        ];
-        fixture.componentRef.setInput('rows', rows);
-        fixture.detectChanges();
+    it('選択中の駅の札は aria-pressed="true"', () => {
+        fixture.componentRef.setInput('selectedStationId', 's1');
+        setRows([
+            stationRow({ stationId: 's1' }),
+            stationRow({ stationId: 's2' }),
+        ]);
 
-        const badge: HTMLButtonElement = fixture.nativeElement.querySelector('button');
-        badge.click();
-        fixture.detectChanges();
-        badge.click();
-        fixture.detectChanges();
-
-        const overlayElement = TestBed.inject(OverlayContainer).getContainerElement();
         expect(
-            overlayElement.querySelectorAll('app-train-location-card').length,
-        ).toBe(0);
+            el()
+                .querySelector('[data-station-id="s1"]')
+                ?.getAttribute('aria-pressed'),
+        ).toBe('true');
+        expect(
+            el()
+                .querySelector('[data-station-id="s2"]')
+                ?.getAttribute('aria-pressed'),
+        ).toBe('false');
     });
 
-    it('停車が1本のみの場合はバッジを出さずカードを直接表示する', () => {
-        const rows: TrainLocationRow[] = [
+    it('在線の無い駅間は 30px', () => {
+        setRows([
+            stationRow({ stationId: 's1' }),
             {
-                kind: 'station',
-                stationId: 'yokohama',
-                stationName: '横浜',
-                isMajor: false,
-                leftCards: [card('t1')],
+                kind: 'between',
+                fromStationId: 's1',
+                toStationId: 's2',
+                leftCards: [],
                 rightCards: [],
-                interchangeRoutes: [],
             },
-        ];
-        fixture.componentRef.setInput('rows', rows);
-        fixture.detectChanges();
+            stationRow({ stationId: 's2' }),
+        ]);
 
-        expect(fixture.nativeElement.textContent).not.toContain('本停車中');
-        expect(
-            fixture.nativeElement.querySelectorAll('app-train-location-card').length,
-        ).toBe(1);
+        const between = el().querySelector('[data-between]') as HTMLElement;
+        expect(between.style.height).toBe('30px');
     });
 
-    it('乗換路線がある駅には他路線への routerLink チップを表示する', () => {
+    it('乗換路線がある駅には他路線への routerLink チップを表示する（station_id 付き）', () => {
         const rows: TrainLocationRow[] = [
-            {
-                kind: 'station',
+            stationRow({
                 stationId: 'futamatagawa',
                 stationName: '二俣川',
                 isMajor: true,
-                leftCards: [],
-                rightCards: [],
                 interchangeRoutes: [{ routeId: 'r-main', routeName: '本線' }],
-            },
+            }),
         ];
         fixture.componentRef.setInput('rows', rows);
         fixture.detectChanges();
 
-        const link: HTMLAnchorElement = fixture.nativeElement.querySelector('a');
+        const link: HTMLAnchorElement =
+            fixture.nativeElement.querySelector('a');
         expect(link.textContent).toContain('本線');
         expect(link.getAttribute('href')).toContain('r-main');
+        expect(link.getAttribute('href')).toContain('station_id=futamatagawa');
     });
 
     it('乗換路線が無い駅にはチップを表示しない', () => {
         const rows: TrainLocationRow[] = [
-            {
-                kind: 'station',
+            stationRow({
                 stationId: 'ebina',
                 stationName: '海老名',
                 isMajor: false,
-                leftCards: [],
-                rightCards: [],
                 interchangeRoutes: [],
-            },
+            }),
         ];
         fixture.componentRef.setInput('rows', rows);
         fixture.detectChanges();
@@ -238,21 +220,82 @@ describe('TrainLocationLineComponent', () => {
         }
     });
 
-    it('起点駅名（駅軸先頭の駅行）を上り方面ラベルに表示する', () => {
-        const rows: TrainLocationRow[] = [
+    it('lg 未満では駅行の grid の中央列を 4.5rem にし、lg 以上では 7rem のまま', () => {
+        setRows([stationRow({ stationId: 's1' })]);
+
+        const gridDiv = el().querySelector('[data-station-id="s1"]')
+            ?.parentElement?.parentElement as HTMLElement;
+
+        expect(gridDiv.className).toContain(
+            'tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)]',
+        );
+        expect(gridDiv.className).toContain(
+            'lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]',
+        );
+    });
+
+    it('駅間行の grid も lg 未満では中央列を 4.5rem にする', () => {
+        setRows([
+            stationRow({ stationId: 's1' }),
             {
-                kind: 'station',
-                stationId: 'yokohama',
-                stationName: '横浜',
-                isMajor: true,
+                kind: 'between',
+                fromStationId: 's1',
+                toStationId: 's2',
                 leftCards: [],
                 rightCards: [],
-                interchangeRoutes: [],
+            },
+            stationRow({ stationId: 's2' }),
+        ]);
+
+        const between = el().querySelector('[data-between]') as HTMLElement;
+        expect(between.className).toContain(
+            'tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)]',
+        );
+        expect(between.className).toContain(
+            'lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]',
+        );
+    });
+
+    it('駅間行の絶対配置カードの包みは列の幅を超えないよう max-w を付ける', () => {
+        const rows: TrainLocationRow[] = [
+            {
+                kind: 'between',
+                fromStationId: 'a',
+                toStationId: 'b',
+                leftCards: [{ card: card('t1'), topProgress: 0.4 }],
+                rightCards: [],
             },
         ];
         fixture.componentRef.setInput('rows', rows);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('横浜方面');
+        const wrap: HTMLElement = fixture.nativeElement.querySelector(
+            'app-train-location-card',
+        ).parentElement;
+        expect(wrap.className).toContain('tw-max-w-[calc(100%-0.5rem)]');
+    });
+
+    it('駅の札は折り返しても WCAG 2.2 の 24px タップ領域を下回らないよう最小高さを持つ', () => {
+        setRows([stationRow({ stationId: 's1' })]);
+
+        const button = el().querySelector(
+            'button[data-station-id="s1"]',
+        ) as HTMLElement;
+        expect(button.className).toContain('tw-min-h-6');
+    });
+
+    it('向きの見出しは「上り」「下り」だけで方面名を出さない（路線の端の駅で自駅名になるため）', () => {
+        const rows: TrainLocationRow[] = [
+            stationRow({
+                stationId: 'yokohama',
+                stationName: '横浜',
+                isMajor: true,
+            }),
+        ];
+        fixture.componentRef.setInput('rows', rows);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.textContent).toContain('◀ 上り');
+        expect(fixture.nativeElement.textContent).not.toContain('方面');
     });
 });

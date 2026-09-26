@@ -6,7 +6,6 @@
     >
         <mat-chip-listbox
             class="tw-list-none"
-            [class.filter-chips-single]="isSingle()"
             [class.filter-chips-scroll]="scrollMode()"
             [multiple]="mode() === 'multiple'"
             [value]="listboxValue()"
@@ -39,11 +38,8 @@
                         [color]="option.selectedColor ?? selectedColor()"
                         [style.background-color]="option.color ?? null"
                     >
-                        <!-- R-4: 単一選択は ✓ でなく選択中チップの ● マーカーで表す
-                             （全チップに付けると箇条書きの点に見えるため選択中のみ） -->
-                        @if (isSingle() && isSelectedValue(option.value)) {
-                            <span class="tw-mr-1" aria-hidden="true">●</span>
-                        }
+                        <!-- 選択の印は単一選択も複数選択も Material の ✓。
+                             ● マーカーは箇条書きの点に見えるのでやめた（ユーザー指摘 2026-09-26） -->
                         {{ option.label }}
                     </mat-chip-option>
                 }

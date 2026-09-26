@@ -1,11 +1,15 @@
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 
+/** 主要駅の根拠にしない種別（系統サフィックス「（…）」付きも先頭一致で捉える） */
+const NON_MAJOR_CLASS_PREFIXES = ['各停', '回送'] as const;
+
 /**
  * 主要駅（優等停車駅）を判定する純関数。
  *
- * 35-architecture-new-pages.md §1.3: 「優等停車駅判定は tripClass 別の停車有無から導出」。
- * tripClassName が「各停」以外の列車が発着（着時刻・発時刻のいずれかを持つ）する駅を
- * 主要駅とする。tripClass が不明（undefined）な場合は安全側として「各停ではない」扱いにする。
+ * 各停・回送以外の列車が発着（着時刻・発時刻のいずれかを持つ）する駅を主要駅とする。
+ * 種別名は「各停（SO）」のように系統が付くため先頭一致で判定する。
+ * API の欠落時刻は null で来るため `!= null` で判定する（通過駅を数えない）。
+ * tripClass が不明（undefined）な場合は安全側として主要駅の根拠にする。
  */
 export function determineMajorStations(
     tripBlocks: readonly TripBlockDetailsDto[],
@@ -15,15 +19,15 @@ export function determineMajorStations(
 
     for (const block of tripBlocks) {
         for (const trip of block.trips ?? []) {
-            if (trip.tripClass?.tripClassName === '各停') {
+            const className = trip.tripClass?.tripClassName ?? '';
+            if (NON_MAJOR_CLASS_PREFIXES.some((p) => className.startsWith(p))) {
                 continue;
             }
             for (const time of trip.times ?? []) {
                 if (
-                    time.stationId !== undefined &&
+                    time.stationId != null &&
                     axisStationIds.has(time.stationId) &&
-                    (time.arrivalTime !== undefined ||
-                        time.departureTime !== undefined)
+                    (time.arrivalTime != null || time.departureTime != null)
                 ) {
                     majorStationIds.add(time.stationId);
                 }

@@ -16,7 +16,9 @@ function trip(params: {
         tripId: params.tripId,
         times: params.times,
         tripClass: params.tripClassName
-            ? ({ tripClassName: params.tripClassName } as TripDetailsDto['tripClass'])
+            ? ({
+                  tripClassName: params.tripClassName,
+              } as TripDetailsDto['tripClass'])
             : undefined,
     } as TripDetailsDto;
 }
@@ -38,7 +40,10 @@ describe('determineMajorStations', () => {
             ],
         });
 
-        const result = determineMajorStations([block([express])], axisStationIds);
+        const result = determineMajorStations(
+            [block([express])],
+            axisStationIds,
+        );
 
         expect(result.has('s1')).toBe(true);
         expect(result.has('s2')).toBe(true);
@@ -67,7 +72,10 @@ describe('determineMajorStations', () => {
             times: [time({ stationId: 'other', departureTime: '07:00:00' })],
         });
 
-        const result = determineMajorStations([block([express])], axisStationIds);
+        const result = determineMajorStations(
+            [block([express])],
+            axisStationIds,
+        );
 
         expect(result.size).toBe(0);
     });
@@ -79,7 +87,10 @@ describe('determineMajorStations', () => {
             times: [time({ stationId: 's1' })],
         });
 
-        const result = determineMajorStations([block([express])], axisStationIds);
+        const result = determineMajorStations(
+            [block([express])],
+            axisStationIds,
+        );
 
         expect(result.size).toBe(0);
     });
@@ -90,8 +101,61 @@ describe('determineMajorStations', () => {
             times: [time({ stationId: 's1', departureTime: '07:00:00' })],
         });
 
-        const result = determineMajorStations([block([unknown])], axisStationIds);
+        const result = determineMajorStations(
+            [block([unknown])],
+            axisStationIds,
+        );
 
         expect(result.has('s1')).toBe(true);
+    });
+
+    it('着発時刻が null の通過駅は対象外（API は欠落を null で返す）', () => {
+        const express = trip({
+            tripId: 't1',
+            tripClassName: '特急（SO）',
+            times: [
+                time({
+                    stationId: 's1',
+                    arrivalTime: null as unknown as string,
+                    departureTime: null as unknown as string,
+                }),
+                time({ stationId: 's2', departureTime: '07:00:00' }),
+            ],
+        });
+
+        const result = determineMajorStations(
+            [block([express])],
+            axisStationIds,
+        );
+
+        expect(result.has('s1')).toBe(false);
+        expect(result.has('s2')).toBe(true);
+    });
+
+    it('系統付きの各停（各停（SO）など）は主要駅の根拠にしない', () => {
+        const local = trip({
+            tripId: 't1',
+            tripClassName: '各停（SO→JA）',
+            times: [time({ stationId: 's1', departureTime: '07:00:00' })],
+        });
+
+        const result = determineMajorStations([block([local])], axisStationIds);
+
+        expect(result.size).toBe(0);
+    });
+
+    it('回送は主要駅の根拠にしない', () => {
+        const deadhead = trip({
+            tripId: 't1',
+            tripClassName: '回送',
+            times: [time({ stationId: 's1', departureTime: '07:00:00' })],
+        });
+
+        const result = determineMajorStations(
+            [block([deadhead])],
+            axisStationIds,
+        );
+
+        expect(result.size).toBe(0);
     });
 });

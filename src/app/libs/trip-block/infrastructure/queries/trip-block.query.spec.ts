@@ -142,4 +142,56 @@ describe('TripBlockQuery', () => {
 
         controller.verify();
     });
+
+    it('fields を指定すると fields[資源]=項目,項目 をクエリに載せ、キャッシュも fields ごとに分ける', () => {
+        const { query, controller } = setup();
+        const fields = {
+            trip: ['tripNumber', 'tripDirection'],
+            time: ['stationId', 'arrivalTime'],
+        };
+
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0, fields })
+            .subscribe();
+        const req = controller.expectOne(
+            (r) =>
+                r.url === v3ApiUrl &&
+                r.params.get('fields[trip]') === 'tripNumber,tripDirection' &&
+                r.params.get('fields[time]') === 'stationId,arrivalTime',
+        );
+        req.flush([{ id: 'b1', trips: [] }]);
+
+        // fields の無い呼び出しは別のキャッシュ（全項目を取り直す）
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
+            .subscribe();
+        const plain = controller.expectOne(
+            (r) => r.url === v3ApiUrl && !r.params.has('fields[trip]'),
+        );
+        plain.flush([]);
+
+        controller.verify();
+    });
+
+    it('findManyByCalendarId も fields を上下の取得に渡す', () => {
+        const { query, controller } = setup();
+
+        query
+            .findManyByCalendarId({
+                calendarId: 'cal-1',
+                fields: { trip: ['tripNumber'] },
+            })
+            .subscribe();
+
+        const reqs = controller.match(
+            (r) =>
+                r.url === v3ApiUrl &&
+                r.params.get('fields[trip]') === 'tripNumber',
+        );
+        expect(
+            reqs.map((r) => r.request.params.get('tripDirection')).sort(),
+        ).toEqual(['0', '1']);
+        reqs.forEach((r) => r.flush([]));
+        controller.verify();
+    });
 });

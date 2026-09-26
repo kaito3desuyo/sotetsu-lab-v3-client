@@ -58,14 +58,14 @@ describe('TrainLocationCardComponent', () => {
         fixture.detectChanges();
 
         const rows: HTMLElement[] = Array.from(
-            fixture.nativeElement.querySelectorAll('a > span'),
+            fixture.nativeElement.querySelectorAll('[data-card] > span'),
         );
         expect(rows.length).toBe(2);
 
         const [top, bottom] = rows;
         expect(top.textContent).toContain('各停');
         expect(top.textContent).toContain('横浜 行');
-        expect(top.textContent).toContain('運用54');
+        expect(top.textContent).toContain('54');
         expect(top.textContent).not.toContain('1234');
 
         expect(bottom.textContent).toContain('1234');
@@ -85,6 +85,18 @@ describe('TrainLocationCardComponent', () => {
         expect(fixture.nativeElement.textContent).not.toContain('相模鉄道');
     });
 
+    it('運用番号の地を運用群の色にする（5 で始まる運用は青の淡色）', () => {
+        fixture.componentRef.setInput('card', card({ operationNumber: '54' }));
+        fixture.detectChanges();
+
+        const tag = fixture.nativeElement.querySelector(
+            '[data-operation-number]',
+        ) as HTMLElement;
+        expect(tag.textContent?.trim()).toBe('54');
+        expect(fixture.nativeElement.textContent).not.toContain('運用');
+        expect(tag.style.backgroundColor).toBe('rgba(33, 150, 243, 0.12)');
+    });
+
     it('status="between" かつ direction="inbound" のとき ▲ を表示する', () => {
         fixture.componentRef.setInput('card', card({ direction: 'inbound' }));
         fixture.componentRef.setInput('status', 'between');
@@ -102,21 +114,110 @@ describe('TrainLocationCardComponent', () => {
     });
 
     it('formationNumber が無ければ充当編成表示欄を出さない', () => {
-        fixture.componentRef.setInput('card', card({ formationNumber: undefined }));
+        fixture.componentRef.setInput(
+            'card',
+            card({ formationNumber: undefined }),
+        );
         fixture.detectChanges();
 
         expect(
-            fixture.nativeElement.querySelector('span.tw-truncate.tw-font-bold.tw-text-grey-900'),
+            fixture.nativeElement.querySelector(
+                'span.tw-truncate.tw-font-bold.tw-text-grey-900',
+            ),
         ).toBeNull();
     });
 
     it('formationNumber があれば無加工の値をそのまま表示する', () => {
-        fixture.componentRef.setInput('card', card({ formationNumber: '9999' }));
+        fixture.componentRef.setInput(
+            'card',
+            card({ formationNumber: '9999' }),
+        );
         fixture.detectChanges();
 
         expect(fixture.nativeElement.textContent).toContain('9999');
         expect(
-            fixture.nativeElement.querySelector('span.tw-truncate.tw-font-bold.tw-text-grey-900'),
+            fixture.nativeElement.querySelector(
+                'span.tw-truncate.tw-font-bold.tw-text-grey-900',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('幅が固定でも列の幅を超えない（tw-max-w-full）', () => {
+        fixture.componentRef.setInput('card', card());
+        fixture.detectChanges();
+
+        const link = fixture.nativeElement.querySelector(
+            '[data-card]',
+        ) as HTMLElement;
+        expect(link.className).toContain('tw-w-40');
+        expect(link.className).toContain('tw-max-w-full');
+        // 実測（390x844）: align-items:flex-end の列では、ホスト自身が max-w-full を
+        // 持たないと祖先の幅制約が <a> まで伝わらず、はみ出す（box-sizing:content-box
+        // かつ preflight 無効のため）。ホストにも max-w-full を付けて経路を切らない。
+        expect((fixture.nativeElement as HTMLElement).className).toContain(
+            'tw-max-w-full',
+        );
+    });
+
+    it('影ではなく細い縁で面を分ける（面の掟）', () => {
+        fixture.componentRef.setInput('card', card());
+        fixture.detectChanges();
+
+        const link = fixture.nativeElement.querySelector(
+            '[data-card]',
+        ) as HTMLElement;
+        expect(link.className).not.toContain('tw-shadow');
+        expect(link.className).toContain('tw-border-solid');
+    });
+
+    it('カードの面は全線時刻表へのリンク（面全体を覆う）', () => {
+        fixture.componentRef.setInput(
+            'card',
+            card({
+                detailLink: [
+                    '/timetable',
+                    'all-line',
+                    { trip_block_id: 'tb-1' },
+                ],
+            }),
+        );
+        fixture.detectChanges();
+
+        const cover = fixture.nativeElement.querySelector(
+            'a[data-card-link]',
+        ) as HTMLAnchorElement;
+        expect(cover.getAttribute('href')).toContain('/timetable/all-line');
+        expect(cover.className).toContain('tw-absolute');
+        expect(cover.className).toContain('tw-inset-0');
+    });
+
+    it('運用番号は運用行路図へのリンク（カードの面のリンクより上に重ねる）', () => {
+        fixture.componentRef.setInput(
+            'card',
+            card({ operationNumber: '54', operationId: 'op-1' }),
+        );
+        fixture.detectChanges();
+
+        const tag = fixture.nativeElement.querySelector(
+            'a[data-operation-number]',
+        ) as HTMLAnchorElement;
+        expect(tag.getAttribute('href')).toBe(
+            '/operation/route-diagram;operation_id=op-1',
+        );
+        expect(tag.className).toContain('tw-relative');
+        // リンクの中にリンクを入れない
+        expect(tag.closest('a[data-card-link]')).toBeNull();
+    });
+
+    it('運用 ID が無ければ運用番号はリンクにしない', () => {
+        fixture.componentRef.setInput('card', card({ operationNumber: '54' }));
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('a[data-operation-number]'),
+        ).toBeNull();
+        expect(
+            fixture.nativeElement.querySelector('span[data-operation-number]'),
         ).not.toBeNull();
     });
 });

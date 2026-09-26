@@ -54,6 +54,7 @@ describe('buildTrainLocationCards', () => {
             tripClassName: '急行',
             tripClassColor: '#43a047',
             operationNumber: '54',
+            operationId: 'op-1',
             destinationName: '終点',
             direction: 'outbound',
             formationNumber: undefined,

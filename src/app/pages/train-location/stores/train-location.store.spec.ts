@@ -4,6 +4,7 @@ describe('TrainLocationStore', () => {
     afterEach(() => {
         TrainLocationStore.setCalendarId(null);
         TrainLocationStore.setSelectedRouteId(null);
+        TrainLocationStore.setSelectedStationId(null);
         TrainLocationStore.setMode('now');
         TrainLocationStore.setSpecifiedTime(null);
         TrainLocationStore.setStationAxisStations([]);
@@ -59,5 +60,12 @@ describe('TrainLocationStore', () => {
         const data = { 0: [], 1: [] };
         TrainLocationStore.setTripBlocksByDirection(data);
         expect(TrainLocationStore.tripBlocksByDirection).toBe(data);
+    });
+
+    it('selectedStationId を保持する', () => {
+        TrainLocationStore.setSelectedStationId('s1');
+        expect(TrainLocationStore.selectedStationId).toBe('s1');
+        TrainLocationStore.setSelectedStationId(null);
+        expect(TrainLocationStore.selectedStationId).toBeNull();
     });
 });

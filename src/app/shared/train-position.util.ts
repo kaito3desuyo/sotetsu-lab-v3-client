@@ -2,6 +2,7 @@ import { getRailwayDate, toAbsoluteTime } from 'src/app/core/utils/railway-day';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 /**
  * 列車位置算出（N2 列車位置情報ページ）の純関数群。
@@ -37,21 +38,89 @@ function dayOffset(days: number | null | undefined): number {
     return (days ?? 1) - 1;
 }
 
-function resolveArrival(base: Date, time: TimeDetailsDto): Date | undefined {
+export function resolveArrival(
+    base: Date,
+    time: TimeDetailsDto,
+): Date | undefined {
     const value = time.arrivalTime ?? time.departureTime;
     // API の欠落時刻は null で来る（undefined ではない）ため == null で両方を捉える。
     if (value == null) {
         return undefined;
     }
-    return toAbsoluteTime(base, dayOffset(time.arrivalDays ?? time.departureDays), value);
+    return toAbsoluteTime(
+        base,
+        dayOffset(time.arrivalDays ?? time.departureDays),
+        value,
+    );
 }
 
-function resolveDeparture(base: Date, time: TimeDetailsDto): Date | undefined {
+export function resolveDeparture(
+    base: Date,
+    time: TimeDetailsDto,
+): Date | undefined {
     const value = time.departureTime ?? time.arrivalTime;
     if (value == null) {
         return undefined;
     }
-    return toAbsoluteTime(base, dayOffset(time.departureDays ?? time.arrivalDays), value);
+    return toAbsoluteTime(
+        base,
+        dayOffset(time.departureDays ?? time.arrivalDays),
+        value,
+    );
+}
+
+function hasTime(time: TimeDetailsDto): boolean {
+    return time.arrivalTime != null || time.departureTime != null;
+}
+
+/** 時刻のある停車点を stopSequence 順に並べる */
+function timedStops(
+    times: readonly TimeDetailsDto[] | undefined,
+): TimeDetailsDto[] {
+    return [...(times ?? [])]
+        .filter(hasTime)
+        .sort((a, b) => (a.stopSequence ?? 0) - (b.stopSequence ?? 0));
+}
+
+/** 並べ替え用の営業日内の分（days は 1 始まり。発時刻を優先） */
+function minutesOfDay(time: TimeDetailsDto): number {
+    const value = time.departureTime ?? time.arrivalTime ?? '00:00:00';
+    const days = (time.departureDays ?? time.arrivalDays ?? 1) - 1;
+    const [hours = 0, minutes = 0] = value.split(':').map(Number);
+    return days * 1440 + hours * 60 + minutes;
+}
+
+/**
+ * 同じ運用のまとまり（trip block）の中で、ある列車の終点から同じ編成が次の列番で発つ
+ * （種別変更・列番の付け替え）とき、tripId → 次の列車 を返す。
+ * trip block は同じ向きに走り続ける列車の連なりなので、終点の駅が次の列車の始発と
+ * 同じなら引き継ぎとみなす（実データで折り返しは block に含まれない）。
+ */
+export function findContinuations(
+    tripBlocks: readonly TripBlockDetailsDto[],
+): ReadonlyMap<string, TripDetailsDto> {
+    const continuations = new Map<string, TripDetailsDto>();
+    for (const block of tripBlocks) {
+        const ordered = (block.trips ?? [])
+            .map((trip) => ({ trip, stops: timedStops(trip.times) }))
+            .filter((entry) => entry.stops.length > 0)
+            .sort(
+                (a, b) => minutesOfDay(a.stops[0]) - minutesOfDay(b.stops[0]),
+            );
+        for (let i = 0; i < ordered.length - 1; i++) {
+            const current = ordered[i];
+            const next = ordered[i + 1];
+            const last = current.stops[current.stops.length - 1];
+            if (
+                current.trip.tripId &&
+                last.stationId != null &&
+                last.stationId === next.stops[0].stationId
+            ) {
+                continuations.set(current.trip.tripId, next.trip);
+            }
+        }
+    }
+    return continuations;
 }
 
 /**
@@ -101,6 +170,17 @@ function estimateTripPosition(
         return undefined; // 未出発
     }
     if (at >= lastArrival) {
+        // 駅軸の最後の停車駅から他線へ直通する列車は、そこを発つまで停車中として残す
+        // （終点では発時刻が無く resolveDeparture が着時刻に落ちるので、着いた時点で消える）
+        const lastStop = stops[stops.length - 1];
+        const lastDeparture = resolveDeparture(base, lastStop);
+        if (lastDeparture !== undefined && at < lastDeparture) {
+            return {
+                type: 'stopped',
+                tripId,
+                stationId: lastStop.stationId as string,
+            };
+        }
         return undefined; // 到着済
     }
 
@@ -168,6 +248,7 @@ export function estimatePositions(
             .filter((id): id is string => id !== undefined),
     );
     const base = getRailwayDate(at);
+    const continuations = findContinuations(tripBlocks);
 
     const positions: TrainPosition[] = [];
     for (const block of tripBlocks) {
@@ -184,6 +265,33 @@ export function estimatePositions(
             );
             if (position !== undefined) {
                 positions.push(position);
+                continue;
+            }
+            // 種別変更・列番の付け替え: 終点に着いてから次の列番で発つまでは、前の列車を停車中として残す
+            const continuation = continuations.get(trip.tripId);
+            const last = timedStops(trip.times).at(-1);
+            const nextFirst = continuation
+                ? timedStops(continuation.times)[0]
+                : undefined;
+            if (
+                last?.stationId != null &&
+                nextFirst &&
+                axisStationIds.has(last.stationId)
+            ) {
+                const arrival = resolveArrival(base, last);
+                const departure = resolveDeparture(base, nextFirst);
+                if (
+                    arrival !== undefined &&
+                    departure !== undefined &&
+                    arrival <= at &&
+                    at < departure
+                ) {
+                    positions.push({
+                        type: 'stopped',
+                        tripId: trip.tripId,
+                        stationId: last.stationId,
+                    });
+                }
             }
         }
     }

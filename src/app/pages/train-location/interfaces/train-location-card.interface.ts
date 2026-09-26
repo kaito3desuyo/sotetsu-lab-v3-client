@@ -9,6 +9,8 @@ export interface TrainLocationCard {
     tripClassColor: string;
     /** 運用番号（tripOperationLists 由来。無ければ undefined） */
     operationNumber?: string;
+    /** 運用 ID（運用番号から運用行路図へのリンクに使う。無ければ undefined） */
+    operationId?: string;
     destinationName: string;
     /** 上り(inbound)=線の左側、下り(outbound)=線の右側（5.8） */
     direction: 'inbound' | 'outbound';

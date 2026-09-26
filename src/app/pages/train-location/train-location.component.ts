@@ -18,18 +18,29 @@ import { interval, lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { LoadingComponent } from 'src/app/shared/app-shared/loading/loading.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { estimatePositions } from 'src/app/shared/train-position.util';
-import { TrainLocationClockComponent } from './components/train-location-clock/train-location-clock.component';
+import {
+    estimatePositions,
+    findContinuations,
+} from 'src/app/shared/train-position.util';
+import { TrainLocationStationPanelComponent } from './components/train-location-station-panel/train-location-station-panel.component';
 import { TrainLocationControllerComponent } from './components/train-location-controller/train-location-controller.component';
 import { TrainLocationLineComponent } from './components/train-location-line/train-location-line.component';
 import { TrainLocationService } from './services/train-location.service';
-import { TrainLocationMode, TrainLocationStore } from './stores/train-location.store';
+import {
+    TrainLocationMode,
+    TrainLocationStore,
+} from './stores/train-location.store';
+import { applyContinuationsToCards } from './utils/apply-continuations-to-cards.util';
 import { buildInterchangeRoutesByStationId } from './utils/build-interchange-routes-by-station-id.util';
+import {
+    buildStationArrivals,
+    STATION_ARRIVALS_LIMIT,
+} from './utils/build-station-arrivals.util';
 import { buildTrainLocationCards } from './utils/build-train-location-cards.util';
 import { buildTrainLocationRows } from './utils/build-train-location-rows.util';
 import { determineMajorStations } from './utils/determine-major-stations.util';
+import { orientStationAxis } from './utils/orient-station-axis.util';
 import {
     formatTimeParam,
     fromTimeInputValue,
@@ -37,6 +48,10 @@ import {
     toDateWithTime,
     toTimeInputValue,
 } from './utils/parse-time-param.util';
+import {
+    readRememberedStationId,
+    writeRememberedStationId,
+} from './utils/train-location-storage.util';
 
 const CURRENT_TIME_REFRESH_MS = 10_000;
 
@@ -50,11 +65,10 @@ TrainLocationStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
-        LoadingComponent,
         EmptyStateComponent,
         TrainLocationControllerComponent,
-        TrainLocationClockComponent,
         TrainLocationLineComponent,
+        TrainLocationStationPanelComponent,
         RouterLink,
     ],
 })
@@ -149,6 +163,28 @@ export class TrainLocationComponent {
         return map;
     });
 
+    /** stationId → その駅を含む路線名（図の外を走る列車の「いま ○○線内」に使う） */
+    readonly #routeNamesByStationId = computed(() => {
+        const map = new Map<string, string[]>();
+        for (const route of this.#routeStations()) {
+            if (!route.routeName) {
+                continue;
+            }
+            for (const rsl of route.routeStationLists ?? []) {
+                const stationId = rsl.station?.stationId;
+                if (!stationId) {
+                    continue;
+                }
+                const names = map.get(stationId) ?? [];
+                if (!names.includes(route.routeName)) {
+                    names.push(route.routeName);
+                }
+                map.set(stationId, names);
+            }
+        }
+        return map;
+    });
+
     /** 編成の所属会社名解決用（agencyId → agencyName）。グローバル AgencyList 由来。 */
     readonly #agencyNameById = computed(() => {
         const map = new Map<string, string>();
@@ -187,11 +223,25 @@ export class TrainLocationComponent {
         ),
     );
 
+    /** 図の駅の並び。上りの列車がいつも図の上へ進む向き（新横浜線などは起点→終点を裏返す） */
+    readonly #orientedStationAxis = computed(() =>
+        orientStationAxis(this.stationAxisStations(), this.#allTripBlocks()),
+    );
+
+    /** 図のカード。種別が変わる駅に着いて停車中の列車は変更後の種別・列番 */
+    readonly #mapCardsById = computed(() =>
+        applyContinuationsToCards(
+            this.#cardsById(),
+            findContinuations(this.#allTripBlocks()),
+            this.positions(),
+        ),
+    );
+
     readonly rows = computed(() =>
         buildTrainLocationRows(
-            this.stationAxisStations(),
+            this.#orientedStationAxis(),
             this.positions(),
-            this.#cardsById(),
+            this.#mapCardsById(),
             this.#majorStationIds(),
             this.#interchangeRoutesByStationId(),
         ),
@@ -221,6 +271,46 @@ export class TrainLocationComponent {
     readonly timeInputValue = computed(() => {
         const parsed = parseTimeParam(this.specifiedTime());
         return parsed ? toTimeInputValue(parsed) : format(new Date(), 'HH:mm');
+    });
+
+    readonly #selectedStationIdParam = toSignal(
+        TrainLocationStore.selectedStationId$,
+        { initialValue: null },
+    );
+
+    /** 駅軸に無い駅（路線を変えた直後など）は未選択として扱う */
+    readonly selectedStationId = computed(() => {
+        const id = this.#selectedStationIdParam();
+        return id && this.stationAxisStations().some((s) => s.stationId === id)
+            ? id
+            : null;
+    });
+
+    readonly selectedStationName = computed(() => {
+        const id = this.selectedStationId();
+        return id ? (this.#stationNameById().get(id) ?? '') : '';
+    });
+
+    readonly selectedStationInterchangeRoutes = computed(() => {
+        const id = this.selectedStationId();
+        return id ? (this.#interchangeRoutesByStationId().get(id) ?? []) : [];
+    });
+
+    readonly arrivals = computed(() => {
+        const stationId = this.selectedStationId();
+        if (!stationId) {
+            return { inbound: [], outbound: [] };
+        }
+        return buildStationArrivals({
+            tripBlocks: this.#allTripBlocks(),
+            stationId,
+            at: this.at(),
+            positions: this.positions(),
+            cardsById: this.#cardsById(),
+            stationNameById: this.#stationNameById(),
+            routeNamesByStationId: this.#routeNamesByStationId(),
+            limit: STATION_ARRIVALS_LIMIT,
+        });
     });
 
     /** 現在アクティブ（停車中/走行中）な trip の operationNumber 一覧（充当編成番号の背景取得対象）。 */
@@ -265,7 +355,31 @@ export class TrainLocationComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const routeId = paramMap.get('route_id') ?? this.#defaultRouteId();
+                const routeIdParam = paramMap.get('route_id');
+                const routeId = routeIdParam ?? this.#defaultRouteId();
+                const stationIdParam = paramMap.get('station_id');
+                const rememberedStationId =
+                    routeId && !stationIdParam
+                        ? readRememberedStationId(routeId)
+                        : null;
+
+                if (routeId && (!routeIdParam || rememberedStationId)) {
+                    this.#router.navigate(
+                        [
+                            '/train-location',
+                            {
+                                ...this.#route.snapshot.params,
+                                route_id: routeId,
+                                ...(rememberedStationId
+                                    ? { station_id: rememberedStationId }
+                                    : {}),
+                            },
+                        ],
+                        { replaceUrl: true },
+                    );
+                    return;
+                }
+
                 const timeParam = paramMap.get('time');
                 const mode: TrainLocationMode = timeParam ? 'specified' : 'now';
                 const todaysCalendarId =
@@ -275,32 +389,26 @@ export class TrainLocationComponent {
                         ? (paramMap.get('calendar_id') ?? todaysCalendarId)
                         : todaysCalendarId;
 
-                const missingParams = !paramMap.get('route_id');
-                if (missingParams && routeId) {
-                    this.#router.navigate(
-                        ['/train-location', { route_id: routeId }],
-                        { replaceUrl: true },
-                    );
-                    return;
-                }
-
                 const routeChanged =
                     TrainLocationStore.selectedRouteId !== (routeId ?? null);
                 const calendarChanged =
                     TrainLocationStore.calendarId !== (calendarId ?? null);
 
                 TrainLocationStore.setSelectedRouteId(routeId ?? null);
+                TrainLocationStore.setSelectedStationId(stationIdParam);
                 TrainLocationStore.setCalendarId(calendarId ?? null);
                 TrainLocationStore.setMode(mode);
                 TrainLocationStore.setSpecifiedTime(
                     mode === 'specified' ? (timeParam ?? null) : null,
                 );
 
-                this.fetchData({
-                    refetchTripBlocks: calendarChanged || !this.#firstLoadDone(),
-                    refetchStationAxis:
-                        routeChanged || !this.#firstLoadDone(),
-                });
+                const refetchTripBlocks =
+                    calendarChanged || !this.#firstLoadDone();
+                const refetchStationAxis =
+                    routeChanged || !this.#firstLoadDone();
+                if (refetchTripBlocks || refetchStationAxis) {
+                    this.fetchData({ refetchTripBlocks, refetchStationAxis });
+                }
             });
     }
 
@@ -346,7 +454,20 @@ export class TrainLocationComponent {
     }
 
     onRouteIdChange(routeId: string): void {
-        this.#navigate({ route_id: routeId });
+        const { station_id, ...rest } = this.#route.snapshot.params;
+        void station_id;
+        this.#router.navigate([
+            '/train-location',
+            { ...rest, route_id: routeId },
+        ]);
+    }
+
+    onStationSelect(stationId: string): void {
+        const routeId = this.selectedRouteId();
+        if (routeId) {
+            writeRememberedStationId(routeId, stationId);
+        }
+        this.#navigate({ station_id: stationId });
     }
 
     /** G12: 空状態の次アクション（時刻指定モード時のみ）。現在時刻モードへ戻す。 */

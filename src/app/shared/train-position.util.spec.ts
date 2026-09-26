@@ -220,6 +220,49 @@ describe('estimatePositions', () => {
         expect(estimatePositions(tripBlocks, AXIS_ABC, at)).toEqual([]);
     });
 
+    it('同じ運用のまとまりで列番・種別が変わる駅では、次の列番で発つまで前の列車を停車中として残す', () => {
+        // 例: 各停 T1 が B に着き、同じ編成が快速 T2 として B を発つ（種別変更）
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                    time({ stationId: 'B', stopSequence: 2, arrivalTime: '08:10:00' }),
+                ]),
+                trip('T2', [
+                    time({ stationId: 'B', stopSequence: 1, departureTime: '08:14:00' }),
+                    time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:20:00' }),
+                ]),
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 12, 0))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'B' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 14, 0))).toEqual([
+            { type: 'between', tripId: 'T2', fromStationId: 'B', toStationId: 'C', progress: 0 },
+        ]);
+    });
+
+    it('駅軸の最後の停車駅から他線へ直通する列車は、そこを発つまで停車中として残す', () => {
+        // 例: 本線の二俣川に着き、いずみ野線（駅軸外の D）へ直通する列車
+        const axisAB = [station('A'), station('B')];
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                    time({ stationId: 'B', stopSequence: 2, arrivalTime: '08:10:00', departureTime: '08:12:00' }),
+                    time({ stationId: 'D', stopSequence: 3, arrivalTime: '08:20:00' }),
+                ]),
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, axisAB, new Date(2026, 6, 4, 8, 11, 0))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'B' },
+        ]);
+        // 発ったあとは他線に入るので図から消える
+        expect(estimatePositions(tripBlocks, axisAB, new Date(2026, 6, 4, 8, 12, 0))).toEqual([]);
+    });
+
     it('複数 tripBlock・複数 trip を横断し、該当するものだけを結果にまとめる', () => {
         const at = new Date(2026, 6, 4, 8, 5, 0);
         const tripBlocks = [

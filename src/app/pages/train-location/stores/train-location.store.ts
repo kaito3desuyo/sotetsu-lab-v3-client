@@ -9,6 +9,7 @@ export type TrainLocationMode = 'now' | 'specified';
 type StoreProps = {
     calendarId: string | null;
     selectedRouteId: string | null;
+    selectedStationId: string | null;
     mode: TrainLocationMode;
     /** 時刻指定モードの指定時刻（"HHmm"）。現在時刻モードでは未使用（null）。 */
     specifiedTime: string | null;
@@ -27,6 +28,7 @@ const store = createStore(
     withProps<StoreProps>({
         calendarId: null,
         selectedRouteId: null,
+        selectedStationId: null,
         mode: 'now',
         specifiedTime: null,
         stationAxisStations: [],
@@ -43,6 +45,9 @@ export const TrainLocationStore = {
     },
     setSelectedRouteId(routeId: string | null): void {
         store.update(setProp('selectedRouteId', () => routeId));
+    },
+    setSelectedStationId(stationId: string | null): void {
+        store.update(setProp('selectedStationId', () => stationId));
     },
     setMode(mode: TrainLocationMode): void {
         store.update(setProp('mode', () => mode));
@@ -86,6 +91,7 @@ export const TrainLocationStore = {
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
     selectedRouteId$: store.pipe(select((state) => state.selectedRouteId)),
+    selectedStationId$: store.pipe(select((state) => state.selectedStationId)),
     mode$: store.pipe(select((state) => state.mode)),
     specifiedTime$: store.pipe(select((state) => state.specifiedTime)),
     stationAxisStations$: store.pipe(
@@ -106,8 +112,14 @@ export const TrainLocationStore = {
     get selectedRouteId(): string | null {
         return store.getValue().selectedRouteId;
     },
+    get selectedStationId(): string | null {
+        return store.getValue().selectedStationId;
+    },
     get mode(): TrainLocationMode {
         return store.getValue().mode;
+    },
+    get tripClasses(): TripClassDetailsDto[] {
+        return store.getValue().tripClasses;
     },
     get tripBlocksByDirection(): Record<number, TripBlockDetailsDto[]> {
         return store.getValue().tripBlocksByDirection;

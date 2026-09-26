@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { RouterLink } from '@angular/router';
 import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
@@ -12,8 +13,8 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
     templateUrl: './train-location-card.component.html',
     styleUrl: './train-location-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, TripClassChipComponent],
-    host: { class: 'tw-block' },
+    imports: [RouterLink, TripClassChipComponent, PipesModule],
+    host: { class: 'tw-block tw-max-w-full' },
 })
 export class TrainLocationCardComponent {
     readonly card = input.required<TrainLocationCard>();

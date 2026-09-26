@@ -1,169 +1,110 @@
-<div class="tw-mx-auto tw-flex tw-max-w-2xl tw-flex-col">
+<div class="tw-flex tw-flex-col tw-py-3">
     <div
-        class="tw-mb-1 tw-flex tw-flex-row tw-justify-between tw-px-1 tw-text-xs tw-font-bold tw-text-grey-600"
+        class="tw-mb-1 tw-flex tw-flex-row tw-justify-between tw-px-4 tw-text-xs tw-font-bold tw-text-ink-2"
     >
-        <span>◀ 上り（{{ originStationName() }}方面・在線 左側）</span>
-        <span>在線 右側・下り ▶</span>
+        <span>◀ 上り</span>
+        <span>下り ▶</span>
     </div>
 
     @for (row of rows(); track rowKey(row)) {
         @if (row.kind === 'station') {
-            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                <div
-                    class="tw-flex tw-min-h-5 tw-flex-1 tw-flex-col tw-items-end tw-gap-1"
-                >
-                    @if (row.leftCards.length > 1) {
-                        <button
-                            type="button"
-                            cdkOverlayOrigin
-                            #leftTrigger="cdkOverlayOrigin"
-                            class="tw-rounded tw-bg-primary-700 tw-px-2 tw-py-1 tw-text-xs tw-font-bold tw-text-white"
-                            (click)="toggleExpand(rowKey(row) + ':left')"
-                        >
-                            🚈 {{ row.leftCards.length }}本停車中
-                            {{ isExpanded(rowKey(row) + ':left') ? '▴' : '▾' }}
-                        </button>
-                        <!-- 展開はオーバーレイで行い、駅軸のレイアウト・高さに影響させない -->
-                        <ng-template
-                            cdkConnectedOverlay
-                            [cdkConnectedOverlayOrigin]="leftTrigger"
-                            [cdkConnectedOverlayOpen]="
-                                isExpanded(rowKey(row) + ':left')
-                            "
-                            [cdkConnectedOverlayPositions]="leftOverlayPositions"
-                            [cdkConnectedOverlayHasBackdrop]="true"
-                            cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
-                            [cdkConnectedOverlayViewportMargin]="8"
-                            [cdkConnectedOverlayPush]="true"
-                            (backdropClick)="closeExpand(rowKey(row) + ':left')"
-                            (overlayKeydown)="
-                                onOverlayKeydown($event, rowKey(row) + ':left')
-                            "
-                        >
-                            <div
-                                class="tw-flex tw-max-h-80 tw-flex-col tw-gap-1 tw-overflow-y-auto tw-rounded tw-border tw-border-grey-200 tw-bg-white tw-p-2 tw-shadow-lg"
-                            >
-                                @for (card of row.leftCards; track card.tripId) {
-                                    <app-train-location-card
-                                        [card]="card"
-                                        status="stopped"
-                                    ></app-train-location-card>
-                                }
-                            </div>
-                        </ng-template>
-                    } @else {
-                        @for (card of row.leftCards; track card.tripId) {
-                            <app-train-location-card
-                                [card]="card"
-                                status="stopped"
-                            ></app-train-location-card>
-                        }
-                    }
-                </div>
-
-                <div class="tw-flex tw-w-5 tw-shrink-0 tw-flex-col tw-items-center">
-                    <span
-                        class="tw-block tw-rounded-full tw-bg-primary-900"
-                        [class.tw-h-4]="row.isMajor"
-                        [class.tw-w-4]="row.isMajor"
-                        [class.tw-h-2]="!row.isMajor"
-                        [class.tw-w-2]="!row.isMajor"
-                    ></span>
-                </div>
-
-                <div
-                    class="tw-flex tw-min-h-5 tw-flex-1 tw-flex-col tw-items-start tw-gap-1"
-                >
-                    @if (row.rightCards.length > 1) {
-                        <button
-                            type="button"
-                            cdkOverlayOrigin
-                            #rightTrigger="cdkOverlayOrigin"
-                            class="tw-rounded tw-bg-primary-700 tw-px-2 tw-py-1 tw-text-xs tw-font-bold tw-text-white"
-                            (click)="toggleExpand(rowKey(row) + ':right')"
-                        >
-                            🚈 {{ row.rightCards.length }}本停車中
-                            {{ isExpanded(rowKey(row) + ':right') ? '▴' : '▾' }}
-                        </button>
-                        <!-- 展開はオーバーレイで行い、駅軸のレイアウト・高さに影響させない -->
-                        <ng-template
-                            cdkConnectedOverlay
-                            [cdkConnectedOverlayOrigin]="rightTrigger"
-                            [cdkConnectedOverlayOpen]="
-                                isExpanded(rowKey(row) + ':right')
-                            "
-                            [cdkConnectedOverlayPositions]="rightOverlayPositions"
-                            [cdkConnectedOverlayHasBackdrop]="true"
-                            cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
-                            [cdkConnectedOverlayViewportMargin]="8"
-                            [cdkConnectedOverlayPush]="true"
-                            (backdropClick)="closeExpand(rowKey(row) + ':right')"
-                            (overlayKeydown)="
-                                onOverlayKeydown($event, rowKey(row) + ':right')
-                            "
-                        >
-                            <div
-                                class="tw-flex tw-max-h-80 tw-flex-col tw-gap-1 tw-overflow-y-auto tw-rounded tw-border tw-border-grey-200 tw-bg-white tw-p-2 tw-shadow-lg"
-                            >
-                                @for (card of row.rightCards; track card.tripId) {
-                                    <app-train-location-card
-                                        [card]="card"
-                                        status="stopped"
-                                    ></app-train-location-card>
-                                }
-                            </div>
-                        </ng-template>
-                    } @else {
-                        @for (card of row.rightCards; track card.tripId) {
-                            <app-train-location-card
-                                [card]="card"
-                                status="stopped"
-                            ></app-train-location-card>
-                        }
-                    }
-                </div>
-            </div>
-
             <div
-                class="tw-py-0.5 tw-text-center tw-text-xs tw-text-grey-800"
-                [class.tw-font-bold]="row.isMajor"
-                [class.tw-text-sm]="row.isMajor"
+                class="tw-grid tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] tw-items-center lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]"
             >
-                {{ row.stationName }}
-            </div>
-
-            @if (row.interchangeRoutes.length > 0) {
                 <div
-                    class="tw-mb-1 tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-justify-center tw-gap-1"
+                    class="tw-flex tw-flex-col tw-items-end tw-gap-1 tw-py-1 tw-pr-2"
                 >
-                    @for (interchange of row.interchangeRoutes; track interchange.routeId) {
+                    @for (card of row.leftCards; track card.tripId) {
+                        <app-train-location-card
+                            [card]="card"
+                            status="stopped"
+                        ></app-train-location-card>
+                    }
+                </div>
+
+                <div
+                    class="tw-relative tw-flex tw-h-full tw-min-h-7 tw-flex-col tw-items-center tw-justify-center tw-gap-1"
+                >
+                    <span
+                        aria-hidden="true"
+                        class="tw-absolute tw-inset-y-0 tw-left-1/2 tw-w-[3px] -tw-translate-x-1/2 tw-bg-structure"
+                    ></span>
+                    <button
+                        type="button"
+                        class="tw-relative tw-min-h-6 tw-cursor-pointer tw-whitespace-normal tw-rounded-full tw-border-2 tw-border-solid tw-border-structure tw-px-2 tw-py-0.5 tw-text-center tw-font-[inherit] tw-text-xs tw-leading-tight lg:tw-whitespace-nowrap"
+                        [attr.data-station-id]="row.stationId"
+                        [attr.aria-pressed]="
+                            row.stationId === selectedStationId()
+                        "
+                        [class.tw-font-bold]="row.isMajor"
+                        [class.tw-bg-white]="
+                            row.stationId !== selectedStationId()
+                        "
+                        [class.tw-text-ink]="
+                            row.stationId !== selectedStationId()
+                        "
+                        [class.tw-bg-structure]="
+                            row.stationId === selectedStationId()
+                        "
+                        [class.tw-text-paper]="
+                            row.stationId === selectedStationId()
+                        "
+                        [style.outline]="
+                            row.stationId === selectedStationId()
+                                ? '3px solid var(--color-accent)'
+                                : null
+                        "
+                        [style.outline-offset.px]="
+                            row.stationId === selectedStationId() ? 2 : null
+                        "
+                        (click)="stationSelect.emit(row.stationId)"
+                    >
+                        {{ row.stationName }}
+                    </button>
+                    @for (
+                        interchange of row.interchangeRoutes;
+                        track interchange.routeId
+                    ) {
                         <a
                             [routerLink]="[
                                 '/train-location',
-                                { route_id: interchange.routeId }
+                                {
+                                    route_id: interchange.routeId,
+                                    station_id: row.stationId,
+                                },
                             ]"
-                            class="tw-rounded-full tw-bg-grey-200 tw-px-2 tw-py-0.5 tw-text-[10px] tw-text-grey-800 tw-no-underline"
+                            class="tw-relative tw-whitespace-nowrap tw-rounded-full tw-bg-paper-3 tw-px-2 tw-py-px tw-text-[10px] tw-text-ink tw-no-underline"
+                            >{{ interchange.routeName }}</a
                         >
-                            {{ interchange.routeName }}
-                        </a>
                     }
                 </div>
-            }
+
+                <div
+                    class="tw-flex tw-flex-col tw-items-start tw-gap-1 tw-py-1 tw-pl-2"
+                >
+                    @for (card of row.rightCards; track card.tripId) {
+                        <app-train-location-card
+                            [card]="card"
+                            status="stopped"
+                        ></app-train-location-card>
+                    }
+                </div>
+            </div>
         } @else {
-            <!-- 駅間ゾーン: topProgress をそのまま top% にすると近接進捗の複数在線が
-                 重なるため、resolveBetweenRowLayout で衝突回避済みの px 位置を使う（98 G8）。
-                 密集時は行自体を伸長する（heightPx）ため、ページの縦スクロールで全件に辿り着ける。 -->
+            <!-- 駅間ゾーン: resolveBetweenRowLayout で衝突回避済みの px 位置を使う（98 G8）。
+                 密集時は行自体を伸長する（heightPx）。 -->
             <div
-                class="tw-flex tw-flex-row"
+                data-between
+                class="tw-grid tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]"
                 [style.height.px]="betweenLayout(row).heightPx"
             >
-                <div class="tw-relative tw-flex-1">
+                <div class="tw-relative">
                     @for (
                         positioned of betweenLayout(row).left;
                         track positioned.entry.card.tripId
                     ) {
                         <div
-                            class="tw-absolute tw-right-0"
+                            class="tw-absolute tw-right-2 tw-max-w-[calc(100%-0.5rem)]"
                             [style.top.px]="positioned.topPx"
                         >
                             <app-train-location-card
@@ -173,14 +114,19 @@
                         </div>
                     }
                 </div>
-                <div class="tw-w-0.5 tw-shrink-0 tw-bg-primary-900"></div>
-                <div class="tw-relative tw-flex-1">
+                <div class="tw-flex tw-justify-center">
+                    <span
+                        aria-hidden="true"
+                        class="tw-w-[3px] tw-bg-structure"
+                    ></span>
+                </div>
+                <div class="tw-relative">
                     @for (
                         positioned of betweenLayout(row).right;
                         track positioned.entry.card.tripId
                     ) {
                         <div
-                            class="tw-absolute tw-left-0"
+                            class="tw-absolute tw-left-2 tw-max-w-[calc(100%-0.5rem)]"
                             [style.top.px]="positioned.topPx"
                         >
                             <app-train-location-card

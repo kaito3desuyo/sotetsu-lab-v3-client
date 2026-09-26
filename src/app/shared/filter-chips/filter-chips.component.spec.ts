@@ -135,21 +135,27 @@ describe('FilterChipsComponent', () => {
             fixture.detectChanges();
         });
 
-        it('未選択の状態では ● マーカーを表示しない（箇条書き風の点を全チップに出さない）', () => {
-            const text: string = fixture.nativeElement.textContent;
-            expect(text).not.toContain('●');
-        });
-
-        it('選択中のチップにのみ先頭に ● マーカーを表示する', () => {
+        it('● マーカーを出さない（箇条書きの点に見える。ユーザー指摘 2026-09-26）', () => {
             fixture.componentRef.setInput('selected', ['a']);
             fixture.detectChanges();
 
-            const chipOptions = fixture.debugElement.queryAll(
+            expect(fixture.nativeElement.textContent).not.toContain('●');
+        });
+
+        it('選択の印は複数選択と同じ Material の ✓（graphic を隠さない）', () => {
+            fixture.componentRef.setInput('selected', ['a']);
+            fixture.detectChanges();
+
+            const listbox = fixture.nativeElement.querySelector(
+                'mat-chip-listbox',
+            ) as HTMLElement;
+            expect(listbox.classList).not.toContain('filter-chips-single');
+            const selected = fixture.debugElement.queryAll(
                 By.css('mat-chip-option'),
-            );
-            expect(chipOptions[0].nativeElement.textContent).toContain('●');
-            expect(chipOptions[1].nativeElement.textContent).not.toContain('●');
-            expect(chipOptions[2].nativeElement.textContent).not.toContain('●');
+            )[0].nativeElement as HTMLElement;
+            expect(
+                selected.querySelector('.mdc-evolution-chip__checkmark'),
+            ).not.toBeNull();
         });
 
         it('選択すると selectedChange が単一値の配列で発火する', () => {

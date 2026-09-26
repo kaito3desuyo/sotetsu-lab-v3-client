@@ -1,0 +1,214 @@
+<section class="tw-overflow-hidden tw-rounded-card tw-bg-white">
+    <header
+        class="tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-3 tw-gap-y-1 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-px-4 tw-py-3"
+    >
+        @if (stationId()) {
+            <h2 class="tw-m-0 tw-text-xl tw-font-bold tw-text-ink">
+                {{ stationName() }}
+            </h2>
+            @for (route of interchangeRoutes(); track route.routeId) {
+                <a
+                    [routerLink]="[
+                        '/train-location',
+                        { route_id: route.routeId, station_id: stationId() },
+                    ]"
+                    class="tw-rounded-full tw-bg-paper-3 tw-px-2 tw-py-0.5 tw-text-xs tw-text-ink tw-no-underline"
+                    >{{ route.routeName }}</a
+                >
+            }
+            <span class="tw-text-xs tw-text-muted"
+                >に次に来る列車（ダイヤ通り）</span
+            >
+        } @else {
+            <span class="tw-text-sm tw-text-muted"
+                >図の駅名を押して駅を選ぶ</span
+            >
+        }
+        <span class="tw-flex-1"></span>
+        @if (stationId()) {
+            <button
+                type="button"
+                class="tw-cursor-pointer tw-border-0 tw-bg-white tw-p-1 tw-font-[inherit] tw-text-xs tw-text-muted lg:tw-hidden"
+                [attr.aria-expanded]="isOpen()"
+                (click)="toggle()"
+            >
+                {{ isOpen() ? '畳む ▴' : '開く ▾' }}
+            </button>
+        }
+    </header>
+
+    @if (stationId()) {
+        <div [class.tw-hidden]="!isOpen()" class="lg:tw-block">
+            <ng-container
+                *ngTemplateOutlet="
+                    directionBlock;
+                    context: {
+                        label: '▲ 上り',
+                        rows: arrivals().inbound,
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    directionBlock;
+                    context: {
+                        label: '▼ 下り',
+                        rows: arrivals().outbound,
+                    }
+                "
+            ></ng-container>
+        </div>
+    }
+</section>
+
+<ng-template #directionBlock let-label="label" let-rows="rows">
+    <h3
+        class="tw-m-0 tw-px-4 tw-pb-1 tw-pt-3 tw-text-xs tw-font-bold tw-text-ink-2"
+    >
+        {{ label }}
+    </h3>
+    @for (row of rows; track row.tripId) {
+        <div
+            class="tw-grid tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)] tw-items-center tw-gap-x-2 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-4 tw-py-2 tw-text-sm sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto]"
+            [class.tw-bg-accent-50]="isImminent(row)"
+        >
+            <span
+                class="tw-whitespace-nowrap tw-text-right tw-text-lg tw-font-bold tw-tabular-nums tw-text-ink"
+                >{{ minutesLabel(row) }}</span
+            >
+            <!-- 着時刻と発時刻が両方あれば「着」「発」を 2 段に並べる。片方だけなら時刻 1 つ -->
+            <span
+                data-time
+                class="tw-flex tw-flex-col tw-tabular-nums tw-text-ink-2"
+            >
+                @if (row.departureTime) {
+                    <span class="tw-whitespace-nowrap"
+                        >{{ timeLabel(row)
+                        }}<small class="tw-text-muted">着</small></span
+                    >
+                    <span class="tw-whitespace-nowrap"
+                        >{{ departureLabel(row)
+                        }}<small class="tw-text-muted">発</small></span
+                    >
+                } @else {
+                    <span class="tw-whitespace-nowrap">{{
+                        timeLabel(row)
+                    }}</span>
+                }
+            </span>
+            <div class="tw-flex tw-min-w-0 tw-flex-col tw-gap-0.5">
+                @if (row.continuation; as next) {
+                    <!-- 上の段: 同じ編成が選んだ駅で次の列番に引き継ぐ（当駅止まりではない）。
+                         主の段は変更後の種別・列番で、ここには変更前を小さく出す -->
+                    <div
+                        data-continuation
+                        class="tw-flex tw-flex-wrap tw-items-center tw-gap-1 tw-text-xs tw-text-muted"
+                    >
+                        <app-trip-class-chip
+                            size="sm"
+                            [label]="row.tripClassName"
+                            [color]="row.tripClassColor"
+                        ></app-trip-class-chip>
+                        <span>{{ row.tripNumber }}</span>
+                        <span aria-hidden="true">→</span>
+                    </div>
+                }
+                <!-- 主の段: 種別 列番 行先（種別が変わる駅を選んでいるときは変更後。上の段に変更前） -->
+                <div
+                    data-main-line
+                    class="tw-flex tw-flex-wrap tw-items-center tw-gap-x-1.5"
+                >
+                    <span data-main-class class="tw-inline-flex">
+                        <app-trip-class-chip
+                            size="sm"
+                            [label]="shown(row).tripClassName"
+                            [color]="shown(row).tripClassColor"
+                        ></app-trip-class-chip>
+                    </span>
+                    <span class="tw-whitespace-nowrap tw-tabular-nums">{{
+                        shown(row).tripNumber
+                    }}</span>
+                    <b class="tw-whitespace-nowrap tw-text-ink"
+                        >{{ row.destinationName }} 行</b
+                    >
+                    @if (row.isPassing) {
+                        <span
+                            class="tw-whitespace-nowrap tw-text-xs tw-font-bold tw-text-accent-deep"
+                            >通過</span
+                        >
+                    }
+                    @if (row.isOrigin) {
+                        <span
+                            data-origin
+                            class="tw-whitespace-nowrap tw-text-xs tw-font-bold tw-text-structure"
+                            >始発</span
+                        >
+                    }
+                    @if (row.isTerminal) {
+                        <span
+                            class="tw-whitespace-nowrap tw-text-xs tw-font-bold tw-text-structure"
+                            >当駅止まり</span
+                        >
+                    }
+                    <span
+                        class="tw-inline-flex tw-flex-wrap tw-gap-x-1 tw-text-xs tw-text-muted"
+                    >
+                        @if (row.operationNumber) {
+                            <!-- 運用番号は運用群の色。運用 ID があれば運用行路図へのリンク -->
+                            <span class="tw-whitespace-nowrap"
+                                >・
+                                @if (row.operationId) {
+                                    <a
+                                        data-operation-number
+                                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink tw-no-underline"
+                                        [style.background-color]="
+                                            row.operationNumber
+                                                | operationNumberColor
+                                        "
+                                        [routerLink]="[
+                                            '/operation',
+                                            'route-diagram',
+                                            { operation_id: row.operationId },
+                                        ]"
+                                        >{{ row.operationNumber }}</a
+                                    >
+                                } @else {
+                                    <span
+                                        data-operation-number
+                                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink"
+                                        [style.background-color]="
+                                            row.operationNumber
+                                                | operationNumberColor
+                                        "
+                                        >{{ row.operationNumber }}</span
+                                    >
+                                }
+                            </span>
+                        }
+                        @if (row.formationNumber) {
+                            <span class="tw-whitespace-nowrap"
+                                >・{{
+                                    row.formationAgencyName
+                                        ? row.formationAgencyName + ' '
+                                        : ''
+                                }}<b class="tw-text-ink">{{
+                                    row.formationNumber
+                                }}</b></span
+                            >
+                        }
+                    </span>
+                </div>
+            </div>
+            <span
+                class="tw-col-span-3 tw-text-xs tw-text-muted sm:tw-col-span-1 sm:tw-text-right"
+                >{{ row.whereText }}</span
+            >
+        </div>
+    } @empty {
+        <p
+            class="tw-m-0 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-4 tw-py-3 tw-text-sm tw-text-muted"
+        >
+            この先の列車はありません
+        </p>
+    }
+</ng-template>

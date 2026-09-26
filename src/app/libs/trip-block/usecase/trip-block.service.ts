@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
+import { TripBlockFields } from './trip-block-fields';
 import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
 import { CreateTripBlockDto } from './dtos/create-trip-block.dto';
 import { DeleteTripFromTripBlockDto } from './dtos/delete-trip-from-trip-block.dto';
@@ -18,6 +19,7 @@ export class TripBlockService {
     findManyByFilter(params: {
         calendarId: string;
         tripDirection: number;
+        fields?: TripBlockFields;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto[]> {
         return this.tripBlockQuery.findManyByFilter(params);
@@ -29,6 +31,7 @@ export class TripBlockService {
      */
     findManyByCalendarId(params: {
         calendarId: string;
+        fields?: TripBlockFields;
         forceReload?: boolean;
     }): Observable<Record<number, TripBlockDetailsDto[]>> {
         return this.tripBlockQuery.findManyByCalendarId(params);

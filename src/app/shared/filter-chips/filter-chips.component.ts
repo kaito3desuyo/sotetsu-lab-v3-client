@@ -99,10 +99,6 @@ export class FilterChipsComponent {
         });
     }
 
-    protected isSelectedValue(value: FilterChipValue): boolean {
-        return this.selected().includes(value);
-    }
-
     protected onChange(event: MatChipListboxChange): void {
         const { value } = event;
 

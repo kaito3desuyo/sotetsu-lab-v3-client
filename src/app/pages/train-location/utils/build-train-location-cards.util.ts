@@ -100,8 +100,7 @@ export function buildTrainLocationCards(
 
             const times = sortTimes(trip.times);
             const destinationStationId =
-                blockDestinationStationId ??
-                times[times.length - 1]?.stationId;
+                blockDestinationStationId ?? times[times.length - 1]?.stationId;
             const destinationName = destinationStationId
                 ? (stationNameById.get(destinationStationId) ?? '')
                 : '';
@@ -125,6 +124,7 @@ export function buildTrainLocationCards(
                 tripClassName: baseTripClassName(trip.tripClass?.tripClassName),
                 tripClassColor: trip.tripClass?.tripClassColor ?? '#8a8a8a',
                 operationNumber,
+                operationId: trip.tripOperationLists?.[0]?.operationId,
                 destinationName,
                 direction:
                     trip.tripDirection === ETripDirection.INBOUND
