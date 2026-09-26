@@ -14,7 +14,6 @@ import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-c
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
 import { OperationRouteDiagramDrawingContainerComponent } from './components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
-import { OperationRouteDiagramHeaderComponent } from './components/operation-route-diagram-header/operation-route-diagram-header.component';
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
@@ -29,7 +28,6 @@ OperationRouteDiagramStore.resetLoading();
     imports: [
         MatProgressBarModule,
         AdsenseModule,
-        OperationRouteDiagramHeaderComponent,
         OperationRouteDiagramRouteFilterComponent,
         OperationRouteDiagramDrawingContainerComponent,
         OperationSearchCardCComponent,
@@ -127,14 +125,24 @@ export class OperationRouteDiagramComponent {
 
         OperationRouteDiagramStore.enableLoading();
 
-        await lastValueFrom(
-            this.#operationRouteDiagramService.fetchOperationTrips(),
-        );
-        await lastValueFrom(
-            this.#operationRouteDiagramService.fetchStations(),
-        );
+        // 列車と駅は互いに依存しないので並行に取る
+        const results = await Promise.allSettled([
+            lastValueFrom(
+                this.#operationRouteDiagramService.fetchOperationTrips(),
+            ),
+            lastValueFrom(this.#operationRouteDiagramService.fetchStations()),
+        ]);
 
+        // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
         OperationRouteDiagramStore.initializeSelectedRouteIds();
         OperationRouteDiagramStore.disableLoading();
+
+        const failure = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
+        );
+        if (failure) {
+            throw failure.reason;
+        }
     }
 }

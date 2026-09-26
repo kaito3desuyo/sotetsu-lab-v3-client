@@ -1,4 +1,4 @@
-<article class="tw-overflow-hidden tw-rounded-card tw-bg-white">
+<article class="tw-overflow-clip tw-rounded-card tw-bg-white">
     <header
         class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
         [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
@@ -10,86 +10,103 @@
             {{ operation().operationNumber }}運
         </h3>
     </header>
-    <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4 max-sm:tw-px-0">
-        <div class="tw-w-full tw-overflow-x-auto">
-            <div class="tw-sticky tw-top-0 tw-z-10 tw-w-fit tw-bg-white">
-                <svg [attr.width]="svgWidth()" [attr.height]="HEADER_HEIGHT">
-                    <ng-container
-                        *ngTemplateOutlet="stationHeaderTpl"
-                    ></ng-container>
-                </svg>
-            </div>
-            <div>
-                <svg [attr.width]="svgWidth()" [attr.height]="bodyHeight()">
-                    <ng-container
-                        *ngTemplateOutlet="
-                            gridlinesTpl;
-                            context: { offset: 0, height: bodyHeight() }
-                        "
-                    ></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            bandsTpl;
-                            context: { offset: 0 }
-                        "
-                    ></ng-container>
-                </svg>
-            </div>
-        </div>
-
-        <div class="max-sm:tw-px-4">
-            <app-button
-                variant="secondary"
-                (buttonClick)="downloadAsPng()"
-            >画像としてダウンロードする</app-button>
-        </div>
-
-        @if (drawingSVGForOutput()) {
-            <div class="tw-hidden">
-                <svg
-                    style="
-                        font-family: -apple-system, BlinkMacSystemFont, Roboto,
-                            'Yu Gothic UI', '游ゴシック体', YuGothic,
-                            'Yu Gothic Medium', sans-serif;
+    <!-- 図はカードの幅いっぱいに広げる。駅が多く列間隔が下限を割るときだけ横にはみ出すので、
+         縦もカード内でスクロールさせ（過去の運用情報と同じ）、横スクロールバーが
+         図の底（列車が多いと 1,000px 下）に隠れないようにする。駅名は上に貼り付ける。 -->
+    <div
+        #scroller
+        class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
+    >
+        <div class="tw-sticky tw-top-0 tw-z-10 tw-w-fit tw-bg-white">
+            <svg [attr.width]="svgWidth()" [attr.height]="HEADER_HEIGHT">
+                <ng-container
+                    *ngTemplateOutlet="
+                        stationHeaderTpl;
+                        context: { columns: stationColumns() }
                     "
-                    #svgElement
-                    [attr.width]="svgWidth()"
-                    [attr.height]="HEADER_HEIGHT + bodyHeight()"
-                >
-                    <ng-container
-                        *ngTemplateOutlet="stationHeaderTpl"
-                    ></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            gridlinesTpl;
-                            context: {
-                                offset: HEADER_HEIGHT,
-                                height: bodyHeight(),
-                            }
-                        "
-                    ></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            bandsTpl;
-                            context: { offset: HEADER_HEIGHT }
-                        "
-                    ></ng-container>
-                </svg>
-            </div>
-        }
+                ></ng-container>
+            </svg>
+        </div>
+        <svg
+            class="tw-block"
+            [attr.width]="svgWidth()"
+            [attr.height]="bodyHeight()"
+        >
+            <ng-container
+                *ngTemplateOutlet="
+                    gridlinesTpl;
+                    context: {
+                        columns: stationColumns(),
+                        offset: 0,
+                        height: bodyHeight(),
+                    }
+                "
+            ></ng-container>
+            <ng-container
+                *ngTemplateOutlet="
+                    bandsTpl;
+                    context: { rows: bandRows(), offset: 0 }
+                "
+            ></ng-container>
+        </svg>
     </div>
+
+    <div class="tw-p-4">
+        <app-button variant="secondary" (buttonClick)="downloadAsPng()"
+            >画像としてダウンロードする</app-button
+        >
+    </div>
+
+    <!-- 画像出力はカードの幅に左右されない固定の列間隔で描く（outputColumnMetrics） -->
+    @if (drawingSVGForOutput()) {
+        <div class="tw-hidden">
+            <svg
+                style="
+                    font-family: -apple-system, BlinkMacSystemFont, Roboto,
+                        'Yu Gothic UI', '游ゴシック体', YuGothic,
+                        'Yu Gothic Medium', sans-serif;
+                "
+                #svgElement
+                [attr.width]="outputColumnMetrics().width"
+                [attr.height]="HEADER_HEIGHT + bodyHeight()"
+            >
+                <ng-container
+                    *ngTemplateOutlet="
+                        stationHeaderTpl;
+                        context: { columns: outputStationColumns() }
+                    "
+                ></ng-container>
+                <ng-container
+                    *ngTemplateOutlet="
+                        gridlinesTpl;
+                        context: {
+                            columns: outputStationColumns(),
+                            offset: HEADER_HEIGHT,
+                            height: bodyHeight(),
+                        }
+                    "
+                ></ng-container>
+                <ng-container
+                    *ngTemplateOutlet="
+                        bandsTpl;
+                        context: { rows: outputBandRows(), offset: HEADER_HEIGHT }
+                    "
+                ></ng-container>
+            </svg>
+        </div>
+    }
 </article>
 
-<!-- G6: 駅名ヘッダー（縦書き圧縮＝1 文字ずつ縦積み。390px フィットのため列間隔は動的） -->
-<ng-template #stationHeaderTpl>
+<!-- 駅名（1 文字ずつ縦に積む） -->
+<ng-template #stationHeaderTpl let-columns="columns">
     <svg>
-        @for (col of stationColumns(); track col.stationId) {
+        @for (col of columns; track col.stationId) {
             <text
                 [attr.x]="col.xList"
-                y="0,0,0,0,0,0"
-                dy="0,14,28,42,56,70"
+                [attr.y]="stationYList"
                 font-size="13"
                 fill="#212121"
+                text-anchor="middle"
             >{{
                 col.stationName
                     | operationRouteDiagramFormatStationName
@@ -99,10 +116,15 @@
     </svg>
 </ng-template>
 
-<!-- G6: 駅ごとの薄い縦グリッド線（判読補助） -->
-<ng-template #gridlinesTpl let-offset="offset" let-height="height">
+<!-- 駅ごとの薄い縦の点線 -->
+<ng-template
+    #gridlinesTpl
+    let-columns="columns"
+    let-offset="offset"
+    let-height="height"
+>
     <svg>
-        @for (col of stationColumns(); track col.stationId) {
+        @for (col of columns; track col.stationId) {
             <line
                 [attr.x1]="col.x"
                 [attr.x2]="col.x"
@@ -116,131 +138,86 @@
     </svg>
 </ng-template>
 
-
-<!-- 99文書（モック04一筆書き階段文法。99文書追補12で出庫/入庫の専用テキストを廃止し
-     通常の発着時刻表示に統合・入庫△の中心を線位置(centerY)に補正）: 行路帯本体。
-     各列車は横線1本（旅客=種別色実線/回送=灰点線）・両端の発着時刻は線の上側
-     （出庫/入庫がある端も含め常に通常表示。○/△マーカー自体が出庫/入庫を意味する）・
-     列番ラベルは旅客・回送とも線の下側中央・出庫○/入庫△・列間の折返し接続線
-     （縦線の直線・列車iの種別色）を描画する。 -->
-<ng-template #bandsTpl let-offset="offset">
+<!-- 列車（本番の行路図と同じ骨格）: 横線（旅客=種別色の実線・回送=灰の点線）、
+     両端の時刻は線の外側、種別チップ＋列番は線の上の中央、出庫○・入庫△は端、
+     着いた端から次の列車の線まで縦線。押すと全線時刻表へ移る。 -->
+<ng-template #bandsTpl let-rows="rows" let-offset="offset">
     <svg>
-        @for (row of bandRows(); track row.tripOperationListId) {
-            <g
-                class="tw-cursor-pointer"
-                (click)="onClickBand(row)"
-            >
-                @if (row.style === 'nonRevenue') {
-                    <line
-                        [attr.x1]="row.leftX"
-                        [attr.x2]="row.rightX"
-                        [attr.y1]="row.centerY + offset"
-                        [attr.y2]="row.centerY + offset"
-                        stroke="#9e9e9e"
-                        stroke-width="2"
-                        stroke-dasharray="5 3"
-                    ></line>
-                } @else {
-                    <line
-                        [attr.x1]="row.leftX"
-                        [attr.x2]="row.rightX"
-                        [attr.y1]="row.centerY + offset"
-                        [attr.y2]="row.centerY + offset"
-                        [attr.stroke]="row.color"
-                        stroke-width="2"
-                    ></line>
-                }
+        @for (row of rows; track row.tripOperationListId) {
+            <g class="tw-cursor-pointer" (click)="onClickBand(row)">
+                <line
+                    [attr.x1]="row.leftX"
+                    [attr.x2]="row.rightX"
+                    [attr.y1]="row.centerY + offset"
+                    [attr.y2]="row.centerY + offset"
+                    [attr.stroke]="row.color"
+                    stroke-width="2"
+                    [attr.stroke-dasharray]="
+                        row.style === 'nonRevenue' ? '5 3' : null
+                    "
+                ></line>
 
-                <!-- P9-11①②（99文書追補9）: 種別バッジ＋（行先）＋列番を standard/nonRevenue
-                     共通の構成で描画する。回送は行先パーツを省略（バッジ＋列番の2パーツ。
-                     行先の概念が無いため）。バッジの塗り(row.badgeFill)は
-                     standard=row.color／nonRevenue=固定の灰(#9e9e9e)で切り替わる
-                     （旧: 回送専用の半透明背景ボックス＋「回送 <列番>」単一テキストは廃止）。
-                     99文書追補4: グラデーションの対象は種別バッジではなく折返し接続線
-                     だった（P9-6の指示誤読を訂正）。バッジは単色ベタ塗りのまま。
-                     99文書追補9 §2（P9-11②）: dominant-baseline="central" を指定すると、
-                     y座標をテキストの視覚的中心とみなして描画されるため、フォントサイズが
-                     異なってもバッジ内テキスト・行先・列番のすべてが同じ labelY を
-                     共有するだけで視覚的中心が揃う（旧 badgeTextY/tripNumberY の
-                     個別y座標・verticalCenterOffset による近似補正は不要になった）。 -->
+                <!-- 種別チップ（app-trip-class-chip と同じ白字＋黒の縁取り） -->
                 <rect
-                    [attr.x]="row.badgeX"
-                    [attr.y]="row.badgeY + offset"
-                    [attr.width]="row.badgeWidth"
-                    [attr.height]="row.badgeHeight"
-                    [attr.rx]="BADGE_RADIUS"
-                    [attr.fill]="row.badgeFill"
+                    [attr.x]="row.chipX"
+                    [attr.y]="row.chipY + offset"
+                    [attr.width]="row.chipWidth"
+                    [attr.height]="CHIP_HEIGHT"
+                    [attr.rx]="CHIP_RADIUS"
+                    [attr.fill]="row.chipFill"
                 ></rect>
                 <text
-                    text-anchor="start"
                     dominant-baseline="central"
-                    [attr.x]="row.badgeTextX"
+                    [attr.x]="row.chipTextX"
                     [attr.y]="row.labelY + offset"
-                    [attr.font-size]="BADGE_FONT_SIZE"
+                    [attr.font-size]="CHIP_FONT_SIZE"
                     font-weight="700"
                     fill="white"
+                    stroke="black"
+                    stroke-width="0.96"
+                    paint-order="stroke fill"
                 >{{ row.tripClassName }}</text>
-
-                @if (row.style !== 'nonRevenue') {
-                    <text
-                        text-anchor="start"
-                        dominant-baseline="central"
-                        [attr.x]="row.destinationX"
-                        [attr.y]="row.labelY + offset"
-                        [attr.font-size]="LABEL_FONT_SIZE"
-                        font-weight="700"
-                        fill="#212121"
-                    >{{ row.destinationStationName }}</text>
-                }
-
-                <!-- 99文書追補14: 和文グリフ（バッジ内種別名・行先）と数字グリフ（列番）とで
-                     dominant-baseline="central" のフォントメトリクス解釈が異なり、
-                     バウンディングボックスは一致していても視覚的には数字が下にズレて見える。
-                     dy="0.5" で視覚的な中心を他要素と揃える（管理者実験値）。 -->
+                <!-- 和文と数字で central の解釈が違い、数字が下にずれて見えるので 0.5 上げる（99 文書追補 14） -->
                 <text
-                    text-anchor="start"
+                    class="tw-tabular-nums"
                     dominant-baseline="central"
                     dy="0.5"
                     [attr.x]="row.tripNumberX"
                     [attr.y]="row.labelY + offset"
                     [attr.font-size]="TRIP_NUMBER_FONT_SIZE"
-                    fill="#757575"
+                    fill="#212121"
                 >{{ row.tripNumber }}</text>
 
-                <!-- 発着時刻: 線の上側・両端の内側寄り。99文書追補12 §1: 出庫/入庫が
-                     ある端でも、この通常表示にそのまま統合する（○/△マーカー自体が
-                     出庫/入庫を意味するため、専用の「HHMM 出庫/入庫」テキストは廃止した）。 -->
                 @if (row.leftTime) {
                     <text
                         class="tw-tabular-nums"
-                        text-anchor="start"
-                        [attr.x]="row.leftX + 4"
-                        [attr.y]="row.timeY + offset"
-                        font-size="12"
-                        fill="black"
+                        text-anchor="end"
+                        dominant-baseline="central"
+                        [attr.x]="row.leftTimeX"
+                        [attr.y]="row.centerY + offset"
+                        [attr.font-size]="TIME_FONT_SIZE"
+                        fill="#212121"
                     >{{
                         row.leftTime
-                            | dateFns
-                                : { format: 'HHmm', parseFormat: 'HH:mm:ss' }
+                            | dateFns: { format: 'HHmm', parseFormat: 'HH:mm:ss' }
                     }}</text>
                 }
                 @if (row.rightTime) {
                     <text
                         class="tw-tabular-nums"
-                        text-anchor="end"
-                        [attr.x]="row.rightX - 4"
-                        [attr.y]="row.timeY + offset"
-                        font-size="12"
-                        fill="black"
+                        text-anchor="start"
+                        dominant-baseline="central"
+                        [attr.x]="row.rightTimeX"
+                        [attr.y]="row.centerY + offset"
+                        [attr.font-size]="TIME_FONT_SIZE"
+                        fill="#212121"
                     >{{
                         row.rightTime
-                            | dateFns
-                                : { format: 'HHmm', parseFormat: 'HH:mm:ss' }
+                            | dateFns: { format: 'HHmm', parseFormat: 'HH:mm:ss' }
                     }}</text>
                 }
 
-                <!-- 出庫: ○(白抜き・紺枠)。99文書追補12 §1: 専用の「HHMM 出庫」テキストは
-                     廃止した（○マーカー自体が出庫を意味し、時刻は上の通常表示で読める）。 -->
+                <!-- 出庫: 白抜きの○ -->
                 @if (row.depotOut) {
                     <circle
                         [attr.cx]="row.depotOutX"
@@ -251,23 +228,19 @@
                         stroke-width="2"
                     ></circle>
                 }
-                <!-- 入庫: △(白抜き・黒枠の上向き三角形。99文書追補7 §6・masterブランチ準拠)。
-                     99文書追補12 §2: バウンディングボックスのy中心が centerY と一致するよう
-                     頂点/底辺のyを centerY±6.5 に補正した（旧 centerY-12/centerY+1 は
-                     中心が centerY-5.5 にズレていた。高さ13pxは維持）。
-                     99文書追補12 §1: 専用の「HHMM 入庫」テキストは廃止した。 -->
+                <!-- 入庫: 白抜きの上向き△。外接する箱の中心を線の位置と端の駅に合わせる -->
                 @if (row.depotIn) {
                     <polygon
                         [attr.points]="
-                            (row.depotInX - 2) +
+                            row.depotInX +
                             ',' +
                             (row.centerY + offset - 6.5) +
                             ' ' +
-                            (row.depotInX - 10) +
+                            (row.depotInX - 7.5) +
                             ',' +
                             (row.centerY + offset + 6.5) +
                             ' ' +
-                            (row.depotInX + 6) +
+                            (row.depotInX + 7.5) +
                             ',' +
                             (row.centerY + offset + 6.5)
                         "
@@ -277,23 +250,10 @@
                     ></polygon>
                 }
 
-                <!-- 折返し接続: 列車iの着駅端xから列車i+1の横線yまでの単純な垂直直線。
-                     99文書追補3: 丸め処理（Q二次ベジェ・stroke-linecap="round"）は駅の実座標から
-                     オフセットして見える原因だったため撤去した。
-                     99文書追補4: d属性はcomponent.ts側で完成済み文字列にせず、offsetを含まない
-                     connectorX/connectorY1/connectorY2からテンプレート側でoffsetを加算して
-                     組み立てる（他の全要素と同じ「offsetはテンプレート側で加算」の原則に統一。
-                     これにより画面表示(offset=0)・PNG出力(offset=HEADER_HEIGHT)の両方で正しい
-                     位置に描画される）。
-                     99文書追補6: グラデーションは「接続元(row.color)の種別色→接続先
-                     (row.connectorEndColor=next.color)の種別色」へ変化させる
-                     （同系色の明度違いlightenHexColorは誤りだったため廃止）。 -->
+                <!-- 次の列車への縦線。色は接続元の種別色から接続先の種別色へ移るグラデーション。
+                     幅 0 の直線は objectBoundingBox だと塗られない（画像出力で消えた）ので
+                     userSpaceOnUse にし、座標は実座標で与える。 -->
                 @if (row.connectorX !== undefined) {
-                    <!-- 差し戻し（2026-07-20）: 接続線は境界ボックス幅が0の垂直直線のため、
-                         gradientUnits省略時のデフォルト(objectBoundingBox)ではSVG仕様上
-                         ペイントが無効化され、画面表示では気づかず「PNG出力でのみ接続線が
-                         消失する」不具合になった。userSpaceOnUseを明示し、x1/y1/x2/y2は
-                         %ではなく接続線の実座標（offset加算後）で与える。 -->
                     <defs>
                         <linearGradient
                             [attr.id]="row.connectorGradientId"
