@@ -83,6 +83,27 @@ describe('TrainDiagramStore', () => {
         ]);
     });
 
+    it('setPxPerMinute / setAxisPxPerMinute: 上限・下限に収めて入れる', () => {
+        TrainDiagramStore.setPxPerMinute(100);
+        expect(TrainDiagramStore.pxPerMinute).toBe(40);
+        TrainDiagramStore.setPxPerMinute(1);
+        expect(TrainDiagramStore.pxPerMinute).toBe(4);
+        TrainDiagramStore.setAxisPxPerMinute(50);
+        expect(TrainDiagramStore.axisPxPerMinute).toBe(24);
+        TrainDiagramStore.setPxPerMinute(10);
+        TrainDiagramStore.setAxisPxPerMinute(null);
+    });
+
+    it('axisPxPerMinute: 既定は null（自動）。Ctrl+ホイール等で明示的に入れると数値になり、null に戻すと自動に戻る（Task 13 フィックス）', () => {
+        expect(TrainDiagramStore.axisPxPerMinute).toBeNull();
+
+        TrainDiagramStore.setAxisPxPerMinute(10);
+        expect(TrainDiagramStore.axisPxPerMinute).toBe(10);
+
+        TrainDiagramStore.setAxisPxPerMinute(null);
+        expect(TrainDiagramStore.axisPxPerMinute).toBeNull();
+    });
+
     it('enableLoading/disableLoading: キューの増減で isLoading$ が切り替わる', (done) => {
         TrainDiagramStore.enableLoading();
         TrainDiagramStore.isLoading$.subscribe((isLoading) => {
@@ -215,7 +236,9 @@ describe('TrainDiagramStore', () => {
                 expect(hasStation(axis, 'futamatagawa')).toBe(true);
                 expect(hasStation(axis, 'shonandai')).toBe(true);
                 const yYokohama = axis ? stationToY('yokohama', axis) : 0;
-                const yFutamatagawa = axis ? stationToY('futamatagawa', axis) : 0;
+                const yFutamatagawa = axis
+                    ? stationToY('futamatagawa', axis)
+                    : 0;
                 const yShonandai = axis ? stationToY('shonandai', axis) : 0;
                 expect(yYokohama).toBeLessThan(yFutamatagawa);
                 expect(yFutamatagawa).toBeLessThan(yShonandai);

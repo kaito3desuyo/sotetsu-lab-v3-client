@@ -1,8 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { TrainDiagramControllerComponent } from './train-diagram-controller.component';
 
 describe('TrainDiagramControllerComponent', () => {
@@ -13,6 +16,7 @@ describe('TrainDiagramControllerComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TrainDiagramControllerComponent],
             providers: [
+                provideNoopAnimations(),
                 {
                     provide: CalendarListStateQuery,
                     useValue: {
@@ -69,41 +73,104 @@ describe('TrainDiagramControllerComponent', () => {
         ]);
     });
 
-    it('onRouteChange: 値が空なら空配列を emit する', () => {
-        const spy = jest.spyOn(component.routeIdsChange, 'emit');
-        component.onRouteChange([]);
-        expect(spy).toHaveBeenCalledWith([]);
-    });
-
     it('onRouteChange: 複数選択の値を emit する', () => {
         const spy = jest.spyOn(component.routeIdsChange, 'emit');
         component.onRouteChange(['route-1', 'route-2']);
         expect(spy).toHaveBeenCalledWith(['route-1', 'route-2']);
     });
 
-    it('onDirectionFilterChange: 選択した方向を emit する', () => {
+    it('畳まない（折りたたみパネルを使わない）', () => {
+        expect(
+            fixture.nativeElement.querySelector('app-collapsible-panel'),
+        ).toBeNull();
+    });
+
+    it('路線チップは複数選択・横スクロール 1 行', () => {
+        const chips = fixture.debugElement.query(
+            By.directive(FilterChipsComponent),
+        ).componentInstance as FilterChipsComponent;
+        expect(chips.mode()).toBe('multiple');
+        expect(chips.scrollMode()).toBe(true);
+    });
+
+    it('「時刻へ跳ぶ」の選択肢が 22 個（4:00〜25:00）', async () => {
+        // mat-select の options は overlay（document.body 直下）にレンダーされるため、
+        // 2つ目（「時刻へ跳ぶ」）の mat-select トリガーを開いて body から options を読む。
+        const trigger: HTMLElement =
+            fixture.nativeElement.querySelectorAll('mat-select')[1];
+        trigger.click();
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const options = document.querySelectorAll(
+            '.cdk-overlay-container mat-option',
+        );
+        expect(options.length).toBe(22);
+        expect(options[0].textContent?.trim()).toBe('4:00');
+        expect(options[21].textContent?.trim()).toBe('25:00');
+    });
+
+    it('「時刻へ跳ぶ」で 18 を選ぶと jumpToHour に 18 を emit し、select の値を null に戻す', () => {
+        const spy = jest.spyOn(component.jumpToHour, 'emit');
+        const event = {
+            value: 18,
+            source: { value: 18 },
+        } as any;
+        component.onJump(event);
+        expect(spy).toHaveBeenCalledWith(18);
+        expect(event.source.value).toBeNull();
+    });
+
+    it('showNowButton=false のとき「今」ボタンは無く、true のとき有って押すと jumpToNow を emit する', () => {
+        expect(
+            fixture.nativeElement.querySelector('[data-now-button]'),
+        ).toBeNull();
+
+        fixture.componentRef.setInput('showNowButton', true);
+        fixture.detectChanges();
+
+        const button: HTMLButtonElement =
+            fixture.nativeElement.querySelector('[data-now-button]');
+        expect(button).not.toBeNull();
+
+        const spy = jest.spyOn(component.jumpToNow, 'emit');
+        button.click();
+        expect(spy).toHaveBeenCalled();
+    });
+
+    it('− で zoomStep に -1、＋ で zoomStep に 1 を emit する', () => {
+        const spy = jest.spyOn(component.zoomStep, 'emit');
+
+        const zoomOut: HTMLButtonElement =
+            fixture.nativeElement.querySelector('[data-zoom-out]');
+        zoomOut.click();
+        expect(spy).toHaveBeenCalledWith(-1);
+
+        const zoomIn: HTMLButtonElement =
+            fixture.nativeElement.querySelector('[data-zoom-in]');
+        zoomIn.click();
+        expect(spy).toHaveBeenCalledWith(1);
+    });
+
+    it('Task 13: ダイヤ選択欄はスマホで行いっぱい・sm 以上で 320px 固定幅', () => {
+        const calendarField: HTMLElement =
+            fixture.nativeElement.querySelectorAll('mat-form-field')[0];
+        expect(calendarField.className).toContain('tw-basis-full');
+        expect(calendarField.className).toContain('sm:tw-w-80');
+        expect(calendarField.className).toContain('sm:tw-basis-auto');
+        expect(calendarField.className).toContain('sm:tw-flex-none');
+    });
+
+    it('方向のトグルで directionFilterChange を emit する', () => {
         const spy = jest.spyOn(component.directionFilterChange, 'emit');
-        component.onDirectionFilterChange('up');
+        // 上り・下り・両方の順で並ぶ最初のトグル（上り）を押す
+        const upToggle: HTMLElement =
+            fixture.nativeElement.querySelectorAll('mat-button-toggle')[0];
+        upToggle
+            .querySelector('button')
+            ?.dispatchEvent(new MouseEvent('click'));
+        fixture.detectChanges();
         expect(spy).toHaveBeenCalledWith('up');
-    });
-
-    it('collapsedSummary: 未選択時は既定値の要約を返す', () => {
-        expect(component.collapsedSummary()).toBe(
-            'ダイヤ未選択 / 全路線 / 7:00〜8:00 / 上り・下り / 標準',
-        );
-    });
-
-    it('collapsedSummary: 現在の選択状態（ダイヤ・路線・時間帯・方向・ズーム）を反映する', () => {
-        fixture.componentRef.setInput('calendarId', 'calendar-1');
-        fixture.componentRef.setInput('selectedRouteIds', [
-            'route-1',
-            'route-2',
-        ]);
-        fixture.componentRef.setInput('windowStartHour', 9);
-        fixture.componentRef.setInput('directionFilter', 'up');
-        fixture.componentRef.setInput('zoomLevel', 'wide');
-        expect(component.collapsedSummary()).toBe(
-            '2026/3/14改正 土休日 / 本線・いずみ野線 / 9:00〜10:00 / 上り / 拡大',
-        );
     });
 });

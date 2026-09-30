@@ -4,36 +4,10 @@ import { map, mergeMap, tap } from 'rxjs/operators';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { TripBlockFields } from 'src/app/libs/trip-block/usecase/trip-block-fields';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TrainLocationStore } from '../stores/train-location.store';
-import { attachTripClasses } from '../utils/attach-trip-classes.util';
-
-/**
- * 列車位置情報で使う列車データの項目（API の fields。sotetsu-lab-v3-api docs/adr/0002-v3-sparse-fieldsets.md）。
- * 全項目だと平日ダイヤ 1 方向で約 5.8MB あり Lambda の応答の上限（6MB）に近いため、使う項目だけを取る
- * （約 1.7MB）。種別の中身は取らず、先に取っている種別の一覧から補う（attachTripClasses）。
- */
-export const TRAIN_LOCATION_TRIP_BLOCK_FIELDS: TripBlockFields = {
-    trip: [
-        'tripNumber',
-        'tripDirection',
-        'tripBlockId',
-        'tripClassId',
-        'depotIn',
-        'depotOut',
-    ],
-    time: [
-        'stationId',
-        'stopSequence',
-        'arrivalDays',
-        'arrivalTime',
-        'departureDays',
-        'departureTime',
-    ],
-    tripOperationList: ['operationId'],
-    operation: ['operationNumber'],
-};
+import { attachTripClasses } from 'src/app/shared/attach-trip-classes.util';
 
 /** 目撃クロスセクションの同時取得数（operation-real-time.service.ts と同一値） */
 const FORMATION_FETCH_CONCURRENCY = 5;
@@ -71,7 +45,7 @@ export class TrainLocationService {
         return this.#tripBlockService
             .findManyByCalendarId({
                 calendarId,
-                fields: TRAIN_LOCATION_TRIP_BLOCK_FIELDS,
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
             })
             .pipe(
                 tap((data) => {

@@ -156,8 +156,21 @@ describe('buildStationAxis / stationToY', () => {
     it('routesOrderedStationIds を渡すと、base で隣接しない路線内ペアの接続駅を複製挿入する', () => {
         // base（網羅駅軸）: yokohama, futamatagawa, izumino1, izumino2, hoshigaoka
         // 本線の順序付き駅列は futamatagawa の次に hoshigaoka が来るが、
-        // base 上では間に izumino1/izumino2 が挟まるため隣接しない
-        // → hoshigaoka の直前に futamatagawa の複製が挿入されるはず。
+        // base 上では間に izumino1/izumino2 が挟まるため隣接しない。
+        //
+        // Task 11 の anchored 判定では、futamatagawa は base の前隣（yokohama）が
+        // mainRoute でも隣なので anchored、hoshigaoka は mainRoute に後続駅が無く
+        // 非 anchored → 真の分岐駅は hoshigaoka 側と判定され、futamatagawa の直後に
+        // hoshigaoka が複製される（このテストは元々「hoshigaoka の直前に futamatagawa
+        // を複製する」ことを検証していたが、それはまさに Task 11 が修正した誤判定と
+        // 同型のケースだったため、期待値を新ルールに合わせて直した）。
+        //
+        // izuminoRoute（futamatagawa, izumino1, izumino2）を処理する時点では、
+        // 直前に挿入された hoshigaoka* は isJunctionDuplicate な行として透過される
+        // ため、futamatagawa と izumino1 は依然として（複製を挟んでいても）隣接と
+        // 判定され、二重に複製されることはない（Task 11 フォローアップ: 複製行を
+        // 挟むだけで非隣接と誤判定すると、後続ペアの隣接が連鎖的に崩れて複製が
+        // 連鎖してしまう。二重複製は fix round 1 の時点では起きていたが解消した）。
         const stations: RouteStationDto[] = [
             makeStation('yokohama', 1),
             makeStation('futamatagawa', 2),
@@ -165,16 +178,8 @@ describe('buildStationAxis / stationToY', () => {
             makeStation('izumino2', 4),
             makeStation('hoshigaoka', 5),
         ];
-        const mainRoute = [
-            'yokohama',
-            'futamatagawa',
-            'hoshigaoka',
-        ];
-        const izuminoRoute = [
-            'futamatagawa',
-            'izumino1',
-            'izumino2',
-        ];
+        const mainRoute = ['yokohama', 'futamatagawa', 'hoshigaoka'];
+        const izuminoRoute = ['futamatagawa', 'izumino1', 'izumino2'];
 
         const axis = buildStationAxis(stations, new Map(), [
             mainRoute,
@@ -184,17 +189,20 @@ describe('buildStationAxis / stationToY', () => {
         expect(axis.map((e) => e.stationId)).toEqual([
             'yokohama',
             'futamatagawa',
+            'hoshigaoka',
             'izumino1',
             'izumino2',
-            'futamatagawa',
             'hoshigaoka',
         ]);
-        // 複製された futamatagawa（末尾から2番目）は hoshigaoka の直前に y を持つ
-        expect(axis[4].y).toBeLessThan(axis[5].y);
-        // 元の並び順（yokohama→futamatagawa→izumino1→izumino2→hoshigaoka）は維持される
+        // hoshigaoka はちょうど 2 回（複製は 1 か所だけ）
+        expect(axis.filter((e) => e.stationId === 'hoshigaoka')).toHaveLength(
+            2,
+        );
+        // 元の並び順（yokohama→futamatagawa→izumino1→izumino2→hoshigaoka）の
+        // 各駅は単調増加を保つ
         expect(axis[0].y).toBeLessThan(axis[1].y);
-        expect(axis[1].y).toBeLessThan(axis[2].y);
-        expect(axis[2].y).toBeLessThan(axis[3].y);
+        expect(axis[3].y).toBeLessThan(axis[4].y);
+        expect(axis[4].y).toBeLessThan(axis[5].y);
     });
 
     it('軸が路線順の逆向き（軸 [C,B,A]・路線順 [A,B,C]）でも複製は発生しない（隣接判定は方向非依存）', () => {
@@ -212,10 +220,18 @@ describe('buildStationAxis / stationToY', () => {
         expect(axis.map((e) => e.stationId)).toEqual(['stC', 'stB', 'stA']);
     });
 
-    it('降順路線でも複製の連鎖（ドミノ）が起きない: base=[K,L,M,N,X,Z]・route=[Z,N,M,L,K] → N が Z の直前に複製されるだけ', () => {
+    it('降順路線でも複製の連鎖（ドミノ）が起きない: base=[K,L,M,N,X,Z]・route=[Z,N,M,L,K] → Z が N の直後に複製されるだけ', () => {
         // route-station-list.state の desc ソート路線（埼京線・川越線等）を想定。
         // 向き正規化がないと、(Z,N) の複製挿入が (N,M) の逆隣接を分断し、
-        // 以降 (M,L)→(L,K) と挿入が連鎖して路線全体が交互二重化する。
+        // 以降 (M,L)→(L,K) と挿入が連鎖して路線全体が交互二重化する（ここではドミノが
+        // 起きず複製が 1 か所だけであることを検証するのが主眼）。
+        //
+        // Task 11 の anchored 判定では、stN は base の前隣（stM）が route でも隣なので
+        // anchored、stZ は route に後続駅が無く非 anchored → 真の分岐駅は stZ 側と判定され、
+        // stN の直後（stX の前）に stZ が複製される（元は「stN が Z の直前に複製される」
+        // ことを検証していたが、これは Task 11 が修正した誤判定と同型のケースなので
+        // 期待値を新ルールに合わせて直した。ドミノが起きない＝複製は 1 か所だけ、という
+        // このテストの本来の目的は変わらない）。
         const stations: RouteStationDto[] = [
             makeStation('stK', 1),
             makeStation('stL', 2),
@@ -233,8 +249,8 @@ describe('buildStationAxis / stationToY', () => {
             'stL',
             'stM',
             'stN',
+            'stZ',
             'stX',
-            'stN',
             'stZ',
         ]);
     });
@@ -257,13 +273,19 @@ describe('buildStationAxis / stationToY', () => {
             'stL',
             'stM',
             'stN',
+            'stZ',
             'stX',
-            'stN',
             'stZ',
         ]);
     });
 
-    it('真の分岐ペア（軸 [X, A, m1, m2, B]・路線順 […A,B…]）では従来どおり A が B の直前に複製される', () => {
+    it('一方だけ anchored な非隣接ペア（軸 [X, A, m1, m2, B]・路線順 […A,B…]）では真の分岐駅である B 側が A の直後に複製される', () => {
+        // stA は base の前隣（stX）が route でも隣なので anchored。
+        // stB は route に後続駅が無く、base の前後隣（m2 側）も route の隣（stA）と
+        // 一致しないため非 anchored → 真の分岐駅は stB 側（新横浜線／西谷と同型のケース）。
+        // このテストは元々「従来どおり A が B の直前に複製される」ことを検証していたが、
+        // それはまさに Task 11 が修正した誤判定と同型のケースだったため、
+        // タイトルと期待値を新ルールに合わせて直した。
         const stations: RouteStationDto[] = [
             makeStation('stX', 1),
             makeStation('stA', 2),
@@ -278,9 +300,9 @@ describe('buildStationAxis / stationToY', () => {
         expect(axis.map((e) => e.stationId)).toEqual([
             'stX',
             'stA',
+            'stB',
             'm1',
             'm2',
-            'stA',
             'stB',
         ]);
     });
@@ -289,6 +311,14 @@ describe('buildStationAxis / stationToY', () => {
         // 本線 futamatagawa->hoshigaoka の実測は無し（フォールバック対象）。
         // 既知区間は 1分（短距離）と 20分（優等の長距離通過）。
         // 平均（10.5分）だと継ぎ目が不自然に間延びするため、最小値（1分）を使う。
+        //
+        // Task 11 の anchored 判定では futamatagawa が anchored・hoshigaoka が
+        // 非 anchored（本線が hoshigaoka で終わり後続駅が無いため）と判定され、
+        // hoshigaoka が futamatagawa の直後に複製される。続けて izuminoRoute
+        // （futamatagawa, izumino1）を処理する時点では、直前に挿入された
+        // hoshigaoka* は isJunctionDuplicate な行として透過されるため、
+        // futamatagawa と izumino1 は依然として隣接と判定され、二重に複製される
+        // ことはない（Task 11 フォローアップ）。
         const stations: RouteStationDto[] = [
             makeStation('yokohama', 1),
             makeStation('futamatagawa', 2),
@@ -311,14 +341,170 @@ describe('buildStationAxis / stationToY', () => {
         expect(axis.map((e) => e.stationId)).toEqual([
             'yokohama',
             'futamatagawa',
+            'hoshigaoka',
             'izumino1',
-            'futamatagawa',
             'hoshigaoka',
         ]);
-        // 継ぎ目区間（izumino1 -> futamatagawa(複製)）は最小値 1分でフォールバックする
-        const junctionY = axis[3].y;
-        const izuminoY = axis[2].y;
-        expect(junctionY - izuminoY).toBe(1);
+        // hoshigaoka はちょうど 2 回（複製は 1 か所だけ）
+        expect(axis.filter((e) => e.stationId === 'hoshigaoka')).toHaveLength(
+            2,
+        );
+        // 継ぎ目区間（futamatagawa -> hoshigaoka(複製)、hoshigaoka(複製) ->
+        // izumino1）はどちらも実測が無いため、平均(10.5分)ではなく
+        // 最小値(1分)でフォールバックする（複製行の前後どちらの区間も対象）
+        expect(axis[2].y - axis[1].y).toBe(1);
+        expect(axis[3].y - axis[2].y).toBe(1);
+    });
+});
+
+describe('buildStationAxis: 分岐駅の複製先（Task 11: anchored 判定）', () => {
+    it('新横浜線は西谷を複製する（羽沢横浜国大は新横浜と base 上で隣接＝anchored、西谷は非 anchored なので西谷側を複製する）', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('shin-yokohama', 1),
+            makeStation('hazawa', 2),
+            makeStation('yokohama', 3),
+            makeStation('hoshikawa', 4),
+            makeStation('kami-hoshikawa', 5),
+            makeStation('nishiya', 6),
+            makeStation('tsurugamine', 7),
+        ];
+        const mainRoute = [
+            'yokohama',
+            'hoshikawa',
+            'kami-hoshikawa',
+            'nishiya',
+            'tsurugamine',
+        ];
+        const shinYokohamaRoute = ['shin-yokohama', 'hazawa', 'nishiya'];
+
+        const axis = buildStationAxis(stations, new Map(), [
+            mainRoute,
+            shinYokohamaRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'shin-yokohama',
+            'hazawa',
+            'nishiya',
+            'yokohama',
+            'hoshikawa',
+            'kami-hoshikawa',
+            'nishiya',
+            'tsurugamine',
+        ]);
+        // Task 18: 分岐元の行（上星川↔鶴ヶ峰側、index 6）は非複製。
+        // 挿入された複製行（羽沢横浜国大の直後、index 2）だけが isDuplicate。
+        expect(axis[2].isDuplicate).toBe(true);
+        expect(axis[6].isDuplicate).toBeFalsy();
+    });
+
+    it('いずみ野線は今までどおり二俣川を複製する（二俣川・希望ヶ丘とも anchored なので両側 anchored の既定挙動になる）', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('tsurugamine', 1),
+            makeStation('futamatagawa', 2),
+            makeStation('minami-makigahara', 3),
+            makeStation('shonandai', 4),
+            makeStation('kibogaoka', 5),
+            makeStation('ebina', 6),
+        ];
+        const mainRoute = ['tsurugamine', 'futamatagawa', 'kibogaoka', 'ebina'];
+        const izuminoRoute = ['futamatagawa', 'minami-makigahara', 'shonandai'];
+
+        const axis = buildStationAxis(stations, new Map(), [
+            mainRoute,
+            izuminoRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'tsurugamine',
+            'futamatagawa',
+            'minami-makigahara',
+            'shonandai',
+            'futamatagawa',
+            'kibogaoka',
+            'ebina',
+        ]);
+        // Task 18: 分岐元の行（鶴ヶ峰↔南万騎が原側、index 1）は非複製。
+        // 挿入された複製行（希望ヶ丘の直前、index 4）だけが isDuplicate。
+        expect(axis[1].isDuplicate).toBeFalsy();
+        expect(axis[4].isDuplicate).toBe(true);
+    });
+
+    it('厚木線は今までどおりかしわ台を複製する（かしわ台・厚木とも非 anchored なので既定挙動になる）', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('sagamino', 1),
+            makeStation('kashiwadai', 2),
+            makeStation('ebina', 3),
+            makeStation('atsugi', 4),
+        ];
+        const mainRoute = ['sagamino', 'kashiwadai', 'ebina'];
+        const atsugiRoute = ['kashiwadai', 'atsugi'];
+
+        const axis = buildStationAxis(stations, new Map(), [
+            mainRoute,
+            atsugiRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'sagamino',
+            'kashiwadai',
+            'ebina',
+            'kashiwadai',
+            'atsugi',
+        ]);
+        // Task 18: 分岐元の行（さがみ野↔海老名側、index 1）は非複製。
+        // 挿入された複製行（厚木の直前、index 3）だけが isDuplicate。
+        expect(axis[1].isDuplicate).toBeFalsy();
+        expect(axis[3].isDuplicate).toBe(true);
+    });
+
+    it('複製した行の前後どちらの区間も、実測が無ければ実測区間の最小値でフォールバックする（西谷*→横浜 側も。Task 11）', () => {
+        const stations: RouteStationDto[] = [
+            makeStation('shin-yokohama', 1),
+            makeStation('hazawa', 2),
+            makeStation('yokohama', 3),
+            makeStation('hoshikawa', 4),
+            makeStation('kami-hoshikawa', 5),
+            makeStation('nishiya', 6),
+            makeStation('tsurugamine', 7),
+        ];
+        const mainRoute = [
+            'yokohama',
+            'hoshikawa',
+            'kami-hoshikawa',
+            'nishiya',
+            'tsurugamine',
+        ];
+        const shinYokohamaRoute = ['shin-yokohama', 'hazawa', 'nishiya'];
+
+        // 既知区間: 最小値は 'kami-hoshikawa nishiya' の 1 分。
+        const segmentMinutes = new Map<string, number>([
+            ['shin-yokohama hazawa', 2],
+            ['yokohama hoshikawa', 5],
+            ['hoshikawa kami-hoshikawa', 3],
+            ['kami-hoshikawa nishiya', 1],
+            ['nishiya tsurugamine', 10],
+        ]);
+
+        const axis = buildStationAxis(stations, segmentMinutes, [
+            mainRoute,
+            shinYokohamaRoute,
+        ]);
+
+        expect(axis.map((e) => e.stationId)).toEqual([
+            'shin-yokohama',
+            'hazawa',
+            'nishiya',
+            'yokohama',
+            'hoshikawa',
+            'kami-hoshikawa',
+            'nishiya',
+            'tsurugamine',
+        ]);
+        // hazawa -> nishiya(複製・前側): 実測なし → 最小値 1 分
+        expect(axis[2].y - axis[1].y).toBe(1);
+        // nishiya(複製・後ろ側) -> yokohama: 実測なし → 最小値 1 分（平均 4.2 分ではない）
+        expect(axis[3].y - axis[2].y).toBe(1);
     });
 });
 

@@ -5,7 +5,9 @@ import { ServiceListStateQuery } from 'src/app/global-states/service-list.state'
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
+import { attachTripClasses } from 'src/app/shared/attach-trip-classes.util';
 import { TrainDiagramStore } from '../stores/train-diagram.store';
 
 @Injectable()
@@ -34,10 +36,15 @@ export class TrainDiagramService {
         }
 
         return this.#tripBlockService
-            .findManyByCalendarId({ calendarId })
+            .findManyByCalendarId({
+                calendarId,
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
+            })
             .pipe(
                 tap((data) => {
-                    TrainDiagramStore.setTripBlocksByDirection(data);
+                    TrainDiagramStore.setTripBlocksByDirection(
+                        attachTripClasses(data, TrainDiagramStore.tripClasses),
+                    );
                 }),
                 map(() => undefined),
             );

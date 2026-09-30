@@ -3,68 +3,74 @@ import {
     Component,
     DestroyRef,
     ElementRef,
+    Injector,
     afterNextRender,
     computed,
+    effect,
     inject,
     input,
-    linkedSignal,
     output,
     signal,
+    untracked,
     viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { interval } from 'rxjs';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import {
-    StationAxis,
-    StationAxisEntry,
-    enforceMinimumRowGap,
-    timeToX,
-} from 'src/app/shared/diagram-scale';
-import { DIAGRAM_ZOOM_LEVELS } from '../../stores/train-diagram.store';
+    AXIS_PX_PER_MINUTE_MAX,
+    AXIS_PX_PER_MINUTE_MIN,
+    DIAGRAM_TOTAL_MINUTES,
+    PX_PER_MINUTE_MAX,
+    PX_PER_MINUTE_MIN,
+    VISIBLE_MARGIN_MINUTES,
+    clamp,
+    formatHourLabel,
+} from '../../utils/diagram-timeline.util';
 import {
+    TripDiagramDepotMark,
     TripDiagramLine,
     TripDiagramPoint,
-    buildTripDiagramLine,
+    TripDiagramStopLabel,
 } from '../../utils/build-trip-diagram-line.util';
-import { RouteIdsByStation } from '../../utils/build-route-ids-by-station.util';
+import { TurnbackLink } from '../../utils/layout-turnback-links.util';
+import {
+    PlacedThroughLabel,
+    placeThroughLabels,
+} from '../../utils/place-through-labels.util';
+import { selectVisibleLines } from '../../utils/select-visible-lines.util';
 
-const HEADER_HEIGHT = 32;
-const AXIS_PX_PER_MINUTE = 6;
-const WINDOW_MINUTES = 60;
-const STATION_LABEL_WIDTH = 72;
-const OUT_OF_WINDOW_MARGIN_PX = 120;
-/**
- * 駅ラベル行の最小ピクセル高さ（G7: 駅軸ラベルの重なり解消）。
- * 12px の tw-text-xs ラベルが重ならない最小値。所要時間比は維持しつつ、
- * 高速通過区間で駅間隔が潰れる場合のみこの値まで底上げする（enforceMinimumRowGap）。
- */
-const MIN_ROW_HEIGHT_PX = 22;
+export type DiagramStationRow = {
+    stationId: string;
+    stationName: string;
+    y: number;
+};
 
-// ホイール/ピンチによる縮尺調整の範囲と 1 ノッチあたりの倍率。
-const AXIS_PX_PER_MINUTE_MIN = 2;
-const AXIS_PX_PER_MINUTE_MAX = 24;
-const PX_PER_MINUTE_MIN = 4;
-const PX_PER_MINUTE_MAX = 40;
+export type DiagramJumpRequest = {
+    minute: number;
+    align: 'start' | 'quarter';
+    seq: number;
+};
+
+const STATION_LABEL_WIDTH = 88;
+const TIME_HEADER_HEIGHT = 32;
+const SCROLL_IDLE_MS = 300;
 const ZOOM_STEP = 1.1;
 
-function clamp(value: number, min: number, max: number): number {
-    return Math.min(max, Math.max(min, value));
-}
+/** highlightedTripIds の既定値（未指定時）。参照を使い回して余計な再計算を避ける。 */
+const EMPTY_TRIP_ID_SET: ReadonlySet<string> = new Set();
 
-type TimeGridMark = { x: number; label: string };
-type StationRow = { stationId: string; stationName: string; y: number };
-
-function pad2(n: number): string {
-    return String(n).padStart(2, '0');
-}
+type MinuteTick = {
+    minute: number;
+    x: number;
+    isHour: boolean;
+    label: string;
+};
 
 /**
  * N1 ダイヤグラムの本体（SVG）。
- * 時間×距離の斜め線ダイヤグラム本体を描画し、列車線タップで強調表示・情報パネル起動の
- * イベントを親へ通知する（自身は選択状態を保持しない = controlled component）。
+ *
+ * 1 日ぶん（4:00〜26:00）を横スクロールする 1 枚の SVG として描く。線の計算（分×駅の y）は
+ * 親（route コンポーネント）が受け持ち、本コンポーネントは横の縮尺（pxPerMinute）を掛けて
+ * 座標へ直す・見えている範囲（±30分）だけを選ぶ・スクロール/ホイール/ピンチのイベントを
+ * 親へ通知するだけの controlled component。
  */
 @Component({
     selector: 'app-train-diagram-chart',
@@ -72,278 +78,183 @@ function pad2(n: number): string {
     styleUrl: './train-diagram-chart.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [],
-    host: { class: 'tw-block' },
+    host: { class: 'tw-block tw-h-full' },
 })
 export class TrainDiagramChartComponent {
+    readonly #injector = inject(Injector);
     readonly #destroyRef = inject(DestroyRef);
 
-    readonly stations = input.required<StationDetailsDto[]>();
-    readonly axis = input.required<StationAxis | null>();
-    /**
-     * 駅ID → 所属routeId集合（選択路線に限定）。経由しない分岐区間で線を分断する判定に使う
-     * （build-trip-diagram-line.util.ts）。未指定（既定=空Map）の場合は分断しない。
-     */
-    readonly routeIdsByStation = input<RouteIdsByStation>(new Map());
-    readonly tripBlocksByDirection =
-        input.required<Record<number, TripBlockDetailsDto[]>>();
-    readonly windowStartHour = input.required<number>();
+    readonly stationRows = input.required<DiagramStationRow[]>();
+    readonly lines = input.required<TripDiagramLine[]>();
+    /** Task 14: 折り返し（種別変更・列番変更のつながりをまたぐ）の⊐字リンク。線より前（下）に描く。 */
+    readonly turnbackLinks = input<TurnbackLink[]>([]);
+    readonly bodyHeight = input.required<number>();
     readonly pxPerMinute = input.required<number>();
-    readonly selectedTripId = input<string | null>(null);
-    readonly isTodaySelected = input<boolean>(false);
+    readonly axisPxPerMinute = input.required<number>();
+    /** 強調中の tripId 集合（選んだ列車が属するつながり全体）。空集合なら何も強調しない。 */
+    readonly highlightedTripIds = input<ReadonlySet<string>>(EMPTY_TRIP_ID_SET);
+    /** 現在時刻（4 時からの分）。今日のダイヤでなければ null */
+    readonly nowMinute = input<number | null>(null);
+    readonly jumpRequest = input<DiagramJumpRequest | null>(null);
+    /**
+     * Task 13: 情報カードに隠れる分だけスクロール領域の下に余白を作る
+     * （選択中はカードの高さ + 16、それ以外は 0。root の infoPanelHeight から渡される）。
+     */
+    readonly bottomInset = input<number>(0);
 
     readonly tripSelected = output<string | null>();
     readonly tripActivated = output<string>();
+    /** スクロールが止まって 300ms 後の左端の分 */
+    readonly leftMinuteChange = output<number>();
+    readonly pxPerMinuteChange = output<number>();
+    readonly axisPxPerMinuteChange = output<number>();
 
-    readonly #now = signal(new Date());
-
-    /**
-     * 縮尺（ローカル状態）。
-     * - 横（時間軸）: 親の pxPerMinute（縮小/標準/拡大ボタン由来）を初期値に取り、
-     *   Ctrl(Cmd)+Shift+ホイール／ピンチで連続的に上書きする。ボタンで pxPerMinute が変わると再同期される。
-     * - 縦（駅軸）: Ctrl(Cmd)+ホイール／ピンチで連続的に調整する。
-     */
-    readonly #horizontalPxPerMinute = linkedSignal(() => this.pxPerMinute());
-    readonly #axisPxPerMinute = signal(AXIS_PX_PER_MINUTE);
+    readonly stationLabelWidth = STATION_LABEL_WIDTH;
+    readonly timeHeaderHeight = TIME_HEADER_HEIGHT;
 
     // NG1053 により viewChild は ES private（#）フィールドに置けないため、
     // 本フィールドのみ TS の private を使う。
     private readonly scrollHost =
         viewChild.required<ElementRef<HTMLDivElement>>('scrollHost');
-    /** 横スクロール領域のうち SVG が使える幅（駅ラベル列を除く）。ResizeObserver で追従する。 */
-    readonly #availableChartWidth = signal(0);
 
-    /** 60 分ぶんがコンテナ幅にちょうど収まる縮尺。未計測時は 0。 */
-    readonly #fitPxPerMinute = computed(() => {
-        const available = this.#availableChartWidth();
-        return available > 0 ? available / WINDOW_MINUTES : 0;
-    });
-
-    /**
-     * ズーム段（絶対 px/分）をコンテナ幅に合わせて底上げする倍率。
-     *
-     * 表示窓は常に 60 分固定なので、横方向の縮尺は「何分ぶん見えるか」ではなく
-     * 密度・可読性だけを決める。よって標準段はコンテナ幅ちょうどが正しい既定になる。
-     * 幅が標準描画（10px/分 = 600px）より狭いモバイルでは 1 倍のままとし、
-     * 既存の挙動を変えない。
-     */
-    readonly #widthScale = computed(() => {
-        const fit = this.#fitPxPerMinute();
-        if (fit <= 0) {
-            return 1;
-        }
-        return Math.max(1, fit / DIAGRAM_ZOOM_LEVELS.standard);
-    });
-
-    /**
-     * 時間軸の実効縮尺。
-     *
-     * 標準縮尺は 10px/分 = 600px 固定だったため、1456px 幅では右側 856px が常に
-     * 空いていた（audit M2）。ズーム段に #widthScale を掛けて幅に追随させ、
-     * さらに fit を下限に敷いて空白が出ないようにする。
-     * 拡大側は下限に飲まれず、はみ出した分は従来どおり横スクロールする。
-     */
-    readonly #effectivePxPerMinute = computed(() =>
-        Math.max(
-            this.#fitPxPerMinute(),
-            this.#horizontalPxPerMinute() * this.#widthScale(),
-        ),
-    );
+    /** 見えている範囲（4 時からの分）。スクロールと大きさの変化で 1 コマに 1 回だけ測る */
+    readonly #visibleRange = signal({ startMinute: 0, endMinute: 180 });
 
     readonly svgWidth = computed(
-        () => WINDOW_MINUTES * this.#effectivePxPerMinute(),
-    );
-    readonly stationLabelWidth = STATION_LABEL_WIDTH;
-    readonly timeLabelY = HEADER_HEIGHT - 12;
-
-    readonly #baseTime = computed(() => getRailwayDate(this.#now()).getTime());
-    readonly #windowStartTime = computed(
-        () => this.#baseTime() + this.windowStartHour() * 60 * 60 * 1000,
-    );
-
-    readonly #axisStationIds = computed(
-        () => new Set(this.stations().map((s) => s.stationId)),
-    );
-    /** stationId → 駅名。axis のエントリ（複製された分岐駅を含む）から駅名を引くために使う。 */
-    readonly #stationNameById = computed(
-        () => new Map(this.stations().map((s) => [s.stationId, s.stationName])),
+        () => DIAGRAM_TOTAL_MINUTES * this.pxPerMinute(),
     );
 
     /**
-     * ピクセル換算済みの駅軸（axis の y を axisPxPerMinute で乗算した後、
-     * enforceMinimumRowGap で最小行高を底上げしたもの）。
-     * stationRows（ラベル位置）と lines（列車線の y 座標）の両方がこれを参照することで、
-     * ラベルと線のズレなく「所要時間比を維持しつつ最小行高を確保」する（G7）。
+     * 10 分ごとの縦線・時刻の字。見えている範囲の前後だけ（1 日ぶん 133 本を常に描かない）。
+     * スマホ幅（400px）では見えている時間が 27 分程度しかなく、正時のみのラベルだと
+     * 画面に何も出ないことがあるため、正時以外の 10 分刻みにも字を出す（isHour で判別し、
+     * 正時は太字・それ以外は控えめな色でテンプレート側が描き分ける）。
      */
-    readonly #pixelAxis = computed<StationAxisEntry[] | null>(() => {
-        const axis = this.axis();
-        if (!axis) {
-            return null;
-        }
-        const axisPxPerMinute = this.#axisPxPerMinute();
-        const scaled = axis.map((entry) => ({
-            stationId: entry.stationId,
-            y: entry.y * axisPxPerMinute,
-        }));
-        return enforceMinimumRowGap(scaled, MIN_ROW_HEIGHT_PX);
-    });
-
-    readonly svgHeight = computed(() => {
-        const pixelAxis = this.#pixelAxis();
-        const maxY =
-            pixelAxis && pixelAxis.length > 0
-                ? Math.max(...pixelAxis.map((entry) => entry.y))
-                : 0;
-        return HEADER_HEIGHT + maxY + 24;
-    });
-
-    /**
-     * 駅ラベル列（グリッド線含む）。axis 配列の各エントリをそのまま描画するため、
-     * 分岐駅（複製挿入された接続駅）は複数行として二重表示される。
-     */
-    readonly stationRows = computed<StationRow[]>(() => {
-        const pixelAxis = this.#pixelAxis();
-        if (!pixelAxis) {
-            return [];
-        }
-        const nameById = this.#stationNameById();
-        return pixelAxis.map((entry) => ({
-            stationId: entry.stationId,
-            stationName: nameById.get(entry.stationId) ?? '',
-            y: HEADER_HEIGHT + entry.y,
-        }));
-    });
-
-    readonly timeGridMarks = computed<TimeGridMark[]>(() => {
-        const startHour = this.windowStartHour();
-        const pxPerMinute = this.#effectivePxPerMinute();
-        const marks: TimeGridMark[] = [];
-        for (
-            let minuteOffset = 0;
-            minuteOffset <= WINDOW_MINUTES;
-            minuteOffset += 10
-        ) {
-            const hour = startHour + Math.floor(minuteOffset / 60);
-            const minute = minuteOffset % 60;
-            marks.push({
-                x: minuteOffset * pxPerMinute,
-                label: `${hour}:${pad2(minute)}`,
+    readonly minuteTicks = computed<MinuteTick[]>(() => {
+        const px = this.pxPerMinute();
+        const { startMinute, endMinute } = this.#visibleRange();
+        const from = Math.max(
+            0,
+            Math.floor((startMinute - VISIBLE_MARGIN_MINUTES) / 10) * 10,
+        );
+        const to = Math.min(
+            DIAGRAM_TOTAL_MINUTES,
+            endMinute + VISIBLE_MARGIN_MINUTES,
+        );
+        const ticks: MinuteTick[] = [];
+        for (let m = from; m <= to; m += 10) {
+            ticks.push({
+                minute: m,
+                x: m * px,
+                isHour: m % 60 === 0,
+                label: formatHourLabel(m),
             });
         }
-        return marks;
+        return ticks;
     });
 
-    readonly lines = computed<TripDiagramLine[]>(() => {
-        const pixelAxis = this.#pixelAxis();
-        if (!pixelAxis) {
-            return [];
-        }
-
-        const axisStationIds = this.#axisStationIds();
-        const routeIdsByStation = this.routeIdsByStation();
-        const base = new Date(this.#baseTime());
-        const windowStart = new Date(this.#windowStartTime());
-        const pxPerMinute = this.#effectivePxPerMinute();
-        const width = this.svgWidth();
-
-        const trips = Object.values(this.tripBlocksByDirection())
-            .flat()
-            .flatMap((block) => block.trips ?? []);
-
-        return trips
-            .map((trip) =>
-                buildTripDiagramLine({
-                    trip,
-                    // pixelAxis は既に axisPxPerMinute で乗算 + 最小行高を適用済みのため、
-                    // ここでは axisPxPerMinute=1（二重乗算を避ける。stationRows と同一の y を使う）。
-                    axis: pixelAxis,
-                    axisStationIds,
-                    routeIdsByStation,
-                    base,
-                    windowStart,
-                    pxPerMinute,
-                    axisPxPerMinute: 1,
-                    headerHeight: HEADER_HEIGHT,
-                }),
-            )
-            .filter((line): line is TripDiagramLine => !!line)
-            .filter((line) =>
-                line.segments.some((segment) =>
-                    segment.some(
-                        (p) =>
-                            p.x >= -OUT_OF_WINDOW_MARGIN_PX &&
-                            p.x <= width + OUT_OF_WINDOW_MARGIN_PX,
-                    ),
-                ),
-            );
-    });
-
-    readonly cursorX = computed(() =>
-        timeToX(
-            (this.#now().getTime() - this.#windowStartTime()) / (60 * 1000),
-            this.#effectivePxPerMinute(),
+    readonly visibleLines = computed(() =>
+        selectVisibleLines(
+            this.lines(),
+            this.#visibleRange(),
+            this.highlightedTripIds(),
         ),
     );
 
     /**
-     * 描画順を選択中トリップが最後（= 最前面）になるよう並べ替えたもの。
-     * SVG は後勝ち描画のため、選択ラインを他ラインの上に見せるにはこの並べ替えが必要。
+     * Task 14: 見えている範囲（前後 VISIBLE_MARGIN_MINUTES 分）にかかる折り返しリンクだけを描く。
+     * 列車の線と違い、強調中でも範囲外まで常時描画はしない（クリック判定も無いため）。
      */
-    readonly orderedLines = computed<TripDiagramLine[]>(() => {
-        const selected = this.selectedTripId();
-        const lines = this.lines();
-        if (!selected) {
-            return lines;
-        }
-        const others = lines.filter((line) => line.tripId !== selected);
-        const selectedLines = lines.filter((line) => line.tripId === selected);
-        return [...others, ...selectedLines];
+    readonly visibleTurnbackLinks = computed<TurnbackLink[]>(() => {
+        const { startMinute, endMinute } = this.#visibleRange();
+        const from = startMinute - VISIBLE_MARGIN_MINUTES;
+        const to = endMinute + VISIBLE_MARGIN_MINUTES;
+        return this.turnbackLinks().filter(
+            (link) => link.maxMinute >= from && link.minMinute <= to,
+        );
     });
 
-    constructor() {
-        interval(1000)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(() => {
-                this.#now.set(new Date());
-            });
+    /**
+     * 直通先ラベル（「→ 渋谷」等）の描画位置。同じ駅の行（同じ y）で複数の直通先ラベルが
+     * 重なって描かれる問題への対処として、見えている線の throughLabels から重なりを
+     * 間引いた結果を計算する（選んだ列車のラベルは常に残す。place-through-labels.util 参照）。
+     */
+    readonly placedThroughLabels = computed<PlacedThroughLabel[]>(() =>
+        placeThroughLabels(
+            this.visibleLines(),
+            this.pxPerMinute(),
+            this.highlightedTripIds(),
+        ),
+    );
 
-        // コンテナ幅を観測して時間軸の実効縮尺に反映する（#effectivePxPerMinute）。
-        // ResizeObserver が無い環境（jsdom 等）では観測せず、利用者指定の縮尺のみで描画する。
-        afterNextRender(() => {
-            if (typeof ResizeObserver === 'undefined') {
-                return;
-            }
-            const host = this.scrollHost().nativeElement;
-            const observer = new ResizeObserver((entries) => {
-                const width = entries[0]?.contentRect.width ?? 0;
-                this.#availableChartWidth.set(
-                    Math.max(0, width - STATION_LABEL_WIDTH),
-                );
-            });
-            observer.observe(host);
-            this.#destroyRef.onDestroy(() => observer.disconnect());
-        });
+    x(minute: number): number {
+        return minute * this.pxPerMinute();
+    }
+
+    /**
+     * 直通先ラベルの縦位置。行き先ラベル（anchor:'start'）は線の上（y - 4、従来どおり）、
+     * 始発駅ラベル（anchor:'end'）は線の下（y + 11）に描き分ける（Task 16）。
+     */
+    throughLabelY(label: PlacedThroughLabel): number {
+        return label.anchor === 'start' ? label.y - 4 : label.y + 11;
+    }
+
+    /**
+     * Task 19: 停車分ラベルの縦位置。線がこの停車の後（上り列車の終点は前）で上
+     * （y が小さい方）へ向かう 'below' は線の下（y + 10）、それ以外の 'above' は
+     * 従来どおり線の上（y - 3）に描く。上り列車は右上へ伸びる線と字が重なるため。
+     */
+    stopLabelY(label: TripDiagramStopLabel): number {
+        return label.side === 'below' ? label.y + 10 : label.y - 3;
     }
 
     pointsAttr(segment: TripDiagramPoint[]): string {
-        return segment.map((p) => `${p.x},${p.y}`).join(' ');
+        const px = this.pxPerMinute();
+        return segment.map((p) => `${p.minute * px},${p.y}`).join(' ');
     }
 
-    /** 選択中トリップ番号ラベルの基点（先頭 segment の先頭点）。 */
-    firstPoint(line: TripDiagramLine): TripDiagramPoint | undefined {
-        return line.segments[0]?.[0];
+    /**
+     * Task 14: 入庫（△）の印の polygon 座標（点を中心にした小さな上向き三角形。
+     * サイズは出庫（◯・r=3.5）と揃えて概ね 7px 角）。
+     */
+    depotTrianglePoints(mark: TripDiagramDepotMark): string {
+        const cx = this.x(mark.minute);
+        const cy = mark.y;
+        return `${cx},${cy - 4} ${cx - 3.8},${cy + 3} ${cx + 3.8},${cy + 3}`;
     }
 
     isSelected(tripId: string): boolean {
-        return this.selectedTripId() === tripId;
+        return this.highlightedTripIds().has(tripId);
     }
 
     lineOpacity(tripId: string): number {
-        const selected = this.selectedTripId();
-        return !selected || selected === tripId ? 1 : 0.15;
+        const highlighted = this.highlightedTripIds();
+        return highlighted.size === 0 || highlighted.has(tripId) ? 1 : 0.15;
+    }
+
+    /** 折り返しリンクの両端（着く・発つ列車）のどちらかが強調中か。 */
+    isTurnbackHighlighted(link: TurnbackLink): boolean {
+        const highlighted = this.highlightedTripIds();
+        return (
+            highlighted.has(link.arrivingTripId) ||
+            highlighted.has(link.departingTripId)
+        );
+    }
+
+    /**
+     * Task 14: どちらかの列車が強調中なら 1、何かを選んでいて両方とも強調外なら 0.15、
+     * 何も選んでいなければ 1。
+     */
+    turnbackLinkOpacity(link: TurnbackLink): number {
+        const highlighted = this.highlightedTripIds();
+        if (highlighted.size === 0) {
+            return 1;
+        }
+        return this.isTurnbackHighlighted(link) ? 1 : 0.15;
     }
 
     onLineClick(tripId: string): void {
-        if (this.selectedTripId() === tripId) {
+        if (this.highlightedTripIds().has(tripId)) {
             this.tripActivated.emit(tripId);
             return;
         }
@@ -351,9 +262,116 @@ export class TrainDiagramChartComponent {
     }
 
     onBackgroundClick(): void {
-        if (this.selectedTripId() !== null) {
+        if (this.highlightedTripIds().size > 0) {
             this.tripSelected.emit(null);
         }
+    }
+
+    #frame: number | null = null;
+    #idleTimer: ReturnType<typeof setTimeout> | null = null;
+
+    onScroll(): void {
+        this.#scheduleMeasure();
+        if (this.#idleTimer !== null) {
+            clearTimeout(this.#idleTimer);
+        }
+        this.#idleTimer = setTimeout(() => {
+            this.#idleTimer = null;
+            const host = this.scrollHost().nativeElement;
+            this.leftMinuteChange.emit(host.scrollLeft / this.pxPerMinute());
+        }, SCROLL_IDLE_MS);
+    }
+
+    #scheduleMeasure(): void {
+        if (this.#frame !== null) {
+            return;
+        }
+        this.#frame = requestAnimationFrame(() => {
+            this.#frame = null;
+            this.#measure();
+        });
+    }
+
+    #measure(): void {
+        const host = this.scrollHost().nativeElement;
+        const px = this.pxPerMinute();
+        const width = Math.max(0, host.clientWidth - STATION_LABEL_WIDTH);
+        this.#visibleRange.set({
+            startMinute: host.scrollLeft / px,
+            endMinute: (host.scrollLeft + width) / px,
+        });
+    }
+
+    #scrollToMinute(
+        minute: number,
+        align: 'start' | 'quarter' | 'center',
+    ): void {
+        const host = this.scrollHost().nativeElement;
+        const width = Math.max(0, host.clientWidth - STATION_LABEL_WIDTH);
+        const offset =
+            align === 'start' ? 0 : align === 'quarter' ? width / 4 : width / 2;
+        host.scrollLeft = Math.max(0, minute * this.pxPerMinute() - offset);
+        this.#measure();
+    }
+
+    constructor() {
+        // 跳ぶ要求（seq が変わるたびに 1 回）
+        effect(() => {
+            const request = this.jumpRequest();
+            if (!request) {
+                return;
+            }
+            untracked(() =>
+                afterNextRender(
+                    () => this.#scrollToMinute(request.minute, request.align),
+                    { injector: this.#injector },
+                ),
+            );
+        });
+
+        // 横の縮尺が変わっても、画面の中央の時刻を保つ
+        let lastPx: number | null = null;
+        effect(() => {
+            const px = this.pxPerMinute();
+            const previous = lastPx;
+            lastPx = px;
+            if (previous === null || previous === px) {
+                return;
+            }
+            untracked(() => {
+                const host = this.scrollHost().nativeElement;
+                const width = Math.max(
+                    0,
+                    host.clientWidth - STATION_LABEL_WIDTH,
+                );
+                const centerMinute = (host.scrollLeft + width / 2) / previous;
+                afterNextRender(
+                    () => this.#scrollToMinute(centerMinute, 'center'),
+                    {
+                        injector: this.#injector,
+                    },
+                );
+            });
+        });
+
+        afterNextRender(() => {
+            this.#measure();
+            if (typeof ResizeObserver === 'undefined') {
+                return;
+            }
+            const observer = new ResizeObserver(() => this.#scheduleMeasure());
+            observer.observe(this.scrollHost().nativeElement);
+            this.#destroyRef.onDestroy(() => observer.disconnect());
+        });
+
+        this.#destroyRef.onDestroy(() => {
+            if (this.#frame !== null) {
+                cancelAnimationFrame(this.#frame);
+            }
+            if (this.#idleTimer !== null) {
+                clearTimeout(this.#idleTimer);
+            }
+        });
     }
 
     /**
@@ -361,26 +379,26 @@ export class TrainDiagramChartComponent {
      * Ctrl（Mac は Cmd/metaKey も許容）を押している場合のみズームとして扱う。
      * - Ctrl/Cmd + ホイール: 縦（駅軸）縮尺
      * - Ctrl/Cmd + Shift + ホイール: 横（時間軸）縮尺
-     * 修飾キーなしの素の wheel / Shift+wheel は通常のページスクロールに委ねる（何もしない）。
-     * 上スクロール（deltaY<0）で拡大、下スクロールで縮小。ズームとして処理する場合のみ
-     * preventDefault してブラウザ標準のズーム動作を抑止する。
      */
     onWheel(event: WheelEvent): void {
-        const isZoomModifierPressed = event.ctrlKey || event.metaKey;
-        if (!isZoomModifierPressed) {
+        if (!(event.ctrlKey || event.metaKey)) {
             return;
         }
         event.preventDefault();
         const factor = event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
         if (event.shiftKey) {
-            this.#horizontalPxPerMinute.update((value) =>
-                clamp(value * factor, PX_PER_MINUTE_MIN, PX_PER_MINUTE_MAX),
+            this.pxPerMinuteChange.emit(
+                clamp(
+                    this.pxPerMinute() * factor,
+                    PX_PER_MINUTE_MIN,
+                    PX_PER_MINUTE_MAX,
+                ),
             );
             return;
         }
-        this.#axisPxPerMinute.update((value) =>
+        this.axisPxPerMinuteChange.emit(
             clamp(
-                value * factor,
+                this.axisPxPerMinute() * factor,
                 AXIS_PX_PER_MINUTE_MIN,
                 AXIS_PX_PER_MINUTE_MAX,
             ),
@@ -401,8 +419,8 @@ export class TrainDiagramChartComponent {
         }
         this.#pinchStart = {
             distance: this.#touchDistance(event),
-            axisPxPerMinute: this.#axisPxPerMinute(),
-            pxPerMinute: this.#horizontalPxPerMinute(),
+            axisPxPerMinute: this.axisPxPerMinute(),
+            pxPerMinute: this.pxPerMinute(),
         };
     }
 
@@ -413,14 +431,14 @@ export class TrainDiagramChartComponent {
         }
         event.preventDefault();
         const ratio = this.#touchDistance(event) / this.#pinchStart.distance;
-        this.#axisPxPerMinute.set(
+        this.axisPxPerMinuteChange.emit(
             clamp(
                 this.#pinchStart.axisPxPerMinute * ratio,
                 AXIS_PX_PER_MINUTE_MIN,
                 AXIS_PX_PER_MINUTE_MAX,
             ),
         );
-        this.#horizontalPxPerMinute.set(
+        this.pxPerMinuteChange.emit(
             clamp(
                 this.#pinchStart.pxPerMinute * ratio,
                 PX_PER_MINUTE_MIN,

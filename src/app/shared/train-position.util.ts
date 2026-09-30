@@ -74,7 +74,7 @@ function hasTime(time: TimeDetailsDto): boolean {
 }
 
 /** 時刻のある停車点を stopSequence 順に並べる */
-function timedStops(
+export function timedStops(
     times: readonly TimeDetailsDto[] | undefined,
 ): TimeDetailsDto[] {
     return [...(times ?? [])]

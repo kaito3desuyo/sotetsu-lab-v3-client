@@ -1,45 +1,66 @@
-<app-collapsible-panel
-    class="tw-sticky tw-top-0 tw-z-20"
-    label="表示設定"
-    [summary]="collapsedSummary()"
+<!-- 表示設定は畳まず 2 行（列車位置情報と同じ。ユーザー判断 2026-09-26）。
+     1 行目: 路線チップ（複数選択・横スクロール 1 行）
+     2 行目: ダイヤ・時刻へ跳ぶ・今・方向・横の縮尺 -->
+<div
+    class="tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-3 tw-pt-2"
 >
-    <!-- ダイヤ select + 時間帯 select を横並びに（G0-1/G0-7・G7）。tw-w-full だと flex-wrap で
-         モバイル幅で縦積みになってしまうため、tw-flex-1 で常に同一行に収める。 -->
-    <div class="tw-flex tw-flex-row tw-gap-2">
-        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-[3]">
+    <app-filter-chips
+        mode="multiple"
+        [scrollMode]="true"
+        [options]="routeOptions()"
+        [selected]="selectedRouteIds()"
+        (selectedChange)="onRouteChange($event)"
+    ></app-filter-chips>
+
+    <div
+        class="tw-flex tw-min-h-14 tw-flex-wrap tw-items-center tw-gap-x-4 tw-gap-y-2 tw-py-2"
+    >
+        <mat-form-field
+            subscriptSizing="dynamic"
+            class="tw-min-w-0 tw-basis-full sm:tw-w-80 sm:tw-flex-none sm:tw-basis-auto"
+        >
             <mat-label>ダイヤ</mat-label>
             <mat-select
                 [value]="calendarId()"
                 (selectionChange)="onCalendarChange($event.value)"
             >
+                <mat-select-trigger>{{ calendarLabel() }}</mat-select-trigger>
                 @for (calendar of calendars(); track calendar.calendarId) {
-                    <mat-option [value]="calendar.calendarId">
-                        {{ calendarSummaryLabel(calendar) }}
-                    </mat-option>
+                    <mat-option [value]="calendar.calendarId">{{
+                        calendarSummaryLabel(calendar)
+                    }}</mat-option>
                 }
             </mat-select>
         </mat-form-field>
 
-        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-[2]">
-            <mat-label>時間帯</mat-label>
-            <mat-select
-                [value]="currentWindowValue()"
-                (selectionChange)="onWindowChange($event.value)"
+        <mat-form-field subscriptSizing="dynamic" class="tw-w-36">
+            <mat-label>時刻へ跳ぶ</mat-label>
+            <!-- 跳ぶだけの操作なので値は持たない（選んだら空に戻す） -->
+            <mat-select (selectionChange)="onJump($event)">
+                @for (hour of jumpHours; track hour) {
+                    <mat-option [value]="hour">{{
+                        hourLabel(hour)
+                    }}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+
+        @if (showNowButton()) {
+            <button
+                mat-stroked-button
+                type="button"
+                data-now-button
+                class="tw-whitespace-nowrap"
+                (click)="jumpToNow.emit()"
             >
-                @for (option of windowOptions; track option.value) {
-                    <mat-option [value]="option.value">
-                        {{ option.label }}
-                    </mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-    </div>
+                今
+            </button>
+        }
 
-    <div class="tw-flex tw-flex-row tw-flex-wrap tw-gap-3">
         <mat-button-toggle-group
-            class="tw-self-center"
+            class="tw-whitespace-nowrap"
             [value]="directionFilter()"
-            (change)="onDirectionFilterChange($event.value)"
+            (change)="directionFilterChange.emit($event.value)"
             aria-label="方向"
         >
             <mat-button-toggle value="up">上り</mat-button-toggle>
@@ -47,27 +68,27 @@
             <mat-button-toggle value="both">両方</mat-button-toggle>
         </mat-button-toggle-group>
 
-        <mat-button-toggle-group
-            class="tw-self-center"
-            [value]="zoomLevel()"
-            (change)="onZoomChange($event.value)"
-            aria-label="時間軸ズーム"
-        >
-            <mat-button-toggle value="narrow">縮小</mat-button-toggle>
-            <mat-button-toggle value="standard">標準</mat-button-toggle>
-            <mat-button-toggle value="wide">拡大</mat-button-toggle>
-        </mat-button-toggle-group>
+        <span class="tw-inline-flex tw-items-center tw-whitespace-nowrap">
+            <button
+                mat-icon-button
+                type="button"
+                data-zoom-out
+                aria-label="横の縮尺を小さくする"
+                matTooltip="Ctrl+Shift+スクロールでも変えられます（Ctrl+スクロールで縦の縮尺）"
+                (click)="zoomStep.emit(-1)"
+            >
+                <mat-icon>zoom_out</mat-icon>
+            </button>
+            <button
+                mat-icon-button
+                type="button"
+                data-zoom-in
+                aria-label="横の縮尺を大きくする"
+                matTooltip="Ctrl+Shift+スクロールでも変えられます（Ctrl+スクロールで縦の縮尺）"
+                (click)="zoomStep.emit(1)"
+            >
+                <mat-icon>zoom_in</mat-icon>
+            </button>
+        </span>
     </div>
-
-    <div>
-        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
-            路線（複数選択）
-        </p>
-        <app-filter-chips
-            mode="multiple"
-            [options]="routeOptions()"
-            [selected]="selectedRouteIds()"
-            (selectedChange)="onRouteChange($event)"
-        ></app-filter-chips>
-    </div>
-</app-collapsible-panel>
+</div>

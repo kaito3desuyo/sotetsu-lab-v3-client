@@ -4,6 +4,7 @@ import { ServiceListStateQuery } from 'src/app/global-states/service-list.state'
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { stationToY } from 'src/app/shared/diagram-scale';
 import { TrainDiagramStore } from '../stores/train-diagram.store';
@@ -83,6 +84,7 @@ describe('Service: TrainDiagram', () => {
         TrainDiagramStore.setTripBlocksByDirection({});
         TrainDiagramStore.setNetworkStations([]);
         TrainDiagramStore.setRouteStations([]);
+        TrainDiagramStore.setTripClasses([]);
     });
 
     it('fetchTripBlocks: calendarId 未設定なら空をセットする', (done) => {
@@ -94,14 +96,38 @@ describe('Service: TrainDiagram', () => {
         });
     });
 
-    it('fetchTripBlocks: calendarId 指定時は取得してストアへ設定する', (done) => {
+    it('fetchTripBlocks: 項目を絞って取り、種別の一覧から種別を補ってストアへ設定する', (done) => {
         TrainDiagramStore.setCalendarId('cal-1');
+        TrainDiagramStore.setTripClasses([
+            {
+                tripClassId: 'tc-1',
+                tripClassName: '快速',
+                tripClassColor: '#3f51b5',
+            } as any,
+        ]);
+        tripBlockServiceMock.findManyByCalendarId.mockReturnValueOnce(
+            of({
+                0: [
+                    {
+                        tripBlockId: 'b1',
+                        trips: [{ tripId: 't1', tripClassId: 'tc-1' }],
+                    },
+                ],
+                1: [],
+            }),
+        );
 
         service.fetchTripBlocks().subscribe(() => {
-            expect(tripBlockServiceMock.findManyByCalendarId).toHaveBeenCalledWith({
+            expect(
+                tripBlockServiceMock.findManyByCalendarId,
+            ).toHaveBeenCalledWith({
                 calendarId: 'cal-1',
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
             });
-            expect(TrainDiagramStore.tripBlocksByDirection[0]).toHaveLength(1);
+            expect(
+                TrainDiagramStore.tripBlocksByDirection[0][0].trips?.[0]
+                    .tripClass?.tripClassName,
+            ).toBe('快速');
             done();
         });
     });

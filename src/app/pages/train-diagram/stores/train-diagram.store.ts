@@ -11,14 +11,14 @@ import {
     buildStationAxis,
     StationAxis,
 } from 'src/app/shared/diagram-scale';
-
-/** ズーム段階（ピンチの代替＝ズームボタン。5.7 の「ピンチ（またはズームボタン）」に対応） */
-export const DIAGRAM_ZOOM_LEVELS = {
-    narrow: 6,
-    standard: 10,
-    wide: 16,
-} as const;
-export type DiagramZoomLevel = keyof typeof DIAGRAM_ZOOM_LEVELS;
+import {
+    AXIS_PX_PER_MINUTE_MAX,
+    AXIS_PX_PER_MINUTE_MIN,
+    clamp,
+    DEFAULT_PX_PER_MINUTE,
+    PX_PER_MINUTE_MAX,
+    PX_PER_MINUTE_MIN,
+} from '../utils/diagram-timeline.util';
 
 /**
  * 描画する列車の方向フィルタ。'up'=上り(INBOUND=0) のみ / 'down'=下り(OUTBOUND=1) のみ /
@@ -30,9 +30,14 @@ type StoreProps = {
     calendarId: string | null;
     /** 選択中の路線 ID 集合（複数選択）。空 = 全路線扱い（網羅駅軸をそのまま表示）。 */
     selectedRouteIds: string[];
-    /** 表示中の時間帯の開始時（4〜25 の範囲。25 は 24 時超え＝深夜帯を表す） */
-    windowStartHour: number;
-    zoomLevel: DiagramZoomLevel;
+    /** 横（時間軸）の縮尺（px/分）。chart 本体の縮尺の一次情報。 */
+    pxPerMinute: number;
+    /**
+     * 縦（駅軸）の縮尺（px/分）。null = 自動（Task 13 フォローアップ: 観測のある駅間の
+     * 最小所要分がちょうど最小行高になるよう root 側で決める）。Ctrl+ホイール・ピンチで
+     * 明示的に値を入れたら、以後はカレンダー・路線・方向を変えても自動に戻さない。
+     */
+    axisPxPerMinute: number | null;
     /** 描画する列車の方向フィルタ（上り/下り/両方）。既定 = 両方。 */
     directionFilter: DiagramDirectionFilter;
     /** ServiceService.findOneWithStations 由来の網羅駅（全線時刻表と同一の並び順）。 */
@@ -57,8 +62,8 @@ const store = createStore(
     withProps<StoreProps>({
         calendarId: null,
         selectedRouteIds: [],
-        windowStartHour: 7,
-        zoomLevel: 'standard',
+        pxPerMinute: DEFAULT_PX_PER_MINUTE,
+        axisPxPerMinute: null,
         directionFilter: 'both',
         networkStations: [],
         routeStations: [],
@@ -184,11 +189,26 @@ export const TrainDiagramStore = {
     setSelectedRouteIds(routeIds: string[]): void {
         store.update(setProp('selectedRouteIds', () => routeIds));
     },
-    setWindowStartHour(hour: number): void {
-        store.update(setProp('windowStartHour', () => hour));
+    setPxPerMinute(value: number): void {
+        store.update(
+            setProp('pxPerMinute', () =>
+                clamp(value, PX_PER_MINUTE_MIN, PX_PER_MINUTE_MAX),
+            ),
+        );
     },
-    setZoomLevel(level: DiagramZoomLevel): void {
-        store.update(setProp('zoomLevel', () => level));
+    /** null を渡すと自動（観測のある駅間の最小所要分から root 側で決める）に戻す。 */
+    setAxisPxPerMinute(value: number | null): void {
+        store.update(
+            setProp('axisPxPerMinute', () =>
+                value === null
+                    ? null
+                    : clamp(
+                          value,
+                          AXIS_PX_PER_MINUTE_MIN,
+                          AXIS_PX_PER_MINUTE_MAX,
+                      ),
+            ),
+        );
     },
     setDirectionFilter(directionFilter: DiagramDirectionFilter): void {
         store.update(setProp('directionFilter', () => directionFilter));
@@ -235,8 +255,8 @@ export const TrainDiagramStore = {
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
-    windowStartHour$: store.pipe(select((state) => state.windowStartHour)),
-    zoomLevel$: store.pipe(select((state) => state.zoomLevel)),
+    pxPerMinute$: store.pipe(select((state) => state.pxPerMinute)),
+    axisPxPerMinute$: store.pipe(select((state) => state.axisPxPerMinute)),
     directionFilter$: store.pipe(select((state) => state.directionFilter)),
     networkStations$: store.pipe(select((state) => state.networkStations)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
@@ -263,8 +283,11 @@ export const TrainDiagramStore = {
     get selectedRouteIds(): string[] {
         return store.getValue().selectedRouteIds;
     },
-    get windowStartHour(): number {
-        return store.getValue().windowStartHour;
+    get pxPerMinute(): number {
+        return store.getValue().pxPerMinute;
+    },
+    get axisPxPerMinute(): number | null {
+        return store.getValue().axisPxPerMinute;
     },
     get directionFilter(): DiagramDirectionFilter {
         return store.getValue().directionFilter;
@@ -277,5 +300,8 @@ export const TrainDiagramStore = {
     },
     get networkStations(): StationDetailsDto[] {
         return store.getValue().networkStations;
+    },
+    get tripClasses(): TripClassDetailsDto[] {
+        return store.getValue().tripClasses;
     },
 } as const;

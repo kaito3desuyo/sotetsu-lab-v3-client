@@ -1,69 +1,83 @@
-<!-- 図そのものが本文なので外周 gutter は持たない（他ページの main とは
-     意図的に異なる。docs/design.md「余白の掟」参照）。ただし landmark は揃える。 -->
-<main class="tw-flex tw-h-full tw-flex-col">
+<!-- tw-h-full は html/body に height:100% が無いため効かず、main が中身の高さ
+     （駅数×最小行高等）にそのまま伸びてページごとスクロールしてしまう。ヘッダー
+     （sticky、48/64px）の下に来る唯一の非固定要素なので、ヘッダー高さぶんを引いた
+     100dvh を直接充てて main 自体の高さを画面の残りに固定する（operation-route-
+     diagram-drawing と同じ calc(100dvh-Npx) パターン）。表示設定・凡例は中身なりの
+     高さのまま、カード（tw-flex-1 tw-min-h-[320px]）が残りを取る。 -->
+<main
+    class="tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-bg-paper-2 md:tw-h-[calc(100dvh-64px)]"
+>
     @if (isLoading()) {
-        <mat-progress-bar
-            mode="indeterminate"
-            class="tw-fixed tw-inset-x-0 tw-top-0 tw-z-30"
-        ></mat-progress-bar>
+        <div
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+        >
+            <mat-progress-bar
+                color="accent"
+                mode="indeterminate"
+            ></mat-progress-bar>
+        </div>
     }
 
     <app-train-diagram-controller
         [calendarId]="calendarId()"
         [selectedRouteIds]="selectedRouteIds()"
-        [windowStartHour]="windowStartHour()"
-        [zoomLevel]="zoomLevel()"
         [directionFilter]="directionFilter()"
+        [showNowButton]="isTodaySelected()"
         (calendarIdChange)="onCalendarIdChange($event)"
         (routeIdsChange)="onRouteIdsChange($event)"
-        (windowStartHourChange)="onWindowStartHourChange($event)"
-        (zoomLevelChange)="onZoomLevelChange($event)"
         (directionFilterChange)="onDirectionFilterChange($event)"
+        (jumpToHour)="onJumpToHour($event)"
+        (jumpToNow)="onJumpToNow()"
+        (zoomStep)="onZoomStep($event)"
     ></app-train-diagram-controller>
 
     <app-train-diagram-legend
-        [tripClasses]="tripClasses()"
+        [hasDeadhead]="hasDeadhead()"
         [showCurrentTimeCursor]="isTodaySelected()"
+        [hasDepotOut]="hasDepotOut()"
+        [hasDepotIn]="hasDepotIn()"
     ></app-train-diagram-legend>
 
-    <!-- trip-blocks バルク取得（数 MB）中はチャートが白紙に見えるため、
-         ロード完了まで本文を出さず中央スピナーを表示する（20-design-ui.md §4） -->
-    @if (isLoading()) {
-        <div
-            class="tw-flex tw-flex-1 tw-items-center tw-justify-center tw-py-16"
-        >
-            <app-loading></app-loading>
-        </div>
-    } @else if (isEmpty()) {
-        <!-- G12: mockup-07 準拠の3点セット。操作部（コントローラ/凡例）はこの分岐の
-             外側にあり常に操作可能（C1 準拠）。 -->
-        <div class="tw-flex tw-flex-1 tw-items-center tw-justify-center">
-            <app-empty-state
-                icon="show_chart"
-                message="この条件の列車情報はありません"
-                actionLabel="表示条件をリセットする"
-                (actionClick)="onResetDiagramFilters()"
-            ></app-empty-state>
-        </div>
-    } @else {
-        <app-train-diagram-chart
-            [stations]="stationAxisStations()"
-            [axis]="stationAxis()"
-            [routeIdsByStation]="routeIdsByStation()"
-            [tripBlocksByDirection]="filteredTripBlocksByDirection()"
-            [windowStartHour]="windowStartHour()"
-            [pxPerMinute]="pxPerMinute()"
-            [selectedTripId]="selectedTripId()"
-            [isTodaySelected]="isTodaySelected()"
-            (tripSelected)="onTripSelected($event)"
-            (tripActivated)="onTripActivated($event)"
-        ></app-train-diagram-chart>
-    }
+    <!-- 図のカード: 高さは画面の残り。縦横スクロールはカードの中 -->
+    <div class="tw-flex tw-min-h-[320px] tw-flex-1 tw-flex-col tw-p-3">
+        @if (isEmpty()) {
+            <div
+                class="tw-flex tw-flex-1 tw-items-center tw-justify-center tw-rounded-card tw-bg-white"
+            >
+                <app-empty-state
+                    icon="show_chart"
+                    message="この条件の列車情報はありません"
+                    actionLabel="表示条件をリセットする"
+                    (actionClick)="onResetDiagramFilters()"
+                ></app-empty-state>
+            </div>
+        } @else {
+            <app-train-diagram-chart
+                class="tw-min-h-0 tw-flex-1 tw-overflow-hidden tw-rounded-card tw-bg-white"
+                [stationRows]="stationRows()"
+                [lines]="diagramLines()"
+                [turnbackLinks]="turnbackLinks()"
+                [bodyHeight]="bodyHeight()"
+                [pxPerMinute]="pxPerMinute()"
+                [axisPxPerMinute]="effectiveAxisPxPerMinute()"
+                [highlightedTripIds]="highlightedTripIds()"
+                [nowMinute]="nowMinute()"
+                [jumpRequest]="jumpRequest()"
+                [bottomInset]="bottomInset()"
+                (tripSelected)="onTripSelected($event)"
+                (tripActivated)="onTripActivated($event)"
+                (leftMinuteChange)="onLeftMinuteChange($event)"
+                (pxPerMinuteChange)="onPxPerMinuteChange($event)"
+                (axisPxPerMinuteChange)="onAxisPxPerMinuteChange($event)"
+            ></app-train-diagram-chart>
+        }
+    </div>
 
     @if (selectedTripInfo(); as info) {
         <app-train-diagram-info-panel
             [info]="info"
             (closed)="onInfoPanelClosed()"
+            (heightChange)="onInfoPanelHeightChange($event)"
         ></app-train-diagram-info-panel>
     }
 </main>

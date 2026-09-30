@@ -7,44 +7,36 @@ import {
     output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectChange, MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import type { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
-import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
 import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
+import { DiagramDirectionFilter } from '../../stores/train-diagram.store';
 import {
-    DIAGRAM_ZOOM_LEVELS,
-    DiagramDirectionFilter,
-    DiagramZoomLevel,
-} from '../../stores/train-diagram.store';
-import { generateDiagramWindowOptions } from '../../utils/generate-diagram-window-options.util';
-
-/** 折り畳み時の要約に使う方向フィルタの表示名 */
-const DIRECTION_FILTER_LABELS: Record<DiagramDirectionFilter, string> = {
-    up: '上り',
-    down: '下り',
-    both: '上り・下り',
-};
-
-/** 折り畳み時の要約に使うズーム段階の表示名 */
-const ZOOM_LEVEL_LABELS: Record<DiagramZoomLevel, string> = {
-    narrow: '縮小',
-    standard: '標準',
-    wide: '拡大',
-};
+    DIAGRAM_JUMP_HOURS,
+    DIAGRAM_START_HOUR,
+    formatHourLabel,
+} from '../../utils/diagram-timeline.util';
 
 /**
- * N1 ダイヤグラムの操作部（5.7）: ダイヤ select + 時間帯 select + 路線チップ（複数選択・会社グルーピング）+ ズームボタン。
+ * N1 ダイヤグラムの操作部（5.7）: 畳まない 2 行の表示設定（列車位置情報と同じ・
+ * ユーザー判断 2026-09-26）。
+ * 1 行目: 路線チップ（複数選択・横スクロール 1 行）
+ * 2 行目: ダイヤ select・時刻へ跳ぶ・今・方向・横の縮尺
+ *
  * controlled component として振る舞い、選択状態は親（route の matrix params）へ通知するのみで
  * 自身では保持しない。
  *
@@ -61,8 +53,10 @@ const ZOOM_LEVEL_LABELS: Record<DiagramZoomLevel, string> = {
         MatFormFieldModule,
         MatSelectModule,
         MatButtonToggleModule,
+        MatButtonModule,
+        MatIconModule,
+        MatTooltipModule,
         FilterChipsComponent,
-        CollapsiblePanelComponent,
     ],
 })
 export class TrainDiagramControllerComponent {
@@ -72,15 +66,17 @@ export class TrainDiagramControllerComponent {
 
     readonly calendarId = input<string | null>(null);
     readonly selectedRouteIds = input<string[]>([]);
-    readonly windowStartHour = input<number>(7);
-    readonly zoomLevel = input<DiagramZoomLevel>('standard');
     readonly directionFilter = input<DiagramDirectionFilter>('both');
+    readonly showNowButton = input<boolean>(false);
 
     readonly calendarIdChange = output<string>();
     readonly routeIdsChange = output<string[]>();
-    readonly windowStartHourChange = output<number>();
-    readonly zoomLevelChange = output<DiagramZoomLevel>();
     readonly directionFilterChange = output<DiagramDirectionFilter>();
+    readonly jumpToHour = output<number>();
+    readonly jumpToNow = output<void>();
+    readonly zoomStep = output<1 | -1>();
+
+    readonly jumpHours = DIAGRAM_JUMP_HOURS;
 
     readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
@@ -92,11 +88,6 @@ export class TrainDiagramControllerComponent {
     readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
     });
-
-    readonly windowOptions = generateDiagramWindowOptions();
-    readonly zoomLevels: DiagramZoomLevel[] = Object.keys(
-        DIAGRAM_ZOOM_LEVELS,
-    ) as DiagramZoomLevel[];
 
     readonly #agencyNameById = computed(
         () =>
@@ -125,75 +116,39 @@ export class TrainDiagramControllerComponent {
         }));
     });
 
-    /**
-     * 折り畳み時にヘッダーへ表示する現在の設定の要約
-     * （ダイヤ / 選択路線 / 時間帯 / 方向 / ズーム）。
-     */
-    readonly collapsedSummary = computed(() => {
+    readonly calendarLabel = computed(() => {
         const calendar = this.calendars().find(
             (c) => c.calendarId === this.calendarId(),
         );
-        const calendarLabel = calendar
-            ? formatCalendarSummaryLabel(calendar)
-            : 'ダイヤ未選択';
-
-        const selectedIds = new Set(this.selectedRouteIds());
-        const routeNames = this.routeOptions()
-            .filter((option) => selectedIds.has(String(option.value)))
-            .map((option) => option.label);
-        const routeLabel = routeNames.length ? routeNames.join('・') : '全路線';
-
-        const windowLabel =
-            this.windowOptions.find(
-                (option) => option.startHour === this.windowStartHour(),
-            )?.label ?? '';
-
-        return [
-            calendarLabel,
-            routeLabel,
-            windowLabel,
-            DIRECTION_FILTER_LABELS[this.directionFilter()],
-            ZOOM_LEVEL_LABELS[this.zoomLevel()],
-        ]
-            .filter((part) => !!part)
-            .join(' / ');
+        return calendar ? formatCalendarSummaryLabel(calendar) : 'ダイヤ未選択';
     });
 
     /**
      * ダイヤ select の各 mat-option 表示に使う短縮ラベル（G0-7: 長い日付表記の truncate 解消）。
-     * 折り畳み時の要約（collapsedSummary）と同じ整形関数を再利用する。
+     * mat-select-trigger と同じ整形関数を再利用する。
      */
     calendarSummaryLabel(calendar: CalendarDetailsDto): string {
         return formatCalendarSummaryLabel(calendar);
+    }
+
+    hourLabel(hour: number): string {
+        return formatHourLabel((hour - DIAGRAM_START_HOUR) * 60);
     }
 
     onCalendarChange(calendarId: string): void {
         this.calendarIdChange.emit(calendarId);
     }
 
-    onWindowChange(value: string): void {
-        const option = this.windowOptions.find((o) => o.value === value);
-        if (option) {
-            this.windowStartHourChange.emit(option.startHour);
-        }
-    }
-
     onRouteChange(values: FilterChipValue[]): void {
         this.routeIdsChange.emit(values.map((value) => String(value)));
     }
 
-    onZoomChange(level: DiagramZoomLevel): void {
-        this.zoomLevelChange.emit(level);
-    }
-
-    onDirectionFilterChange(directionFilter: DiagramDirectionFilter): void {
-        this.directionFilterChange.emit(directionFilter);
-    }
-
-    currentWindowValue(): string {
-        const option = this.windowOptions.find(
-            (o) => o.startHour === this.windowStartHour(),
-        );
-        return option?.value ?? this.windowOptions[0].value;
+    /** 跳ぶだけの操作なので、選んだら select を空に戻す */
+    onJump(event: MatSelectChange): void {
+        const hour = event.value as number | null;
+        event.source.value = null;
+        if (hour !== null) {
+            this.jumpToHour.emit(hour);
+        }
     }
 }

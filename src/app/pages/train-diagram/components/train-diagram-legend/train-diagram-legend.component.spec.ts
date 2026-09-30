@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TrainDiagramLegendComponent } from './train-diagram-legend.component';
 
@@ -12,7 +13,6 @@ describe('TrainDiagramLegendComponent', () => {
 
         fixture = TestBed.createComponent(TrainDiagramLegendComponent);
         component = fixture.componentInstance;
-        fixture.componentRef.setInput('tripClasses', []);
         fixture.detectChanges();
     });
 
@@ -20,88 +20,72 @@ describe('TrainDiagramLegendComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('種別ベース名（"（" 以前）でまとめ、重複は最初の色を代表色にする', () => {
-        fixture.componentRef.setInput('tripClasses', [
-            {
-                tripClassId: '1',
-                tripClassName: '特急（SO）',
-                tripClassColor: '#ee7b35',
-            },
-            {
-                tripClassId: '2',
-                tripClassName: '特急（SO→TY）',
-                tripClassColor: '#ff0000',
-            },
-            {
-                tripClassId: '3',
-                tripClassName: '各停（SO）',
-                tripClassColor: '#8a8a8a',
-            },
-        ]);
+    it('hasDeadhead=true で「回送」と破線の見本が出て、false では出ない', () => {
+        fixture.componentRef.setInput('hasDeadhead', true);
+        fixture.detectChanges();
 
-        const entries = component.legendEntries();
+        expect(fixture.nativeElement.textContent).toContain('回送');
+        expect(
+            fixture.nativeElement.querySelector('line[stroke-dasharray="6 4"]'),
+        ).not.toBeNull();
 
-        // 特急（SO）/特急（SO→TY）は「特急」1 行にまとまり、色は最初の #ee7b35
-        expect(entries).toEqual([
-            { labels: ['特急'], color: '#ee7b35' },
-            { labels: ['各停'], color: '#8a8a8a' },
-        ]);
+        fixture.componentRef.setInput('hasDeadhead', false);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.textContent).not.toContain('回送');
+        expect(
+            fixture.nativeElement.querySelector('line[stroke-dasharray="6 4"]'),
+        ).toBeNull();
     });
 
-    // audit M3: 色はドメインデータで UI 側では変えられないため、同色の種別が
-    // 別々のスウォッチとして並ぶと判別できない。色でまとめて種別名を併記する。
-    it('異なるベース種別が同じ色を共有する場合はひとつのスウォッチにまとめる', () => {
-        fixture.componentRef.setInput('tripClasses', [
-            {
-                tripClassId: '1',
-                tripClassName: '特急',
-                tripClassColor: '#ff9800',
-            },
-            {
-                tripClassId: '2',
-                tripClassName: 'F特急',
-                tripClassColor: '#ff9800',
-            },
-            {
-                tripClassId: '3',
-                tripClassName: '各停',
-                tripClassColor: '#212121',
-            },
-            {
-                tripClassId: '4',
-                tripClassName: '普通',
-                tripClassColor: '#212121',
-            },
-            {
-                tripClassId: '5',
-                tripClassName: '快速',
-                tripClassColor: '#3f51b5',
-            },
-        ]);
+    it('showCurrentTimeCursor=true で「現在時刻」が出て、false では出ない', () => {
+        fixture.componentRef.setInput('showCurrentTimeCursor', true);
+        fixture.detectChanges();
 
-        expect(component.legendEntries()).toEqual([
-            { labels: ['特急', 'F特急'], color: '#ff9800' },
-            { labels: ['各停', '普通'], color: '#212121' },
-            { labels: ['快速'], color: '#3f51b5' },
-        ]);
+        expect(fixture.nativeElement.textContent).toContain('現在時刻');
+
+        fixture.componentRef.setInput('showCurrentTimeCursor', false);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.textContent).not.toContain('現在時刻');
     });
 
-    it('色の表記ゆれ（大文字小文字・前後空白）は同じ色として扱う', () => {
-        fixture.componentRef.setInput('tripClasses', [
-            {
-                tripClassId: '1',
-                tripClassName: '急行',
-                tripClassColor: '#D50000',
-            },
-            {
-                tripClassId: '2',
-                tripClassName: 'F急行',
-                tripClassColor: ' #d50000 ',
-            },
-        ]);
+    it('Task 14: hasDepotOut=true で「出庫」と◯の見本が出て、false では出ない', () => {
+        fixture.componentRef.setInput('hasDepotOut', true);
+        fixture.detectChanges();
 
-        expect(component.legendEntries()).toEqual([
-            { labels: ['急行', 'F急行'], color: '#D50000' },
-        ]);
+        expect(fixture.nativeElement).toHaveTextContent('出庫');
+        expect(fixture.nativeElement.querySelector('circle')).not.toBeNull();
+
+        fixture.componentRef.setInput('hasDepotOut', false);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).not.toHaveTextContent('出庫');
+        expect(fixture.nativeElement.querySelector('circle')).toBeNull();
+    });
+
+    it('Task 14: hasDepotIn=true で「入庫」と△の見本が出て、false では出ない', () => {
+        fixture.componentRef.setInput('hasDepotIn', true);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).toHaveTextContent('入庫');
+        expect(fixture.nativeElement.querySelector('polygon')).not.toBeNull();
+
+        fixture.componentRef.setInput('hasDepotIn', false);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).not.toHaveTextContent('入庫');
+        expect(fixture.nativeElement.querySelector('polygon')).toBeNull();
+    });
+
+    it('全部 false なら項目は 0（種別の色分けは出さない）', () => {
+        fixture.componentRef.setInput('hasDeadhead', false);
+        fixture.componentRef.setInput('showCurrentTimeCursor', false);
+        fixture.componentRef.setInput('hasDepotOut', false);
+        fixture.componentRef.setInput('hasDepotIn', false);
+        fixture.detectChanges();
+
+        const items = fixture.nativeElement.querySelectorAll('div > span');
+        expect(items.length).toBe(0);
     });
 });
