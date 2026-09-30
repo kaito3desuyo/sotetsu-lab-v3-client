@@ -72,8 +72,12 @@ function sortTripsByFirstTime(trips: TripDetailsDto[]): TripDetailsDto[] {
         if (!aValue || !bValue) return 0;
 
         return (
-            dayjs(aValue, format).add(aDays - 1, 'days').unix() -
-            dayjs(bValue, format).add(bDays - 1, 'days').unix()
+            dayjs(aValue, format)
+                .add(aDays - 1, 'days')
+                .unix() -
+            dayjs(bValue, format)
+                .add(bDays - 1, 'days')
+                .unix()
         );
     });
 }
@@ -122,6 +126,14 @@ export const TimetableEditFormStore = {
     },
     setSelectedRouteIds(routeIds: string[]): void {
         store.update(setProp('selectedRouteIds', () => routeIds));
+    },
+    /** 選択中の路線に足す（外さない）。読み込んだ列車の通る路線を見せるため */
+    addSelectedRouteIds(routeIds: Iterable<string>): void {
+        store.update(
+            setProp('selectedRouteIds', (current) => [
+                ...new Set([...current, ...routeIds]),
+            ]),
+        );
     },
     setStations(stations: StationDetailsDto[]): void {
         store.update(setProp('stations', () => stations));
@@ -220,6 +232,9 @@ export const TimetableEditFormStore = {
     },
     get selectedRouteIds(): string[] {
         return store.getValue().selectedRouteIds;
+    },
+    get stations(): StationDetailsDto[] {
+        return store.getValue().stations;
     },
     get routes(): RouteDetailsDto[] {
         return store.getValue().routes;

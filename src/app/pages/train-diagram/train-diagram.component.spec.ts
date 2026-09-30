@@ -14,6 +14,29 @@ import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
 import { TrainDiagramStore } from './stores/train-diagram.store';
 
+/**
+ * 渡した駅の並びをそれぞれ 1 本の路線として置き、全部選ぶ。路線を何も選ばないと駅は
+ * 出ないため（全線時刻表・運用行路図と同じ）、縮尺・線のつながりを見るテストはこれで駅を出す。
+ */
+function selectRoutesThrough(...routes: string[][]): void {
+    TrainDiagramStore.setRouteStations(
+        routes.map(
+            (stationIds, index) =>
+                ({
+                    routeId: `fixture-route-${index}`,
+                    routeName: `fixture-${index}`,
+                    routeStationLists: stationIds.map((stationId) => ({
+                        stationId,
+                        station: { stationId, stationName: stationId },
+                    })),
+                }) as any,
+        ),
+    );
+    TrainDiagramStore.setSelectedRouteIds(
+        routes.map((_, index) => `fixture-route-${index}`),
+    );
+}
+
 describe('TrainDiagramComponent', () => {
     let component: TrainDiagramComponent;
     let fixture: ComponentFixture<TrainDiagramComponent>;
@@ -354,6 +377,7 @@ describe('TrainDiagramComponent', () => {
                     }) as any,
             ),
         );
+        selectRoutesThrough(['s1', 's2']);
         TrainDiagramStore.setTripBlocksByDirection({
             0: [
                 {
@@ -400,6 +424,7 @@ describe('TrainDiagramComponent', () => {
                     }) as any,
             ),
         );
+        selectRoutesThrough(['s1', 's2', 's3']);
         TrainDiagramStore.setTripBlocksByDirection({
             0: [
                 {
@@ -488,6 +513,7 @@ describe('TrainDiagramComponent', () => {
                     }) as any,
             ),
         );
+        selectRoutesThrough(['s1', 's2', 's3']);
         TrainDiagramStore.setTripBlocksByDirection({
             0: [
                 {
@@ -585,6 +611,7 @@ describe('TrainDiagramComponent', () => {
                     }) as any,
             ),
         );
+        selectRoutesThrough(['A', 'B', 'C', 'D']);
         TrainDiagramStore.setTripBlocksByDirection({
             0: [
                 {
@@ -724,6 +751,7 @@ describe('TrainDiagramComponent', () => {
                     }) as any,
             ),
         );
+        selectRoutesThrough(['A', 'B', 'C'], ['B', 'D', 'E']);
         TrainDiagramStore.setTripBlocksByDirection({
             0: [
                 {

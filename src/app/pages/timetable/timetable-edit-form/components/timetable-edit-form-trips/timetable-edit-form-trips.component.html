@@ -1,57 +1,88 @@
-<article class="tw-rounded-card tw-bg-white">
+<article
+    class="tw-flex tw-flex-col tw-gap-4 tw-rounded-card tw-bg-white tw-p-4"
+>
     @if (calendar()) {
-        <header
-            class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-            [ngClass]="[isHolidayCalendar() ? 'holiday' : 'weekday']"
-        >
-            <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-                {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
-                改正<br />
-                {{ calendar().calendarName }}
-                {{ tripDirectionLabel.get(tripDirection()) }}時刻表
-            </h3>
-        </header>
+        <!-- 平日／土休日の色の帯をやめ、操作カードの小見出し（16px 太字）にする。改正日・ダイヤ名・上り／下りは全部残す -->
+        <h2 class="tw-m-0 tw-text-base tw-font-bold">
+            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}改正
+            {{ calendar().calendarName }}
+            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
+        </h2>
     }
+    <!-- 路線チップで入力対象駅を絞り込む（既定は自社の路線・折り畳み） -->
+    <app-collapsible-panel
+        label="路線で絞り込み"
+        [summary]="routeFilterSummary()"
+    >
+        <app-filter-chips
+            mode="multiple"
+            [options]="routeOptions()"
+            [selected]="selectedRouteIds()"
+            (selectedChange)="onRouteFilterChange($event)"
+        ></app-filter-chips>
+    </app-collapsible-panel>
 
-    <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
-        @if (isInitialValueBlockVisible()) {
-            <!-- G9: 初期値取り込みブロック（既存列車からコピー + 一括オフセット + プリフィル説明行を1ブロックに統合）
-                 mock06「新規」画面で常時表示。ADD/COPY 両モードで既存列車をコピー元に選べる。
-                 B8-3 (D-5): trip-block 単位でコピー元を選ぶと全列車がプリフィルされる -->
-            <section
-                class="tw-flex tw-flex-col tw-gap-2 tw-border tw-border-grey-300 tw-bg-white tw-p-3"
+    @if (isInitialValueBlockVisible()) {
+        <!-- 初期値の取り込み（既存列車からコピー + 一括オフセット + コピー元の説明）。ADD/COPY で表示 -->
+        <!-- 小見出し → 入力欄は 16px（outline のラベルが枠の上辺に食い込むため。design.md 操作カード） -->
+        <section
+            class="tw-flex tw-flex-col tw-gap-4 tw-rounded-card tw-bg-paper-2 tw-p-4"
+        >
+            <p class="tw-m-0 tw-text-xs tw-font-bold tw-text-muted">
+                初期値の取り込み
+            </p>
+            <div
+                class="tw-flex tw-flex-col tw-gap-4 sm:tw-flex-row sm:tw-items-center"
             >
-                <p class="tw-m-0 tw-text-xs tw-font-bold tw-text-grey-600">
-                    初期値の取り込み
-                </p>
-                <div
-                    class="tw-flex tw-flex-col tw-gap-2 sm:tw-flex-row sm:tw-items-end"
+                <mat-form-field
+                    class="tw-w-full sm:tw-min-w-0 sm:tw-flex-1"
+                    subscriptSizing="dynamic"
                 >
-                    <button
-                        type="button"
-                        mat-stroked-button
-                        color="primary"
-                        class="tw-shrink-0"
-                        [matMenuTriggerFor]="copySourceMenu"
+                    <mat-label>既存列車からコピー</mat-label>
+                    <mat-icon matIconPrefix>search</mat-icon>
+                    <input
+                        matInput
+                        placeholder="列番・駅・時刻（512）で絞り込み"
+                        [matAutocomplete]="copySourceAuto"
+                        [value]="copySourceQuery()"
+                        (input)="copySourceQuery.set($any($event.target).value)"
+                    />
+                    <mat-autocomplete
+                        #copySourceAuto="matAutocomplete"
+                        [displayWith]="clearCopySourceInput"
+                        (optionSelected)="
+                            onCopySourceChange($event.option.value);
+                            copySourceQuery.set('')
+                        "
                     >
-                        既存列車からコピー…
-                    </button>
-                    <mat-menu #copySourceMenu="matMenu">
-                        @for (
-                            block of copySourceOptions();
-                            track block.tripBlockId
-                        ) {
-                            <button
-                                type="button"
-                                mat-menu-item
-                                (click)="onCopySourceChange(block.tripBlockId)"
-                            >
-                                {{ tripBlockLabel(block) }}
-                            </button>
+                        @for (group of copySourceGroups(); track group.name) {
+                            <mat-optgroup>
+                                <span
+                                    class="tw-font-bold"
+                                    [style.color]="group.color"
+                                    >{{ group.name }}</span
+                                >
+                                @for (
+                                    option of group.options;
+                                    track option.tripBlockId
+                                ) {
+                                    <mat-option
+                                        class="tw-tabular-nums"
+                                        [value]="option.tripBlockId"
+                                    >
+                                        {{ option.label }}
+                                    </mat-option>
+                                }
+                            </mat-optgroup>
                         }
-                    </mat-menu>
+                    </mat-autocomplete>
+                </mat-form-field>
 
-                    <mat-form-field class="tw-w-32" subscriptSizing="dynamic">
+                <div class="tw-flex tw-shrink-0 tw-items-center tw-gap-2">
+                    <mat-form-field
+                        class="tw-min-w-0 tw-flex-1 sm:tw-w-44 sm:tw-flex-none"
+                        subscriptSizing="dynamic"
+                    >
                         <mat-label>一括オフセット（分）</mat-label>
                         <input
                             matInput
@@ -63,598 +94,83 @@
                     </mat-form-field>
                     <button
                         type="button"
-                        mat-icon-button
+                        mat-stroked-button
                         color="primary"
+                        class="tw-shrink-0"
                         aria-label="一括オフセットを全列車へ適用"
                         (click)="onApplyOffset()"
                     >
-                        <mat-icon>check</mat-icon>
+                        <!-- スマホは「適用」だけにして、一括オフセットのラベルが切れない幅を残す -->
+                        <span class="tw-hidden sm:tw-inline">全列車に</span>適用
                     </button>
                 </div>
+            </div>
 
-                @if (selectedCopySourceLabel(); as label) {
-                    <p class="tw-m-0 tw-text-xs tw-text-grey-600">
-                        コピー元: {{ label }}
-                        @if (offsetMinutes()) {
-                            （時刻を
-                            {{ offsetMinutes() > 0 ? '+' : ''
-                            }}{{ offsetMinutes() }}
-                            分してプリフィル済み）
-                        }
-                    </p>
-                }
-            </section>
-        }
-
-        <!-- B8-1 / G9: 路線チップで入力対象駅リストを絞り込む（保守的既定=全路線表示だが折り畳み） -->
-        <app-collapsible-panel
-            label="路線で絞り込み"
-            [summary]="routeFilterSummary()"
-        >
-            <app-filter-chips
-                mode="multiple"
-                [options]="routeOptions()"
-                [selected]="selectedRouteIds()"
-                (selectedChange)="onRouteFilterChange($event)"
-            ></app-filter-chips>
-        </app-collapsible-panel>
-
-        <form
-            class="tw-flex tw-flex-col tw-gap-4 tw-text-sm"
-            [formGroup]="form"
-            (ngSubmit)="onClickSubmit()"
-        >
-            @if (isVisibleToggleThatSaveTripsIndividually()) {
-                <div class="tw-flex tw-flex-col tw-gap-4 tw-bg-grey-200 tw-p-4">
-                    <p class="tw-m-0">
-                        デフォルトでは、列車を複数入力した場合、列車群は分割・併合・直通がある列車として1つのグループに割り当てられます。<br />
-                        途中駅で方向は変わらず、列車番号や種別が変わる場合に使用してください。<br />
-                        <br />
-                        分割・併合・直通がない列車を複数同時に保存する（グループを作成せず、単一列車に単一グループを割り当てる）場合は、以下のトグルをONにしてください。
-                    </p>
-                    <mat-slide-toggle
-                        (change)="toggleIsSaveTripsIndividually.emit($event)"
-                    >
-                        列車個別保存モード
-                    </mat-slide-toggle>
-                </div>
+            @if (selectedCopySourceLabel(); as label) {
+                <p class="tw-m-0 tw-text-xs tw-text-muted">
+                    コピー元: {{ label }}
+                    @if (offsetMinutes()) {
+                        （時刻を {{ offsetMinutes() > 0 ? '+' : ''
+                        }}{{ offsetMinutes() }} 分してプリフィル済み）
+                    }
+                </p>
             }
+        </section>
+    }
 
-            <!-- デスクトップ: 横長グリッド（現行維持） -->
-            <div class="tw-hidden tw-overflow-x-auto md:tw-block">
-                <table
-                    class="tw-table-fixed tw-border-collapse [&_td]:tw-w-[256px] [&_td]:tw-max-w-[256px] [&_td]:tw-bg-white [&_td]:tw-px-1 [&_td]:tw-py-2 [&_th:first-child]:tw-sticky [&_th:first-child]:tw-left-0 [&_th:first-child]:tw-z-[9999] [&_th]:tw-whitespace-nowrap [&_th]:tw-bg-white [&_th]:tw-px-1 [&_th]:tw-py-2 [&_th]:tw-text-right"
-                >
-                    <tbody>
-                        <tr>
-                            <th></th>
-                            <ng-container formArrayName="trips">
-                                @for (
-                                    tripForm of tripsForm.controls;
-                                    track i;
-                                    let i = $index
-                                ) {
-                                    <td>
-                                        <div
-                                            class="tw-flex tw-flex-row tw-justify-end tw-gap-2"
-                                        >
-                                            <button
-                                                type="button"
-                                                mat-icon-button
-                                                [attr.aria-label]="
-                                                    i +
-                                                    1 +
-                                                    '本目の列車を削除する'
-                                                "
-                                                (click)="onClickRemove(i)"
-                                                [disabled]="
-                                                    tripsForm.controls
-                                                        .length === 1 && i === 0
-                                                "
-                                            >
-                                                <mat-icon>remove</mat-icon>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                mat-icon-button
-                                                aria-label="列車を追加する"
-                                                [disabled]="
-                                                    i !==
-                                                    tripsForm.controls.length -
-                                                        1
-                                                "
-                                                (click)="onClickAdd()"
-                                            >
-                                                <mat-icon>add</mat-icon>
-                                            </button>
-                                        </div>
-                                    </td>
-                                }
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <th></th>
-                            <ng-container formArrayName="trips">
-                                @for (
-                                    tripForm of tripsForm.controls;
-                                    track $index
-                                ) {
-                                    <td [formGroup]="tripForm">
-                                        <mat-form-field class="tw-w-full">
-                                            <mat-label>列車番号</mat-label>
-                                            <input
-                                                matInput
-                                                formControlName="tripNumber"
-                                            />
-                                        </mat-form-field>
-                                    </td>
-                                }
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <th></th>
-                            <ng-container formArrayName="trips">
-                                @for (
-                                    tripForm of tripsForm.controls;
-                                    track $index
-                                ) {
-                                    <td [formGroup]="tripForm">
-                                        <mat-form-field class="tw-w-full">
-                                            <mat-label>運用番号</mat-label>
-                                            <mat-select
-                                                formControlName="operationId"
-                                            >
-                                                @for (
-                                                    operation of operations();
-                                                    track operation.operationId
-                                                ) {
-                                                    <mat-option
-                                                        [value]="
-                                                            operation.operationId
-                                                        "
-                                                    >
-                                                        {{
-                                                            operation.operationNumber
-                                                        }}
-                                                    </mat-option>
-                                                }
-                                            </mat-select>
-                                        </mat-form-field>
-                                    </td>
-                                }
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <th></th>
-                            <ng-container formArrayName="trips">
-                                @for (
-                                    tripForm of tripsForm.controls;
-                                    track $index
-                                ) {
-                                    <td [formGroup]="tripForm">
-                                        <mat-form-field class="tw-w-full">
-                                            <mat-label>種別</mat-label>
-                                            <mat-select
-                                                formControlName="tripClassId"
-                                            >
-                                                @for (
-                                                    tripClass of tripClasses();
-                                                    track tripClass.tripClassId
-                                                ) {
-                                                    <!-- セレクトの種別は塗りチップにしない（ユーザー指示 2026-08-22）。
-                                                         選択肢は系統付きの正式名をそのまま出す。 -->
-                                                    <mat-option
-                                                        [value]="
-                                                            tripClass.tripClassId
-                                                        "
-                                                        [style.color]="
-                                                            tripClass.tripClassColor ??
-                                                            null
-                                                        "
-                                                    >
-                                                        {{
-                                                            tripClass.tripClassName
-                                                        }}
-                                                    </mat-option>
-                                                }
-                                            </mat-select>
-                                        </mat-form-field>
-                                    </td>
-                                }
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <th></th>
-                            <ng-container formArrayName="trips">
-                                @for (
-                                    tripForm of tripsForm.controls;
-                                    track $index
-                                ) {
-                                    <td [formGroup]="tripForm">
-                                        <div
-                                            class="tw-flex tw-flex-row tw-justify-center tw-gap-2"
-                                        >
-                                            <mat-checkbox
-                                                formControlName="depotIn"
-                                            >
-                                                入庫
-                                            </mat-checkbox>
-                                            <mat-checkbox
-                                                color="accent"
-                                                formControlName="depotOut"
-                                            >
-                                                出庫
-                                            </mat-checkbox>
-                                        </div>
-                                    </td>
-                                }
-                            </ng-container>
-                        </tr>
-                        @for (
-                            station of visibleStations();
-                            track station.stationId
-                        ) {
-                            <tr>
-                                <th>
-                                    <span
-                                        style="
-                                            display: inline-block;
-                                            transform-origin: right;
-                                        "
-                                        [ngStyle]="{
-                                            transform:
-                                                'scale(' +
-                                                (station.stationName.length > 4
-                                                    ? 4 /
-                                                      station.stationName.length
-                                                    : 1) +
-                                                ', 1)',
-                                            marginLeft:
-                                                (station.stationName.length > 4
-                                                    ? (station.stationName
-                                                          .length -
-                                                          4) *
-                                                      16 *
-                                                      -1
-                                                    : 0) + 'px',
-                                        }"
-                                    >
-                                        {{ station.stationName }}
-                                    </span>
-                                </th>
-                                <ng-container formArrayName="trips">
-                                    @for (
-                                        tripForm of tripsForm.controls;
-                                        track $index
-                                    ) {
-                                        <td
-                                            [formGroup]="
-                                                tripForm
-                                                    .get('times')
-                                                    ?.at(
-                                                        stations().indexOf(
-                                                            station
-                                                        )
-                                                    )
-                                            "
-                                        >
-                                            <div
-                                                class="tw-flex tw-flex-col tw-gap-2"
-                                            >
-                                                <div>
-                                                    <mat-radio-group
-                                                        class="tw-flex tw-flex-row tw-justify-center tw-gap-2"
-                                                        formControlName="stopType"
-                                                    >
-                                                        @for (
-                                                            type of stopTypeArray;
-                                                            track $index
-                                                        ) {
-                                                            <mat-radio-button
-                                                                [value]="
-                                                                    type.value
-                                                                "
-                                                            >
-                                                                {{ type.label }}
-                                                            </mat-radio-button>
-                                                        }
-                                                    </mat-radio-group>
-                                                </div>
-                                                <div
-                                                    class="tw-flex tw-flex-row tw-gap-2"
-                                                >
-                                                    <mat-form-field
-                                                        class="tw-w-1/2"
-                                                    >
-                                                        <mat-label
-                                                            >着</mat-label
-                                                        >
-                                                        <input
-                                                            type="time"
-                                                            matInput
-                                                            formControlName="arrivalTime"
-                                                        />
-                                                    </mat-form-field>
-                                                    <mat-form-field
-                                                        class="tw-w-1/2"
-                                                    >
-                                                        <mat-label
-                                                            >発</mat-label
-                                                        >
-                                                        <input
-                                                            type="time"
-                                                            matInput
-                                                            formControlName="departureTime"
-                                                        />
-                                                    </mat-form-field>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    }
-                                </ng-container>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- モバイル: 1列車=1画面の縦フロー（B8-4・G9 モック06準拠に作り直し） -->
-            <div class="tw-flex tw-flex-col tw-gap-4 md:tw-hidden">
-                @if (tripsForm.controls.length > 0) {
-                    <div
-                        class="tw-flex tw-flex-row tw-items-center tw-justify-between"
-                    >
-                        <button
-                            type="button"
-                            mat-icon-button
-                            aria-label="前の列車を表示する"
-                            [disabled]="currentTripIndex() === 0"
-                            (click)="onPrevTrip()"
-                        >
-                            <mat-icon>chevron_left</mat-icon>
-                        </button>
-                        <span>
-                            {{ currentTripIndex() + 1 }} /
-                            {{ tripsForm.controls.length }} 列車目
-                        </span>
-                        <button
-                            type="button"
-                            mat-icon-button
-                            aria-label="次の列車を表示する"
-                            [disabled]="
-                                currentTripIndex() ===
-                                tripsForm.controls.length - 1
-                            "
-                            (click)="onNextTrip()"
-                        >
-                            <mat-icon>chevron_right</mat-icon>
-                        </button>
-                        <!-- 情報維持: 全幅fill縦積みの旧footerにあった「クリア」を
-                             sticky footer 化に伴いここへ移設（機能は変更なし） -->
-                        <button
-                            type="button"
-                            mat-button
-                            color="primary"
-                            (click)="onClickClear()"
-                        >
-                            クリア
-                        </button>
-                    </div>
-
-                    <ng-container formArrayName="trips">
-                        @if (
-                            tripsForm.controls[currentTripIndex()];
-                            as tripForm
-                        ) {
-                            <div
-                                [formGroup]="tripForm"
-                                class="tw-flex tw-flex-col tw-gap-3"
-                            >
-                                <!-- G9: 種別/行先/列車番号/運用番号 の2×2コンパクトoutlinedヘッダー -->
-                                <div class="tw-grid tw-grid-cols-2 tw-gap-x-2">
-                                    <mat-form-field subscriptSizing="dynamic">
-                                        <mat-label>種別</mat-label>
-                                        <mat-select
-                                            formControlName="tripClassId"
-                                        >
-                                            <mat-select-trigger>
-                                                @if (
-                                                    selectedTripClass(tripForm);
-                                                    as tc
-                                                ) {
-                                                    <!-- セレクトの種別は塗りチップにしない（ユーザー指示 2026-08-22） -->
-                                                    <span
-                                                        [style.color]="
-                                                            tc.tripClassColor ??
-                                                            null
-                                                        "
-                                                    >
-                                                        {{ tc.tripClassName }}
-                                                    </span>
-                                                }
-                                            </mat-select-trigger>
-                                            @for (
-                                                tripClass of tripClasses();
-                                                track tripClass.tripClassId
-                                            ) {
-                                                <mat-option
-                                                    [value]="
-                                                        tripClass.tripClassId
-                                                    "
-                                                >
-                                                    <span
-                                                        [style.color]="
-                                                            tripClass.tripClassColor ??
-                                                            null
-                                                        "
-                                                    >
-                                                        {{
-                                                            tripClass.tripClassName
-                                                        }}
-                                                    </span>
-                                                </mat-option>
-                                            }
-                                        </mat-select>
-                                    </mat-form-field>
-
-                                    <mat-form-field subscriptSizing="dynamic">
-                                        <mat-label>行先</mat-label>
-                                        <input
-                                            matInput
-                                            readonly
-                                            [value]="destinationLabel(tripForm)"
-                                        />
-                                    </mat-form-field>
-
-                                    <mat-form-field subscriptSizing="dynamic">
-                                        <mat-label>列車番号</mat-label>
-                                        <input
-                                            matInput
-                                            formControlName="tripNumber"
-                                        />
-                                    </mat-form-field>
-
-                                    <mat-form-field subscriptSizing="dynamic">
-                                        <mat-label>運用番号</mat-label>
-                                        <mat-select
-                                            formControlName="operationId"
-                                        >
-                                            @for (
-                                                operation of operations();
-                                                track operation.operationId
-                                            ) {
-                                                <mat-option
-                                                    [value]="
-                                                        operation.operationId
-                                                    "
-                                                >
-                                                    {{
-                                                        operation.operationNumber
-                                                    }}
-                                                </mat-option>
-                                            }
-                                        </mat-select>
-                                    </mat-form-field>
-                                </div>
-
-                                <!-- 情報維持: 入庫/出庫チェック -->
-                                <div class="tw-flex tw-flex-row tw-gap-4">
-                                    <mat-checkbox formControlName="depotIn">
-                                        入庫
-                                    </mat-checkbox>
-                                    <mat-checkbox
-                                        color="accent"
-                                        formControlName="depotOut"
-                                    >
-                                        出庫
-                                    </mat-checkbox>
-                                    <span class="tw-flex-1"></span>
-                                    <button
-                                        type="button"
-                                        mat-icon-button
-                                        (click)="
-                                            onClickRemove(currentTripIndex())
-                                        "
-                                        [disabled]="
-                                            tripsForm.controls.length === 1
-                                        "
-                                        aria-label="この列車を削除"
-                                    >
-                                        <mat-icon>remove</mat-icon>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        mat-icon-button
-                                        (click)="onClickAdd()"
-                                        aria-label="列車を追加"
-                                    >
-                                        <mat-icon>add</mat-icon>
-                                    </button>
-                                </div>
-
-                                <!-- G9: 1駅1行の停車駅リスト（駅名｜通過/着時刻｜発時刻入力）。
-                                     経由なしラジオは廃止し路線チップ絞り込み（visibleStations）が代替する。
-                                     停/通の切替はコンパクトなタップ式トグル（onToggleStopType）で維持する。 -->
-                                <div
-                                    class="tw-flex tw-flex-col tw-divide-y tw-divide-grey-200"
-                                >
-                                    @for (
-                                        station of visibleStations();
-                                        track station.stationId
-                                    ) {
-                                        @if (
-                                            tripForm
-                                                .get('times')
-                                                ?.at(
-                                                    stations().indexOf(station)
-                                                );
-                                            as timeForm
-                                        ) {
-                                            <div
-                                                [formGroup]="timeForm"
-                                                class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-py-2"
-                                            >
-                                                <span
-                                                    class="tw-w-20 tw-shrink-0 tw-truncate tw-text-sm"
-                                                >
-                                                    {{ station.stationName }}
-                                                </span>
-
-                                                <button
-                                                    type="button"
-                                                    class="tw-bg-transparent tw-w-14 tw-shrink-0 tw-border-0 tw-p-0 tw-text-right tw-text-xs"
-                                                    [class.tw-text-grey-500]="
-                                                        isPassStopType(timeForm)
-                                                    "
-                                                    (click)="
-                                                        onToggleStopType(
-                                                            timeForm
-                                                        )
-                                                    "
-                                                >
-                                                    @if (
-                                                        isPassStopType(timeForm)
-                                                    ) {
-                                                        通過
-                                                    } @else {
-                                                        {{
-                                                            timeForm.get(
-                                                                'arrivalTime'
-                                                            ).value || '—'
-                                                        }}
-                                                    }
-                                                </button>
-
-                                                <mat-form-field
-                                                    class="tw-flex-1"
-                                                    subscriptSizing="dynamic"
-                                                >
-                                                    <input
-                                                        type="time"
-                                                        matInput
-                                                        formControlName="departureTime"
-                                                        placeholder="--:--"
-                                                        [class.tw-text-grey-400]="
-                                                            isPassStopType(
-                                                                timeForm
-                                                            )
-                                                        "
-                                                    />
-                                                </mat-form-field>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        }
-                    </ng-container>
-                }
-            </div>
-
-            <!-- デスクトップ: 従来の中央寄せ クリア/保存する（横長グリッドと同様に現行維持） -->
-            <div
-                class="tw-hidden tw-flex-row tw-justify-center tw-gap-6 tw-p-4 md:tw-flex"
+    @if (isVisibleToggleThatSaveTripsIndividually()) {
+        <!-- ⓘ はトグルの隣。説明文が折り返しても ⓘ だけ次の行に残らないように -->
+        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-x-2">
+            <mat-slide-toggle
+                (change)="toggleIsSaveTripsIndividually.emit($event)"
             >
+                列車個別保存モード
+            </mat-slide-toggle>
+            <button
+                type="button"
+                mat-icon-button
+                aria-label="列車個別保存モードの説明"
+                [matTooltip]="saveTripsIndividuallyHelp"
+                #saveHelp="matTooltip"
+                (click)="saveHelp.toggle()"
+            >
+                <mat-icon>info_outline</mat-icon>
+            </button>
+            <span class="tw-text-sm tw-text-muted"
+                >分割・併合・直通のない列車を 1 本ずつ保存する</span
+            >
+        </div>
+    }
+
+    <form
+        class="tw-flex tw-flex-col tw-gap-4"
+        [formGroup]="form"
+        (ngSubmit)="onClickSubmit()"
+    >
+        @if (isCompact()) {
+            <div class="tw-flex tw-items-center tw-justify-between">
+                <button
+                    type="button"
+                    mat-icon-button
+                    aria-label="前の列車を表示する"
+                    [disabled]="currentTripIndex() === 0"
+                    (click)="onPrevTrip()"
+                >
+                    <mat-icon>chevron_left</mat-icon>
+                </button>
+                <span
+                    >{{ currentTripIndex() + 1 }} /
+                    {{ tripCount() }} 列車目</span
+                >
+                <button
+                    type="button"
+                    mat-icon-button
+                    aria-label="次の列車を表示する"
+                    [disabled]="currentTripIndex() >= tripCount() - 1"
+                    (click)="onNextTrip()"
+                >
+                    <mat-icon>chevron_right</mat-icon>
+                </button>
                 <button
                     type="button"
                     mat-button
@@ -663,20 +179,25 @@
                 >
                     クリア
                 </button>
-                <!-- ボタン規約（app-button）に寄せる。紺塗りは規約外だった（audit M6） -->
-                <app-button
-                    class="tw-w-32"
-                    type="submit"
-                    variant="primary"
-                    [disabled]="form.invalid"
-                >
-                    保存する
-                </app-button>
             </div>
+        }
 
-            <!-- G9: モバイル sticky 下部バー（下書き保存 outlined + この列車を登録/更新 オレンジ全幅相当） -->
+        <app-timetable-edit-form-grid
+            [tripsForm]="tripsForm"
+            [stations]="stations()"
+            [visibleStations]="visibleStations()"
+            [tripIndexes]="shownTripIndexes()"
+            [compact]="isCompact()"
+            [operations]="operations()"
+            [tripClasses]="tripClasses()"
+            (addTrip)="onClickAdd()"
+            (removeTrip)="onClickRemove($event)"
+        ></app-timetable-edit-form-grid>
+
+        @if (isCompact()) {
+            <!-- スマホ: 下に sticky の操作バー（影は design.md が許す「sticky な操作バー」） -->
             <div
-                class="tw-sticky tw-bottom-0 tw-z-10 tw-flex tw-gap-2 tw-border-t tw-border-grey-200 tw-bg-white tw-p-3 tw-shadow-[0_-2px_8px_rgba(0,0,0,0.08)] md:tw-hidden"
+                class="tw-sticky tw-bottom-0 tw-z-30 tw-flex tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-3 tw-shadow-[0_-2px_8px_rgba(0,0,0,0.08)]"
             >
                 <app-button
                     variant="secondary"
@@ -693,6 +214,34 @@
                     {{ submitButtonLabel() }}
                 </app-button>
             </div>
-        </form>
-    </div>
+        } @else {
+            <div
+                class="tw-flex tw-flex-wrap tw-items-center tw-justify-end tw-gap-2"
+            >
+                <button
+                    type="button"
+                    mat-button
+                    color="primary"
+                    (click)="onClickClear()"
+                >
+                    クリア
+                </button>
+                <app-button
+                    variant="secondary"
+                    type="button"
+                    (buttonClick)="onClickSaveDraft()"
+                >
+                    下書き保存
+                </app-button>
+                <app-button
+                    class="tw-w-32"
+                    variant="primary"
+                    type="submit"
+                    [disabled]="form.invalid"
+                >
+                    {{ submitButtonLabel() }}
+                </app-button>
+            </div>
+        }
+    </form>
 </article>

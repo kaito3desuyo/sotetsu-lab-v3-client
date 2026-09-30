@@ -1,15 +1,20 @@
 import { provideHttpClient } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, firstValueFrom, Observable, of, throwError } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
+import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
-import { ETimetableEditFormMode } from './special/enums/timetable-edit-form.enum';
+import {
+    ETimetableEditFormMode,
+    ETimetableEditFormStopType,
+} from './special/enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 import { TimetableEditFormComponent } from './timetable-edit-form.component';
 
@@ -35,6 +40,7 @@ describe('TimetableEditFormComponent', () => {
             saveDraft: jest.fn(),
             clearDraft: jest.fn(),
             getMatchingDraft: jest.fn(() => null),
+            selectRoutesTraversedBy: jest.fn(),
         };
 
         await TestBed.configureTestingModule({
@@ -107,6 +113,117 @@ describe('TimetableEditFormComponent', () => {
         ).not.toHaveBeenCalled();
     });
 
+    it('駅・路線・運用・種別・ダイヤの取得を同時に購読する（順番待ちしない）', () => {
+        const subscribed: string[] = [];
+        const names = [
+            'fetchStations',
+            'fetchRoutes',
+            'fetchOperations',
+            'fetchTripClasses',
+            'fetchCalendar',
+        ];
+        for (const name of names) {
+            timetableEditFormService[name].mockImplementation(
+                () =>
+                    new Observable<void>(() => {
+                        subscribed.push(name);
+                    }),
+            );
+        }
+
+        TestBed.createComponent(TimetableEditFormComponent);
+
+        expect(subscribed).toEqual(names);
+    });
+
+    it('取得に失敗しても読み込み中を解く', async () => {
+        TimetableEditFormStore.resetLoading();
+        timetableEditFormService.fetchStations.mockReturnValue(
+            throwError(() => new Error('network')),
+        );
+
+        await expect(component.fetchData()).rejects.toThrow('network');
+        expect(await firstValueFrom(TimetableEditFormStore.isLoading$)).toBe(
+            false,
+        );
+    });
+
+    describe('下書きの復元の案内', () => {
+        let snackBarRef: { onAction: jest.Mock; dismiss: jest.Mock };
+        let openFromComponent: jest.SpyInstance;
+
+        beforeEach(() => {
+            timetableEditFormService.getMatchingDraft.mockReturnValue({
+                trips: [{ tripNumber: '2301' }],
+            });
+            snackBarRef = {
+                onAction: jest.fn(() => EMPTY),
+                dismiss: jest.fn(),
+            };
+            openFromComponent = jest
+                .spyOn(TestBed.inject(MatSnackBar), 'openFromComponent')
+                .mockReturnValue(snackBarRef as any);
+        });
+
+        it('自動では消さない（閉じるか復元するまで残す）', async () => {
+            await component.fetchData();
+
+            expect(openFromComponent).toHaveBeenCalledWith(
+                TimetableEditFormDraftRestoreSnackBarComponent,
+            );
+        });
+
+        it('「復元する」で下書きを戻し、通る駅（‖ 以外）の路線を絞り込みに足す', async () => {
+            const trips = [
+                {
+                    tripNumber: '3030',
+                    times: [
+                        {
+                            stationId: '横浜',
+                            stopType: ETimetableEditFormStopType.STOP,
+                        },
+                        {
+                            stationId: '西谷',
+                            stopType: ETimetableEditFormStopType.PASS,
+                        },
+                        {
+                            stationId: '厚木',
+                            stopType:
+                                ETimetableEditFormStopType.NOT_GOING_THROUGH,
+                        },
+                    ],
+                },
+            ];
+            timetableEditFormService.getMatchingDraft.mockReturnValue({
+                trips,
+            });
+            snackBarRef.onAction.mockReturnValue(of(undefined));
+
+            await component.fetchData();
+
+            expect(
+                timetableEditFormService.selectRoutesTraversedBy,
+            ).toHaveBeenCalledWith([['横浜', '西谷']]);
+            expect(component.restoreTrips()).toEqual(trips);
+        });
+
+        it('ページを離れたら閉じる', async () => {
+            await component.fetchData();
+            fixture.destroy();
+
+            expect(snackBarRef.dismiss).toHaveBeenCalled();
+        });
+
+        it('保存に成功したら閉じる（下書きは消えるため）', async () => {
+            await component.fetchData();
+            await component.onReceiveClickSubmit([
+                { tripNumber: '2301' },
+            ] as any);
+
+            expect(snackBarRef.dismiss).toHaveBeenCalled();
+        });
+    });
+
     describe('G9: 保存 API の呼び出し形が add/copy/update 各モードで従前と一致する（契約非破壊の証拠）', () => {
         it('ADD モードでは createTripBlocks（CreateTripDto[]）を呼ぶ', async () => {
             TimetableEditFormStore.setMode(ETimetableEditFormMode.ADD);
@@ -114,10 +231,12 @@ describe('TimetableEditFormComponent', () => {
 
             await component.onReceiveClickSubmit(trips);
 
-            expect(timetableEditFormService.createTripBlocks).toHaveBeenCalledWith(
-                trips,
-            );
-            expect(timetableEditFormService.replaceTripBlock).not.toHaveBeenCalled();
+            expect(
+                timetableEditFormService.createTripBlocks,
+            ).toHaveBeenCalledWith(trips);
+            expect(
+                timetableEditFormService.replaceTripBlock,
+            ).not.toHaveBeenCalled();
         });
 
         it('COPY モードでは createTripBlocks（CreateTripDto[]）を呼ぶ', async () => {
@@ -126,10 +245,12 @@ describe('TimetableEditFormComponent', () => {
 
             await component.onReceiveClickSubmit(trips);
 
-            expect(timetableEditFormService.createTripBlocks).toHaveBeenCalledWith(
-                trips,
-            );
-            expect(timetableEditFormService.replaceTripBlock).not.toHaveBeenCalled();
+            expect(
+                timetableEditFormService.createTripBlocks,
+            ).toHaveBeenCalledWith(trips);
+            expect(
+                timetableEditFormService.replaceTripBlock,
+            ).not.toHaveBeenCalled();
         });
 
         it('UPDATE モードでは replaceTripBlock（ReplaceTripDto[]）を呼ぶ', async () => {
@@ -138,10 +259,12 @@ describe('TimetableEditFormComponent', () => {
 
             await component.onReceiveClickSubmit(trips);
 
-            expect(timetableEditFormService.replaceTripBlock).toHaveBeenCalledWith(
-                trips,
-            );
-            expect(timetableEditFormService.createTripBlocks).not.toHaveBeenCalled();
+            expect(
+                timetableEditFormService.replaceTripBlock,
+            ).toHaveBeenCalledWith(trips);
+            expect(
+                timetableEditFormService.createTripBlocks,
+            ).not.toHaveBeenCalled();
         });
     });
 });

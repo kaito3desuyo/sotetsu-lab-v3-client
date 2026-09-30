@@ -143,17 +143,13 @@ describe('TrainDiagramStore', () => {
             makeRoute('izumino', ['st-branch', 'st-izumino']),
         ];
 
-        it('未選択（空集合）時は networkStations と同一順を返す', (done) => {
+        it('路線を何も選んでいないときは駅を出さない（全線時刻表・運用行路図と同じ）', (done) => {
             TrainDiagramStore.setNetworkStations(networkStations);
             TrainDiagramStore.setRouteStations(routeStations);
             TrainDiagramStore.setSelectedRouteIds([]);
 
             TrainDiagramStore.stationAxisStations$.subscribe((stations) => {
-                expect(stations.map((s) => s.stationId)).toEqual([
-                    'st-honsen',
-                    'st-branch',
-                    'st-izumino',
-                ]);
+                expect(stations).toEqual([]);
                 done();
             });
         });

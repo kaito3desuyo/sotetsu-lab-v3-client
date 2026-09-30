@@ -9,9 +9,9 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
-import { lastValueFrom, Observable } from 'rxjs';
+import { forkJoin, lastValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -19,13 +19,17 @@ import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormTripsComponent } from './components/timetable-edit-form-trips/timetable-edit-form-trips.component';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
-import { ETimetableEditFormMode } from './special/enums/timetable-edit-form.enum';
+import { ITimetableEditFormTripValue } from './interfaces/timetable-edit-form.interface';
+import {
+    ETimetableEditFormMode,
+    ETimetableEditFormStopType,
+} from './special/enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
@@ -97,7 +101,7 @@ export class TimetableEditFormComponent {
             .pipe(map(() => new Date().getTime())),
     );
 
-    readonly restoreTrips = signal<TripDetailsDto[] | null>(null);
+    readonly restoreTrips = signal<ITimetableEditFormTripValue[] | null>(null);
 
     constructor() {
         this.#route.paramMap
@@ -107,9 +111,7 @@ export class TimetableEditFormComponent {
                     .mode as ETimetableEditFormMode;
                 const calendarId = paramMap.get('calendar_id');
                 const tripDirection = paramMap.has('trip_direction')
-                    ? (Number(
-                          paramMap.get('trip_direction'),
-                      ) as ETripDirection)
+                    ? (Number(paramMap.get('trip_direction')) as ETripDirection)
                     : null;
                 const tripBlockId = paramMap.get('trip_block_id');
 
@@ -130,27 +132,32 @@ export class TimetableEditFormComponent {
     async fetchData(): Promise<void> {
         TimetableEditFormStore.enableLoading();
 
-        await lastValueFrom(this.#timetableEditFormService.fetchStations());
-        await lastValueFrom(this.#timetableEditFormService.fetchRoutes());
-        await lastValueFrom(this.#timetableEditFormService.fetchOperations());
-        await lastValueFrom(
-            this.#timetableEditFormService.fetchTripClasses(),
-        );
-        await lastValueFrom(this.#timetableEditFormService.fetchCalendar());
+        try {
+            // 5 本は互いに依存しないので同時に投げる
+            await lastValueFrom(
+                forkJoin([
+                    this.#timetableEditFormService.fetchStations(),
+                    this.#timetableEditFormService.fetchRoutes(),
+                    this.#timetableEditFormService.fetchOperations(),
+                    this.#timetableEditFormService.fetchTripClasses(),
+                    this.#timetableEditFormService.fetchCalendar(),
+                ]),
+            );
 
-        if (this.mode() === ETimetableEditFormMode.UPDATE) {
-            await lastValueFrom(
-                this.#timetableEditFormService.fetchTargetTripBlock(),
-            );
-        } else {
-            // G9: ADD/COPY 両モードで「既存列車からコピー」を提供するため、
-            // コピー元候補（同一ダイヤ・同一方向の trip-block 一覧）を取得する。
-            await lastValueFrom(
-                this.#timetableEditFormService.fetchCopySourceCandidates(),
-            );
+            if (this.mode() === ETimetableEditFormMode.UPDATE) {
+                await lastValueFrom(
+                    this.#timetableEditFormService.fetchTargetTripBlock(),
+                );
+            } else {
+                // G9: ADD/COPY 両モードで「既存列車からコピー」を提供するため、
+                // コピー元候補（同一ダイヤ・同一方向の trip-block 一覧）を取得する。
+                await lastValueFrom(
+                    this.#timetableEditFormService.fetchCopySourceCandidates(),
+                );
+            }
+        } finally {
+            TimetableEditFormStore.disableLoading();
         }
-
-        TimetableEditFormStore.disableLoading();
 
         this.#proposeDraftRestoreIfAny();
     }
@@ -233,23 +240,40 @@ export class TimetableEditFormComponent {
             }
         };
 
+        this.#draftRestoreRef?.dismiss();
         this.#notification.open(message(), 'OK');
         this.#timetableEditFormService.clearDraft();
         this.#timetableEditFormService.emitSubmittedEvent();
     }
 
+    #draftRestoreRef: MatSnackBarRef<TimetableEditFormDraftRestoreSnackBarComponent> | null =
+        null;
+
     #proposeDraftRestoreIfAny(): void {
         const draft = this.#timetableEditFormService.getMatchingDraft();
         if (!draft || draft.trips.length === 0) return;
 
-        const ref = this.#snackBar.open(
-            '前回の入力途中データがあります。復元しますか？',
-            '復元する',
-            { duration: 8000 },
+        // 自動では消さない（8 秒で消えると見逃して戻せなかった）。閉じるか復元するまで残す
+        const ref = this.#snackBar.openFromComponent(
+            TimetableEditFormDraftRestoreSnackBarComponent,
         );
+        this.#draftRestoreRef = ref;
+        this.#destroyRef.onDestroy(() => ref.dismiss());
 
         ref.onAction().subscribe(() => {
-            this.restoreTrips.set(draft.trips as unknown as TripDetailsDto[]);
+            const trips = draft.trips as ITimetableEditFormTripValue[];
+            this.#timetableEditFormService.selectRoutesTraversedBy(
+                trips.map((trip) =>
+                    (trip.times ?? [])
+                        .filter(
+                            (time) =>
+                                time.stopType !==
+                                ETimetableEditFormStopType.NOT_GOING_THROUGH,
+                        )
+                        .map((time) => time.stationId),
+                ),
+            );
+            this.restoreTrips.set(trips);
         });
     }
 }

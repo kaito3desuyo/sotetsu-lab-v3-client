@@ -1,7 +1,12 @@
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormArray } from '@angular/forms';
+import { BehaviorSubject } from 'rxjs';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { ETimetableEditFormMode } from '../../special/enums/timetable-edit-form.enum';
+import {
+    ETimetableEditFormMode,
+    ETimetableEditFormStopType,
+} from '../../special/enums/timetable-edit-form.enum';
 import { TimetableEditFormTripsComponent } from './timetable-edit-form-trips.component';
 
 function makeStation(stationId: string): any {
@@ -11,12 +16,24 @@ function makeStation(stationId: string): any {
 describe('TimetableEditFormTripsComponent', () => {
     let component: TimetableEditFormTripsComponent;
     let fixture: ComponentFixture<TimetableEditFormTripsComponent>;
+    let breakpoint$: BehaviorSubject<BreakpointState>;
 
     const stations = [makeStation('横浜'), makeStation('二俣川')];
 
     beforeEach(async () => {
+        breakpoint$ = new BehaviorSubject<BreakpointState>({
+            matches: false,
+            breakpoints: {},
+        });
+
         await TestBed.configureTestingModule({
             imports: [TimetableEditFormTripsComponent],
+            providers: [
+                {
+                    provide: BreakpointObserver,
+                    useValue: { observe: () => breakpoint$ },
+                },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(TimetableEditFormTripsComponent);
@@ -25,10 +42,7 @@ describe('TimetableEditFormTripsComponent', () => {
         fixture.componentRef.setInput('serviceId', 'service-1');
         fixture.componentRef.setInput('calendarId', 'calendar-1');
         fixture.componentRef.setInput('mode', ETimetableEditFormMode.ADD);
-        fixture.componentRef.setInput(
-            'tripDirection',
-            ETripDirection.OUTBOUND,
-        );
+        fixture.componentRef.setInput('tripDirection', ETripDirection.OUTBOUND);
         fixture.componentRef.setInput('stations', stations);
         fixture.componentRef.setInput(
             'visibleStationIds',
@@ -47,9 +61,9 @@ describe('TimetableEditFormTripsComponent', () => {
 
     it('ADD モードでは1件分の空 trip フォームで初期化される（現行と同じ既定挙動）', () => {
         expect(component.tripsForm.controls.length).toBe(1);
-        expect(
-            component.tripsForm.controls[0].get('times').value.length,
-        ).toBe(stations.length);
+        expect(component.tripsForm.controls[0].get('times').value.length).toBe(
+            stations.length,
+        );
     });
 
     it('B8-1: visibleStations は visibleStationIds に含まれる駅のみを返す（情報削減ではなく表示絞り込み）', () => {
@@ -60,9 +74,9 @@ describe('TimetableEditFormTripsComponent', () => {
             '二俣川',
         ]);
         // フォーム自体は駅データを保持したまま（全駅ぶんの times コントロールは維持）
-        expect(
-            component.tripsForm.controls[0].get('times').value.length,
-        ).toBe(stations.length);
+        expect(component.tripsForm.controls[0].get('times').value.length).toBe(
+            stations.length,
+        );
     });
 
     it('B8-3: 一括オフセットは全 trip の全時刻へ適用される', () => {
@@ -71,7 +85,9 @@ describe('TimetableEditFormTripsComponent', () => {
 
         for (const tripForm of component.tripsForm.controls) {
             const times = tripForm.get('times') as FormArray;
-            times.at(0).patchValue({ arrivalTime: '10:00', departureTime: '10:05' });
+            times
+                .at(0)
+                .patchValue({ arrivalTime: '10:00', departureTime: '10:05' });
         }
 
         component.offsetMinutes.set(15);
@@ -104,70 +120,33 @@ describe('TimetableEditFormTripsComponent', () => {
         expect(restoredSpy).toHaveBeenCalled();
     });
 
-    describe('G9: モバイル1駅1行の停/通トグルと行先導出', () => {
-        it('onToggleStopType は 経由なし(既定)→停→通→停 の順で循環する', () => {
-            const timeForm = (
-                component.tripsForm.controls[0].get('times') as FormArray
-            ).at(0) as any;
-
-            expect(timeForm.get('stopType').value).toBe(
-                'not-going-through',
-            );
-
-            component.onToggleStopType(timeForm);
-            expect(timeForm.get('stopType').value).toBe('stop');
-
-            component.onToggleStopType(timeForm);
-            expect(timeForm.get('stopType').value).toBe('pass');
-
-            component.onToggleStopType(timeForm);
-            expect(timeForm.get('stopType').value).toBe('stop');
+    it('下書きを戻すと、保存したときのフォームの値（停・通過・時刻・運用）がそのまま戻る', () => {
+        const trip = component.tripsForm.controls[0];
+        trip.patchValue({
+            tripNumber: '3030',
+            tripClassId: 'class-1',
+            operationId: 'operation-54',
         });
-
-        it('isPassStopType は stopType=pass のときのみ true を返す', () => {
-            const timeForm = (
-                component.tripsForm.controls[0].get('times') as FormArray
-            ).at(0) as any;
-
-            expect(component.isPassStopType(timeForm)).toBe(false);
-
-            timeForm.get('stopType').setValue('pass');
-            expect(component.isPassStopType(timeForm)).toBe(true);
+        (trip.get('times') as FormArray).at(0).patchValue({
+            stopType: ETimetableEditFormStopType.STOP,
+            departureTime: '11:54',
         });
-
-        it('destinationLabel は経由なしを除いた最後の停車/通過駅名を返す（両方とも経由なしなら空文字）', () => {
-            const tripForm = component.tripsForm.controls[0];
-
-            expect(component.destinationLabel(tripForm)).toBe('');
-
-            const times = tripForm.get('times') as FormArray;
-            times.at(0).patchValue({ stopType: 'stop' });
-            expect(component.destinationLabel(tripForm)).toBe('横浜');
-
-            times.at(1).patchValue({ stopType: 'stop' });
-            expect(component.destinationLabel(tripForm)).toBe('二俣川');
+        (trip.get('times') as FormArray).at(1).patchValue({
+            stopType: ETimetableEditFormStopType.PASS,
         });
+        const saved = component.tripsForm.getRawValue();
+
+        component.onClickAdd();
+        fixture.componentRef.setInput(
+            'restoreTrips',
+            JSON.parse(JSON.stringify(saved)),
+        );
+        fixture.detectChanges();
+
+        expect(component.tripsForm.getRawValue()).toEqual(saved);
     });
 
     describe('G9: 種別バッジ・下書き保存ボタン', () => {
-        it('selectedTripClass は tripClassId に一致する tripClasses の要素を返す', () => {
-            fixture.componentRef.setInput('tripClasses', [
-                {
-                    tripClassId: 'tc-1',
-                    tripClassName: '急行',
-                    tripClassColor: '#00a040',
-                },
-            ]);
-            fixture.detectChanges();
-
-            const tripForm = component.tripsForm.controls[0];
-            tripForm.get('tripClassId').setValue('tc-1');
-
-            expect(component.selectedTripClass(tripForm)?.tripClassName).toBe(
-                '急行',
-            );
-        });
-
         it('onClickSaveDraft は formValueChange と saveDraftClick を emit する', () => {
             const formValueChangeSpy = jest.fn();
             const saveDraftClickSpy = jest.fn();
@@ -187,10 +166,7 @@ describe('TimetableEditFormTripsComponent', () => {
             fixture.detectChanges();
             expect(component.isInitialValueBlockVisible()).toBe(true);
 
-            fixture.componentRef.setInput(
-                'mode',
-                ETimetableEditFormMode.COPY,
-            );
+            fixture.componentRef.setInput('mode', ETimetableEditFormMode.COPY);
             fixture.detectChanges();
             expect(component.isInitialValueBlockVisible()).toBe(true);
 
@@ -241,10 +217,7 @@ describe('TimetableEditFormTripsComponent', () => {
                 { routeId: 'r1', routeName: '本線' },
                 { routeId: 'r2', routeName: 'いずみ野線' },
             ]);
-            fixture.componentRef.setInput('selectedRouteIds', [
-                'r1',
-                'r2',
-            ]);
+            fixture.componentRef.setInput('selectedRouteIds', ['r1', 'r2']);
             fixture.detectChanges();
 
             expect(component.routeFilterSummary()).toBe('全路線');
@@ -259,6 +232,173 @@ describe('TimetableEditFormTripsComponent', () => {
             fixture.detectChanges();
 
             expect(component.routeFilterSummary()).toBe('本線');
+        });
+
+        it('何も選んでいないときは「選択なし」と表示する（格子も空になる）', () => {
+            fixture.componentRef.setInput('routes', [
+                { routeId: 'r1', routeName: '本線' },
+                { routeId: 'r2', routeName: 'いずみ野線' },
+            ]);
+            fixture.componentRef.setInput('selectedRouteIds', []);
+            fixture.detectChanges();
+
+            expect(component.routeFilterSummary()).toBe('選択なし');
+        });
+    });
+
+    describe('格子の組み込み', () => {
+        it('PC 幅では全列車を格子に出す', () => {
+            component.onClickAdd();
+            fixture.detectChanges();
+
+            expect(component.isCompact()).toBe(false);
+            expect(component.shownTripIndexes()).toEqual([0, 1]);
+        });
+
+        it('スマホ幅では今の 1 列車だけを出し、追加するとその列車へ移る', () => {
+            breakpoint$.next({ matches: true, breakpoints: {} });
+            fixture.detectChanges();
+
+            expect(component.shownTripIndexes()).toEqual([0]);
+
+            component.onClickAdd();
+            fixture.detectChanges();
+
+            expect(component.currentTripIndex()).toBe(1);
+            expect(component.shownTripIndexes()).toEqual([1]);
+        });
+
+        it('片方の配置だけを描く（スマホの列車送りは PC では描かない）', () => {
+            const pcText: string = fixture.nativeElement.textContent;
+            expect(pcText).not.toContain('列車目');
+
+            breakpoint$.next({ matches: true, breakpoints: {} });
+            fixture.detectChanges();
+
+            const compactText: string = fixture.nativeElement.textContent;
+            expect(compactText).toContain('1 / 1 列車目');
+        });
+
+        it('経由なしの駅でも時刻の control を無効にしない（無効は格子が描画時に決める）', () => {
+            const time = (
+                component.tripsForm.controls[0].get('times') as FormArray
+            ).at(0);
+
+            expect(time.get('stopType').value).toBe('not-going-through');
+            expect(time.get('arrivalTime').disabled).toBe(false);
+            expect(time.get('departureTime').disabled).toBe(false);
+        });
+
+        it('保存ボタンのラベルは ADD で「登録する」、UPDATE で「更新する」', () => {
+            expect(component.submitButtonLabel()).toBe('登録する');
+
+            fixture.componentRef.setInput(
+                'mode',
+                ETimetableEditFormMode.UPDATE,
+            );
+            fixture.detectChanges();
+
+            expect(component.submitButtonLabel()).toBe('更新する');
+        });
+
+        it('格子を描く', () => {
+            expect(
+                fixture.nativeElement.querySelector(
+                    'app-timetable-edit-form-grid',
+                ),
+            ).not.toBeNull();
+        });
+    });
+
+    describe('保存の DTO（格子に置き換えても変えない）', () => {
+        it('経由なしを除き、始発の着・終着の発を捨て、停車種別を乗降区分にする', () => {
+            fixture.componentRef.setInput('stations', [
+                makeStation('横浜'),
+                makeStation('西谷'),
+                makeStation('二俣川'),
+            ]);
+            fixture.componentRef.setInput('visibleStationIds', [
+                '横浜',
+                '西谷',
+                '二俣川',
+            ]);
+            fixture.detectChanges();
+
+            const tripForm = component.tripsForm.controls[0];
+            tripForm.patchValue({ tripNumber: '1001', tripClassId: 'tc-1' });
+            const times = tripForm.get('times') as FormArray;
+            times.at(0).patchValue({
+                stopType: 'stop',
+                arrivalTime: '09:58',
+                departureTime: '10:00',
+            });
+            times.at(1).patchValue({
+                stopType: 'not-going-through',
+                arrivalTime: '10:03',
+                departureTime: '10:04',
+            });
+            times.at(2).patchValue({
+                stopType: 'stop',
+                arrivalTime: '10:08',
+                departureTime: '10:09',
+            });
+
+            const spy = jest.fn();
+            component.clickSubmit.subscribe(spy);
+            component.onClickSubmit();
+
+            const [dto] = spy.mock.calls[0][0];
+            expect(dto.tripNumber).toBe('1001');
+            expect(
+                dto.times.map((t: any) => ({
+                    stationId: t.stationId,
+                    stopSequence: t.stopSequence,
+                    pickupType: t.pickupType,
+                    dropoffType: t.dropoffType,
+                    arrivalTime: t.arrivalTime,
+                    arrivalDays: t.arrivalDays,
+                    departureTime: t.departureTime,
+                    departureDays: t.departureDays,
+                })),
+            ).toEqual([
+                {
+                    stationId: '横浜',
+                    stopSequence: 1,
+                    pickupType: 0,
+                    dropoffType: 1,
+                    arrivalTime: null,
+                    arrivalDays: null,
+                    departureTime: '10:00',
+                    departureDays: 1,
+                },
+                {
+                    stationId: '二俣川',
+                    stopSequence: 2,
+                    pickupType: 1,
+                    dropoffType: 0,
+                    arrivalTime: '10:08',
+                    arrivalDays: 1,
+                    departureTime: null,
+                    departureDays: null,
+                },
+            ]);
+        });
+
+        it('0 時台の時刻は days = 2', () => {
+            const tripForm = component.tripsForm.controls[0];
+            const times = tripForm.get('times') as FormArray;
+            times
+                .at(0)
+                .patchValue({ stopType: 'stop', departureTime: '23:58' });
+            times.at(1).patchValue({ stopType: 'stop', arrivalTime: '00:03' });
+
+            const spy = jest.fn();
+            component.clickSubmit.subscribe(spy);
+            component.onClickSubmit();
+
+            const [dto] = spy.mock.calls[0][0];
+            expect(dto.times[0].departureDays).toBe(1);
+            expect(dto.times[1].arrivalDays).toBe(2);
         });
     });
 });

@@ -64,7 +64,10 @@ describe('Service: TrainDiagram', () => {
                     provide: ServiceListStateQuery,
                     useValue: { serviceId: 'service-1' },
                 },
-                { provide: TripClassService, useValue: { findMany: () => of([]) } },
+                {
+                    provide: TripClassService,
+                    useValue: { findMany: () => of([]) },
+                },
                 { provide: TripBlockService, useValue: tripBlockServiceMock },
                 {
                     provide: OperationSightingService,
@@ -134,9 +137,11 @@ describe('Service: TrainDiagram', () => {
 
     it('fetchNetworkStations: serviceId で網羅駅を取得してストアへ設定する', (done) => {
         service.fetchNetworkStations().subscribe(() => {
-            expect(serviceServiceMock.findOneWithStations).toHaveBeenCalledWith({
-                serviceId: 'service-1',
-            });
+            expect(serviceServiceMock.findOneWithStations).toHaveBeenCalledWith(
+                {
+                    serviceId: 'service-1',
+                },
+            );
             expect(
                 TrainDiagramStore.networkStations.map((s) => s.stationId),
             ).toEqual(['s1', 's2']);
@@ -155,11 +160,20 @@ describe('Service: TrainDiagram', () => {
             {
                 routeId: 'r1',
                 routeStationLists: [
-                    { routeStationListId: 'r1-s1', routeId: 'r1', stationId: 's1' },
-                    { routeStationListId: 'r1-s2', routeId: 'r1', stationId: 's2' },
+                    {
+                        routeStationListId: 'r1-s1',
+                        routeId: 'r1',
+                        stationId: 's1',
+                    },
+                    {
+                        routeStationListId: 'r1-s2',
+                        routeId: 'r1',
+                        stationId: 's2',
+                    },
                 ],
             } as any,
         ]);
+        TrainDiagramStore.setSelectedRouteIds(['r1']);
 
         service.fetchNetworkStations().subscribe(() => {
             TrainDiagramStore.stationAxis$.subscribe((axis) => {

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of, Subject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -24,6 +25,7 @@ import {
     TimetableEditFormDraftStore,
 } from '../stores/timetable-edit-form-draft.store';
 import { TimetableEditFormStore } from '../stores/timetable-edit-form.store';
+import { routeIdsTraversedBy } from '../utils/timetable-edit-form-route.util';
 import { ownAgencyRouteIds } from 'src/app/shared/own-agency-route-ids.util';
 
 @Injectable()
@@ -95,8 +97,15 @@ export class TimetableEditFormService {
             map((operations) =>
                 operations
                     .filter((o) => o.operationNumber !== '100')
-                    .sort((a, b) =>
-                        a.operationNumber.localeCompare(b.operationNumber),
+                    // リアルタイム運用情報と同じ順（数字 → G → K）
+                    .sort(
+                        (a, b) =>
+                            Number(
+                                generateOperationSortNumber(a.operationNumber),
+                            ) -
+                            Number(
+                                generateOperationSortNumber(b.operationNumber),
+                            ),
                     ),
             ),
             tap((operations: OperationDetailsDto[]) => {
@@ -108,6 +117,14 @@ export class TimetableEditFormService {
 
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
+            // 届く種別一覧は並んでいないことがあるので sequence で並べる（相鉄→直通先→回送・不明）
+            map((tripClasses) =>
+                [...tripClasses].sort(
+                    (a, b) =>
+                        (a.sequence ?? Number.MAX_SAFE_INTEGER) -
+                        (b.sequence ?? Number.MAX_SAFE_INTEGER),
+                ),
+            ),
             tap((tripClasses: TripClassDetailsDto[]) => {
                 TimetableEditFormStore.setTripClasses(tripClasses);
             }),
@@ -133,6 +150,7 @@ export class TimetableEditFormService {
                     );
                 }
                 TimetableEditFormStore.setTargetTripBlock(tripBlock);
+                this.#selectRoutesOf(tripBlock);
             }),
             map(() => undefined),
         );
@@ -147,9 +165,7 @@ export class TimetableEditFormService {
             .findManyByFilter({ calendarId, tripDirection })
             .pipe(
                 tap((tripBlocks: TripBlockDetailsDto[]) => {
-                    TimetableEditFormStore.setCopySourceCandidates(
-                        tripBlocks,
-                    );
+                    TimetableEditFormStore.setCopySourceCandidates(tripBlocks);
 
                     const preselected = TimetableEditFormStore.tripBlockId;
                     const match = tripBlocks.find(
@@ -157,6 +173,7 @@ export class TimetableEditFormService {
                     );
                     if (match) {
                         TimetableEditFormStore.setTargetTripBlock(match);
+                        this.#selectRoutesOf(match);
                     }
                 }),
                 map(() => undefined),
@@ -175,8 +192,30 @@ export class TimetableEditFormService {
         return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
             tap((tripBlock: TripBlockDetailsDto) => {
                 TimetableEditFormStore.setTargetTripBlock(tripBlock);
+                this.#selectRoutesOf(tripBlock);
             }),
             map(() => undefined),
+        );
+    }
+
+    /**
+     * 列車（通る駅 id の並び）が 2 駅以上を通る路線を、路線の絞り込みに足す（外さない）。
+     * 絞り込みの外の駅は格子に出ないので、読み込んだ列車の時刻が見えなくなるのを防ぐ。
+     */
+    selectRoutesTraversedBy(stationIdsPerTrip: string[][]): void {
+        TimetableEditFormStore.addSelectedRouteIds(
+            routeIdsTraversedBy(
+                stationIdsPerTrip,
+                TimetableEditFormStore.stations,
+            ),
+        );
+    }
+
+    #selectRoutesOf(tripBlock: TripBlockDetailsDto): void {
+        this.selectRoutesTraversedBy(
+            (tripBlock.trips ?? []).map((trip) =>
+                (trip.times ?? []).map((time) => time.stationId),
+            ),
         );
     }
 

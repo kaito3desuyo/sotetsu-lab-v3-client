@@ -117,8 +117,10 @@ export class DashboardComponent {
                 this.#router.navigate([
                     'timetable',
                     'add',
-                    state.calendarId,
-                    { trip_direction: state.tripDirection },
+                    {
+                        calendar_id: state.calendarId,
+                        trip_direction: state.tripDirection,
+                    },
                 ]);
             });
     }
