@@ -11,9 +11,9 @@
         letter-spacing: 0.08em;
     }
 
+    // 現在地の縦棒は枠でなく inset の影で描く。枠だと字が 3px 右へずれ、
+    // 見出し・駅名欄の左端（16px）とそろわなかった
     .mat-mdc-list-item {
-        border-left: 3px solid transparent;
-
         .mat-mdc-list-item-title {
             color: var(--color-ink);
             font-size: var(--text-sm);
@@ -26,7 +26,7 @@
 
     // 現在地。routerLinkActive が付く。以前は現在ページが一切示されていなかった
     .mat-mdc-list-item.is-active {
-        border-left-color: var(--color-accent-deep);
+        box-shadow: inset 3px 0 0 var(--color-accent-deep);
         background-color: var(--color-paper-3);
 
         .mat-mdc-list-item-title {
@@ -34,11 +34,9 @@
         }
     }
 
-    // 駅名セレクトはリンク列と混ざらないよう領域として沈める
+    // 駅名セレクトの地は敷かない（ユーザー指示 2026-10-01。水色の面はいらない）。
+    // 左右は見出し・リンクの字と同じ 16px にそろえる
     .station-filter {
-        margin: 0 var(--space-2xs) var(--space-2xs);
-        padding: var(--space-2xs);
-        border-radius: var(--radius-card);
-        background-color: var(--color-paper-2);
+        padding: var(--space-3xs) var(--space-sm) var(--space-2xs);
     }
 }

@@ -26,14 +26,14 @@
                         選択しない（全線検索）
                     </mat-option>
 
-                    @for (route of routeStations(); track route.routeId) {
-                        <mat-optgroup [label]="route.routeName">
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
                             @for (
-                                rsl of route.routeStationLists;
-                                track rsl.routeStationListId
+                                station of group.stations;
+                                track station.stationId
                             ) {
-                                <mat-option [value]="rsl.stationId">
-                                    {{ rsl.station.stationName }}
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
                                 </mat-option>
                             }
                         </mat-optgroup>
@@ -49,27 +49,25 @@
             [routerLink]="inboundTimetableLink()"
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="timetableLinkActiveOptions"
-            aria-label="上り時刻表を開く"
         >
-            <span matListItemTitle>上り</span>
+            <span matListItemTitle>{{ timetableLinkPrefix() }} 上り</span>
         </a>
         <a
             mat-list-item
             [routerLink]="outboundTimetableLink()"
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="timetableLinkActiveOptions"
-            aria-label="下り時刻表を開く"
         >
-            <span matListItemTitle>下り</span>
+            <span matListItemTitle>{{ timetableLinkPrefix() }} 下り</span>
         </a>
 
-        <h3 matSubheader>ダイヤグラム</h3>
+        <h3 matSubheader>列車</h3>
         <a
             mat-list-item
             [routerLink]="['/train-diagram']"
             routerLinkActive="is-active"
         >
-            <span matListItemTitle>ダイヤグラム（時刻-距離図）</span>
+            <span matListItemTitle>列車ダイヤグラム</span>
         </a>
         <a
             mat-list-item

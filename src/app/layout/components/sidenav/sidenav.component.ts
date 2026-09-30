@@ -15,11 +15,13 @@ import {
     RouterLink,
     RouterLinkActive,
 } from '@angular/router';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { buildStationGroups } from 'src/app/shared/station-groups.util';
 
 @Component({
     selector: 'app-sidenav',
@@ -42,6 +44,7 @@ export class SidenavComponent {
         TodaysCalendarListStateQuery,
     );
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
     readonly stationId = this.#fb.control<string>('');
 
@@ -64,10 +67,31 @@ export class SidenavComponent {
     readonly todaysCalendarId = toSignal(
         this.#todaysCalendarListStateQuery.todaysCalendarId$,
     );
-    readonly routeStations = toSignal(
+    readonly #routeStations = toSignal(
         this.#routeStationListStateQuery.routeStations$,
+        { initialValue: [] },
+    );
+    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+
+    /** 駅 select の選択肢（「会社名 路線名」でまとめる。駅別時刻表・検索カードと共通）。 */
+    readonly stationGroups = computed(() =>
+        buildStationGroups(this.#routeStations(), this.#agencies()),
     );
     readonly selectedStationId = toSignal(this.stationId.valueChanges);
+
+    /** 上り/下りリンクの行き先名。駅を選べば駅別時刻表、選ばなければ全線時刻表へ飛ぶ。 */
+    readonly timetableLinkPrefix = computed(() => {
+        const selectedStationId = this.selectedStationId();
+        if (!selectedStationId) {
+            return '全線時刻表';
+        }
+        const station = this.stationGroups()
+            .flatMap((group) => group.stations)
+            .find((o) => o.stationId === selectedStationId);
+        return station?.stationName ?? '駅別時刻表';
+    });
 
     readonly inboundTimetableLink = computed(() => {
         const todaysCalendarId = this.todaysCalendarId();
