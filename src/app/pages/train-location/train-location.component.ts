@@ -425,21 +425,27 @@ export class TrainLocationComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            if (!this.#firstLoadDone()) {
-                await lastValueFrom(
-                    this.#trainLocationService.fetchTripClasses(),
-                );
-            }
-            if (flags.refetchTripBlocks) {
-                await lastValueFrom(
-                    this.#trainLocationService.fetchTripBlocks(),
-                );
-            }
-            if (flags.refetchStationAxis) {
-                await lastValueFrom(
-                    this.#trainLocationService.fetchStationAxis(),
-                );
-            }
+            // 運行は種別を貼り付けるので種別の後。駅軸はどちらにも依存しないので並行に取る
+            const fetchTripBlocks = async (): Promise<void> => {
+                if (!this.#firstLoadDone()) {
+                    await lastValueFrom(
+                        this.#trainLocationService.fetchTripClasses(),
+                    );
+                }
+                if (flags.refetchTripBlocks) {
+                    await lastValueFrom(
+                        this.#trainLocationService.fetchTripBlocks(),
+                    );
+                }
+            };
+            await Promise.all([
+                fetchTripBlocks(),
+                flags.refetchStationAxis
+                    ? lastValueFrom(
+                          this.#trainLocationService.fetchStationAxis(),
+                      )
+                    : undefined,
+            ]);
             this.#firstLoadDone.set(true);
         } finally {
             TrainLocationStore.disableLoading();

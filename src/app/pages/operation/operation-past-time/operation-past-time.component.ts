@@ -83,17 +83,23 @@ export class OperationPastTimeComponent {
     async fetchData(): Promise<void> {
         OperationPastTimeStore.enableLoading();
 
-        await lastValueFrom(
-            this.#operationPastTimeService.fetchCalendarByDate(),
-        );
-        await lastValueFrom(this.#operationPastTimeService.fetchFormations());
-        await lastValueFrom(
-            this.#operationPastTimeService.fetchOperationsV3(),
-        );
-        await lastValueFrom(
-            this.#operationPastTimeService.fetchOperationSightingsV3(),
-        );
-
-        OperationPastTimeStore.disableLoading();
+        try {
+            // どれも日付の範囲だけで取れるので並行に取る（以前は 1 本ずつ待っていた）
+            await Promise.all([
+                lastValueFrom(
+                    this.#operationPastTimeService.fetchCalendarByDate(),
+                ),
+                lastValueFrom(this.#operationPastTimeService.fetchFormations()),
+                lastValueFrom(
+                    this.#operationPastTimeService.fetchOperationsV3(),
+                ),
+                lastValueFrom(
+                    this.#operationPastTimeService.fetchOperationSightingsV3(),
+                ),
+            ]);
+        } finally {
+            // 途中の reject でローディングバーが残り続けないようにする
+            OperationPastTimeStore.disableLoading();
+        }
     }
 }

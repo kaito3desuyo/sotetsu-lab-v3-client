@@ -149,7 +149,11 @@ export class TimetableStationComponent {
                 const rawTripDirection = paramMap.get('trip_direction');
 
                 // 既定表示（mockup-01）: パラメータ不足時は 横浜 / 今日のダイヤ / 上り へ補完
-                if (!rawCalendarId || !rawStationId || rawTripDirection === null) {
+                if (
+                    !rawCalendarId ||
+                    !rawStationId ||
+                    rawTripDirection === null
+                ) {
                     const defaultCalendarId =
                         rawCalendarId ??
                         this.#todaysCalendarListStateQuery.todaysCalendarId;
@@ -230,19 +234,16 @@ export class TimetableStationComponent {
         TimetableStationStore.enableLoading();
 
         try {
-            await lastValueFrom(this.#timetableStationService.fetchCalendar());
-            await lastValueFrom(this.#timetableStationService.fetchTrips());
-            await lastValueFrom(
-                this.#timetableStationService.fetchTripClasses(),
-            );
-            await lastValueFrom(this.#timetableStationService.fetchStations());
-            await lastValueFrom(
-                this.#timetableStationService.fetchOperations(),
-            );
+            // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
+            await Promise.all([
+                lastValueFrom(this.#timetableStationService.fetchCalendar()),
+                lastValueFrom(this.#timetableStationService.fetchTrips()),
+                lastValueFrom(this.#timetableStationService.fetchTripClasses()),
+                lastValueFrom(this.#timetableStationService.fetchStations()),
+                lastValueFrom(this.#timetableStationService.fetchOperations()),
+            ]);
 
-            // T6.8 再差し戻し対応: 充当編成（本ページの最重要データ）は、重い
-            // tripBlocks バルク取得より先に取得する。tripBlocks 側の遅延・失敗が
-            // 充当編成の初回描画を巻き添えにしない順序に固定する。
+            // 充当編成は列車の運用番号とダイヤ（今日かどうか）が揃ってから取る。
             // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
             if (this.isTodaysCalendar()) {
                 await lastValueFrom(
@@ -251,10 +252,6 @@ export class TimetableStationComponent {
             } else {
                 TimetableStationStore.resetOperationSightingTimeCrossSections();
             }
-
-            await lastValueFrom(
-                this.#timetableStationService.fetchTripBlocks(),
-            );
         } finally {
             // 途中の reject でローディングバーが永久残留しないことを保証する
             TimetableStationStore.disableLoading();
@@ -310,9 +307,7 @@ export class TimetableStationComponent {
         navigation
             .then((succeeded) => {
                 if (!succeeded) {
-                    console.error(
-                        'timetable navigation did not complete',
-                    );
+                    console.error('timetable navigation did not complete');
                     this.#notificationService.open(
                         'ページの遷移に失敗しました',
                         'OK',

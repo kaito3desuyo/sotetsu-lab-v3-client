@@ -8,19 +8,29 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
-import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
+import {
+    TRIP_BLOCK_TIMELINE_FIELDS,
+    TripBlockFields,
+} from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { TripService } from 'src/app/libs/trip/usecase/trip.service';
 import { TimetableStationStore } from '../stores/timetable-station.store';
+import { stationTrips } from '../utils/station-trips.util';
+
+/**
+ * 脚注（同じ運行の後続列車・行き先）と並べ替えに使う時刻の組に、その駅に停まるかの判定に要る
+ * 乗降の可否を足したもの。共有の組に足すと他ページも約 2 割重くなるので、このページだけで使う。
+ */
+const TIMETABLE_STATION_FIELDS: TripBlockFields = {
+    ...TRIP_BLOCK_TIMELINE_FIELDS,
+    time: [...TRIP_BLOCK_TIMELINE_FIELDS['time'], 'pickupType', 'dropoffType'],
+};
 
 @Injectable()
 export class TimetableStationService {
     readonly #calendarService = inject(CalendarService);
     readonly #stationService = inject(StationService);
-    readonly #tripService = inject(TripService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #tripClassService = inject(TripClassService);
     readonly #operationService = inject(OperationService);
@@ -42,68 +52,36 @@ export class TimetableStationService {
         );
     }
 
+    /**
+     * 方向ごとの運行（trip-block）を 1 本で取り、脚注用の運行とその駅に停まる列車の両方をストアへ入れる。
+     * 以前は駅ごとに `/v3/trips/station`（横浜・平日・上りで約 1.6MB）も取っていた。運行は方向ごとに
+     * キャッシュされるので、駅を切り替えても取り直さない（行の条件と順は `stationTrips`）。
+     */
     fetchTrips(): Observable<void> {
         const stationId = TimetableStationStore.stationId;
         const calendarId = TimetableStationStore.calendarId;
         const tripDirection = TimetableStationStore.tripDirection;
 
-        // 駅・ダイヤ未選択（初期状態）では /v3/trips/station/null を叩かない。
-        if (!stationId || !calendarId) {
+        // 駅・ダイヤ未選択（初期状態）では取りに行かない。
+        if (!stationId || !calendarId || tripDirection === null) {
             return of(undefined);
         }
 
-        return this.#tripService
-            .findManyByStationId({ stationId, calendarId, tripDirection })
+        return this.#tripBlockService
+            .findManyByFilter({
+                calendarId,
+                tripDirection,
+                fields: TIMETABLE_STATION_FIELDS,
+            })
             .pipe(
-                tap((data: TripDetailsDto[]) => {
-                    TimetableStationStore.setTrips(data);
+                tap((tripBlocks) => {
+                    TimetableStationStore.setTripBlocks(tripBlocks);
+                    TimetableStationStore.setTrips(
+                        stationTrips(tripBlocks, stationId, tripDirection),
+                    );
                 }),
                 map(() => undefined),
             );
-    }
-
-    /**
-     * G1（通し運行脚注行が実画面で出ない問題の修正）: 旧実装は駅の全 trip の
-     * tripBlockId ごとに findOneById を forkJoin していた（横浜・平日・上りで
-     * 324 並列 HTTP）。1 件でも失敗すると forkJoin 全体が reject し、
-     * tripBlocks が空のまま（=脚注行 0 件）＆後続の目撃クロスセクション取得も
-     * 走らない（=充当編成「不明」）という実行時全滅モードがあった。
-     * calendarId+tripDirection のバルク 1 リクエスト（ブロックの全メンバー trip
-     * 込みで返る）に置き換える。取得件数は増えるが、ダイヤグラム等 N1〜N3 と
-     * 同一の shareReplay キャッシュに乗るためページ間で再利用される。
-     */
-    fetchTripBlocks(): Observable<void> {
-        const calendarId = TimetableStationStore.calendarId;
-        const tripDirection = TimetableStationStore.tripDirection;
-
-        if (!calendarId || tripDirection === null) {
-            TimetableStationStore.setTripBlocks([]);
-            return of(undefined);
-        }
-
-        return (
-            this.#tripBlockService
-                // 脚注（同じ運行の後続列車・行き先）と並べ替えは列番・種別 id・時刻しか読まない。
-                // 列車位置情報・列車ダイヤグラムと同じ項目の組にしてキャッシュも共有する。
-                .findManyByFilter({
-                    calendarId,
-                    tripDirection,
-                    fields: TRIP_BLOCK_TIMELINE_FIELDS,
-                })
-                .pipe(
-                    tap((data) => {
-                        TimetableStationStore.setTripBlocks(data);
-                    }),
-                    map(() => undefined),
-                    // tripBlocks は脚注行（3段目）専用の付加データ。取得失敗時は
-                    // fetchData ごと reject させず（=ローディング残留・以後の再描画
-                    // 停止を防ぐ）、脚注なしのグレースフルデグラデーションに留める。
-                    catchError(() => {
-                        TimetableStationStore.setTripBlocks([]);
-                        return of(undefined);
-                    }),
-                )
-        );
     }
 
     fetchTripClasses(): Observable<void> {

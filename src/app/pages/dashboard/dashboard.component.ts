@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    inject,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { Router } from '@angular/router';
@@ -48,16 +53,20 @@ export class DashboardComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            await lastValueFrom(this.#dashboardService.fetchTodaysCalendar());
-            await lastValueFrom(this.#dashboardService.fetchTodaysDayName());
-            await lastValueFrom(
-                this.#dashboardService.fetchRunningTripCount(),
-            );
-            await lastValueFrom(this.#dashboardService.fetchTodaysSightings());
-            await lastValueFrom(
-                this.#dashboardService.fetchLatestSightingPositions(),
-            );
-            await lastValueFrom(this.#dashboardService.fetchTripClasses());
+            // 互いに依存しないものは並行に取る（以前は 6 本を 1 本ずつ待っていた）
+            await Promise.all([
+                lastValueFrom(this.#dashboardService.fetchTodaysCalendar()),
+                lastValueFrom(this.#dashboardService.fetchTodaysDayName()),
+                lastValueFrom(this.#dashboardService.fetchTodaysSightings()),
+                lastValueFrom(this.#dashboardService.fetchTripClasses()),
+            ]);
+            // 走行中の本数は今日のダイヤ、位置は目撃情報を読むので後に回す
+            await Promise.all([
+                lastValueFrom(this.#dashboardService.fetchRunningTripCount()),
+                lastValueFrom(
+                    this.#dashboardService.fetchLatestSightingPositions(),
+                ),
+            ]);
         } finally {
             DashboardStore.disableLoading();
         }

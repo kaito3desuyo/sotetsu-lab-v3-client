@@ -12,7 +12,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -25,7 +25,6 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { TripService } from 'src/app/libs/trip/usecase/trip.service';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
@@ -69,6 +68,8 @@ const makeTrip = (
                 timeId: `tm-${tripId}`,
                 stationId: YOKOHAMA,
                 stopSequence: 10,
+                pickupType: 0,
+                dropoffType: 0,
                 arrivalTime: `06:${minute}:00`,
                 arrivalDays: 1,
                 departureTime: null,
@@ -159,13 +160,6 @@ async function setup(overrides?: {
                 useValue: { findOne: () => of(calendarDto).pipe(delay(1)) },
             },
             {
-                provide: TripService,
-                useValue: {
-                    findManyByStationId: () =>
-                        of([trip1, trip2]).pipe(delay(1)),
-                },
-            },
-            {
                 provide: TripClassService,
                 useValue: {
                     findMany: () =>
@@ -248,8 +242,8 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
     it('初回フェッチ解決後、追加操作なしで全セルに充当編成が描画される', async () => {
         const fixture = await setup();
 
-        // fetchData の全 await（calendar→trips→classes→stations→operations
-        // →crossSections→blocks）が実時間で解決するのを待つ
+        // fetchData の全 await（calendar・運行・種別・駅・運用を並行 → crossSections）が
+        // 実時間で解決するのを待つ
         await sleep(300);
         fixture.detectChanges();
 
@@ -278,20 +272,21 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         expect(text).toContain('不明');
     });
 
-    it('tripBlocks バルク取得が失敗しても充当編成の描画は影響を受けない', async () => {
-        const fixture = await setup({
-            tripBlock: {
-                findManyByFilter: () =>
-                    throwError(() => new Error('boom')).pipe(delay(30)),
-            },
-        });
+    it('列車の行は方向ごとの運行 1 本の取得から作る（駅ごとの列車一覧は取らない）', async () => {
+        const findManyByFilter = jest.fn(() =>
+            of([
+                { tripBlockId: 'block-trip-1', trips: [trip1] },
+                { tripBlockId: 'block-trip-2', trips: [trip2] },
+            ]).pipe(delay(30)),
+        );
+        const fixture = await setup({ tripBlock: { findManyByFilter } });
 
         await sleep(300);
         fixture.detectChanges();
 
         const text = (fixture.nativeElement as HTMLElement).textContent;
-        expect(text).toContain('10708');
-        expect(text).toContain('21101');
-        expect(text).not.toContain('不明');
+        expect(findManyByFilter).toHaveBeenCalledTimes(1);
+        expect(text).toContain('6001');
+        expect(text).toContain('6003');
     });
 });

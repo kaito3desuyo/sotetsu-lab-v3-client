@@ -98,27 +98,45 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         ).toEqual({});
     });
 
-    it('tripBlocks バルク取得が失敗しても reject せず空配列で継続する', async () => {
+    it('fetchTrips は方向ごとの運行を 1 本で取り、脚注用の運行とその駅に停まる列車を両方入れる', async () => {
+        const stop = {
+            tripId: 'stop',
+            tripDirection: 0,
+            times: [
+                {
+                    stationId: 'st-1',
+                    pickupType: 0,
+                    dropoffType: 0,
+                    departureTime: '05:00:00',
+                },
+            ],
+        };
+        const pass = {
+            tripId: 'pass',
+            tripDirection: 0,
+            times: [{ stationId: 'st-1', pickupType: 1, dropoffType: 1 }],
+        };
+        const tripBlocks = [{ tripBlockId: 'b1', trips: [stop, pass] }];
+        const findManyByFilter = jest.fn(() => of(tripBlocks));
         TestBed.configureTestingModule({
             providers: [
                 provideHttpClient(),
                 TimetableStationService,
-                {
-                    provide: TripBlockService,
-                    useValue: {
-                        findManyByFilter: () =>
-                            throwError(() => new Error('boom')),
-                    },
-                },
+                { provide: TripBlockService, useValue: { findManyByFilter } },
             ],
         });
         const service = TestBed.inject(TimetableStationService);
 
         TimetableStationStore.setCalendarId('cal-1');
+        TimetableStationStore.setStationId('st-1');
         TimetableStationStore.setTripDirection(ETripDirection.INBOUND);
 
-        await lastValueFrom(service.fetchTripBlocks());
+        await lastValueFrom(service.fetchTrips());
 
-        expect(TimetableStationStore.tripBlocks).toEqual([]);
+        expect(findManyByFilter).toHaveBeenCalledTimes(1);
+        expect(TimetableStationStore.tripBlocks).toBe(tripBlocks);
+        expect(TimetableStationStore.trips.map((t) => t.tripId)).toEqual([
+            'stop',
+        ]);
     });
 });

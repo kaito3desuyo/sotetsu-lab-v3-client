@@ -945,19 +945,28 @@ export class TrainDiagramComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            if (!this.#firstLoadDone()) {
-                await lastValueFrom(
-                    this.#timetableDiagramService.fetchTripClasses(),
-                );
-                await lastValueFrom(
-                    this.#timetableDiagramService.fetchNetworkStations(),
-                );
-            }
-            if (flags.refetchTripBlocks) {
-                await lastValueFrom(
-                    this.#timetableDiagramService.fetchTripBlocks(),
-                );
-            }
+            // 運行は種別を貼り付けるので種別の後。路線網の駅はどちらにも依存しないので並行に取る
+            const firstLoad = !this.#firstLoadDone();
+            const fetchTripBlocks = async (): Promise<void> => {
+                if (firstLoad) {
+                    await lastValueFrom(
+                        this.#timetableDiagramService.fetchTripClasses(),
+                    );
+                }
+                if (flags.refetchTripBlocks) {
+                    await lastValueFrom(
+                        this.#timetableDiagramService.fetchTripBlocks(),
+                    );
+                }
+            };
+            await Promise.all([
+                fetchTripBlocks(),
+                firstLoad
+                    ? lastValueFrom(
+                          this.#timetableDiagramService.fetchNetworkStations(),
+                      )
+                    : undefined,
+            ]);
             this.#firstLoadDone.set(true);
         } finally {
             TrainDiagramStore.disableLoading();
