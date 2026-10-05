@@ -1,0 +1,61 @@
+// G0-3: 全幅2等分・選択時は紺塗り白字を確実に反映する。
+// filter-chips.component.scss の前例と同様、M2 テーマは
+// `--mat-button-toggle-*` トークンを構造クラス
+// （.mat-button-toggle-group-appearance-standard 等）に直接セットするため、
+// :host からの CSS カスタムプロパティ継承ではカスケード順序に依存してしまい
+// 環境差で負ける（filter-chips の実測差し戻しと同じ理由）。
+// よって MDC 標準の構造クラスに対して色・枠線・角丸を直接指定して確実に
+// 上書きする（:host ::ng-deep で本コンポーネントの subtree のみに限定）。
+:host ::ng-deep {
+    .mat-button-toggle-group {
+        display: flex !important;
+        width: 100%;
+        border: 1px solid var(--color-structure) !important;
+        border-radius: 4px !important;
+        overflow: hidden;
+    }
+
+    .mat-button-toggle {
+        flex: 1 1 0% !important;
+    }
+
+    // 2セグメント間の仕切り線（紺）
+    .mat-button-toggle + .mat-button-toggle {
+        border-left: 1px solid var(--color-structure) !important;
+    }
+
+    // box-sizing は必ず border-box にする。Tailwind の preflight を切っている
+    // ため既定が content-box で、`width: 100%` に Material 由来の左右 padding
+    // 12px が**外側へ足される**。結果ラベルが 24px はみ出し、text-align:center
+    // の文字が 12px 右へずれる（2026-08-22 実測・ユーザー指摘）。
+    .mat-button-toggle-label-content {
+        box-sizing: border-box;
+        width: 100%;
+        text-align: center;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .mat-button-toggle-button {
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    // 未選択（通常）状態: 白地紺文字（地は操作部品共通の --color-control）
+    .mat-button-toggle:not(.mat-button-toggle-checked):not(
+            .mat-button-toggle-disabled
+        ) {
+        background-color: var(--color-control) !important;
+        color: var(--color-structure) !important;
+    }
+
+    // 選択状態: 紺塗り白字
+    .mat-button-toggle-checked:not(.mat-button-toggle-disabled) {
+        background-color: var(--color-structure) !important;
+        color: var(--color-paper) !important;
+    }
+
+    .mat-button-toggle-disabled {
+        opacity: 0.5;
+    }
+}

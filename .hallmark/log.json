@@ -1,0 +1,28 @@
+[
+  {
+    "date": "2026-08-22",
+    "scope": "app",
+    "genre": "modern-minimal",
+    "macrostructure": "変更なし（docs/design.md の系統をそのまま維持）",
+    "theme": "custom",
+    "theme_axes": "light / system-native / warm",
+    "design_system": "docs/design.md",
+    "locked_page": "operation/real-time",
+    "brief": "違和感の是正パス → operation/real-time を App/index 系の参照実装としてロック。種別チップの縁取りを em 化 / 鮮度色をトークン化して AA へ / 運用群を規則から導出（5群→15群・絞り込めない運用番号 60→0）/ 外周 gutter を段階化 / カードの境界を影から面の差へ / 角丸を --radius-card に統一",
+    "note": "デザインシステムの改訂は 色の掟 6・面の掟・余白の掟・ドメインの表示規則 の追加。マクロ構造・書体・ブランド2色は不変。次に他ページを触るときは operation/real-time の実装を参照する"
+  },
+  {
+    "date": "2026-08-21",
+    "scope": "app",
+    "genre": "modern-minimal",
+    "macrostructure": "Map/Diagram (app-canvas) · Catalogue (app-index) · Bento Grid (hub) · Long Document (content)",
+    "theme": "custom",
+    "theme_axes": "light / geometric-sans / warm",
+    "vibe": "instrument panel, rail-navy, dense, legible",
+    "nav": "N3 Side-rail + N13 inline search pill",
+    "footer": "Ft4 Dense colophon",
+    "enrichment": "none (app pages) / Tier-A CSS のみ (hub)",
+    "design_system": "docs/design.md",
+    "brief": "sotetsu-lab-v3-client · 相鉄線の運用・時刻表・ダイヤグラム閲覧アプリの全ページ改修（audit 2026-08-21 起点）"
+  }
+]

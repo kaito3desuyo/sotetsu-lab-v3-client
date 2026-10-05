@@ -1,0 +1,13 @@
+<mat-button-toggle-group
+    class="segment-toggle-group tw-w-full"
+    hideSingleSelectionIndicator
+    [value]="value()"
+    [disabled]="disabled()"
+    (change)="onChange($event)"
+>
+    @for (option of options(); track option.value) {
+        <mat-button-toggle class="tw-flex-1" [value]="option.value">
+            {{ option.label }}
+        </mat-button-toggle>
+    }
+</mat-button-toggle-group>

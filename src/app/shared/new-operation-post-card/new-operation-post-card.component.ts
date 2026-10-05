@@ -13,10 +13,8 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { addDays, getHours, parse, subDays } from 'date-fns';
@@ -25,6 +23,10 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { AppButtonComponent } from '../app-button/app-button.component';
+import { PanelCardComponent } from '../panel-card/panel-card.component';
+import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
+import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
 import { LoadingService } from '../app-shared/loading/loading.service';
 import { NewOperationPostCardService } from './new-operation-post-card.service';
 import { OperationPostCardStore } from './new-operation-post-card.store';
@@ -46,10 +48,11 @@ type Form = FormGroup<{
         ReactiveFormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatRadioModule,
         MatSelectModule,
-        MatButtonModule,
         MatSnackBarModule,
+        SegmentToggleComponent,
+        AppButtonComponent,
+        PanelCardComponent,
     ],
 })
 export class NewOperationPostCardComponent {
@@ -76,6 +79,18 @@ export class NewOperationPostCardComponent {
 
     readonly agencies = toSignal(OperationPostCardStore.agencies$);
 
+    readonly timeSetting = toSignal(
+        this.sightingForm.get('timeSetting').valueChanges,
+        { initialValue: this.sightingForm.get('timeSetting').value },
+    );
+    readonly timeSettingOptions: readonly [
+        SegmentToggleOption,
+        SegmentToggleOption,
+    ] = [
+        { value: 'currentTime', label: '現在時刻' },
+        { value: 'specifiedTime', label: '時刻指定' },
+    ];
+
     constructor() {
         this.fetchData();
         this.hookEvent();
@@ -85,6 +100,10 @@ export class NewOperationPostCardComponent {
         await lastValueFrom(
             this.#newOperationPostCardService.fetchServiceAgencies(),
         );
+    }
+
+    onTimeSettingChange(value: 'currentTime' | 'specifiedTime'): void {
+        this.sightingForm.get('timeSetting').setValue(value);
     }
 
     hookEvent(): void {

@@ -24,6 +24,24 @@ export class OperationSightingService {
         return this.operationSightingQuery.findManyBySpecificPeriod(params);
     }
 
+    findManyTimeCrossSectionsByOperationNumbers(params: {
+        operationNumbers: string[];
+        forceReload?: boolean;
+    }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
+        return this.operationSightingQuery.findManyTimeCrossSectionsByOperationNumbers(
+            params,
+        );
+    }
+
+    findManyTimeCrossSectionsByFormationNumbers(params: {
+        formationNumbers: string[];
+        forceReload?: boolean;
+    }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
+        return this.operationSightingQuery.findManyTimeCrossSectionsByFormationNumbers(
+            params,
+        );
+    }
+
     findOneTimeCrossSectionByOperationNumber(params: {
         operationNumber: string;
         forceReload?: boolean;

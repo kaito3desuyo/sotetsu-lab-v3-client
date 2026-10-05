@@ -1,0 +1,50 @@
+<mat-accordion
+    displayMode="flat"
+    class="tw-flex tw-flex-col tw-overflow-hidden tw-rounded-card tw-bg-white"
+>
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>運用情報を検索する</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-operation-search-card-c></app-operation-search-card-c>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>運用情報を投稿する</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-new-operation-post-card></app-new-operation-post-card>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>時刻表を検索する</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-timetable-search-card-c></app-timetable-search-card-c>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>時刻表を投稿する</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-timetable-post-card-c></app-timetable-post-card-c>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>ライブラリ</mat-panel-title>
+        </mat-expansion-panel-header>
+        <app-library-list-card-c></app-library-list-card-c>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel [expanded]="isSiteDescriptionExpanded()">
+        <mat-expansion-panel-header>
+            <mat-panel-title>このサイトは？</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p class="tw-m-0 tw-text-sm">
+            Sotetsu Lab.
+            は、神奈川県を走る大手私鉄、相模鉄道に関する情報を提供するWebサービスです。<br />
+            相鉄線を走る車両の1日の動き（これを運用と呼びます）や、全駅における特定車両の発車時刻等の情報を提供しています。
+        </p>
+    </mat-expansion-panel>
+</mat-accordion>

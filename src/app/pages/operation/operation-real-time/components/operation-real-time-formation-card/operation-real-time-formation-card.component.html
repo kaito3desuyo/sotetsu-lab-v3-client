@@ -1,0 +1,269 @@
+@let expectedSightingOperationVm = expectedSightingOperation();
+@let sightingVm = latestSighting();
+@let dayCount = sightingVm?.sightingTime | operationRealTimeDayCount;
+@let sightingTime = sightingVm?.sightingTime;
+@let updatedAt = sightingVm?.updatedAt;
+@let positionVm = currentPosition();
+@let prev = positionVm?.prev;
+@let current = positionVm?.current;
+@let next = positionVm?.next;
+@let showsHistories = isVisibleSightingHistories() && hasVisibleHistories();
+@let showsPosition =
+    isVisibleCurrentPosition() && (!!prev || !!current || !!next);
+
+<div
+    class="tw-grid tw-grid-cols-[72px_1fr_auto] tw-items-start tw-gap-x-3 tw-gap-y-1 tw-rounded-card tw-bg-white tw-p-3"
+>
+    <!-- 上段左: 編成番号（主役）・所属会社/形式。
+         このカードは**編成番号順**に並ぶので、並び順の主キーである編成番号を
+         左端に置き、運用番号をその右にする（ユーザー指示 2026-08-22）。
+         運用順カードとは主従が逆になる（あちらは運用番号が左端）。
+
+         列幅は 72px 固定。auto にすると幅が形式・会社名に引きずられ
+         （`8000・相鉄` 63px / `10000・相鉄` 69px / `E233-7000・JR東日本` 121px）、
+         右隣の運用番号チップの左端がカードごとにガタつく（実測）。
+         長い形式名は折り返して2行にする — 省略はしない（情報削減禁止）。 -->
+    <div
+        class="tw-col-start-1 tw-row-start-1 tw-flex tw-flex-col tw-items-start tw-self-center"
+    >
+        <!-- 太字にしない。凡例で「太字＝本日中に目撃された情報」と定義しており、
+             常時太字にするとその意味と衝突する（ユーザー指摘 2026-08-22）。
+             このカードで鮮度を表すのは右隣の運用番号チップの textStyle。 -->
+        <span class="tw-text-base tw-tabular-nums tw-leading-tight">
+            {{ formation().formationNumber }}
+        </span>
+        @if (formationAnnotation()) {
+            <span class="tw-text-xs tw-leading-tight tw-text-grey-600">
+                {{ formationAnnotation() }}
+            </span>
+        }
+    </div>
+
+    <!-- 上段中央: 運用番号チップ（休車=運用番号100は「休」表示・リンク無効化） -->
+    <div class="tw-col-start-2 tw-row-start-1 tw-self-center">
+        @if (expectedSightingOperationVm) {
+            <app-new-operation-number-link
+                [text]="
+                    (expectedSightingOperationVm.operationNumber === '100'
+                        ? '休'
+                        : expectedSightingOperationVm.operationNumber) +
+                    (dayCount !== 0 ? '?' : '')
+                "
+                [textStyle]="
+                    dayCount === 0
+                        ? 'bold'
+                        : dayCount === 1
+                          ? 'underline'
+                          : 'normal'
+                "
+                [bgColor]="
+                    expectedSightingOperationVm.operationNumber
+                        | newOperationNumberColor
+                "
+                [link]="
+                    expectedSightingOperationVm.operationNumber === '100'
+                        ? undefined
+                        : [
+                              '/operation',
+                              'route-diagram',
+                              {
+                                  operation_id:
+                                      expectedSightingOperationVm.operationId,
+                              },
+                          ]
+                "
+            ></app-new-operation-number-link>
+        } @else if (isSightingLoading()) {
+            <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
+            <span
+                class="tw-inline-flex tw-items-center"
+                aria-label="運用番号を取得中"
+            >
+                <span
+                    class="tw-h-4 tw-w-10 tw-rounded tw-bg-paper-3"
+                    aria-hidden="true"
+                ></span>
+            </span>
+        } @else {
+            <span class="tw-text-sm tw-text-grey-600">不明</span>
+        }
+    </div>
+
+    <!-- 下段: 履歴・現在位置 -->
+    @if (showsHistories || showsPosition) {
+        <div
+            class="tw-col-span-3 tw-col-start-1 tw-row-start-2 tw-grid tw-min-w-0 tw-grid-cols-[2.5rem_1fr] tw-items-center tw-gap-x-2 tw-gap-y-1"
+        >
+            @if (showsHistories) {
+                <span
+                    class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
+                >
+                    履歴
+                </span>
+                <div
+                    class="tw-flex tw-min-w-0 tw-max-w-full tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-overflow-x-auto"
+                >
+                    @for (
+                        history of reversedHistories();
+                        track history.operationSightingId
+                    ) {
+                        @if (
+                            !expectedSightingOperationVm ||
+                            sightingVm?.operationSightingId !==
+                                history.operationSightingId
+                        ) {
+                            @let historyOperationNumber =
+                                history.operationId
+                                    | newFindById
+                                        : {
+                                              array: operations(),
+                                              propertyName: 'operationId',
+                                              outputPropertyName:
+                                                  'operationNumber',
+                                          };
+                            @let historyDayCount =
+                                history.sightingTime
+                                    | operationRealTimeDayCount;
+                            <span
+                                class="tw-inline-flex tw-items-center tw-gap-0.5 tw-whitespace-nowrap tw-rounded tw-bg-grey-100 tw-px-1 tw-py-0.5"
+                                [matTooltip]="
+                                    history.sightingTime
+                                        | dateFns
+                                            : {
+                                                  format: '目撃：yyyy/MM/dd HH:mm:ss',
+                                                  parseISO: true,
+                                              }
+                                "
+                            >
+                                <mat-icon
+                                    class="!tw-h-3.5 !tw-w-3.5 tw-min-w-3.5 tw-text-[14px] tw-text-muted"
+                                >
+                                    arrow_back
+                                </mat-icon>
+                                <span class="tw-text-xs tw-text-grey-600">
+                                    {{
+                                        historyOperationNumber !== '100'
+                                            ? historyOperationNumber
+                                            : '休'
+                                    }}
+                                </span>
+                                <span
+                                    class="tw-text-[10px] tw-tabular-nums tw-leading-tight"
+                                    [style.color]="
+                                        historyDayCount === 0
+                                            ? 'var(--color-recency-today)'
+                                            : historyDayCount === 1
+                                              ? 'var(--color-recency-yesterday)'
+                                              : 'initial'
+                                    "
+                                >
+                                    {{
+                                        history.sightingTime
+                                            | dateFns
+                                                : {
+                                                      format: 'MM/dd HH:mm',
+                                                      parseISO: true,
+                                                  }
+                                    }}
+                                </span>
+                            </span>
+                        }
+                    }
+                </div>
+            }
+
+            @if (showsPosition) {
+                <!-- 見出し列は 2.5rem 固定（一番長い「現在位置」の幅）。文字数に
+                     よらず本文の左端をカード・ページ間でそろえる（docs/design.md）。 -->
+                <span
+                    class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
+                >
+                    現在位置
+                </span>
+                <!-- 種別・列番・現在位置区間（運用順カードと同一ロジック） -->
+                <app-trip-position
+                    [position]="positionVm"
+                    [stations]="stations()"
+                    [tripClasses]="tripClasses()"
+                    [calendarId]="calendarId()"
+                ></app-trip-position>
+            }
+        </div>
+    }
+
+    <!-- 上段右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
+    <div
+        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-center tw-text-right"
+    >
+        <div
+            class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
+        >
+            <span class="tw-text-[10px] tw-leading-tight tw-text-muted">
+                目撃
+            </span>
+            @if (sightingTime) {
+                <span
+                    class="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-tight"
+                    [style.color]="
+                        (sightingTime | operationRealTimeDayCount) === 0
+                            ? 'var(--color-recency-today)'
+                            : (sightingTime | operationRealTimeDayCount) === 1
+                              ? 'var(--color-recency-yesterday)'
+                              : 'initial'
+                    "
+                >
+                    {{
+                        sightingTime
+                            | dateFns
+                                : {
+                                      format: 'MM/dd HH:mm',
+                                      parseISO: true,
+                                  }
+                    }}
+                </span>
+            } @else if (isSightingLoading()) {
+                <span
+                    class="tw-inline-block tw-h-3 tw-w-16 tw-rounded tw-bg-paper-3"
+                    aria-label="目撃時刻を取得中"
+                ></span>
+            } @else {
+                <span class="tw-text-xs tw-text-grey-600">不明</span>
+            }
+        </div>
+        <div
+            class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
+        >
+            <span class="tw-text-[10px] tw-leading-tight tw-text-muted">
+                更新
+            </span>
+            @if (updatedAt) {
+                <span
+                    class="tw-whitespace-nowrap tw-text-xs tw-tabular-nums tw-leading-tight"
+                    [style.color]="
+                        (updatedAt | operationRealTimeDayCount) === 0
+                            ? 'var(--color-recency-today)'
+                            : (updatedAt | operationRealTimeDayCount) === 1
+                              ? 'var(--color-recency-yesterday)'
+                              : 'initial'
+                    "
+                >
+                    {{
+                        updatedAt
+                            | dateFns
+                                : {
+                                      format: 'MM/dd HH:mm',
+                                      parseISO: true,
+                                  }
+                    }}
+                </span>
+            } @else if (isSightingLoading()) {
+                <span
+                    class="tw-inline-block tw-h-3 tw-w-16 tw-rounded tw-bg-paper-3"
+                    aria-label="更新時刻を取得中"
+                ></span>
+            } @else {
+                <span class="tw-text-xs tw-text-grey-600">不明</span>
+            }
+        </div>
+    </div>
+</div>

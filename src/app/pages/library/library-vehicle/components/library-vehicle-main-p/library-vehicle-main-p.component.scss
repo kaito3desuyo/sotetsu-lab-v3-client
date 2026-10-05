@@ -7,6 +7,14 @@
         margin: 0;
     }
 
+    // 本文の measure を 45 全角文字相当に制限する（docs/design.md「Content の measure」）。
+    // 1310px 幅では 1 行あたり約 80 全角文字あり読み進めるのが苦しかった（audit M10）。
+    // 編成図の表は横に広いので対象に含めない。
+    p,
+    > div > small {
+        max-width: 45em;
+    }
+
     p {
         margin: 0;
     }

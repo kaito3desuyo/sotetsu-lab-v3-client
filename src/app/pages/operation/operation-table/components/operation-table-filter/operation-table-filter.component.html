@@ -1,0 +1,41 @@
+<div class="tw-flex tw-flex-col tw-gap-4">
+    <!-- ダイヤ select を常設。運用番号へのジャンプは 2026-09-25 に外した
+         （本番に無い機能で、運用群チップで十分に絞れるため） -->
+    <div class="tw-flex tw-flex-row tw-items-start tw-gap-3">
+        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-1">
+            <mat-label>ダイヤ</mat-label>
+            <mat-select
+                [value]="calendarId()"
+                (selectionChange)="onCalendarChange($event.value)"
+            >
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy/M/d改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <div>
+        <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
+            運用群で絞り込み
+        </p>
+        <!-- リアルタイム運用情報と同じ運用群チップ（横スクロール 1 行・見本色付き） -->
+        <app-filter-chips
+            mode="multiple"
+            [scrollMode]="true"
+            [options]="groupOptions()"
+            [selected]="selectedGroupNames()"
+            (selectedChange)="onGroupChange($event)"
+        ></app-filter-chips>
+    </div>
+</div>

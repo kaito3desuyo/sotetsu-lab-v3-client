@@ -7,25 +7,72 @@
     </div>
 }
 
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
-    <header>
-        <app-operation-real-time-header></app-operation-real-time-header>
-    </header>
-    <div>
-        <app-operation-real-time-controller></app-operation-real-time-controller>
-    </div>
-    <div class="tw-flex tw-flex-col tw-gap-4 md:tw-flex-row md:tw-gap-16">
-        <div
-            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
-        >
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- 最終更新時刻は controller の再読み込みボタンの横へ移した
+         （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。
+         操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
+    <app-control-band>
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            <app-operation-real-time-controller></app-operation-real-time-controller>
+            <app-operation-real-time-filter></app-operation-real-time-filter>
+        </div>
+    </app-control-band>
+
+    <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。
+         横並びでもどちらの列が何順なのかを示す見出し行を置く
+         （ユーザー指示 2026-08-22）。モバイルの mat-tab 帯と同じ視覚言語
+         （高さ 48px / 14px・500・tracking 1.25px / 2px の下線）に揃えてあるので、
+         幅が変わっても同じものを見ている感覚が切れない。
+         切り替えではなく両方が常に見えている状態なので、両方とも「選択中」の
+         見た目にする。タブ部品は使わない（操作できない偽タブになるため）。 -->
+    <div class="tw-hidden md:tw-flex md:tw-flex-row md:tw-gap-16">
+        <div class="md:tw-flex-1 md:tw-self-start">
+            <div
+                class="tw-mb-3 tw-box-border tw-flex tw-h-12 tw-items-stretch tw-border-0 tw-border-b tw-border-solid tw-border-rule"
+            >
+                <h2
+                    class="tw-m-0 tw-mb-[-1px] tw-flex tw-items-center tw-border-0 tw-border-b-2 tw-border-solid tw-border-structure tw-px-4 tw-text-sm tw-font-medium tw-tracking-[1.25px] tw-text-structure"
+                >
+                    運用順
+                </h2>
+            </div>
             <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
         </div>
 
-        <div
-            class="tw-overflow-x-auto tw-overflow-y-hidden tw-shadow-md md:tw-flex-1 md:tw-self-start"
-        >
+        <div class="md:tw-flex-1 md:tw-self-start">
+            <div
+                class="tw-mb-3 tw-box-border tw-flex tw-h-12 tw-items-stretch tw-border-0 tw-border-b tw-border-solid tw-border-rule"
+            >
+                <h2
+                    class="tw-m-0 tw-mb-[-1px] tw-flex tw-items-center tw-border-0 tw-border-b-2 tw-border-solid tw-border-structure tw-px-4 tw-text-sm tw-font-medium tw-tracking-[1.25px] tw-text-structure"
+                >
+                    編成順
+                </h2>
+            </div>
             <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
         </div>
+    </div>
+
+    <!-- モバイル: mat-tab で運用順｜編成順を切替表示。
+         タブ帯だけは画面端まで抜く（ユーザー指示 2026-08-22）。main の横 gutter
+         16px を負のマージンで打ち消し、中身のカード側で同じ 16px を戻すことで、
+         「帯は全幅・カードは余白あり」を両立させる。この要素は md 未満でしか
+         出ないので、打ち消す値は tw-p-4 の 16px 固定でよい。 -->
+    <div class="tw-mx-[-16px] md:tw-hidden">
+        <mat-tab-group>
+            <mat-tab label="運用順">
+                <div class="tw-px-4 tw-pt-3">
+                    <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
+                </div>
+            </mat-tab>
+            <mat-tab label="編成順">
+                <div class="tw-px-4 tw-pt-3">
+                    <app-operation-real-time-formation-table></app-operation-real-time-formation-table>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
     </div>
     <div>
         <app-operation-real-time-legend></app-operation-real-time-legend>

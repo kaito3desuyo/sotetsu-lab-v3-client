@@ -1,0 +1,83 @@
+<div class="tw-flex tw-flex-row tw-items-start tw-gap-3 tw-p-3">
+    <div class="tw-flex tw-flex-1 tw-flex-col tw-gap-2">
+        <div class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-2">
+            <!-- 種別 列車番号（共通部品）。列車番号が全線時刻表へのリンク（ユーザー指示 2026-10-05） -->
+            <app-trip-label
+                class="tw-text-sm tw-font-bold"
+                [tripClassName]="info().tripClassName"
+                [tripClassColor]="info().tripClassColor"
+                [tripNumber]="info().tripNumber"
+                [link]="info().detailLink"
+                (linkClicked)="closed.emit()"
+            ></app-trip-label>
+            <span class="tw-text-sm">{{ info().destinationName }} 行</span>
+        </div>
+
+        <div
+            class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-text-sm tw-text-muted"
+        >
+            @if (info().operationNumber) {
+                <!-- 運用番号は運用群の色。運用 ID があれば運用行路図へのリンク（列車位置情報と同じ） -->
+                @if (info().operationId) {
+                    <a
+                        data-operation-number
+                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink tw-no-underline"
+                        [style.background-color]="
+                            info().operationNumber | operationNumberColor
+                        "
+                        [routerLink]="[
+                            '/operation',
+                            'route-diagram',
+                            { operation_id: info().operationId },
+                        ]"
+                        (click)="closed.emit()"
+                        >{{ info().operationNumber }}</a
+                    >
+                } @else {
+                    <span
+                        data-operation-number
+                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink"
+                        [style.background-color]="
+                            info().operationNumber | operationNumberColor
+                        "
+                        >{{ info().operationNumber }}</span
+                    >
+                }
+            }
+            @if (info().formationNumber) {
+                <span class="tw-whitespace-nowrap"
+                    >編成
+                    <b class="tw-text-ink">{{
+                        info().formationNumber
+                    }}</b></span
+                >
+            }
+            @if (info().sightingTime; as sightingTime) {
+                <span class="tw-whitespace-nowrap"
+                    >（目撃
+                    {{
+                        sightingTime
+                            | dateFns: { format: 'MM/dd', parseISO: true }
+                    }}）</span
+                >
+            }
+        </div>
+
+        <a
+            [routerLink]="info().detailLink"
+            (click)="closed.emit()"
+            class="tw-text-sm tw-font-bold tw-text-primary-500"
+        >
+            全線時刻表で見る ›
+        </a>
+    </div>
+
+    <button
+        type="button"
+        class="tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-white"
+        aria-label="閉じる"
+        (click)="closed.emit()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+</div>

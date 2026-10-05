@@ -1,0 +1,51 @@
+// G0-4: 主アクション=オレンジ塗り・副アクション=白地紺枠を確実に反映する。
+// filter-chips / segment-toggle の前例と同様、M2 テーマは
+// `--mat-button-*` トークンを `.mat-mdc-unelevated-button` 等の構造クラスに
+// 直接セットするため、:host からの CSS カスタムプロパティ継承では
+// カスケード順序に依存してしまい環境差で負ける。よって MDC 標準の構造クラス
+// に対して色・枠線を直接指定して確実に上書きする
+// （:host ::ng-deep で本コンポーネントの subtree のみに限定）。
+:host ::ng-deep {
+    .app-button {
+        font-size: 0.875rem;
+        font-weight: 700;
+        cursor: pointer;
+        // ラベルを折り返さない。入力欄の横に並ぶ内容幅のボタンが、狭い幅で
+        // 「運用 / 表」「行路 / 図」と 2 行に折れていた（2026-09-23）
+        white-space: nowrap;
+
+        &.mat-mdc-button-disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    // 主アクション: オレンジ塗り・暗色字（disabled でも同色を維持し不透明度のみ下げる）
+    // 文字色は白ではなく --color-accent-ink。白字はオレンジ地で 2.79:1 と AA 不合格、
+    // 暗色字なら 6.38:1。accent の L=70.3% > 50% のため docs/design.md 色の掟 2 が暗色を定める。
+    .app-button-primary.mat-mdc-unelevated-button {
+        background-color: var(--color-accent) !important;
+        color: var(--color-accent-ink) !important;
+        border: 0;
+
+        &.mat-mdc-button-disabled {
+            background-color: var(--color-accent) !important;
+            color: var(--color-accent-ink) !important;
+            opacity: 0.5;
+        }
+    }
+
+    // 副アクション: 白地紺枠（disabled でも同色を維持し不透明度のみ下げる）
+    .app-button-secondary.mat-mdc-outlined-button {
+        background-color: var(--color-control) !important;
+        color: var(--color-structure) !important;
+        border-color: var(--color-structure) !important;
+        border-width: 2px !important;
+
+        &.mat-mdc-button-disabled {
+            background-color: var(--color-control) !important;
+            color: var(--color-structure) !important;
+            border-color: var(--color-structure) !important;
+            opacity: 0.5;
+        }
+    }
+}

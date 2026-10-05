@@ -1,53 +1,42 @@
-<article
-    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
->
-    <header>
-        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">列車を追加</h2>
-        <p class="tw-m-0 tw-text-sm tw-text-grey-700">
-            列車データを追加できます。
-        </p>
-    </header>
-    <div class="tw-flex-grow">
-        <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
-            <mat-form-field appearance="fill">
-                <mat-label>ダイヤ</mat-label>
-                <mat-select formControlName="calendarId">
-                    @for (calendar of calendars(); track calendar.calendarId) {
-                        <mat-option [value]="calendar.calendarId">
-                            {{
-                                calendar.startDate
-                                    | dateFns
-                                        : {
-                                              format: 'yyyy年MM月dd日改正',
-                                              parseFormat: 'yyyy-MM-dd',
-                                          }
-                            }}
-                            {{ calendar.calendarName }}
-                        </mat-option>
-                    }
-                </mat-select>
-                @if (form.get('calendarId').hasError('required')) {
-                    <mat-error> <strong>必須項目</strong>です </mat-error>
+<app-panel-card heading="時刻表を投稿する">
+    <!-- 入力欄は他カードと同じ outline、上り/下りは時刻表検索と同じセグメント切替に
+         そろえる（以前は fill の入力欄とラジオボタンで、このカードだけ語彙が違った） -->
+    <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+        <mat-form-field>
+            <mat-label>ダイヤ</mat-label>
+            <mat-select formControlName="calendarId">
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy/M/d改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
                 }
-            </mat-form-field>
-            <mat-radio-group
-                class="tw-flex tw-flex-row tw-gap-4"
-                formControlName="tripDirection"
-            >
-                <mat-radio-button [value]="0">上り</mat-radio-button>
-                <mat-radio-button [value]="1">下り</mat-radio-button>
-            </mat-radio-group>
-        </form>
-    </div>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
-            type="button"
-            color="primary"
-            mat-raised-button
+            </mat-select>
+            @if (form.get('calendarId').hasError('required')) {
+                <mat-error> <strong>必須項目</strong>です </mat-error>
+            }
+        </mat-form-field>
+
+        <app-segment-toggle
+            [options]="tripDirectionOptions"
+            [value]="tripDirection()"
+            (valueChange)="onTripDirectionChange($event)"
+        ></app-segment-toggle>
+    </form>
+    <footer class="tw-flex tw-flex-col">
+        <app-button
+            variant="primary"
             [disabled]="form.invalid"
-            (click)="clickMoveTimetableAdd.emit(form.value)"
+            (buttonClick)="clickMoveTimetableAdd.emit(form.value)"
         >
             列車情報入力へ移る
-        </button>
+        </app-button>
     </footer>
-</article>
+</app-panel-card>

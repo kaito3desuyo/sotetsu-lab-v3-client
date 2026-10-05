@@ -1,11 +1,12 @@
 :host {
     display: block;
 
+    // 凡例の見本色は本体の時刻表示と必ず同じトークンを引く（src/tokens.css）。
     .today {
-        color: #f44336;
+        color: var(--color-recency-today);
     }
 
     .yesterday {
-        color: #4caf50;
+        color: var(--color-recency-yesterday);
     }
 }

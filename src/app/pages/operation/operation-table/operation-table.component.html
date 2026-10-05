@@ -1,8 +1,71 @@
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
-    <header>
-        <app-operation-table-header-c></app-operation-table-header-c>
-    </header>
-    <div>
-        <app-operation-table-main-c></app-operation-table-main-c>
+@if (isLoading()) {
+    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
     </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
+         本文の h1/h2 重複は置かない -->
+    <!-- モック 03: 青バナーを廃し、ダイヤ select を常設。
+         改正日・ダイヤ名は select の選択値として表示を維持する。
+         操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
+    <app-control-band>
+        <app-operation-table-filter
+            [operationTrips]="operationTrips()"
+            [calendars]="calendars()"
+            [calendarId]="calendarId()"
+            (calendarChange)="onCalendarChange($event)"
+        ></app-operation-table-filter>
+    </app-control-band>
+
+    @if (isEmpty()) {
+        <app-empty-state
+            icon="event_busy"
+            message="このダイヤには運用情報が登録されていません"
+        ></app-empty-state>
+    } @else if (!isLoading()) {
+        <!-- 折返し表のカードは幅 18.5rem 前後で敷き詰める（本番と同じく 1440 幅で 4 面）。
+             カードごとに高さが大きく違うため items-start で各カードの高さを保つ。
+             取得中は出さない: 運用・駅・種別がそろう前に描くと、届くたびに全カードを
+             描き直すうえ、ダイヤを替えたときに前のダイヤのカードが混ざって見える。 -->
+        <div
+            class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"
+        >
+            @for (
+                operationTrip of operationTrips();
+                track operationTrip.operation.operationNumber
+            ) {
+                @if (isCardVisible(operationTrip.operation.operationNumber)) {
+                    <!-- 画面に入ったカードだけ描く（104 枚・2,500 行余りを一度に描くと約 1 秒かかる）。
+                         場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする -->
+                    @defer (on viewport; prefetch on idle) {
+                        <app-operation-table-card
+                            [operationTrip]="operationTrip"
+                            [stations]="stations()"
+                            [tripClasses]="tripClasses()"
+                            [calendarId]="calendarId()"
+                            [groupName]="
+                                groupNameFor(
+                                    operationTrip.operation.operationNumber
+                                )
+                            "
+                        ></app-operation-table-card>
+                    } @placeholder {
+                        <div
+                            class="tw-rounded-card tw-bg-white"
+                            [style.height.px]="placeholderHeight(operationTrip)"
+                        ></div>
+                    }
+                }
+            }
+        </div>
+    }
+
+    <app-operation-search-card-c></app-operation-search-card-c>
 </main>

@@ -1,23 +1,59 @@
-<article
-    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
->
-    <header>
-        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">運用情報</h2>
-        <p class="tw-m-0 tw-text-sm tw-text-grey-700">
-            相鉄線の運用情報を検索できます。
-        </p>
-    </header>
-    <section class="tw-flex-grow">
-        <div
-            class="tw-flex tw-flex-col [&>*]:tw-mx-[-16px] [&>*]:tw-box-border [&>*]:tw-flex [&>*]:tw-min-h-[48px] [&>*]:tw-items-center [&>*]:tw-px-4 [&>*]:tw-py-2 [&>a:hover]:hover:tw-bg-grey-100 [&>h3]:tw-my-0 [&>h3]:tw-flex [&>h3]:tw-items-center [&>h3]:tw-text-base [&>h3]:tw-font-normal"
+<app-panel-card heading="運用情報を検索する">
+    <!-- 余白: まとまり同士 32px / 小見出し→一覧の行 8px・→入力欄 16px /
+         入力欄同士は他のフォームと同じ -->
+    <div class="tw-flex tw-flex-col tw-gap-2">
+        <h3 class="tw-m-0 tw-text-xs tw-font-bold tw-text-muted">目撃情報</h3>
+        <!-- 現在地への自己リンクを出さない（audit M7）。このカードは各運用ページの
+             下部に共通で置かれるため、そのページ自身への導線が並んでいた。
+             routerLinkActive で現在地を示し、aria-current も付ける。
+             行は端から端まで押せるよう、外枠の余白ぶん左右に広げる。 -->
+        <mat-nav-list
+            class="!tw-mx-[calc(var(--panel-card-inset)*-1)] !tw-py-0"
         >
-            <h3>目撃情報</h3>
-            <a matRipple routerLink="/operation/real-time">
-                リアルタイム運用情報
+            <a
+                mat-list-item
+                routerLink="/operation/real-time"
+                routerLinkActive="is-current"
+                ariaCurrentWhenActive="page"
+                class="!tw-px-[var(--panel-card-inset)]"
+            >
+                <span matListItemTitle>リアルタイム運用情報</span>
+                <!-- mat-icon に直接 matListItemMeta を付けると、MDC の end スロットの
+                     font-family がアイコンフォントを上書きして文字のまま出る -->
+                <div matListItemMeta class="tw-flex">
+                    <mat-icon>chevron_right</mat-icon>
+                </div>
             </a>
-            <a matRipple routerLink="/operation/past-time"> 過去の運用情報 </a>
-            <h3>運用表／運用行路図</h3>
-            <mat-form-field>
+            <a
+                mat-list-item
+                routerLink="/operation/past-time"
+                routerLinkActive="is-current"
+                ariaCurrentWhenActive="page"
+                class="!tw-px-[var(--panel-card-inset)]"
+            >
+                <span matListItemTitle>過去の運用情報</span>
+                <!-- mat-icon に直接 matListItemMeta を付けると、MDC の end スロットの
+                     font-family がアイコンフォントを上書きして文字のまま出る -->
+                <div matListItemMeta class="tw-flex">
+                    <mat-icon>chevron_right</mat-icon>
+                </div>
+            </a>
+        </mat-nav-list>
+    </div>
+
+    <!-- 運用表・運用行路図へは、一番下の主ボタン 1 つで移る（ユーザー指示 2026-09-23）。
+         運用番号まで選んでいれば運用行路図、ダイヤだけなら運用表。他のカード
+         （検索する・投稿する）と同じ「最下部に全幅の主ボタン」の構えにそろえる。
+         以前は選択欄の横の小ボタン → 選択欄の下の › 行と変えたが、行がどの欄に
+         属するかが余白の取り方しだいで揺れていた。 -->
+    <!-- 小見出し→入力欄は 16px。outline のラベルが枠の上辺に食い込むので、
+         8px では小見出しとラベルが接して見えた（ユーザー指摘 2026-09-23） -->
+    <div class="tw-mt-4 tw-flex tw-flex-col tw-gap-4">
+        <h3 class="tw-m-0 tw-text-xs tw-font-bold tw-text-muted">
+            運用表／運用行路図
+        </h3>
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            <mat-form-field class="tw-w-full">
                 <mat-label>ダイヤ</mat-label>
                 <mat-select
                     [value]="calendarId()"
@@ -29,7 +65,7 @@
                                 calendar.startDate
                                     | dateFns
                                         : {
-                                              format: 'yyyy年MM月dd日改正',
+                                              format: 'yyyy/M/d改正',
                                               parseFormat: 'yyyy-MM-dd',
                                           }
                             }}
@@ -38,7 +74,7 @@
                     }
                 </mat-select>
             </mat-form-field>
-            <mat-form-field>
+            <mat-form-field class="tw-w-full">
                 <mat-label>運用番号</mat-label>
                 <mat-select
                     [value]="operationId()"
@@ -57,15 +93,14 @@
                 </mat-select>
             </mat-form-field>
         </div>
-    </section>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
-            type="button"
-            color="primary"
-            mat-raised-button
-            (click)="clickSearch.emit()"
+    </div>
+    <footer class="tw-flex tw-flex-col">
+        <app-button
+            variant="primary"
+            [disabled]="!calendarId()"
+            (buttonClick)="submit()"
         >
-            検索
-        </button>
+            {{ operationId() ? '運用行路図に移る' : '運用表に移る' }}
+        </app-button>
     </footer>
-</article>
+</app-panel-card>

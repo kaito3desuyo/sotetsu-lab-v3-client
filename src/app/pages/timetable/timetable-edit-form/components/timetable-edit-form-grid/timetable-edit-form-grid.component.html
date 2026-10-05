@@ -1,0 +1,362 @@
+@let cols = columns(); @let heightClass = rowHeightClass();
+
+<!-- PC はカードの中で縦横スクロール（design.md 面の掟）。スマホは箱なしでページがスクロールする -->
+<!-- 上の段の入力欄は幅 0＋最小幅 100%。列の幅は下の時刻のセルで決め、欄はマスいっぱいに広げる -->
+<div
+    [class]="
+        compact()
+            ? ''
+            : 'tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)] [&_mat-form-field]:tw-w-0 [&_mat-form-field]:tw-min-w-full'
+    "
+>
+    <table
+        role="grid"
+        aria-label="列車の時刻"
+        class="tw-border-separate tw-border-spacing-0 tw-text-sm [font-variant-numeric:tabular-nums] [&_.mat-mdc-form-field-infix]:tw-w-auto [&_.mat-mdc-form-field-infix]:tw-min-w-0"
+        [class.tw-w-full]="compact()"
+        (keydown)="onGridKeydown($event)"
+    >
+        <thead>
+            <!-- 上の段は Material（例外は時刻のセルだけ） -->
+            <tr>
+                <th
+                    class="tw-sticky tw-left-0 tw-z-[5] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2"
+                ></th>
+                @for (col of cols; track col.tripForm) {
+                    <td
+                        colspan="3"
+                        class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                    >
+                        <div class="tw-flex tw-justify-end tw-gap-1">
+                            <button
+                                type="button"
+                                mat-icon-button
+                                [attr.aria-label]="
+                                    col.tripNumber + 'を削除する'
+                                "
+                                [disabled]="tripsForm().length === 1"
+                                (click)="removeTrip.emit(col.tripIndex)"
+                            >
+                                <mat-icon>remove</mat-icon>
+                            </button>
+                            <button
+                                type="button"
+                                mat-icon-button
+                                aria-label="列車を追加する"
+                                [disabled]="
+                                    !compact() &&
+                                    col.tripIndex !== tripsForm().length - 1
+                                "
+                                (click)="addTrip.emit()"
+                            >
+                                <mat-icon>add</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                }
+            </tr>
+            <tr>
+                <th
+                    scope="row"
+                    class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                >
+                    列車番号
+                </th>
+                @for (col of cols; track col.tripForm) {
+                    <td
+                        colspan="3"
+                        class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                    >
+                        <mat-form-field
+                            class="tw-w-full"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                matInput
+                                aria-label="列車番号"
+                                [formControl]="col.tripForm.controls.tripNumber"
+                            />
+                        </mat-form-field>
+                    </td>
+                }
+            </tr>
+            <tr>
+                <th
+                    scope="row"
+                    class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                >
+                    運用番号
+                </th>
+                @for (col of cols; track col.tripForm) {
+                    <td
+                        colspan="3"
+                        class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                    >
+                        <mat-form-field
+                            class="tw-w-full"
+                            subscriptSizing="dynamic"
+                        >
+                            <mat-select
+                                aria-label="運用番号"
+                                [formControl]="
+                                    col.tripForm.controls.operationId
+                                "
+                            >
+                                @for (
+                                    operation of operations();
+                                    track operation.operationId
+                                ) {
+                                    <mat-option [value]="operation.operationId">
+                                        {{ operation.operationNumber }}
+                                    </mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </td>
+                }
+            </tr>
+            <tr>
+                <th
+                    scope="row"
+                    class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                >
+                    種別
+                </th>
+                @for (col of cols; track col.tripForm) {
+                    <td
+                        colspan="3"
+                        class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                    >
+                        <mat-form-field
+                            class="tw-w-full"
+                            subscriptSizing="dynamic"
+                        >
+                            <!-- 種別は塗りチップにしない（ユーザー指示 2026-08-22）。系統付きの正式名を文字色で -->
+                            <mat-select
+                                aria-label="種別"
+                                [formControl]="
+                                    col.tripForm.controls.tripClassId
+                                "
+                            >
+                                <mat-select-trigger>
+                                    @if (col.tripClass; as tc) {
+                                        <span
+                                            [style.color]="
+                                                tc.tripClassColor ?? null
+                                            "
+                                            >{{ tc.tripClassName }}</span
+                                        >
+                                    }
+                                </mat-select-trigger>
+                                @for (
+                                    tripClass of tripClasses();
+                                    track tripClass.tripClassId
+                                ) {
+                                    <mat-option [value]="tripClass.tripClassId">
+                                        <span
+                                            [style.color]="
+                                                tripClass.tripClassColor ?? null
+                                            "
+                                            >{{ tripClass.tripClassName }}</span
+                                        >
+                                    </mat-option>
+                                }
+                            </mat-select>
+                        </mat-form-field>
+                    </td>
+                }
+            </tr>
+            <tr>
+                <th
+                    scope="row"
+                    class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                >
+                    入出庫
+                </th>
+                @for (col of cols; track col.tripForm) {
+                    <td
+                        colspan="3"
+                        class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                    >
+                        <div class="tw-flex tw-justify-center tw-gap-2">
+                            <mat-checkbox
+                                [formControl]="col.tripForm.controls.depotIn"
+                                >入庫</mat-checkbox
+                            >
+                            <mat-checkbox
+                                color="accent"
+                                [formControl]="col.tripForm.controls.depotOut"
+                                >出庫</mat-checkbox
+                            >
+                        </div>
+                    </td>
+                }
+            </tr>
+            @if (compact()) {
+                <tr>
+                    <th
+                        scope="row"
+                        class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                    >
+                        行先
+                    </th>
+                    @for (col of cols; track col.tripForm) {
+                        <td
+                            colspan="3"
+                            class="tw-h-10 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-px-2"
+                        >
+                            {{ col.destination }}
+                        </td>
+                    }
+                </tr>
+            }
+            <!-- 「駅｜列番｜着｜発」は上に sticky。スマホはトップバー（48px）の下 -->
+            <tr>
+                <th
+                    class="tw-sticky tw-left-0 tw-z-20 tw-h-7 tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule-strong tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                    [class.tw-top-0]="!compact()"
+                    [class.tw-top-12]="compact()"
+                >
+                    駅
+                </th>
+                @for (col of cols; track col.tripForm) {
+                    <th
+                        class="tw-sticky tw-z-10 tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-b-rule-strong tw-bg-paper-2 tw-px-1 tw-font-bold"
+                        [class.tw-top-0]="!compact()"
+                        [class.tw-top-12]="compact()"
+                    >
+                        {{ col.tripNumber }}
+                    </th>
+                    <th
+                        class="tw-sticky tw-z-10 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-b-rule-strong tw-bg-paper-2 tw-text-xs tw-font-normal tw-text-muted"
+                        [class.tw-top-0]="!compact()"
+                        [class.tw-top-12]="compact()"
+                    >
+                        着
+                    </th>
+                    <th
+                        class="tw-sticky tw-z-10 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-b-rule-strong tw-border-r-rule-strong tw-bg-paper-2 tw-text-xs tw-font-normal tw-text-muted"
+                        [class.tw-top-0]="!compact()"
+                        [class.tw-top-12]="compact()"
+                    >
+                        発
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @for (
+                station of visibleStations();
+                track station.stationId;
+                let r = $index
+            ) {
+                <tr>
+                    <!-- 駅名は潰さない（scale をやめる）。最長「羽沢横浜国大」が 1 行に収まるよう nowrap -->
+                    <th
+                        scope="row"
+                        class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal"
+                    >
+                        {{ station.stationName }}
+                    </th>
+                    @for (col of cols; track col.tripForm; let c = $index) {
+                        @let cell = col.cells[r];
+                        <td
+                            class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-p-0 [outline-offset:-2px] focus-within:[outline:2px_solid_var(--color-focus)]"
+                            [class.tw-bg-white]="!cell.routeError"
+                            [class.tw-bg-red-50]="cell.routeError"
+                            [class.tw-w-10]="!compact()"
+                            [class.tw-w-11]="compact()"
+                        >
+                            <button
+                                type="button"
+                                class="tw-bg-transparent tw-block tw-w-full tw-cursor-pointer tw-border-0 tw-p-0 tw-text-sm tw-outline-none"
+                                [class]="heightClass"
+                                [class.tw-font-bold]="
+                                    cell.stopType === stopTypeEnum.STOP
+                                "
+                                [class.tw-text-muted]="
+                                    cell.stopType !== stopTypeEnum.STOP &&
+                                    !cell.routeError
+                                "
+                                [class.tw-text-red-800]="cell.routeError"
+                                [attr.data-row]="r"
+                                [attr.data-col]="c * 3"
+                                [attr.aria-label]="cell.label"
+                                (focus)="
+                                    onRowFocus(col.tripIndex, cell.timeIndex)
+                                "
+                                (blur)="onRowBlur()"
+                                (click)="
+                                    onToggleStopType(
+                                        col.tripForm,
+                                        cell.timeIndex
+                                    )
+                                "
+                            >
+                                {{ cell.mark }}
+                            </button>
+                        </td>
+                        @for (
+                            field of ['arrivalTime', 'departureTime'];
+                            track field;
+                            let k = $index
+                        ) {
+                            @let t =
+                                k === 0 ? cell.arrivalTime : cell.departureTime;
+                            <td
+                                class="tw-min-w-16 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-p-0 [outline-offset:-2px] focus-within:[outline:2px_solid_var(--color-focus)]"
+                                [class.tw-border-r-rule-strong]="k === 1"
+                                [class.tw-bg-paper-3]="t.muted"
+                                [class.tw-bg-red-50]="t.error && !t.muted"
+                                [class.tw-text-red-800]="t.error && !t.muted"
+                                [class.tw-bg-white]="!t.muted && !t.error"
+                            >
+                                <input
+                                    type="text"
+                                    inputmode="numeric"
+                                    autocomplete="off"
+                                    size="4"
+                                    class="tw-bg-transparent tw-block tw-w-full tw-border-0 tw-p-0 tw-text-center tw-outline-none [color:inherit] [font:inherit]"
+                                    [class]="heightClass"
+                                    [attr.data-row]="r"
+                                    [attr.data-col]="c * 3 + 1 + k"
+                                    [attr.aria-label]="t.label"
+                                    [value]="t.value"
+                                    [disabled]="t.disabled"
+                                    (focus)="
+                                        onTimeFocus(
+                                            $event,
+                                            col.tripIndex,
+                                            cell.timeIndex
+                                        )
+                                    "
+                                    (input)="onTimeInput($event)"
+                                    (blur)="
+                                        onTimeBlur(
+                                            $event,
+                                            col.tripForm,
+                                            cell.timeIndex,
+                                            $any(field),
+                                            t.value
+                                        )
+                                    "
+                                />
+                            </td>
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (messages().length) {
+    <ul
+        role="alert"
+        class="tw-m-0 tw-mt-2 tw-flex tw-list-none tw-flex-col tw-gap-1 tw-p-0 tw-text-sm tw-text-red-800"
+    >
+        @for (message of messages(); track $index) {
+            <li>{{ message }}</li>
+        }
+    </ul>
+}

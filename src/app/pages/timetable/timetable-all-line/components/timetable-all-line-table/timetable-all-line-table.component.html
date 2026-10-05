@@ -1,0 +1,711 @@
+@if (calendar()) {
+    <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+        <!-- 改正日・ダイヤ名・方向は、平日は青・土休日は赤の帯で出す（運用行路図と同じ帯）。
+             7 月にモックに無いとして消していたが、検索カードは長い表の下にあり見えないため戻した（2026-10-05） -->
+        <app-calendar-band
+            [calendar]="calendar()"
+            [suffix]="tripDirectionLabel.get(tripDirection()) + '時刻表'"
+        ></app-calendar-band>
+        <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+            @if (trips().length) {
+                <mat-paginator
+                    [length]="pageSettings().length"
+                    [pageIndex]="pageSettings().pageIndex"
+                    [pageSize]="pageSettings().pageSize"
+                    [pageSizeOptions]="[10, 20, 50, 100]"
+                    (page)="page.emit($event)"
+                ></mat-paginator>
+
+                <!-- 縦にも横にも大きい表なので、この箱の中で縦横スクロールさせる
+                     （design.md 面の掟・2026-09-24）。横だけの箱にすると箱がスクロール
+                     コンテナになり、見出し 3 段の縦の sticky がページ基準で効かず流れて
+                     消えていた。高さは「画面 − トップバー − 16/32px」（過去の運用情報と同じ）。
+                     罫線は border-separate + 各セルの右・下で引く（面の掟）。以前は
+                     border-collapse の罫線が sticky のセルから外れて消えるのを、疑似要素で
+                     描き直して補っていた。外枠は表自身の罫線で閉じるので、箱には枠を付けない。
+                     見出しのセルは余白 0 で 3 段とも 24px ちょうどにする（運用番号のタグ 21.5px に
+                     UA の余白が乗ると 24.5px になり、sticky の位置とずれて隙間が透けた） -->
+                <div
+                    class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
+                >
+                    <table
+                        class="tw-border-separate tw-border-spacing-0 tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
+                    >
+                        <thead>
+                            <tr class="tw-h-6">
+                                <th
+                                    class="tw-sticky tw-left-0 tw-top-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
+                                    colspan="2"
+                                >
+                                    列車番号
+                                </th>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <th
+                                        class="tw-sticky tw-top-0 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    >
+                                        <span
+                                            style="
+                                                display: inline-block;
+                                                transform-origin: center;
+                                                margin: -9999px;
+                                            "
+                                            [style]="{
+                                                transform:
+                                                    'scale(' +
+                                                    (trip.tripNumber.length > 3
+                                                        ? 3 /
+                                                          trip.tripNumber.length
+                                                        : 1) +
+                                                    ', 1)',
+                                            }"
+                                        >
+                                            {{ trip.tripNumber }}
+                                        </span>
+                                    </th>
+                                }
+                            </tr>
+                            <tr class="tw-h-6">
+                                <th
+                                    class="tw-sticky tw-left-0 tw-top-6 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
+                                    colspan="2"
+                                >
+                                    運用番号
+                                </th>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <th
+                                        class="tw-sticky tw-top-6 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    >
+                                        @if (trip.tripOperationLists.length) {
+                                            <app-operation-number-tag
+                                                [operationNumber]="
+                                                    trip.tripOperationLists[0]
+                                                        .operation
+                                                        .operationNumber
+                                                "
+                                                [link]="[
+                                                    '/operation/route-diagram',
+                                                    {
+                                                        operation_id:
+                                                            trip
+                                                                .tripOperationLists[0]
+                                                                .operationId,
+                                                    },
+                                                ]"
+                                            ></app-operation-number-tag>
+                                        } @else {
+                                            <span>不明</span>
+                                        }
+                                    </th>
+                                }
+                            </tr>
+                            <tr class="tw-h-6">
+                                <th
+                                    class="tw-sticky tw-left-0 tw-top-12 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
+                                    colspan="2"
+                                >
+                                    種別
+                                </th>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <th
+                                        class="tw-sticky tw-top-12 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    >
+                                        <!-- 種別は全ページ共通の塗りチップに統一する
+                                     （ユーザー指示 2026-08-22）。従来は種別色の文字だった。
+                                     G5: 種別行は短縮名（各駅停車→各停）。select 等の選択肢は正式名維持。
+                                     大きさは md（12px）。sm（10px）は列車番号・運用番号より小さく見えた
+                                     （2026-09-24）。2 文字で 36px に収まり、3 文字以上は横に縮める。
+                                     縦は、セル全面に重ねた枠の中央に置いてそろえる（行のベースラインに
+                                     合わせていた頃は 1.7px 下にずれた）。重ねた枠は幅を持たないので、
+                                     縮める前のチップが列の幅を押し広げることもない -->
+                                        <span
+                                            class="tw-absolute tw-inset-0 tw-flex tw-items-center tw-justify-center"
+                                        >
+                                            <app-trip-class-chip
+                                                class="tw-shrink-0"
+                                                size="md"
+                                                [style.transform]="
+                                                    'scale(' +
+                                                    ((
+                                                        trip.tripClass
+                                                            .tripClassName
+                                                        | tripClassShortName
+                                                    ).length > 2
+                                                        ? 2 /
+                                                          (
+                                                              trip.tripClass
+                                                                  .tripClassName
+                                                              | tripClassShortName
+                                                          ).length
+                                                        : 1) +
+                                                    ', 1)'
+                                                "
+                                                [label]="
+                                                    trip.tripClass.tripClassName
+                                                        | tripClassShortName
+                                                "
+                                                [color]="
+                                                    trip.tripClass
+                                                        .tripClassColor
+                                                "
+                                            ></app-trip-class-chip>
+                                        </span>
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 表の上端に列車ごとの始発駅と始発時刻、下端に終着時刻と終着駅を出す
+                                 （ユーザー指示 2026-09-24。絞り込みの有無によらず全列車）。駅名は外側、
+                                 時刻は本体の側。駅名は列が 40px なので紙の時刻表と同じく縦書き。
+                                 絞り込みで始発・終着が隠れた列車は、時刻の欄がここまで「経由なし」で伸びる -->
+                            <!-- 始発駅・始発時刻の 2 段は見出しの直下（72px = 24px × 3 段）に固定し、
+                                 下を二重罫線にして本体と分ける（ユーザー指示 2026-09-24）。始発時刻の段の
+                                 固定位置は、縦書きの駅名で高さの変わる始発駅の段を測って決める -->
+                            <tr #originNameRow>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-top-[72px] tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                >
+                                    始発駅
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-sticky tw-top-[72px] tw-z-20 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                    >
+                                        <ng-container
+                                            *ngTemplateOutlet="
+                                                endpointName;
+                                                context: {
+                                                    $implicit: endpoints().get(
+                                                        trip.tripId
+                                                    )?.originName,
+                                                }
+                                            "
+                                        ></ng-container>
+                                    </td>
+                                }
+                            </tr>
+                            <tr class="tw-h-6">
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b-[3px] tw-border-l tw-border-r tw-border-double tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                    [style.top.px]="72 + originNameRowHeight()"
+                                >
+                                    始発時刻
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-sticky tw-z-20 tw-border-0 tw-border-b-[3px] tw-border-r tw-border-double tw-border-rule tw-bg-white tw-text-center"
+                                        [style.top.px]="
+                                            72 + originNameRowHeight()
+                                        "
+                                        [style.color]="
+                                            trip.tripClass.tripClassColor
+                                        "
+                                    >
+                                        {{
+                                            endpoints().get(trip.tripId)
+                                                ?.originTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
+                            @for (
+                                station of stations();
+                                track station.stationId;
+                                let last = $last
+                            ) {
+                                @let viewMode =
+                                    viewModes().get(station.stationId);
+                                @let borderSetting =
+                                    bordersAfter().get(station.stationId) ??
+                                    false;
+                                @let isDirectionTerminusArrival =
+                                    (tripDirection() ===
+                                        tripDirectionEnum.INBOUND &&
+                                        viewMode ===
+                                            staitonViewModeEnum.ONLY_INBOUND_ARRIVAL) ||
+                                    (tripDirection() ===
+                                        tripDirectionEnum.OUTBOUND &&
+                                        viewMode ===
+                                            staitonViewModeEnum.ONLY_OUTBOUND_ARRIVAL);
+                                @let isArrivalBlockEnd =
+                                    viewMode ===
+                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                    isDirectionTerminusArrival;
+
+                                <!-- 下の罫線は本番と同じ条件で引く: 駅名は「罫線の駅」か「方向の終着」、
+                                     着の行（着・時刻）は加えて「着発 2 段」、発の行は「罫線の駅」だけ。
+                                     着の見出しセルは常に下を引き、着と発を分ける。
+                                     ただし最後の駅の行の下は引かない（操作の段の上の罫線と重なって 2px になる） -->
+                                @if (
+                                    viewMode ===
+                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                    isDirectionTerminusArrival
+                                ) {
+                                    <tr class="tw-h-6">
+                                        <td
+                                            class="tw-sticky tw-left-0 tw-z-10 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-right"
+                                            [class.tw-border-b]="
+                                                (borderSetting ||
+                                                    isDirectionTerminusArrival) &&
+                                                !last
+                                            "
+                                            [rowSpan]="
+                                                viewMode ===
+                                                staitonViewModeEnum.DEPARTURE_AND_ARRIVAL
+                                                    ? 2
+                                                    : 1
+                                            "
+                                        >
+                                            <ng-container
+                                                *ngTemplateOutlet="
+                                                    stationName;
+                                                    context: {
+                                                        $implicit: station,
+                                                    }
+                                                "
+                                            ></ng-container>
+                                        </td>
+                                        <td
+                                            class="tw-sticky tw-left-[106px] tw-z-10 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-center tw-text-xs tw-text-muted"
+                                            [class.tw-border-b]="
+                                                viewMode ===
+                                                    staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                                !last
+                                            "
+                                        >
+                                            着
+                                        </td>
+
+                                        @for (
+                                            trip of trips();
+                                            track trip.tripId
+                                        ) {
+                                            <td
+                                                class="dia tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                                [class.tw-border-b]="
+                                                    (borderSetting ||
+                                                        isArrivalBlockEnd) &&
+                                                    (viewMode ===
+                                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                                        !last)
+                                                "
+                                                [style.color]="
+                                                    trip.tripClass
+                                                        .tripClassColor
+                                                "
+                                            >
+                                                {{
+                                                    {
+                                                        tripDirection:
+                                                            tripDirection(),
+                                                        mode: 'arrival',
+                                                        station: station,
+                                                        trip: trip,
+                                                        stations: stations(),
+                                                        previousTrip:
+                                                            previousTrips().get(
+                                                                trip.tripId
+                                                            ),
+                                                        viewModes: viewModes(),
+                                                        bordersAfter:
+                                                            bordersAfter(),
+                                                    } | timetableAllLineGetTime
+                                                }}
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+
+                                @if (
+                                    viewMode ===
+                                        staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
+                                    viewMode ===
+                                        staitonViewModeEnum.ONLY_DEPARTURE
+                                ) {
+                                    <tr class="tw-h-6">
+                                        @if (
+                                            viewMode ===
+                                            staitonViewModeEnum.ONLY_DEPARTURE
+                                        ) {
+                                            <td
+                                                class="tw-sticky tw-left-0 tw-z-0 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-right"
+                                                [class.tw-border-b]="
+                                                    borderSetting && !last
+                                                "
+                                            >
+                                                <ng-container
+                                                    *ngTemplateOutlet="
+                                                        stationName;
+                                                        context: {
+                                                            $implicit: station,
+                                                        }
+                                                    "
+                                                ></ng-container>
+                                            </td>
+                                        }
+
+                                        <td
+                                            class="tw-sticky tw-left-[106px] tw-z-0 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-center tw-text-xs tw-text-muted"
+                                            [class.tw-border-b]="
+                                                borderSetting && !last
+                                            "
+                                        >
+                                            発
+                                        </td>
+
+                                        @for (
+                                            trip of trips();
+                                            track trip.tripId
+                                        ) {
+                                            <td
+                                                class="dia tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                                [class.tw-border-b]="
+                                                    borderSetting && !last
+                                                "
+                                                [style.color]="
+                                                    trip.tripClass
+                                                        .tripClassColor
+                                                "
+                                            >
+                                                {{
+                                                    {
+                                                        tripDirection:
+                                                            tripDirection(),
+                                                        mode: 'departure',
+                                                        station: station,
+                                                        trip: trip,
+                                                        stations: stations(),
+                                                        previousTrip:
+                                                            previousTrips().get(
+                                                                trip.tripId
+                                                            ),
+                                                        viewModes: viewModes(),
+                                                        bordersAfter:
+                                                            bordersAfter(),
+                                                    } | timetableAllLineGetTime
+                                                }}
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                            <!-- 終着時刻・終着駅の 2 段は箱の下端に固定し、上を二重罫線にする
+                                 （ユーザー指示 2026-09-24）。終着時刻の段は終着駅の段の高さぶん上に置く -->
+                            <tr class="tw-h-6">
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                    [style.bottom.px]="terminusNameRowHeight()"
+                                >
+                                    終着時刻
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="dia tw-sticky tw-z-20 tw-border-0 tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-white tw-text-center"
+                                        [style.bottom.px]="
+                                            terminusNameRowHeight()
+                                        "
+                                        [style.color]="
+                                            trip.tripClass.tripClassColor
+                                        "
+                                    >
+                                        {{
+                                            endpoints().get(trip.tripId)
+                                                ?.terminusTime
+                                        }}
+                                    </td>
+                                }
+                            </tr>
+                            <tr #terminusNameRow>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-bottom-0 tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                >
+                                    終着駅
+                                </td>
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-sticky tw-bottom-0 tw-z-20 tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                    >
+                                        <ng-container
+                                            *ngTemplateOutlet="
+                                                endpointName;
+                                                context: {
+                                                    $implicit: endpoints().get(
+                                                        trip.tripId
+                                                    )?.terminusName,
+                                                }
+                                            "
+                                        ></ng-container>
+                                    </td>
+                                }
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                >
+                                    編集
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-text-center"
+                                    >
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="編集する"
+                                            [attr.aria-label]="
+                                                '列車 ' +
+                                                trip.tripNumber +
+                                                ' を編集する'
+                                            "
+                                            (click)="clickEditButton.emit(trip)"
+                                        >
+                                            <mat-icon>edit</mat-icon>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                            <tr>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                >
+                                    コピー
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                    >
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="コピーして新規作成"
+                                            [attr.aria-label]="
+                                                '列車 ' +
+                                                trip.tripNumber +
+                                                ' をコピーして新規作成'
+                                            "
+                                            (click)="clickCopyButton.emit(trip)"
+                                        >
+                                            <mat-icon>content_copy</mat-icon>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                            <tr>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                >
+                                    削除
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                    >
+                                        <button
+                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                            mat-icon-button
+                                            matTooltip="削除する"
+                                            [attr.aria-label]="
+                                                '列車 ' +
+                                                trip.tripNumber +
+                                                ' を削除する'
+                                            "
+                                            [disabled]="isFeatureDate()"
+                                            (click)="
+                                                clickDeleteButton.emit(trip)
+                                            "
+                                        >
+                                            <mat-icon>delete</mat-icon>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                            <tr>
+                                <td
+                                    colspan="2"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                >
+                                    グループ
+                                </td>
+
+                                @for (trip of trips(); track trip.tripId) {
+                                    <td
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                    >
+                                        @if (!groupingBaseTrip()) {
+                                            <button
+                                                class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                mat-icon-button
+                                                matTooltip="この列車を基準として列車をグルーピングする"
+                                                [attr.aria-label]="
+                                                    '列車 ' +
+                                                    trip.tripNumber +
+                                                    ' を基準にグルーピングする'
+                                                "
+                                                (click)="
+                                                    groupingBaseTrip.set(trip)
+                                                "
+                                            >
+                                                <mat-icon>link</mat-icon>
+                                            </button>
+                                        } @else {
+                                            @if (
+                                                groupingBaseTrip() &&
+                                                trip.tripId ===
+                                                    groupingBaseTrip().tripId
+                                            ) {
+                                                <button
+                                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                    mat-icon-button
+                                                    matTooltip="キャンセル"
+                                                    aria-label="グルーピングをキャンセルする"
+                                                    (click)="
+                                                        groupingBaseTrip.set(
+                                                            undefined
+                                                        )
+                                                    "
+                                                >
+                                                    <mat-icon>clear</mat-icon>
+                                                </button>
+                                            }
+
+                                            @if (
+                                                groupingBaseTrip() &&
+                                                trip.tripId !==
+                                                    groupingBaseTrip().tripId &&
+                                                trip.tripBlockId !==
+                                                    groupingBaseTrip()
+                                                        .tripBlockId
+                                            ) {
+                                                <button
+                                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                    mat-icon-button
+                                                    matTooltip="グループに追加する"
+                                                    [attr.aria-label]="
+                                                        '列車 ' +
+                                                        trip.tripNumber +
+                                                        ' をグループに追加する'
+                                                    "
+                                                    (click)="
+                                                        clickAddTripInGroup.emit(
+                                                            {
+                                                                base: groupingBaseTrip(),
+                                                                target: trip,
+                                                            }
+                                                        )
+                                                    "
+                                                >
+                                                    <mat-icon>add</mat-icon>
+                                                </button>
+                                            }
+
+                                            @if (
+                                                groupingBaseTrip() &&
+                                                trip.tripId !==
+                                                    groupingBaseTrip().tripId &&
+                                                trip.tripBlockId ===
+                                                    groupingBaseTrip()
+                                                        .tripBlockId
+                                            ) {
+                                                <button
+                                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                    mat-icon-button
+                                                    matTooltip="グループから除外する"
+                                                    [attr.aria-label]="
+                                                        '列車 ' +
+                                                        trip.tripNumber +
+                                                        ' をグループから除外する'
+                                                    "
+                                                    (click)="
+                                                        clickDeleteTripInGroup.emit(
+                                                            {
+                                                                base: groupingBaseTrip(),
+                                                                target: trip,
+                                                            }
+                                                        )
+                                                    "
+                                                >
+                                                    <mat-icon>remove</mat-icon>
+                                                </button>
+                                            }
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            } @else {
+                <!-- G12: mockup-07 準拠の3点セット。次アクションは反対方向へ切り替え。 -->
+                <app-empty-state
+                    icon="train"
+                    message="この条件の列車情報はありません"
+                    subtitle="ダイヤまたは方向を変えてお試しください。"
+                    [actionLabel]="oppositeDirectionActionLabel()"
+                    (actionClick)="toggleDirection.emit()"
+                ></app-empty-state>
+            }
+        </div>
+    </article>
+}
+
+<!-- 駅名セルの中身（駅番号 + 駅名。5 文字以上は 4 文字幅に横方向へ縮める）。
+     着発 2 段の行と発のみの行で同じものを出すため 1 か所にまとめた。
+     駅番号は 1 つずつ縦に積む（ユーザー指示 2026-09-24「駅名列の幅を小さくしたい」）。
+     横に「MG13/SH03/TY13」と並べていた頃は、これが列の幅（154px）を決めていた。
+     番号 1 つは最大 29px（SR-26）なので列は 106px で済む。番号が 3 つの駅（日吉・目黒・
+     和光市・大崎・小竹向原）はどれも着発 2 段（48px）、2 つの駅は 1 段（24px）に収まる -->
+<ng-template #stationName let-station>
+    <span
+        class="tw-mr-1 tw-inline-flex tw-flex-col tw-items-end tw-align-middle tw-text-[10px] tw-leading-none"
+    >
+        @for (
+            numbering of station | timetableAllLineGetStationNumbering;
+            track numbering
+        ) {
+            <span>{{ numbering }}</span>
+        }
+    </span>
+    <span
+        class="tw-align-middle tw-text-sm"
+        style="display: inline-block; transform-origin: right"
+        [style]="{
+            transform:
+                'scale(' +
+                (station.stationName.length > 4
+                    ? 4 / station.stationName.length
+                    : 1) +
+                ', 1)',
+            marginLeft:
+                (station.stationName.length > 4
+                    ? (station.stationName.length - 4) * 14 * -1
+                    : 0) + 'px',
+        }"
+    >
+        {{ station.stationName }}
+    </span>
+</ng-template>
+
+<!-- 始発駅・終着駅の駅名（縦書き） -->
+<ng-template #endpointName let-name>
+    @if (name) {
+        <span
+            class="tw-inline-block tw-text-xs tw-leading-none [writing-mode:vertical-rl]"
+            >{{ name }}</span
+        >
+    }
+</ng-template>

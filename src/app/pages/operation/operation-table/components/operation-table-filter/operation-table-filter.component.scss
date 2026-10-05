@@ -1,0 +1,27 @@
+:host {
+    display: block;
+}
+
+// モック 03: 群チップは選択時にオレンジ（accent #ee7b35）＋白文字＋白 ✓。
+// 非選択はグレー地。shared/filter-chips 本体は他ページと共用のため変更せず、
+// 本ページ配下に限定して上書きする。
+:host ::ng-deep {
+    .mat-mdc-chip-option {
+        background-color: #eeeeee;
+    }
+
+    .mat-mdc-chip-option.mat-mdc-chip-selected {
+        background-color: #ee7b35;
+
+        // R-5: オレンジ地の文字は 15px 以上 + bold のみ（AA コントラスト確保）
+        .mdc-evolution-chip__text-label {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .mdc-evolution-chip__checkmark {
+            color: #ffffff;
+        }
+    }
+}

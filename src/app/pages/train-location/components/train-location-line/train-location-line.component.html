@@ -1,0 +1,142 @@
+<div class="tw-flex tw-flex-col tw-py-3">
+    <div
+        class="tw-mb-1 tw-flex tw-flex-row tw-justify-between tw-px-4 tw-text-xs tw-font-bold tw-text-ink-2"
+    >
+        <span>◀ 上り</span>
+        <span>下り ▶</span>
+    </div>
+
+    @for (row of rows(); track rowKey(row)) {
+        @if (row.kind === 'station') {
+            <div
+                class="tw-grid tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] tw-items-center lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]"
+            >
+                <div
+                    class="tw-flex tw-flex-col tw-items-end tw-gap-1 tw-py-1 tw-pr-2"
+                >
+                    @for (card of row.leftCards; track card.tripId) {
+                        <app-train-location-card
+                            [card]="card"
+                            status="stopped"
+                        ></app-train-location-card>
+                    }
+                </div>
+
+                <div
+                    class="tw-relative tw-flex tw-h-full tw-min-h-7 tw-flex-col tw-items-center tw-justify-center tw-gap-1"
+                >
+                    <span
+                        aria-hidden="true"
+                        class="tw-absolute tw-inset-y-0 tw-left-1/2 tw-w-[3px] -tw-translate-x-1/2 tw-bg-structure"
+                    ></span>
+                    <button
+                        type="button"
+                        class="tw-relative tw-min-h-6 tw-cursor-pointer tw-whitespace-normal tw-rounded-full tw-border-2 tw-border-solid tw-border-structure tw-px-2 tw-py-0.5 tw-text-center tw-font-[inherit] tw-text-xs tw-leading-tight lg:tw-whitespace-nowrap"
+                        [attr.data-station-id]="row.stationId"
+                        [attr.aria-pressed]="
+                            row.stationId === selectedStationId()
+                        "
+                        [class.tw-font-bold]="row.isMajor"
+                        [class.tw-bg-white]="
+                            row.stationId !== selectedStationId()
+                        "
+                        [class.tw-text-ink]="
+                            row.stationId !== selectedStationId()
+                        "
+                        [class.tw-bg-structure]="
+                            row.stationId === selectedStationId()
+                        "
+                        [class.tw-text-paper]="
+                            row.stationId === selectedStationId()
+                        "
+                        [style.outline]="
+                            row.stationId === selectedStationId()
+                                ? '3px solid var(--color-accent)'
+                                : null
+                        "
+                        [style.outline-offset.px]="
+                            row.stationId === selectedStationId() ? 2 : null
+                        "
+                        (click)="stationSelect.emit(row.stationId)"
+                    >
+                        {{ row.stationName }}
+                    </button>
+                    @for (
+                        interchange of row.interchangeRoutes;
+                        track interchange.routeId
+                    ) {
+                        <a
+                            [routerLink]="[
+                                '/train-location',
+                                {
+                                    route_id: interchange.routeId,
+                                    station_id: row.stationId,
+                                },
+                            ]"
+                            class="tw-relative tw-whitespace-nowrap tw-rounded-full tw-bg-paper-3 tw-px-2 tw-py-px tw-text-[10px] tw-text-ink tw-no-underline"
+                            >{{ interchange.routeName }}</a
+                        >
+                    }
+                </div>
+
+                <div
+                    class="tw-flex tw-flex-col tw-items-start tw-gap-1 tw-py-1 tw-pl-2"
+                >
+                    @for (card of row.rightCards; track card.tripId) {
+                        <app-train-location-card
+                            [card]="card"
+                            status="stopped"
+                        ></app-train-location-card>
+                    }
+                </div>
+            </div>
+        } @else {
+            <!-- 駅間ゾーン: resolveBetweenRowLayout で衝突回避済みの px 位置を使う（98 G8）。
+                 密集時は行自体を伸長する（heightPx）。 -->
+            <div
+                data-between
+                class="tw-grid tw-grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)] lg:tw-grid-cols-[minmax(0,1fr)_7rem_minmax(0,1fr)]"
+                [style.height.px]="betweenLayout(row).heightPx"
+            >
+                <div class="tw-relative">
+                    @for (
+                        positioned of betweenLayout(row).left;
+                        track positioned.entry.card.tripId
+                    ) {
+                        <div
+                            class="tw-absolute tw-right-2 tw-max-w-[calc(100%-0.5rem)]"
+                            [style.top.px]="positioned.topPx"
+                        >
+                            <app-train-location-card
+                                [card]="positioned.entry.card"
+                                status="between"
+                            ></app-train-location-card>
+                        </div>
+                    }
+                </div>
+                <div class="tw-flex tw-justify-center">
+                    <span
+                        aria-hidden="true"
+                        class="tw-w-[3px] tw-bg-structure"
+                    ></span>
+                </div>
+                <div class="tw-relative">
+                    @for (
+                        positioned of betweenLayout(row).right;
+                        track positioned.entry.card.tripId
+                    ) {
+                        <div
+                            class="tw-absolute tw-left-2 tw-max-w-[calc(100%-0.5rem)]"
+                            [style.top.px]="positioned.topPx"
+                        >
+                            <app-train-location-card
+                                [card]="positioned.entry.card"
+                                status="between"
+                            ></app-train-location-card>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

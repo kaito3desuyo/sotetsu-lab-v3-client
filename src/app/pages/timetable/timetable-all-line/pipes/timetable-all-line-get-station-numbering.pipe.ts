@@ -5,8 +5,11 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
     standalone: true,
     name: 'timetableAllLineGetStationNumbering',
 })
+/**
+ * 駅の所属路線ごとの駅番号（重複を除いて昇順）。表では 1 つずつ縦に積むので配列で返す。
+ */
 export class TimetableAllLineGetStationNumberingPipe implements PipeTransform {
-    transform(station: StationDetailsDto): string {
+    transform(station: StationDetailsDto): string[] {
         const valueSet = new Set<string>();
 
         return (
@@ -20,8 +23,7 @@ export class TimetableAllLineGetStationNumberingPipe implements PipeTransform {
                     valueSet.add(value);
                     return true;
                 })
-                .sort()
-                .join('/') ?? ''
+                .sort() ?? []
         );
     }
 }

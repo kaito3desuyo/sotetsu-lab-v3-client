@@ -2,19 +2,22 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { omitBy } from 'es-toolkit';
 import { md5 } from 'js-md5';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
+import { OperationGroupDto } from '../../usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import {
     OperationDtoBuilder,
     OperationsDtoBuilder,
 } from '../builders/operation.dto.builder';
 import { OperationCurrentPositionDtoBuilder } from '../builders/operation-current-position.dto.builder';
+import { OperationGroupsDtoBuilder } from '../builders/operation-group.dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
+import { OperationGroupModel } from '../models/operation-group.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
 
@@ -30,6 +33,11 @@ export class OperationQuery {
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
         const { calendarId, forceReload } = params;
+
+        // calendarId 未指定では /v3/operations/calendar/null を叩かず空配列を返す。
+        if (!calendarId) {
+            return of([]);
+        }
 
         const key = md5(
             JSON.stringify({
@@ -147,6 +155,92 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
+    /** 複数の運用の現在位置を 1 回で取る（運用ごとの findOneWithCurrentPosition を束ねたもの）。 */
+    findManyWithCurrentPosition(params: {
+        operationIds: string[];
+        forceReload?: boolean;
+    }): Observable<OperationCurrentPositionDto[]> {
+        const { operationIds, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findManyWithCurrentPosition',
+                operationIds,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<OperationCurrentPositionModel[]>(
+                    `${this.#v3ApiUrl}/current-positions`,
+                    {
+                        params: { operationIds: operationIds.join(',') },
+                        observe: 'response',
+                    },
+                )
+                .pipe(
+                    shareReplay({
+                        bufferSize: 1,
+                        refCount: true,
+                    }),
+                    map((res) =>
+                        (res.body ?? []).map((model) =>
+                            OperationCurrentPositionDtoBuilder.buildFromModel(
+                                model,
+                            ),
+                        ),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
+    /** ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。 */
+    findManyWithTrips(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationTripsDto[]> {
+        const { calendarId, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findManyWithTrips',
+                calendarId,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<
+                    OperationTripsModel[]
+                >(`${this.#v3ApiUrl}/calendar/${calendarId}/trips`, { observe: 'response' })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        res.body.map((operationTrips) => ({
+                            operation: OperationDtoBuilder.buildFromModel(
+                                operationTrips.operation,
+                            ),
+                            trips: operationTrips.trips.map((o) =>
+                                TripOperationListDtoBuilder.buildFromModel(o),
+                            ),
+                        })),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
@@ -186,5 +280,29 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
-}
+    findManyGroups(params?: {
+        forceReload?: boolean;
+    }): Observable<OperationGroupDto[]> {
+        const { forceReload } = params ?? {};
+        const key = md5(JSON.stringify({ name: 'findManyGroups' }));
 
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<
+                    OperationGroupModel[]
+                >(`${this.#v3ApiUrl}/groups`, { observe: 'response' })
+                .pipe(
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                    map((res) =>
+                        OperationGroupsDtoBuilder.buildFromModels(res.body),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
+}

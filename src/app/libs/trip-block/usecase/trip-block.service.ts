@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
+import { TripBlockFields } from './trip-block-fields';
 import { AddTripToTripBlockDto } from './dtos/add-trip-to-trip-block.dto';
 import { CreateTripBlockDto } from './dtos/create-trip-block.dto';
 import { DeleteTripFromTripBlockDto } from './dtos/delete-trip-from-trip-block.dto';
@@ -18,9 +19,27 @@ export class TripBlockService {
     findManyByFilter(params: {
         calendarId: string;
         tripDirection: number;
+        fields?: TripBlockFields;
         forceReload?: boolean;
     }): Observable<TripBlockDetailsDto[]> {
         return this.tripBlockQuery.findManyByFilter(params);
+    }
+
+    /**
+     * 指定 calendarId の上下（tripDirection=0/1）バルクデータをまとめて取得する。
+     * N1/N2/N3 が同一メソッドを呼べばキャッシュが効き、ページ間遷移で再取得しない。
+     */
+    findManyByCalendarId(params: {
+        calendarId: string;
+        fields?: TripBlockFields;
+        forceReload?: boolean;
+    }): Observable<Record<number, TripBlockDetailsDto[]>> {
+        return this.tripBlockQuery.findManyByCalendarId(params);
+    }
+
+    /** ダイヤ改正等でバルクキャッシュ（findManyByFilter / findManyByCalendarId）を失効させる。 */
+    invalidateAll(): void {
+        this.tripBlockQuery.invalidateAll();
     }
 
     findOneById(params: {

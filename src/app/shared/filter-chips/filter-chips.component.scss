@@ -1,0 +1,74 @@
+// scrollMode（.filter-chips-scroll）: チップを折り返さず横スクロール可能な
+// 1 行に収める（mockup-05 全線時刻表の路線チップ）。
+// Material 本体の `.mdc-evolution-chip-set__chips { flex-flow: wrap }`
+// (0,1,0) に CSS 順序へ依存せず勝てるよう、クラス付きの (0,2,0) で上書きする。
+// 既定（折返し表示）のスタイルは変更しない。
+::ng-deep .filter-chips-scroll .mdc-evolution-chip-set__chips {
+    flex-wrap: nowrap;
+}
+
+// G0-2: 絞り込みチップの角型化・状態別配色。
+// MatChip の M2 テーマは背景色・角丸を CSS カスタムプロパティのカスケードで
+// 決めており、そのカスケード順序に依存すると環境差で選択状態が灰のまま
+// 視認できなくなる（98 G0-2 実測バグ）。さらにテーマは
+// `--mat-chip-container-shape-radius` を要素側に直接セットするため、
+// :host での変数上書き（継承）は負ける（T6.5 差し戻しで実測）。
+// よって MDC 標準の構造クラスに対して色・角丸とも直接指定して確実に上書きする
+// （:host ::ng-deep で本コンポーネントの subtree のみに限定）。
+:host ::ng-deep {
+    // 角型（角丸 2px）。外側コンテナの border-radius と、
+    // 枠線を描く ::before（var 参照）の両方に効かせる
+    .mat-mdc-standard-chip {
+        border-radius: 2px !important;
+        --mat-chip-container-shape-radius: 2px;
+    }
+
+    // 枠線は**全状態で 1px 引く**。色だけを状態で変える。
+    // 以前は未選択にだけ border を付けていたため、選択すると上下の枠 2px が
+    // 消えてチップの高さが 34px → 32px と縮み、同じ行に並ぶチップの縦幅が
+    // 不揃いになっていた（2026-08-22 実測・ユーザー指摘）。
+    // box-sizing が content-box なので、枠線の有無がそのまま外形に効く。
+    .mdc-evolution-chip:not(.mdc-evolution-chip--disabled) {
+        border: 1px solid var(--color-rule-strong);
+    }
+
+    .mdc-evolution-chip:not(.mdc-evolution-chip--selected):not(
+            .mdc-evolution-chip--disabled
+        ) {
+        background-color: var(--color-control) !important;
+    }
+
+    .mdc-evolution-chip--selected:not(.mdc-evolution-chip--disabled) {
+        &.mat-primary {
+            background-color: var(--color-structure) !important;
+            // 塗りと同色の枠にして、高さを保ったまま塗り一色に見せる
+            border-color: var(--color-structure);
+
+            .mdc-evolution-chip__text-label,
+            .mdc-evolution-chip__checkmark {
+                color: var(--color-paper) !important;
+            }
+        }
+
+        // オレンジ地の文字・✓ は暗色。白字は 2.79:1 で AA 不合格
+        // （docs/design.md 色の掟 2）
+        &.mat-accent {
+            background-color: var(--color-accent) !important;
+            border-color: var(--color-accent);
+
+            .mdc-evolution-chip__text-label,
+            .mdc-evolution-chip__checkmark {
+                color: var(--color-accent-ink) !important;
+            }
+        }
+    }
+
+    .mdc-evolution-chip--disabled {
+        background-color: #e0e0e0 !important;
+        opacity: 1 !important;
+
+        .mdc-evolution-chip__text-label {
+            color: rgba(0, 0, 0, 0.38) !important;
+        }
+    }
+}

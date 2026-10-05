@@ -7,7 +7,10 @@ import { map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
-import { OperationSightingDtoBuilder, OperationSightingsDtoBuilder } from '../builders/operation-sighting.dto.builder';
+import {
+    OperationSightingDtoBuilder,
+    OperationSightingsDtoBuilder,
+} from '../builders/operation-sighting.dto.builder';
 import { OperationSightingTimeCrossSectionDtoBuilder } from '../builders/operation-sighting-time-cross-section.dto.builder';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
@@ -51,8 +54,86 @@ export class OperationSightingQuery {
                         refCount: true,
                     }),
                     map((res) => {
-                        return OperationSightingsDtoBuilder.buildFromModels(res.body);
+                        return OperationSightingsDtoBuilder.buildFromModels(
+                            res.body,
+                        );
                     }),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
+    /**
+     * 複数の運用番号の時刻断面を 1 回で取る（番号ごとの findOneTimeCrossSectionByOperationNumber を束ねたもの）。
+     * キーは運用番号。休車の 100 は返らない。
+     */
+    findManyTimeCrossSectionsByOperationNumbers(params: {
+        operationNumbers: string[];
+        forceReload?: boolean;
+    }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
+        return this.#findManyTimeCrossSections(
+            'operation-numbers',
+            'operationNumbers',
+            params.operationNumbers,
+            params.forceReload,
+        );
+    }
+
+    /** 複数の編成番号の時刻断面を 1 回で取る。キーは編成番号。 */
+    findManyTimeCrossSectionsByFormationNumbers(params: {
+        formationNumbers: string[];
+        forceReload?: boolean;
+    }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
+        return this.#findManyTimeCrossSections(
+            'formation-numbers',
+            'formationNumbers',
+            params.formationNumbers,
+            params.forceReload,
+        );
+    }
+
+    #findManyTimeCrossSections(
+        path: 'operation-numbers' | 'formation-numbers',
+        paramName: 'operationNumbers' | 'formationNumbers',
+        numbers: string[],
+        forceReload?: boolean,
+    ): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
+        const key = md5(
+            JSON.stringify({
+                name: `findManyTimeCrossSections:${path}`,
+                numbers,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<Record<string, OperationSightingTimeCrossSectionModel>>(
+                    `${this.#v3ApiUrl}/time-cross-section/${path}`,
+                    {
+                        params: { [paramName]: numbers.join(',') },
+                        observe: 'response',
+                    },
+                )
+                .pipe(
+                    shareReplay({
+                        bufferSize: 1,
+                        refCount: true,
+                    }),
+                    map((res) =>
+                        Object.fromEntries(
+                            Object.entries(res.body ?? {}).map(([n, model]) => [
+                                n,
+                                OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                                    model,
+                                ),
+                            ]),
+                        ),
+                    ),
                 );
         }
 

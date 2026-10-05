@@ -1,0 +1,74 @@
+<!-- 図そのものが本文なので外周 gutter は持たない（docs/design.md「余白の掟」2）。
+     図の上下の chrome は横 12px の inset。landmark は揃える。 -->
+<main class="tw-flex tw-h-full tw-flex-col tw-bg-paper-2">
+    <!-- 読み込み中はプログレスバーだけ（ロック済みページと同じ。位置は運用表と同じヘッダーのすぐ下） -->
+    @if (isLoading()) {
+        <div
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+        >
+            <mat-progress-bar
+                color="accent"
+                mode="indeterminate"
+            ></mat-progress-bar>
+        </div>
+    }
+
+    <app-train-location-controller
+        [calendarId]="calendarId()"
+        [selectedRouteId]="selectedRouteId()"
+        [mode]="mode()"
+        [clockText]="clockText()"
+        [timeInputValue]="timeInputValue()"
+        (calendarIdChange)="onCalendarIdChange($event)"
+        (routeIdChange)="onRouteIdChange($event)"
+        (modeChange)="onModeChange($event)"
+        (timeInputValueChange)="onTimeInputValueChange($event)"
+    ></app-train-location-controller>
+
+    <div class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-3">
+        @if (!isLoading()) {
+            <div
+                class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-[40rem_minmax(0,1fr)] lg:tw-items-start"
+            >
+                <app-train-location-station-panel
+                    class="lg:tw-sticky lg:tw-top-0 lg:tw-col-start-2 lg:tw-row-start-1"
+                    [stationId]="selectedStationId()"
+                    [stationName]="selectedStationName()"
+                    [interchangeRoutes]="selectedStationInterchangeRoutes()"
+                    [arrivals]="arrivals()"
+                ></app-train-location-station-panel>
+
+                <div
+                    class="tw-rounded-card tw-bg-white lg:tw-col-start-1 lg:tw-row-start-1"
+                >
+                    @if (hasNoTrainsInService()) {
+                        <app-empty-state
+                            icon="train"
+                            message="現在この路線を走行中の列車はありません"
+                            [subtitle]="emptyStateSubtitle()"
+                            [actionLabel]="emptyStateActionLabel()"
+                            (actionClick)="onEmptyStateAction()"
+                        ></app-empty-state>
+                    }
+                    <app-train-location-line
+                        [rows]="rows()"
+                        [selectedStationId]="selectedStationId()"
+                        (stationSelect)="onStationSelect($event)"
+                    ></app-train-location-line>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 免責文（98 G8: 最下部固定で常設）。ページ内でこの 1 か所だけ。 -->
+    <footer
+        class="tw-shrink-0 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-px-3 tw-py-2 tw-text-center tw-text-xs tw-text-muted"
+    >
+        ダイヤ通りに走った場合の位置です。実在線は
+        <a
+            routerLink="/operation/real-time"
+            class="tw-text-structure tw-underline"
+            >リアルタイム運用情報</a
+        >へ。
+    </footer>
+</main>

@@ -1,0 +1,30 @@
+// 上り/下りの sticky な帯の真下に、ページ地の色で「逆向きの角」を左右 1 つずつ描く。
+// 帯の下へ潜り込んでいく時刻表カードの上端は帯でまっすぐ切られ、角丸が消えて見えていた
+// （ユーザー指摘 2026-09-23）。帯に貼り付いた角がカードの角丸の代わりをする。
+// 貼り付いていない間は、帯とカードの間の 8px の隙間（同じページ地）に重なるだけで見えない。
+.sticky-direction-band {
+    position: sticky; // tw-sticky と同じ。::after の基準にもなる
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        height: var(--radius-card);
+        pointer-events: none;
+        background:
+            radial-gradient(
+                    circle at 100% 100%,
+                    transparent calc(var(--radius-card) - 0.5px),
+                    var(--color-paper-2) var(--radius-card)
+                )
+                left top / var(--radius-card) var(--radius-card) no-repeat,
+            radial-gradient(
+                    circle at 0 100%,
+                    transparent calc(var(--radius-card) - 0.5px),
+                    var(--color-paper-2) var(--radius-card)
+                )
+                right top / var(--radius-card) var(--radius-card) no-repeat;
+    }
+}

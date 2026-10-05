@@ -1,0 +1,13 @@
+<span matSnackBarLabel>前回の入力途中データがあります。復元しますか？</span>
+<span matSnackBarActions>
+    <button mat-button matSnackBarAction (click)="snackBarRef.dismiss()">
+        閉じる
+    </button>
+    <button
+        mat-button
+        matSnackBarAction
+        (click)="snackBarRef.dismissWithAction()"
+    >
+        復元する
+    </button>
+</span>

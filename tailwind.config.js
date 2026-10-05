@@ -25,6 +25,21 @@ module.exports = {
                 A400: '#000afe',
                 A700: '#0009e5',
             },
+            // docs/design.md のトークンを Tailwind から引くための別名。
+            // 値の実体は src/tokens.css。ここには生値を書かない。
+            paper: 'var(--color-paper)',
+            'paper-2': 'var(--color-paper-2)',
+            'paper-3': 'var(--color-paper-3)',
+            ink: 'var(--color-ink)',
+            'ink-2': 'var(--color-ink-2)',
+            muted: 'var(--color-muted)',
+            rule: 'var(--color-rule)',
+            'rule-strong': 'var(--color-rule-strong)',
+            structure: 'var(--color-structure)',
+            'accent-ink': 'var(--color-accent-ink)',
+            'accent-deep': 'var(--color-accent-deep)',
+            'recency-today': 'var(--color-recency-today)',
+            'recency-yesterday': 'var(--color-recency-yesterday)',
             accent: {
                 50: '#fdefe7',
                 100: '#fad7c2',
@@ -43,6 +58,13 @@ module.exports = {
             },
         },
         extend: {
+            // docs/design.md の角丸トークン。値の実体は src/tokens.css。
+            // カードは必ず tw-rounded-card を使う（0px / 4px / 8px の混在を防ぐ）。
+            borderRadius: {
+                card: 'var(--radius-card)',
+                control: 'var(--radius-control)',
+                chip: 'var(--radius-chip)',
+            },
             gridTemplateAreas: {
                 'dashboard-full': [
                     'description description description',

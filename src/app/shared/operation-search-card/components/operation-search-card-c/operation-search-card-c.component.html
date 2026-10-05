@@ -6,5 +6,6 @@
     [operations]="operations()"
     (selectCalendarId)="onSelectedCalendarId$.next($event)"
     (selectOperationId)="onSelectedOperationId$.next($event)"
-    (clickSearch)="onClickedSearch$.next()"
+    (clickSearchOperationTable)="onClickOperationTable$.next($event)"
+    (clickSearchRouteDiagram)="onClickRouteDiagram$.next($event)"
 ></app-operation-search-card-p>

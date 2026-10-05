@@ -1,0 +1,275 @@
+<div
+    #scrollHost
+    data-scroll-host
+    class="tw-relative tw-h-full tw-overflow-auto tw-overscroll-contain"
+    style="touch-action: pan-x pan-y"
+    (scroll)="onScroll()"
+    (wheel)="onWheel($event)"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd($event)"
+>
+    <div
+        [style.width.px]="stationLabelWidth + svgWidth()"
+        [style.padding-bottom.px]="bottomInset()"
+    >
+        <!-- 時刻の行（上に固定）。角は左にも固定 -->
+        <div class="tw-sticky tw-top-0 tw-z-20 tw-flex tw-bg-white">
+            <div
+                class="tw-sticky tw-left-0 tw-z-30 tw-shrink-0 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white"
+                [style.width.px]="stationLabelWidth"
+                [style.height.px]="timeHeaderHeight"
+            ></div>
+            <svg
+                data-time-header
+                class="tw-block tw-max-w-none tw-shrink-0 tw-border-0 tw-border-b tw-border-solid tw-border-rule"
+                [attr.width]="svgWidth()"
+                [attr.height]="timeHeaderHeight"
+            >
+                @for (tick of minuteTicks(); track tick.minute) {
+                    @if (tick.isHour) {
+                        <text
+                            [attr.x]="tick.x + 4"
+                            y="20"
+                            class="tw-fill-ink tw-tabular-nums"
+                            style="font-size: 11px; font-weight: bold"
+                        >
+                            {{ tick.label }}
+                        </text>
+                    } @else {
+                        <text
+                            [attr.x]="tick.x + 4"
+                            y="20"
+                            class="tw-fill-ink-2 tw-tabular-nums"
+                            style="font-size: 10px"
+                        >
+                            {{ tick.label }}
+                        </text>
+                    }
+                }
+            </svg>
+        </div>
+
+        <div class="tw-flex">
+            <!-- 駅名の列（左に固定） -->
+            <div
+                class="tw-sticky tw-left-0 tw-z-10 tw-shrink-0 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white"
+                [style.width.px]="stationLabelWidth"
+                [style.height.px]="bodyHeight()"
+            >
+                <div class="tw-relative tw-h-full">
+                    @for (row of stationRows(); track $index) {
+                        <div
+                            data-station-label
+                            class="tw-absolute tw-left-0 tw-w-full tw-truncate tw-px-2 tw-text-xs tw-leading-none tw-text-ink"
+                            [style.top.px]="row.y - 6"
+                        >
+                            {{ row.stationName }}
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <svg
+                data-diagram-body
+                class="tw-block tw-max-w-none tw-shrink-0"
+                [attr.width]="svgWidth()"
+                [attr.height]="bodyHeight()"
+            >
+                <rect
+                    x="0"
+                    y="0"
+                    [attr.width]="svgWidth()"
+                    [attr.height]="bodyHeight()"
+                    fill="white"
+                    (click)="onBackgroundClick()"
+                ></rect>
+
+                @for (tick of minuteTicks(); track tick.minute) {
+                    <line
+                        [attr.x1]="tick.x"
+                        y1="0"
+                        [attr.x2]="tick.x"
+                        [attr.y2]="bodyHeight()"
+                        [attr.stroke]="tick.isHour ? '#bdbdbd' : '#eeeeee'"
+                        stroke-width="1"
+                    ></line>
+                }
+                @for (row of stationRows(); track $index) {
+                    <line
+                        x1="0"
+                        [attr.y1]="row.y"
+                        [attr.x2]="svgWidth()"
+                        [attr.y2]="row.y"
+                        stroke="#eeeeee"
+                        stroke-width="1"
+                    ></line>
+                }
+                @for (
+                    link of visibleTurnbackLinks();
+                    track link.arrivingTripId + link.departingTripId
+                ) {
+                    <polyline
+                        data-turnback-link
+                        fill="none"
+                        [attr.points]="pointsAttr(link.points)"
+                        [attr.stroke]="link.color"
+                        stroke-width="1.5"
+                        [attr.opacity]="turnbackLinkOpacity(link)"
+                    ></polyline>
+                    @for (
+                        connector of link.connectors;
+                        track connector.minute + ':' + connector.fromY
+                    ) {
+                        <!-- Task 18: 分岐駅（西谷・二俣川等）で分岐元の行と着・発それぞれの
+                             行が違うときの縦のつなぎ線。分岐駅の点線（connector）と同じ見た目。 -->
+                        <line
+                            data-turnback-connector
+                            [attr.x1]="x(connector.minute)"
+                            [attr.y1]="connector.fromY"
+                            [attr.x2]="x(connector.minute)"
+                            [attr.y2]="connector.toY"
+                            [attr.stroke]="link.color"
+                            [attr.stroke-width]="
+                                isTurnbackHighlighted(link) ? 1.5 : 1
+                            "
+                            stroke-dasharray="2 3"
+                            stroke-opacity="0.45"
+                            [attr.opacity]="turnbackLinkOpacity(link)"
+                        ></line>
+                    }
+                }
+                @for (line of visibleLines(); track line.tripId) {
+                    @for (connector of line.connectors; track $index) {
+                        <line
+                            data-trip-connector
+                            [attr.x1]="x(connector.minute)"
+                            [attr.y1]="connector.fromY"
+                            [attr.x2]="x(connector.minute)"
+                            [attr.y2]="connector.toY"
+                            [attr.stroke]="line.tripClassColor"
+                            [attr.stroke-width]="
+                                isSelected(line.tripId) ? 1.5 : 1
+                            "
+                            stroke-dasharray="2 3"
+                            stroke-opacity="0.45"
+                            [attr.opacity]="lineOpacity(line.tripId)"
+                        ></line>
+                    }
+                    @for (segment of line.segments; track $index) {
+                        @if (isSelected(line.tripId)) {
+                            <polyline
+                                [attr.points]="pointsAttr(segment)"
+                                fill="none"
+                                stroke="#ffffff"
+                                stroke-width="9"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                opacity="0.9"
+                            ></polyline>
+                        }
+                        <polyline
+                            data-trip-line
+                            [attr.data-trip-id]="line.tripId"
+                            [attr.points]="pointsAttr(segment)"
+                            fill="none"
+                            [attr.stroke]="line.tripClassColor"
+                            [attr.stroke-width]="
+                                isSelected(line.tripId) ? 4 : 2
+                            "
+                            [attr.stroke-dasharray]="
+                                line.isDeadhead ? '6 4' : null
+                            "
+                            [attr.opacity]="lineOpacity(line.tripId)"
+                            style="cursor: pointer"
+                            (click)="onLineClick(line.tripId)"
+                        ></polyline>
+                    }
+                    @if (isSelected(line.tripId)) {
+                        @if (
+                            line.isChainHead && line.segments[0]?.[0];
+                            as point
+                        ) {
+                            <text
+                                data-trip-number
+                                [attr.x]="x(point.minute) - 4"
+                                [attr.y]="point.y - 6"
+                                text-anchor="end"
+                                style="font-size: 11px; font-weight: bold"
+                                class="tw-fill-primary-700"
+                            >
+                                {{ line.tripNumber }}
+                            </text>
+                        }
+                        @for (label of line.stopLabels; track $index) {
+                            <text
+                                data-stop-label
+                                [attr.x]="x(label.minute) + 3"
+                                [attr.y]="stopLabelY(label)"
+                                style="font-size: 9px"
+                                class="tw-fill-ink tw-tabular-nums"
+                            >
+                                {{ label.text }}
+                            </text>
+                        }
+                    }
+                }
+                <!-- Task 14 追加: 入庫・出庫の印。折り返しと違い、線より前ではなく
+                     すべての線の上（後）に描く。 -->
+                @for (line of visibleLines(); track line.tripId) {
+                    @for (mark of line.depotMarks; track $index) {
+                        @if (mark.kind === 'out') {
+                            <circle
+                                data-depot-mark="out"
+                                [attr.cx]="x(mark.minute)"
+                                [attr.cy]="mark.y"
+                                r="3.5"
+                                fill="white"
+                                [attr.stroke]="line.tripClassColor"
+                                stroke-width="1.5"
+                                [attr.opacity]="lineOpacity(line.tripId)"
+                            ></circle>
+                        } @else {
+                            <polygon
+                                data-depot-mark="in"
+                                [attr.points]="depotTrianglePoints(mark)"
+                                fill="white"
+                                [attr.stroke]="line.tripClassColor"
+                                stroke-width="1.5"
+                                stroke-linejoin="round"
+                                [attr.opacity]="lineOpacity(line.tripId)"
+                            ></polygon>
+                        }
+                    }
+                }
+                @for (
+                    label of placedThroughLabels();
+                    track label.tripId + label.anchor
+                ) {
+                    <text
+                        data-through-label
+                        [attr.x]="label.x"
+                        [attr.y]="throughLabelY(label)"
+                        [attr.text-anchor]="label.anchor"
+                        [attr.opacity]="label.opacity"
+                        style="font-size: 10px"
+                        class="tw-fill-ink-2"
+                    >
+                        {{ label.text }}
+                    </text>
+                }
+                @if (nowMinute() !== null) {
+                    <line
+                        data-now-line
+                        [attr.x1]="x(nowMinute()!)"
+                        y1="0"
+                        [attr.x2]="x(nowMinute()!)"
+                        [attr.y2]="bodyHeight()"
+                        stroke="rgb(217, 83, 79)"
+                        stroke-width="2"
+                    ></line>
+                }
+            </svg>
+        </div>
+    </div>
+</div>

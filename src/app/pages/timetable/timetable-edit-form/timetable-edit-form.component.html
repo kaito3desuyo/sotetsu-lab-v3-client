@@ -1,0 +1,42 @@
+@if (isLoading()) {
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+    >
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <app-timetable-edit-form-trips
+        [serviceId]="serviceId()"
+        [calendarId]="calendarId()"
+        [calendar]="calendar()"
+        [mode]="mode()"
+        [tripDirection]="tripDirection()"
+        [stations]="stations()"
+        [visibleStationIds]="visibleStationIds()"
+        [routes]="routes()"
+        [selectedRouteIds]="selectedRouteIds()"
+        [operations]="operations()"
+        [tripClasses]="tripClasses()"
+        [trips]="trips()"
+        [copySourceCandidates]="copySourceCandidates()"
+        [selectedTripBlockId]="selectedTripBlockId()"
+        [lastSubmittedAt]="lastSubmittedAt()"
+        [restoreTrips]="restoreTrips()"
+        (clickSubmit)="onReceiveClickSubmit($event)"
+        (toggleIsSaveTripsIndividually)="
+            onToggleIsSaveTripsIndividually($event)
+        "
+        (selectedRouteIdsChange)="onRouteFilterChange($event)"
+        (selectCopySource)="onSelectCopySource($event)"
+        (formValueChange)="onFormValueChange($event)"
+        (restored)="onDraftRestored()"
+        (saveDraftClick)="onSaveDraftClick()"
+    ></app-timetable-edit-form-trips>
+</main>

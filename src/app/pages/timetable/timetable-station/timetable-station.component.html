@@ -1,8 +1,118 @@
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
-    <header>
-        <app-timetable-station-header-c></app-timetable-station-header-c>
-    </header>
-    <div>
-        <app-timetable-station-main-c></app-timetable-station-main-c>
+@if (isLoading()) {
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+    >
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
     </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
+         本文の h1/h2 重複は置かない -->
+    <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01）。ただし sm 未満は縦に積む。
+         ダイヤの選択中表示「2026/3/14改正 土休日ダイヤ」は約 270px 要り、390px で
+         横に並べると改正日の途中で省略される（2026-09-23 実測） -->
+    <app-control-band>
+        <header
+            class="tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[40rem]"
+        >
+            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                <mat-label>駅</mat-label>
+                <mat-select
+                    [value]="stationId()"
+                    (valueChange)="onStationChange($event)"
+                >
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
+                            @for (
+                                station of group.stations;
+                                track station.stationId
+                            ) {
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                <mat-label>ダイヤ</mat-label>
+                <!-- ダイヤ名だけでは同名の「平日ダイヤ」が改正ごとに並び、選び分けられない
+                 （ユーザー指摘 2026-09-23）。選択肢は検索カードと同じ「改正日 + ダイヤ名」、
+                 選択中の表示は幅に収まるよう改正日を短く書く -->
+                <mat-select
+                    [value]="calendarId()"
+                    (valueChange)="onCalendarChange($event)"
+                >
+                    <mat-select-trigger>
+                        @if (selectedCalendar(); as selected) {
+                            {{
+                                selected.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ selected.calendarName }}
+                        }
+                    </mat-select-trigger>
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </header>
+    </app-control-band>
+
+    <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/segment-toggle）。
+         長い時刻表を読みながら切り替えられるよう、これだけトップバーの直下に貼り付ける
+         （ユーザー判断 2026-09-23）。上下 8px の地は負マージンで打ち消し、gap を変えない。
+         z は 1: ドロワーの遮光幕（z-10）より下に置く。帯の下の角は scss の
+         .sticky-direction-band（潜り込むカードの角丸を保つ） -->
+    <div
+        class="sticky-direction-band tw-sticky tw-top-12 tw-z-[1] -tw-my-2 tw-bg-paper-2 tw-py-2 md:tw-top-16"
+    >
+        <app-segment-toggle
+            [options]="tripDirectionOptions"
+            [value]="tripDirection()"
+            (valueChange)="onDirectionChange($event)"
+        ></app-segment-toggle>
+    </div>
+
+    <div>
+        @if (isEmpty()) {
+            <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。
+                 次アクションは反対方向への切り替え（ダイヤ/方向を変えて再検索する動線）。 -->
+            <app-empty-state
+                icon="train"
+                message="この条件の列車情報はありません"
+                subtitle="ダイヤまたは方向を変えてお試しください。"
+                [actionLabel]="oppositeDirectionActionLabel()"
+                (actionClick)="onDirectionChange(oppositeDirection())"
+            ></app-empty-state>
+        } @else if (calendar()) {
+            <app-timetable-station-table
+                [showCurrentFormation]="isTodaysCalendar()"
+            ></app-timetable-station-table>
+        }
+    </div>
+
+    <app-timetable-search-card-c></app-timetable-search-card-c>
 </main>

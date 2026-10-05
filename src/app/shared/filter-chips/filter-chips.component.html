@@ -1,0 +1,68 @@
+<div class="tw-relative">
+    <div
+        #scroller
+        class="tw-overflow-x-auto"
+        (scroll)="updateScrollIndicators()"
+    >
+        <mat-chip-listbox
+            class="tw-list-none"
+            [class.filter-chips-scroll]="scrollMode()"
+            [multiple]="mode() === 'multiple'"
+            [value]="listboxValue()"
+            (change)="onChange($event)"
+        >
+            @for (
+                group of groupedOptions();
+                track group.group;
+                let first = $first
+            ) {
+                @if (hasGroups() && group.group) {
+                    <!-- 折り返し表示では見出しを 1 行ぶんの幅にして会社ごとに段を分ける。
+                         横スクロール 1 行（全線時刻表）では段を分けると縦に伸びるので、
+                         見出しを行の中に差し込み、2 社目からは左に間を空けて切れ目を示す -->
+                    <span
+                        class="tw-pl-2 tw-text-xs tw-font-bold tw-text-grey-600"
+                        [class.tw-mt-1]="!scrollMode()"
+                        [class.tw-w-full]="!scrollMode()"
+                        [class.tw-self-center]="scrollMode()"
+                        [class.tw-whitespace-nowrap]="scrollMode()"
+                        [class.tw-ml-4]="scrollMode() && !first"
+                    >
+                        {{ group.group }}
+                    </span>
+                }
+                @for (option of group.options; track option.value) {
+                    <mat-chip-option
+                        [value]="option.value"
+                        [disabled]="option.disabled ?? false"
+                        [color]="option.selectedColor ?? selectedColor()"
+                        [style.background-color]="option.color ?? null"
+                    >
+                        <!-- 選択の印は単一選択も複数選択も Material の ✓。
+                             ● マーカーは箇条書きの点に見えるのでやめた（ユーザー指摘 2026-09-26） -->
+                        {{ option.label }}
+                    </mat-chip-option>
+                }
+            }
+        </mat-chip-listbox>
+    </div>
+
+    <!-- scrollMode: 見切れ方向を示す薄い矢印インジケータ（mockup-05）。
+         装飾のみ（クリック不可）なので pointer-events を切る -->
+    @if (scrollMode() && canScrollLeft()) {
+        <span
+            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-bg-gradient-to-r tw-from-white tw-pr-3 tw-text-xs tw-text-grey-500"
+            aria-hidden="true"
+        >
+            ◀
+        </span>
+    }
+    @if (scrollMode() && canScrollRight()) {
+        <span
+            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-bg-gradient-to-l tw-from-white tw-pl-3 tw-text-xs tw-text-grey-500"
+            aria-hidden="true"
+        >
+            ▶
+        </span>
+    }
+</div>

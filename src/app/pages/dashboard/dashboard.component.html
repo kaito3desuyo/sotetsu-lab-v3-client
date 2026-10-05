@@ -1,3 +1,28 @@
-<main class="tw-p-4 md:tw-p-16">
-    <app-dashboard-main-c></app-dashboard-main-c>
+@if (isLoading()) {
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+    >
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- Hub = Bento Grid（docs/design.md）。lg 以上は左に今日の状況＋タイル、右に最新の目撃情報 -->
+    <div
+        class="tw-flex tw-flex-col tw-gap-4 lg:tw-grid lg:tw-grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
+    >
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            <app-dashboard-status-card></app-dashboard-status-card>
+            <app-dashboard-quick-tiles></app-dashboard-quick-tiles>
+        </div>
+        <app-dashboard-latest-sightings
+            class="tw-flex tw-flex-col [&>section]:tw-flex-grow"
+        ></app-dashboard-latest-sightings>
+    </div>
+    <app-dashboard-collapsible-cards></app-dashboard-collapsible-cards>
 </main>

@@ -1,0 +1,40 @@
+<!-- 中央寄せの大アイコン＋中央の一行＋中央のボタン、という定型をやめる
+     （docs/design.md「空状態の作り」/ audit M8）。
+     空状態は独立したブロックではなく、直前のフォームや一覧の続きとして読ませたいので
+     左揃えにし、アイコンは見出しに添える小さめの記号に留める。 -->
+<div class="tw-flex tw-flex-col tw-items-start tw-gap-2 tw-px-4 tw-py-6">
+    <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+        @if (icon()) {
+            <mat-icon
+                class="tw-text-muted"
+                style="width: 20px; height: 20px; font-size: 20px"
+                aria-hidden="true"
+            >
+                {{ icon() }}
+            </mat-icon>
+        }
+        <p class="tw-m-0 tw-text-base tw-font-bold tw-text-ink">
+            {{ message() }}
+        </p>
+    </div>
+    @if (subtitle()) {
+        <p class="tw-m-0 tw-text-sm tw-text-muted">
+            {{ subtitle() }}
+        </p>
+    }
+    @if (actionLabel()) {
+        <!-- 生の mat-flat-button（紺塗り）をやめ、app-button の副アクションに寄せる。
+             紺塗りはボタン規約（app-button の primary=オレンジ塗り /
+             secondary=白地紺枠）の外にある第 3 の語彙で、1 ページ上に 4 種類の
+             ボタンが並ぶ原因になっていた（audit M6）。
+             ページの主アクションは検索側なので、空状態の導線は副アクションが正しい
+             （docs/design.md「CTA voice」: Primary は 1 画面に 1 つ）。 -->
+        <app-button
+            variant="secondary"
+            [fullWidth]="false"
+            (buttonClick)="actionClick.emit()"
+        >
+            {{ actionLabel() }}
+        </app-button>
+    }
+</div>

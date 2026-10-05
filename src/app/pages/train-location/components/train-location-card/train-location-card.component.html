@@ -1,0 +1,83 @@
+<!-- カードの面は全線時刻表へのリンク。運用番号も別のリンク（運用行路図）にするため、
+     リンクの中にリンクを入れず、面全体を覆う透明なリンクの上に運用番号のリンクを重ねる -->
+<div
+    data-card
+    class="tw-relative tw-box-border tw-flex tw-w-40 tw-max-w-full tw-flex-col tw-gap-0.5 tw-rounded tw-border tw-border-solid tw-border-rule tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-grey-900"
+>
+    <a
+        data-card-link
+        class="tw-absolute tw-inset-0 tw-rounded"
+        [routerLink]="card().detailLink"
+        [attr.aria-label]="
+            card().tripNumber + ' ' + card().destinationName + '行の時刻表を見る'
+        "
+    ></a>
+    <!-- 上段（モック09準拠）: 種別バッジ+行き先（左寄せ）+ 運用番号（右端。実装の補足情報として維持） -->
+    <span
+        class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-1"
+    >
+        <span class="tw-flex tw-min-w-0 tw-items-center tw-gap-1">
+            <app-trip-class-chip
+                size="sm"
+                [label]="card().tripClassName"
+                [color]="card().tripClassColor"
+            ></app-trip-class-chip>
+            <span class="tw-truncate tw-font-bold"
+                >{{ card().destinationName }} 行</span
+            >
+        </span>
+        <!-- 運用番号の地は運用群の色（リアルタイム運用情報・運用表と同じ operationNumberColor）。
+             運用 ID があれば運用行路図へのリンク（駅別時刻表などと同じ行き先） -->
+        @if (card().operationNumber && card().operationId) {
+            <a
+                data-operation-number
+                class="tw-relative tw-shrink-0 tw-rounded tw-px-1 tw-text-[10px] tw-font-bold tw-text-ink tw-no-underline"
+                [style.background-color]="
+                    card().operationNumber | operationNumberColor
+                "
+                [routerLink]="[
+                    '/operation',
+                    'route-diagram',
+                    { operation_id: card().operationId },
+                ]"
+                >{{ card().operationNumber }}</a
+            >
+        } @else if (card().operationNumber) {
+            <span
+                data-operation-number
+                class="tw-shrink-0 tw-rounded tw-px-1 tw-text-[10px] tw-font-bold tw-text-ink"
+                [style.background-color]="
+                    card().operationNumber | operationNumberColor
+                "
+                >{{ card().operationNumber }}</span
+            >
+        }
+    </span>
+
+    <!-- 下段（モック09準拠）: 列車番号+進行方向矢印（停車中は矢印の代わりに「停車中」）（左）
+         + 充当編成番号・所属会社（右端。実装の補足情報として維持） -->
+    <span
+        class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-1 tw-text-grey-600"
+    >
+        <span class="tw-flex tw-shrink-0 tw-items-center tw-gap-1">
+            <span>{{ card().tripNumber }}</span>
+            @if (status() === 'stopped') {
+                <span class="tw-font-bold tw-text-primary-700">停車中</span>
+            } @else {
+                <span aria-hidden="true">{{
+                    card().direction === 'inbound' ? '▲' : '▼'
+                }}</span>
+            }
+        </span>
+        @if (card().formationNumber) {
+            <span class="tw-truncate tw-font-bold tw-text-grey-900">
+                @if (card().formationAgencyName) {
+                    <span class="tw-font-normal tw-text-grey-500"
+                        >{{ card().formationAgencyName }}
+                    </span>
+                }
+                <span>{{ card().formationNumber }}</span>
+            </span>
+        }
+    </span>
+</div>

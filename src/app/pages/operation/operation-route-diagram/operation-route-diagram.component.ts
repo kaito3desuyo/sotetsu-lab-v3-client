@@ -1,75 +1,146 @@
-import { Component, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    inject,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RxState } from '@rx-angular/state';
-import { TitleService } from 'src/app/core/services/title.service';
+import { filter } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
+import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationRouteDiagramHeaderCComponent } from './components/operation-route-diagram-header-c/operation-route-diagram-header-c.component';
-import { OperationRouteDiagramMainCComponent } from './components/operation-route-diagram-main-c/operation-route-diagram-main-c.component';
+import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
+import { OperationRouteDiagramDrawingContainerComponent } from './components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
+import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
-import { OperationRouteDiagramStateQuery } from './states/operation-route-diagram.state';
+import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
+
+OperationRouteDiagramStore.resetLoading();
 
 @Component({
     selector: 'app-operation-route-diagram',
     templateUrl: './operation-route-diagram.component.html',
     styleUrls: ['./operation-route-diagram.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        OperationRouteDiagramHeaderCComponent,
-        OperationRouteDiagramMainCComponent,
+        MatProgressBarModule,
+        OperationRouteDiagramRouteFilterComponent,
+        OperationRouteDiagramDrawingContainerComponent,
+        OperationSearchCardCComponent,
     ],
-    providers: [RxState]
 })
 export class OperationRouteDiagramComponent {
+    readonly #destroyRef = inject(DestroyRef);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
-    readonly #state = inject<RxState<{}>>(RxState);
-    readonly #titleService = inject(TitleService);
     readonly #operationSearchCardService = inject(OperationSearchCardService);
+    readonly #operationSearchCardStateStore = inject(
+        OperationSearchCardStateStore,
+    );
     readonly #operationRouteDiagramService = inject(
         OperationRouteDiagramService,
     );
-    readonly #operationRouteDiagramStateQuery = inject(
-        OperationRouteDiagramStateQuery,
-    );
+
+    readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
 
     constructor() {
-        this.#state.hold(this.#route.data, ({ title }) => {
-            this.#titleService.setTitle(title);
-        });
+        this.#route.paramMap
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((paramMap) => {
+                const operationId = paramMap.get('operation_id');
 
-        this.#state.hold(
-            this.#operationSearchCardService.receiveSearchOperationTableEvent(),
-            (calendarId) => {
+                OperationRouteDiagramStore.setOperationId(operationId);
+                this.fetchData();
+            });
+
+        OperationRouteDiagramStore.calendar$
+            .pipe(
+                filter((calendar) => !!calendar),
+                takeUntilDestroyed(this.#destroyRef),
+            )
+            .subscribe((calendar) => {
+                this.#operationSearchCardStateStore.setCalendarId(
+                    calendar.calendarId,
+                );
+            });
+
+        OperationRouteDiagramStore.operation$
+            .pipe(
+                filter((operation) => !!operation),
+                takeUntilDestroyed(this.#destroyRef),
+            )
+            .subscribe((operation) => {
+                this.#operationSearchCardStateStore.setOperationId(
+                    operation.operationId,
+                );
+            });
+
+        this.#operationSearchCardService
+            .receiveSearchOperationTableEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((calendarId) => {
                 this.#router.navigate([
                     '/operation/table',
                     { calendar_id: calendarId },
                 ]);
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.#operationSearchCardService.receiveSearchOperationRouteDiagramEvent(),
-            (operationId) => {
+        this.#operationSearchCardService
+            .receiveSearchOperationRouteDiagramEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((operationId) => {
                 this.#router.navigate([
                     '/operation/route-diagram',
                     { operation_id: operationId },
                 ]);
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.#operationRouteDiagramService.receiveNavigateTimetableEvent(),
-            (ev) => {
+        this.#operationRouteDiagramService
+            .receiveNavigateTimetableEvent()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((ev) => {
                 this.#router.navigate([
                     '/timetable',
                     'all-line',
                     {
-                        calendar_id:
-                            this.#operationRouteDiagramStateQuery.calendarId,
+                        calendar_id: OperationRouteDiagramStore.calendarId,
                         trip_block_id: ev.tripBlockId,
                         trip_direction: ev.tripDirection,
                     },
                 ]);
-            },
+            });
+    }
+
+    /** G12: 空状態（運用番号未設定）の次アクション。運用表へ誘導する。 */
+    onEmptyStateActionClick(): void {
+        this.#router.navigate(['/operation/table']);
+    }
+
+    async fetchData(): Promise<void> {
+        if (!OperationRouteDiagramStore.operationId) return;
+
+        OperationRouteDiagramStore.enableLoading();
+
+        // 列車と駅は互いに依存しないので並行に取る
+        const results = await Promise.allSettled([
+            lastValueFrom(
+                this.#operationRouteDiagramService.fetchOperationTrips(),
+            ),
+            lastValueFrom(this.#operationRouteDiagramService.fetchStations()),
+        ]);
+
+        // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
+        OperationRouteDiagramStore.initializeSelectedRouteIds();
+        OperationRouteDiagramStore.disableLoading();
+
+        const failure = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
         );
+        if (failure) {
+            throw failure.reason;
+        }
     }
 }

@@ -1,0 +1,58 @@
+<div
+    class="tw-flex tw-flex-wrap tw-gap-x-4 tw-gap-y-1 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-3 tw-py-2 tw-text-xs tw-text-ink-2"
+>
+    @if (hasDeadhead()) {
+        <span class="tw-flex tw-items-center tw-gap-1.5 tw-whitespace-nowrap">
+            <svg width="24" height="4" aria-hidden="true">
+                <line
+                    x1="0"
+                    y1="2"
+                    x2="24"
+                    y2="2"
+                    stroke="#8a8a8a"
+                    stroke-width="2"
+                    stroke-dasharray="6 4"
+                ></line>
+            </svg>
+            回送
+        </span>
+    }
+    @if (hasDepotOut()) {
+        <span class="tw-flex tw-items-center tw-gap-1.5 tw-whitespace-nowrap">
+            <svg width="10" height="10" aria-hidden="true">
+                <circle
+                    cx="5"
+                    cy="5"
+                    r="3.5"
+                    fill="white"
+                    stroke="#8a8a8a"
+                    stroke-width="1.5"
+                ></circle>
+            </svg>
+            出庫
+        </span>
+    }
+    @if (hasDepotIn()) {
+        <span class="tw-flex tw-items-center tw-gap-1.5 tw-whitespace-nowrap">
+            <svg width="10" height="10" aria-hidden="true">
+                <polygon
+                    points="5,1 1.2,8 8.8,8"
+                    fill="white"
+                    stroke="#8a8a8a"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                ></polygon>
+            </svg>
+            入庫
+        </span>
+    }
+    @if (showCurrentTimeCursor()) {
+        <span class="tw-flex tw-items-center tw-gap-1.5 tw-whitespace-nowrap">
+            <span
+                class="tw-inline-block tw-h-1 tw-w-6 tw-shrink-0 tw-rounded-sm"
+                style="background-color: rgb(217, 83, 79)"
+            ></span>
+            現在時刻
+        </span>
+    }
+</div>

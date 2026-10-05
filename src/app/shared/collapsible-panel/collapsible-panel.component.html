@@ -1,0 +1,31 @@
+<div class="tw-flex tw-flex-col tw-bg-white tw-shadow">
+    <button
+        type="button"
+        class="tw-bg-transparent tw-flex tw-min-h-[44px] tw-w-full tw-cursor-pointer tw-items-center tw-gap-2 tw-border-0 tw-px-3 tw-py-2 tw-text-left"
+        [attr.aria-expanded]="expanded()"
+        (click)="toggle()"
+    >
+        <span class="tw-shrink-0 tw-text-xs tw-font-bold tw-text-grey-600">
+            {{ label() }}
+        </span>
+        @if (!expanded() && summary()) {
+            <span
+                class="tw-min-w-0 tw-flex-1 tw-truncate tw-text-xs tw-text-grey-800"
+                data-testid="collapsible-panel-summary"
+            >
+                {{ summary() }}
+            </span>
+        }
+        <mat-icon class="tw-ml-auto tw-shrink-0 tw-text-grey-600">
+            {{ expanded() ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
+    </button>
+
+    <div
+        class="tw-flex tw-flex-col tw-gap-3 tw-px-3 tw-pb-3"
+        [class.tw-hidden]="!expanded()"
+        data-testid="collapsible-panel-content"
+    >
+        <ng-content></ng-content>
+    </div>
+</div>

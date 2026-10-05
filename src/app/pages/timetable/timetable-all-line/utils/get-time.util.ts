@@ -1,18 +1,8 @@
-import { format, parse } from 'date-fns';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
-import { getBorderSetting } from './get-border-setting.util';
-import { getViewMode } from './get-view-mode.util';
-
-function _formatTime(timeString: string): string {
-    const date = parse(timeString, 'HH:mm:ss', new Date());
-    let time = format(date, 'Hmm');
-    if (time.length === 3) {
-        time = '-' + time;
-    }
-    return timeString ? time : '';
-}
+import { formatDiaTime } from './format-dia-time.util';
+import { hiddenStopsAround } from './trip-endpoints.util';
 
 export function getTime({
     tripDirection,
@@ -20,14 +10,19 @@ export function getTime({
     station,
     trip,
     stations,
-    trips,
+    previousTrip,
+    viewModes,
+    bordersAfter,
 }: {
     tripDirection: 0 | 1;
     mode: 'arrival' | 'departure';
     station: StationDetailsDto;
     trip: TripDetailsDto;
     stations: StationDetailsDto[];
-    trips: TripDetailsDto[];
+    /** 列の並びで 1 つ前の列車。ページ分けの前の並びから引く（前のページにあっても同じ運行の印を出すため） */
+    previousTrip?: TripDetailsDto;
+    viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
+    bordersAfter: ReadonlyMap<string, boolean>;
 }): string {
     const time = trip.times.find((o) => {
         return o.stationId === station.stationId;
@@ -35,8 +30,7 @@ export function getTime({
     const stationIndex = stations.findIndex(
         (o) => o.stationId === station.stationId,
     );
-    const tripIndex = trips.findIndex((o) => o.tripId === trip.tripId);
-    const viewMode = getViewMode(station, tripDirection);
+    const viewMode = viewModes.get(station.stationId);
 
     if (time) {
         switch (true) {
@@ -51,16 +45,10 @@ export function getTime({
                     return '↓';
                 }
 
-                const minus1Trip = trips[tripIndex - 1];
-                // const plus1Time = trip.times.find((o) => {
-                //     return (
-                //         o.stationId === stations[stationIndex + 1].stationId
-                //     );
-                // });
+                const minus1Trip = previousTrip;
                 if (
                     minus1Trip &&
                     minus1Trip.tripBlockId === trip.tripBlockId &&
-                    // plus1Time &&
                     minus1Trip.times.some(
                         (o) => o.stationId === station.stationId,
                     )
@@ -72,7 +60,7 @@ export function getTime({
                     return '‥';
                 }
 
-                return _formatTime(time.arrivalTime);
+                return formatDiaTime(time.arrivalTime);
             case mode === 'arrival':
                 if (
                     time.pickupType === 1 &&
@@ -81,7 +69,7 @@ export function getTime({
                 ) {
                     return '↓';
                 }
-                return _formatTime(time.arrivalTime);
+                return formatDiaTime(time.arrivalTime);
             case mode === 'departure' &&
                 viewMode === ETimetableAllLineStationViewMode.ONLY_DEPARTURE:
                 if (
@@ -93,10 +81,10 @@ export function getTime({
                 }
 
                 if (!time.departureTime) {
-                    return _formatTime(time.arrivalTime);
+                    return formatDiaTime(time.arrivalTime);
                 }
 
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
             case mode === 'departure' &&
                 viewMode ===
                     ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL:
@@ -112,7 +100,7 @@ export function getTime({
                     return '‥';
                 }
 
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
             case mode === 'departure':
                 if (
                     time.pickupType === 1 &&
@@ -121,7 +109,7 @@ export function getTime({
                 ) {
                     return '↓';
                 }
-                return _formatTime(time.departureTime);
+                return formatDiaTime(time.departureTime);
         }
     } else {
         let isExistTimeBeforeStation = false;
@@ -145,17 +133,29 @@ export function getTime({
             return '|';
         }
 
+        // 路線の絞り込みで始発駅・終着駅が隠れた列車は、表の上端・下端まで「経由なし」を
+        // 伸ばし、表の外から来て表の外へ出ることを示す（ユーザー指示 2026-09-24）。
+        // 終着の区切り「=」は出さない（列車は隠れた駅へ続いている）
+        const hidden = hiddenStopsAround(trip, viewModes);
+        if (
+            (!isExistTimeBeforeStation &&
+                isExistTimeAfterStation &&
+                hidden.before) ||
+            (isExistTimeBeforeStation &&
+                !isExistTimeAfterStation &&
+                hidden.after)
+        ) {
+            return '|';
+        }
+
         const minus1Station = stations[stationIndex - 1];
 
         if (minus1Station) {
-            const minus1StationViewMode = getViewMode(
-                minus1Station,
-                tripDirection,
+            const minus1StationViewMode = viewModes.get(
+                minus1Station.stationId,
             );
-            const minus1BorderSetting = getBorderSetting(
-                minus1Station,
-                tripDirection,
-            );
+            const minus1BorderSetting =
+                bordersAfter.get(minus1Station.stationId) ?? false;
             const minus1Time = trip.times.find((o) => {
                 return o.stationId === minus1Station.stationId;
             });
@@ -178,11 +178,8 @@ export function getTime({
         const plus1Station = stations[stationIndex + 1];
 
         if (plus1Station) {
-            const minus1Trip = trips[tripIndex - 1];
-            const plus1StationViewMode = getViewMode(
-                plus1Station,
-                tripDirection,
-            );
+            const minus1Trip = previousTrip;
+            const plus1StationViewMode = viewModes.get(plus1Station.stationId);
             const plus1Time = trip.times.find((o) => {
                 return o.stationId === plus1Station.stationId;
             });

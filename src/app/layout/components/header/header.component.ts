@@ -4,6 +4,7 @@ import {
     ChangeDetectionStrategy,
     Component,
     inject,
+    input,
     output,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -46,6 +47,12 @@ export class HeaderComponent {
 
     readonly isLoggedIn = toSignal(this.#userStateQuery.isLoggedIn$);
     readonly displayName = toSignal(this.#userStateQuery.displayName$);
+
+    /**
+     * 現在ページ名。指定時はツールバーにページ名を表示する（モック全ページの
+     * トップバー準拠）。空のとき（ホーム等）は従来どおり「Sotetsu Lab.」。
+     */
+    readonly pageTitle = input<string>('');
 
     clickButton = output<void>();
 

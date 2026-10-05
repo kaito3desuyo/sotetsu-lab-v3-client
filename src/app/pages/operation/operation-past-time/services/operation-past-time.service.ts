@@ -3,34 +3,32 @@ import { format } from 'date-fns';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
-import {
-    OperationPastTimeStateQuery,
-    OperationPastTimeStateStore,
-} from '../states/operation-past-time.state';
-import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
+import { OperationPastTimeStore } from '../stores/operation-past-time.store';
 
 @Injectable()
 export class OperationPastTimeService {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #operationPastTimeStateStore = inject(OperationPastTimeStateStore);
-    readonly #operationPastTimeStateQuery = inject(OperationPastTimeStateQuery);
 
     fetchCalendarByDate(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
-            this.#operationPastTimeStateStore.setCalendars([]);
+            OperationPastTimeStore.setCalendars([]);
             return of(undefined);
         }
 
@@ -42,17 +40,17 @@ export class OperationPastTimeService {
             ),
         ).pipe(
             tap((calendars) => {
-                this.#operationPastTimeStateStore.setCalendars(calendars);
+                OperationPastTimeStore.setCalendars(calendars);
             }),
             map(() => undefined),
         );
     }
 
     fetchFormations(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
-            this.#operationPastTimeStateStore.setFormations([]);
+            OperationPastTimeStore.setFormations([]);
             return of(undefined);
         }
 
@@ -63,26 +61,39 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((formations: FormationDetailsDto[]) => {
-                    const agencies = this.#agencyListStateQuery.agencies;
-                    this.#operationPastTimeStateStore.setFormations(
-                        [...formations].sort(
-                            (a, b) =>
+                    // 会社の順は相鉄と直通を始めた順（会社チップと同じ。agenciesInThroughServiceOrder）
+                    const agencies = agenciesInThroughServiceOrder(
+                        this.#agencyListStateQuery.agencies,
+                        this.#routeStationListStateQuery.routeStations,
+                    );
+                    OperationPastTimeStore.setFormations(
+                        [...formations].sort((a, b) => {
+                            const agencyDiff =
                                 agencies.findIndex(
                                     (v) => v.agencyId === a.agencyId,
                                 ) -
                                 agencies.findIndex(
                                     (v) => v.agencyId === b.agencyId,
-                                ),
-                        ),
+                                );
+                            if (agencyDiff !== 0) {
+                                return agencyDiff;
+                            }
+                            // 会社内は編成番号の数値順（API 返却順のままだと
+                            // 東急・相鉄の一部で番号が前後するため）。
+                            return (a.formationNumber ?? '').localeCompare(
+                                b.formationNumber ?? '',
+                                undefined,
+                                { numeric: true },
+                            );
+                        }),
                     );
                 }),
                 map(() => undefined),
             );
     }
 
-    // v3
     fetchOperationsV3(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
+        const dates = OperationPastTimeStore.dates;
 
         if (!dates.length) {
             return of(undefined);
@@ -95,16 +106,15 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((operations: OperationDetailsDto[]) => {
-                    this.#operationPastTimeStateStore.setOperations(operations);
+                    OperationPastTimeStore.setOperations(operations);
                 }),
                 map(() => undefined),
             );
     }
 
     fetchOperationSightingsV3(): Observable<void> {
-        const dates = this.#operationPastTimeStateQuery.dates;
-        const includeInvalidated =
-            this.#operationPastTimeStateQuery.includeInvalidated;
+        const dates = OperationPastTimeStore.dates;
+        const includeInvalidated = OperationPastTimeStore.includeInvalidated;
 
         if (!dates.length) {
             return of(undefined);
@@ -118,9 +128,7 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((sightings: OperationSightingDetailsDto[]) => {
-                    this.#operationPastTimeStateStore.setOperationSightings(
-                        sightings,
-                    );
+                    OperationPastTimeStore.setOperationSightings(sightings);
                 }),
                 map(() => undefined),
             );

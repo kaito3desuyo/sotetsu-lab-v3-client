@@ -1,15 +1,7 @@
-<article
-    class="tw-box-border tw-flex tw-h-full tw-w-full tw-flex-col tw-gap-4 tw-bg-white tw-p-4 tw-shadow-md"
->
-    <header>
-        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">時刻表</h2>
-        <p class="tw-m-0 tw-text-sm tw-text-grey-700">
-            相鉄線の時刻表を検索できます。
-        </p>
-    </header>
+<app-panel-card heading="時刻表を検索する">
     <div class="tw-flex-grow">
         <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
-            <mat-form-field appearance="fill">
+            <mat-form-field>
                 <mat-label>ダイヤ</mat-label>
                 <mat-select formControlName="calendarId">
                     @for (calendar of calendars(); track calendar.calendarId) {
@@ -18,7 +10,7 @@
                                 calendar.startDate
                                     | dateFns
                                         : {
-                                              format: 'yyyy年MM月dd日改正',
+                                              format: 'yyyy/M/d改正',
                                               parseFormat: 'yyyy-MM-dd',
                                           }
                             }}
@@ -31,29 +23,27 @@
                 }
             </mat-form-field>
 
-            <mat-radio-group
-                class="tw-flex tw-flex-row tw-gap-4"
-                formControlName="tripDirection"
-            >
-                <mat-radio-button [value]="0">上り</mat-radio-button>
-                <mat-radio-button [value]="1">下り</mat-radio-button>
-            </mat-radio-group>
+            <app-segment-toggle
+                [options]="tripDirectionOptions"
+                [value]="tripDirection()"
+                (valueChange)="onTripDirectionChange($event)"
+            ></app-segment-toggle>
 
-            <mat-slide-toggle formControlName="searchByStation">
+            <mat-slide-toggle color="accent" formControlName="searchByStation">
                 駅を指定して検索する
             </mat-slide-toggle>
 
-            <mat-form-field appearance="fill">
+            <mat-form-field>
                 <mat-label>駅名</mat-label>
                 <mat-select formControlName="stationId">
-                    @for (rsl of routeStationLists(); track rsl.routeId) {
-                        <mat-optgroup [label]="rsl.routeName">
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
                             @for (
-                                rsl2 of rsl.routeStationLists;
-                                track rsl2.stationId
+                                station of group.stations;
+                                track station.stationId
                             ) {
-                                <mat-option [value]="rsl2.stationId">
-                                    {{ rsl2.station.stationName }}
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
                                 </mat-option>
                             }
                         </mat-optgroup>
@@ -65,15 +55,13 @@
             </mat-form-field>
         </form>
     </div>
-    <footer class="tw-flex tw-flex-row tw-justify-end">
-        <button
+    <footer class="tw-flex tw-flex-col">
+        <app-button
             type="button"
-            color="primary"
-            mat-raised-button
             [disabled]="form.invalid"
-            (click)="clickSearch.emit(form.value)"
+            (buttonClick)="clickSearch.emit(form.value)"
         >
             検索
-        </button>
+        </app-button>
     </footer>
-</article>
+</app-panel-card>

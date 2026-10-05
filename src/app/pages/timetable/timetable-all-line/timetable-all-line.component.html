@@ -1,8 +1,45 @@
-<main class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-16">
-    <header>
-        <app-timetable-all-line-header-c></app-timetable-all-line-header-c>
-    </header>
-    <div>
-        <app-timetable-all-line-main-c></app-timetable-all-line-main-c>
-    </div>
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
+         偽表示になるため、ロード完了までチップ・テーブルを出さない。
+         読み込み中の合図はロック済みページと同じくトップバー直下のプログレスバーだけ。
+         以前は中央にスピナーも出していたが、プログレスバーと二重の合図だったので外した
+         （2026-09-24） -->
+    @if (isLoading()) {
+        <div
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]"
+        >
+            <mat-progress-bar
+                color="accent"
+                mode="indeterminate"
+            ></mat-progress-bar>
+        </div>
+    } @else {
+        <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
+
+        <app-timetable-all-line-table
+            [calendar]="calendar()"
+            [tripDirection]="tripDirection()"
+            [stations]="stations()"
+            [trips]="trips()"
+            [pageSettings]="pageSettings()"
+            [viewModes]="viewModes()"
+            [bordersAfter]="bordersAfter()"
+            [endpoints]="endpoints()"
+            [previousTrips]="previousTrips()"
+            (page)="onPaged($event)"
+            (clickEditButton)="onClickedEditButton($event)"
+            (clickCopyButton)="onClickedCopyButton($event)"
+            (clickDeleteButton)="onClickedDeleteButton($event)"
+            (clickAddTripInGroup)="onClickedAddTripInGroup($event)"
+            (clickDeleteTripInGroup)="onClickedDeleteTripInGroup($event)"
+            (toggleDirection)="onToggleDirection()"
+        ></app-timetable-all-line-table>
+    }
+
+    <!-- 検索カードを広告より前に置く。時刻表が未選択のとき、このページで唯一の
+         操作要素である検索カードが 280px の広告に押し下げられてフォールド外に
+         出ていた（audit M5）。 -->
+    <app-timetable-search-card-c></app-timetable-search-card-c>
 </main>

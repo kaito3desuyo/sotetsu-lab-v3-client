@@ -1,0 +1,103 @@
+<section
+    class="tw-flex tw-flex-col tw-gap-2 tw-rounded-card tw-bg-white tw-p-4"
+>
+    <h2 class="tw-m-0 tw-text-base tw-font-bold tw-text-ink">最新の目撃情報</h2>
+
+    @if (isLoading() && items().length === 0) {
+        <!-- 取得中は「まだありません」を先に出さず骨組みを置く -->
+        <div class="tw-flex tw-flex-col" aria-label="読み込み中">
+            @for (row of skeletonRows; track row) {
+                <div
+                    class="tw-flex tw-flex-row tw-items-center tw-gap-3 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-py-2 first:tw-border-t-0"
+                >
+                    <span
+                        class="tw-block tw-h-5 tw-w-8 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                    <span
+                        class="tw-block tw-h-5 tw-w-14 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                    <span
+                        class="tw-block tw-h-5 tw-flex-grow tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                </div>
+            }
+        </div>
+    } @else if (items().length === 0) {
+        <p class="tw-m-0 tw-text-sm tw-text-muted">
+            本日の目撃情報はまだありません
+        </p>
+    } @else {
+        <div class="tw-flex tw-flex-col">
+            @for (item of items(); track item.sighting.operationSightingId) {
+                <!-- operation/real-time のカードと同じ 2 段構成。
+                     行を <a> にしないのは、運用チップと種別・列番がそれぞれ
+                     リンクを持ち、入れ子のリンクになるため。 -->
+                <div
+                    class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-center tw-gap-x-3 tw-gap-y-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-py-2 tw-text-ink first:tw-border-t-0"
+                >
+                    @if (item.operationNumber) {
+                        <app-new-operation-number-link
+                            [text]="item.operationNumber"
+                            [bgColor]="
+                                item.operationNumber | newOperationNumberColor
+                            "
+                            [link]="[
+                                '/operation',
+                                'route-diagram',
+                                { operation_id: item.sighting.operationId },
+                            ]"
+                        ></app-new-operation-number-link>
+                    } @else {
+                        <span class="tw-text-sm tw-text-muted">不明</span>
+                    }
+
+                    <!-- 編成番号と形式・会社は横 1 行、入らなければ折り返す
+                         （real-time の運用順カードと同じ。docs/design.md）。 -->
+                    <div
+                        class="tw-flex tw-min-w-0 tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-2"
+                    >
+                        <span
+                            class="tw-text-sm tw-font-bold tw-tabular-nums tw-leading-tight"
+                        >
+                            {{ item.formationNumber ?? '不明' }}
+                        </span>
+                        @if (item.formationAnnotation) {
+                            <span class="tw-text-xs tw-text-muted">
+                                {{ item.formationAnnotation }}
+                            </span>
+                        }
+                    </div>
+
+                    <span class="tw-text-xs tw-tabular-nums tw-text-muted">
+                        @if (item.sighting.sightingTime) {
+                            {{
+                                item.sighting.sightingTime
+                                    | dateFns
+                                        : { format: 'HH:mm', parseISO: true }
+                            }}
+                        }
+                    </span>
+
+                    <!-- 下段はカードの左端から全幅（real-time と同じ）。 -->
+                    @if (item.hasPosition) {
+                        <div
+                            class="tw-col-span-3 tw-grid tw-min-w-0 tw-grid-cols-[2.5rem_1fr] tw-items-center tw-gap-x-2"
+                        >
+                            <span
+                                class="tw-whitespace-nowrap tw-text-[10px] tw-leading-tight tw-text-muted"
+                            >
+                                目撃時
+                            </span>
+                            <app-trip-position
+                                [position]="item.position"
+                                [stations]="stations()"
+                                [tripClasses]="tripClasses()"
+                                [calendarId]="calendarId()"
+                            ></app-trip-position>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>

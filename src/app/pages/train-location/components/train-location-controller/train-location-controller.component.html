@@ -1,0 +1,78 @@
+<!-- 表示設定は畳まず 2 行（ユーザー判断 2026-09-26）。
+     1 行目: 路線チップ（全線時刻表と同じ横スクロール 1 行・会社名は行の中の小見出し）
+     2 行目: 時計と時刻の操作（現在時刻/時刻指定・表示時刻・ダイヤ） -->
+<div
+    class="tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-3 tw-pt-2"
+>
+    <app-filter-chips
+        mode="single"
+        [scrollMode]="true"
+        [options]="routeOptions()"
+        [selected]="selectedRouteIdValue()"
+        (selectedChange)="onRouteChange($event)"
+    ></app-filter-chips>
+
+    <div
+        class="tw-flex tw-min-h-14 tw-flex-wrap tw-items-center tw-gap-x-4 tw-gap-y-2 tw-py-2"
+    >
+        <span
+            data-clock
+            class="tw-text-2xl tw-font-bold tw-tabular-nums tw-text-ink"
+            >{{ clockText() }}</span
+        >
+
+        <app-segment-toggle
+            class="tw-w-48"
+            [options]="modeOptions"
+            [value]="mode()"
+            (valueChange)="onModeChange($event)"
+        ></app-segment-toggle>
+
+        @if (mode() === 'specified') {
+            <mat-form-field subscriptSizing="dynamic" class="tw-w-28">
+                <mat-label>表示時刻</mat-label>
+                <input
+                    matInput
+                    type="time"
+                    aria-label="表示時刻を指定する"
+                    class="tw-tabular-nums"
+                    [ngModel]="timeInputValue()"
+                    (ngModelChange)="onTimeInputChange($event)"
+                />
+            </mat-form-field>
+            <mat-form-field
+                subscriptSizing="dynamic"
+                class="tw-min-w-0 tw-flex-1 sm:tw-w-64 sm:tw-flex-none"
+            >
+                <mat-label>ダイヤ</mat-label>
+                <mat-select
+                    [value]="calendarId()"
+                    (selectionChange)="onCalendarChange($event.value)"
+                >
+                    <!-- 選んだ値は短い書き方（スマホ幅でダイヤ名まで切れずに見せる） -->
+                    <mat-select-trigger>{{
+                        calendarLabel()
+                    }}</mat-select-trigger>
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        } @else {
+            <!-- 現在時刻では今日のダイヤに固定されるので、選択欄ではなく字で示す -->
+            <span data-calendar-label class="tw-text-sm tw-text-ink-2">{{
+                calendarLabel()
+            }}</span>
+        }
+    </div>
+</div>

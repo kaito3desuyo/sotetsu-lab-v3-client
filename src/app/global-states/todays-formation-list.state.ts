@@ -11,7 +11,9 @@ import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from '../libs/formation/usecase/formation.service';
+import { agenciesInThroughServiceOrder } from '../shared/agencies-in-through-service-order.util';
 import { AgencyListStateQuery } from './agency-list.state';
+import { RouteStationListStateQuery } from './route-station-list.state';
 
 type State = FormationDetailsDto;
 
@@ -46,6 +48,7 @@ export class TodaysFormationListStateStore {
 @Injectable({ providedIn: 'root' })
 export class TodaysFormationListStateQuery {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
 
     readonly todaysFormations$ = state.pipe(
         selectEntities(),
@@ -56,10 +59,24 @@ export class TodaysFormationListStateQuery {
     readonly todaysFormationsSorted$ = this.todaysFormations$.pipe(
         map((formations) =>
             [...formations].sort((a, b) => {
-                const agencies = this.#agencyListStateQuery.agencies;
+                // 会社の順は相鉄と直通を始めた順（会社チップと同じ。agenciesInThroughServiceOrder）
+                const agencies = agenciesInThroughServiceOrder(
+                    this.#agencyListStateQuery.agencies,
+                    this.#routeStationListStateQuery.routeStations,
+                );
                 const getIndex = (agencyId: string) =>
                     agencies.findIndex((v) => v.agencyId === agencyId);
-                return getIndex(a.agencyId) - getIndex(b.agencyId);
+                const agencyDiff = getIndex(a.agencyId) - getIndex(b.agencyId);
+                if (agencyDiff !== 0) {
+                    return agencyDiff;
+                }
+                // 会社内は編成番号の数値順（API 返却順のままだと東急・相鉄の
+                // 一部で番号が前後するため）。
+                return (a.formationNumber ?? '').localeCompare(
+                    b.formationNumber ?? '',
+                    undefined,
+                    { numeric: true },
+                );
             }),
         ),
     );

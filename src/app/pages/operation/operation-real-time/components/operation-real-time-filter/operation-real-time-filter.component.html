@@ -1,0 +1,20 @@
+<div class="tw-flex tw-flex-col tw-gap-2">
+    <p class="tw-m-0 tw-text-xs tw-text-grey-600">絞り込み</p>
+    <!-- 会社と運用群は段を分ける（ユーザー指示 2026-08-22）。
+         1 行に混在させると、どちらの軸で絞っているのか読み取りにくく、
+         横スクロールでどちらかが見切れる。 -->
+    <app-filter-chips
+        mode="multiple"
+        [scrollMode]="true"
+        [options]="agencyOptions()"
+        [selected]="selectedAgencyIds()"
+        (selectedChange)="onAgencyChange($event)"
+    ></app-filter-chips>
+    <app-filter-chips
+        mode="multiple"
+        [scrollMode]="true"
+        [options]="groupOptions()"
+        [selected]="selectedGroupNames()"
+        (selectedChange)="onGroupChange($event)"
+    ></app-filter-chips>
+</div>

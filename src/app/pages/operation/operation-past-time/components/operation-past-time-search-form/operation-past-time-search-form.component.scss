@@ -1,3 +1,6 @@
 :host {
   display: block;
 }
+
+// 検索ボタンは app-button（primary variant）に統一（98 G0-4）。
+// オレンジ地・15px 以上・bold は app-button.component.scss 側で担保する。

@@ -1,8 +1,8 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
+import { persistState, StateStorage } from '@ngneat/elf-persist-state';
 import { addDays, getHours, parse } from 'date-fns';
 import localForage from 'localforage';
-import { debounceTime } from 'rxjs';
+import { debounceTime, map } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -10,17 +10,23 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 type StoreProps = {
     routes: RouteDetailsDto[];
+    /** 編成順カードの会社の並び（agencyId）。相鉄と直通を始めた順（agenciesInThroughServiceOrder） */
+    agencyOrder: string[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     calendar: CalendarDetailsDto;
     operations: OperationDetailsDto[];
     formations: FormationDetailsDto[];
+    operationGroups: OperationGroupDto[];
+    selectedAgencyIds: string[];
+    selectedGroupNames: string[];
     operationSightingTimeCrossSections: Record<
         string,
         OperationSightingTimeCrossSectionDto
@@ -43,11 +49,15 @@ const store = createStore(
     { name: 'OperationRealTimeStore' },
     withProps<StoreProps>({
         routes: [],
+        agencyOrder: [],
         stations: [],
         tripClasses: [],
         calendar: null,
         operations: [],
         formations: [],
+        operationGroups: [],
+        selectedAgencyIds: [],
+        selectedGroupNames: [],
         operationSightingTimeCrossSections: {},
         formationSightingTimeCrossSections: {},
         operationSightingHistories: {},
@@ -61,15 +71,68 @@ const store = createStore(
     }),
 );
 
+/**
+ * 永続化対象は UI 選択状態のみ（B2/B3: フィルタ選択・トグルの復元）。
+ *
+ * かつては全ストアを永続化していたが、elf-persist-state の復元は
+ * `{...state, ...snapshot}` の後勝ちマージであり localForage(IndexedDB) の
+ * 復元は非同期のため、フェッチ済みの新鮮なデータ props
+ * （operationGroups / currentPositions 等）を過去セッションのスナップショット
+ * （群フェッチ完了前に保存された空配列を含む）で上書きしていた。
+ * これが「運用群チップが『休』のみになる」（98 §G2 A3）・
+ * 「カードの現在位置行が消える」（同 A4）の真因。
+ * データ props を永続化対象から外すことで、復元がデータを壊す経路を絶つ。
+ */
+const PERSISTED_KEYS = [
+    'selectedAgencyIds',
+    'selectedGroupNames',
+    'isEnableAutoReload',
+    'isVisibleSightingHistories',
+    'isVisibleCurrentPosition',
+] as const;
+
+function pickPersistedProps(state: Partial<StoreProps>): Partial<StoreProps> {
+    const picked: Record<string, unknown> = {};
+    for (const key of PERSISTED_KEYS) {
+        if (key in state) {
+            picked[key] = state[key];
+        }
+    }
+    return picked as Partial<StoreProps>;
+}
+
+/**
+ * 旧形式スナップショット（全ストア永続化時代）にはデータ props が
+ * 含まれたまま残っているため、復元時にも永続化対象キーのみへ
+ * サニタイズする（保存側の source 絞り込みだけでは初回復元で汚染される）。
+ */
+const persistStorage: StateStorage = {
+    async getItem<T extends Record<string, any>>(
+        key: string,
+    ): Promise<T | null> {
+        const value = await localForage.getItem<Partial<StoreProps>>(key);
+        return (value ? pickPersistedProps(value) : value) as T | null;
+    },
+    setItem(key: string, value: Record<string, any>): Promise<unknown> {
+        return localForage.setItem(key, value);
+    },
+    removeItem(key: string): Promise<void> {
+        return localForage.removeItem(key);
+    },
+};
+
 const persist = persistState(store, {
     key: 'OperationRealTimeStore',
-    storage: localForage,
-    source: () => store.pipe(debounceTime(1000)),
+    storage: persistStorage,
+    source: () => store.pipe(debounceTime(1000), map(pickPersistedProps)),
 });
 
 export const OperationRealTimeStore = {
     persistInitialized$: persist.initialized$,
 
+    setAgencyOrder(agencyIds: string[]): void {
+        store.update(setProp('agencyOrder', () => agencyIds));
+    },
     setRoutes(routes: RouteDetailsDto[]): void {
         store.update(setProp('routes', () => routes));
     },
@@ -87,6 +150,15 @@ export const OperationRealTimeStore = {
     },
     setFormations(formations: FormationDetailsDto[]): void {
         store.update(setProp('formations', () => formations));
+    },
+    setOperationGroups(operationGroups: OperationGroupDto[]): void {
+        store.update(setProp('operationGroups', () => operationGroups));
+    },
+    setSelectedAgencyIds(agencyIds: string[]): void {
+        store.update(setProp('selectedAgencyIds', () => agencyIds));
+    },
+    setSelectedGroupNames(groupNames: string[]): void {
+        store.update(setProp('selectedGroupNames', () => groupNames));
     },
     setOperationSightingTimeCrossSection(
         operationNumber: string,
@@ -181,25 +253,29 @@ export const OperationRealTimeStore = {
                 ),
         ),
     ),
+    /**
+     * 編成順カードの並び。会社は相鉄と直通を始めた順（会社チップと同じ。2026-09-24）、会社内は編成番号の順。
+     * 以前の「相鉄・JR東日本・東急」の決め打ちはこの歴史による。ほかの会社に順位が無かったので、
+     * 一覧（THROUGH_SERVICE_AGENCY_ORDER）で持つようにした。
+     */
     formations$: store.pipe(
-        select((state) =>
-            state.formations
+        select((state) => {
+            const rank = (agencyId: string): number => {
+                const index = state.agencyOrder.indexOf(agencyId);
+                return index < 0 ? Infinity : index;
+            };
+            return state.formations
                 .sort(
                     (a, b) =>
                         Number(a.formationNumber) - Number(b.formationNumber),
                 )
-                .sort((a, b) => {
-                    const index = {
-                        相鉄: 0,
-                        JR東日本: 1,
-                        東急: 2,
-                    };
-
-                    return (
-                        index[a.agency.agencyName] - index[b.agency.agencyName]
-                    );
-                }),
-        ),
+                .sort((a, b) => rank(a.agencyId) - rank(b.agencyId));
+        }),
+    ),
+    operationGroups$: store.pipe(select((state) => state.operationGroups)),
+    selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),
+    selectedGroupNames$: store.pipe(
+        select((state) => state.selectedGroupNames),
     ),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),

@@ -20,4 +20,13 @@ describe('SidenavComponent', () => {
     it('should create', () => {
         expect(component).toBeTruthy();
     });
+
+    it('駅を選ばなければ上り/下りの行き先は「全線時刻表」と書く', () => {
+        expect(component.timetableLinkPrefix()).toBe('全線時刻表');
+    });
+
+    it('一覧に無い駅が選ばれたら「駅別時刻表」と書く', () => {
+        component.stationId.setValue('unknown-station');
+        expect(component.timetableLinkPrefix()).toBe('駅別時刻表');
+    });
 });

@@ -1,0 +1,24 @@
+:host {
+    ::ng-deep.mat-mdc-icon-button .mat-mdc-button-touch-target {
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    // G5: mockup-05 は件数セレクト＋件数表示＋前後シェブロンをテーブル直上の 1 行に収める。
+    // Material のデフォルトは flex-wrap のため 390px 幅で 2 行に分裂する → 折り返し禁止 + 余白圧縮。
+    ::ng-deep .mat-mdc-paginator-container {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        padding: 0;
+        min-height: auto;
+    }
+
+    ::ng-deep .mat-mdc-paginator-page-size {
+        margin-right: 4px;
+    }
+
+    ::ng-deep .mat-mdc-paginator-range-label {
+        margin: 0 8px;
+        white-space: nowrap;
+    }
+}

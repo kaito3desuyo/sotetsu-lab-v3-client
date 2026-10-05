@@ -1,42 +1,37 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterLink } from '@angular/router';
-import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
-import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
-import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
 import {
-    OperationRealTimeTableColumn,
-    OperationRealTimeTableColumnLabel,
-} from '../../enums/operation-real-time.enum';
-import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
+import { matchesAgencyFilter } from '../../utils/operation-real-time-filter.util';
+import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
 
 @Component({
     selector: 'app-operation-real-time-operation-table',
     templateUrl: './operation-real-time-operation-table.component.html',
     styleUrl: './operation-real-time-operation-table.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        RouterLink,
-        MatIconModule,
-        MatTooltipModule,
-        NewOperationNumberLinkComponent,
-        DateFnsPipe,
-        NewFindByIdPipe,
-        NewAntiBracketsPipe,
-        NewOperationNumberColorPipe,
-        OperationRealTimeDayCountPipe,
-    ],
+    imports: [EmptyStateComponent, OperationRealTimeOperationCardComponent],
 })
 export class OperationRealTimeOperationTableComponent {
-    readonly operationRealTimeTableColumn = OperationRealTimeTableColumn;
-    readonly operationRealTimeTableColumnLabel =
-        OperationRealTimeTableColumnLabel;
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
 
+    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+    /**
+     * 目撃データの取得中フラグ。カードへ渡して、未到着と「目撃が無い」を
+     * 区別させる（audit M4）。ページ上部の進捗バーと同じ出所。
+     */
+    readonly isLoading = toSignal(OperationRealTimeStore.isLoading$, {
+        initialValue: false,
+    });
     readonly stations = toSignal(OperationRealTimeStore.stations$);
     readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
     readonly calendar = toSignal(OperationRealTimeStore.calendar$);
@@ -57,26 +52,42 @@ export class OperationRealTimeOperationTableComponent {
     readonly isVisibleSightingHistories = toSignal(
         OperationRealTimeStore.isVisibleSightingHistories$,
     );
+    readonly selectedAgencyIds = toSignal(
+        OperationRealTimeStore.selectedAgencyIds$,
+        { initialValue: [] },
+    );
+    readonly selectedGroupNames = toSignal(
+        OperationRealTimeStore.selectedGroupNames$,
+        { initialValue: [] },
+    );
 
-    readonly displayedColumns = computed(() => {
-        const isVisibleSightingHistories = this.isVisibleSightingHistories();
-        const isVisibleCurrentPosition = this.isVisibleCurrentPosition();
+    readonly filteredOperations = computed(() => {
+        const operations = this.operations() ?? [];
+        const selectedAgencyIds = this.selectedAgencyIds();
+        const selectedGroupNames = this.selectedGroupNames();
+        const timeCrossSections = this.timeCrossSections() ?? {};
+        const formations = this.formations() ?? [];
 
-        return [
-            OperationRealTimeTableColumn.OPERATION_NUMBER,
-            OperationRealTimeTableColumn.FORMATION_NUMBER,
-            OperationRealTimeTableColumn.SIGHTING_HISTORIES,
-            OperationRealTimeTableColumn.CURRENT_POSITION,
-            OperationRealTimeTableColumn.SIGHTING_TIME,
-            OperationRealTimeTableColumn.UPDATED_AT,
-        ].filter((column) => {
-            if (column === OperationRealTimeTableColumn.SIGHTING_HISTORIES) {
-                return isVisibleSightingHistories;
+        return operations.filter((operation) => {
+            if (
+                !matchesGroupFilter(
+                    operation.operationNumber,
+                    selectedGroupNames,
+                )
+            ) {
+                return false;
             }
-            if (column === OperationRealTimeTableColumn.CURRENT_POSITION) {
-                return isVisibleCurrentPosition;
-            }
-            return true;
+
+            const expectedFormation =
+                timeCrossSections[operation.operationNumber]?.expectedSighting
+                    ?.formation;
+            const agencyId = expectedFormation
+                ? formations.find(
+                      (f) => f.formationId === expectedFormation.formationId,
+                  )?.agencyId
+                : undefined;
+
+            return matchesAgencyFilter(agencyId, selectedAgencyIds);
         });
     });
 
@@ -90,7 +101,7 @@ export class OperationRealTimeOperationTableComponent {
     readonly queryHistoriesByOperationNumber = (operationNumber: string) =>
         computed(() => {
             const histories = this.histories();
-            return [...(histories[operationNumber] ?? [])].reverse();
+            return histories[operationNumber] ?? [];
         });
     readonly queryCurrentPositionByOperationNumber = (
         operationNumber: string,

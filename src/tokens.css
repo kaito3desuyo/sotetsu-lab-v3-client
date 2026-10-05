@@ -1,0 +1,108 @@
+/* Hallmark · genre: modern-minimal · design-system: docs/design.md · designed-as-app
+ * theme: custom · vibe: "instrument panel, rail-navy, dense, legible"
+ * paper: oklch(99% 0.004 263) · accent: oklch(70.3% 0.163 48.5)
+ * type: 既存システムスタック維持（表示用書体の導入は 2026-08-22 に取りやめ）
+ * axes: light / system-native / warm · studied: no
+ *
+ * 色の単一の正。styles.scss / tailwind.config.js / 各コンポーネント SCSS は
+ * ここを参照する。生値の直書きを増やさないこと。詳細は docs/design.md。
+ */
+:root {
+    /* --- 面 ------------------------------------------------------------ */
+    --color-paper: oklch(99% 0.004 263);
+    --color-paper-2: oklch(96.8% 0.006 263);
+    --color-paper-3: oklch(93.8% 0.008 263);
+    /* 操作部品（入力欄・セグメント切替・絞り込みチップ・副ボタン）の地。
+     * カード面と同じ白に統一する（ユーザー指示 2026-09-23）。ページ地の上に
+     * 置かれても透けず、カードの上に置かれても面の色と揃う */
+    --color-control: #ffffff;
+
+    /* --- 文字 ---------------------------------------------------------- */
+    --color-ink: oklch(21% 0.05 263);
+    --color-ink-2: oklch(42% 0.035 263);
+    /* muted より薄い文字色を新設しないこと（muted on paper = 5.38:1） */
+    --color-muted: oklch(52% 0.028 263);
+
+    /* --- 罫線 ---------------------------------------------------------- */
+    /* rule: 行区切りの装飾罫。WCAG 1.4.11 の対象外 */
+    --color-rule: oklch(84% 0.01 263);
+    --color-rule-2: oklch(90% 0.008 263);
+    /* rule-strong: 入力欄・チップ・ボタンの枠。UI 部品なので 3:1 必須（実測 3.55:1） */
+    --color-rule-strong: oklch(62% 0.02 263);
+
+    /* --- ブランド ------------------------------------------------------ */
+    /* 既存 primary-500 #001556 と完全に同値。改変禁止 */
+    --color-structure: oklch(23.8% 0.12 263);
+    /* 既存 accent-500 #ee7b35 と完全に同値。改変禁止。**塗り専用** */
+    --color-accent: oklch(70.3% 0.163 48.5);
+    /* accent 塗りの上の文字色。白にしないこと（白は 2.79:1 で不合格 / これは 6.38:1） */
+    --color-accent-ink: var(--color-ink);
+    /* 紙の上に置く accent 系の前景色（アイコン・下線・指標）。実測 5.76:1 */
+    --color-accent-deep: oklch(52% 0.2 48.5);
+
+    /* 種別色チップの白文字に乗せる縁取り色。
+       塗り色を変えずに白文字を読ませるための輪郭であり、紺寄りの --color-ink では
+       輪郭として弱いのでこの用途に限り純黒を使う。
+       詳細は docs/design.md「色の掟 4 の例外: 種別色チップ」 */
+    --color-ink-deep: oklch(0% 0 0);
+
+    /* --- 鮮度（リアルタイム運用情報の目撃・更新時刻）-------------------- */
+    /* 赤=本日中 / 緑=昨日 という既存の凡例をそのまま踏襲する。色の意味は変えず、
+       明度だけを揃えて紙の上で AA を満たす値に置き換えてある
+       （旧: #f44336 3.68:1 / #4caf50 2.78:1）。
+       2色とも L=50% に揃えてあるのは、赤だけが警告に見える状態を避けるため。
+       色以外に 太字（本日）/ 下線（昨日）の手掛かりが凡例側に既にあるので、
+       赤緑の対を色覚の単一手掛かりにはしていない。 */
+    --color-recency-today: oklch(50% 0.19 27);
+    --color-recency-yesterday: oklch(50% 0.13 150);
+
+    /* --- フォーカス ---------------------------------------------------- */
+    /* 面の明度で使い分ける。単色運用はどちらかの面で必ず消える */
+    --color-focus: oklch(52% 0.2 48.5);
+    --color-focus-on-dark: oklch(86% 0.15 48.5);
+
+    /* --- 書体 ----------------------------------------------------------
+       書体はトークン化していない。表示用書体（Zen Kaku Gothic New）と数字用書体
+       （IBM Plex Mono）の導入は 2026-08-22 にユーザー判断で取りやめ、改修前の
+       単一システムスタック（styles.scss の $sotetsu-lab-v3-client-font-family）へ
+       戻した。ワードマークの Quicksand と全線時刻表の DiaPro は従来どおり
+       それぞれの利用箇所で直接指定する。 */
+
+    /* --- 文字サイズ ---------------------------------------------------- */
+    /* 10px の文字を新設しないこと（現状の 目撃/更新 ラベルが 10px・2.68:1） */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-md: 1.125rem;
+    --text-lg: 1.375rem;
+    --text-xl: 1.75rem;
+    --text-display: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+
+    /* --- 余白（4pt スケール）------------------------------------------- */
+    --space-3xs: 0.25rem;
+    --space-2xs: 0.5rem;
+    --space-xs: 0.75rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+    --space-2xl: 4.5rem;
+
+    /* --- 角丸 ---------------------------------------------------------- */
+    --radius-control: 6px;
+    --radius-card: 8px;
+    --radius-chip: 999px;
+
+    /* --- モーション ---------------------------------------------------- */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --dur-short: 160ms;
+    --dur-med: 240ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --dur-short: 1ms;
+        --dur-med: 150ms;
+    }
+}

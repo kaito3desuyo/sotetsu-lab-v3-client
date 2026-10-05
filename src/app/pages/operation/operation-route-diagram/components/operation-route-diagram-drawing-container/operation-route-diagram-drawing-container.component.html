@@ -8,8 +8,12 @@
             (clickNavigateTimetable)="onReceiveClickNavigateTimetable($event)"
         ></app-operation-route-diagram-drawing-presentational>
     } @else {
-        <div class="tw-bg-white tw-p-4 tw-shadow-md">
-            <p class="tw-m-0">運用番号を設定して検索してください</p>
-        </div>
+        <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。 -->
+        <app-empty-state
+            icon="route"
+            message="運用番号を設定して検索してください"
+            actionLabel="運用表を見る"
+            (actionClick)="emptyStateActionClick.emit()"
+        ></app-empty-state>
     }
 </div>

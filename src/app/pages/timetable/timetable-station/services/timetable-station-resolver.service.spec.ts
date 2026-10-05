@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 
 import { TestBed, inject, waitForAsync } from '@angular/core/testing';
 import { TimetableStationResolverService } from './timetable-station-resolver.service';

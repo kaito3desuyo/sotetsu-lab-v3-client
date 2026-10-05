@@ -1,0 +1,58 @@
+<!-- 枠は border でなく inset の影で描く。border だと枠のあるタグだけ上下 2px 高くなり、
+     同じ行に並ぶ枠なしのタグと縦位置がずれる（過去の運用情報の無効化表示。2026-09-24） -->
+@if (link() && !isRetired()) {
+    <a
+        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black tw-no-underline"
+        [style.background-color]="operationNumber() | operationNumberColor"
+        [style.box-shadow]="
+            borderEnabled() ? 'inset 0 0 0 1px ' + borderColor() : null
+        "
+        [routerLink]="link()"
+        (contextmenu)="onContextMenu($event, menuTrigger)"
+        (touchstart)="onTouchStart($event, menuTrigger)"
+        (touchend)="onTouchEnd($event)"
+        (touchmove)="onTouchCancel()"
+        (touchcancel)="onTouchCancel()"
+        (click)="onClick($event)"
+    >
+        {{ label() }}
+    </a>
+} @else {
+    <span
+        [attr.title]="isRetired() ? '休車（運用番号 100）' : null"
+        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black"
+        [style.background-color]="operationNumber() | operationNumberColor"
+        [style.box-shadow]="
+            borderEnabled() ? 'inset 0 0 0 1px ' + borderColor() : null
+        "
+        (contextmenu)="onContextMenu($event, menuTrigger)"
+        (touchstart)="onTouchStart($event, menuTrigger)"
+        (touchend)="onTouchEnd($event)"
+        (touchmove)="onTouchCancel()"
+        (touchcancel)="onTouchCancel()"
+    >
+        {{ label() }}
+    </span>
+}
+
+<!-- メニューの起点。display: none だと位置が取れずメニューが (0, 0) に出るので、
+     見えない 0×0 の固定配置にして、右クリック・長押しした座標へ置く -->
+<button
+    #menuTrigger="matMenuTrigger"
+    [matMenuTriggerFor]="menu"
+    type="button"
+    tabindex="-1"
+    aria-hidden="true"
+    class="tw-pointer-events-none tw-invisible tw-fixed tw-h-0 tw-w-0 tw-border-0 tw-p-0"
+    [style.left.px]="menuPosition().x"
+    [style.top.px]="menuPosition().y"
+></button>
+
+<mat-menu #menu="matMenu">
+    @for (item of contextMenus() ?? []; track $index) {
+        <button mat-menu-item [disabled]="item.disabled" (click)="item.onClick()">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span>{{ item.text }}</span>
+        </button>
+    }
+</mat-menu>
