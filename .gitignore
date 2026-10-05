@@ -51,3 +51,8 @@ Thumbs.db
 
 # Temporary working files
 .context/
+# Claude Code のサンドボックスが置く空のファイル（hooks・skills・settings.json など）と検証の画面写真
+/.claude/*
+!/.claude/settings.local.json
+/.mcp.json
+/.playwright-mcp/
