@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 import { OperationRouteDiagramRouteFilterComponent } from './operation-route-diagram-route-filter.component';
 
@@ -42,6 +45,24 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [OperationRouteDiagramRouteFilterComponent],
+            providers: [
+                {
+                    // 系統順はいずみ野線が本線より前（並びが入れ替わることを確かめるため）
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of([
+                            { routeId: 'いずみ野線', agencyId: 'so' },
+                            { routeId: '本線', agencyId: 'so' },
+                        ]),
+                    },
+                },
+                {
+                    provide: AgencyListStateQuery,
+                    useValue: {
+                        agencies$: of([{ agencyId: 'so', agencyName: '相鉄' }]),
+                    },
+                },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(
@@ -64,18 +85,25 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
     it('経由しない関連路線（いずみ野線）は disabled として渡される', () => {
         const options = component.routeOptions();
 
-        expect(
-            options.find((o) => o.value === 'いずみ野線')?.disabled,
-        ).toBe(true);
-        expect(options.find((o) => o.value === '本線')?.disabled).toBe(
-            false,
+        expect(options.find((o) => o.value === 'いずみ野線')?.disabled).toBe(
+            true,
         );
+        expect(options.find((o) => o.value === '本線')?.disabled).toBe(false);
     });
 
     it('P8-3: 経由路線と接続しない無関係路線（厚木線）のチップは表示されない', () => {
         const options = component.routeOptions();
 
         expect(options.find((o) => o.value === '厚木線')).toBeUndefined();
+    });
+
+    it('チップは系統順に並べ、会社名で見出しを付ける（他ページと同じ並び）', () => {
+        const options = component.routeOptions();
+
+        expect(options.map((o) => [o.value, o.group])).toEqual([
+            ['いずみ野線', '相鉄'],
+            ['本線', '相鉄'],
+        ]);
     });
 
     it('onChange で選択路線をストアへ書き込む', () => {

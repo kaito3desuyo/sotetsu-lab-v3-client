@@ -2,12 +2,13 @@
      コントロール無しで宙に浮いていたため、チップが 1 つも無い間は帯ごと出さない
      （audit C6）。 -->
 @if (routeOptions().length > 0) {
-    <div class="max-sm:tw-px-4">
+    <div>
         <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
             路線で駅を絞り込み（経由しない路線は選択不可）
         </p>
         <app-filter-chips
             mode="multiple"
+            [scrollMode]="true"
             [options]="routeOptions()"
             [selected]="selectedRouteIds()"
             (selectedChange)="onChange($event)"

@@ -15,6 +15,7 @@ import {
 import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import { ownAgencyRouteIds } from 'src/app/shared/own-agency-route-ids.util';
 import { hasVisibleStop, tripEndpoints } from '../utils/trip-endpoints.util';
+import { traversedRouteIds } from '../utils/traversed-route-ids.util';
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
 type StoreProps = {
@@ -255,11 +256,20 @@ export const TimetableAllLineStore = {
     /**
      * 既定 = 自社（相鉄）の路線だけ ON（ユーザー指示 2026-09-24）。以前は全路線 ON。
      * 会社が引けないときは全路線 ON に戻る（ownAgencyRouteIds のフォールバック）。
+     *
+     * 列車番号のリンクから運行を絞り込んで開いたとき（tripBlockId あり）は、その運行が走る
+     * 路線を ON にする。相鉄だけだと、他社線で完結する列車が消え、直通先の区間も隠れる。
      */
     initializeSelectedRouteIds(): void {
-        const { stations, agencies } = store.getValue();
+        const { stations, agencies, tripBlockId, tripBlocks } =
+            store.getValue();
+        const traversed = tripBlockId
+            ? traversedRouteIds(stations, tripBlocks)
+            : [];
         TimetableAllLineStore.setSelectedRouteIds(
-            ownAgencyRouteIds(extractRoutes(stations), agencies),
+            traversed.length
+                ? traversed
+                : ownAgencyRouteIds(extractRoutes(stations), agencies),
         );
     },
     enableLoading(): void {
