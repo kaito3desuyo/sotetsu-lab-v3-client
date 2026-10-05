@@ -304,6 +304,23 @@ export const TimetableAllLineStore = {
     /** ページングした表示列車（列）。絞り込み中は表示駅に停まらない列車を外してある。 */
     trips$: pagedTrips$,
 
+    /**
+     * 表示中の列車ごとの、列の並びで 1 つ前の列車。ページ分けの前の並びから引くので、
+     * ページの先頭の列でも前のページの最後の列車が入る（同じ運行の「⬎」がページをまたいで消えていた）。
+     */
+    previousTrips$: combineLatest([listedTrips$, pagedTrips$]).pipe(
+        map(([listed, paged]) => {
+            const pagedIds = new Set(paged.map((trip) => trip.tripId));
+            return new Map(
+                listed.flatMap((trip, i) =>
+                    pagedIds.has(trip.tripId) && i > 0
+                        ? [[trip.tripId, listed[i - 1]] as const]
+                        : [],
+                ),
+            );
+        }),
+    ),
+
     /** 表示中の列車ごとの始発駅・終着駅とその時刻（表の上端・下端の行）。 */
     endpoints$: combineLatest([orderedStations$, pagedTrips$]).pipe(
         map(([all, trips]) => {

@@ -81,6 +81,9 @@ export class TimetableAllLineComponent {
     readonly endpoints = toSignal(TimetableAllLineStore.endpoints$, {
         initialValue: new Map(),
     });
+    readonly previousTrips = toSignal(TimetableAllLineStore.previousTrips$, {
+        initialValue: new Map(),
+    });
     readonly calendar = toSignal(
         TimetableAllLineStore.calendarId$.pipe(
             mergeMap((id) =>

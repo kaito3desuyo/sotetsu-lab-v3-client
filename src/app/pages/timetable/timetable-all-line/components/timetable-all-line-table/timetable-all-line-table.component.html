@@ -34,7 +34,7 @@
                         <thead>
                             <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-top-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    class="tw-sticky tw-left-0 tw-top-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
                                     colspan="2"
                                 >
                                     列車番号
@@ -67,7 +67,7 @@
                             </tr>
                             <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-top-6 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    class="tw-sticky tw-left-0 tw-top-6 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
                                     colspan="2"
                                 >
                                     運用番号
@@ -102,7 +102,7 @@
                             </tr>
                             <tr class="tw-h-6">
                                 <th
-                                    class="tw-sticky tw-left-0 tw-top-12 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
+                                    class="tw-sticky tw-left-0 tw-top-12 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-text-sm tw-font-normal tw-text-muted"
                                     colspan="2"
                                 >
                                     種別
@@ -167,7 +167,7 @@
                             <tr #originNameRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-top-[72px] tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    class="tw-sticky tw-left-0 tw-top-[72px] tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
                                 >
                                     始発駅
                                 </td>
@@ -191,7 +191,7 @@
                             <tr class="tw-h-6">
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b-[3px] tw-border-l tw-border-r tw-border-double tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b-[3px] tw-border-l tw-border-r tw-border-double tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
                                     [style.top.px]="72 + originNameRowHeight()"
                                 >
                                     始発時刻
@@ -248,7 +248,7 @@
                                 ) {
                                     <tr class="tw-h-6">
                                         <td
-                                            class="tw-sticky tw-left-0 tw-z-10 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                            class="tw-sticky tw-left-0 tw-z-10 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-right"
                                             [class.tw-border-b]="
                                                 (borderSetting ||
                                                     isDirectionTerminusArrival) &&
@@ -271,7 +271,7 @@
                                             ></ng-container>
                                         </td>
                                         <td
-                                            class="tw-sticky tw-left-[106px] tw-z-10 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-center"
+                                            class="tw-sticky tw-left-[106px] tw-z-10 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-center tw-text-xs tw-text-muted"
                                             [class.tw-border-b]="
                                                 viewMode ===
                                                     staitonViewModeEnum.DEPARTURE_AND_ARRIVAL ||
@@ -307,7 +307,10 @@
                                                         station: station,
                                                         trip: trip,
                                                         stations: stations(),
-                                                        trips: trips(),
+                                                        previousTrip:
+                                                            previousTrips().get(
+                                                                trip.tripId
+                                                            ),
                                                         viewModes: viewModes(),
                                                         bordersAfter:
                                                             bordersAfter(),
@@ -330,7 +333,7 @@
                                             staitonViewModeEnum.ONLY_DEPARTURE
                                         ) {
                                             <td
-                                                class="tw-sticky tw-left-0 tw-z-0 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                                class="tw-sticky tw-left-0 tw-z-0 tw-box-border tw-w-[106px] tw-min-w-[106px] tw-border-0 tw-border-l tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-right"
                                                 [class.tw-border-b]="
                                                     borderSetting && !last
                                                 "
@@ -347,7 +350,7 @@
                                         }
 
                                         <td
-                                            class="tw-sticky tw-left-[106px] tw-z-0 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-center"
+                                            class="tw-sticky tw-left-[106px] tw-z-0 tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-1 tw-text-center tw-text-xs tw-text-muted"
                                             [class.tw-border-b]="
                                                 borderSetting && !last
                                             "
@@ -377,7 +380,10 @@
                                                         station: station,
                                                         trip: trip,
                                                         stations: stations(),
-                                                        trips: trips(),
+                                                        previousTrip:
+                                                            previousTrips().get(
+                                                                trip.tripId
+                                                            ),
                                                         viewModes: viewModes(),
                                                         bordersAfter:
                                                             bordersAfter(),
@@ -393,7 +399,7 @@
                             <tr class="tw-h-6">
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
                                     [style.bottom.px]="terminusNameRowHeight()"
                                 >
                                     終着時刻
@@ -418,7 +424,7 @@
                             <tr #terminusNameRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-bottom-0 tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right"
+                                    class="tw-sticky tw-bottom-0 tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
                                 >
                                     終着駅
                                 </td>
@@ -444,7 +450,7 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     編集
                                 </td>
@@ -472,7 +478,7 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     コピー
                                 </td>
@@ -500,7 +506,7 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     削除
                                 </td>
@@ -531,7 +537,7 @@
                             <tr>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-white !tw-px-1 tw-text-right tw-text-xs"
+                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     グループ
                                 </td>
@@ -675,7 +681,7 @@
         }
     </span>
     <span
-        class="tw-align-middle"
+        class="tw-align-middle tw-text-sm"
         style="display: inline-block; transform-origin: right"
         [style]="{
             transform:
@@ -686,7 +692,7 @@
                 ', 1)',
             marginLeft:
                 (station.stationName.length > 4
-                    ? (station.stationName.length - 4) * 16 * -1
+                    ? (station.stationName.length - 4) * 14 * -1
                     : 0) + 'px',
         }"
     >

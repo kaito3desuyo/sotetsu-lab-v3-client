@@ -70,6 +70,10 @@ export class TimetableAllLineTableComponent {
     readonly bordersAfter = input.required<ReadonlyMap<string, boolean>>();
     /** 列車ごとの始発駅・終着駅とその時刻（表の上端・下端の行）。 */
     readonly endpoints = input<ReadonlyMap<string, TripEndpoints>>(new Map());
+    /** 列車ごとの、列の並びで 1 つ前の列車（ページ分けの前の並びから引いたもの）。 */
+    readonly previousTrips = input<ReadonlyMap<string, TripDetailsDto>>(
+        new Map(),
+    );
 
     readonly page = output<PageEvent>();
     readonly clickEditButton = output<TripDetailsDto>();

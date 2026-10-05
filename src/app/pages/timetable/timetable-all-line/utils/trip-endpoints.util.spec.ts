@@ -122,7 +122,6 @@ describe('getTime（始発・終着が隠れた列車の「経由なし」）', 
             station: station(stationId),
             trip: t,
             stations,
-            trips: [t],
             viewModes,
             bordersAfter: new Map(),
         });

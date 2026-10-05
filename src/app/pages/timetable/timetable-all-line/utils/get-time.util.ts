@@ -10,7 +10,7 @@ export function getTime({
     station,
     trip,
     stations,
-    trips,
+    previousTrip,
     viewModes,
     bordersAfter,
 }: {
@@ -19,7 +19,8 @@ export function getTime({
     station: StationDetailsDto;
     trip: TripDetailsDto;
     stations: StationDetailsDto[];
-    trips: TripDetailsDto[];
+    /** 列の並びで 1 つ前の列車。ページ分けの前の並びから引く（前のページにあっても同じ運行の印を出すため） */
+    previousTrip?: TripDetailsDto;
     viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
     bordersAfter: ReadonlyMap<string, boolean>;
 }): string {
@@ -29,7 +30,6 @@ export function getTime({
     const stationIndex = stations.findIndex(
         (o) => o.stationId === station.stationId,
     );
-    const tripIndex = trips.findIndex((o) => o.tripId === trip.tripId);
     const viewMode = viewModes.get(station.stationId);
 
     if (time) {
@@ -45,7 +45,7 @@ export function getTime({
                     return '↓';
                 }
 
-                const minus1Trip = trips[tripIndex - 1];
+                const minus1Trip = previousTrip;
                 if (
                     minus1Trip &&
                     minus1Trip.tripBlockId === trip.tripBlockId &&
@@ -178,7 +178,7 @@ export function getTime({
         const plus1Station = stations[stationIndex + 1];
 
         if (plus1Station) {
-            const minus1Trip = trips[tripIndex - 1];
+            const minus1Trip = previousTrip;
             const plus1StationViewMode = viewModes.get(plus1Station.stationId);
             const plus1Time = trip.times.find((o) => {
                 return o.stationId === plus1Station.stationId;

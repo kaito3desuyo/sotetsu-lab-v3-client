@@ -15,7 +15,7 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
         station,
         trip,
         stations,
-        trips,
+        previousTrip,
         viewModes,
         bordersAfter,
     }: {
@@ -24,7 +24,7 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
         station: StationDetailsDto;
         trip: TripDetailsDto;
         stations: StationDetailsDto[];
-        trips: TripDetailsDto[];
+        previousTrip?: TripDetailsDto;
         viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
         bordersAfter: ReadonlyMap<string, boolean>;
     }): string {
@@ -34,7 +34,7 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
             station,
             trip,
             stations,
-            trips,
+            previousTrip,
             viewModes,
             bordersAfter,
         });

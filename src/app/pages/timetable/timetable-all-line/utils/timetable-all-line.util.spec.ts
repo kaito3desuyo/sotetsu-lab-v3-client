@@ -103,6 +103,17 @@ describe('TimetableAllLineUtil.getViewMode', () => {
             );
         });
     });
+
+    // 相鉄と東急の境の駅。着発 2 段にする（ユーザー指示 2026-10-05）
+    it.each([0, 1] as const)(
+        'returns DEPARTURE_AND_ARRIVAL for 新横浜（新横浜線／東急新横浜線） in direction %i',
+        (direction) => {
+            const station = makeStation('新横浜', ['新横浜線', '東急新横浜線']);
+            expect(TimetableAllLineUtil.getViewMode(station, direction)).toBe(
+                ETimetableAllLineStationViewMode.DEPARTURE_AND_ARRIVAL,
+            );
+        },
+    );
 });
 
 describe('TimetableAllLineUtil.getBorderSetting', () => {
@@ -141,7 +152,6 @@ describe('TimetableAllLineUtil.getTime', () => {
                 station,
                 trip,
                 stations: [station],
-                trips: [trip],
                 viewModes,
                 bordersAfter: new Map(),
             }),
@@ -164,7 +174,6 @@ describe('TimetableAllLineUtil.getTime', () => {
                 station,
                 trip,
                 stations: [station],
-                trips: [trip],
                 viewModes,
                 bordersAfter: new Map(),
             }),
@@ -188,7 +197,6 @@ describe('TimetableAllLineUtil.getTime', () => {
                 station: stB,
                 trip,
                 stations,
-                trips: [trip],
                 viewModes,
                 bordersAfter: new Map(),
             }),
@@ -208,11 +216,48 @@ describe('TimetableAllLineUtil.getTime', () => {
                 station,
                 trip,
                 stations: [station],
-                trips: [trip],
                 viewModes,
                 bordersAfter: new Map(),
             }),
         ).toBe('-930');
+    });
+
+    // 前の列の列車は、ページ分けの前の並びから渡す。前のページにあっても印が消えない（ユーザー指摘 2026-10-05）
+    describe('着発 2 段の駅で同じ運行の前の列車がある', () => {
+        const station = makeStation('新横浜', ['新横浜線', '東急新横浜線']);
+        const trip = makeTrip('t2', 'tb1', [
+            makeTime('新横浜', null as any, '10:05:00'),
+        ]);
+        const viewModes = viewModesOf([station], [trip], 1);
+        const getArrival = (previousTrip?: any) =>
+            TimetableAllLineUtil.getTime({
+                tripDirection: 1,
+                mode: 'arrival',
+                station,
+                trip,
+                stations: [station],
+                previousTrip,
+                viewModes,
+                bordersAfter: new Map(),
+            });
+
+        it('前の列車が同じ運行で当駅に時刻を持つなら ⬎ を返す', () => {
+            const previousTrip = makeTrip('t1', 'tb1', [
+                makeTime('新横浜', '10:00:00', null as any),
+            ]);
+            expect(getArrival(previousTrip)).toBe('⬎');
+        });
+
+        it('前の列車が別の運行なら ⬎ にしない', () => {
+            const previousTrip = makeTrip('t0', 'tb0', [
+                makeTime('新横浜', '10:00:00', null as any),
+            ]);
+            expect(getArrival(previousTrip)).toBe('‥');
+        });
+
+        it('前の列車が無ければ ⬎ にしない', () => {
+            expect(getArrival(undefined)).toBe('‥');
+        });
     });
 });
 
