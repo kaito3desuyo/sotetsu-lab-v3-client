@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
-import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
+import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-selected-trip-info.interface';
 
 /**
@@ -33,7 +33,7 @@ import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-sel
     imports: [
         RouterLink,
         MatIconModule,
-        TripClassChipComponent,
+        TripLabelComponent,
         DateFnsPipe,
         PipesModule,
     ],

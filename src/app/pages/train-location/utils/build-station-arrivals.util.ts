@@ -260,6 +260,7 @@ function buildArrival(
                   input.at,
                   input,
               ),
+        detailLink: card?.detailLink,
     };
 }
 

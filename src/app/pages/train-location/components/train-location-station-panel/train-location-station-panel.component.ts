@@ -8,7 +8,7 @@ import {
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { RouterLink } from '@angular/router';
 import { format } from 'date-fns';
-import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
+import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import {
     StationArrival,
     StationArrivals,
@@ -27,12 +27,7 @@ import {
     selector: 'app-train-location-station-panel',
     templateUrl: './train-location-station-panel.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        RouterLink,
-        TripClassChipComponent,
-        NgTemplateOutlet,
-        PipesModule,
-    ],
+    imports: [RouterLink, TripLabelComponent, NgTemplateOutlet, PipesModule],
     host: { class: 'tw-block' },
 })
 export class TrainLocationStationPanelComponent {

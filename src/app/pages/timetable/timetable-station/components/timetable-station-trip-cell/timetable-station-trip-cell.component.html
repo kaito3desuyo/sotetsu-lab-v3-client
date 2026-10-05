@@ -45,26 +45,11 @@
     <!-- 左の列: 幅 2.75rem 固定。運用番号チップ（最大「95G」）と充当編成番号（最大
          「21104?」）が入る幅で、セルごとに右の列の左端がガタつかないようにする -->
     <div class="tw-flex tw-flex-col tw-items-center tw-gap-1">
-        <a
-            matRipple
-            class="tw-flex tw-h-6 tw-items-center tw-rounded tw-text-2xl tw-font-bold tw-tabular-nums tw-leading-none tw-no-underline"
-            [style.color]="
-                trip().tripClassId
-                    | findById
-                        : {
-                              array: tripClasses(),
-                              propertyName: 'tripClassId',
-                              outputPropertyName: 'tripClassColor',
-                          }
-            "
-            [routerLink]="[
-                '/timetable/all-line',
-                {
-                    calendar_id: calendarId(),
-                    trip_direction: trip().tripDirection,
-                    trip_block_id: trip().tripBlockId,
-                },
-            ]"
+        <!-- 分はリンクにしない。全線時刻表へは右の列の列車番号から飛ぶ（ユーザー指示 2026-10-05）。
+             着だけの分（当駅止まり）の下線は時刻表の印なので残す -->
+        <div
+            class="tw-flex tw-h-6 tw-items-center tw-text-2xl tw-font-bold tw-tabular-nums tw-leading-none"
+            [style.color]="tripClassColor"
         >
             @if (!stationTime?.departureTime && stationTime?.arrivalTime) {
                 <span class="tw-underline">
@@ -83,7 +68,7 @@
                     }}
                 </span>
             }
-        </a>
+        </div>
 
         @if (trip().tripOperationLists.length !== 0) {
             <app-operation-number-tag
@@ -118,8 +103,10 @@
         <div
             class="tw-flex tw-h-6 tw-flex-row tw-items-center tw-gap-x-1.5 tw-whitespace-nowrap"
         >
-            <app-trip-class-chip
-                [label]="
+            <!-- 種別 列車番号（共通部品）。列車番号が全線時刻表へのリンク（ユーザー指示 2026-10-05） -->
+            <app-trip-label
+                class="tw-text-xs tw-leading-tight tw-text-muted"
+                [tripClassName]="
                     trip().tripClassId
                         | findById
                             : {
@@ -129,13 +116,17 @@
                               }
                         | antiBrackets
                 "
-                [color]="tripClassColor"
-            ></app-trip-class-chip>
-
-            <span
-                class="tw-text-xs tw-tabular-nums tw-leading-tight tw-text-muted"
-                >{{ trip().tripNumber }}</span
-            >
+                [tripClassColor]="tripClassColor"
+                [tripNumber]="trip().tripNumber"
+                [link]="[
+                    '/timetable/all-line',
+                    {
+                        calendar_id: calendarId(),
+                        trip_direction: trip().tripDirection,
+                        trip_block_id: trip().tripBlockId,
+                    },
+                ]"
+            ></app-trip-label>
 
             <span class="tw-text-sm tw-leading-tight">
                 {{
@@ -171,38 +162,40 @@
                         class="tw-grid tw-grid-cols-[auto_minmax(0,1fr)] tw-items-center tw-gap-x-1 tw-gap-y-0.5 tw-text-xs tw-leading-4 tw-text-muted"
                     >
                         <span aria-hidden="true">↪</span>
-                        <span
-                            class="tw-inline-flex tw-items-center tw-gap-1 tw-whitespace-nowrap"
-                        >
-                            <!-- 脚注も種別は塗りチップに統一する（ユーザー指示 2026-08-22）。 -->
-                            <app-trip-class-chip
-                                size="sm"
-                                [label]="
-                                    otherTrip.tripClassId
-                                        | findById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassName',
-                                              }
-                                        | antiBrackets
-                                "
-                                [color]="
-                                    otherTrip.tripClassId
-                                        | findById
-                                            : {
-                                                  array: tripClasses(),
-                                                  propertyName: 'tripClassId',
-                                                  outputPropertyName:
-                                                      'tripClassColor',
-                                              }
-                                "
-                            ></app-trip-class-chip>
-                            <span class="tw-tabular-nums">{{
-                                otherTrip.tripNumber
-                            }}</span>
-                        </span>
+                        <!-- 脚注も種別 列車番号の共通部品（列車番号が全線時刻表へのリンク・2026-10-05） -->
+                        <app-trip-label
+                            chipSize="sm"
+                            [tripClassName]="
+                                otherTrip.tripClassId
+                                    | findById
+                                        : {
+                                              array: tripClasses(),
+                                              propertyName: 'tripClassId',
+                                              outputPropertyName:
+                                                  'tripClassName',
+                                          }
+                                    | antiBrackets
+                            "
+                            [tripClassColor]="
+                                otherTrip.tripClassId
+                                    | findById
+                                        : {
+                                              array: tripClasses(),
+                                              propertyName: 'tripClassId',
+                                              outputPropertyName:
+                                                  'tripClassColor',
+                                          }
+                            "
+                            [tripNumber]="otherTrip.tripNumber"
+                            [link]="[
+                                '/timetable/all-line',
+                                {
+                                    calendar_id: calendarId(),
+                                    trip_direction: otherTrip.tripDirection,
+                                    trip_block_id: otherTrip.tripBlockId,
+                                },
+                            ]"
+                        ></app-trip-label>
 
                         <span
                             class="tw-col-start-2 tw-inline-flex tw-flex-row tw-items-center tw-gap-1 tw-whitespace-nowrap"

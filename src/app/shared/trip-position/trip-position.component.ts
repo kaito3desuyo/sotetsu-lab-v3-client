@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
 import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripClassChipComponent } from '../trip-class-chip/trip-class-chip.component';
+import { TripLabelComponent } from '../trip-label/trip-label.component';
 
 export type TripPosition = Pick<
     OperationCurrentPositionDto,
@@ -31,12 +30,11 @@ export type TripPosition = Pick<
     templateUrl: './trip-position.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        RouterLink,
         MatIconModule,
         DateFnsPipe,
         NewFindByIdPipe,
         NewAntiBracketsPipe,
-        TripClassChipComponent,
+        TripLabelComponent,
     ],
     host: { class: 'tw-block tw-min-w-0' },
 })

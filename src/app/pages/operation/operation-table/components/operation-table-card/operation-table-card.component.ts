@@ -12,7 +12,7 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
+import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table-format-station-name.pipe';
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';
 
@@ -105,7 +105,7 @@ const STATION_WIDTH = 3;
         RouterLink,
         PipesModule,
         DateFnsPipe,
-        TripClassChipComponent,
+        TripLabelComponent,
     ],
 })
 export class OperationTableCardComponent {

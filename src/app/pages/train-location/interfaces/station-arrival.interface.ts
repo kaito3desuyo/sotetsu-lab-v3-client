@@ -39,6 +39,8 @@ export interface StationArrival {
     formationAgencyName?: string;
     /** いまどこか（「いま 瀬谷→三ツ境」「いま 鶴ヶ峰に停車中」「海老名 10:02 発」） */
     whereText: string;
+    /** 全線時刻表へのリンク（カード由来。列車番号のリンクに使う。カードが無ければ undefined） */
+    detailLink?: [string, string, Record<string, string>];
 }
 
 export interface StationArrivals {

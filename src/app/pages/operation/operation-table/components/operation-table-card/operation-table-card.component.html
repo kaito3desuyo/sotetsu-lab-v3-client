@@ -82,13 +82,17 @@
                                 }
                             "
                         ></ng-container>
-                        <!-- 種別チップに列車番号を同居させず、番号は隣の要素に出す
-                             （ユーザー指示 2026-08-22） -->
-                        <a
-                            class="tw-inline-flex tw-items-center tw-gap-1 tw-font-bold tw-no-underline"
+                        <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05） -->
+                        <app-trip-label
+                            class="tw-shrink-0 tw-font-bold"
                             [class.tw-text-ink]="!row.isDeadhead"
                             [class.tw-text-grey-500]="row.isDeadhead"
-                            [routerLink]="[
+                            [tripClassName]="row.tripClassName"
+                            [tripClassColor]="
+                                row.isDeadhead ? null : row.tripClassColor
+                            "
+                            [tripNumber]="row.tripNumber"
+                            [link]="[
                                 '/timetable',
                                 'all-line',
                                 {
@@ -97,18 +101,7 @@
                                     trip_block_id: row.tripBlockId,
                                 },
                             ]"
-                        >
-                            <app-trip-class-chip
-                                class="tw-shrink-0"
-                                [label]="row.tripClassName"
-                                [color]="
-                                    row.isDeadhead ? null : row.tripClassColor
-                                "
-                            ></app-trip-class-chip>
-                            <span class="tw-tabular-nums">{{
-                                row.tripNumber
-                            }}</span>
-                        </a>
+                        ></app-trip-label>
                         <ng-container
                             *ngTemplateOutlet="
                                 arrow;

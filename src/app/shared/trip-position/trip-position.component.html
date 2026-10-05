@@ -10,11 +10,31 @@
     class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 tw-text-xs tw-leading-4"
 >
     @if (!!current) {
-        <!-- 種別は全ページ共通の塗りチップ、列車番号はチップの外
-             （ユーザー指示 2026-08-22）。 -->
-        <a
-            class="tw-inline-flex tw-items-center tw-gap-1 tw-whitespace-nowrap tw-text-ink tw-no-underline"
-            [routerLink]="[
+        <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05） -->
+        <app-trip-label
+            class="tw-text-ink"
+            chipSize="sm"
+            [tripClassName]="
+                current.trip.tripClassId
+                    | newFindById
+                        : {
+                              array: tripClasses(),
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassName',
+                          }
+                    | newAntiBrackets
+            "
+            [tripClassColor]="
+                current.trip.tripClassId
+                    | newFindById
+                        : {
+                              array: tripClasses(),
+                              propertyName: 'tripClassId',
+                              outputPropertyName: 'tripClassColor',
+                          }
+            "
+            [tripNumber]="current.trip.tripNumber"
+            [link]="[
                 '/timetable',
                 'all-line',
                 {
@@ -23,33 +43,7 @@
                     trip_block_id: current.trip.tripBlockId,
                 },
             ]"
-        >
-            <app-trip-class-chip
-                size="sm"
-                [label]="
-                    current.trip.tripClassId
-                        | newFindById
-                            : {
-                                  array: tripClasses(),
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassName',
-                              }
-                        | newAntiBrackets
-                "
-                [color]="
-                    current.trip.tripClassId
-                        | newFindById
-                            : {
-                                  array: tripClasses(),
-                                  propertyName: 'tripClassId',
-                                  outputPropertyName: 'tripClassColor',
-                              }
-                "
-            ></app-trip-class-chip>
-            <span class="tw-tabular-nums tw-underline">
-                {{ current.trip.tripNumber }}
-            </span>
-        </a>
+        ></app-trip-label>
     }
 
     <span

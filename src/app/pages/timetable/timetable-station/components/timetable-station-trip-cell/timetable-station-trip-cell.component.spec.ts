@@ -181,4 +181,23 @@ describe('TimetableStationTripCellComponent', () => {
         expect(text).toContain('10708');
         expect(text).not.toContain('不明');
     });
+
+    // 全線時刻表へは列車番号から飛ぶ。分はリンクにしない（ユーザー指示 2026-10-05）
+    it('全線時刻表へのリンクは列車番号（本体と脚注）だけで、分はリンクにしない', async () => {
+        const fixture = await createFixture();
+        const el = fixture.nativeElement as HTMLElement;
+        const links = Array.from(
+            el.querySelectorAll<HTMLAnchorElement>(
+                'a[href*="/timetable/all-line"]',
+            ),
+        );
+
+        expect(links.map((a) => a.textContent?.trim())).toEqual([
+            '6436',
+            '9437',
+        ]);
+        expect(links.every((a) => a.classList.contains('tw-underline'))).toBe(
+            true,
+        );
+    });
 });

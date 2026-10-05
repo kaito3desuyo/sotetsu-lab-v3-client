@@ -104,12 +104,13 @@
                         data-continuation
                         class="tw-flex tw-flex-wrap tw-items-center tw-gap-1 tw-text-xs tw-text-muted"
                     >
-                        <app-trip-class-chip
-                            size="sm"
-                            [label]="row.tripClassName"
-                            [color]="row.tripClassColor"
-                        ></app-trip-class-chip>
-                        <span>{{ row.tripNumber }}</span>
+                        <app-trip-label
+                            chipSize="sm"
+                            [tripClassName]="row.tripClassName"
+                            [tripClassColor]="row.tripClassColor"
+                            [tripNumber]="row.tripNumber"
+                            [link]="row.detailLink"
+                        ></app-trip-label>
                         <span aria-hidden="true">→</span>
                     </div>
                 }
@@ -118,16 +119,16 @@
                     data-main-line
                     class="tw-flex tw-flex-wrap tw-items-center tw-gap-x-1.5"
                 >
-                    <span data-main-class class="tw-inline-flex">
-                        <app-trip-class-chip
-                            size="sm"
-                            [label]="shown(row).tripClassName"
-                            [color]="shown(row).tripClassColor"
-                        ></app-trip-class-chip>
-                    </span>
-                    <span class="tw-whitespace-nowrap tw-tabular-nums">{{
-                        shown(row).tripNumber
-                    }}</span>
+                    <!-- 種別 列車番号（共通部品）。列車番号が全線時刻表へのリンク（ユーザー指示 2026-10-05）。
+                         引き継ぐ前後の列車は同じ運行なので、リンク先は同じ -->
+                    <app-trip-label
+                        data-main-class
+                        chipSize="sm"
+                        [tripClassName]="shown(row).tripClassName"
+                        [tripClassColor]="shown(row).tripClassColor"
+                        [tripNumber]="shown(row).tripNumber"
+                        [link]="row.detailLink"
+                    ></app-trip-label>
                     <b class="tw-whitespace-nowrap tw-text-ink"
                         >{{ row.destinationName }} 行</b
                     >

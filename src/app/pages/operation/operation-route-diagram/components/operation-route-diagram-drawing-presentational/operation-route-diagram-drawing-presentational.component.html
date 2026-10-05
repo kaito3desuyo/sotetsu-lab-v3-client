@@ -170,9 +170,11 @@
                     stroke-width="0.96"
                     paint-order="stroke fill"
                 >{{ row.tripClassName }}</text>
-                <!-- 和文と数字で central の解釈が違い、数字が下にずれて見えるので 0.5 上げる（99 文書追補 14） -->
+                <!-- 和文と数字で central の解釈が違い、数字が下にずれて見えるので 0.5 上げる（99 文書追補 14）。
+                     列車番号は他ページと同じく下線で全線時刻表へのリンクだと示す（帯を押すと飛ぶ・2026-10-05）。
+                     下線はクラスで付けるので、画像保存（SVG を画像にする）には出ない -->
                 <text
-                    class="tw-tabular-nums"
+                    class="tw-tabular-nums tw-underline"
                     dominant-baseline="central"
                     dy="0.5"
                     [attr.x]="row.tripNumberX"
