@@ -1,9 +1,9 @@
 <!-- 運用番号が未設定のあいだ routeOptions は空になる。ラベルだけが対応する
      コントロール無しで宙に浮いていたため、チップが 1 つも無い間は帯ごと出さない
-     （audit C6）。 -->
+     （audit C6）。操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
 @if (routeOptions().length > 0) {
-    <div>
-        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+    <app-control-band>
+        <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
             路線で駅を絞り込み（経由しない路線は選択不可）
         </p>
         <app-filter-chips
@@ -13,5 +13,5 @@
             [selected]="selectedRouteIds()"
             (selectedChange)="onChange($event)"
         ></app-filter-chips>
-    </div>
+    </app-control-band>
 }

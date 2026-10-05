@@ -8,6 +8,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
@@ -25,6 +26,7 @@ OperationPastTimeStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         OperationPastTimeSearchFormComponent,
         OperationPastTimeFilterComponent,
         OperationPastTimeTableComponent,

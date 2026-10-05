@@ -25,6 +25,7 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
@@ -220,6 +221,7 @@ async function setup(overrides?: {
                     MatProgressBarModule,
                     MatSelectModule,
                     DateFnsPipe,
+                    ControlBandComponent,
                     EmptyStateComponent,
                     SegmentToggleComponent,
                     TimetableStationTableComponent,

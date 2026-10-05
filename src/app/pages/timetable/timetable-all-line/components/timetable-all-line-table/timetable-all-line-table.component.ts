@@ -21,6 +21,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassShortNamePipe } from 'src/app/shared/pipes/trip-class-short-name.pipe';
@@ -45,6 +46,7 @@ import { TripEndpoints } from '../../utils/trip-endpoints.util';
         MatTooltipModule,
         MatButtonModule,
         MatIconModule,
+        CalendarBandComponent,
         EmptyStateComponent,
         OperationNumberTagComponent,
         TimetableAllLineGetStationNumberingPipe,

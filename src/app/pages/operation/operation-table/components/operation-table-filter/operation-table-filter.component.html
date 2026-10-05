@@ -1,4 +1,4 @@
-<div class="tw-flex tw-flex-col tw-gap-3">
+<div class="tw-flex tw-flex-col tw-gap-4">
     <!-- ダイヤ select を常設。運用番号へのジャンプは 2026-09-25 に外した
          （本番に無い機能で、運用群チップで十分に絞れるため） -->
     <div class="tw-flex tw-flex-row tw-items-start tw-gap-3">
@@ -17,7 +17,7 @@
                             calendar.startDate
                                 | dateFns
                                     : {
-                                          format: 'yyyy.M改正',
+                                          format: 'yyyy/M/d改正',
                                           parseFormat: 'yyyy-MM-dd',
                                       }
                         }}
@@ -29,7 +29,7 @@
     </div>
 
     <div>
-        <p class="tw-m-0 tw-mb-1 tw-text-xs tw-text-grey-600">
+        <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
             運用群で絞り込む（カードの表示/非表示のみ）
         </p>
         <!-- リアルタイム運用情報と同じ運用群チップ（横スクロール 1 行・見本色付き） -->

@@ -8,6 +8,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
@@ -31,6 +32,7 @@ OperationTableStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         AdsenseModule,
         EmptyStateComponent,
         OperationTableFilterComponent,

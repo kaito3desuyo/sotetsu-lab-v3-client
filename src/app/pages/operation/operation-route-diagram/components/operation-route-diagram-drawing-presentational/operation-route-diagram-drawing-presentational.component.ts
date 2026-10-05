@@ -24,6 +24,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
+import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
 import { buildBandViewModels } from '../../utils/operation-route-diagram-build-band-view-models.util';
@@ -176,6 +177,7 @@ export interface OperationRouteDiagramBandRow {
         DateFnsPipe,
         OperationRouteDiagramFormatStationNamePipe,
         AppButtonComponent,
+        CalendarBandComponent,
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -387,7 +389,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
 
     async downloadAsPng() {
         const name = `${dayjs(this.calendar().startDate, 'YYYY-MM-DD').format(
-            'YYYY年MM月DD日',
+            'YYYY/M/D',
         )}改正 ${this.calendar().calendarName} ${
             this.operation().operationNumber
         }運 運用行路図`;
@@ -396,7 +398,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         const nameLine1 = `${dayjs(
             this.calendar().startDate,
             'YYYY-MM-DD',
-        ).format('YYYY年MM月DD日')}改正`;
+        ).format('YYYY/M/D')}改正`;
         const nameLine2 = `${this.calendar().calendarName} ${
             this.operation().operationNumber
         }運`;

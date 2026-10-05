@@ -47,6 +47,7 @@ import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto'
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
+import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { CollapsiblePanelComponent } from 'src/app/shared/collapsible-panel/collapsible-panel.component';
 import {
     FilterChipOption,
@@ -91,6 +92,7 @@ import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/time
         FilterChipsComponent,
         CollapsiblePanelComponent,
         AppButtonComponent,
+        CalendarBandComponent,
         TimetableEditFormGridComponent,
     ],
 })

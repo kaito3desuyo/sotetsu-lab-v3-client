@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
 
@@ -15,7 +16,7 @@ import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
     templateUrl: './timetable-all-line-route-filter.component.html',
     styleUrl: './timetable-all-line-route-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FilterChipsComponent],
+    imports: [ControlBandComponent, FilterChipsComponent],
 })
 export class TimetableAllLineRouteFilterComponent {
     readonly routeOptions = toSignal(TimetableAllLineStore.routeOptions$, {

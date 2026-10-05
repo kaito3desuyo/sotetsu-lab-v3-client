@@ -1,15 +1,8 @@
 <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
-    <header
-        class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-justify-start tw-px-4"
-        [class]="isHolidayCalendar() ? 'holiday' : 'weekday'"
-    >
-        <h3 class="tw-text-base tw-font-normal tw-leading-5 tw-text-white">
-            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}
-            改正<br />
-            {{ calendar().calendarName }}
-            {{ operation().operationNumber }}運
-        </h3>
-    </header>
+    <app-calendar-band
+        [calendar]="calendar()"
+        [suffix]="operation().operationNumber + '運'"
+    ></app-calendar-band>
     <!-- 図はカードの幅いっぱいに広げる。駅が多く列間隔が下限を割るときだけ横にはみ出すので、
          縦もカード内でスクロールさせ（過去の運用情報と同じ）、横スクロールバーが
          図の底（列車が多いと 1,000px 下）に隠れないようにする。駅名は上に貼り付ける。 -->

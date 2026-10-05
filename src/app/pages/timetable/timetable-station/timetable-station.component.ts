@@ -19,6 +19,7 @@ import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.stat
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
@@ -44,6 +45,7 @@ TimetableStationStore.resetLoading();
         MatSelectModule,
         AdsenseModule,
         DateFnsPipe,
+        ControlBandComponent,
         EmptyStateComponent,
         SegmentToggleComponent,
         TimetableStationTableComponent,

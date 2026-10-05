@@ -1,7 +1,11 @@
 @if (calendar()) {
-    <article class="tw-rounded-card tw-bg-white">
-        <!-- P8-2 (98 §G0-8): 青帯バナーを廃止。改正日・ダイヤ名・方向は
-         app-timetable-search-card-c 側で表示済みのため削除しても情報削減にならない。 -->
+    <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+        <!-- 改正日・ダイヤ名・方向は、平日は青・土休日は赤の帯で出す（運用行路図と同じ帯）。
+             7 月にモックに無いとして消していたが、検索カードは長い表の下にあり見えないため戻した（2026-10-05） -->
+        <app-calendar-band
+            [calendar]="calendar()"
+            [suffix]="tripDirectionLabel.get(tripDirection()) + '時刻表'"
+        ></app-calendar-band>
         <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
             @if (trips().length) {
                 <mat-paginator

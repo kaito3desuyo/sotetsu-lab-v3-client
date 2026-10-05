@@ -11,6 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { interval, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
 import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
@@ -31,6 +32,7 @@ OperationRealTimeStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         MatTabsModule,
         OperationRealTimeControllerComponent,
         OperationRealTimeFilterComponent,

@@ -1,10 +1,13 @@
 @if (routeOptions().length) {
-    <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
-    <app-filter-chips
-        mode="multiple"
-        [scrollMode]="true"
-        [options]="routeOptions()"
-        [selected]="selectedRouteIds()"
-        (selectedChange)="onChange($event)"
-    ></app-filter-chips>
+    <!-- 操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
+    <app-control-band>
+        <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
+        <app-filter-chips
+            mode="multiple"
+            [scrollMode]="true"
+            [options]="routeOptions()"
+            [selected]="selectedRouteIds()"
+            (selectedChange)="onChange($event)"
+        ></app-filter-chips>
+    </app-control-band>
 }

@@ -1,13 +1,14 @@
 <article
-    class="tw-flex tw-flex-col tw-gap-4 tw-rounded-card tw-bg-white tw-p-4"
+    class="tw-flex tw-flex-col tw-gap-4 tw-overflow-clip tw-rounded-card tw-bg-white tw-p-4"
 >
     @if (calendar()) {
-        <!-- 平日／土休日の色の帯をやめ、操作カードの小見出し（16px 太字）にする。改正日・ダイヤ名・上り／下りは全部残す -->
-        <h2 class="tw-m-0 tw-text-base tw-font-bold">
-            {{ calendar().startDate | date: 'yyyy年MM月dd日' }}改正
-            {{ calendar().calendarName }}
-            {{ tripDirectionLabel.get(tripDirection()) }}時刻表
-        </h2>
+        <!-- 改正日・ダイヤ名・上り／下りは平日青・土休日赤の帯で出す（運用行路図と同じ）。
+             一度は小見出しにしていたのを戻した（ユーザー指示 2026-10-05）。帯はカードの縁まで出す -->
+        <app-calendar-band
+            class="-tw-mx-4 -tw-mt-4"
+            [calendar]="calendar()"
+            [suffix]="tripDirectionLabel.get(tripDirection()) + '時刻表'"
+        ></app-calendar-band>
     }
     <!-- 路線チップで入力対象駅を絞り込む（既定は自社の路線・折り畳み） -->
     <app-collapsible-panel

@@ -1,9 +1,19 @@
-<!-- P8-2 (98 §G0-8): 青帯バナーを廃止。改正日・ダイヤ名・方向・駅名は
-     親ページの駅/ダイヤ select・上下トグルと app-timetable-search-card-c
-     側で表示済みのため削除しても情報削減にならない。 -->
 <!-- 時の帯をカードの縁まで出すため内側の余白を持たない。角丸は overflow-clip で効かせる。
      overflow-hidden はスクロールコンテナを作って時の sticky を殺すので使わない（面の掟） -->
 <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
+    <!-- 改正日・ダイヤ名・駅名・方向は平日青・土休日赤の帯で出す（運用行路図と同じ）。
+         7 月にモックに無いとして消していたのを戻した（ユーザー指示 2026-10-05） -->
+    @if (calendar(); as calendar) {
+        <app-calendar-band
+            [calendar]="calendar"
+            [suffix]="
+                stationName() +
+                '駅 ' +
+                tripDirectionLabel.get(tripDirection()) +
+                '時刻表'
+            "
+        ></app-calendar-band>
+    }
     <!-- G5 と同方針: 内部縦スクロールは設けずページ全開で描画する（mockup-01） -->
     <!-- 時ごとの縞は付けない（全部白。ユーザー指示 2026-09-23）。時の境目は上罫で示す -->
     @for (item of timetableData(); track item.day + ':' + item.hour) {

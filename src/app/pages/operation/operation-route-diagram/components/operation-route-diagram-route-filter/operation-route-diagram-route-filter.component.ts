@@ -12,6 +12,7 @@ import {
     FilterChipOption,
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 
@@ -27,7 +28,7 @@ import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram
     templateUrl: './operation-route-diagram-route-filter.component.html',
     styleUrl: './operation-route-diagram-route-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FilterChipsComponent],
+    imports: [ControlBandComponent, FilterChipsComponent],
 })
 export class OperationRouteDiagramRouteFilterComponent {
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);

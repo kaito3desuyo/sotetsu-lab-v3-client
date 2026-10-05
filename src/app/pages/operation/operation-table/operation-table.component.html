@@ -13,15 +13,16 @@
     <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
          本文の h1/h2 重複は置かない -->
     <!-- モック 03: 青バナーを廃し、ダイヤ select を常設。
-         改正日・ダイヤ名は select の選択値として表示を維持する -->
-    <div>
+         改正日・ダイヤ名は select の選択値として表示を維持する。
+         操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
+    <app-control-band>
         <app-operation-table-filter
             [operationTrips]="operationTrips()"
             [calendars]="calendars()"
             [calendarId]="calendarId()"
             (calendarChange)="onCalendarChange($event)"
         ></app-operation-table-filter>
-    </div>
+    </app-control-band>
 
     @if (isEmpty()) {
         <app-empty-state

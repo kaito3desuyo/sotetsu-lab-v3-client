@@ -11,13 +11,14 @@
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
     <!-- 最終更新時刻は controller の再読み込みボタンの横へ移した
-         （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。 -->
-    <div>
-        <app-operation-real-time-controller></app-operation-real-time-controller>
-    </div>
-    <div>
-        <app-operation-real-time-filter></app-operation-real-time-filter>
-    </div>
+         （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。
+         操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
+    <app-control-band>
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            <app-operation-real-time-controller></app-operation-real-time-controller>
+            <app-operation-real-time-filter></app-operation-real-time-filter>
+        </div>
+    </app-control-band>
 
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。
          横並びでもどちらの列が何順なのかを示す見出し行を置く

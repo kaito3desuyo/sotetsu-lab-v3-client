@@ -1,5 +1,7 @@
 @if (isLoading()) {
-    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+    >
         <mat-progress-bar
             color="accent"
             mode="indeterminate"
@@ -13,69 +15,71 @@
     <!-- G0-5: ページ名はヘッダー（layout header の pageTitle）のみに表示し、
          本文の h1/h2 重複は置かない -->
     <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01）。ただし sm 未満は縦に積む。
-         ダイヤの選択中表示「2026.3.14改正 土休日ダイヤ」は約 270px 要り、390px で
+         ダイヤの選択中表示「2026/3/14改正 土休日ダイヤ」は約 270px 要り、390px で
          横に並べると改正日の途中で省略される（2026-09-23 実測） -->
-    <header
-        class="tw-grid tw-grid-cols-1 tw-gap-x-2 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[40rem]"
-    >
-        <mat-form-field class="tw-w-full">
-            <mat-label>駅</mat-label>
-            <mat-select
-                [value]="stationId()"
-                (valueChange)="onStationChange($event)"
-            >
-                @for (group of stationGroups(); track group.routeId) {
-                    <mat-optgroup [label]="group.label">
-                        @for (
-                            station of group.stations;
-                            track station.stationId
-                        ) {
-                            <mat-option [value]="station.stationId">
-                                {{ station.stationName }}
-                            </mat-option>
-                        }
-                    </mat-optgroup>
-                }
-            </mat-select>
-        </mat-form-field>
-        <mat-form-field class="tw-w-full">
-            <mat-label>ダイヤ</mat-label>
-            <!-- ダイヤ名だけでは同名の「平日ダイヤ」が改正ごとに並び、選び分けられない
+    <app-control-band>
+        <header
+            class="tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[40rem]"
+        >
+            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                <mat-label>駅</mat-label>
+                <mat-select
+                    [value]="stationId()"
+                    (valueChange)="onStationChange($event)"
+                >
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
+                            @for (
+                                station of group.stations;
+                                track station.stationId
+                            ) {
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                <mat-label>ダイヤ</mat-label>
+                <!-- ダイヤ名だけでは同名の「平日ダイヤ」が改正ごとに並び、選び分けられない
                  （ユーザー指摘 2026-09-23）。選択肢は検索カードと同じ「改正日 + ダイヤ名」、
                  選択中の表示は幅に収まるよう改正日を短く書く -->
-            <mat-select
-                [value]="calendarId()"
-                (valueChange)="onCalendarChange($event)"
-            >
-                <mat-select-trigger>
-                    @if (selectedCalendar(); as selected) {
-                        {{
-                            selected.startDate
-                                | dateFns
-                                    : {
-                                          format: 'yyyy.M.d改正',
-                                          parseFormat: 'yyyy-MM-dd',
-                                      }
-                        }}
-                        {{ selected.calendarName }}
+                <mat-select
+                    [value]="calendarId()"
+                    (valueChange)="onCalendarChange($event)"
+                >
+                    <mat-select-trigger>
+                        @if (selectedCalendar(); as selected) {
+                            {{
+                                selected.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ selected.calendarName }}
+                        }
+                    </mat-select-trigger>
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
                     }
-                </mat-select-trigger>
-                @for (calendar of calendars(); track calendar.calendarId) {
-                    <mat-option [value]="calendar.calendarId">
-                        {{
-                            calendar.startDate
-                                | dateFns
-                                    : {
-                                          format: 'yyyy年MM月dd日改正',
-                                          parseFormat: 'yyyy-MM-dd',
-                                      }
-                        }}
-                        {{ calendar.calendarName }}
-                    </mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
-    </header>
+                </mat-select>
+            </mat-form-field>
+        </header>
+    </app-control-band>
 
     <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/segment-toggle）。
          長い時刻表を読みながら切り替えられるよう、これだけトップバーの直下に貼り付ける
