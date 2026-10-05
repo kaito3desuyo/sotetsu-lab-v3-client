@@ -382,6 +382,95 @@
 - [x] **P8-8 ダッシュボードのカード影とアコーディオン影の被りを解消（2026-07-20 指示）** — コミット `7009cb7`。`Tests: 612 passed, 612 total`（dashboard 18）。変更: `dashboard-collapsible-cards.component.{html,ts,scss(新規)}`。`mat-accordion displayMode="flat"`＋各 `mat-expansion-panel` を `box-shadow:none`（ng-deep）＋`tw-gap-2` 撤去→`tw-divide-y tw-divide-solid tw-divide-grey-300` 区切り線＋アコーディオン全体を単一面 `tw-bg-white tw-shadow-md`（カードと同 shadow トークン）に統一。**管理者 Playwright 実測（390px）**: 6パネルとも box-shadow「none」・単一白面＋細区切り線・隙間の二重影帯解消・上のカードと非衝突・開閉シェブロン/本文健在。逸脱なし。 — 原文:  トップページで**各種カードの影とアコーディオンメニュー（mat-expansion-panel）の影が被る**。実測: アコーディオンは6枚の mat-expansion-panel が各々 MDC 既定 elevation 影（`rgba(0,0,0,.2) 0 3px 1px -2px, rgba(0,0,0,.14) 0 2px 2px 0…`）を持ち 8px 間隔で積層→隣接パネル間の隙間で影が二重化。上の独自カード（mat-card でなく div・影あり）とも隣接して被る。→ **アコーディオンを個別 elevation でなくフラット化**（`box-shadow: none` + 区切り線/1px枠 or 単一グループ影）し影の積層を解消、カードとの elevation 言語を統一（浮かせる面を減らす）。情報削減なし・開閉機能維持。対象: `pages/dashboard/`（アコーディオン=このサイトは？/運用情報検索・投稿/時刻表検索・投稿/ライブラリ 等）+ 必要なら共通 collapsible/expansion スタイル。検証: jest + Playwright 390px（隣接影の二重帯が消え・カードとアコーディオンの影が整理されて見える）
 - [x] **P8-5 余白の 4px グリッド化＋スマホ横余白ほぼ0（全ページ横断・2026-07-20 指示）** — コミット `f3d1dfa`（差し戻し1回込み・amend）。`Tests: 603 passed, 603 total`。変更: 10ページの `<main>` ルートで `max-sm:tw-px-2`→`max-sm:tw-px-0`（11ファイル）＋ `shared/ad-placeholder` に `box-sizing:border-box`。train-diagram/train-location は元々 px-2 無し（0px）。**差し戻し経緯**: flush 化でダッシュボードの広告枠（width100%+1px枠）が 392>390 の2px 横スクロールを誘発→ ad-placeholder に box-sizing:border-box で解消。**管理者 Playwright 実測（390px）**: 全ページ rootPad 0px・dashboard/real-time/train-location/train-diagram とも横スクロールなし・クイックタイル等が full-bleed で窮屈感解消。半端値 `tw-p-[6px]`（all-line のアイコンボタン・意図的サイズ計算）はスコープ外で未修正。 — 全ページルートの横 gutter を `max-sm:tw-px-0` に（従来 `max-sm:tw-px-2` を上書き＝P4.6 `6be47d8` の更新）。半端値 padding があれば4px系に是正。カード内部 padding は残す（full-bleed カード＋内部余白＝情報削減なし）。対象: 全ページルート（約10）+ 目立つ半端余白。検証: jest + Playwright 390px（横スクロールなし・カードが画面端まで・窮屈感解消を目視）。[[project_spacing_4px_mobile_flush]]
 
+## P9 行路図の帯文法是正（2026-07-20 ユーザー指摘「モックに寄せて逆に変」・裁定=99 文書）
+
+> T6.12 `4c6e22d` は要素単位（白地枠・タグ有無・フィット値）ではモック検証したが、**帯の描画文法
+> （一筆書き階段）を「独立角丸ボックス＋下置き時刻＋オレンジタグ」に誤訳**していた。管理者が
+> mockup-04 を ffmpeg 3倍拡大して裁定した一次資料 = `.context/redesign-2026-07/99-route-diagram-band-grammar-2026-07-20.md`
+> （**98 §G6 より優先・各サブエージェント必読**）。赤帯・チップ構成・罫線・色言語はスコープ外（99 §スコープ外）。
+
+- [x] **P9-1 帯描画をモック04の一筆書き階段文法へ是正** — コミット `c6f37e1`（差し戻し2回込み・amend×2）。`Tests: 76 passed, 76 total`（単体）/ `Tests: 637 passed, 637 total`（全体・baseline 625→回帰ゼロ）。変更: rect(rx=6)角丸ボックス撤去→横線1本(tripClassColor/回送は#9e9e9e破線)。時刻を線の上側両端(anchor start/end)へ。旅客ラベルは線の下側中央、回送ラベルは線の上側中央（「回」未含有時は前置）。オレンジタグ・△撤去、入庫■(navy fill)+「HHMM入庫」・出庫○+「HHMM出庫」。列車i→i+1の折返しをQ(二次ベジェ)角丸pathで縦線接続。**差し戻し経緯**: ①初版は出庫マーカー付近で回送ラベル/到着時刻/出庫テキストが同一y座標(線の上8px)に同居し1駅区間(列幅22px)で文字重複「回940217」化→出庫テキストのみ10px上へ分離させたが②回送ラベルと到着時刻がなお同じ高さで重複→時刻/ラベル/出庫テキストを線から8/18/28pxの3段（列幅非依存）に再分離して解消。管理者Playwright実測（11運・390px・実データ・フルページ）で出庫3行が階段状に分離・入庫側「■0017入庫」も無事・優等種別（特急/快速）の白地枠+階段状折返しがモック04と一致することを確認。逸脱なし。
+  - 対象: `pages/operation/operation-route-diagram/` の drawing-presentational {ts,html,spec}・build-band-view-models util+spec（必要なら interface）
+  - 参照: 99 文書（必読）/ `mockups/mockup-04-route-diagram.jpeg` / 既存流用せずモックから（[[feedback_subagent_model_and_redesign]]）
+  - DoD: 横線1本化（種別色・回送=灰破線）・時刻=線の上両端・旅客ラベル=線の下/回送=線の上・「回」前置・着端からの縦線接続（角丸r≈6）・出庫○+「HHMM 出庫」/入庫■+「HHMM 入庫」・オレンジタグ/角丸ボックス/下置き時刻/△の撤去・PNG出力追随・赤帯/チップ/二重罫線/グリッドは不変
+  - 検証: `npx jest`（`Tests:` 行必須・baseline 625）+ 管理者 Playwright 実測（11運・390px・モック04比較）
+- [x] **P9-2 カードの max-sm full-bleed 化（32px はみ出し解消）** — コミット `abcb288`。`Tests: 76 passed, 76 total`（単体）/ `Tests: 637 passed, 637 total`（全体・回帰ゼロ）。変更: drawing-presentational.component.html の `tw-p-4` に `max-sm:tw-px-0` を追加（既存10ページと同一パターン踏襲）。逸脱なし（全体実行中の timetable-station フレーキーテスト1件は単独実行で再現せず無関係と確認済み）。
+  - 対象: drawing-presentational.component.html（カード内 `tw-p-4` の横成分のみ）
+  - 参照: 99 §フィット寸法（clientWidth=358/scrollWidth=390 実測）/ [[project_spacing_4px_mobile_flush]]
+  - DoD: max-sm で図コンテナ実効幅=390（clientWidth==scrollWidth・右端駅列可視）・sm 以上は現状維持・ボタン等テキスト部の内部余白維持
+  - 検証: `npx jest` + 管理者 Playwright（390px で client/scrollWidth 実測）
+
+- [x] **P9-4 行路図ラベルの可読性折衷（線は一筆書き維持・ラベルのみ背景ボックスで拡大）** — コミット `8ec3b32`。`Tests: 79 passed, 79 total`（単体）/ `Tests: 640 passed, 640 total`（全体・baseline 637→回帰ゼロ）。変更: ラベル背景に fill-opacity(0.15) の種別色/灰半透明角丸矩形(rx=6)・文字幅概算（全角=フォントサイズ/半角=0.6倍）で可変幅・font-size 10→12拡大。ROW_HEIGHT(50→70)・ROW_TOP_MARGIN(18→24)等を拡大分の衝突回避で微増（時刻・出庫入庫の位置ロジック式自体は不変）。**管理者Playwright実測（11運・390px・実データ・フルページ）**: 「6008 各停 横浜」「2701 快速 湘南台」「3013 特急 海老名」等が種別色背景ボックスで区切られ大きく読める・一筆書き折返し接続は維持・出庫側の重なりも解消。ユーザーへスクショ提示済み。逸脱: モックへのピクセル忠実より視認性を優先する明示的ユーザー判断のため99§追補どおり許容。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}（P9-1 と同一ファイル）
+  - 参照: 99 §追補（必読・モック04より優先の確定方針）
+  - DoD: 99 §追補の「追加DoD」どおり。線・折返し接続・時刻・出庫入庫マーカーの位置ロジックは変更しない。ラベル（列番+種別+行先／回送=列番のみ）に半透明背景の角丸ボックスを敷き、フォント拡大＋太字で視認性を上げる
+  - 検証: `npx jest`（baseline 637・回帰ゼロ必須）+ 管理者 Playwright（11運・390px・可読性目視）
+- [x] **P9-5 駅名色/二重罫線/ラベルデザイン統一/PNG出力の情報切れ是正（2026-07-20 ユーザー指摘4点）** — コミット `bb3ab4f`。`Tests: 79 passed, 79 total`（単体）/ `Tests: 640 passed, 640 total`（全体・baseline通り回帰ゼロ）。変更: ①駅名ヘッダー`fill="#001556"`→`#212121` ②`boundaryTpl`・呼び出し3箇所・`boundaryXs()`・`borderAfterStation`import削除（`gridlinesTpl`は無変更）③standard行は種別バッジ(不透明塗りつぶし+白文字rx=3)+行先(黒#212121太字)+列番(グレー#757575)の3パーツ横並びに置換、`OperationRouteDiagramBandRow.label`廃止し`tripNumber`/`tripClassName`/`destinationStationName`個別フィールド化（回送は変更なし）④`downloadAsPng()`のヘッダーテキストを`nameLine1`/`nameLine2`の2行描画に分割・高さ64→96。**管理者Playwright実測（11運・390px・実データ+実PNGダウンロード）**: 画面描画で「各停 横浜 6008」「快速 湘南台 2701」等が塗りつぶしバッジ+黒字行先+グレー列番の3パーツで表示・駅名黒字・二重罫線消失（薄いグリッド点線は健在）を確認。**実際にPNGをダウンロードして中身確認**: ヘッダーが「2022年03月12日改正」「土休日ダイヤ 11運」の2行にCanvas幅内で収まり、旧実装で発生していた右側の文字切れが解消。逸脱なし。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}（P9-1/P9-4 と同一ファイル）
+  - 参照: 99 §追補2（必読・4点とも確定事項）/ `timetable-station-trip-cell.component.html` / `train-location-card.component.html`（デザインシステム参照元・既存流用）
+  - DoD: ①駅名ヘッダー色を青系から黒系へ ②`boundaryTpl`（二重縦罫線）削除・`gridlinesTpl`（薄いグリッド線）は残す ③ラベルを「種別=tripClassColor塗りつぶしバッジ+白文字／行先=黒文字太字／列番=グレー文字」に統一しP9-4の単色半透明背景表現は廃止（回送は現状の灰表現のまま） ④PNG出力ヘッダーを2行描画に分けCanvas幅内に収める
+  - 検証: `npx jest`（baseline 640・回帰ゼロ必須）+ 管理者 Playwright（11運・390px・実データ+PNGダウンロード実行確認）
+
+- [x] **P9-6 折返し接続線の丸め処理撤去・種別バッジのグラデーション化（2026-07-20 ユーザー再指摘）** — コミット `64953b6`。`Tests: 81 passed, 81 total`（単体）/ `Tests: 642 passed, 642 total`（全体・baseline 640→回帰ゼロ）。変更: ①`CONNECTOR_CORNER_RADIUS`/Q二次ベジェ/`stroke-linecap="round"`を撤去し`connectorPathD = M ${cx} ${y1} L ${cx} ${y2}`の単純垂直直線に置換（y1/y2はrow.centerY/next.centerYそのまま） ②標準行のバッジfillを単色から列車ごと一意なid（`route-diagram-badge-gradient-${tripOperationListId}`）の`linearGradient`（tripClassColor→白35%ブレンドの明色）に変更。回送は変更なし。**管理者Playwright実測（11運・390px・実データ+実PNGダウンロード再実施）**: 接続線path座標が`M 82.67 59 L 82.67 129`等の単純直線でDOM実測（帯線y座標59/129と完全一致・6pxオフセット消失）を確認。バッジは「各停」黒系・「快速」青系・「特急」オレンジ系のグラデーションを画面・PNG出力の両方で目視確認。逸脱なし。**教訓**: P9-5検収時に自分でダウンロードしたPNGを見ておきながら丸め接続線のズレを見落としており、ユーザー指摘で気付いた（[[feedback_visual_realdata_gate]]に「ズームして細部を見る」の重要性を追記検討）。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}（P9-1/P9-4/P9-5 と同一ファイル）
+  - 参照: 99 §追補3（必読・管理者が座標実測で原因確定済み）
+  - DoD: ①`connectorPathD`（`CONNECTOR_CORNER_RADIUS`によるQ二次ベジェ+オフセット丸め）を撤去し`M x y1 L x y2`の単純な垂直直線にする（xは着駅=発駅の同一座標） ②種別バッジのfillを単色から`linearGradient`（tripClassColorベース・列車ごとに一意なgradient id）に変更（回送は変更なし） ③線・時刻・出庫入庫マーカー・行先/列番表示はP9-5のまま変更しない
+  - 検証: `npx jest`（baseline 640・回帰ゼロ必須）+ 管理者 Playwright（11運・390px・実データ+実PNGダウンロードで目視確認）
+
+- [x] **P9-7 PNG出力offset未加算バグ修正・グラデーション対象を接続線に訂正（2026-07-20 ユーザー再指摘）** — コミット `3ad0534`（差し戻し1回込み・amend）。`Tests: 84 passed, 84 total`（単体）/ `Tests: 645 passed, 645 total`（全体・baseline 644→回帰ゼロ）。変更: ①`connectorPathD`文字列事前確定を廃止し`connectorX`/`connectorY1`/`connectorY2`(offset無し)をビューモデルに持たせテンプレート側で`+offset`して動的にd属性組み立て ②接続線strokeをrow.colorベースのlinearGradientに、バッジは単色ベタ塗りに戻す。**差し戻し経緯（2段階の致命的バグを管理者が実測発見）**: 初版は「offset加算はDOM実測で確認した」という報告だったが、管理者がPNGを実際にダウンロードしピクセル解析（Blob→Image→Canvas→getImageData）したところ**接続線が完全に消失**していた。原因はSVG仕様の既知の罠——垂直な接続線は境界ボックス幅が0の図形で、`gradientUnits`未指定（既定=objectBoundingBox）だと仕様上ペイントが無効化されstrokeが描画されない（種別バッジは矩形で幅・高さとも非ゼロのため同じ実装パターンで問題が起きず、これまで気づけなかった）。**この不具合は画面表示のネイティブSVGレンダリングでは再現せずPNG出力のBlob→Image→Canvas変換でのみ発生する**ため、画面確認だけでは検出不能。管理者がgradientUnits="userSpaceOnUse"注入で実測復活を確認してから差し戻し、修正後は管理者が同じ手順（DOM実測+実PNGダウンロード+ffmpegピクセル拡大）で接続線の正しい接続位置とグラデーション発色（黒→薄グレー等、上から下へ）の両方を実物で確認した。逸脱なし。**教訓**: gradientをSVGに適用する際は対象図形の境界ボックスが縮退（幅/高さ0）していないか確認必須。PNG/画像出力機能の検証は「画面のPlaywright確認」だけでなく「実際にダウンロードしてBlob→Image→Canvas変換のピクセルを見る」までやらないと、レンダリングパイプライン固有のバグを見逃す（[[feedback_visual_realdata_gate]]に追記）。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}（P9-1/P9-4/P9-5/P9-6 と同一ファイル）
+  - 参照: 99 §追補4・§追補5（必読・管理者がコード直読とピクセル実測で原因確定済み・致命的バグ）
+  - DoD: ①`connectorPathD`の文字列事前確定をやめ、offset無しの個別値をビューモデルに持たせテンプレート側で`+offset`して動的にd属性を組み立てる（画面表示=offset0とPNG出力=offset96の両方で正しい位置になることをDOM実測で確認） ②接続線(path stroke)を`row.color`ベースのlinearGradientに変更（`gradientUnits="userSpaceOnUse"`必須） ③種別バッジは単色ベタ塗りに戻す（P9-6のbadgeGradient撤去） ④線・時刻・出庫入庫マーカー・行先/列番表示は変更しない
+  - 検証: `npx jest`（baseline 642・回帰ゼロ必須）+ 管理者Playwright（**画面表示とPNG出力の両方**で接続線位置をDOM実測・実PNGダウンロード+ピクセル解析で確認必須）
+
+- [x] **P9-8 接続線グラデーションを「前種別色→次種別色」に訂正（2026-07-20 ユーザー最終確定）** — コミット `98a1177`。`Tests: 84 passed, 84 total`（単体）/ `Tests: 645 passed, 645 total`（全体・baseline通り回帰ゼロ）。変更: 接続線gradientの終了色を`lightenHexColor`による同色濃淡から`next.color`（接続先の列車の種別色。新フィールド`connectorEndColor`）に変更、開始色は`row.color`のまま。未使用化した`lightenHexColor`/`CONNECTOR_GRADIENT_LIGHTEN_RATIO`を削除。**管理者Playwright実測（実PNGダウンロード+Blob→Image→Canvas→getImageData）**: 各停→快速の接続線で上端`[34,35,40]`（各停の黒系）・下端`[61,79,175]`（快速の青系）を確認——接続元→接続先の種別色へ正しくグラデーションしていることを数値で確定。逸脱なし。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}（P9-1/P9-4/P9-5/P9-6/P9-7 と同一ファイル）
+  - 参照: 99 §追補6（必読・ユーザーが真意を確定）
+  - DoD: 接続線gradientの開始色=`row.color`（接続元）・終了色=`next.color`（接続先）に変更。`lightenHexColor`による同色濃淡（`connectorGradientLightColor`）は廃止。`gradientUnits="userSpaceOnUse"`は維持
+  - 検証: `npx jest`（baseline 645・回帰ゼロ必須）+ 管理者Playwright（**実際にPNGをダウンロードし接続線の上端/下端ピクセル色が接続元/接続先の種別色になっていることをffmpeg拡大+ピクセル解析で確認**。画面確認のみで終わらせない）
+
+- [x] **P9-9 可読性・表現統一の6点是正（2026-07-21 ユーザー指摘）** — コミット `e814f0f`（差し戻し1回込み・セッションリミット復旧）。`Tests: 85 passed, 85 total`（単体）/ `Tests: 646 passed, 646 total`（全体・baseline 645→+1・回帰ゼロ）。変更: ①BADGE/TRIP_NUMBER 10→12px・LABEL(行先/回送) 12→14px・時刻10→12px・駅名11→13px・出庫入庫9→11px、ROW_HEIGHT等のオフセット定数も比例拡張 ②`fit-columns.util.ts`を「390pxフィット優先」から「COLUMN_WIDTH=30px固定・駅数が多ければ390pxを超えて横スクロール」に変更 ③`verticalCenterOffset()`でBADGE/TRIP_NUMBER_FONT_SIZEとLABEL_FONT_SIZEの差分の半分だけy座標を補正しバッジ・行先・列番の視覚的中心を揃える ④コードレビュー完了（後述） ⑤「回」自動前置を廃止し`nonRevenueLabelText = '回送 <列番>'`をstandard行に近いレイアウトで表示 ⑥入庫を白抜き黒枠の`<polygon>`（masterブランチ座標踏襲）に変更。**④コードレビュー結論（実データ確認はローカルDBに直通データなしのため不可・コードレビューのみ）**: `reconnectTripOperationLists`が非表示駅への始発/終着を最寄りの表示中駅IDへ置換済みで境界駅名フォールバックとして機能し、`curateRouteDiagramStations`が直通全社局の代表駅を含むcurated master listのため、経由路線が不変でONの設計（P8-3）と合わせて`destinationStationName`が空になるケースは実質存在しない、現状維持で問題なしと判断。**管理者Playwright実測（11運・390px・実データ・DOM実測+ffmpeg拡大）**: ①②③⑤⑥を画面で目視確認（「回送 9432」「回送 9473」表現・各停/横浜/6008の縦位置揃い・白抜き三角形の入庫マーカー）、②は正しいoverflowコンテナで`scrollWidth=398/clientWidth=390`と実測し列間隔拡大による横スクロール発生を確認（誤ったセレクタで最初398/390取り違えたが再実測で訂正）。逸脱なし。**セッションリミット復旧の教訓**: 完了通知が"You've hit your session limit"のみの異常応答だった際、git diffで実際の変更内容を確認したところ実装は完了しておりテストのみ未追従（10件失敗、原因は全て仕様変更への追従漏れで実装バグではなかった）。差し戻しでピンポイントに10件の修正指示を出せたため1往復で解決した。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}・fit-columns.util.{ts,spec.ts}・build-band-view-models.util.{ts,spec.ts}（必要な範囲）
+  - 参照: 99 §追補7（必読・6点それぞれDoD明記済み）
+  - DoD: ①フォント全体拡大 ②390pxフィット優先をやめ列間隔を広げる(横スクロール許容) ③バッジ/行先/列番の縦位置ズレ解消 ④他社線直通の行き先表示を実データで確認（要修正なら対応） ⑤回送ラベルをstandard行と同じレイアウトに統一 ⑥入庫マーカーを白抜き黒枠の三角形(polygon)に変更（masterブランチ準拠）
+  - 検証: `npx jest`（baseline 645・回帰ゼロ必須）+ 管理者Playwright（11運+他社線直通運用の両方で390px実データ確認、実PNGダウンロードも確認）
+
+- [ ] **P9-10 列間隔拡大・回送ラベル位置統一・出庫入庫時刻の位置統合（2026-07-21 ユーザー指摘）**
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}・fit-columns.util.{ts,spec.ts}
+  - 参照: 99 §追補8（必読・3点それぞれDoD明記済み）
+  - DoD: ①COLUMN_WIDTH 30→40程度にさらに拡大 ②回送ラベルもstandard行と同じ「線の下」に統一（NON_REVENUE_LABEL_OFFSET分岐撤去） ③出庫/入庫の専用テキストを通常の発着時刻と同じ高さ(線の上・TIME_LABEL_OFFSET)に統合しマーカーと重ならないよう配置。1駅区間での重なり再発がないか実測確認必須
+  - 検証: `npx jest`（baseline 646・回帰ゼロ必須）+ 管理者Playwright（11運・390px・実データ+DOM実測でマーカー/テキスト非衝突確認）
+
+- [x] **P9-11 回送のバッジ化・縦位置ズレの根本対応・出庫テキストの画面外はみ出し是正（2026-07-21）** — コミット `6b351fe`（差し戻し1回込み・amend）。`Tests: 92 passed, 92 total`（単体）/ `Tests: 653 passed, 653 total`（全体・baseline 651→回帰ゼロ）。変更: ①`layoutLabelGroup()`でstandard用バッジ算出ロジックを共通化し回送も「[灰#9e9e9e塗りバッジ+白文字「回送」] 列番(グレー)」の2パーツに統一（旧`labelBoxX/Y/Width/Height`半透明背景ボックス撤去） ②全テキストに`dominant-baseline="central"`を付与し同一`labelY`共有方式へ切替（`verticalCenterOffset`等の手動近似計算撤去） ③`resolveDepotTextPlacement()`でSVG端付近の反転判定を追加。**差し戻し経緯**: 初版は③のx方向反転のみで、1駅区間・全体最初の駅の出庫で反転後のテキストが同じ行の到着時刻と衝突（「0711 出庫717」に潰れる）を管理者DOM実測で検出→反転時のみy座標を`timeY`から追加で16px上にずらす条件分岐で解消。**管理者Playwright実測（11運・390px・実データ）**: ①「各停」「横浜」「6008」の描画中心が全て523で完全一致（dominant-baseline方式の効果を数値確認） ②回送バッジ「回送 9432」が灰塗りバッジ+グレー列番で表示 ③「0711 出庫」(top389-401)・「0717」(top404-418)がy方向で完全分離し重なり解消。逸脱なし。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}
+  - 参照: 99 §追補9・§追補10・§追補11（必読）
+  - DoD: ①回送を「種別バッジ(灰塗り+白文字「回送」)+列番(グレー)」の2パーツ構成に統一(standard行と同じ仕組み) ②`dominant-baseline="central"`方式に切り替えバッジ/行先/列番の縦位置ズレを根本解消（手動近似計算`verticalCenterOffset`は撤去） ③出庫/入庫マーカーがSVG左端/右端付近にある場合、テキストを逃がす方向を反転し画面外にはみ出さないようにする（反転時は他要素との衝突回避でy方向にもずらす）
+  - 検証: `npx jest`（baseline 648・回帰ゼロ必須）+ 管理者Playwright（11運・390px・実データでDOM実測=getBoundingClientRect比較・出庫テキストが画面内に収まり他要素と重ならないことを確認）
+
+- [x] **P9-12 出庫入庫テキスト簡略化・三角形中心揃え・ボタン余白（2026-07-21 ユーザー指摘）** — コミット `9dbf8c4`。`Tests: 90 passed, 90 total`（単体）/ `Tests: 651 passed, 651 total`（全体。653→651は削除機能に紐づく重複spec統合による意図的な減・失敗ゼロを管理者が`npx jest`再実行で確認）。変更: ①`resolveDepotTextPlacement`・`depotOutTextX/Y/Anchor`・`depotInTextX/Y/Anchor`・関連定数を全削除し「HHMM 出庫/入庫」テキスト描画を撤去、○/△マーカーのみ残し時刻は常に通常のleftTime/rightTime表示に統合 ②入庫`<polygon>`の頂点/底辺yを`centerY-12/+1`から`centerY-6.5/+6.5`に修正（高さ13px維持・バウンディングボックス中心=centerY） ③画像ダウンロードボタンの`<div>`に`max-sm:tw-px-4`追加。**管理者Playwright実測（11運・390px・実データ）**: ①「0711　0717」「0017　0008」のように文字ラベルなし時刻のみ表示を確認、出庫側の重なり問題（過去複数回差し戻し）が構造的に解消 ②三角形バウンディングボックス中心(top2290.5/bottom2303.5→中心2297)と対応する破線の位置(y=2297)が完全一致を確認 ③ボタン本体が`x=16〜374`（画面0〜390から左右16pxずつ余白）で画面端から離れていることを確認。逸脱なし。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}
+  - 参照: 99 §追補12（必読）・[[project_spacing_4px_mobile_flush]]（③のUI原則）
+  - DoD: ①出庫/入庫の「HHMM 出庫/入庫」専用テキストを廃止し通常の発着時刻表示に統合（showLeftTime/showRightTimeを常にtrueに・depotOutTextX/Y/Anchor等の位置調整ロジックを削除） ②入庫△のバウンディングボックス中心をcenterYに揃える（頂点centerY-6.5・底辺centerY+6.5程度） ③「画像としてダウンロードする」ボタンのラッパーに`max-sm:tw-px-4`等の横余白を追加（SVG部分は現状のfull-bleedのまま）
+  - 検証: `npx jest`（baseline 653・回帰ゼロ必須）+ 管理者Playwright（11運・390px・実データでDOM実測=出庫/入庫マーカーの中心とcenterYの一致・ボタン余白の目視確認）
+
+- [x] **P9-13 路線チップの操作系余白・フィルター説明文・時刻表示余白（2026-07-21 ユーザー指摘 + 積み残しP9-3統合）** — コミット `ad5ae90`。`Tests: 90 passed, 90 total`（単体）/ `Tests: 651 passed, 651 total`（全体・回帰ゼロ）。変更: ①route-filterのルート`<div>`に`max-sm:tw-px-4`追加 ②ラベルを「路線で駅を絞り込み（経由しない路線は選択不可）」に変更（mockup-04目視確認） ③時刻表示xオフセットを`leftX+2/rightX-2`から`leftX+4/rightX-4`に変更。**管理者Playwright実測（11運・390px・実データ）**: ①チップ矩形が`x=16〜374`で左右16px余白を確認 ②ラベル文言が正しく表示されていることを確認 ③帯線leftX=104に対し時刻x=108で差分4pxを確認。逸脱なし。
+  - 対象: operation-route-diagram-route-filter.component.{html,spec}・drawing-presentational.component.{html,spec}
+  - 参照: 99 §追補13・§付随ギャップ（必読）
+  - DoD: ①route-filterに`max-sm:tw-px-4`等の横余白を追加（P9-12のボタンと同じ扱い） ②フィルターラベルをモック04準拠「路線で駅を絞り込み（経由しない路線は選択不可）」に変更 ③発着時刻表示のxオフセットを`leftX+2`/`rightX-2`から`leftX+4`/`rightX-4`に変更
+  - 検証: `npx jest`（baseline 651・回帰ゼロ必須）+ 管理者Playwright（11運・390px・実データでチップ余白・時刻位置をDOM実測確認）
+
+- [x] **P9-16 列番dy補正値を0.5に最終確定（2026-07-21 ユーザー3値選定）** — コミット `42d4c66`。`Tests: 91 passed, 91 total`（単体）/ `Tests: 652 passed, 652 total`（全体・回帰ゼロ）。P9-15の`-0.75`もユーザー「dy=0が一番自然」と再訂正→さらに「dy=0も微妙にズレてる、+0.25pxぐらいの雰囲気」と追加指摘され、管理者が`dy=0`/`0.25`/`0.5`の3値を並べて提示（**自分の目では差が判別できないと正直に申告した上で**）、ユーザーが実際に見て`dy=0.5`を選定。DOM実測で`dy="0.5"`が正しく反映されていることを確認。逸脱なし。**教訓（3回連続で外した反省）**: `-1.5`(誤)→`-0.75`(誤・同方向)→ユーザー指摘で`0`付近が正しい方向と判明→`0.5`(正)。自分の目視だけで最適値を決め打ちせず、迷ったら正直に「差が判別できない」と伝えて複数候補をユーザーに選んでもらうのが結果的に一番早かった（[[feedback_visual_realdata_gate]]に記録済み）。
+  - 対象: drawing-presentational.component.{html,spec}
+  - 検証: `npx jest` + DOM実測でdy="0.5"を確認
+
+- [x] **P9-15 列番dy補正値を-1.5から-0.75に調整（2026-07-21 ユーザー再指摘・過剰補正の是正）** — コミット `601363b`。`Tests: 91 passed, 91 total`（単体）/ `Tests: 652 passed, 652 total`（全体・回帰ゼロ）。P9-14の`dy="-1.5"`にユーザーが「今度は上にズレて見える」と指摘→管理者が`dy=0`/`-0.75`/`-1.5`の3値をPlaywright上で切り替えてスクリーンショットを縦に並べて比較（`ffmpeg vstack`）、`-0.75`が最も自然に揃って見えることを確定。**管理者Playwright実測（11運・390px・実データ、ピクセル拡大）**で最終反映後も同じ見た目を確認。逸脱なし。教訓: 視覚補正値は一発で決め打ちせず、複数候補を並べて比較するのが確実。
+
+- [x] **P9-14 列車番号(数字)の縦位置視覚補正（2026-07-21 ユーザー指摘・原因確定）** — コミット `773cf64`。`Tests: 91 passed, 91 total`（単体）/ `Tests: 652 passed, 652 total`（全体・baseline 651→回帰ゼロ）。変更: standard/回送共通の列番`<text>`要素に`dy="-1.5"`を追加。発着時刻は他要素と基準線を共有していないため対象外と判断。**管理者Playwright実測（11運・390px・実データ、スクリーンショットピクセル拡大で目視）**: 「特急 海老名 3013」「回送 9432」とも視覚的に揃って見えることを確認。逸脱なし。
+  - 対象: drawing-presentational.component.{ts,html,spec.ts}
+  - 参照: 99 §追補14（必読・管理者が実験でdy=-1.5の有効性を確認済み）
+  - DoD: 列番テキスト（standard・回送とも）に`dy="-1.5"`程度の視覚補正を追加。発着/出庫入庫時刻の数字も同じ問題がないか確認し必要なら同様に補正。バッジ内種別名・行先（和文のみ）は変更不要
+  - 検証: `npx jest`（baseline 651・回帰ゼロ必須）+ 管理者Playwright（11運・390px・実データ。**DOM実測だけでなく必ずスクリーンショットのピクセル拡大で目視確認**）
+
 ## 次セッションへの申し送り（2026-07-20 更新・P8 全9件完了）
 - **P8（ユーザー判断反映＋視覚フィードバック）全9件 完了・各件管理者 Playwright 実測済み**: P8-1 形式「系」全廃(`cc3dc61`)/ P8-2 青帯バナー削除(`d7222e9`・行路図の赤帯は情報源のため残置＝要ユーザー判断)/ P8-3 行路図チップ関連路線のみ(`39dda99`)/ P8-4 入力チップ既定=自社線(`49848eb`)/ P8-5 余白4px・スマホ横flush(`f3d1dfa`)/ P8-6 ヘッダー更新ボタン削除(`5638d70`)/ P8-7 ヒーロー主要駅粗化(`7429ccb`・474→125線)/ P8-8 アコーディオン影フラット化(`7009cb7`)/ P8-9 チップ左寄り修正(`c7bf696`)。jest ベースライン `Tests: 625 passed`。
 - **未決の軽微1件**: P8-2 で運用行路図の帯（赤・改正日/ダイヤ/運用番号）を残置——消すなら情報を別コントロールに出す要あり（ユーザー判断待ち）。
