@@ -88,9 +88,7 @@ export const OperationRouteDiagramStore = {
     calendar$: store.pipe(
         select((state) => state.operationTrips?.operation?.calendar),
     ),
-    operation$: store.pipe(
-        select((state) => state.operationTrips?.operation),
-    ),
+    operation$: store.pipe(select((state) => state.operationTrips?.operation)),
     tripOperationLists$: store.pipe(
         select((state) => state.operationTrips?.trips),
     ),
@@ -98,12 +96,24 @@ export const OperationRouteDiagramStore = {
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 
+    /**
+     * 路線を何も選んでいなければ、この運用が経由する路線の駅を全部出す（押せるチップを全部選んだのと同じ）。
+     * 経由しない路線の駅は出さない（ユーザー指示 2026-10-05）。
+     */
     visibleStations$: combineLatest([
         store.pipe(select((state) => state.stations)),
         store.pipe(select((state) => state.selectedRouteIds)),
-    ]).pipe(map(([stations, selectedRouteIds]) =>
-        visibleStations(stations, selectedRouteIds),
-    )),
+        store.pipe(select((state) => state.operationTrips)),
+    ]).pipe(
+        map(([stations, selectedRouteIds, operationTrips]) =>
+            visibleStations(
+                stations,
+                selectedRouteIds.length
+                    ? selectedRouteIds
+                    : visitedRouteIds(stations, operationTrips?.trips ?? []),
+            ),
+        ),
+    ),
 
     // P8-3: チップの表示自体を「当該運用に関連する路線」のみへ絞り込む。
     // 関連路線の判定基準は operation-route-diagram-related-route-ids.util.ts 参照。

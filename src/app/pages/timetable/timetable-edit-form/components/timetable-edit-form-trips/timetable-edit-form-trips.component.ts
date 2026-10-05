@@ -221,15 +221,16 @@ export class TimetableEditFormTripsComponent {
         this.mode() === ETimetableEditFormMode.UPDATE ? '更新する' : '登録する',
     );
 
-    /** G9: 路線チップ折り畳み時のヘッダー要約（全路線は「全路線」、何も選んでいなければ「選択なし」） */
+    /** G9: 路線チップ折り畳み時のヘッダー要約（全部選んでいるときも、何も選んでいない＝全部出すときも「全路線」） */
     readonly routeFilterSummary = computed(() => {
         const options = this.routeOptions();
         const selected = this.selectedRouteIds();
-        if (!options.length || selected.length === options.length) {
+        if (
+            !options.length ||
+            selected.length === 0 ||
+            selected.length === options.length
+        ) {
             return '全路線';
-        }
-        if (selected.length === 0) {
-            return '選択なし';
         }
         const selectedSet = new Set<FilterChipValue>(selected);
         return options

@@ -234,7 +234,7 @@ describe('TimetableEditFormTripsComponent', () => {
             expect(component.routeFilterSummary()).toBe('本線');
         });
 
-        it('何も選んでいないときは「選択なし」と表示する（格子も空になる）', () => {
+        it('何も選んでいないときは全部出すので「全路線」と表示する', () => {
             fixture.componentRef.setInput('routes', [
                 { routeId: 'r1', routeName: '本線' },
                 { routeId: 'r2', routeName: 'いずみ野線' },
@@ -242,7 +242,7 @@ describe('TimetableEditFormTripsComponent', () => {
             fixture.componentRef.setInput('selectedRouteIds', []);
             fixture.detectChanges();
 
-            expect(component.routeFilterSummary()).toBe('選択なし');
+            expect(component.routeFilterSummary()).toBe('全路線');
         });
     });
 

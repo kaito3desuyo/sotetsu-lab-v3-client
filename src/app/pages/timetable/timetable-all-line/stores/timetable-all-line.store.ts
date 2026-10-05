@@ -60,17 +60,6 @@ function orderStations(
     return tripDirection === 0 ? [...stations].reverse() : stations;
 }
 
-/** 選択路線で絞り込んだ表示駅。未選択（初期化前）は全駅を表示する。 */
-function toVisibleStations(
-    orderedStations: StationDetailsDto[],
-    selectedRouteIds: string[],
-): StationDetailsDto[] {
-    if (!selectedRouteIds.length) {
-        return orderedStations;
-    }
-    return visibleStations(orderedStations, selectedRouteIds);
-}
-
 /**
  * ダイヤ並び替え済みの全列車（ページング前）。列は路線絞り込みの影響を受けない
  * （並びは全駅で決め、絞り込みは行を隠すだけ）。並べ方は sort-trips.util.ts を参照。
@@ -160,7 +149,7 @@ const visibleStations$ = combineLatest([
     store.pipe(select((state) => state.selectedRouteIds)),
 ]).pipe(
     map(([orderedStations, selectedRouteIds]) =>
-        toVisibleStations(orderedStations, selectedRouteIds),
+        visibleStations(orderedStations, selectedRouteIds),
     ),
 );
 

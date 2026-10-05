@@ -25,9 +25,9 @@ describe('visibleStations', () => {
     ];
 
     it('全路線選択時は全駅を返す（現行表示と一致・リグレッションなし）', () => {
-        expect(
-            visibleStations(all, ['本線', 'いずみ野線', '厚木線']),
-        ).toEqual(all);
+        expect(visibleStations(all, ['本線', 'いずみ野線', '厚木線'])).toEqual(
+            all,
+        );
     });
 
     it('1路線選択時はその路線に属する駅のみ返す', () => {
@@ -41,8 +41,8 @@ describe('visibleStations', () => {
         ]);
     });
 
-    it('未選択（空集合）では駅が1つも返らない', () => {
-        expect(visibleStations(all, [])).toEqual([]);
+    it('未選択（空集合）では全駅を返す（絞り込みは「空＝全部」）', () => {
+        expect(visibleStations(all, [])).toEqual(all);
     });
 
     it('2路線選択時はその2路線に属する駅のみ返す', () => {

@@ -15,8 +15,8 @@ import { TrainDiagramService } from './services/train-diagram.service';
 import { TrainDiagramStore } from './stores/train-diagram.store';
 
 /**
- * 渡した駅の並びをそれぞれ 1 本の路線として置き、全部選ぶ。路線を何も選ばないと駅は
- * 出ないため（全線時刻表・運用行路図と同じ）、縮尺・線のつながりを見るテストはこれで駅を出す。
+ * 渡した駅の並びをそれぞれ 1 本の路線として置き、全部選ぶ。縮尺・線のつながりを見るテストは
+ * これで駅軸と分岐駅の判定に使う路線をそろえる。
  */
 function selectRoutesThrough(...routes: string[][]): void {
     TrainDiagramStore.setRouteStations(

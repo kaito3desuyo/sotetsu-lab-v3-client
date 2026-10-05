@@ -28,7 +28,7 @@ export type DiagramDirectionFilter = 'up' | 'down' | 'both';
 
 type StoreProps = {
     calendarId: string | null;
-    /** 選択中の路線 ID 集合（複数選択）。空 = 駅を出さない（全線時刻表・運用行路図と同じ）。 */
+    /** 選択中の路線 ID 集合（複数選択）。空 = 全路線扱い（網羅駅軸をそのまま表示。絞り込みは全ページで「空＝全部」）。 */
     selectedRouteIds: string[];
     /** 横（時間軸）の縮尺（px/分）。chart 本体の縮尺の一次情報。 */
     pxPerMinute: number;
@@ -81,13 +81,16 @@ const store = createStore(
  * 全線時刻表の駅順）が駅順の一次情報であり、これに対して独自の並べ替えをしてはならない。
  *
  * networkStations の順序を維持したまま、選択路線のいずれかに属する駅だけにフィルタする。
- * 路線を何も選んでいなければ駅は出さない（全線時刻表・運用行路図と同じ）。
+ * 路線を何も選んでいなければ網羅駅軸をそのまま返す（絞り込みは全ページで「空＝全部」。ユーザー指示 2026-10-05）。
  */
 function toStationAxisStations(
     networkStations: StationDetailsDto[],
     routeStations: RouteDetailsDto[],
     selectedRouteIds: string[],
 ): StationDetailsDto[] {
+    if (selectedRouteIds.length === 0) {
+        return networkStations;
+    }
     const selected = new Set(selectedRouteIds);
     const stationIdsInSelectedRoutes = new Set<string>();
     for (const route of routeStations) {
@@ -117,7 +120,7 @@ const stationAxisStations$ = combineLatest([
 );
 
 /**
- * 選択路線ごとの順序付き stationId 列。
+ * 選択路線（未選択=全路線）ごとの順序付き stationId 列。
  * buildStationAxis が「路線内で連続するが軸上で隣接しない接続駅（分岐駅）」を
  * 複製挿入する判定（insertJunctionDuplicates）に使う。軸順の決定には使わない
  * （軸順は networkStations のキュレート順が一次情報）。
@@ -127,7 +130,9 @@ function toRoutesOrderedStationIds(
     selectedRouteIds: string[],
 ): readonly (readonly string[])[] {
     const selected = new Set(selectedRouteIds);
-    const routes = routeStations.filter((route) => selected.has(route.routeId));
+    const routes = selectedRouteIds.length
+        ? routeStations.filter((route) => selected.has(route.routeId))
+        : routeStations;
     return routes.map((route) =>
         (route.routeStationLists ?? [])
             .map((rsl) => rsl.station?.stationId ?? rsl.stationId)
