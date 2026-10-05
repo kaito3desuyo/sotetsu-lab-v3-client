@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TripClassChipComponent } from './trip-class-chip.component';
@@ -49,14 +50,14 @@ describe('TripClassChipComponent', () => {
         fixture.componentInstance.label = '快速';
         fixture.detectChanges();
         expect(chip().textContent.trim()).toBe('快速');
-        expect(chip().textContent).not.toMatch(/\d/);
+        expect(chip()).not.toHaveTextContent(/\d/);
     });
 
     it('色が無いときはグレーで塗る', () => {
         fixture.componentInstance.color = null;
         fixture.detectChanges();
         expect(chip().className).toContain('tw-bg-grey-500');
-        expect(chip().style.backgroundColor).toBe('');
+        expect(chip()).toHaveStyle({ backgroundColor: '' });
     });
 
     it('白文字と縁取り用クラスを常に持つ', () => {

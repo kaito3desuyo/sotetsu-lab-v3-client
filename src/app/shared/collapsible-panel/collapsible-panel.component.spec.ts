@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -105,9 +106,9 @@ describe('CollapsiblePanelComponent', () => {
 
     it('aria-expanded が開閉状態に追従する', async () => {
         await setup(true);
-        expect(headerButton().getAttribute('aria-expanded')).toBe('false');
+        expect(headerButton()).toHaveAttribute('aria-expanded', 'false');
         headerButton().click();
         fixture.detectChanges();
-        expect(headerButton().getAttribute('aria-expanded')).toBe('true');
+        expect(headerButton()).toHaveAttribute('aria-expanded', 'true');
     });
 });

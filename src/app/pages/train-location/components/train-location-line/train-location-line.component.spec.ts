@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
@@ -78,7 +79,7 @@ describe('TrainLocationLineComponent', () => {
         expect(el().querySelectorAll('app-train-location-card')).toHaveLength(
             3,
         );
-        expect(el().textContent).not.toContain('本停車中');
+        expect(el()).not.toHaveTextContent(/本停車中/);
     });
 
     it('駅の札を押すと stationSelect に stationId を出す', () => {
@@ -130,7 +131,7 @@ describe('TrainLocationLineComponent', () => {
         ]);
 
         const between = el().querySelector('[data-between]') as HTMLElement;
-        expect(between.style.height).toBe('30px');
+        expect(between).toHaveStyle({ height: '30px' });
     });
 
     it('乗換路線がある駅には他路線への routerLink チップを表示する（station_id 付き）', () => {
@@ -147,9 +148,12 @@ describe('TrainLocationLineComponent', () => {
 
         const link: HTMLAnchorElement =
             fixture.nativeElement.querySelector('a');
-        expect(link.textContent).toContain('本線');
-        expect(link.getAttribute('href')).toContain('r-main');
-        expect(link.getAttribute('href')).toContain('station_id=futamatagawa');
+        expect(link).toHaveTextContent(/本線/);
+        expect(link).toHaveAttribute('href', expect.stringContaining('r-main'));
+        expect(link).toHaveAttribute(
+            'href',
+            expect.stringContaining('station_id=futamatagawa'),
+        );
     });
 
     it('乗換路線が無い駅にはチップを表示しない', () => {
@@ -185,7 +189,7 @@ describe('TrainLocationLineComponent', () => {
         ).parentElement;
         const usableHeightPx =
             BETWEEN_ROW_BASE_HEIGHT_PX - BETWEEN_ROW_CARD_HEIGHT_PX;
-        expect(positioned.style.top).toBe(`${0.4 * usableHeightPx}px`);
+        expect(positioned).toHaveStyle({ top: `${0.4 * usableHeightPx}px` });
     });
 
     it('98 G8: 同一区間・同一方向に近接進捗の複数在線があってもカードが重ならない（衝突回避）', () => {
@@ -295,7 +299,7 @@ describe('TrainLocationLineComponent', () => {
         fixture.componentRef.setInput('rows', rows);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('◀ 上り');
-        expect(fixture.nativeElement.textContent).not.toContain('方面');
+        expect(fixture.nativeElement).toHaveTextContent(/◀ 上り/);
+        expect(fixture.nativeElement).not.toHaveTextContent(/方面/);
     });
 });

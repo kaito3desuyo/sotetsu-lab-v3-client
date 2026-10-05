@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 
 import { TestBed, inject } from '@angular/core/testing';
 import { TrainLocationResolverService } from './train-location-resolver.service';

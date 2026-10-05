@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -47,19 +48,22 @@ describe('TrainDiagramInfoPanelComponent', () => {
             'a[data-operation-number]',
         );
         expect(link.textContent?.trim()).toBe('71');
-        expect(link.getAttribute('href')).toContain(
-            '/operation/route-diagram;operation_id=op-71',
+        expect(link).toHaveAttribute(
+            'href',
+            expect.stringContaining(
+                '/operation/route-diagram;operation_id=op-71',
+            ),
         );
+        // 色の値は問わず「付いている」ことだけを見る（toHaveStyle は特定の値しか比べられない）
+        // eslint-disable-next-line jest-dom/prefer-to-have-style
         expect(link.style.backgroundColor).not.toBe('');
-        expect(fixture.nativeElement.textContent).not.toContain('運用');
+        expect(fixture.nativeElement).not.toHaveTextContent(/運用/);
     });
 
     it('全線時刻表へのリンクの字は「全線時刻表で見る ›」', () => {
         fixture.componentRef.setInput('info', baseInfo);
         fixture.detectChanges();
-        expect(fixture.nativeElement.textContent).toContain(
-            '全線時刻表で見る ›',
-        );
+        expect(fixture.nativeElement).toHaveTextContent(/全線時刻表で見る ›/);
     });
 
     it('host は PC で右下に浮かぶカード、枠は tw-border-solid', () => {

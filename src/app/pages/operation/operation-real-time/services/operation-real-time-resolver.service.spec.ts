@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 
 import { TestBed, inject, waitForAsync } from '@angular/core/testing';
 import { OperationRealTimeResolverService } from './operation-real-time-resolver.service';

@@ -35,9 +35,7 @@ describe('HeaderComponent', () => {
 
         const h1: HTMLElement = fixture.nativeElement.querySelector('h1');
         expect(h1.textContent?.trim()).toBe('ダイヤグラム');
-        expect(fixture.nativeElement.textContent).not.toContain(
-            'Sotetsu Lab.',
-        );
+        expect(fixture.nativeElement).not.toHaveTextContent(/Sotetsu Lab\./);
     });
 
     it('P8-6: リロードアイコンは表示しない（「ようこそ」は維持する）', () => {

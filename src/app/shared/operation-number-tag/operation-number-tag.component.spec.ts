@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { provideRouter } from '@angular/router';
@@ -38,34 +39,36 @@ describe('OperationNumberTagComponent', () => {
         fixture.componentRef.setInput('operationNumber', '1001');
         fixture.detectChanges();
 
-        expect(getTagEl().style.backgroundColor).toBe(
-            'rgba(244, 67, 54, 0.12)',
-        );
+        expect(getTagEl()).toHaveStyle({
+            backgroundColor: 'rgba(244, 67, 54, 0.12)',
+        });
     });
 
     it('G を含む運用番号は紺系の群色背景になる', () => {
         fixture.componentRef.setInput('operationNumber', '1G01');
         fixture.detectChanges();
 
-        expect(getTagEl().style.backgroundColor).toBe(
-            'rgba(26, 35, 126, 0.12)',
-        );
+        expect(getTagEl()).toHaveStyle({
+            backgroundColor: 'rgba(26, 35, 126, 0.12)',
+        });
     });
 
     it('K を含む運用番号は赤茶系の群色背景になる', () => {
         fixture.componentRef.setInput('operationNumber', '1K01');
         fixture.detectChanges();
 
-        expect(getTagEl().style.backgroundColor).toBe(
-            'rgba(183, 28, 28, 0.12)',
-        );
+        expect(getTagEl()).toHaveStyle({
+            backgroundColor: 'rgba(183, 28, 28, 0.12)',
+        });
     });
 
     it('運用番号 100（休車）は灰色背景になる', () => {
         fixture.componentRef.setInput('operationNumber', '100');
         fixture.detectChanges();
 
-        expect(getTagEl().style.backgroundColor).toBe('rgba(0, 0, 0, 0.12)');
+        expect(getTagEl()).toHaveStyle({
+            backgroundColor: 'rgba(0, 0, 0, 0.12)',
+        });
     });
 
     it('運用番号 100（休車）は「休」と出し、link があってもリンクにしない', () => {
@@ -97,7 +100,8 @@ describe('OperationNumberTagComponent', () => {
         const anchor: HTMLAnchorElement =
             fixture.nativeElement.querySelector('a');
         expect(anchor).not.toBeNull();
-        expect(anchor.getAttribute('href')).toBe(
+        expect(anchor).toHaveAttribute(
+            'href',
             '/operation/route-diagram;operation_id=123',
         );
     });
@@ -111,15 +115,17 @@ describe('OperationNumberTagComponent', () => {
             fixture.detectChanges();
 
             const el = getTagEl();
-            expect(el.style.boxShadow).toBe('inset 0 0 0 1px rgb(183, 28, 28)');
-            expect(el.classList.contains('tw-border')).toBe(false);
+            expect(el).toHaveStyle({
+                boxShadow: 'inset 0 0 0 1px rgb(183, 28, 28)',
+            });
+            expect(el).not.toHaveClass('tw-border');
         });
 
         it('borderEnabled 未指定時は枠の影が付かない', () => {
             fixture.componentRef.setInput('operationNumber', '53');
             fixture.detectChanges();
 
-            expect(getTagEl().style.boxShadow).toBe('');
+            expect(getTagEl()).toHaveStyle({ boxShadow: '' });
         });
     });
 
@@ -127,7 +133,9 @@ describe('OperationNumberTagComponent', () => {
         let mockTrigger: { openMenu: jest.Mock };
 
         const touchAt = (x: number, y: number) =>
-            ({ touches: [{ clientX: x, clientY: y }] }) as unknown as TouchEvent;
+            ({
+                touches: [{ clientX: x, clientY: y }],
+            }) as unknown as TouchEvent;
 
         beforeEach(() => {
             mockTrigger = { openMenu: jest.fn() };
@@ -152,8 +160,8 @@ describe('OperationNumberTagComponent', () => {
 
             const trigger: HTMLButtonElement =
                 fixture.nativeElement.querySelector('button[aria-hidden]');
-            expect(trigger.style.left).toBe('320px');
-            expect(trigger.style.top).toBe('480px');
+            expect(trigger).toHaveStyle({ left: '320px' });
+            expect(trigger).toHaveStyle({ top: '480px' });
         });
 
         it('長押しした座標にメニューの起点を置く', () => {
@@ -175,7 +183,9 @@ describe('OperationNumberTagComponent', () => {
             fixture.componentRef.setInput('operationNumber', '1001');
             fixture.detectChanges();
 
-            const event = { preventDefault: jest.fn() } as unknown as MouseEvent;
+            const event = {
+                preventDefault: jest.fn(),
+            } as unknown as MouseEvent;
             component.onContextMenu(
                 event,
                 mockTrigger as unknown as MatMenuTrigger,
@@ -192,7 +202,9 @@ describe('OperationNumberTagComponent', () => {
             ]);
             fixture.detectChanges();
 
-            const event = { preventDefault: jest.fn() } as unknown as MouseEvent;
+            const event = {
+                preventDefault: jest.fn(),
+            } as unknown as MouseEvent;
             component.onContextMenu(
                 event,
                 mockTrigger as unknown as MatMenuTrigger,

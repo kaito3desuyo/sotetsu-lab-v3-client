@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
+/* eslint-disable no-unused-vars */
 
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed, inject } from '@angular/core/testing';

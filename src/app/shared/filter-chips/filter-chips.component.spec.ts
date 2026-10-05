@@ -91,11 +91,9 @@ describe('FilterChipsComponent', () => {
                 By.css('mat-chip-option'),
             );
 
-            expect(
-                chipOptions[2].nativeElement.classList.contains(
-                    'mat-mdc-chip-disabled',
-                ),
-            ).toBe(true);
+            expect(chipOptions[2].nativeElement).toHaveClass(
+                'mat-mdc-chip-disabled',
+            );
 
             clickChip(2);
 
@@ -139,7 +137,7 @@ describe('FilterChipsComponent', () => {
             fixture.componentRef.setInput('selected', ['a']);
             fixture.detectChanges();
 
-            expect(fixture.nativeElement.textContent).not.toContain('●');
+            expect(fixture.nativeElement).not.toHaveTextContent(/●/);
         });
 
         it('選択の印は複数選択と同じ Material の ✓（graphic を隠さない）', () => {
@@ -248,7 +246,7 @@ describe('FilterChipsComponent', () => {
                 '.filter-chips-arrow',
             ) as NodeListOf<HTMLElement>;
             expect(arrows.length).toBe(1);
-            expect(arrows[0].textContent).toContain('▶');
+            expect(arrows[0]).toHaveTextContent(/▶/);
         });
 
         it('中間位置では左右両方の矢印を表示する', () => {
@@ -262,8 +260,8 @@ describe('FilterChipsComponent', () => {
                 '.filter-chips-arrow',
             ) as NodeListOf<HTMLElement>;
             expect(arrows.length).toBe(2);
-            expect(arrows[0].textContent).toContain('◀');
-            expect(arrows[1].textContent).toContain('▶');
+            expect(arrows[0]).toHaveTextContent(/◀/);
+            expect(arrows[1]).toHaveTextContent(/▶/);
         });
 
         it('右端までスクロールすると左矢印のみ表示する', () => {
@@ -277,7 +275,7 @@ describe('FilterChipsComponent', () => {
                 '.filter-chips-arrow',
             ) as NodeListOf<HTMLElement>;
             expect(arrows.length).toBe(1);
-            expect(arrows[0].textContent).toContain('◀');
+            expect(arrows[0]).toHaveTextContent(/◀/);
         });
 
         it('はみ出しが無いときは矢印を表示しない', () => {

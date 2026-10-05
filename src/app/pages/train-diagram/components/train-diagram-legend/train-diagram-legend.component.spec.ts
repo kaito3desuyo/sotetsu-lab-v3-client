@@ -24,7 +24,7 @@ describe('TrainDiagramLegendComponent', () => {
         fixture.componentRef.setInput('hasDeadhead', true);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('回送');
+        expect(fixture.nativeElement).toHaveTextContent(/回送/);
         expect(
             fixture.nativeElement.querySelector('line[stroke-dasharray="6 4"]'),
         ).not.toBeNull();
@@ -32,7 +32,7 @@ describe('TrainDiagramLegendComponent', () => {
         fixture.componentRef.setInput('hasDeadhead', false);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).not.toContain('回送');
+        expect(fixture.nativeElement).not.toHaveTextContent(/回送/);
         expect(
             fixture.nativeElement.querySelector('line[stroke-dasharray="6 4"]'),
         ).toBeNull();
@@ -42,12 +42,12 @@ describe('TrainDiagramLegendComponent', () => {
         fixture.componentRef.setInput('showCurrentTimeCursor', true);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('現在時刻');
+        expect(fixture.nativeElement).toHaveTextContent(/現在時刻/);
 
         fixture.componentRef.setInput('showCurrentTimeCursor', false);
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).not.toContain('現在時刻');
+        expect(fixture.nativeElement).not.toHaveTextContent(/現在時刻/);
     });
 
     it('Task 14: hasDepotOut=true で「出庫」と◯の見本が出て、false では出ない', () => {

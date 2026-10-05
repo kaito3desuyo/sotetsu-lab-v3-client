@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
@@ -119,10 +120,8 @@ describe('TrainLocationComponent', () => {
         const footer: HTMLElement =
             fixture.nativeElement.querySelector('footer');
         expect(footer).toBeTruthy();
-        expect(footer.textContent).toContain(
-            'ダイヤ通りに走った場合の位置です',
-        );
-        expect(footer.textContent).toContain('リアルタイム運用情報');
+        expect(footer).toHaveTextContent(/ダイヤ通りに走った場合の位置です/);
+        expect(footer).toHaveTextContent(/リアルタイム運用情報/);
 
         // ロード中も消えない（常設）
         TrainLocationStore.enableLoading();

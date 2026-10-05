@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TrainLocationCard } from '../../interfaces/train-location-card.interface';
@@ -41,9 +42,9 @@ describe('TrainLocationCardComponent', () => {
         fixture.componentRef.setInput('status', 'stopped');
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('停車中');
-        expect(fixture.nativeElement.textContent).not.toContain('▲');
-        expect(fixture.nativeElement.textContent).not.toContain('▼');
+        expect(fixture.nativeElement).toHaveTextContent(/停車中/);
+        expect(fixture.nativeElement).not.toHaveTextContent(/▲/);
+        expect(fixture.nativeElement).not.toHaveTextContent(/▼/);
     });
 
     it('2段構成（モック09準拠）: 上段に種別・行き先・運用番号、下段に列車番号・矢印・所属会社・編成番号を表示する', () => {
@@ -63,15 +64,15 @@ describe('TrainLocationCardComponent', () => {
         expect(rows.length).toBe(2);
 
         const [top, bottom] = rows;
-        expect(top.textContent).toContain('各停');
-        expect(top.textContent).toContain('横浜 行');
-        expect(top.textContent).toContain('54');
-        expect(top.textContent).not.toContain('1234');
+        expect(top).toHaveTextContent(/各停/);
+        expect(top).toHaveTextContent(/横浜 行/);
+        expect(top).toHaveTextContent(/54/);
+        expect(top).not.toHaveTextContent(/1234/);
 
-        expect(bottom.textContent).toContain('1234');
-        expect(bottom.textContent).toContain('▲');
-        expect(bottom.textContent).toContain('相模鉄道');
-        expect(bottom.textContent).toContain('10708');
+        expect(bottom).toHaveTextContent(/1234/);
+        expect(bottom).toHaveTextContent(/▲/);
+        expect(bottom).toHaveTextContent(/相模鉄道/);
+        expect(bottom).toHaveTextContent(/10708/);
     });
 
     it('formationAgencyName が無ければ会社名なしで編成番号のみ表示する', () => {
@@ -81,8 +82,8 @@ describe('TrainLocationCardComponent', () => {
         );
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('9999');
-        expect(fixture.nativeElement.textContent).not.toContain('相模鉄道');
+        expect(fixture.nativeElement).toHaveTextContent(/9999/);
+        expect(fixture.nativeElement).not.toHaveTextContent(/相模鉄道/);
     });
 
     it('運用番号の地を運用群の色にする（5 で始まる運用は青の淡色）', () => {
@@ -93,8 +94,10 @@ describe('TrainLocationCardComponent', () => {
             '[data-operation-number]',
         ) as HTMLElement;
         expect(tag.textContent?.trim()).toBe('54');
-        expect(fixture.nativeElement.textContent).not.toContain('運用');
-        expect(tag.style.backgroundColor).toBe('rgba(33, 150, 243, 0.12)');
+        expect(fixture.nativeElement).not.toHaveTextContent(/運用/);
+        expect(tag).toHaveStyle({
+            backgroundColor: 'rgba(33, 150, 243, 0.12)',
+        });
     });
 
     it('status="between" かつ direction="inbound" のとき ▲ を表示する', () => {
@@ -102,7 +105,7 @@ describe('TrainLocationCardComponent', () => {
         fixture.componentRef.setInput('status', 'between');
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('▲');
+        expect(fixture.nativeElement).toHaveTextContent(/▲/);
     });
 
     it('status="between" かつ direction="outbound" のとき ▼ を表示する', () => {
@@ -110,7 +113,7 @@ describe('TrainLocationCardComponent', () => {
         fixture.componentRef.setInput('status', 'between');
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('▼');
+        expect(fixture.nativeElement).toHaveTextContent(/▼/);
     });
 
     it('formationNumber が無ければ充当編成表示欄を出さない', () => {
@@ -134,7 +137,7 @@ describe('TrainLocationCardComponent', () => {
         );
         fixture.detectChanges();
 
-        expect(fixture.nativeElement.textContent).toContain('9999');
+        expect(fixture.nativeElement).toHaveTextContent(/9999/);
         expect(
             fixture.nativeElement.querySelector(
                 'span.tw-truncate.tw-font-bold.tw-text-grey-900',
@@ -186,7 +189,10 @@ describe('TrainLocationCardComponent', () => {
         const cover = fixture.nativeElement.querySelector(
             'a[data-card-link]',
         ) as HTMLAnchorElement;
-        expect(cover.getAttribute('href')).toContain('/timetable/all-line');
+        expect(cover).toHaveAttribute(
+            'href',
+            expect.stringContaining('/timetable/all-line'),
+        );
         expect(cover.className).toContain('tw-absolute');
         expect(cover.className).toContain('tw-inset-0');
     });
@@ -201,7 +207,8 @@ describe('TrainLocationCardComponent', () => {
         const tag = fixture.nativeElement.querySelector(
             'a[data-operation-number]',
         ) as HTMLAnchorElement;
-        expect(tag.getAttribute('href')).toBe(
+        expect(tag).toHaveAttribute(
+            'href',
             '/operation/route-diagram;operation_id=op-1',
         );
         expect(tag.className).toContain('tw-relative');

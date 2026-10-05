@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -44,7 +45,7 @@ describe('TrainLocationStationPanelComponent', () => {
         fixture.componentRef.setInput('stationId', null);
         fixture.detectChanges();
 
-        expect(el().textContent).toContain('図の駅名を押して駅を選ぶ');
+        expect(el()).toHaveTextContent(/図の駅名を押して駅を選ぶ/);
     });
 
     it('上り・下りの見出しと行（あと何分・時刻・行先・列番・運用・いまどこか）を出す', () => {
@@ -116,8 +117,8 @@ describe('TrainLocationStationPanelComponent', () => {
             '[data-operation-number]',
         ) as HTMLElement;
         expect(tag.textContent?.trim()).toBe('30K');
-        expect(el().textContent).not.toContain('運用');
-        expect(tag.style.backgroundColor).toBe('rgba(183, 28, 28, 0.12)');
+        expect(el()).not.toHaveTextContent(/運用/);
+        expect(tag).toHaveStyle({ backgroundColor: 'rgba(183, 28, 28, 0.12)' });
     });
 
     it('運用番号は運用行路図へのリンク（運用 ID が無ければリンクにしない）', () => {
@@ -137,7 +138,8 @@ describe('TrainLocationStationPanelComponent', () => {
 
         const links = el().querySelectorAll('a[data-operation-number]');
         expect(links).toHaveLength(1);
-        expect(links[0].getAttribute('href')).toBe(
+        expect(links[0]).toHaveAttribute(
+            'href',
             '/operation/route-diagram;operation_id=op-30k',
         );
         expect(
@@ -174,7 +176,7 @@ describe('TrainLocationStationPanelComponent', () => {
         // 項目の間は flex の gap で空けるので、字の並びだけを比べる
         expect(text('[data-continuation]')).toBe('各停7416→');
         expect(text('[data-main-line]')).toMatch(/^急行054052和光市行/);
-        expect(el().textContent).not.toContain('当駅止まり');
+        expect(el()).not.toHaveTextContent(/当駅止まり/);
     });
 
     it('種別変更の無い列車は上の段を出さず、主の段は「種別 列番 行先」', () => {
@@ -268,8 +270,11 @@ describe('TrainLocationStationPanelComponent', () => {
         const link = el().querySelector(
             'a[href*="izumino"]',
         ) as HTMLAnchorElement;
-        expect(link.textContent).toContain('いずみ野線');
-        expect(link.getAttribute('href')).toContain('station_id=C');
+        expect(link).toHaveTextContent(/いずみ野線/);
+        expect(link).toHaveAttribute(
+            'href',
+            expect.stringContaining('station_id=C'),
+        );
     });
 
     it('開閉ボタンで本文を畳み、状態を覚える', () => {
@@ -280,11 +285,11 @@ describe('TrainLocationStationPanelComponent', () => {
         const toggle = el().querySelector(
             'button[aria-expanded]',
         ) as HTMLButtonElement;
-        expect(toggle.getAttribute('aria-expanded')).toBe('true');
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
         toggle.click();
         fixture.detectChanges();
 
-        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
         expect(localStorage.getItem('train-location:panel-open')).toBe('false');
     });
 
@@ -361,7 +366,7 @@ describe('TrainLocationStationPanelComponent', () => {
 
         const row = el().querySelector('.tw-bg-accent-50') as HTMLElement;
         expect(row).not.toBeNull();
-        expect(row.textContent).toContain('2分');
+        expect(row).toHaveTextContent(/2分/);
     });
 
     it('運用・編成の項目は間で折り返せる（項目内は改行しない）', () => {
