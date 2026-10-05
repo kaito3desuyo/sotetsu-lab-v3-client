@@ -8,7 +8,6 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdsenseModule } from 'ng2-adsense';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
@@ -39,7 +38,6 @@ TimetableAllLineStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
-        AdsenseModule,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
         TimetableSearchCardCComponent,

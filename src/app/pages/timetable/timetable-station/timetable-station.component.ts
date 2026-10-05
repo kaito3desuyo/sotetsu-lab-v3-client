@@ -10,7 +10,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdsenseModule } from 'ng2-adsense';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -43,7 +42,6 @@ TimetableStationStore.resetLoading();
         MatFormFieldModule,
         MatProgressBarModule,
         MatSelectModule,
-        AdsenseModule,
         DateFnsPipe,
         ControlBandComponent,
         EmptyStateComponent,

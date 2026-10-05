@@ -102,9 +102,6 @@ const makeCrossSection = (
 @Component({ selector: 'app-timetable-search-card-c', template: '' })
 class StubSearchCardComponent {}
 
-@Component({ selector: 'ng-adsense', template: '' })
-class StubAdsenseComponent {}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function setup(overrides?: {
@@ -226,7 +223,6 @@ async function setup(overrides?: {
                     SegmentToggleComponent,
                     TimetableStationTableComponent,
                     StubSearchCardComponent,
-                    StubAdsenseComponent,
                 ],
             },
         })

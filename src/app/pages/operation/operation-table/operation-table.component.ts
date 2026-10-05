@@ -1,8 +1,13 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    computed,
+    inject,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AdsenseModule } from 'ng2-adsense';
 import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
@@ -33,7 +38,6 @@ OperationTableStore.resetLoading();
     imports: [
         MatProgressBarModule,
         ControlBandComponent,
-        AdsenseModule,
         EmptyStateComponent,
         OperationTableFilterComponent,
         OperationTableCardComponent,
@@ -204,7 +208,9 @@ export class OperationTableComponent {
         navigation
             .then((succeeded) => {
                 if (!succeeded) {
-                    console.error('operation table navigation did not complete');
+                    console.error(
+                        'operation table navigation did not complete',
+                    );
                     this.#notificationService.open(
                         'ページの遷移に失敗しました',
                         'OK',
