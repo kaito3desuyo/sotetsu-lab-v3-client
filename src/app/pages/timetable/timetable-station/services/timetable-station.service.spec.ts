@@ -42,23 +42,14 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         },
     } as never;
 
-    it('1運用分のクロスセクション取得が失敗しても残りは継続して store に反映される', async () => {
+    const setupWith = (sightingService: unknown) => {
         TestBed.configureTestingModule({
             providers: [
                 provideHttpClient(),
                 TimetableStationService,
                 {
                     provide: OperationSightingService,
-                    useValue: {
-                        findOneTimeCrossSectionByOperationNumber: ({
-                            operationNumber,
-                        }: {
-                            operationNumber: string;
-                        }) =>
-                            operationNumber === '51'
-                                ? throwError(() => new Error('boom'))
-                                : of(crossSection),
-                    },
+                    useValue: sightingService,
                 },
             ],
         });
@@ -73,16 +64,38 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
             { operationId: 'op-1', operationNumber: '51' },
             { operationId: 'op-2', operationNumber: '52' },
         ] as never);
+        return service;
+    };
 
-        // reject せず解決すること（=フェッチ全滅・ローディング残留の回帰防止）
-        await lastValueFrom(
-            service.fetchOperationSightingTimeCrossSections(),
-        );
+    it('時刻断面は全運用を 1 回で取り、運用番号ごとに store へ入れる', async () => {
+        const findMany = jest.fn(() => of({ '52': crossSection }));
+        const service = setupWith({
+            findManyTimeCrossSectionsByOperationNumbers: findMany,
+        });
 
-        const record =
-            TimetableStationStore.operationSightingTimeCrossSections;
+        await lastValueFrom(service.fetchOperationSightingTimeCrossSections());
+
+        expect(findMany).toHaveBeenCalledTimes(1);
+        expect(findMany).toHaveBeenCalledWith({
+            operationNumbers: ['51', '52'],
+        });
+        const record = TimetableStationStore.operationSightingTimeCrossSections;
         expect(record['52']).toBeDefined();
         expect(record['51']).toBeUndefined();
+    });
+
+    it('時刻断面の取得が失敗しても reject せず解決する', async () => {
+        const service = setupWith({
+            findManyTimeCrossSectionsByOperationNumbers: () =>
+                throwError(() => new Error('boom')),
+        });
+
+        // reject せず解決すること（=フェッチ全滅・ローディング残留の回帰防止）
+        await lastValueFrom(service.fetchOperationSightingTimeCrossSections());
+
+        expect(
+            TimetableStationStore.operationSightingTimeCrossSections,
+        ).toEqual({});
     });
 
     it('tripBlocks バルク取得が失敗しても reject せず空配列で継続する', async () => {

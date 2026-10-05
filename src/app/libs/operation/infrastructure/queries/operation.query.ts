@@ -155,6 +155,51 @@ export class OperationQuery {
         return this.#obs[key];
     }
 
+    /** 複数の運用の現在位置を 1 回で取る（運用ごとの findOneWithCurrentPosition を束ねたもの）。 */
+    findManyWithCurrentPosition(params: {
+        operationIds: string[];
+        forceReload?: boolean;
+    }): Observable<OperationCurrentPositionDto[]> {
+        const { operationIds, forceReload } = params;
+
+        const key = md5(
+            JSON.stringify({
+                name: 'findManyWithCurrentPosition',
+                operationIds,
+            }),
+        );
+
+        if (forceReload) {
+            this.#obs[key] = undefined;
+        }
+
+        if (!this.#obs[key]) {
+            this.#obs[key] = this.http
+                .get<OperationCurrentPositionModel[]>(
+                    `${this.#v3ApiUrl}/current-positions`,
+                    {
+                        params: { operationIds: operationIds.join(',') },
+                        observe: 'response',
+                    },
+                )
+                .pipe(
+                    shareReplay({
+                        bufferSize: 1,
+                        refCount: true,
+                    }),
+                    map((res) =>
+                        (res.body ?? []).map((model) =>
+                            OperationCurrentPositionDtoBuilder.buildFromModel(
+                                model,
+                            ),
+                        ),
+                    ),
+                );
+        }
+
+        return this.#obs[key];
+    }
+
     /** ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。 */
     findManyWithTrips(params: {
         calendarId: string;
@@ -261,4 +306,3 @@ export class OperationQuery {
         return this.#obs[key];
     }
 }
-

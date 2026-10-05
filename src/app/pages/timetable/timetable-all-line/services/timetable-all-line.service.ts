@@ -4,8 +4,36 @@ import { map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripBlockFields } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TimetableAllLineStore } from '../stores/timetable-all-line.store';
+
+/**
+ * 全線時刻表が読む項目の組。表（時刻・着発・種別・運用番号・始発/終着）と並べ替え、
+ * 編集・コピーの遷移（calendarId・tripBlockId）に要るものだけを取る。
+ */
+const TIMETABLE_ALL_LINE_FIELDS: TripBlockFields = {
+    trip: [
+        'tripNumber',
+        'tripDirection',
+        'tripBlockId',
+        'tripClassId',
+        'calendarId',
+    ],
+    time: [
+        'stationId',
+        'stopSequence',
+        'arrivalDays',
+        'arrivalTime',
+        'departureDays',
+        'departureTime',
+        'pickupType',
+        'dropoffType',
+    ],
+    tripOperationList: ['operationId'],
+    operation: ['operationNumber'],
+    tripClass: ['tripClassName', 'tripClassColor'],
+};
 
 @Injectable()
 export class TimetableAllLineService {
@@ -35,6 +63,7 @@ export class TimetableAllLineService {
             : this.#tripBlockService.findManyByFilter({
                   calendarId,
                   tripDirection,
+                  fields: TIMETABLE_ALL_LINE_FIELDS,
               });
 
         return tripBlocks$.pipe(

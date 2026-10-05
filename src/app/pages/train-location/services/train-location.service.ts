@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { from, Observable, of } from 'rxjs';
-import { map, mergeMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -8,9 +8,6 @@ import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TrainLocationStore } from '../stores/train-location.store';
 import { attachTripClasses } from 'src/app/shared/attach-trip-classes.util';
-
-/** 目撃クロスセクションの同時取得数（operation-real-time.service.ts と同一値） */
-const FORMATION_FETCH_CONCURRENCY = 5;
 
 @Injectable()
 export class TrainLocationService {
@@ -69,7 +66,8 @@ export class TrainLocationService {
         return this.#routeService.findOneWithStations({ routeId }).pipe(
             tap(({ stations }) => {
                 const ordered = [...stations].sort(
-                    (a, b) => (a.stationSequence ?? 0) - (b.stationSequence ?? 0),
+                    (a, b) =>
+                        (a.stationSequence ?? 0) - (b.stationSequence ?? 0),
                 );
                 TrainLocationStore.setStationAxisStations(ordered);
             }),
@@ -93,24 +91,24 @@ export class TrainLocationService {
             return of(undefined);
         }
 
-        return from(missing).pipe(
-            mergeMap(
-                (operationNumber) =>
-                    this.#operationSightingService
-                        .findOneTimeCrossSectionByOperationNumber({
+        // 運用ごとに 1 本ずつ取っていたのを、まとめて返す口 1 本にする（api ADR-0003）
+        return this.#operationSightingService
+            .findManyTimeCrossSectionsByOperationNumbers({
+                operationNumbers: missing,
+            })
+            .pipe(
+                tap((data) => {
+                    for (const [
+                        operationNumber,
+                        crossSection,
+                    ] of Object.entries(data)) {
+                        TrainLocationStore.setOperationSightingTimeCrossSection(
                             operationNumber,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                TrainLocationStore.setOperationSightingTimeCrossSection(
-                                    operationNumber,
-                                    data,
-                                );
-                            }),
-                        ),
-                FORMATION_FETCH_CONCURRENCY,
-            ),
-            map(() => undefined),
-        );
+                            crossSection,
+                        );
+                    }
+                }),
+                map(() => undefined),
+            );
     }
 }

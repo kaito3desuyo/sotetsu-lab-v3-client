@@ -10,24 +10,26 @@ import {
 } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { flow } from 'es-toolkit';
-import { forkJoin, from, Observable, of } from 'rxjs';
-import { map, mergeMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import { OperationRealTimeStore } from '../stores/operation-real-time.store';
 
+/** 相鉄の運行系統（路線と駅はここから取る） */
+const SERVICE_ID = '8d9d2a20-48ad-438b-83a4-ba8727b4708c';
+
 @Injectable()
 export class OperationRealTimeService {
     readonly #serviceService = inject(ServiceService);
-    readonly #routeService = inject(RouteService);
     readonly #tripClassService = inject(TripClassService);
     readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
@@ -39,7 +41,7 @@ export class OperationRealTimeService {
     fetchRoutes(): Observable<void> {
         return this.#serviceService
             .findOneWithRoutes({
-                serviceId: '8d9d2a20-48ad-438b-83a4-ba8727b4708c',
+                serviceId: SERVICE_ID,
             })
             .pipe(
                 tap((data) => {
@@ -55,33 +57,19 @@ export class OperationRealTimeService {
             );
     }
 
+    /**
+     * 駅は「駅 ID → 駅名」の引き当てにしか使わない。路線ごとに 21 本取って重複を消していたのを、
+     * 同じ運行系統の駅一覧 1 本にする（2026-10-05 実測で 249 駅・駅名とも一致）。
+     */
     fetchStations(): Observable<void> {
-        const routes = OperationRealTimeStore.routes;
-
-        if (!routes.length) {
-            return of(undefined);
-        }
-
-        return forkJoin(
-            routes.map(({ routeId }) =>
-                this.#routeService.findOneWithStations({ routeId }),
-            ),
-        ).pipe(
-            map((data) =>
-                data
-                    .flatMap((d) => d.stations)
-                    .filter(
-                        (s, i, arr) =>
-                            arr.findIndex(
-                                ({ stationId }) => stationId === s.stationId,
-                            ) === i,
-                    ),
-            ),
-            tap((data) => {
-                OperationRealTimeStore.setStations(data);
-            }),
-            map(() => undefined),
-        );
+        return this.#serviceService
+            .findOneWithStations({ serviceId: SERVICE_ID })
+            .pipe(
+                tap((data) => {
+                    OperationRealTimeStore.setStations(data.stations);
+                }),
+                map(() => undefined),
+            );
     }
 
     fetchTripClasses(): Observable<void> {
@@ -132,9 +120,7 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchOperationGroups(params?: {
-        forceReload?: boolean;
-    }): Observable<void> {
+    fetchOperationGroups(params?: { forceReload?: boolean }): Observable<void> {
         return this.#operationService.findManyGroups(params).pipe(
             tap((data) => {
                 OperationRealTimeStore.setOperationGroups(data);
@@ -168,66 +154,70 @@ export class OperationRealTimeService {
             );
     }
 
+    /** 運用番号ごとの時刻断面を 1 回で取る（以前は運用ごとに 1 本ずつ、100 本余り引いていた）。 */
     fetchOperationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const operations = OperationRealTimeStore.operations;
+        const operationNumbers = OperationRealTimeStore.operations
+            .map((o) => o.operationNumber)
+            .filter((o) => o !== '100');
 
-        if (!operations.length) {
+        if (!operationNumbers.length) {
             return of(undefined);
         }
 
-        return from(operations).pipe(
-            mergeMap(
-                ({ operationNumber }) =>
-                    this.#operationSightingService
-                        .findOneTimeCrossSectionByOperationNumber({
+        return this.#operationSightingService
+            .findManyTimeCrossSectionsByOperationNumbers({
+                operationNumbers,
+                forceReload: params?.forceReload,
+            })
+            .pipe(
+                tap((data) => {
+                    for (const [
+                        operationNumber,
+                        crossSection,
+                    ] of Object.entries(data)) {
+                        OperationRealTimeStore.setOperationSightingTimeCrossSection(
                             operationNumber,
-                            forceReload: params?.forceReload,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                OperationRealTimeStore.setOperationSightingTimeCrossSection(
-                                    operationNumber,
-                                    data,
-                                );
-                            }),
-                        ),
-                5,
-            ),
-            map(() => undefined),
-        );
+                            crossSection,
+                        );
+                    }
+                }),
+                map(() => undefined),
+            );
     }
 
+    /** 編成番号ごとの時刻断面を 1 回で取る（以前は編成ごとに 1 本ずつ引いていた）。 */
     fetchFormationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const formations = OperationRealTimeStore.formations;
+        const formationNumbers = OperationRealTimeStore.formations.map(
+            (o) => o.formationNumber,
+        );
 
-        if (!formations.length) {
+        if (!formationNumbers.length) {
             return of(undefined);
         }
 
-        return from(formations).pipe(
-            mergeMap(
-                ({ formationNumber }) =>
-                    this.#operationSightingService
-                        .findOneTimeCrossSectionByFormationNumber({
+        return this.#operationSightingService
+            .findManyTimeCrossSectionsByFormationNumbers({
+                formationNumbers,
+                forceReload: params?.forceReload,
+            })
+            .pipe(
+                tap((data) => {
+                    for (const [
+                        formationNumber,
+                        crossSection,
+                    ] of Object.entries(data)) {
+                        OperationRealTimeStore.setFormationSightingTimeCrossSection(
                             formationNumber,
-                            forceReload: params?.forceReload,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                OperationRealTimeStore.setFormationSightingTimeCrossSection(
-                                    formationNumber,
-                                    data,
-                                );
-                            }),
-                        ),
-                5,
-            ),
-            map(() => undefined),
-        );
+                            crossSection,
+                        );
+                    }
+                }),
+                map(() => undefined),
+            );
     }
 
     fetchSightingHistories(params?: {
@@ -281,69 +271,60 @@ export class OperationRealTimeService {
             );
     }
 
+    /** 運用ごとの現在位置を 1 回で取る（以前は運用ごとに 1 本ずつ引いていた）。 */
     fetchCurrentPositions(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const operations = OperationRealTimeStore.operations;
-
-        if (!operations.length) {
-            return of(undefined);
-        }
-
-        return from(operations).pipe(
-            mergeMap(
-                ({ operationId, operationNumber }) =>
-                    this.#operationService
-                        .findOneWithCurrentPosition({
-                            operationId,
-                            forceReload: params?.forceReload,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                OperationRealTimeStore.setCurrentPosition(
-                                    operationNumber,
-                                    data,
-                                );
-                            }),
-                        ),
-                5,
-            ),
-            map(() => undefined),
+        return this.#fetchCurrentPositionsOf(
+            OperationRealTimeStore.operations,
+            params?.forceReload,
         );
     }
 
     fetchCurrentPositionThatShouldUpdate(): Observable<void> {
-        const currentPositions =
-            OperationRealTimeStore.currentPositionsThatShouldUpdate;
+        return this.#fetchCurrentPositionsOf(
+            OperationRealTimeStore.currentPositionsThatShouldUpdate.map(
+                ({ operation }) => operation,
+            ),
+            true,
+        );
+    }
 
-        if (!currentPositions.length) {
+    #fetchCurrentPositionsOf(
+        operations: Pick<
+            OperationDetailsDto,
+            'operationId' | 'operationNumber'
+        >[],
+        forceReload?: boolean,
+    ): Observable<void> {
+        if (!operations.length) {
             return of(undefined);
         }
 
-        return from(
-            currentPositions.map(({ operation }) => ({
-                operationId: operation.operationId,
-                operationNumber: operation.operationNumber,
-            })),
-        ).pipe(
-            mergeMap(
-                ({ operationId, operationNumber }) =>
-                    this.#operationService
-                        .findOneWithCurrentPosition({
-                            operationId,
-                            forceReload: true,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                OperationRealTimeStore.setCurrentPosition(
-                                    operationNumber,
-                                    data,
-                                );
-                            }),
-                        ),
-                5,
-            ),
-            map(() => undefined),
+        const numberById = new Map(
+            operations.map((o) => [o.operationId, o.operationNumber]),
         );
+
+        return this.#operationService
+            .findManyWithCurrentPosition({
+                operationIds: [...numberById.keys()],
+                forceReload,
+            })
+            .pipe(
+                tap((data) => {
+                    for (const currentPosition of data) {
+                        const operationNumber = numberById.get(
+                            currentPosition.operation?.operationId,
+                        );
+                        if (operationNumber !== undefined) {
+                            OperationRealTimeStore.setCurrentPosition(
+                                operationNumber,
+                                currentPosition,
+                            );
+                        }
+                    }
+                }),
+                map(() => undefined),
+            );
     }
 }

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { from, Observable, of } from 'rxjs';
-import { catchError, map, mergeMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -8,6 +8,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -80,21 +81,29 @@ export class TimetableStationService {
             return of(undefined);
         }
 
-        return this.#tripBlockService
-            .findManyByFilter({ calendarId, tripDirection })
-            .pipe(
-                tap((data) => {
-                    TimetableStationStore.setTripBlocks(data);
-                }),
-                map(() => undefined),
-                // tripBlocks は脚注行（3段目）専用の付加データ。取得失敗時は
-                // fetchData ごと reject させず（=ローディング残留・以後の再描画
-                // 停止を防ぐ）、脚注なしのグレースフルデグラデーションに留める。
-                catchError(() => {
-                    TimetableStationStore.setTripBlocks([]);
-                    return of(undefined);
-                }),
-            );
+        return (
+            this.#tripBlockService
+                // 脚注（同じ運行の後続列車・行き先）と並べ替えは列番・種別 id・時刻しか読まない。
+                // 列車位置情報・列車ダイヤグラムと同じ項目の組にしてキャッシュも共有する。
+                .findManyByFilter({
+                    calendarId,
+                    tripDirection,
+                    fields: TRIP_BLOCK_TIMELINE_FIELDS,
+                })
+                .pipe(
+                    tap((data) => {
+                        TimetableStationStore.setTripBlocks(data);
+                    }),
+                    map(() => undefined),
+                    // tripBlocks は脚注行（3段目）専用の付加データ。取得失敗時は
+                    // fetchData ごと reject させず（=ローディング残留・以後の再描画
+                    // 停止を防ぐ）、脚注なしのグレースフルデグラデーションに留める。
+                    catchError(() => {
+                        TimetableStationStore.setTripBlocks([]);
+                        return of(undefined);
+                    }),
+                )
+        );
     }
 
     fetchTripClasses(): Observable<void> {
@@ -145,29 +154,26 @@ export class TimetableStationService {
             return of(undefined);
         }
 
-        return from(operations).pipe(
-            mergeMap(
-                ({ operationNumber }) =>
-                    this.#operationSightingService
-                        .findOneTimeCrossSectionByOperationNumber({
+        // 運用ごとに 1 本ずつ取っていたのを、まとめて返す口 1 本にする（api ADR-0003）。
+        // 失敗しても充当編成が「不明」になるだけで、ページは止めない。
+        return this.#operationSightingService
+            .findManyTimeCrossSectionsByOperationNumbers({
+                operationNumbers: operations.map((o) => o.operationNumber),
+            })
+            .pipe(
+                tap((data) => {
+                    for (const [
+                        operationNumber,
+                        crossSection,
+                    ] of Object.entries(data)) {
+                        TimetableStationStore.setOperationSightingTimeCrossSection(
                             operationNumber,
-                        })
-                        .pipe(
-                            tap((data) => {
-                                TimetableStationStore.setOperationSightingTimeCrossSection(
-                                    operationNumber,
-                                    data,
-                                );
-                            }),
-                            // T6.8 再差し戻し（初回ロードで充当編成が全滅する回帰）:
-                            // 1 運用分の HTTP が失敗すると mergeMap ストリーム全体が
-                            // error 終了し、残り全運用の取得が中断して全セル「不明」の
-                            // まま固まる。失敗した運用のみ「不明」に留め、他は継続する。
-                            catchError(() => of(undefined)),
-                        ),
-                5,
-            ),
-            map(() => undefined),
-        );
+                            crossSection,
+                        );
+                    }
+                }),
+                map(() => undefined),
+                catchError(() => of(undefined)),
+            );
     }
 }

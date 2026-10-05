@@ -9,6 +9,7 @@ import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calen
 import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { estimatePositions } from 'src/app/shared/train-position.util';
@@ -81,11 +82,12 @@ export class DashboardService {
         }
 
         return forkJoin({
-            tripBlocksByDirection: this.#tripBlockService.findManyByCalendarId(
-                {
-                    calendarId: calendar.calendarId,
-                },
-            ),
+            tripBlocksByDirection: this.#tripBlockService.findManyByCalendarId({
+                calendarId: calendar.calendarId,
+                // 走行中の本数を数えるだけなので時刻と駅だけ取る（全項目だと約 12MB）。
+                // 列車位置情報と同じ組にして、取得結果のキャッシュを共有する
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
+            }),
             routes: this.#routeStationListStateQuery.routeStations$.pipe(
                 first(),
             ),

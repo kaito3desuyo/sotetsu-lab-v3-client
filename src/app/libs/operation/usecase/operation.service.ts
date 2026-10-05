@@ -33,6 +33,13 @@ export class OperationService {
         return this.operationQuery.findOneWithCurrentPosition(params);
     }
 
+    findManyWithCurrentPosition(params: {
+        operationIds: string[];
+        forceReload?: boolean;
+    }): Observable<OperationCurrentPositionDto[]> {
+        return this.operationQuery.findManyWithCurrentPosition(params);
+    }
+
     findManyWithTrips(params: {
         calendarId: string;
         forceReload?: boolean;

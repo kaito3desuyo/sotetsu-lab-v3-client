@@ -182,9 +182,9 @@ async function setup(overrides?: {
                 provide: StationService,
                 useValue: {
                     findMany: () =>
-                        of([
-                            { stationId: YOKOHAMA, stationName: '横浜' },
-                        ]).pipe(delay(1)),
+                        of([{ stationId: YOKOHAMA, stationName: '横浜' }]).pipe(
+                            delay(1),
+                        ),
                 },
             },
             {
@@ -210,16 +210,11 @@ async function setup(overrides?: {
             {
                 provide: OperationSightingService,
                 useValue: overrides?.operationSighting ?? {
-                    findOneTimeCrossSectionByOperationNumber: ({
-                        operationNumber,
-                    }: {
-                        operationNumber: string;
-                    }) =>
-                        of(
-                            operationNumber === '51'
-                                ? makeCrossSection('op-1', '51', '10708')
-                                : makeCrossSection('op-2', '52', '21101'),
-                        ).pipe(delay(10)),
+                    findManyTimeCrossSectionsByOperationNumbers: () =>
+                        of({
+                            '51': makeCrossSection('op-1', '51', '10708'),
+                            '52': makeCrossSection('op-2', '52', '21101'),
+                        }).pipe(delay(10)),
                 },
             },
         ],
@@ -264,19 +259,13 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         expect(text).not.toContain('不明');
     });
 
-    it('一部のクロスセクション取得が失敗しても他の充当編成は描画される', async () => {
+    it('まとめて返る結果に無い運用だけが「不明」になり、他の充当編成は描画される', async () => {
         const fixture = await setup({
             operationSighting: {
-                findOneTimeCrossSectionByOperationNumber: ({
-                    operationNumber,
-                }: {
-                    operationNumber: string;
-                }) =>
-                    operationNumber === '51'
-                        ? throwError(() => new Error('boom'))
-                        : of(makeCrossSection('op-2', '52', '21101')).pipe(
-                              delay(10),
-                          ),
+                findManyTimeCrossSectionsByOperationNumbers: () =>
+                    of({
+                        '52': makeCrossSection('op-2', '52', '21101'),
+                    }).pipe(delay(10)),
             },
         });
 
@@ -284,7 +273,7 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         fixture.detectChanges();
 
         const text = (fixture.nativeElement as HTMLElement).textContent;
-        // 失敗した運用（51）のみ「不明」、成功した運用（52）は編成表示
+        // 結果に無い運用（51）のみ「不明」、ある運用（52）は編成表示
         expect(text).toContain('21101');
         expect(text).toContain('不明');
     });
