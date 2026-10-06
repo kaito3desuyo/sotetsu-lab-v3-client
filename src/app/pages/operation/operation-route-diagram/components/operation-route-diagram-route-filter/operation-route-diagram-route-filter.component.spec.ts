@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 import { OperationRouteDiagramRouteFilterComponent } from './operation-route-diagram-route-filter.component';
 
@@ -111,5 +113,81 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
         fixture.detectChanges();
 
         expect(component.selectedRouteIds()).toEqual(['本線', 'いずみ野線']);
+    });
+});
+
+describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）', () => {
+    let fixture: ComponentFixture<OperationRouteDiagramRouteFilterComponent>;
+
+    function makeRouteStation(
+        stationId: string,
+        routeId: string,
+        routeName: string,
+    ): any {
+        return {
+            stationId,
+            stationName: stationId,
+            routeStationLists: [
+                {
+                    routeStationListId: `${stationId}-${routeId}`,
+                    route: { routeId, routeName },
+                },
+            ],
+        };
+    }
+
+    beforeEach(async () => {
+        // 選択肢 r1(本線)/r2(厚木線)（group なし）、選択 ['r1']。
+        // 会社・系統の対応表（Route/AgencyStateQuery）には出てこない路線にして
+        // group が付かないようにする。
+        OperationRouteDiagramStore.setStations([
+            makeRouteStation('st-r1', 'r1', '本線'),
+            makeRouteStation('st-r2', 'r2', '厚木線'),
+        ]);
+        OperationRouteDiagramStore.setOperationTrips({
+            operation: {} as any,
+            trips: [
+                {
+                    startTime: { stationId: 'st-r1' },
+                    endTime: { stationId: 'st-r2' },
+                } as any,
+            ],
+        });
+        OperationRouteDiagramStore.setSelectedRouteIds(['r1']);
+
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramRouteFilterComponent],
+            providers: [
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: { routeStations$: of([]) },
+                },
+                {
+                    provide: AgencyListStateQuery,
+                    useValue: { agencies$: of([]) },
+                },
+            ],
+        }).compileComponents();
+
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.detectChanges();
+    });
+
+    afterEach(() => {
+        OperationRouteDiagramStore.setStations([]);
+        OperationRouteDiagramStore.setOperationTrips(null);
+        OperationRouteDiagramStore.setSelectedRouteIds([]);
+    });
+
+    it('細帯の要約は「路線：…」か「全路線」で、絞り込み中を帯に渡す', () => {
+        fixture.detectChanges();
+        const band = fixture.debugElement.query(
+            By.directive(ControlBandComponent),
+        ).componentInstance as ControlBandComponent;
+        expect(band.summary()).toBe('路線：本線');
+        expect(band.filterActive()).toBe(true);
+        expect(band.clearable()).toBe(false);
     });
 });

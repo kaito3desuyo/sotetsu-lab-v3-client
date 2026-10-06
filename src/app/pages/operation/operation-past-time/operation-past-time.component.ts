@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     DestroyRef,
     inject,
 } from '@angular/core';
@@ -8,6 +9,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
 import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
@@ -16,6 +18,7 @@ import { OperationPastTimeSearchFormComponent } from './components/operation-pas
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
+import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
 
 OperationPastTimeStore.resetLoading();
 
@@ -41,6 +44,36 @@ export class OperationPastTimeComponent {
     readonly #operationSearchCardService = inject(OperationSearchCardService);
 
     readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
+
+    readonly #referenceDate = toSignal(OperationPastTimeStore.referenceDate$, {
+        initialValue: null,
+    });
+    readonly #days = toSignal(OperationPastTimeStore.days$, {
+        initialValue: null,
+    });
+    readonly #agencies = toSignal(inject(AgencyListStateQuery).agencies$, {
+        initialValue: [],
+    });
+    readonly #selectedAgencyIds = toSignal(
+        OperationPastTimeStore.selectedAgencyIds$,
+        { initialValue: [] },
+    );
+
+    readonly filterActive = computed(
+        () => this.#selectedAgencyIds().length > 0,
+    );
+    readonly bandSummary = computed(() =>
+        formatPastTimeSummary({
+            referenceDate: this.#referenceDate(),
+            days: this.#days(),
+            agencies: this.#agencies(),
+            selectedAgencyIds: this.#selectedAgencyIds(),
+        }),
+    );
+
+    onClearFilter(): void {
+        OperationPastTimeStore.setSelectedAgencyIds([]);
+    }
 
     constructor() {
         this.#route.paramMap

@@ -9,8 +9,7 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
-import { matchesAgencyFilter } from '../../utils/operation-real-time-filter.util';
-import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
+import { filterRealTimeOperations } from '../../utils/operation-real-time-filter.util';
 
 @Component({
     selector: 'app-operation-real-time-operation-table',
@@ -61,35 +60,15 @@ export class OperationRealTimeOperationTableComponent {
         { initialValue: [] },
     );
 
-    readonly filteredOperations = computed(() => {
-        const operations = this.operations() ?? [];
-        const selectedAgencyIds = this.selectedAgencyIds();
-        const selectedGroupNames = this.selectedGroupNames();
-        const timeCrossSections = this.timeCrossSections() ?? {};
-        const formations = this.formations() ?? [];
-
-        return operations.filter((operation) => {
-            if (
-                !matchesGroupFilter(
-                    operation.operationNumber,
-                    selectedGroupNames,
-                )
-            ) {
-                return false;
-            }
-
-            const expectedFormation =
-                timeCrossSections[operation.operationNumber]?.expectedSighting
-                    ?.formation;
-            const agencyId = expectedFormation
-                ? formations.find(
-                      (f) => f.formationId === expectedFormation.formationId,
-                  )?.agencyId
-                : undefined;
-
-            return matchesAgencyFilter(agencyId, selectedAgencyIds);
-        });
-    });
+    readonly filteredOperations = computed(() =>
+        filterRealTimeOperations(
+            this.operations() ?? [],
+            this.selectedAgencyIds(),
+            this.selectedGroupNames(),
+            this.timeCrossSections() ?? {},
+            this.formations() ?? [],
+        ),
+    );
 
     readonly queryTimeCrossSectionByOperationNumber = (
         operationNumber: string,

@@ -1,5 +1,7 @@
 @if (isLoading()) {
-    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+    >
         <mat-progress-bar
             color="accent"
             mode="indeterminate"
@@ -13,12 +15,24 @@
     <!-- 最終更新時刻は controller の再読み込みボタンの横へ移した
          （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。
          操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
-    <app-control-band>
+    <app-control-band
+        [summary]="bandSummary()"
+        [filterActive]="filterActive()"
+        [clearable]="true"
+        (clear)="onClearFilter()"
+    >
         <div class="tw-flex tw-flex-col tw-gap-4">
             <app-operation-real-time-controller></app-operation-real-time-controller>
             <app-operation-real-time-filter></app-operation-real-time-filter>
         </div>
     </app-control-band>
+
+    <!-- 凡例は列車ダイヤグラムと同じく操作帯のすぐ下の白い全幅の帯（ユーザー判断 2026-10-06）。
+         操作帯の要約の行（40px＋罫線 1px）の下に貼り付く。main の gap 16px と横 gutter は
+         負のマージンで打ち消し、中身で同じ gutter を戻す。ページの中の貼り付く物なので z-30（重なりの順） -->
+    <app-operation-real-time-legend
+        class="tw-sticky tw-top-[calc(49px_+_var(--control-band-offset,0px))] tw-z-30 -tw-mx-4 -tw-mt-4 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2 md:tw-top-[calc(65px_+_var(--control-band-offset,0px))] md:-tw-mx-6 md:tw-px-6 lg:-tw-mx-8 lg:tw-px-8 xl:-tw-mx-16 xl:tw-px-16"
+    ></app-operation-real-time-legend>
 
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。
          横並びでもどちらの列が何順なのかを示す見出し行を置く
@@ -73,9 +87,6 @@
                 </div>
             </mat-tab>
         </mat-tab-group>
-    </div>
-    <div>
-        <app-operation-real-time-legend></app-operation-real-time-legend>
     </div>
     <div>
         <app-new-operation-post-card></app-new-operation-post-card>

@@ -16,7 +16,7 @@
              罫線は border-collapse だと sticky のセルから外れて消えるので、
              separate + 各セルの右・下の罫で引く -->
         <div
-            class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
+            class="tw-max-h-[calc(100dvh_-_80px_-_var(--control-band-offset,0px))] tw-overflow-auto md:tw-max-h-[calc(100dvh_-_96px_-_var(--control-band-offset,0px))]"
         >
             <table
                 class="tw-border-separate tw-border-spacing-0 [&_td]:tw-border-0 [&_td]:tw-border-b [&_td]:tw-border-r [&_td]:tw-border-solid [&_td]:tw-border-rule [&_td]:tw-p-2 [&_th]:tw-border-0 [&_th]:tw-border-b [&_th]:tw-border-r [&_th]:tw-border-solid [&_th]:tw-border-rule [&_th]:tw-bg-white [&_th]:tw-p-2"
