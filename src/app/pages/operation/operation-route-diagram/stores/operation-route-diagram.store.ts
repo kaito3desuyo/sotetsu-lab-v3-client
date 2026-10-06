@@ -11,6 +11,10 @@ import {
     FilterChipOption,
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import {
+    applyRouteDiagramStationAliases,
+    RouteDiagramStationAliases,
+} from '../utils/operation-route-diagram-curate-stations.util';
 import { relatedRouteIds } from '../utils/operation-route-diagram-related-route-ids.util';
 import { visitedRouteIds } from '../utils/operation-route-diagram-visited-route-ids.util';
 
@@ -18,6 +22,7 @@ type StoreProps = {
     operationId: string | null;
     operationTrips: OperationTripsDto | null;
     stations: StationDetailsDto[];
+    stationAliases: RouteDiagramStationAliases;
     selectedRouteIds: string[];
     loadingQueue: boolean[];
 };
@@ -28,10 +33,24 @@ const store = createStore(
         operationId: null,
         operationTrips: null,
         stations: [],
+        stationAliases: {},
         selectedRouteIds: [],
         loadingQueue: [],
     }),
 );
+
+/**
+ * 運用の行路。始発・終着の駅 ID は縦軸の列の駅 ID に読み替えてある
+ * （路線ごとに別の駅として登録された駅を 1 列にまとめたため。curate-stations.util 参照）。
+ */
+function tripsOf(
+    state: Pick<StoreProps, 'operationTrips' | 'stationAliases'>,
+): TripOperationListDetailsDto[] {
+    return applyRouteDiagramStationAliases(
+        state.operationTrips?.trips ?? [],
+        state.stationAliases,
+    );
+}
 
 function extractRouteOptions(
     stations: StationDetailsDto[],
@@ -62,6 +81,9 @@ export const OperationRouteDiagramStore = {
     setStations(stations: StationDetailsDto[]): void {
         store.update(setProp('stations', () => stations));
     },
+    setStationAliases(stationAliases: RouteDiagramStationAliases): void {
+        store.update(setProp('stationAliases', () => stationAliases));
+    },
     setSelectedRouteIds(routeIds: FilterChipValue[]): void {
         store.update(setProp('selectedRouteIds', () => routeIds as string[]));
     },
@@ -70,8 +92,8 @@ export const OperationRouteDiagramStore = {
      * operationTrips と stations の両方が揃った後（fetchData 完了後）に呼ぶ。
      */
     initializeSelectedRouteIds(): void {
-        const { stations, operationTrips } = store.getValue();
-        const routeIds = visitedRouteIds(stations, operationTrips?.trips ?? []);
+        const state = store.getValue();
+        const routeIds = visitedRouteIds(state.stations, tripsOf(state));
         store.update(setProp('selectedRouteIds', () => routeIds));
     },
     enableLoading(): void {
@@ -90,7 +112,9 @@ export const OperationRouteDiagramStore = {
     ),
     operation$: store.pipe(select((state) => state.operationTrips?.operation)),
     tripOperationLists$: store.pipe(
-        select((state) => state.operationTrips?.trips),
+        select((state) =>
+            state.operationTrips?.trips ? tripsOf(state) : undefined,
+        ),
     ),
     stations$: store.pipe(select((state) => state.stations)),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
@@ -103,14 +127,14 @@ export const OperationRouteDiagramStore = {
     visibleStations$: combineLatest([
         store.pipe(select((state) => state.stations)),
         store.pipe(select((state) => state.selectedRouteIds)),
-        store.pipe(select((state) => state.operationTrips)),
+        store.pipe(select(tripsOf)),
     ]).pipe(
-        map(([stations, selectedRouteIds, operationTrips]) =>
+        map(([stations, selectedRouteIds, trips]) =>
             visibleStations(
                 stations,
                 selectedRouteIds.length
                     ? selectedRouteIds
-                    : visitedRouteIds(stations, operationTrips?.trips ?? []),
+                    : visitedRouteIds(stations, trips),
             ),
         ),
     ),
@@ -119,10 +143,9 @@ export const OperationRouteDiagramStore = {
     // 関連路線の判定基準は operation-route-diagram-related-route-ids.util.ts 参照。
     routeOptions$: combineLatest([
         store.pipe(select((state) => state.stations)),
-        store.pipe(select((state) => state.operationTrips)),
+        store.pipe(select(tripsOf)),
     ]).pipe(
-        map(([stations, operationTrips]) => {
-            const trips = operationTrips?.trips ?? [];
+        map(([stations, trips]) => {
             const visited = new Set(visitedRouteIds(stations, trips));
             const related = new Set(relatedRouteIds(stations, trips));
 

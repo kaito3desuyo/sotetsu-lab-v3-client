@@ -6,13 +6,25 @@ export const ROUTE_DIAGRAM_OUTSIDE_LEFT_ID = '__route-diagram-outside-left__';
 /** 表示中の末尾の駅より後にある、隠した駅をまとめる列（図の右端の「図外」） */
 export const ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID = '__route-diagram-outside-right__';
 export const ROUTE_DIAGRAM_OUTSIDE_STATION_NAME = '図外';
+const ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX = '__route-diagram-outside-after:';
+
+/**
+ * 表示中の駅の間でひと続きに隠れた駅をまとめる列（その位置の「図外」）。
+ * まとまりの直前の表示駅で見分ける。
+ */
+export function routeDiagramOutsideBetweenId(
+    previousVisibleStationId: string,
+): string {
+    return `${ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX}${previousVisibleStationId}__`;
+}
 
 export function isRouteDiagramOutsideStationId(
     stationId: string | undefined,
 ): boolean {
     return (
         stationId === ROUTE_DIAGRAM_OUTSIDE_LEFT_ID ||
-        stationId === ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID
+        stationId === ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID ||
+        !!stationId?.startsWith(ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX)
     );
 }
 
@@ -35,7 +47,7 @@ export type OperationRouteDiagramTripOperationList =
  * （絞り込み前の全駅順）で決める。
  * - 表示中の先頭の駅より前の駅 → 左端の「図外」の列
  * - 表示中の末尾の駅より後の駅 → 右端の「図外」の列
- * - 表示中の駅の間の駅 → 全駅順で最も近い表示中の駅
+ * - 表示中の駅の間の駅 → 先頭と末尾の近い方の「図外」の列（2026-10-07。以前は最も近い表示中の駅）
  *
  * 見える駅で始まる・終わるように見えないよう、付け替えた端には本当の駅名を持たせる
  * （2026-10-06。南古谷で出庫する列車が大崎で出庫するように見えると指摘された）。
@@ -81,18 +93,21 @@ export function reconnectTripOperationLists(
             };
         }
 
-        for (let offset = 1; offset < allStations.length; offset++) {
-            const before = allStations[index - offset];
-            if (before && visibleIds.has(before.stationId)) {
-                return { stationId: before.stationId, hiddenStationName };
-            }
-            const after = allStations[index + offset];
-            if (after && visibleIds.has(after.stationId)) {
-                return { stationId: after.stationId, hiddenStationName };
-            }
+        // 間の駅も近い表示駅へは付けない。表示駅が別の路線の駅だと、そこで折り返したように
+        // 見えるため（2026-10-07 ユーザー指示）。ひと続きに隠れた駅のまとまりごとに、
+        // その位置（直前の表示駅の後）に置く図外の列へ寄せる。同じまとまりの駅で着いて
+        // 出る列車は同じ図外の列で折り返す。
+        let blockStart = index;
+        while (!visibleIds.has(allStations[blockStart - 1].stationId)) {
+            blockStart--;
         }
 
-        return { stationId };
+        return {
+            stationId: routeDiagramOutsideBetweenId(
+                allStations[blockStart - 1].stationId,
+            ),
+            hiddenStationName,
+        };
     }
 
     return tripOperationLists.map((tripOperationList) => {
@@ -114,7 +129,8 @@ export function reconnectTripOperationLists(
 }
 
 /**
- * 付け替えた行路が「図外」の列を使うときだけ、表示駅リストの端にその列を足す。
+ * 付け替えた行路が「図外」の列を使うときだけ、表示駅リストにその列を足す。
+ * 左右の図外は端に、間の図外は直前の表示駅の後に置く。
  */
 export function withOutsideStationColumns(
     visibleStations: readonly StationDetailsDto[],
@@ -136,7 +152,12 @@ export function withOutsideStationColumns(
         ...(usedIds.has(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID)
             ? [outsideStation(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID)]
             : []),
-        ...visibleStations,
+        ...visibleStations.flatMap((station) => {
+            const betweenId = routeDiagramOutsideBetweenId(station.stationId);
+            return usedIds.has(betweenId)
+                ? [station, outsideStation(betweenId)]
+                : [station];
+        }),
         ...(usedIds.has(ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID)
             ? [outsideStation(ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID)]
             : []),

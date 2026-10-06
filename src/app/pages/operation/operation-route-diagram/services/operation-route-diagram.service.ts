@@ -6,7 +6,7 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { OperationRouteDiagramNavigateTimetable } from '../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramStore } from '../stores/operation-route-diagram.store';
-import { curateRouteDiagramStations } from '../utils/operation-route-diagram-curate-stations.util';
+import { curateRouteDiagramStationsWithAliases } from '../utils/operation-route-diagram-curate-stations.util';
 
 @Injectable()
 export class OperationRouteDiagramService {
@@ -33,9 +33,10 @@ export class OperationRouteDiagramService {
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
-                OperationRouteDiagramStore.setStations(
-                    curateRouteDiagramStations(data.stations),
-                );
+                const { stations, aliases } =
+                    curateRouteDiagramStationsWithAliases(data.stations);
+                OperationRouteDiagramStore.setStations(stations);
+                OperationRouteDiagramStore.setStationAliases(aliases);
             }),
             map(() => undefined),
         );

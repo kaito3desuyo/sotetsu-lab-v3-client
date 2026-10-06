@@ -1,7 +1,9 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
+    isRouteDiagramOutsideStationId,
     reconnectTripOperationLists,
+    routeDiagramOutsideBetweenId,
     ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
     ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
     withOutsideStationColumns,
@@ -99,7 +101,7 @@ describe('reconnectTripOperationLists', () => {
         expect(result[0].endHiddenStationName).toBe('かしわ台');
     });
 
-    it('始発駅が非表示のとき、全駅順で最も近い表示中の駅へ再接続する', () => {
+    it('表示中の駅の間の隠れた駅は、近い表示駅でなく、その位置の「図外」の列へ付け替える', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '二俣川',
         );
@@ -113,10 +115,80 @@ describe('reconnectTripOperationLists', () => {
             visibleStations,
         );
 
-        // 二俣川の直前で表示中なのは瀬谷
-        expect(result[0].startTime.stationId).toBe('瀬谷');
+        expect(result[0].startTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('瀬谷'),
+        );
         expect(result[0].startHiddenStationName).toBe('二俣川');
         expect(result[0].endTime.stationId).toBe('横浜');
+    });
+
+    it('ひと続きに隠れた駅は、まとまりごとに同じ「図外」の列へ付け替える（区間の途中で割らない）', () => {
+        const hidden = new Set(['相模大塚', '大和', '瀬谷', '二俣川']);
+        const visibleStations = allStations.filter(
+            (s) => !hidden.has(s.stationName),
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '相模大塚', '二俣川'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].startTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('かしわ台'),
+        );
+        expect(result[0].endTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('かしわ台'),
+        );
+    });
+
+    it('離れた 2 つのまとまりは、それぞれの位置の別の「図外」の列へ付け替える', () => {
+        const hidden = new Set(['かしわ台', '二俣川']);
+        const visibleStations = allStations.filter(
+            (s) => !hidden.has(s.stationName),
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', 'かしわ台', '二俣川'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].startTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('海老名'),
+        );
+        expect(result[0].endTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('瀬谷'),
+        );
+    });
+
+    it('同じ隠れた駅に着いて出る列車は、同じ「図外」の列で折り返す', () => {
+        const visibleStations = allStations.filter(
+            (s) => s.stationName !== '二俣川',
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '海老名', '二俣川'),
+            makeTrip('t2', '二俣川', '海老名'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].endTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('瀬谷'),
+        );
+        expect(result[1].startTime.stationId).toBe(
+            routeDiagramOutsideBetweenId('瀬谷'),
+        );
     });
 
     it('全駅順に存在しない駅（データ不整合）は変更せずそのまま返す', () => {
@@ -190,6 +262,37 @@ describe('reconnectTripOperationLists', () => {
                 '二俣川',
             ]);
             expect(result[0].stationName).toBe('図外');
+        });
+
+        it('間の「図外」の列は、隠れたまとまりの位置（直前の表示駅の後）に足す', () => {
+            const visibleStations = allStations.filter(
+                (s) => s.stationName !== '二俣川',
+            );
+            const reconnected = reconnectTripOperationLists(
+                [makeTrip('t1', '二俣川', '横浜')],
+                allStations,
+                visibleStations,
+            );
+
+            const result = withOutsideStationColumns(
+                visibleStations,
+                reconnected,
+            );
+
+            expect(result.map((s) => s.stationId)).toEqual([
+                '海老名',
+                'かしわ台',
+                '相模大塚',
+                '大和',
+                '瀬谷',
+                routeDiagramOutsideBetweenId('瀬谷'),
+                '西谷',
+                '横浜',
+            ]);
+            expect(result[5].stationName).toBe('図外');
+            expect(isRouteDiagramOutsideStationId(result[5].stationId)).toBe(
+                true,
+            );
         });
 
         it('図の外に端が無ければ列を足さない', () => {
