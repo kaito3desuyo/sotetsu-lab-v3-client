@@ -4,32 +4,44 @@
         message="条件に一致する編成がありません"
     ></app-empty-state>
 } @else {
-    <div class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-2">
-        @for (formation of filteredFormations(); track formation.formationId) {
-            <app-operation-real-time-formation-card
-                [formation]="formation"
-                [timeCrossSection]="
-                    queryTimeCrossSectionByFormationNumber(
-                        formation.formationNumber
-                    )()
-                "
-                [histories]="
-                    queryHistoriesByFormationNumber(formation.formationNumber)()
-                "
-                [currentPosition]="
-                    queryCurrentPositionByFormationNumber(
-                        formation.formationNumber
-                    )()
-                "
-                [operations]="operations() ?? []"
-                [agencies]="agencies()"
-                [stations]="stations() ?? []"
-                [tripClasses]="tripClasses() ?? []"
-                [calendarId]="calendar()?.calendarId"
-                [isVisibleSightingHistories]="isVisibleSightingHistories()"
-                [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
-                [isSightingLoading]="isLoading()"
-            ></app-operation-real-time-formation-card>
-        }
+    <!-- 帳票: 1 枚の白地を罫線で区切る（docs/design.md 面の掟の例外・2026-10-06）。
+         作りは運用順の一覧と同じ -->
+    <div class="tw-overflow-hidden tw-rounded-card tw-bg-white">
+        <div
+            class="-tw-mb-px -tw-mr-px tw-grid tw-grid-cols-1 xl:tw-grid-cols-2"
+        >
+            @for (
+                formation of filteredFormations();
+                track formation.formationId
+            ) {
+                <app-operation-real-time-formation-card
+                    class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule"
+                    [formation]="formation"
+                    [timeCrossSection]="
+                        queryTimeCrossSectionByFormationNumber(
+                            formation.formationNumber
+                        )()
+                    "
+                    [histories]="
+                        queryHistoriesByFormationNumber(
+                            formation.formationNumber
+                        )()
+                    "
+                    [currentPosition]="
+                        queryCurrentPositionByFormationNumber(
+                            formation.formationNumber
+                        )()
+                    "
+                    [operations]="operations() ?? []"
+                    [agencies]="agencies()"
+                    [stations]="stations() ?? []"
+                    [tripClasses]="tripClasses() ?? []"
+                    [calendarId]="calendar()?.calendarId"
+                    [isVisibleSightingHistories]="isVisibleSightingHistories()"
+                    [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
+                    [isSightingLoading]="isLoading()"
+                ></app-operation-real-time-formation-card>
+            }
+        </div>
     </div>
 }
