@@ -9,7 +9,7 @@
 >
     @if (isLoading()) {
         <div
-            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
         >
             <mat-progress-bar
                 color="accent"
@@ -18,18 +18,26 @@
         </div>
     }
 
-    <app-train-diagram-controller
-        [calendarId]="calendarId()"
-        [selectedRouteIds]="selectedRouteIds()"
-        [directionFilter]="directionFilter()"
-        [showNowButton]="isTodaySelected()"
-        (calendarIdChange)="onCalendarIdChange($event)"
-        (routeIdsChange)="onRouteIdsChange($event)"
-        (directionFilterChange)="onDirectionFilterChange($event)"
-        (jumpToHour)="onJumpToHour($event)"
-        (jumpToNow)="onJumpToNow()"
-        (zoomStep)="onZoomStep($event)"
-    ></app-train-diagram-controller>
+    <app-control-band
+        collapse="manual"
+        [flush]="true"
+        [summary]="bandSummary()"
+        [collapsed]="controlCollapsed()"
+        (collapsedChange)="onControlCollapsedChange($event)"
+    >
+        <app-train-diagram-controller
+            [calendarId]="calendarId()"
+            [selectedRouteIds]="selectedRouteIds()"
+            [directionFilter]="directionFilter()"
+            [showNowButton]="isTodaySelected()"
+            (calendarIdChange)="onCalendarIdChange($event)"
+            (routeIdsChange)="onRouteIdsChange($event)"
+            (directionFilterChange)="onDirectionFilterChange($event)"
+            (jumpToHour)="onJumpToHour($event)"
+            (jumpToNow)="onJumpToNow()"
+            (zoomStep)="onZoomStep($event)"
+        ></app-train-diagram-controller>
+    </app-control-band>
 
     <app-train-diagram-legend
         [hasDeadhead]="hasDeadhead()"

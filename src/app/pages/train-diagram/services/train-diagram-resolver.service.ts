@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { filter, first, map, mergeMap } from 'rxjs/operators';
 import { TitleService } from 'src/app/core/services/title.service';
 import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
+import { TrainDiagramStore } from '../stores/train-diagram.store';
 
 @Injectable()
 export class TrainDiagramResolverService {
@@ -22,6 +23,7 @@ export class TrainDiagramResolverService {
                     first(),
                 ),
             ),
+            mergeMap(() => TrainDiagramStore.persistInitialized$),
             map(() => undefined),
         );
     }

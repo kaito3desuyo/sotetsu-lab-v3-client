@@ -1,3 +1,4 @@
+import localForage from 'localforage';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationAxis, stationToY } from 'src/app/shared/diagram-scale';
@@ -253,6 +254,32 @@ describe('TrainDiagramStore', () => {
                 expect(hasStation(axis, 'shonandai')).toBe(false);
                 done();
             });
+        });
+    });
+
+    describe('controlCollapsed の保存', () => {
+        it('初めは false で、set すると流れる', (done) => {
+            TrainDiagramStore.setControlCollapsed(true);
+            TrainDiagramStore.controlCollapsed$.subscribe((value) => {
+                expect(value).toBe(true);
+                done();
+            });
+        });
+
+        it('localForage には controlCollapsed だけを書く', async () => {
+            const spy = jest.spyOn(localForage, 'setItem');
+            TrainDiagramStore.setControlCollapsed(true);
+            TrainDiagramStore.setControlCollapsed(false);
+            await Promise.resolve();
+            const calls = spy.mock.calls.filter(
+                ([key]) => key === 'TrainDiagramStore',
+            );
+            expect(calls.length).toBeGreaterThan(0);
+            for (const [, value] of calls) {
+                expect(Object.keys(value as object)).toEqual([
+                    'controlCollapsed',
+                ]);
+            }
         });
     });
 });
