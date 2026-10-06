@@ -131,6 +131,16 @@ export class TrainLocationControllerComponent {
         this.timeInputValueChange.emit(value);
     }
 
+    /** 時刻の選択画面を開く。`showPicker()` が無い・開けないブラウザでは何もしない */
+    openTimePicker(input: HTMLInputElement): void {
+        if (typeof input.showPicker !== 'function') return;
+        try {
+            input.showPicker();
+        } catch {
+            // 既に開いている・押した操作の外から呼ばれたなど。開けなくても入力はできる
+        }
+    }
+
     onRouteChange(values: FilterChipValue[]): void {
         const routeId = values[0];
         if (routeId !== undefined) {
