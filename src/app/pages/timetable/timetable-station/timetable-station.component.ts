@@ -29,6 +29,7 @@ import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-c
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
+import { formatTimetableStationSummary } from './utils/timetable-station-summary.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableStationStore.resetLoading();
@@ -127,6 +128,19 @@ export class TimetableStationComponent {
 
     readonly isEmpty = computed(
         () => !!this.calendar() && this.timetableData().length === 0,
+    );
+
+    /** 細帯の要約（絞り込みはこのページに無いので常に表示）。 */
+    readonly bandSummary = computed(() =>
+        formatTimetableStationSummary({
+            stationName: this.stationOptions().find(
+                (station) => station.stationId === this.stationId(),
+            )?.stationName,
+            calendar: this.selectedCalendar(),
+            directionLabel: this.tripDirectionOptions.find(
+                (option) => option.value === this.tripDirection(),
+            )?.label,
+        }),
     );
 
     /** G12: 空状態の次アクション（反対方向へ切り替え）に使う方向・ラベル（mockup-07 準拠）。 */

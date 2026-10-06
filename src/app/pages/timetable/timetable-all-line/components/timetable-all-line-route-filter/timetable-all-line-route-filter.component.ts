@@ -1,7 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
+import {
+    formatRouteFilterSummary,
+    isRouteFilterActive,
+} from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
 
@@ -14,9 +18,9 @@ import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
 @Component({
     selector: 'app-timetable-all-line-route-filter',
     templateUrl: './timetable-all-line-route-filter.component.html',
-    styleUrl: './timetable-all-line-route-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ControlBandComponent, FilterChipsComponent],
+    host: { class: 'tw-contents' },
 })
 export class TimetableAllLineRouteFilterComponent {
     readonly routeOptions = toSignal(TimetableAllLineStore.routeOptions$, {
@@ -26,6 +30,17 @@ export class TimetableAllLineRouteFilterComponent {
         TimetableAllLineStore.selectedRouteIds$,
         { initialValue: [] },
     );
+
+    readonly filterActive = computed(() =>
+        isRouteFilterActive(this.routeOptions(), this.selectedRouteIds()),
+    );
+    readonly bandSummary = computed(() => {
+        const routes = formatRouteFilterSummary(
+            this.routeOptions(),
+            this.selectedRouteIds(),
+        );
+        return routes === '全路線' ? routes : `路線：${routes}`;
+    });
 
     onChange(values: FilterChipValue[]): void {
         TimetableAllLineStore.setSelectedRouteIds(values);

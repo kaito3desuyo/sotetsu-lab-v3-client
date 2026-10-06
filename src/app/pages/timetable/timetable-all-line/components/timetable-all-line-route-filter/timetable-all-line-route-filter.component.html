@@ -1,6 +1,6 @@
 @if (routeOptions().length) {
     <!-- 操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
-    <app-control-band>
+    <app-control-band [summary]="bandSummary()" [filterActive]="filterActive()">
         <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
         <app-filter-chips
             mode="multiple"
