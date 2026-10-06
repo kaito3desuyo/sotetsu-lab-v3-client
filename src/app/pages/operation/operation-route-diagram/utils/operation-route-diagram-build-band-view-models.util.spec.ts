@@ -151,7 +151,11 @@ describe('buildBandViewModels', () => {
 
     it('tripClass が欠落してもフォールバック色を返し例外を投げない', () => {
         const [vm] = buildBandViewModels(
-            [tripOperationList({ trip: { ...tripOperationList().trip, tripClass: undefined } })],
+            [
+                tripOperationList({
+                    trip: { ...tripOperationList().trip, tripClass: undefined },
+                }),
+            ],
             stations,
         );
         expect(vm.color).toBe('#666666');
@@ -182,7 +186,10 @@ describe('buildBandViewModels', () => {
         const [vm] = buildBandViewModels(
             [
                 tripOperationList({
-                    startTime: { stationId: 'unknown', departureTime: '05:00:00' },
+                    startTime: {
+                        stationId: 'unknown',
+                        departureTime: '05:00:00',
+                    },
                 }),
             ],
             stations,
@@ -240,5 +247,58 @@ describe('buildBandViewModels', () => {
         const [vm] = buildBandViewModels([tripOperationList()], stations);
         expect(vm.depotOutTime).toBe('05:45:00');
         expect(vm.depotInTime).toBe('06:40:00');
+    });
+
+    it('隠した駅から付け替えた端は、その側に本当の駅名を持ち、○・△ を描かない', () => {
+        // 上り（海老名 → 横浜）。始発の海老名・終着の横浜とも隠した駅から付け替えた想定
+        const [vm] = buildBandViewModels(
+            [
+                tripOperationList({
+                    startTime: {
+                        stationId: 's-ebina',
+                        departureTime: '07:52:00',
+                    },
+                    endTime: {
+                        stationId: 's-yokohama',
+                        arrivalTime: '08:55:00',
+                    },
+                    startHiddenStationName: '湘南台',
+                    endHiddenStationName: '大宮',
+                    trip: {
+                        ...tripOperationList().trip,
+                        depotOut: true,
+                        depotIn: true,
+                    },
+                }),
+            ],
+            stations,
+        );
+
+        expect(vm.leftStationName).toBe('大宮');
+        expect(vm.rightStationName).toBe('湘南台');
+        expect(vm.destinationStationName).toBe('大宮');
+        expect(vm.depotOut).toBe(true);
+        expect(vm.depotIn).toBe(true);
+        expect(vm.depotOutMarker).toBe(false);
+        expect(vm.depotInMarker).toBe(false);
+    });
+
+    it('表示中の駅で出庫・入庫する端には ○・△ を描く', () => {
+        const [vm] = buildBandViewModels(
+            [
+                tripOperationList({
+                    trip: {
+                        ...tripOperationList().trip,
+                        depotOut: true,
+                        depotIn: true,
+                    },
+                }),
+            ],
+            stations,
+        );
+
+        expect(vm.leftStationName).toBeUndefined();
+        expect(vm.depotOutMarker).toBe(true);
+        expect(vm.depotInMarker).toBe(true);
     });
 });

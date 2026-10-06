@@ -15,24 +15,29 @@ import {
 } from '@angular/core';
 import dayjs from 'dayjs';
 import { saveAs } from 'file-saver';
-import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramFormatStationNamePipe } from '../../pipes/operation-route-diagram-format-station-name.pipe';
-import { buildBandViewModels } from '../../utils/operation-route-diagram-build-band-view-models.util';
+import {
+    buildBandViewModels,
+    OperationRouteDiagramBandViewModel,
+} from '../../utils/operation-route-diagram-build-band-view-models.util';
 import {
     computeColumnMetrics,
     OperationRouteDiagramColumnMetrics,
     ROUTE_DIAGRAM_SIDE_PAD,
 } from '../../utils/operation-route-diagram-fit-columns.util';
+import {
+    isRouteDiagramOutsideStationId,
+    OperationRouteDiagramTripOperationList,
+} from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
 
 // 本番の行路図に合わせた描画寸法。字も SVG の中に描く（「画像としてダウンロードする」が
 // SVG をそのまま画像にするため。字を HTML に出すと画像から消える）。
@@ -72,6 +77,76 @@ const LABEL_CONNECTOR_GAP = 6;
 const OUTPUT_COLUMN_WIDTH = 64;
 /** 回送のチップと線の色（grey-500） */
 const NON_REVENUE_COLOR = '#9e9e9e';
+/** 「図外」の列の見出しの色（grey-500） */
+const OUTSIDE_HEADER_COLOR = '#9e9e9e';
+/** 両端とも図の外にある列車を図外の列に描く短い線の、半分の長さ */
+const OUTSIDE_STUB_HALF = 8;
+
+/** `HH:mm:ss` を本番と同じ 4 桁（`HHmm`）にする */
+function formatTime(time: string | undefined): string {
+    return time ? time.slice(0, 2) + time.slice(3, 5) : '';
+}
+
+/** 端の外側に書く字。隠した駅から付け替えた端は、時刻の前に本当の駅名を書く */
+function endLabel(
+    time: string | undefined,
+    hiddenStationName: string | undefined,
+): string | undefined {
+    if (!time) return undefined;
+    return hiddenStationName
+        ? `${hiddenStationName} ${formatTime(time)}`
+        : formatTime(time);
+}
+
+interface OperationRouteDiagramBandLabels {
+    leftLabel?: string;
+    rightLabel?: string;
+    /** 両端とも同じ図外の列にある（短い線を引き、外側だけに書く） */
+    stub: boolean;
+    leftGap: number;
+    rightGap: number;
+}
+
+/**
+ * 列車 1 本ぶんの、線の両端の外側に書く字と、線の端から字までの間を決める。
+ * 列の座標に依らないので、余白を決める前に求められる。
+ */
+function buildBandLabels(
+    vm: OperationRouteDiagramBandViewModel,
+    stations: readonly StationDetailsDto[],
+): OperationRouteDiagramBandLabels {
+    const hasMarkerAt = (stationIndex: number) =>
+        (vm.depotOutMarker && vm.depotOutIndex === stationIndex) ||
+        (vm.depotInMarker && vm.depotInIndex === stationIndex);
+    const leftGap = hasMarkerAt(vm.leftIndex) ? TIME_GAP_WITH_MARKER : TIME_GAP;
+    const rightGap = hasMarkerAt(vm.rightIndex)
+        ? TIME_GAP_WITH_MARKER
+        : TIME_GAP;
+
+    const stub =
+        vm.leftIndex === vm.rightIndex &&
+        isRouteDiagramOutsideStationId(stations[vm.leftIndex]?.stationId);
+    if (stub) {
+        // 外側に「駅名 時刻→駅名 時刻」。同じ駅なら 2 つめの駅名は省く
+        const start = endLabel(vm.depotOutTime, vm.startHiddenStationName);
+        const end =
+            vm.startHiddenStationName === vm.endHiddenStationName
+                ? formatTime(vm.depotInTime)
+                : endLabel(vm.depotInTime, vm.endHiddenStationName);
+        const label = [start, end].filter((t) => t).join('→');
+        return vm.leftIndex === 0
+            ? { leftLabel: label, stub, leftGap, rightGap }
+            : { rightLabel: label, stub, leftGap, rightGap };
+    }
+
+    return {
+        leftLabel: endLabel(vm.leftTime, vm.leftStationName),
+        rightLabel: endLabel(vm.rightTime, vm.rightStationName),
+        stub,
+        leftGap,
+        rightGap,
+    };
+}
 
 /**
  * 字の幅の概算。getBBox で測らず、全角は字の大きさ、半角（Latin-1）はその 0.6 倍とみなす。
@@ -146,12 +221,19 @@ export interface OperationRouteDiagramBandRow {
     rightX: number;
     leftTime?: string;
     rightTime?: string;
+    /** 左端の外側に書く字（時刻。図の外の端は駅名＋時刻） */
+    leftLabel?: string;
+    /** 右端の外側に書く字 */
+    rightLabel?: string;
     /** 左端の時刻の x（text-anchor="end"。左端の外側） */
     leftTimeX: number;
     /** 右端の時刻の x（text-anchor="start"。右端の外側） */
     rightTimeX: number;
     depotOut: boolean;
     depotIn: boolean;
+    /** ○・△ を描くか（図の外の端には描かない） */
+    depotOutMarker: boolean;
+    depotInMarker: boolean;
     depotOutX: number;
     depotInX: number;
     /** 次の列車へ下ろす縦線の x。入庫する列車・最後の列車では無い */
@@ -174,7 +256,6 @@ export interface OperationRouteDiagramBandRow {
     imports: [
         CommonModule,
         PipesModule,
-        DateFnsPipe,
         OperationRouteDiagramFormatStationNamePipe,
         AppButtonComponent,
         CalendarBandComponent,
@@ -190,6 +271,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
     readonly CHIP_RADIUS = CHIP_RADIUS;
     readonly TRIP_NUMBER_FONT_SIZE = TRIP_NUMBER_FONT_SIZE;
     readonly NON_REVENUE_COLOR = NON_REVENUE_COLOR;
+    readonly OUTSIDE_HEADER_COLOR = OUTSIDE_HEADER_COLOR;
 
     readonly drawingSVGForOutput = signal(false);
 
@@ -197,7 +279,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
     readonly operation = input.required<OperationDetailsDto>();
     readonly stations = input.required<StationDetailsDto[]>();
     readonly tripOperationLists =
-        input.required<TripOperationListDetailsDto[]>();
+        input.required<OperationRouteDiagramTripOperationList[]>();
 
     readonly clickNavigateTimetable =
         output<OperationRouteDiagramNavigateTimetable>();
@@ -211,17 +293,73 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         return !!calendar && (calendar.sunday || calendar.saturday);
     });
 
+    readonly bandViewModels = computed(() =>
+        buildBandViewModels(this.tripOperationLists(), this.stations()),
+    );
+    readonly bandLabels = computed(() =>
+        this.bandViewModels().map((vm) => buildBandLabels(vm, this.stations())),
+    );
+
+    /**
+     * 端の列の外側に書く字が、既定の余白（4 桁の時刻＋○・△ ぶん）に収まらないときに
+     * 足す余白。図外の駅名を書くときに要る
+     */
+    readonly extraSidePads = computed(() => {
+        const lastIndex = this.stations().length - 1;
+        const need = (label: string | undefined, gap: number, stub: boolean) =>
+            label
+                ? (stub ? OUTSIDE_STUB_HALF : 0) +
+                  gap +
+                  estimateTextWidth(label, TIME_FONT_SIZE) +
+                  LABEL_EDGE_GAP
+                : 0;
+
+        let left = 0;
+        let right = 0;
+        this.bandViewModels().forEach((vm, index) => {
+            const labels = this.bandLabels()[index];
+            if (vm.leftIndex === 0) {
+                left = Math.max(
+                    left,
+                    need(labels.leftLabel, labels.leftGap, labels.stub),
+                );
+            }
+            if (vm.rightIndex === lastIndex) {
+                right = Math.max(
+                    right,
+                    need(labels.rightLabel, labels.rightGap, labels.stub),
+                );
+            }
+        });
+
+        return {
+            left: Math.max(left - ROUTE_DIAGRAM_SIDE_PAD, 0),
+            right: Math.max(right - ROUTE_DIAGRAM_SIDE_PAD, 0),
+        };
+    });
+
     readonly columnMetrics = computed(() =>
-        computeColumnMetrics(this.stations().length, this.availableWidth()),
+        computeColumnMetrics(
+            this.stations().length,
+            this.availableWidth(),
+            this.extraSidePads().left,
+            this.extraSidePads().right,
+        ),
     );
 
     readonly svgWidth = computed(() => this.columnMetrics().width);
 
     readonly outputColumnMetrics = computed(() => {
         const gaps = Math.max(this.stations().length - 1, 0);
+        const { left, right } = this.extraSidePads();
         return computeColumnMetrics(
             this.stations().length,
-            ROUTE_DIAGRAM_SIDE_PAD * 2 + OUTPUT_COLUMN_WIDTH * gaps,
+            ROUTE_DIAGRAM_SIDE_PAD * 2 +
+                left +
+                right +
+                OUTPUT_COLUMN_WIDTH * gaps,
+            left,
+            right,
         );
     });
 
@@ -247,6 +385,9 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
             return {
                 stationId: station.stationId,
                 stationName: station.stationName,
+                fill: isRouteDiagramOutsideStationId(station.stationId)
+                    ? OUTSIDE_HEADER_COLOR
+                    : '#212121',
                 x,
                 xList: Array(STATION_LABEL_CHARS).fill(x).join(','),
             };
@@ -273,24 +414,17 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         const xOf = (index: number) =>
             metrics.leftPad + index * metrics.columnWidth;
 
-        const viewModels = buildBandViewModels(
-            this.tripOperationLists(),
-            this.stations(),
-        );
+        const viewModels = this.bandViewModels();
+        const bandLabels = this.bandLabels();
         const rows = viewModels.map((vm, index) => {
+            const labels = bandLabels[index];
             const centerY = ROW_TOP_MARGIN + index * ROW_HEIGHT;
-            const leftX = xOf(vm.leftIndex);
-            const rightX = xOf(vm.rightIndex);
+            const stubHalf = labels.stub ? OUTSIDE_STUB_HALF : 0;
+            const leftX = xOf(vm.leftIndex) - stubHalf;
+            const rightX = xOf(vm.rightIndex) + stubHalf;
 
-            const hasMarkerAt = (stationIndex: number) =>
-                (vm.depotOut && vm.depotOutIndex === stationIndex) ||
-                (vm.depotIn && vm.depotInIndex === stationIndex);
-            const leftTimeX =
-                leftX -
-                (hasMarkerAt(vm.leftIndex) ? TIME_GAP_WITH_MARKER : TIME_GAP);
-            const rightTimeX =
-                rightX +
-                (hasMarkerAt(vm.rightIndex) ? TIME_GAP_WITH_MARKER : TIME_GAP);
+            const leftTimeX = leftX - labels.leftGap;
+            const rightTimeX = rightX + labels.rightGap;
 
             const isNonRevenue = vm.style === 'nonRevenue';
             const color = isNonRevenue ? NON_REVENUE_COLOR : vm.color;
@@ -332,10 +466,14 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
                 rightX,
                 leftTime: vm.leftTime,
                 rightTime: vm.rightTime,
+                leftLabel: labels.leftLabel,
+                rightLabel: labels.rightLabel,
                 leftTimeX,
                 rightTimeX,
                 depotOut: vm.depotOut,
                 depotIn: vm.depotIn,
+                depotOutMarker: vm.depotOutMarker,
+                depotInMarker: vm.depotInMarker,
                 depotOutX: xOf(vm.depotOutIndex),
                 depotInX: xOf(vm.depotInIndex),
                 connectorGradientId: `route-diagram-connector-gradient-${vm.tripOperationListId}`,

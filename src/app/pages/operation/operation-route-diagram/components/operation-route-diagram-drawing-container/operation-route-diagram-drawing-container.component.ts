@@ -10,7 +10,10 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from '../../services/operation-route-diagram.service';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
-import { reconnectTripOperationLists } from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
+import {
+    reconnectTripOperationLists,
+    withOutsideStationColumns,
+} from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
 import { OperationRouteDiagramDrawingPresentationalComponent } from '../operation-route-diagram-drawing-presentational/operation-route-diagram-drawing-presentational.component';
 
 @Component({
@@ -39,10 +42,12 @@ export class OperationRouteDiagramDrawingContainerComponent {
     // B5: 路線チップ絞り込み前の全駅順（再接続の基準になる）。
     readonly #allStations = toSignal(OperationRouteDiagramStore.stations$);
     // B5: 路線チップの選択状態で絞り込んだ表示駅リスト（縦軸）。
-    readonly stations = toSignal(OperationRouteDiagramStore.visibleStations$);
+    readonly #visibleStations = toSignal(
+        OperationRouteDiagramStore.visibleStations$,
+    );
 
-    // B5: 路線チップ OFF で縦軸から消えた駅を始発/終着に持つ行路を、表示中の
-    // 最寄り駅へ再接続する（受け入れ条件「隠れた駅を飛ばして描画する」）。
+    // B5: 路線チップ OFF で縦軸から消えた駅を始発/終着に持つ行路を、表示中の列へ
+    // 付け替える。表示中の駅より外の駅は端の「図外」の列、間の駅は最寄りの表示駅。
     // SVG 描画（drawing-presentational）の座標系・findById による index 計算は
     // 一切変更せず、その入力となる駅 ID をここで付け替えるだけに留める。
     readonly tripOperationLists = computed(() => {
@@ -52,7 +57,18 @@ export class OperationRouteDiagramDrawingContainerComponent {
         return reconnectTripOperationLists(
             raw,
             this.#allStations() ?? [],
-            this.stations() ?? [],
+            this.#visibleStations() ?? [],
+        );
+    });
+
+    // 縦軸。図外の列を使う行路があるときだけ、その側の端に「図外」の列を足す。
+    readonly stations = computed(() => {
+        const visibleStations = this.#visibleStations();
+        if (!visibleStations) return visibleStations;
+
+        return withOutsideStationColumns(
+            visibleStations,
+            this.tripOperationLists() ?? [],
         );
     });
 
