@@ -13,6 +13,7 @@ import {
 import {
     ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
     ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+    routeDiagramOutsideBetweenId,
 } from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './operation-route-diagram-drawing-presentational.component';
 
@@ -582,6 +583,49 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
             const columns = component.stationColumns();
             expect(columns[0].fill).toBe('#9e9e9e');
             expect(columns[1].fill).toBe('#212121');
+        });
+    });
+
+    describe('間の図外の列にある列車', () => {
+        const betweenId = routeDiagramOutsideBetweenId('s-hoshikawa');
+
+        beforeEach(() => {
+            fixture.componentRef.setInput('calendar', calendar);
+            fixture.componentRef.setInput('operation', operation);
+            fixture.componentRef.setInput('stations', [
+                station('s-yokohama', '横浜'),
+                station('s-hoshikawa', '星川'),
+                station(betweenId, '図外'),
+                station('s-futamatagawa', '二俣川'),
+            ]);
+            fixture.componentRef.setInput('tripOperationLists', [
+                tripOperationList({
+                    tripOperationListId: 'tol-a',
+                    startTime: {
+                        stationId: betweenId,
+                        departureTime: '04:42:00',
+                    },
+                    endTime: {
+                        stationId: betweenId,
+                        arrivalTime: '04:45:00',
+                    },
+                    startHiddenStationName: '西谷',
+                    endHiddenStationName: '西谷',
+                }),
+            ]);
+            fixture.detectChanges();
+            component.availableWidth.set(1312);
+            fixture.detectChanges();
+        });
+
+        it('その列に短い線を引き、右に書いて、見出しは灰にする', () => {
+            const [row] = component.bandRows();
+            const columns = component.stationColumns();
+
+            expect((row.leftX + row.rightX) / 2).toBeCloseTo(columns[2].x);
+            expect(row.rightLabel).toBe('西谷 0442→0445');
+            expect(row.leftLabel).toBeUndefined();
+            expect(columns[2].fill).toBe('#9e9e9e');
         });
     });
 });

@@ -6,13 +6,25 @@ export const ROUTE_DIAGRAM_OUTSIDE_LEFT_ID = '__route-diagram-outside-left__';
 /** 表示中の末尾の駅より後にある、隠した駅をまとめる列（図の右端の「図外」） */
 export const ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID = '__route-diagram-outside-right__';
 export const ROUTE_DIAGRAM_OUTSIDE_STATION_NAME = '図外';
+const ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX = '__route-diagram-outside-after:';
+
+/**
+ * 表示中の駅の間でひと続きに隠れた駅をまとめる列（その位置の「図外」）。
+ * まとまりの直前の表示駅で見分ける。
+ */
+export function routeDiagramOutsideBetweenId(
+    previousVisibleStationId: string,
+): string {
+    return `${ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX}${previousVisibleStationId}__`;
+}
 
 export function isRouteDiagramOutsideStationId(
     stationId: string | undefined,
 ): boolean {
     return (
         stationId === ROUTE_DIAGRAM_OUTSIDE_LEFT_ID ||
-        stationId === ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID
+        stationId === ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID ||
+        !!stationId?.startsWith(ROUTE_DIAGRAM_OUTSIDE_BETWEEN_PREFIX)
     );
 }
 
@@ -68,29 +80,32 @@ export function reconnectTripOperationLists(
         }
         const hiddenStationName = allStations[index].stationName;
 
+        if (index < firstVisibleIndex) {
+            return {
+                stationId: ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+                hiddenStationName,
+            };
+        }
+        if (index > lastVisibleIndex) {
+            return {
+                stationId: ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+                hiddenStationName,
+            };
+        }
+
         // 間の駅も近い表示駅へは付けない。表示駅が別の路線の駅だと、そこで折り返したように
         // 見えるため（2026-10-07 ユーザー指示）。ひと続きに隠れた駅のまとまりごとに、
-        // その中心が先頭と末尾の近い方（同じなら右）の図外の列へ寄せる。駅ごとに選ぶと
-        // まとまりの途中で左右に割れ、両端が隠れた列車が図の端から端まで線を引いてしまう。
-        // 側は駅で決まるので、同じ駅で着いて出る列車は同じ図外の列で折り返す。
-        let isLeft = index < firstVisibleIndex;
-        if (index >= firstVisibleIndex && index <= lastVisibleIndex) {
-            let blockStart = index;
-            while (!visibleIds.has(allStations[blockStart - 1].stationId)) {
-                blockStart--;
-            }
-            let blockEnd = index;
-            while (!visibleIds.has(allStations[blockEnd + 1].stationId)) {
-                blockEnd++;
-            }
-            const center = (blockStart + blockEnd) / 2;
-            isLeft = center - firstVisibleIndex < lastVisibleIndex - center;
+        // その位置（直前の表示駅の後）に置く図外の列へ寄せる。同じまとまりの駅で着いて
+        // 出る列車は同じ図外の列で折り返す。
+        let blockStart = index;
+        while (!visibleIds.has(allStations[blockStart - 1].stationId)) {
+            blockStart--;
         }
 
         return {
-            stationId: isLeft
-                ? ROUTE_DIAGRAM_OUTSIDE_LEFT_ID
-                : ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+            stationId: routeDiagramOutsideBetweenId(
+                allStations[blockStart - 1].stationId,
+            ),
             hiddenStationName,
         };
     }
@@ -114,7 +129,8 @@ export function reconnectTripOperationLists(
 }
 
 /**
- * 付け替えた行路が「図外」の列を使うときだけ、表示駅リストの端にその列を足す。
+ * 付け替えた行路が「図外」の列を使うときだけ、表示駅リストにその列を足す。
+ * 左右の図外は端に、間の図外は直前の表示駅の後に置く。
  */
 export function withOutsideStationColumns(
     visibleStations: readonly StationDetailsDto[],
@@ -136,7 +152,12 @@ export function withOutsideStationColumns(
         ...(usedIds.has(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID)
             ? [outsideStation(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID)]
             : []),
-        ...visibleStations,
+        ...visibleStations.flatMap((station) => {
+            const betweenId = routeDiagramOutsideBetweenId(station.stationId);
+            return usedIds.has(betweenId)
+                ? [station, outsideStation(betweenId)]
+                : [station];
+        }),
         ...(usedIds.has(ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID)
             ? [outsideStation(ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID)]
             : []),

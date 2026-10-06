@@ -47,7 +47,7 @@ export class OperationRouteDiagramDrawingContainerComponent {
     );
 
     // B5: 路線チップ OFF で縦軸から消えた駅を始発/終着に持つ行路を、表示中の列へ
-    // 付け替える。表示中の駅より外の駅は端の「図外」の列、間の駅は最寄りの表示駅。
+    // 付け替える。表示中の駅より外の駅は端の「図外」の列、間の駅はその位置の「図外」の列。
     // SVG 描画（drawing-presentational）の座標系・findById による index 計算は
     // 一切変更せず、その入力となる駅 ID をここで付け替えるだけに留める。
     readonly tripOperationLists = computed(() => {
@@ -61,7 +61,7 @@ export class OperationRouteDiagramDrawingContainerComponent {
         );
     });
 
-    // 縦軸。図外の列を使う行路があるときだけ、その側の端に「図外」の列を足す。
+    // 縦軸。図外の列を使う行路があるときだけ、その位置に「図外」の列を足す。
     readonly stations = computed(() => {
         const visibleStations = this.#visibleStations();
         if (!visibleStations) return visibleStations;
