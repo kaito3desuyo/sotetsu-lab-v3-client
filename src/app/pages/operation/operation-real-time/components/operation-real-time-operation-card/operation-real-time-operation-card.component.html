@@ -15,9 +15,11 @@
        1 行目: 運用番号 | 編成番号 | 目撃/更新
        2 行目: 履歴・現在位置（**カードの左端から**全幅を使う）
      以前は履歴が編成番号と同じセルに積まれ、目撃/更新が 2 行ぶん縦に伸びていた。
-     下段は主キーの列に合わせず左端から始める（ユーザー指示 2026-08-22）。 -->
+     下段は主キーの列に合わせず左端から始める（ユーザー指示 2026-08-22）。
+     外側は帳票の 1 行（角丸・白地は一覧側の白地が持つ。2026-10-06）。h-full で同じ段の高さにそろえ、
+     content-start で中身は上に詰める（引き伸ばすと隣の行と上段の高さがずれる）。 -->
 <div
-    class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-start tw-gap-x-3 tw-gap-y-1 tw-rounded-card tw-bg-white tw-p-3"
+    class="tw-box-border tw-grid tw-h-full tw-grid-cols-[auto_1fr_auto] tw-content-start tw-items-start tw-gap-x-3 tw-gap-y-0.5 tw-px-3 tw-py-2"
 >
     <!-- 運用番号チップ -->
     <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
