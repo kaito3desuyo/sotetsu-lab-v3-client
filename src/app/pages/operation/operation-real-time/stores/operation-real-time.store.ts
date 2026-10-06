@@ -14,6 +14,7 @@ import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { normalizeGroupNames } from 'src/app/shared/operation-group.util';
 
 type StoreProps = {
     routes: RouteDetailsDto[];
@@ -274,8 +275,10 @@ export const OperationRealTimeStore = {
     ),
     operationGroups$: store.pipe(select((state) => state.operationGroups)),
     selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),
+    // 2026-10-06 より前に保存した群名（「3G群」など）は今の名前に置き換える
     selectedGroupNames$: store.pipe(
         select((state) => state.selectedGroupNames),
+        map(normalizeGroupNames),
     ),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),

@@ -11,14 +11,38 @@ const operationNumberColor = new NewOperationNumberColorPipe();
 export const RETIRED_GROUP_NAME = '休';
 export const RETIRED_OPERATION_NUMBER = '100';
 
+/** 方面の並び（目黒線 → 東横線） */
+const DIRECTION_ORDER = ['目黒線', '東横線'];
+
+/**
+ * 記号付きの運用（G＝相鉄車の東急直通・K＝東急車）の、先頭の数字ごとの乗り入れ方面
+ * （ユーザー判断 2026-10-06）。番号と経路が合うことは本番 DB（2026.3 改正）で確かめた。
+ * 目黒線側は南北線・三田線・埼玉高速、東横線側は副都心線・有楽町線・東武・西武まで走る。
+ * 表に無い数字は方面を決めず、元の規則（「5G群」など）で出す。
+ */
+const DIRECTION_BY_SYMBOL: Record<string, Record<string, string>> = {
+    G: { '3': '目黒線', '4': '目黒線', '9': '東横線' },
+    K: {
+        '0': '目黒線',
+        '1': '目黒線',
+        '2': '目黒線',
+        '3': '目黒線',
+        '4': '目黒線',
+        '5': '東横線',
+        '6': '東横線',
+    },
+};
+
 /**
  * 運用番号から運用群名を導出する。
  *
  * **規則（ユーザー確認済み 2026-08-22）: 数字の最初の 1 桁 + 記号（存在する場合）。**
+ * **記号付き（G・K）は乗り入れる方面でまとめる（2026-10-06）。**
  *
  * ```
  * 11  → 1群     51  → 5群     79  → 7群
- * 91G → 9G群    01K → 0K群    60K → 6K群
+ * 31G → G群（目黒線）   91G → G群（東横線）
+ * 01K → K群（目黒線）   60K → K群（東横線）
  * 100 → 休（運用群ではなく休車。上の規則の対象外）
  * ```
  *
@@ -41,8 +65,25 @@ export function deriveGroupName(
     const matched = operationNumber.match(/^(\d)\d*([A-Za-z]*)$/);
     if (!matched) return null;
 
-    const [, leadingDigit, symbol] = matched;
-    return `${leadingDigit}${symbol.toUpperCase()}群`;
+    const [, leadingDigit, rawSymbol] = matched;
+    const symbol = rawSymbol.toUpperCase();
+    const direction = DIRECTION_BY_SYMBOL[symbol]?.[leadingDigit];
+    if (direction) return `${symbol}群（${direction}）`;
+    return `${leadingDigit}${symbol}群`;
+}
+
+/**
+ * 保存された選択の群名を今の名前にそろえる。2026-10-06 より前の「3G群」「0K群」などは
+ * 方面でまとめた名前に置き換え、重なりを除く（置き換えないと、どの運用にも当たらず全部消える）。
+ */
+export function normalizeGroupNames(groupNames: string[]): string[] {
+    const normalized = groupNames.map((groupName) => {
+        const legacy = groupName.match(/^(\d)([A-Z]+)群$/);
+        return legacy
+            ? (deriveGroupName(`${legacy[1]}0${legacy[2]}`) ?? groupName)
+            : groupName;
+    });
+    return [...new Set(normalized)];
 }
 
 /**
@@ -53,7 +94,8 @@ export function deriveGroupName(
 const SYMBOL_ORDER = ['', 'G', 'K'];
 
 /**
- * 群名の表示順。記号（なし → G → K → その他）→ 数字の昇順。
+ * 群名の表示順。記号（なし → G → K → その他）→ 方面（目黒線 → 東横線）→ 数字の昇順。
+ * 方面の決まらない記号付きの群（「5G群」など）は、同じ記号の方面の群の後ろに置く。
  * 休は運用群ではないので常に末尾に置く。
  */
 export function compareGroupNames(a: string, b: string): number {
@@ -61,21 +103,28 @@ export function compareGroupNames(a: string, b: string): number {
     if (a === RETIRED_GROUP_NAME) return 1;
     if (b === RETIRED_GROUP_NAME) return -1;
 
+    // [並びの数（方面は 0・1、方面の無い群は 2 + 数字）, 記号]
     const parse = (name: string): [number, string] => {
+        const directed = name.match(/^([A-Za-z]+)群（(.+)）$/);
+        if (directed) {
+            return [DIRECTION_ORDER.indexOf(directed[2]), directed[1]];
+        }
         const matched = name.match(/^(\d)([A-Za-z]*)群$/);
-        return matched ? [Number(matched[1]), matched[2]] : [Number.NaN, name];
+        return matched
+            ? [DIRECTION_ORDER.length + Number(matched[1]), matched[2]]
+            : [Number.NaN, name];
     };
     const rank = (symbol: string): number => {
         const index = SYMBOL_ORDER.indexOf(symbol);
         // 未知の記号は末尾側へ。同順位どうしは辞書順で決着させる。
         return index === -1 ? SYMBOL_ORDER.length : index;
     };
-    const [digitA, symbolA] = parse(a);
-    const [digitB, symbolB] = parse(b);
+    const [orderA, symbolA] = parse(a);
+    const [orderB, symbolB] = parse(b);
 
     if (rank(symbolA) !== rank(symbolB)) return rank(symbolA) - rank(symbolB);
     if (symbolA !== symbolB) return symbolA.localeCompare(symbolB);
-    return digitA - digitB;
+    return orderA - orderB;
 }
 
 /**

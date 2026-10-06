@@ -45,7 +45,11 @@ describe('OperationRealTimeFilterComponent', () => {
 
     it('運用群チップに「休」の疑似グループが末尾に追加される', () => {
         const options = component.groupOptions();
-        expect(options.map((o) => o.value)).toEqual(['1群', '9G群', '休']);
+        expect(options.map((o) => o.value)).toEqual([
+            '1群',
+            'G群（東横線）',
+            '休',
+        ]);
     });
 
     it('群チップは実在する運用番号から導出される（API の群定義に依存しない）', () => {
@@ -60,9 +64,9 @@ describe('OperationRealTimeFilterComponent', () => {
         expect(component.groupOptions().map((o) => o.value)).toEqual([
             '7群',
             '8群',
-            '3G群',
-            '0K群',
-            '5K群',
+            'G群（目黒線）',
+            'K群（目黒線）',
+            'K群（東横線）',
             '休',
         ]);
     });
@@ -104,7 +108,7 @@ describe('OperationRealTimeFilterComponent', () => {
                 (chip.textContent ?? '').trim(),
             );
         // 1 段目=会社（このテストでは未 seed なので空）/ 2 段目=運用群
-        expect(labelsOf(rows[1])).toEqual(['1群', '9G群', '休']);
+        expect(labelsOf(rows[1])).toEqual(['1群', 'G群（東横線）', '休']);
     });
 
     it('選択色はページで上書きせず app-filter-chips の既定に委ねる', () => {

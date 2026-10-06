@@ -41,7 +41,7 @@ describe('OperationTableFilterComponent', () => {
         expect(options.map((o) => o.value)).toEqual([
             '1群',
             '7群',
-            '9G群',
+            'G群（東横線）',
             '休',
         ]);
     });

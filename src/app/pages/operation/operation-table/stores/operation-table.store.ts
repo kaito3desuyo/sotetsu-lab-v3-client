@@ -1,12 +1,13 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { debounceTime } from 'rxjs';
+import { debounceTime, map } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { normalizeGroupNames } from 'src/app/shared/operation-group.util';
 
 type StoreProps = {
     calendarId: string | null;
@@ -90,8 +91,10 @@ export const OperationTableStore = {
     ),
     stations$: store.pipe(select((state) => state.stations)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
+    // 2026-10-06 より前に保存した群名（「3G群」など）は今の名前に置き換える
     selectedGroupNames$: store.pipe(
         select((state) => state.selectedGroupNames),
+        map(normalizeGroupNames),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 
