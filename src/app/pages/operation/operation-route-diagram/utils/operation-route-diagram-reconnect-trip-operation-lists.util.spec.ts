@@ -99,7 +99,7 @@ describe('reconnectTripOperationLists', () => {
         expect(result[0].endHiddenStationName).toBe('かしわ台');
     });
 
-    it('始発駅が非表示のとき、全駅順で最も近い表示中の駅へ再接続する', () => {
+    it('表示中の駅の間の隠れた駅も、近い表示駅でなく末尾に近ければ右端の「図外」の列へ付け替える', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '二俣川',
         );
@@ -113,10 +113,77 @@ describe('reconnectTripOperationLists', () => {
             visibleStations,
         );
 
-        // 二俣川の直前で表示中なのは瀬谷
-        expect(result[0].startTime.stationId).toBe('瀬谷');
+        // 二俣川は全駅順で 5 番目。先頭（海老名 0）より末尾（横浜 7）に近い
+        expect(result[0].startTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
         expect(result[0].startHiddenStationName).toBe('二俣川');
         expect(result[0].endTime.stationId).toBe('横浜');
+    });
+
+    it('表示中の駅の間の隠れた駅が先頭に近ければ、左端の「図外」の列へ付け替える', () => {
+        const visibleStations = allStations.filter(
+            (s) => s.stationName !== 'かしわ台',
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '横浜', 'かしわ台'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].endTime.stationId).toBe(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID);
+        expect(result[0].endHiddenStationName).toBe('かしわ台');
+    });
+
+    it('ひと続きに隠れた駅は、まとまりの中心が近い方の同じ「図外」の列へ付け替える（区間の途中で左右に割らない）', () => {
+        // 相模大塚(2)〜二俣川(5) を隠す。中心 3.5 は先頭 0・末尾 7 から等距離なので右
+        const hidden = new Set(['相模大塚', '大和', '瀬谷', '二俣川']);
+        const visibleStations = allStations.filter(
+            (s) => !hidden.has(s.stationName),
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '相模大塚', '二俣川'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].startTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
+        expect(result[0].endTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
+    });
+
+    it('同じ隠れた駅に着いて出る列車は、同じ側の「図外」の列で折り返す', () => {
+        const visibleStations = allStations.filter(
+            (s) => s.stationName !== '二俣川',
+        );
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '海老名', '二俣川'),
+            makeTrip('t2', '二俣川', '海老名'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].endTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
+        expect(result[1].startTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
     });
 
     it('全駅順に存在しない駅（データ不整合）は変更せずそのまま返す', () => {

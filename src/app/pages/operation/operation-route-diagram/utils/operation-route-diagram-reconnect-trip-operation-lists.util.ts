@@ -35,7 +35,7 @@ export type OperationRouteDiagramTripOperationList =
  * （絞り込み前の全駅順）で決める。
  * - 表示中の先頭の駅より前の駅 → 左端の「図外」の列
  * - 表示中の末尾の駅より後の駅 → 右端の「図外」の列
- * - 表示中の駅の間の駅 → 全駅順で最も近い表示中の駅
+ * - 表示中の駅の間の駅 → 先頭と末尾の近い方の「図外」の列（2026-10-07。以前は最も近い表示中の駅）
  *
  * 見える駅で始まる・終わるように見えないよう、付け替えた端には本当の駅名を持たせる
  * （2026-10-06。南古谷で出庫する列車が大崎で出庫するように見えると指摘された）。
@@ -68,31 +68,31 @@ export function reconnectTripOperationLists(
         }
         const hiddenStationName = allStations[index].stationName;
 
-        if (index < firstVisibleIndex) {
-            return {
-                stationId: ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
-                hiddenStationName,
-            };
-        }
-        if (index > lastVisibleIndex) {
-            return {
-                stationId: ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
-                hiddenStationName,
-            };
+        // 間の駅も近い表示駅へは付けない。表示駅が別の路線の駅だと、そこで折り返したように
+        // 見えるため（2026-10-07 ユーザー指示）。ひと続きに隠れた駅のまとまりごとに、
+        // その中心が先頭と末尾の近い方（同じなら右）の図外の列へ寄せる。駅ごとに選ぶと
+        // まとまりの途中で左右に割れ、両端が隠れた列車が図の端から端まで線を引いてしまう。
+        // 側は駅で決まるので、同じ駅で着いて出る列車は同じ図外の列で折り返す。
+        let isLeft = index < firstVisibleIndex;
+        if (index >= firstVisibleIndex && index <= lastVisibleIndex) {
+            let blockStart = index;
+            while (!visibleIds.has(allStations[blockStart - 1].stationId)) {
+                blockStart--;
+            }
+            let blockEnd = index;
+            while (!visibleIds.has(allStations[blockEnd + 1].stationId)) {
+                blockEnd++;
+            }
+            const center = (blockStart + blockEnd) / 2;
+            isLeft = center - firstVisibleIndex < lastVisibleIndex - center;
         }
 
-        for (let offset = 1; offset < allStations.length; offset++) {
-            const before = allStations[index - offset];
-            if (before && visibleIds.has(before.stationId)) {
-                return { stationId: before.stationId, hiddenStationName };
-            }
-            const after = allStations[index + offset];
-            if (after && visibleIds.has(after.stationId)) {
-                return { stationId: after.stationId, hiddenStationName };
-            }
-        }
-
-        return { stationId };
+        return {
+            stationId: isLeft
+                ? ROUTE_DIAGRAM_OUTSIDE_LEFT_ID
+                : ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+            hiddenStationName,
+        };
     }
 
     return tripOperationLists.map((tripOperationList) => {
