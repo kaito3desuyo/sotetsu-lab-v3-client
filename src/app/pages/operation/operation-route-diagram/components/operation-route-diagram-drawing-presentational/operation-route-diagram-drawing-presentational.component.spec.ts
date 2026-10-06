@@ -452,6 +452,37 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
                 { tripBlockId: 'block-1', tripDirection: 0 },
             ]);
         });
+
+        it('押して全線時刻表へ移れるのは列車番号だけ（線・時刻を押しても移らない）', () => {
+            const emitted: unknown[] = [];
+            component.clickNavigateTimetable.subscribe((ev) =>
+                emitted.push(ev),
+            );
+            const svg = fixture.nativeElement as HTMLElement;
+            const texts = Array.from(svg.querySelectorAll('text'));
+
+            svg.querySelector('line[stroke="#001556"]')!.dispatchEvent(
+                new MouseEvent('click', { bubbles: true }),
+            );
+            texts
+                .find((t) => t.textContent?.trim() === '0545')!
+                .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            expect(emitted).toEqual([]);
+
+            const tripNumber = texts.find(
+                (t) => t.textContent?.trim() === '5001',
+            )!;
+            expect(tripNumber.classList).toContain('tw-underline');
+            expect(tripNumber.classList).toContain('tw-cursor-pointer');
+            // central にすると Chrome が下線を字の上に引く
+            expect(tripNumber.getAttribute('dominant-baseline')).toBeNull();
+            tripNumber.dispatchEvent(
+                new MouseEvent('click', { bubbles: true }),
+            );
+            expect(emitted).toEqual([
+                { tripBlockId: 'block-1', tripDirection: 0 },
+            ]);
+        });
     });
 
     describe('図の外に端がある列車', () => {

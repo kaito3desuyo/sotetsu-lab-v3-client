@@ -133,11 +133,11 @@
 
 <!-- 列車（本番の行路図と同じ骨格）: 横線（旅客=種別色の実線・回送=灰の点線）、
      両端の時刻は線の外側、種別チップ＋列番は線の上の中央、出庫○・入庫△は端、
-     着いた端から次の列車の線まで縦線。押すと全線時刻表へ移る。 -->
+     着いた端から次の列車の線まで縦線。列車番号を押すと全線時刻表へ移る。 -->
 <ng-template #bandsTpl let-rows="rows" let-offset="offset">
     <svg>
         @for (row of rows; track row.tripOperationListId) {
-            <g class="tw-cursor-pointer" (click)="onClickBand(row)">
+            <g>
                 <line
                     [attr.x1]="row.leftX"
                     [attr.x2]="row.rightX"
@@ -170,13 +170,14 @@
                     stroke-width="0.96"
                     paint-order="stroke fill"
                 >{{ row.tripClassName }}</text>
-                <!-- 和文と数字で central の解釈が違い、数字が下にずれて見えるので 0.5 上げる（99 文書追補 14）。
-                     列車番号は他ページと同じく下線で全線時刻表へのリンクだと示す（帯を押すと飛ぶ・2026-10-05）。
+                <!-- 列車番号は他ページと同じく下線で全線時刻表へのリンクだと示し、押せるのもここだけ（2026-10-06）。
+                     dominant-baseline="central" にすると Chrome が下線を字の上に引くので、基準線は既定のまま
+                     0.39em 下げて、種別チップの字と中心をそろえる（central＋0.5px と同じ位置。99 文書追補 14）。
                      下線はクラスで付けるので、画像保存（SVG を画像にする）には出ない -->
                 <text
-                    class="tw-tabular-nums tw-underline"
-                    dominant-baseline="central"
-                    dy="0.5"
+                    class="tw-cursor-pointer tw-tabular-nums tw-underline"
+                    dy="0.39em"
+                    (click)="onClickBand(row)"
                     [attr.x]="row.tripNumberX"
                     [attr.y]="row.labelY + offset"
                     [attr.font-size]="TRIP_NUMBER_FONT_SIZE"
