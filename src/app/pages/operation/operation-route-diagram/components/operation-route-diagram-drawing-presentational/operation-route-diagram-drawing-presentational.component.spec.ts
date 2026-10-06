@@ -475,7 +475,7 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
             expect(tripNumber.classList).toContain('tw-underline');
             expect(tripNumber.classList).toContain('tw-cursor-pointer');
             // central にすると Chrome が下線を字の上に引く
-            expect(tripNumber.getAttribute('dominant-baseline')).toBeNull();
+            expect(tripNumber).not.toHaveAttribute('dominant-baseline');
             tripNumber.dispatchEvent(
                 new MouseEvent('click', { bubbles: true }),
             );
