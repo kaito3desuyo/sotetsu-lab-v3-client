@@ -60,3 +60,19 @@ export const OperationPostCardStore = {
         }),
     ),
 } as const;
+
+/**
+ * 所属の選択肢を、今日の編成を持つ会社だけに絞る（2026-10-06）。投稿は編成番号を
+ * その会社の編成から探すので、編成の無い会社は選んでも投稿できない。
+ * 編成をまだ取れていない（空の）ときは絞らない（選べる会社が無くなるのを避ける）。
+ */
+export function filterAgenciesWithFormations<T extends { agencyId: string }>(
+    agencies: readonly T[],
+    formations: readonly { agencyId?: string }[],
+): T[] {
+    const agencyIds = new Set(
+        formations.map((formation) => formation.agencyId),
+    );
+    if (agencyIds.size === 0) return [...agencies];
+    return agencies.filter((agency) => agencyIds.has(agency.agencyId));
+}
