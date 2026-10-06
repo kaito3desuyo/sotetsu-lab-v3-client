@@ -1,4 +1,8 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+
+/** まとめた駅の ID → 代表の駅 ID */
+export type RouteDiagramStationAliases = Record<string, string>;
 
 /**
  * 運用行路図の縦軸（駅リスト）に表示する駅を、相互直通を含む全路線の生駅マスタから
@@ -13,11 +17,27 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 export function curateRouteDiagramStations(
     stations: StationDetailsDto[],
 ): StationDetailsDto[] {
-    return targetStations
+    return curateRouteDiagramStationsWithAliases(stations).stations;
+}
+
+/**
+ * `curateRouteDiagramStations` と同じ駅を選び、同じ対象に当てはまる駅が複数あれば 1 列にまとめる。
+ *
+ * 路線ごとに別の駅として登録された駅がある（千川は副都心線と有楽町線で別。2026-10-07）。
+ * 以前は先に見つかった片方だけを列にしたため、もう片方で発着する列車は列が見つからず、
+ * 図の先頭の列（湘南台）に描かれていた（平日 53K の A853K）。
+ * 代表は先に見つかった駅。所属路線は全部を合わせ、ほかの駅 ID は代表の別名として返す。
+ */
+export function curateRouteDiagramStationsWithAliases(
+    stations: StationDetailsDto[],
+): { stations: StationDetailsDto[]; aliases: RouteDiagramStationAliases } {
+    const aliases: RouteDiagramStationAliases = {};
+
+    const curated = targetStations
         .map(({ routeName, stationName }) => {
             const targetSet = new Set(routeName);
 
-            return stations.find((s) => {
+            const matches = stations.filter((s) => {
                 const dataSet = new Set(
                     (s.routeStationLists ?? []).map(
                         (rsl) => rsl.route?.routeName,
@@ -32,8 +52,52 @@ export function curateRouteDiagramStations(
                     differenceSet.size === 0 && s.stationName === stationName
                 );
             });
+
+            const [representative, ...others] = matches;
+            if (!representative || !others.length) return representative;
+
+            for (const other of others) {
+                aliases[other.stationId] = representative.stationId;
+            }
+
+            return {
+                ...representative,
+                routeStationLists: matches.flatMap(
+                    (s) => s.routeStationLists ?? [],
+                ),
+            };
         })
         .filter((o) => !!o);
+
+    return { stations: curated, aliases };
+}
+
+/**
+ * 行路の始発・終着の駅 ID を、まとめた駅の代表の駅 ID に読み替える（元の行路は変えない）。
+ */
+export function applyRouteDiagramStationAliases<
+    T extends TripOperationListDetailsDto,
+>(tripOperationLists: T[], aliases: RouteDiagramStationAliases): T[] {
+    if (!Object.keys(aliases).length) return tripOperationLists;
+
+    const resolve = (stationId: string | undefined) =>
+        stationId ? (aliases[stationId] ?? stationId) : stationId;
+
+    return tripOperationLists.map((tripOperationList) => ({
+        ...tripOperationList,
+        startTime: tripOperationList.startTime
+            ? {
+                  ...tripOperationList.startTime,
+                  stationId: resolve(tripOperationList.startTime.stationId),
+              }
+            : tripOperationList.startTime,
+        endTime: tripOperationList.endTime
+            ? {
+                  ...tripOperationList.endTime,
+                  stationId: resolve(tripOperationList.endTime.stationId),
+              }
+            : tripOperationList.endTime,
+    }));
 }
 
 const targetStations = [
