@@ -1,6 +1,11 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
-import { reconnectTripOperationLists } from './operation-route-diagram-reconnect-trip-operation-lists.util';
+import {
+    reconnectTripOperationLists,
+    ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+    ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+    withOutsideStationColumns,
+} from './operation-route-diagram-reconnect-trip-operation-lists.util';
 
 function makeStation(stationId: string): any {
     return { stationId, stationName: stationId };
@@ -52,8 +57,7 @@ describe('reconnectTripOperationLists', () => {
         expect(result[0].endTime.stationId).toBe('横浜');
     });
 
-    it('終着駅が路線チップ OFF で非表示のとき、全駅順で最も近い表示中の駅へ再接続する', () => {
-        // 横浜が非表示（例: いずみ野線 OFF で本線側のみ表示のケースを簡略化）
+    it('表示中の末尾より後の駅は、右端の「図外」の列へ付け替えて本当の駅名を持たせる', () => {
         const visibleStations = allStations.filter(
             (s) => s.stationName !== '横浜',
         );
@@ -67,9 +71,32 @@ describe('reconnectTripOperationLists', () => {
             visibleStations,
         );
 
-        // 横浜の直前で表示中なのは西谷
         expect(result[0].startTime.stationId).toBe('海老名');
-        expect(result[0].endTime.stationId).toBe('西谷');
+        expect(result[0].startHiddenStationName).toBeUndefined();
+        expect(result[0].endTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+        );
+        expect(result[0].endHiddenStationName).toBe('横浜');
+    });
+
+    it('表示中の先頭より前の駅は、左端の「図外」の列へ付け替える', () => {
+        const visibleStations = allStations.slice(2);
+        const trips: TripOperationListDetailsDto[] = [
+            makeTrip('t1', '海老名', 'かしわ台'),
+        ];
+
+        const result = reconnectTripOperationLists(
+            trips,
+            allStations,
+            visibleStations,
+        );
+
+        expect(result[0].startTime.stationId).toBe(
+            ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+        );
+        expect(result[0].startHiddenStationName).toBe('海老名');
+        expect(result[0].endTime.stationId).toBe(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID);
+        expect(result[0].endHiddenStationName).toBe('かしわ台');
     });
 
     it('始発駅が非表示のとき、全駅順で最も近い表示中の駅へ再接続する', () => {
@@ -88,6 +115,7 @@ describe('reconnectTripOperationLists', () => {
 
         // 二俣川の直前で表示中なのは瀬谷
         expect(result[0].startTime.stationId).toBe('瀬谷');
+        expect(result[0].startHiddenStationName).toBe('二俣川');
         expect(result[0].endTime.stationId).toBe('横浜');
     });
 
@@ -138,5 +166,42 @@ describe('reconnectTripOperationLists', () => {
 
         expect(result[0].startTime.stationId).toBe('海老名');
         expect(result[0].endTime.stationId).toBe('横浜');
+    });
+
+    describe('withOutsideStationColumns', () => {
+        it('「図外」の列を使う行路があるときだけ、その側の端に列を足す', () => {
+            const visibleStations = allStations.slice(2, 6);
+            const reconnected = reconnectTripOperationLists(
+                [makeTrip('t1', '海老名', '大和')],
+                allStations,
+                visibleStations,
+            );
+
+            const result = withOutsideStationColumns(
+                visibleStations,
+                reconnected,
+            );
+
+            expect(result.map((s) => s.stationId)).toEqual([
+                ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+                '相模大塚',
+                '大和',
+                '瀬谷',
+                '二俣川',
+            ]);
+            expect(result[0].stationName).toBe('図外');
+        });
+
+        it('図の外に端が無ければ列を足さない', () => {
+            const reconnected = reconnectTripOperationLists(
+                [makeTrip('t1', '海老名', '横浜')],
+                allStations,
+                allStations,
+            );
+
+            expect(withOutsideStationColumns(allStations, reconnected)).toEqual(
+                allStations,
+            );
+        });
     });
 });

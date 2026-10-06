@@ -10,6 +10,10 @@ import {
     ROUTE_DIAGRAM_MIN_COLUMN_WIDTH,
     ROUTE_DIAGRAM_SIDE_PAD,
 } from '../../utils/operation-route-diagram-fit-columns.util';
+import {
+    ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+    ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+} from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
 import { OperationRouteDiagramDrawingPresentationalComponent } from './operation-route-diagram-drawing-presentational.component';
 
 function station(
@@ -447,6 +451,106 @@ describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
             expect(emitted).toEqual([
                 { tripBlockId: 'block-1', tripDirection: 0 },
             ]);
+        });
+    });
+
+    describe('図の外に端がある列車', () => {
+        beforeEach(() => {
+            fixture.componentRef.setInput('calendar', calendar);
+            fixture.componentRef.setInput('operation', operation);
+            fixture.componentRef.setInput('stations', [
+                station(ROUTE_DIAGRAM_OUTSIDE_LEFT_ID, '図外'),
+                station('s-yokohama', '横浜'),
+                station('s-hoshikawa', '星川'),
+                station('s-futamatagawa', '二俣川'),
+                station(ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID, '図外'),
+            ]);
+            fixture.componentRef.setInput('tripOperationLists', [
+                // 片方だけ図の外（大宮で出庫）
+                tripOperationList({
+                    tripOperationListId: 'tol-a',
+                    startTime: {
+                        stationId: ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+                        departureTime: '07:40:00',
+                    },
+                    endTime: {
+                        stationId: 's-futamatagawa',
+                        arrivalTime: '08:20:00',
+                    },
+                    startHiddenStationName: '大宮',
+                    trip: { ...tripOperationList().trip, depotOut: true },
+                }),
+                // 両端とも右の図外（同じ駅）
+                tripOperationList({
+                    tripOperationListId: 'tol-b',
+                    startTime: {
+                        stationId: ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+                        departureTime: '04:42:00',
+                    },
+                    endTime: {
+                        stationId: ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
+                        arrivalTime: '04:45:00',
+                    },
+                    startHiddenStationName: '南古谷',
+                    endHiddenStationName: '南古谷',
+                }),
+                // 両端とも左の図外（違う駅）
+                tripOperationList({
+                    tripOperationListId: 'tol-c',
+                    startTime: {
+                        stationId: ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+                        departureTime: '04:51:00',
+                    },
+                    endTime: {
+                        stationId: ROUTE_DIAGRAM_OUTSIDE_LEFT_ID,
+                        arrivalTime: '05:50:00',
+                    },
+                    startHiddenStationName: '南古谷',
+                    endHiddenStationName: '大宮',
+                }),
+            ]);
+            fixture.detectChanges();
+            component.availableWidth.set(1312);
+            fixture.detectChanges();
+        });
+
+        it('図の外の端は時刻の前に本当の駅名を書き、○ は描かない', () => {
+            const [oneSide] = component.bandRows();
+            expect(oneSide.leftLabel).toBe('大宮 0740');
+            expect(oneSide.rightLabel).toBe('0820');
+            expect(oneSide.depotOut).toBe(true);
+            expect(oneSide.depotOutMarker).toBe(false);
+            expect(oneSide.leftX - oneSide.leftTimeX).toBe(6);
+            expect(
+                (fixture.nativeElement as HTMLElement).querySelector('circle'),
+            ).toBeNull();
+        });
+
+        it('両端とも図の外なら、図外の列に 16px の線を引き、外側だけに書く', () => {
+            const [, right, left] = component.bandRows();
+            const columns = component.stationColumns();
+
+            expect(right.rightX - right.leftX).toBe(16);
+            expect((right.leftX + right.rightX) / 2).toBeCloseTo(columns[4].x);
+            expect(right.rightLabel).toBe('南古谷 0442→0445');
+            expect(right.leftLabel).toBeUndefined();
+
+            expect((left.leftX + left.rightX) / 2).toBeCloseTo(columns[0].x);
+            expect(left.leftLabel).toBe('南古谷 0451→大宮 0550');
+            expect(left.rightLabel).toBeUndefined();
+        });
+
+        it('図外の列の外側は、書く字の幅だけ余白を広げる', () => {
+            // 「南古谷 0451→大宮 0550」168px ＋ 短い線の半分 8 ＋ 間 6 ＋ 端 4
+            expect(component.columnMetrics().leftPad).toBeCloseTo(186);
+            expect(component.outputColumnMetrics().leftPad).toBeCloseTo(186);
+            expect(component.svgWidth()).toBeCloseTo(1312);
+        });
+
+        it('「図外」の見出しは灰で書く', () => {
+            const columns = component.stationColumns();
+            expect(columns[0].fill).toBe('#9e9e9e');
+            expect(columns[1].fill).toBe('#212121');
         });
     });
 });

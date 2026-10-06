@@ -98,7 +98,7 @@
                 [attr.x]="col.xList"
                 [attr.y]="stationYList"
                 font-size="13"
-                fill="#212121"
+                [attr.fill]="col.fill"
                 text-anchor="middle"
             >{{
                 col.stationName
@@ -183,7 +183,9 @@
                     fill="#212121"
                 >{{ row.tripNumber }}</text>
 
-                @if (row.leftTime) {
+                <!-- 図の外の端は「大宮 0740」のように時刻の前に本当の駅名を書く。
+                     両端とも図外の列にある列車は外側だけに「南古谷 0442→0445」 -->
+                @if (row.leftLabel) {
                     <text
                         class="tw-tabular-nums"
                         text-anchor="end"
@@ -192,12 +194,9 @@
                         [attr.y]="row.centerY + offset"
                         [attr.font-size]="TIME_FONT_SIZE"
                         fill="#212121"
-                    >{{
-                        row.leftTime
-                            | dateFns: { format: 'HHmm', parseFormat: 'HH:mm:ss' }
-                    }}</text>
+                    >{{ row.leftLabel }}</text>
                 }
-                @if (row.rightTime) {
+                @if (row.rightLabel) {
                     <text
                         class="tw-tabular-nums"
                         text-anchor="start"
@@ -206,14 +205,11 @@
                         [attr.y]="row.centerY + offset"
                         [attr.font-size]="TIME_FONT_SIZE"
                         fill="#212121"
-                    >{{
-                        row.rightTime
-                            | dateFns: { format: 'HHmm', parseFormat: 'HH:mm:ss' }
-                    }}</text>
+                    >{{ row.rightLabel }}</text>
                 }
 
-                <!-- 出庫: 白抜きの○ -->
-                @if (row.depotOut) {
+                <!-- 出庫: 白抜きの○（図の外の端には描かない） -->
+                @if (row.depotOutMarker) {
                     <circle
                         [attr.cx]="row.depotOutX"
                         [attr.cy]="row.centerY + offset"
@@ -224,7 +220,7 @@
                     ></circle>
                 }
                 <!-- 入庫: 白抜きの上向き△。外接する箱の中心を線の位置と端の駅に合わせる -->
-                @if (row.depotIn) {
+                @if (row.depotInMarker) {
                     <polygon
                         [attr.points]="
                             row.depotInX +

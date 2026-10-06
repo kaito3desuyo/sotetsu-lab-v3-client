@@ -1,10 +1,10 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { baseTripClassName } from 'src/app/shared/trip-class-base-name.util';
 import {
     classifyBandStyle,
     OperationRouteDiagramBandStyle,
 } from './operation-route-diagram-classify-band-style.util';
+import { OperationRouteDiagramTripOperationList } from './operation-route-diagram-reconnect-trip-operation-lists.util';
 
 export interface OperationRouteDiagramBandViewModel {
     tripOperationListId: string;
@@ -13,7 +13,7 @@ export interface OperationRouteDiagramBandViewModel {
     tripNumber: string;
     /** 系統サフィックスを除いた種別名（例: 「特急（SO→TY）」→「特急」） */
     tripClassName: string;
-    /** 行先＝終着駅名（reconnect 後は境界駅名に置き換わっている） */
+    /** 行先＝終着駅名（隠した駅から付け替えたときも本当の駅名） */
     destinationStationName: string;
     /** 帯の左端の駅 index（stations 配列内） */
     leftIndex: number;
@@ -23,11 +23,25 @@ export interface OperationRouteDiagramBandViewModel {
     leftTime?: string;
     /** 右端に表示する時刻 */
     rightTime?: string;
+    /** 左端を隠した駅から付け替えたときの本当の駅名（時刻の前に書く） */
+    leftStationName?: string;
+    /** 右端を隠した駅から付け替えたときの本当の駅名 */
+    rightStationName?: string;
+    /** 始発駅を隠した駅から付け替えたときの本当の駅名 */
+    startHiddenStationName?: string;
+    /** 終着駅を隠した駅から付け替えたときの本当の駅名 */
+    endHiddenStationName?: string;
     style: OperationRouteDiagramBandStyle;
     /** 種別色（データ駆動・UI ハードコード禁止） */
     color: string;
     depotOut: boolean;
     depotIn: boolean;
+    /**
+     * ○・△ を描くか。始発・終着を隠した駅から付け替えた端には描かない
+     * （図外の列や近くの表示駅で出庫・入庫したように見えるため）
+     */
+    depotOutMarker: boolean;
+    depotInMarker: boolean;
     /** 出庫ノードの駅 index（startTime 側） */
     depotOutIndex: number;
     /** 入庫ノードの駅 index（endTime 側） */
@@ -51,7 +65,7 @@ const FALLBACK_COLOR = '#666666';
  * `stations` は表示中の駅リスト（B5 の絞り込み・T6.3 の reconnect 適用後）を渡すこと。
  */
 export function buildBandViewModels(
-    tripOperationLists: readonly TripOperationListDetailsDto[],
+    tripOperationLists: readonly OperationRouteDiagramTripOperationList[],
     stations: readonly StationDetailsDto[],
 ): OperationRouteDiagramBandViewModel[] {
     const indexById = new Map(stations.map((s, i) => [s.stationId, i]));
@@ -72,6 +86,10 @@ export function buildBandViewModels(
         const rightTime = startIsLeft
             ? tripOperationList.endTime?.arrivalTime
             : tripOperationList.startTime?.departureTime;
+        const { startHiddenStationName, endHiddenStationName } =
+            tripOperationList;
+        const depotOut = !!tripOperationList.trip?.depotOut;
+        const depotIn = !!tripOperationList.trip?.depotIn;
 
         const style = classifyBandStyle(
             tripOperationList.trip?.tripClass?.tripClassName,
@@ -95,17 +113,29 @@ export function buildBandViewModels(
             tripClassName: baseTripClassName(
                 tripOperationList.trip?.tripClass?.tripClassName,
             ),
-            destinationStationName: endId ? (nameById.get(endId) ?? '') : '',
+            destinationStationName:
+                endHiddenStationName ??
+                (endId ? (nameById.get(endId) ?? '') : ''),
             leftIndex,
             rightIndex,
             leftTime,
             rightTime,
+            leftStationName: startIsLeft
+                ? startHiddenStationName
+                : endHiddenStationName,
+            rightStationName: startIsLeft
+                ? endHiddenStationName
+                : startHiddenStationName,
+            startHiddenStationName,
+            endHiddenStationName,
             style,
             color:
                 tripOperationList.trip?.tripClass?.tripClassColor ??
                 FALLBACK_COLOR,
-            depotOut: !!tripOperationList.trip?.depotOut,
-            depotIn: !!tripOperationList.trip?.depotIn,
+            depotOut,
+            depotIn,
+            depotOutMarker: depotOut && !startHiddenStationName,
+            depotInMarker: depotIn && !endHiddenStationName,
             depotOutIndex: startIndex,
             depotInIndex: endIndex,
             depotOutTime: tripOperationList.startTime?.departureTime,
