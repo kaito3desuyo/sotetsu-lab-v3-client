@@ -8,7 +8,7 @@
          図の底（列車が多いと 1,000px 下）に隠れないようにする。駅名は上に貼り付ける。 -->
     <div
         #scroller
-        class="tw-max-h-[calc(100dvh-80px)] tw-overflow-auto md:tw-max-h-[calc(100dvh-96px)]"
+        class="tw-max-h-[calc(100dvh_-_80px_-_var(--control-band-offset,0px))] tw-overflow-auto md:tw-max-h-[calc(100dvh_-_96px_-_var(--control-band-offset,0px))]"
     >
         <div class="tw-sticky tw-top-0 tw-z-10 tw-w-fit tw-bg-white">
             <svg [attr.width]="svgWidth()" [attr.height]="HEADER_HEIGHT">

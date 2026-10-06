@@ -1,6 +1,6 @@
 @if (isLoading()) {
     <div
-        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
     >
         <mat-progress-bar
             color="accent"
@@ -17,7 +17,7 @@
     <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01）。ただし sm 未満は縦に積む。
          ダイヤの選択中表示「2026/3/14改正 土休日ダイヤ」は約 270px 要り、390px で
          横に並べると改正日の途中で省略される（2026-09-23 実測） -->
-    <app-control-band>
+    <app-control-band [summary]="bandSummary()">
         <header
             class="tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[40rem]"
         >
@@ -87,7 +87,7 @@
          z は 1: ドロワーの遮光幕（z-10）より下に置く。帯の下の角は scss の
          .sticky-direction-band（潜り込むカードの角丸を保つ） -->
     <div
-        class="sticky-direction-band tw-sticky tw-top-12 tw-z-[1] -tw-my-2 tw-bg-paper-2 tw-py-2 md:tw-top-16"
+        class="sticky-direction-band tw-sticky tw-top-[calc(48px_+_var(--control-band-offset,0px))] tw-z-[1] -tw-my-2 tw-bg-paper-2 tw-py-2 md:tw-top-[calc(64px_+_var(--control-band-offset,0px))]"
     >
         <app-segment-toggle
             [options]="tripDirectionOptions"

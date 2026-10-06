@@ -2,7 +2,7 @@
      コントロール無しで宙に浮いていたため、チップが 1 つも無い間は帯ごと出さない
      （audit C6）。操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
 @if (routeOptions().length > 0) {
-    <app-control-band>
+    <app-control-band [summary]="bandSummary()" [filterActive]="filterActive()">
         <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">路線で絞り込み</p>
         <app-filter-chips
             mode="multiple"

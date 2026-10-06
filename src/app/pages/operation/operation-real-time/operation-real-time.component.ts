@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     DestroyRef,
     inject,
     signal,
@@ -11,6 +12,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { interval, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
 import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
@@ -21,6 +23,8 @@ import { OperationRealTimeLegendComponent } from './components/operation-real-ti
 import { OperationRealTimeOperationTableComponent } from './components/operation-real-time-operation-table/operation-real-time-operation-table.component';
 import { OperationRealTimeService } from './services/operation-real-time.service';
 import { OperationRealTimeStore } from './stores/operation-real-time.store';
+import { filterRealTimeOperations } from './utils/operation-real-time-filter.util';
+import { formatRealTimeSummary } from './utils/operation-real-time-summary.util';
 
 const firstLoading = signal(true);
 OperationRealTimeStore.resetLoading();
@@ -50,6 +54,56 @@ export class OperationRealTimeComponent {
     readonly #newOperationPostCardService = inject(NewOperationPostCardService);
 
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
+
+    readonly #agencies = toSignal(inject(AgencyListStateQuery).agencies$, {
+        initialValue: [],
+    });
+    readonly #operations = toSignal(OperationRealTimeStore.operations$, {
+        initialValue: [],
+    });
+    readonly #formations = toSignal(OperationRealTimeStore.formations$, {
+        initialValue: [],
+    });
+    readonly #timeCrossSections = toSignal(
+        OperationRealTimeStore.operationSightingTimeCrossSections$,
+        { initialValue: {} },
+    );
+    readonly #selectedAgencyIds = toSignal(
+        OperationRealTimeStore.selectedAgencyIds$,
+        { initialValue: [] },
+    );
+    readonly #selectedGroupNames = toSignal(
+        OperationRealTimeStore.selectedGroupNames$,
+        { initialValue: [] },
+    );
+
+    readonly filterActive = computed(
+        () =>
+            this.#selectedAgencyIds().length > 0 ||
+            this.#selectedGroupNames().length > 0,
+    );
+    readonly bandSummary = computed(() => {
+        const operations = this.#operations() ?? [];
+        const shown = filterRealTimeOperations(
+            operations,
+            this.#selectedAgencyIds(),
+            this.#selectedGroupNames(),
+            this.#timeCrossSections() ?? {},
+            this.#formations() ?? [],
+        ).length;
+        return formatRealTimeSummary({
+            agencies: this.#agencies(),
+            selectedAgencyIds: this.#selectedAgencyIds(),
+            selectedGroupNames: this.#selectedGroupNames(),
+            shown,
+            total: operations.length,
+        });
+    });
+
+    onClearFilter(): void {
+        OperationRealTimeStore.setSelectedAgencyIds([]);
+        OperationRealTimeStore.setSelectedGroupNames([]);
+    }
 
     constructor() {
         this.fetchData();

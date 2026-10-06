@@ -14,16 +14,21 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { interval, lastValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { formatRouteFilterSummary } from 'src/app/shared/control-band/control-band-summary.util';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import {
     enforceMinimumRowGap,
     StationAxis,
     StationAxisEntry,
 } from 'src/app/shared/diagram-scale';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { findContinuations } from 'src/app/shared/train-position.util';
 import { TrainDiagramControllerComponent } from './components/train-diagram-controller/train-diagram-controller.component';
 import { TrainDiagramInfoPanelComponent } from './components/train-diagram-info-panel/train-diagram-info-panel.component';
@@ -72,6 +77,8 @@ import {
 } from './utils/ensure-turnback-clearance.util';
 import { TurnbackLink } from './utils/layout-turnback-links.util';
 import { mergeSameDirectionContinuations } from './utils/merge-same-direction-continuations.util';
+import { formatTrainDiagramSummary } from './utils/train-diagram-summary.util';
+import { buildRouteOptions } from './utils/build-route-options.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TrainDiagramStore.resetLoading();
@@ -108,6 +115,7 @@ const EMPTY_TRIP_ID_SET: ReadonlySet<string> = new Set();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         EmptyStateComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
@@ -125,6 +133,8 @@ export class TrainDiagramComponent {
         TodaysCalendarListStateQuery,
     );
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
 
     readonly isLoading = toSignal(TrainDiagramStore.isLoading$);
     readonly calendarId = toSignal(TrainDiagramStore.calendarId$, {
@@ -219,8 +229,38 @@ export class TrainDiagramComponent {
         this.#routeStationListStateQuery.routeStations$,
         { initialValue: [] },
     );
+    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+    readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
+        initialValue: [],
+    });
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
+    );
+
+    /** 操作帯（manual）の畳み状態。開閉は TrainDiagramStore に保存して覚える。 */
+    readonly controlCollapsed = toSignal(TrainDiagramStore.controlCollapsed$, {
+        initialValue: false,
+    });
+
+    /** 細帯の要約に出す路線チップの選択肢（チップと同じ組み立て。ずれると要約の「○○の N 路線」がチップと合わない） */
+    readonly #routeOptions = computed<FilterChipOption[]>(() =>
+        buildRouteOptions(this.#routeStations(), this.#agencies()),
+    );
+
+    /** 畳んだ 1 行の要約。例「本線 平日 下り」。 */
+    readonly bandSummary = computed(() =>
+        formatTrainDiagramSummary({
+            routes: formatRouteFilterSummary(
+                this.#routeOptions(),
+                this.selectedRouteIds(),
+            ),
+            calendarName: this.#calendars().find(
+                (c) => c.calendarId === this.calendarId(),
+            )?.calendarName,
+            direction: this.directionFilter(),
+        }),
     );
 
     readonly nowMinute = computed(() =>
@@ -983,6 +1023,10 @@ export class TrainDiagramComponent {
 
     onDirectionFilterChange(directionFilter: DiagramDirectionFilter): void {
         this.#replaceViewParams({ direction: directionFilter });
+    }
+
+    onControlCollapsedChange(collapsed: boolean): void {
+        TrainDiagramStore.setControlCollapsed(collapsed);
     }
 
     /**

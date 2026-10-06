@@ -1,5 +1,7 @@
 @if (isLoading()) {
-    <div class="tw-fixed tw-left-0 tw-top-[48px] tw-w-full md:tw-top-[64px]">
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+    >
         <mat-progress-bar
             color="accent"
             mode="indeterminate"
@@ -15,7 +17,12 @@
     <!-- モック 03: 青バナーを廃し、ダイヤ select を常設。
          改正日・ダイヤ名は select の選択値として表示を維持する。
          操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
-    <app-control-band>
+    <app-control-band
+        [summary]="bandSummary()"
+        [filterActive]="filterActive()"
+        [clearable]="true"
+        (clear)="onClearFilter()"
+    >
         <app-operation-table-filter
             [operationTrips]="operationTrips()"
             [calendars]="calendars()"

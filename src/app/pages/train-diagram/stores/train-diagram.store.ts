@@ -1,4 +1,6 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { persistState } from '@ngneat/elf-persist-state';
+import localForage from 'localforage';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -55,6 +57,8 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     loadingQueue: boolean[];
+    /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
+    controlCollapsed: boolean;
 };
 
 const store = createStore(
@@ -72,8 +76,21 @@ const store = createStore(
         selectedTripId: null,
         operationSightingTimeCrossSections: {},
         loadingQueue: [],
+        controlCollapsed: false,
     }),
 );
+
+// 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
+// 開いたときに前のダイヤ・路線へ戻ってしまう
+const persist = persistState(store, {
+    key: 'TrainDiagramStore',
+    storage: localForage,
+    source: (s) =>
+        s.pipe(
+            select((state) => state.controlCollapsed),
+            map((controlCollapsed) => ({ controlCollapsed })),
+        ),
+});
 
 /**
  * networkStations（ServiceService.findOneWithStations 由来 = operating_systems
@@ -252,7 +269,11 @@ export const TrainDiagramStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    setControlCollapsed(collapsed: boolean): void {
+        store.update(setProp('controlCollapsed', () => collapsed));
+    },
 
+    persistInitialized$: persist.initialized$,
     calendarId$: store.pipe(select((state) => state.calendarId)),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
     pxPerMinute$: store.pipe(select((state) => state.pxPerMinute)),
@@ -268,6 +289,7 @@ export const TrainDiagramStore = {
         select((state) => state.operationSightingTimeCrossSections),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    controlCollapsed$: store.pipe(select((state) => state.controlCollapsed)),
 
     /**
      * 表示駅軸（駅リスト）。networkStations（全線時刻表順）の順序をそのまま維持し、

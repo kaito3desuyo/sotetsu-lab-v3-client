@@ -13,6 +13,10 @@ import {
     FilterChipValue,
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
+import {
+    formatRouteFilterSummary,
+    isRouteFilterActive,
+} from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 
@@ -29,6 +33,7 @@ import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram
     styleUrl: './operation-route-diagram-route-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ControlBandComponent, FilterChipsComponent],
+    host: { class: 'tw-contents' },
 })
 export class OperationRouteDiagramRouteFilterComponent {
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
@@ -85,6 +90,17 @@ export class OperationRouteDiagramRouteFilterComponent {
         OperationRouteDiagramStore.selectedRouteIds$,
         { initialValue: [] },
     );
+
+    readonly filterActive = computed(() =>
+        isRouteFilterActive(this.routeOptions(), this.selectedRouteIds()),
+    );
+    readonly bandSummary = computed(() => {
+        const routes = formatRouteFilterSummary(
+            this.routeOptions(),
+            this.selectedRouteIds(),
+        );
+        return routes === '全路線' ? routes : `路線：${routes}`;
+    });
 
     onChange(values: FilterChipValue[]): void {
         OperationRouteDiagramStore.setSelectedRouteIds(values);

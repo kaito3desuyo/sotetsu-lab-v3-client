@@ -26,6 +26,7 @@ import {
     deriveGroupName,
     matchesGroupFilter,
 } from 'src/app/shared/operation-group.util';
+import { formatOperationTableSummary } from './utils/operation-table-summary.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 OperationTableStore.resetLoading();
@@ -82,6 +83,29 @@ export class OperationTableComponent {
     readonly isEmpty = computed(
         () => !!this.calendar() && this.operationTrips().length === 0,
     );
+
+    readonly filterActive = computed(
+        () => this.selectedGroupNames().length > 0,
+    );
+    readonly bandSummary = computed(() => {
+        const trips = this.operationTrips();
+        const shown = trips.filter((t) =>
+            matchesGroupFilter(
+                t.operation.operationNumber,
+                this.selectedGroupNames(),
+            ),
+        ).length;
+        return formatOperationTableSummary({
+            calendar: this.calendar(),
+            selectedGroupNames: this.selectedGroupNames(),
+            shown,
+            total: trips.length,
+        });
+    });
+
+    onClearFilter(): void {
+        OperationTableStore.setSelectedGroupNames([]);
+    }
 
     constructor() {
         this.#route.paramMap
