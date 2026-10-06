@@ -194,12 +194,12 @@ describe('OperationTableCardComponent', () => {
     });
 
     it('groupName 指定時はヘッダに実データの群名バッジを表示する（モック03）', () => {
-        fixture.componentRef.setInput('groupName', '9G群');
+        fixture.componentRef.setInput('groupName', 'G群（東横線）');
         fixture.detectChanges();
 
         const badge = fixture.nativeElement.querySelector(
             'header .tw-bg-black\\/10',
         );
-        expect(badge?.textContent.trim()).toBe('9G群');
+        expect(badge?.textContent.trim()).toBe('G群（東横線）');
     });
 });

@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     DestroyRef,
     inject,
 } from '@angular/core';
@@ -22,6 +23,7 @@ import { lastValueFrom } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { PanelCardComponent } from '../panel-card/panel-card.component';
@@ -29,7 +31,10 @@ import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.compone
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
 import { LoadingService } from '../app-shared/loading/loading.service';
 import { NewOperationPostCardService } from './new-operation-post-card.service';
-import { OperationPostCardStore } from './new-operation-post-card.store';
+import {
+    filterAgenciesWithFormations,
+    OperationPostCardStore,
+} from './new-operation-post-card.store';
 
 type Form = FormGroup<{
     agencyId: FormControl<string>;
@@ -77,7 +82,20 @@ export class NewOperationPostCardComponent {
         ]),
     });
 
-    readonly agencies = toSignal(OperationPostCardStore.agencies$);
+    readonly #agencies = toSignal(OperationPostCardStore.agencies$, {
+        initialValue: [],
+    });
+    readonly #todaysFormations = toSignal(
+        inject(TodaysFormationListStateQuery).todaysFormations$,
+        { initialValue: [] },
+    );
+    /** 所属は今日の編成を持つ会社だけ（相鉄・JR東日本・東急。2026-10-06） */
+    readonly agencies = computed(() =>
+        filterAgenciesWithFormations(
+            this.#agencies(),
+            this.#todaysFormations(),
+        ),
+    );
 
     readonly timeSetting = toSignal(
         this.sightingForm.get('timeSetting').valueChanges,

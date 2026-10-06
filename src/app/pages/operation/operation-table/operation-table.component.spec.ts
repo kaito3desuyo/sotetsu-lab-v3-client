@@ -134,7 +134,7 @@ describe('OperationTableComponent', () => {
         createComponent();
 
         expect(component.groupNameFor('31')).toBe('3群');
-        expect(component.groupNameFor('91G')).toBe('9G群');
+        expect(component.groupNameFor('91G')).toBe('G群（東横線）');
         expect(component.groupNameFor('79')).toBe('7群');
     });
 
