@@ -29,9 +29,16 @@
         ></app-segment-toggle>
 
         @if (mode() === 'specified') {
-            <mat-form-field subscriptSizing="dynamic" class="tw-w-28">
+            <!-- 枠のどこを押しても時刻の選択画面を開く。Android の Chrome は input 本体（80×16px）を
+                 押したときしか開かず、枠の余白やラベルを押すとフォーカスが移るだけだった（2026-10-06） -->
+            <mat-form-field
+                subscriptSizing="dynamic"
+                class="tw-w-28"
+                (click)="openTimePicker(timeInput)"
+            >
                 <mat-label>表示時刻</mat-label>
                 <input
+                    #timeInput
                     matInput
                     type="time"
                     aria-label="表示時刻を指定する"

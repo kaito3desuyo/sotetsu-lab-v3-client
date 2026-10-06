@@ -126,4 +126,44 @@ describe('TrainLocationControllerComponent', () => {
         component.onTimeInputChange('12:34');
         expect(spy).toHaveBeenCalledWith('12:34');
     });
+
+    describe('openTimePicker', () => {
+        function renderSpecified(): HTMLInputElement {
+            fixture.componentRef.setInput('mode', 'specified');
+            fixture.componentRef.setInput('calendarId', 'calendar-1');
+            fixture.detectChanges();
+            return (fixture.nativeElement as HTMLElement).querySelector(
+                'input[type="time"]',
+            )!;
+        }
+
+        it('入力欄の枠（ラベルの辺り）を押すと、時刻の選択画面を開く', () => {
+            const input = renderSpecified();
+            const showPicker = jest.fn();
+            input.showPicker = showPicker;
+
+            (fixture.nativeElement as HTMLElement)
+                .querySelector('mat-label')!
+                .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+            // mat-label は input を指す <label> なので input にもクリックが届き、2 回呼ばれうる（2 回目は何もしない）
+            expect(showPicker).toHaveBeenCalled();
+        });
+
+        it('showPicker が無いブラウザでは何もしない', () => {
+            const input = renderSpecified();
+            (input as { showPicker?: unknown }).showPicker = undefined;
+
+            expect(() => component.openTimePicker(input)).not.toThrow();
+        });
+
+        it('showPicker が例外を投げても止まらない', () => {
+            const input = renderSpecified();
+            input.showPicker = jest.fn(() => {
+                throw new DOMException('', 'InvalidStateError');
+            });
+
+            expect(() => component.openTimePicker(input)).not.toThrow();
+        });
+    });
 });
