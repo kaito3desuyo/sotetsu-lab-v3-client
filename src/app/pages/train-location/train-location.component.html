@@ -4,7 +4,7 @@
     <!-- 読み込み中はプログレスバーだけ（ロック済みページと同じ。位置は運用表と同じヘッダーのすぐ下） -->
     @if (isLoading()) {
         <div
-            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-30 tw-w-full md:tw-top-[64px]"
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
         >
             <mat-progress-bar
                 color="accent"
@@ -13,17 +13,19 @@
         </div>
     }
 
-    <app-train-location-controller
-        [calendarId]="calendarId()"
-        [selectedRouteId]="selectedRouteId()"
-        [mode]="mode()"
-        [clockText]="clockText()"
-        [timeInputValue]="timeInputValue()"
-        (calendarIdChange)="onCalendarIdChange($event)"
-        (routeIdChange)="onRouteIdChange($event)"
-        (modeChange)="onModeChange($event)"
-        (timeInputValueChange)="onTimeInputValueChange($event)"
-    ></app-train-location-controller>
+    <app-control-band [flush]="true" [summary]="bandSummary()">
+        <app-train-location-controller
+            [calendarId]="calendarId()"
+            [selectedRouteId]="selectedRouteId()"
+            [mode]="mode()"
+            [clockText]="clockText()"
+            [timeInputValue]="timeInputValue()"
+            (calendarIdChange)="onCalendarIdChange($event)"
+            (routeIdChange)="onRouteIdChange($event)"
+            (modeChange)="onModeChange($event)"
+            (timeInputValueChange)="onTimeInputValueChange($event)"
+        ></app-train-location-controller>
+    </app-control-band>
 
     <div class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-3">
         @if (!isLoading()) {

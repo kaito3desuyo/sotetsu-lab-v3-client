@@ -16,8 +16,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { interval, lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import {
     estimatePositions,
@@ -52,6 +54,7 @@ import {
     readRememberedStationId,
     writeRememberedStationId,
 } from './utils/train-location-storage.util';
+import { formatTrainLocationSummary } from './utils/train-location-summary.util';
 
 const CURRENT_TIME_REFRESH_MS = 10_000;
 
@@ -65,6 +68,7 @@ TrainLocationStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         EmptyStateComponent,
         TrainLocationControllerComponent,
         TrainLocationLineComponent,
@@ -82,6 +86,7 @@ export class TrainLocationComponent {
     );
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
 
     readonly isLoading = toSignal(TrainLocationStore.isLoading$);
     readonly calendarId = toSignal(TrainLocationStore.calendarId$, {
@@ -118,6 +123,9 @@ export class TrainLocationComponent {
         { initialValue: [] },
     );
     readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+    readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
     });
     readonly isTodaySelected = computed(() =>
@@ -272,6 +280,29 @@ export class TrainLocationComponent {
         const parsed = parseTimeParam(this.specifiedTime());
         return parsed ? toTimeInputValue(parsed) : format(new Date(), 'HH:mm');
     });
+
+    /** 細帯の要約に出す路線名（選択中路線を #routeStations から引く） */
+    readonly #routeName = computed(
+        () =>
+            this.#routeStations().find(
+                (route) => route.routeId === this.selectedRouteId(),
+            )?.routeName,
+    );
+    /** 細帯の要約に出すダイヤ名（calendarId() から calendars() を引く） */
+    readonly #calendarName = computed(
+        () =>
+            this.#calendars().find(
+                (calendar) => calendar.calendarId === this.calendarId(),
+            )?.calendarName,
+    );
+    readonly bandSummary = computed(() =>
+        formatTrainLocationSummary({
+            routeName: this.#routeName(),
+            mode: this.mode(),
+            timeText: this.timeInputValue(),
+            calendarName: this.#calendarName(),
+        }),
+    );
 
     readonly #selectedStationIdParam = toSignal(
         TrainLocationStore.selectedStationId$,
