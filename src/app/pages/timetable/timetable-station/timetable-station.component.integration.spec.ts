@@ -101,7 +101,7 @@ const makeCrossSection = (
 
 @Component({
     selector: 'app-timetable-search-card-c',
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     template: '',
 })
 class StubSearchCardComponent {}

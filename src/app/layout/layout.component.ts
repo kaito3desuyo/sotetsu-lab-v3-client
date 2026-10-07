@@ -23,7 +23,7 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterModule, HeaderComponent, SidenavComponent],
 })
 export class LayoutComponent {

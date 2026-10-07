@@ -23,9 +23,6 @@ module.exports = defineConfig(
         extends: [angular.configs.tsRecommended, prettier],
         processor: angular.processInlineTemplates,
         rules: {
-            // v22 の移行が、今の挙動を保つために ChangeDetectionStrategy.Eager を明示した。
-            // OnPush への切り替えは別に行う
-            '@angular-eslint/prefer-on-push-component-change-detection': 'off',
             '@angular-eslint/component-selector': [
                 'error',
                 {

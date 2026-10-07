@@ -5,7 +5,7 @@ import { LibraryVehicleHeaderPComponent } from '../library-vehicle-header-p/libr
     selector: 'app-library-vehicle-header-c',
     templateUrl: './library-vehicle-header-c.component.html',
     styleUrls: ['./library-vehicle-header-c.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryVehicleHeaderPComponent],
 })
 export class LibraryVehicleHeaderCComponent {

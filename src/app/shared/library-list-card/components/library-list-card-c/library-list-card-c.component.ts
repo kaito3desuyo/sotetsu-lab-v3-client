@@ -5,7 +5,7 @@ import { LibraryListCardPComponent } from '../library-list-card-p/library-list-c
     selector: 'app-library-list-card-c',
     templateUrl: './library-list-card-c.component.html',
     styleUrls: ['./library-list-card-c.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryListCardPComponent],
 })
 export class LibraryListCardCComponent {}

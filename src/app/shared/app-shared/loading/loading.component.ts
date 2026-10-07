@@ -23,7 +23,7 @@ export class RemoveMatAnimationNoopableDirective implements AfterViewInit {
     selector: 'app-loading',
     templateUrl: './loading.component.html',
     styleUrls: ['./loading.component.scss'],
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatProgressSpinnerModule, RemoveMatAnimationNoopableDirective],
 })
 export class LoadingComponent {}

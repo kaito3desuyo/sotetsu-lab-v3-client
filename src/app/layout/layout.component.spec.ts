@@ -8,7 +8,7 @@ import { Router, provideRouter } from '@angular/router';
 
 import { LayoutComponent } from './layout.component';
 
-@Component({ changeDetection: ChangeDetectionStrategy.Eager, template: '' })
+@Component({ changeDetection: ChangeDetectionStrategy.OnPush, template: '' })
 class DummyComponent {}
 
 describe('LayoutComponent', () => {

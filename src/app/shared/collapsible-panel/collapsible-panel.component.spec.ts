@@ -10,7 +10,7 @@ import { CollapsiblePanelComponent } from './collapsible-panel.component';
             <p class="projected">中身</p>
         </app-collapsible-panel>
     `,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CollapsiblePanelComponent],
 })
 class HostComponent {

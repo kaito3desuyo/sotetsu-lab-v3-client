@@ -84,7 +84,7 @@ function installGlobals(): void {
         }
         <p class="outside">本文</p>
     `,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ControlBandComponent],
 })
 class HostComponent {

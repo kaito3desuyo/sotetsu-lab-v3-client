@@ -9,7 +9,7 @@ import {
     template: `<app-panel-card heading="運用情報を検索する">
         <p class="content">中身</p>
     </app-panel-card>`,
-    changeDetection: ChangeDetectionStrategy.Eager,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [PanelCardComponent],
 })
 class HostComponent {}
