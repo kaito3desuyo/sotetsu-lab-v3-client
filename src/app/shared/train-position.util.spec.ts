@@ -290,13 +290,13 @@ describe('estimatePositions', () => {
             ];
         }
 
-        it('前の列車が着いてから発時刻までは、これから発つ列車を停車中として出す', () => {
+        it('前の列車が着いてから発時刻までは、これから発つ列車を折返しの印つきで停車中として出す', () => {
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0)),
-            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C' }]);
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', turnaround: true }]);
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 17, 59)),
-            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C' }]);
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', turnaround: true }]);
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 18, 0)),
             ).toEqual([

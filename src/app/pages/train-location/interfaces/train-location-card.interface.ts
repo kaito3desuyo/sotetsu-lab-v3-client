@@ -1,6 +1,6 @@
 /**
  * 列車カード（N2 列車位置情報）の表示用データ。tripId ごとに 1 件、
- * 位置（停車中/駅間）とは独立に静的な列車属性のみを保持する。
+ * 位置（停車中/駅間）とは独立に静的な列車属性のみを保持する（isTurnaround だけは位置から付ける）。
  */
 export interface TrainLocationCard {
     tripId: string;
@@ -19,4 +19,9 @@ export interface TrainLocationCard {
     /** 充当編成が属する事業者名（agency 名）。解決できなければ undefined（非表示） */
     formationAgencyName?: string;
     detailLink: [string, string, Record<string, string>];
+    /**
+     * 折返しで発時刻を待っているか（buildTrainLocationRows が位置の turnaround から付ける）。
+     * ホームか留置線かは分からないので「停車中」と言わず「折返し」と出す
+     */
+    isTurnaround?: boolean;
 }

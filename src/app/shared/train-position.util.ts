@@ -15,6 +15,8 @@ export type TrainPosition =
           type: 'stopped';
           tripId: string;
           stationId: string;
+          /** 折返しで発時刻を待っている（ホームか留置線かは分からない） */
+          turnaround?: true;
       }
     | {
           type: 'between';
@@ -287,7 +289,7 @@ function estimateTripPosition(
  * - 停車中判定: 駅 s の着 ≤ at < 発 → stopped
  * - 走行中判定: 駅 s の発 ≤ at < 駅 s+1 の着 → between（progress は線形補間）
  * - 通過駅（駅軸に存在しない・発着時刻が両方欠落）は区間補間に自然に吸収される
- * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に停車中として出す
+ * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に停車中（turnaround: true）として出す
  * - 出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す（基地にいるあいだは出さない）
  * - 鉄道日（4 時境界）を考慮し、`at` の属する営業日を基準に times の日オフセットを実体化する
  *
@@ -380,6 +382,7 @@ export function estimatePositions(
                         type: 'stopped',
                         tripId: trip.tripId,
                         stationId: first.stationId,
+                        ...(previousLast ? { turnaround: true as const } : {}),
                     });
                 }
             }

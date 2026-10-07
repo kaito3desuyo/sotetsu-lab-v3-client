@@ -143,7 +143,9 @@ function buildWhereText(
     const name = (id: string | undefined) =>
         id ? (input.stationNameById.get(id) ?? '') : '';
     if (position?.type === 'stopped') {
-        return `いま ${name(position.stationId)}に停車中`;
+        return position.turnaround
+            ? `いま ${name(position.stationId)}で折返し`
+            : `いま ${name(position.stationId)}に停車中`;
     }
     if (position?.type === 'between') {
         return `いま ${name(position.fromStationId)}→${name(position.toStationId)}`;
