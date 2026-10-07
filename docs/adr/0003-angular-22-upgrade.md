@@ -66,10 +66,29 @@ v22 で既定が変わったものは、どれも今までの値を明示して�
 - jest 1202 件・lint・tsc・本番ビルドが通る。
 - ローカル（本番 DB）で 10 ページを開いた。捕まらない例外は 0 件。描画された文字数は、本番と同じだった（ダッシュボードと列車位置情報は、比べる条件がそろわなかった）。
 - 開発用のコンテナは、node_modules を別のボリュームに持っている。このブランチに切り替えたら、コンテナの中で `npm ci --force` を流してから再起動する。
-- 後でやること:
-  - `Eager` の 13 個を OnPush にする。そうしたら `prefer-on-push-component-change-detection` を戻す。
-  - `$safeNavigationMigration()` を外す。null と undefined の違いが効かない所から外していく。
-  - 範囲の外に置いた更新（tailwindcss 4・date-fns 4・cypress・eslint 10・express 5・TypeScript 7）。
+
+## 追記（2026-10-08）: 後始末と、範囲の外に置いた更新
+
+ユーザーの指示で、同じブランチで続けた。
+
+- `Eager` の 13 個を OnPush にし、`prefer-on-push-component-change-detection` を戻した。
+  - 本物は App・Layout・Loading・ライブラリの殻 4 個の 7 個で、どれもシグナルだけで動くか、状態を持たない。残り 6 個は spec のテスト用ホスト。
+  - 親が OnPush だと、その下の Eager の子は描き直されなくなる。だから 13 個はまとめて替えた。これで OnPush でないコンポーネントは無い。
+- `$safeNavigationMigration()` を外した。
+  - 22 か所のうち 19 か所は、真偽しか見ないか、受け取る入力が undefined を前提にしている。
+  - 日数のパイプ（`operationRealTimeDayCount`・`calculateDayCountFromToday`）に渡す 3 か所は、`?? null` を残した。`dayjs(undefined)` は「今」になるので、目撃の無い推測の編成（「10706?」）が、今日目撃した編成（太字の「10706」）に見えてしまう。駅別時刻表のセルの spec で押さえた。
+- 範囲の外に置いた更新:
+
+| もの | 結果 |
+|---|---|
+| date-fns | 4 に上げた。v4 の破壊的変更は型と ESM 化だけ |
+| eslint・eslint-config-prettier | 10 に上げた。flat config に移してあるので、設定はそのまま |
+| cypress・`@cypress/schematic` | 16・6 に上げた。テストは雛形 1 本だけで CI でも回していないので、`cypress verify` まで確かめた |
+| express | 5 に上げた。`'**'` は起動時に例外になるので、server.ts を `'/{*splat}'` にした。SSR は無効で、この server は本番で使っていない |
+| TypeScript 7 | 上げられない。Angular 22 のコンパイラも typescript-eslint も 6.0 系までしか受け付けない |
+| tailwindcss 4 | 見送った（ユーザー判断）。Safari 16.4 より古いブラウザを切り捨て、127 ファイル・約 3,100 か所のクラスが `tw-` から `tw:` の書き方に変わる。利用者のブラウザの内訳を見てから、別の作業で上げる |
+
+- cypress の型検査で、tsconfig の `typeRoots: ["node_modules/@types"]` が原因だと分かった。`typeRoots` を指定すると、`types` に書いた名前を `node_modules/@types` の中でしか探さない。型を同梱する cypress と `@testing-library/jest-dom` が見つからず、master から `tsc -p tsconfig.spec.json` が落ちていたのも、これが原因だった。既定の探し方で `node_modules/@types` も見るので、指定を外した。
 
 ## 検討した代案
 
