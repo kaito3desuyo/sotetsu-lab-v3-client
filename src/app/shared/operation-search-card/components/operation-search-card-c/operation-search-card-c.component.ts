@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
@@ -17,7 +16,7 @@ import { OperationSearchCardPComponent } from '../operation-search-card-p/operat
     templateUrl: './operation-search-card-c.component.html',
     styleUrls: ['./operation-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [CommonModule, OperationSearchCardPComponent],
+    imports: [OperationSearchCardPComponent],
 })
 export class OperationSearchCardCComponent {
     readonly #operationSearchCardService = inject(OperationSearchCardService);

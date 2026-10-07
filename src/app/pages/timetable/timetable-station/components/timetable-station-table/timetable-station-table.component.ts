@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
@@ -11,11 +10,7 @@ import { TimetableStationStore } from '../../stores/timetable-station.store';
     selector: 'app-timetable-station-table',
     templateUrl: './timetable-station-table.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        CommonModule,
-        CalendarBandComponent,
-        TimetableStationTripCellComponent,
-    ],
+    imports: [CalendarBandComponent, TimetableStationTripCellComponent],
 })
 export class TimetableStationTableComponent {
     readonly tripDirectionEnum = ETripDirection;

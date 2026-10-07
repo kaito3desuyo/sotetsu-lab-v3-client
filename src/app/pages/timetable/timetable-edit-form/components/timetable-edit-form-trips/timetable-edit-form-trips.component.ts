@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule } from '@angular/common';
+
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -78,7 +78,6 @@ import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/time
     styleUrls: ['./timetable-edit-form-trips.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         ReactiveFormsModule,
         FormsModule,
         MatFormFieldModule,

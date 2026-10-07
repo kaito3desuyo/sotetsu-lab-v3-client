@@ -2,8 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
-    "types": ["jest", "@testing-library/jest-dom", "gtag.js"],
-    "lib": ["ES2020", "ES2022", "DOM"]
+    "types": ["jest", "@testing-library/jest-dom", "gtag.js"]
   },
   "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
 }

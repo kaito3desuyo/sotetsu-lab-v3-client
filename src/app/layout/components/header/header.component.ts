@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
     ChangeDetectionStrategy,
@@ -29,7 +28,6 @@ import { RegisterDialogComponent } from '../register-dialog/register-dialog.comp
     styleUrls: ['./header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         MatButtonModule,
         MatIconModule,
         MatMenuModule,
