@@ -1,8 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
 import {
@@ -14,7 +14,7 @@ import { CalendarModel } from '../models/calendar.model';
 @Injectable({ providedIn: 'root' })
 export class CalendarQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/calendars';
-    #obs: Record<string, Observable<any>> = {};
+    readonly #cache = new QueryCache();
 
     constructor(private readonly http: HttpClient) {}
 
@@ -23,30 +23,25 @@ export class CalendarQuery {
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto[]> {
         const { serviceName, forceReload } = params ?? {};
-        const key = md5(JSON.stringify({ name: 'findMany', serviceName }));
 
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            const httpParams = new HttpParams(
-                serviceName ? { fromObject: { serviceName } } : {},
+        return this.#cache
+            .get({
+                name: 'findMany',
+                params: { serviceName },
+                fetch: () => {
+                    const httpParams = new HttpParams(
+                        serviceName ? { fromObject: { serviceName } } : {},
+                    );
+                    return this.http.get<CalendarModel[]>(this.#v3ApiUrl, {
+                        params: httpParams,
+                        observe: 'response',
+                    });
+                },
+                forceReload,
+            })
+            .pipe(
+                map((res) => res.body.map((o) => buildCalendarDetailsDto(o))),
             );
-            this.#obs[key] = this.http
-                .get<CalendarModel[]>(this.#v3ApiUrl, {
-                    params: httpParams,
-                    observe: 'response',
-                })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) =>
-                        res.body.map((o) => buildCalendarDetailsDto(o)),
-                    ),
-                );
-        }
-
-        return this.#obs[key];
     }
 
     findOne(params: {
@@ -55,34 +50,18 @@ export class CalendarQuery {
     }): Observable<CalendarDetailsDto> {
         const { calendarId, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOne',
-                calendarId,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<CalendarModel>(`${this.#v3ApiUrl}/${calendarId}`, {
-                    observe: 'response',
-                })
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return CalendarDtoBuilder.buildFromModel(res.body);
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { calendarId },
+                fetch: () =>
+                    this.http.get<CalendarModel>(
+                        `${this.#v3ApiUrl}/${calendarId}`,
+                        { observe: 'response' },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => CalendarDtoBuilder.buildFromModel(res.body)));
     }
 
     findOneBySpecificDate(params: {
@@ -91,33 +70,17 @@ export class CalendarQuery {
     }): Observable<CalendarDetailsDto> {
         const { date, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOneBySpecificDate',
-                date,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<CalendarModel>(`${this.#v3ApiUrl}/as/of/${params.date}`, {
-                    observe: 'response',
-                })
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return CalendarDtoBuilder.buildFromModel(res.body);
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { date },
+                fetch: () =>
+                    this.http.get<CalendarModel>(
+                        `${this.#v3ApiUrl}/as/of/${date}`,
+                        { observe: 'response' },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => CalendarDtoBuilder.buildFromModel(res.body)));
     }
 }

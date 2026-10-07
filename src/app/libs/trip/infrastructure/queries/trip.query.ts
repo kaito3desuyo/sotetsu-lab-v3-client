@@ -1,8 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { TripDetailsDto } from '../../usecase/dtos/trip-details.dto';
 import { TripDtoBuilder } from '../builders/trip.dto.builder';
@@ -11,7 +11,7 @@ import { TripModel } from '../models/trip.model';
 @Injectable({ providedIn: 'root' })
 export class TripQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trips';
-    #obs: Record<string, Observable<any>> = {};
+    readonly #cache = new QueryCache();
 
     constructor(private readonly http: HttpClient) {}
 
@@ -23,39 +23,28 @@ export class TripQuery {
     }): Observable<TripDetailsDto[]> {
         const { stationId, calendarId, tripDirection, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyByStationId',
-                stationId,
-                calendarId,
-                tripDirection,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            const httpParams = new HttpParams({
-                fromObject: {
-                    calendarId,
-                    tripDirection: String(tripDirection),
+                params: { stationId, calendarId, tripDirection },
+                fetch: () => {
+                    const httpParams = new HttpParams({
+                        fromObject: {
+                            calendarId,
+                            tripDirection: String(tripDirection),
+                        },
+                    });
+                    return this.http.get<TripModel[]>(
+                        `${this.#v3ApiUrl}/station/${stationId}`,
+                        { params: httpParams, observe: 'response' },
+                    );
                 },
-            });
-            this.#obs[key] = this.http
-                .get<TripModel[]>(
-                    `${this.#v3ApiUrl}/station/${stationId}`,
-                    { params: httpParams, observe: 'response' },
-                )
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => res.body.map((o) => TripDtoBuilder.buildFromModel(o))),
-                );
-        }
-
-        return this.#obs[key];
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    res.body.map((o) => TripDtoBuilder.buildFromModel(o)),
+                ),
+            );
     }
-
 }
-

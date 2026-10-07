@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { AgencyDetailsDto } from '../../usecase/dtos/agency-details.dto';
 import { AgencyDtoBuilder } from '../builders/agency.dto.builder';
@@ -11,7 +11,7 @@ import { AgencyModel } from '../models/agency.model';
 @Injectable({ providedIn: 'root' })
 export class AgencyQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/agencies';
-    #obs: Record<string, Observable<any>> = {};
+    readonly #cache = new QueryCache();
 
     constructor(private readonly http: HttpClient) {}
 
@@ -19,21 +19,21 @@ export class AgencyQuery {
         forceReload?: boolean;
     }): Observable<AgencyDetailsDto[]> {
         const { forceReload } = params ?? {};
-        const key = md5(JSON.stringify({ name: 'findMany' }));
 
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<AgencyModel[]>(this.#v3ApiUrl, { observe: 'response' })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => res.body.map((o) => AgencyDtoBuilder.buildFromModel(o))),
-                );
-        }
-
-        return this.#obs[key];
+        return this.#cache
+            .get({
+                name: 'findMany',
+                params: {},
+                fetch: () =>
+                    this.http.get<AgencyModel[]>(this.#v3ApiUrl, {
+                        observe: 'response',
+                    }),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    res.body.map((o) => AgencyDtoBuilder.buildFromModel(o)),
+                ),
+            );
     }
 }
