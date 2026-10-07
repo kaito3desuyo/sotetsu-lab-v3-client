@@ -1,7 +1,7 @@
 @let positionVm = position();
-@let prev = $safeNavigationMigration(positionVm?.prev);
-@let current = $safeNavigationMigration(positionVm?.current);
-@let next = $safeNavigationMigration(positionVm?.next);
+@let prev = positionVm?.prev;
+@let current = positionVm?.current;
+@let next = positionVm?.next;
 
 <!-- 横並び + 折り返し。幅が足りなければ発着が次の行へ落ちる。
      固定の判定幅を持たないのは、必要な幅が中身で 150〜290px とばらつくため

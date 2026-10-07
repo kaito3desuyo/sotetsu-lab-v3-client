@@ -37,9 +37,7 @@
                     [agencies]="agencies()"
                     [stations]="stations() ?? []"
                     [tripClasses]="tripClasses() ?? []"
-                    [calendarId]="
-                        $safeNavigationMigration(calendar()?.calendarId)
-                    "
+                    [calendarId]="calendar()?.calendarId"
                     [isVisibleSightingHistories]="isVisibleSightingHistories()"
                     [isVisibleCurrentPosition]="isVisibleCurrentPosition()"
                     [isSightingLoading]="isLoading()"
