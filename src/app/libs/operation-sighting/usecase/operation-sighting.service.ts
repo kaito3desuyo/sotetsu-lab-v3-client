@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { OperationSightingCommand } from '../infrastructure/commands/operation-sighting.command';
 import { OperationSightingQuery } from '../infrastructure/queries/operation-sighting.query';
 import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
@@ -10,6 +11,8 @@ import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.d
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingService {
+    readonly #queryInvalidator = inject(QueryInvalidator);
+
     constructor(
         private readonly operationSightingCommand: OperationSightingCommand,
         private readonly operationSightingQuery: OperationSightingQuery,
@@ -61,14 +64,20 @@ export class OperationSightingService {
     }
 
     post(body: PostOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand.post(body);
+        return this.operationSightingCommand
+            .post(body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }
 
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand.invalidate(body);
+        return this.operationSightingCommand
+            .invalidate(body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }
 
     restore(body: RestoreOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand.restore(body);
+        return this.operationSightingCommand
+            .restore(body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }
 }

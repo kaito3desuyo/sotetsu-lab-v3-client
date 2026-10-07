@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { TripBlockCommand } from '../infrastructure/commands/trip-block.command';
 import { TripBlockQuery } from '../infrastructure/queries/trip-block.query';
 import { TripBlockFields } from './trip-block-fields';
@@ -11,6 +12,8 @@ import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockService {
+    readonly #queryInvalidator = inject(QueryInvalidator);
+
     constructor(
         private readonly tripBlockCommand: TripBlockCommand,
         private readonly tripBlockQuery: TripBlockQuery,
@@ -37,11 +40,6 @@ export class TripBlockService {
         return this.tripBlockQuery.findManyByCalendarId(params);
     }
 
-    /** ダイヤ改正等でバルクキャッシュ（findManyByFilter / findManyByCalendarId）を失効させる。 */
-    invalidateAll(): void {
-        this.tripBlockQuery.invalidateAll();
-    }
-
     findOneById(params: {
         id: string;
         forceReload?: boolean;
@@ -50,30 +48,35 @@ export class TripBlockService {
     }
 
     createMany(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
-        return this.tripBlockCommand.createMany(body);
+        return this.tripBlockCommand
+            .createMany(body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('timetable')));
     }
 
     replaceOne(
         tripBlockId: string,
         body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.replaceOne(tripBlockId, body);
+        return this.tripBlockCommand
+            .replaceOne(tripBlockId, body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('timetable')));
     }
 
     addTripToTripBlock(
         tripBlockId: string,
         body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.addTripToTripBlock(tripBlockId, body);
+        return this.tripBlockCommand
+            .addTripToTripBlock(tripBlockId, body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('timetable')));
     }
 
     deleteTripFromTripBlock(
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.tripBlockCommand.deleteTripFromTripBlock(
-            tripBlockId,
-            body,
-        );
+        return this.tripBlockCommand
+            .deleteTripFromTripBlock(tripBlockId, body)
+            .pipe(tap(() => this.#queryInvalidator.invalidate('timetable')));
     }
 }

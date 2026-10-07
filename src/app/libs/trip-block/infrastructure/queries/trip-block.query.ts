@@ -1,8 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { md5 } from 'js-md5';
+import { inject, Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, forkJoin } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
 import { TripBlockFields } from '../../usecase/trip-block-fields';
@@ -12,21 +14,17 @@ import { TripBlockModel } from '../models/trip-block.model';
 @Injectable({ providedIn: 'root' })
 export class TripBlockQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
-    #obs: Record<string, Observable<any>> = {};
-    // ダイヤ改正等でバルクキャッシュ全体を失効させるための世代キー。
-    // invalidateAll() で更新すると、以後の findManyByFilter/findManyByCalendarId は
-    // 新しいキャッシュキーとなり実質的に再取得される。
-    #worldVersion = 0;
+    readonly #cache = new QueryCache();
+    readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {}
-
-    /**
-     * ダイヤ改正等でバルクキャッシュ（findManyByFilter / findManyByCalendarId）を
-     * まとめて失効させる。既存キャッシュを破棄しつつ、以後のキーも新しい世代になる。
-     */
-    invalidateAll(): void {
-        this.#worldVersion += 1;
-        this.#obs = {};
+    constructor(private readonly http: HttpClient) {
+        // 列車情報が書かれたら全部捨てる（どのダイヤ・どの列車が変わったかは追わない）
+        this.#invalidator.invalidated$
+            .pipe(
+                filter((tag) => tag === 'timetable'),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => this.#cache.clear());
     }
 
     findManyByFilter(params: {
@@ -37,55 +35,44 @@ export class TripBlockQuery {
     }): Observable<TripBlockDetailsDto[]> {
         const { calendarId, tripDirection, fields, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyByFilter',
-                calendarId,
-                tripDirection,
-                fields,
-                worldVersion: this.#worldVersion,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            const httpParams = new HttpParams({
-                fromObject: {
-                    calendarId,
-                    tripDirection: String(tripDirection),
-                    ...Object.fromEntries(
-                        Object.entries(fields ?? {}).map(
-                            ([resource, names]) => [
-                                `fields[${resource}]`,
-                                names.join(','),
-                            ],
-                        ),
-                    ),
+                params: { calendarId, tripDirection, fields },
+                fetch: () => {
+                    const httpParams = new HttpParams({
+                        fromObject: {
+                            calendarId,
+                            tripDirection: String(tripDirection),
+                            ...Object.fromEntries(
+                                Object.entries(fields ?? {}).map(
+                                    ([resource, names]) => [
+                                        `fields[${resource}]`,
+                                        names.join(','),
+                                    ],
+                                ),
+                            ),
+                        },
+                    });
+                    return this.http.get<TripBlockModel[]>(this.#v3ApiUrl, {
+                        params: httpParams,
+                        observe: 'response',
+                        cache: this.#invalidator.requestCache('timetable'),
+                    });
                 },
-            });
-            this.#obs[key] = this.http
-                .get<TripBlockModel[]>(this.#v3ApiUrl, {
-                    params: httpParams,
-                    observe: 'response',
-                })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) =>
-                        res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
-                    ),
-                );
-        }
-
-        return this.#obs[key];
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
+                ),
+            );
     }
 
     /**
      * 指定 calendarId の上下（tripDirection=0/1）バルクデータをまとめて取得する。
      * N1(ダイヤグラム)/N2(列車位置情報)/N3(ダッシュボード) が同じキーで呼べば
-     * ページ遷移をまたいでも再取得しない（findManyByFilter の shareReplay キャッシュに加え、
+     * ページ遷移をまたいでも再取得しない（findManyByFilter のキャッシュに加え、
      * forkJoin した結果自体もキャッシュする）。
      */
     findManyByCalendarId(params: {
@@ -95,37 +82,26 @@ export class TripBlockQuery {
     }): Observable<Record<number, TripBlockDetailsDto[]>> {
         const { calendarId, fields, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
-                name: 'findManyByCalendarId',
-                calendarId,
-                fields,
-                worldVersion: this.#worldVersion,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = forkJoin({
-                0: this.findManyByFilter({
-                    calendarId,
-                    tripDirection: 0,
-                    fields,
-                    forceReload,
+        return this.#cache.get({
+            name: 'findManyByCalendarId',
+            params: { calendarId, fields },
+            fetch: () =>
+                forkJoin({
+                    0: this.findManyByFilter({
+                        calendarId,
+                        tripDirection: 0,
+                        fields,
+                        forceReload,
+                    }),
+                    1: this.findManyByFilter({
+                        calendarId,
+                        tripDirection: 1,
+                        fields,
+                        forceReload,
+                    }),
                 }),
-                1: this.findManyByFilter({
-                    calendarId,
-                    tripDirection: 1,
-                    fields,
-                    forceReload,
-                }),
-            }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
-        }
-
-        return this.#obs[key];
+            forceReload,
+        });
     }
 
     findOneById(params: {
@@ -134,25 +110,17 @@ export class TripBlockQuery {
     }): Observable<TripBlockDetailsDto> {
         const { id, forceReload } = params;
 
-        const key = md5(JSON.stringify({ name: 'findOneById', id }));
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<TripBlockModel>(`${this.#v3ApiUrl}/${id}`, {
-                    observe: 'response',
-                })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => TripBlockDtoBuilder.buildFromModel(res.body)),
-                );
-        }
-
-        return this.#obs[key];
+        return this.#cache
+            .get({
+                name: 'findOneById',
+                params: { id },
+                fetch: () =>
+                    this.http.get<TripBlockModel>(`${this.#v3ApiUrl}/${id}`, {
+                        observe: 'response',
+                        cache: this.#invalidator.requestCache('timetable'),
+                    }),
+                forceReload,
+            })
+            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
     }
-
 }
-
