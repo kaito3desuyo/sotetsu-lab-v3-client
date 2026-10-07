@@ -14,6 +14,7 @@ import {
     provideRouter,
     withEnabledBlockingInitialNavigation,
     withInMemoryScrolling,
+    withRouterConfig,
 } from '@angular/router';
 import { APP_ROUTES } from './app.route';
 import { CoreModule } from './core/core.module';
@@ -24,6 +25,8 @@ export const appConfig: ApplicationConfig = {
             APP_ROUTES,
             withEnabledBlockingInitialNavigation(),
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+            // v22 で既定が 'always' に変わった。親ルートの params を子へ流さない従来の挙動を保つ
+            withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' }),
         ),
         provideClientHydration(withNoIncrementalHydration()),
         provideHttpClient(withFetch(), withInterceptorsFromDi()),
