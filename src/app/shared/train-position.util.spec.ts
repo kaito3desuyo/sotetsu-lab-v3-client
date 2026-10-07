@@ -328,7 +328,7 @@ describe('estimatePositions', () => {
             ).toEqual([]);
         });
 
-        it('発つ列車が出庫なら出さない', () => {
+        it('発つ列車が出庫なら、前の列車が着いても出さない', () => {
             expect(
                 estimatePositions(
                     turnaroundBlocks('O1', {}, { depotOut: true }),
@@ -337,6 +337,44 @@ describe('estimatePositions', () => {
                 ),
             ).toEqual([]);
         });
+    });
+
+    it('出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す', () => {
+        const tripBlocks = [
+            tripBlock([
+                {
+                    ...trip('T1', [
+                        time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                        time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                    ]),
+                    depotOut: true,
+                },
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 56, 59))).toEqual([]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 57, 0))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 59, 59))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 0, 0))).toEqual([
+            { type: 'between', tripId: 'T1', fromStationId: 'A', toStationId: 'C', progress: 0 },
+        ]);
+    });
+
+    it('出庫しない列車は、発時刻の前には出さない', () => {
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                    time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                ]),
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 58, 0))).toEqual([]);
     });
 
     it('駅軸の最後の停車駅から他線へ直通する列車は、そこを発つまで停車中として残す', () => {

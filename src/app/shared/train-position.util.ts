@@ -123,6 +123,9 @@ export function findContinuations(
     return continuations;
 }
 
+/** 出庫する列車を、発時刻のどれだけ前から始発駅に停車中として出すか（ユーザー指示 2026-10-07: 3 分前ぐらい） */
+const DEPOT_OUT_LEAD_MS = 3 * 60 * 1000;
+
 /**
  * 折り返し: 同じ運用の列車が終点に着き、別の trip block（逆向き）で同じ駅を発つとき、
  * 発つ列車の tripId → 着く列車 を返す。折り返しは block に含まれないので運用でつなぐ。
@@ -285,6 +288,7 @@ function estimateTripPosition(
  * - 走行中判定: 駅 s の発 ≤ at < 駅 s+1 の着 → between（progress は線形補間）
  * - 通過駅（駅軸に存在しない・発着時刻が両方欠落）は区間補間に自然に吸収される
  * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に停車中として出す
+ * - 出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す（基地にいるあいだは出さない）
  * - 鉄道日（4 時境界）を考慮し、`at` の属する営業日を基準に times の日オフセットを実体化する
  *
  * @param tripBlocks 対象ダイヤの全 tripBlock（tripDirection 上下分含めて呼び出し側で束ねたもの）
@@ -349,23 +353,27 @@ export function estimatePositions(
                     continue;
                 }
             }
-            // 折り返し: 前の列車が着いてから発時刻までは、これから発つ列車を停車中として出す
-            const previous = turnarounds.get(trip.tripId);
+            // 発時刻の前から始発駅に停車中として出す。
+            // 折り返しは前の列車が着いてから、出庫は発時刻の DEPOT_OUT_LEAD_MS 前から
             const first = timedStops(trip.times)[0];
-            const previousLast = previous
-                ? timedStops(previous.times).at(-1)
-                : undefined;
             if (
                 first?.stationId != null &&
-                previousLast &&
                 axisStationIds.has(first.stationId)
             ) {
-                const arrival = resolveArrival(base, previousLast);
                 const departure = resolveDeparture(base, first);
+                const previous = turnarounds.get(trip.tripId);
+                const previousLast = previous
+                    ? timedStops(previous.times).at(-1)
+                    : undefined;
+                const appearsAt = previousLast
+                    ? resolveArrival(base, previousLast)
+                    : trip.depotOut && departure !== undefined
+                      ? new Date(departure.getTime() - DEPOT_OUT_LEAD_MS)
+                      : undefined;
                 if (
-                    arrival !== undefined &&
+                    appearsAt !== undefined &&
                     departure !== undefined &&
-                    arrival <= at &&
+                    appearsAt <= at &&
                     at < departure
                 ) {
                     positions.push({
