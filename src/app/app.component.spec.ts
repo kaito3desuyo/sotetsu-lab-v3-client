@@ -1,6 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 
@@ -21,7 +21,7 @@ describe('AppComponent', () => {
         await TestBed.configureTestingModule({
             imports: [AppComponent],
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideRouter([]),
                 { provide: AppUpdateService, useValue: {} },
                 {

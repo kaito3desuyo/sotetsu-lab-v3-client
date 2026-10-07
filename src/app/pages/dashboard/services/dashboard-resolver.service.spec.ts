@@ -1,11 +1,11 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { TestBed, inject } from '@angular/core/testing';
 import { DashboardResolverService } from './dashboard-resolver.service';
 
 describe('Service: DashboardResolver', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), DashboardResolverService],
+            providers: [provideHttpClient(withXhr()), DashboardResolverService],
         });
     });
 

@@ -1,6 +1,7 @@
 @let formationVm = expectedSightingFormation();
 @let sightingVm = latestSighting();
-@let dayCount = sightingVm?.sightingTime | operationRealTimeDayCount;
+<!-- 目撃が無いときは null を渡す。undefined だと dayjs が「今」とみなし、今日の目撃に見えてしまう -->
+@let dayCount = sightingVm?.sightingTime ?? null | operationRealTimeDayCount;
 @let sightingTime = sightingVm?.sightingTime;
 @let updatedAt = sightingVm?.updatedAt;
 @let positionVm = currentPosition();

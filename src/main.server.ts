@@ -1,5 +1,8 @@
-import { enableProdMode } from '@angular/core';
-import { bootstrapApplication, BootstrapContext } from '@angular/platform-browser';
+import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
+import {
+    bootstrapApplication,
+    BootstrapContext,
+} from '@angular/platform-browser';
 import { enableElfProdMode } from '@ngneat/elf';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -18,6 +21,14 @@ if (environment.production) {
     enableElfProdMode();
 }
 
-const bootstrap = (context: BootstrapContext) => bootstrapApplication(AppComponent, config, context);
+const bootstrap = (context: BootstrapContext) =>
+    bootstrapApplication(
+        AppComponent,
+        {
+            ...config,
+            providers: [provideZoneChangeDetection(), ...config.providers],
+        },
+        context,
+    );
 
 export default bootstrap;

@@ -1,6 +1,7 @@
 import {
     provideHttpClient,
     withInterceptorsFromDi,
+    withXhr,
 } from '@angular/common/http';
 import {
     HttpTestingController,
@@ -16,7 +17,7 @@ const v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
 function setup() {
     TestBed.configureTestingModule({
         providers: [
-            provideHttpClient(withInterceptorsFromDi()),
+            provideHttpClient(withXhr(), withInterceptorsFromDi()),
             provideHttpClientTesting(),
         ],
     });

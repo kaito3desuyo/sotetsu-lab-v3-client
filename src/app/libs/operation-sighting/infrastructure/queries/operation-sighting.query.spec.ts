@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
     HttpTestingController,
     provideHttpClientTesting,
@@ -10,7 +10,10 @@ import { OperationSightingQuery } from './operation-sighting.query';
 describe('OperationSightingQuery', () => {
     const setup = () => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting()],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideHttpClientTesting(),
+            ],
         });
         return {
             query: TestBed.inject(OperationSightingQuery),

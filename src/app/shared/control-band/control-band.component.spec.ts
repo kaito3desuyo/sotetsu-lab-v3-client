@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import {
@@ -84,6 +84,7 @@ function installGlobals(): void {
         }
         <p class="outside">本文</p>
     `,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ControlBandComponent],
 })
 class HostComponent {

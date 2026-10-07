@@ -1,6 +1,5 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RxState } from '@rx-angular/state';
 import { EMPTY } from 'rxjs';
 
 import { OperationSearchCardService } from '../../services/operation-search-card.service';
@@ -23,7 +22,6 @@ describe('OperationSearchCardCComponent', () => {
                     imports: [],
                     schemas: [NO_ERRORS_SCHEMA],
                     providers: [
-                        RxState,
                         {
                             provide: OperationSearchCardService,
                             useValue: { fetchOperations: () => EMPTY },

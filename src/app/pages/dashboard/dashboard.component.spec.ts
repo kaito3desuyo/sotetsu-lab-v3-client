@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -22,7 +22,7 @@ describe('DashboardComponent', () => {
         await TestBed.configureTestingModule({
             imports: [DashboardComponent],
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideRouter([]),
                 {
                     // 実 HTTP を発行させない（fetchData の未処理 Promise

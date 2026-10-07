@@ -1,10 +1,14 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import {
+    Component,
+    NO_ERRORS_SCHEMA,
+    ChangeDetectionStrategy,
+} from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { LayoutComponent } from './layout.component';
 
-@Component({ template: '' })
+@Component({ changeDetection: ChangeDetectionStrategy.OnPush, template: '' })
 class DummyComponent {}
 
 describe('LayoutComponent', () => {

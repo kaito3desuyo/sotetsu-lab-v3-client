@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -17,7 +17,7 @@ describe('OperationRealTimeComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeComponent],
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideRouter([]),
                 OperationRealTimeService,
                 {

@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ConfirmDialogService } from '../../services/confirm-dialog.service';
@@ -10,7 +9,7 @@ import { ConfirmDialogMainPComponent } from '../confirm-dialog-main-p/confirm-di
     templateUrl: './confirm-dialog-main-c.component.html',
     styleUrls: ['./confirm-dialog-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ConfirmDialogMainPComponent, CommonModule]
+    imports: [ConfirmDialogMainPComponent],
 })
 export class ConfirmDialogMainCComponent {
     readonly #confirmDialogService = inject(ConfirmDialogService);

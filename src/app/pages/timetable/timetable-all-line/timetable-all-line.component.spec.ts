@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -24,7 +24,7 @@ describe('TimetableAllLineComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 provideRouter([]),
                 TimetableAllLineService,
                 TimetableSearchCardStateStore,
@@ -36,11 +36,23 @@ describe('TimetableAllLineComponent', () => {
                     provide: CalendarListStateQuery,
                     useValue: { selectByCalendarId: () => of(undefined) },
                 },
-                { provide: ErrorHandlerService, useValue: { handleError: () => {} } },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
                 { provide: NotificationService, useValue: { open: () => {} } },
-                { provide: LoadingService, useValue: { open: () => {}, close: () => {} } },
-                { provide: ConfirmDialogService, useValue: { open: () => ({ afterClosed: () => EMPTY }) } },
-                { provide: CalendarSelectDialogService, useValue: { open: () => ({ afterClosed: () => EMPTY }) } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                {
+                    provide: ConfirmDialogService,
+                    useValue: { open: () => ({ afterClosed: () => EMPTY }) },
+                },
+                {
+                    provide: CalendarSelectDialogService,
+                    useValue: { open: () => ({ afterClosed: () => EMPTY }) },
+                },
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {

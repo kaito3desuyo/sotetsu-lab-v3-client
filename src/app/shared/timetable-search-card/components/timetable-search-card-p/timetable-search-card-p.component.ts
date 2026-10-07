@@ -6,7 +6,11 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import {
+    takeUntilDestroyed,
+    toObservable,
+    toSignal,
+} from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
     FormControl,
@@ -17,7 +21,6 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { RxState } from '@rx-angular/state';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { RouteStationListDetailsDto } from 'src/app/libs/route/usecase/dtos/route-station-list-details.dto';
@@ -41,7 +44,6 @@ type Form = FormGroup<{
     templateUrl: './timetable-search-card-p.component.html',
     styleUrls: ['./timetable-search-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
     imports: [
         CommonModule,
         ReactiveFormsModule,
@@ -52,11 +54,10 @@ type Form = FormGroup<{
         PanelCardComponent,
         AppButtonComponent,
         DateFnsPipe,
-    ]
+    ],
 })
 export class TimetableSearchCardPComponent {
     readonly #fb = inject(FormBuilder).nonNullable;
-    readonly #state = inject<RxState<{}>>(RxState);
 
     readonly tripDirectionEnum = ETripDirection;
 
@@ -91,20 +92,22 @@ export class TimetableSearchCardPComponent {
     readonly clickSearch = output<ITimetableSearchCardForm>();
 
     constructor() {
-        this.#state.hold(
-            this.form.get('searchByStation').valueChanges,
-            (bool) => {
+        this.form
+            .get('searchByStation')
+            .valueChanges.pipe(takeUntilDestroyed())
+            .subscribe((bool) => {
                 if (bool) {
                     this.form.get('stationId').enable();
                 } else {
                     this.form.get('stationId').disable();
                 }
-            },
-        );
+            });
 
-        this.#state.hold(toObservable(this.currentState), (state) => {
-            this.form.patchValue(state);
-        });
+        toObservable(this.currentState)
+            .pipe(takeUntilDestroyed())
+            .subscribe((state) => {
+                this.form.patchValue(state);
+            });
     }
 
     onTripDirectionChange(value: number): void {

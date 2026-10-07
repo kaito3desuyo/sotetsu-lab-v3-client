@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CollapsiblePanelComponent } from './collapsible-panel.component';
@@ -10,6 +10,7 @@ import { CollapsiblePanelComponent } from './collapsible-panel.component';
             <p class="projected">中身</p>
         </app-collapsible-panel>
     `,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CollapsiblePanelComponent],
 })
 class HostComponent {

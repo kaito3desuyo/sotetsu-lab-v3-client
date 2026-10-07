@@ -1,7 +1,5 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { RxState } from '@rx-angular/state';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -18,11 +16,9 @@ import { OperationSearchCardPComponent } from '../operation-search-card-p/operat
     templateUrl: './operation-search-card-c.component.html',
     styleUrls: ['./operation-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
-    imports: [CommonModule, OperationSearchCardPComponent]
+    imports: [OperationSearchCardPComponent],
 })
 export class OperationSearchCardCComponent {
-    readonly #state = inject(RxState);
     readonly #operationSearchCardService = inject(OperationSearchCardService);
     readonly #operationSearchCardStateStore = inject(
         OperationSearchCardStateStore,
@@ -58,49 +54,50 @@ export class OperationSearchCardCComponent {
     >();
 
     constructor() {
-        this.#state.hold(
-            this.#operationSearchCardStateQuery.calendarId$.pipe(
+        this.#operationSearchCardStateQuery.calendarId$
+            .pipe(
                 switchMap(() =>
                     this.#operationSearchCardService.fetchOperations(),
                 ),
-            ),
-        );
+                takeUntilDestroyed(),
+            )
+            .subscribe();
 
-        this.#state.hold(
-            this.onSelectedCalendarId$.asObservable(),
-            (calendarId) => {
+        this.onSelectedCalendarId$
+            .asObservable()
+            .pipe(takeUntilDestroyed())
+            .subscribe((calendarId) => {
                 this.#operationSearchCardStateStore.setCalendarId(calendarId);
                 this.#operationSearchCardStateStore.setOperationId(null);
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.onSelectedOperationId$.asObservable(),
-            (operationId) => {
+        this.onSelectedOperationId$
+            .asObservable()
+            .pipe(takeUntilDestroyed())
+            .subscribe((operationId) => {
                 this.#operationSearchCardStateStore.setOperationId(operationId);
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.onClickOperationTable$.asObservable(),
-            (calendarId) => {
+        this.onClickOperationTable$
+            .asObservable()
+            .pipe(takeUntilDestroyed())
+            .subscribe((calendarId) => {
                 if (calendarId) {
                     this.#operationSearchCardService.emitSearchOperationTableEvent(
                         calendarId,
                     );
                 }
-            },
-        );
+            });
 
-        this.#state.hold(
-            this.onClickRouteDiagram$.asObservable(),
-            (operationId) => {
+        this.onClickRouteDiagram$
+            .asObservable()
+            .pipe(takeUntilDestroyed())
+            .subscribe((operationId) => {
                 if (operationId) {
                     this.#operationSearchCardService.emitSearchOperationRouteDiagramEvent(
                         operationId,
                     );
                 }
-            },
-        );
+            });
     }
 }

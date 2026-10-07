@@ -38,8 +38,9 @@
             : undefined;
     @let currentFormationNumber =
         timeCrossSection?.expectedSighting?.formation?.formationNumber;
+    <!-- 目撃が無いときは null を渡す。undefined だと dayjs が「今」とみなし、今日の目撃に見えてしまう -->
     @let currentFormationDayCount =
-        timeCrossSection?.latestSighting?.sightingTime
+        timeCrossSection?.latestSighting?.sightingTime ?? null
             | calculateDayCountFromToday;
 
     <!-- 左の列: 幅 2.75rem 固定。運用番号チップ（最大「95G」）と充当編成番号（最大

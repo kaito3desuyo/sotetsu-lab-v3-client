@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
     HttpTestingController,
     provideHttpClientTesting,
@@ -13,7 +13,10 @@ const url = environment.apiUrl + '/v3/operations';
 describe('OperationQuery', () => {
     const setup = () => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), provideHttpClientTesting()],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideHttpClientTesting(),
+            ],
         });
         return {
             query: TestBed.inject(OperationQuery),

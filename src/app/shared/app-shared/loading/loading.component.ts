@@ -4,6 +4,7 @@ import {
     Directive,
     ElementRef,
     inject,
+    ChangeDetectionStrategy,
 } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -22,6 +23,7 @@ export class RemoveMatAnimationNoopableDirective implements AfterViewInit {
     selector: 'app-loading',
     templateUrl: './loading.component.html',
     styleUrls: ['./loading.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatProgressSpinnerModule, RemoveMatAnimationNoopableDirective],
 })
 export class LoadingComponent {}

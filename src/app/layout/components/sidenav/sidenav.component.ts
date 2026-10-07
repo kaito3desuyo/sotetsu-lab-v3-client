@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -29,7 +28,6 @@ import { buildStationGroups } from 'src/app/shared/station-groups.util';
     styleUrls: ['./sidenav.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         RouterLink,
         RouterLinkActive,
         ReactiveFormsModule,

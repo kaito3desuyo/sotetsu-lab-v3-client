@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
     PanelCardComponent,
@@ -9,6 +9,7 @@ import {
     template: `<app-panel-card heading="運用情報を検索する">
         <p class="content">中身</p>
     </app-panel-card>`,
+    changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [PanelCardComponent],
 })
 class HostComponent {}

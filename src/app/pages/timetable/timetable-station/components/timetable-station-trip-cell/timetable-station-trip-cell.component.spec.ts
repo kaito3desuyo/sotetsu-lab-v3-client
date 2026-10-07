@@ -182,6 +182,25 @@ describe('TimetableStationTripCellComponent', () => {
         expect(text).not.toContain('不明');
     });
 
+    // 目撃の無い編成は推測なので「?」を付ける。日数のパイプに undefined を渡すと
+    // dayjs が「今」とみなし、今日の目撃に見えてしまう（Angular 22 で ?. が undefined を返す）
+    it('目撃が無く推測だけの編成には「?」を付ける', async () => {
+        const fixture = await createFixture({
+            showCurrentFormation: true,
+            operationSightingTimeCrossSections: {
+                '51': {
+                    latestSighting: null,
+                    expectedSighting: {
+                        formation: { formationNumber: '10708' },
+                    },
+                },
+            },
+        });
+        const text = (fixture.nativeElement as HTMLElement).textContent;
+
+        expect(text).toContain('10708?');
+    });
+
     // 全線時刻表へは列車番号から飛ぶ。分はリンクにしない（ユーザー指示 2026-10-05）
     it('全線時刻表へのリンクは列車番号（本体と脚注）だけで、分はリンクにしない', async () => {
         const fixture = await createFixture();

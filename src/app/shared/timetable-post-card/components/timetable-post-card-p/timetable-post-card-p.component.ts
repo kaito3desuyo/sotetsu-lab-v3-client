@@ -16,7 +16,6 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { RxState } from '@rx-angular/state';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { PanelCardComponent } from 'src/app/shared/panel-card/panel-card.component';
@@ -36,7 +35,6 @@ type Form = FormGroup<{
     templateUrl: './timetable-post-card-p.component.html',
     styleUrls: ['./timetable-post-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [RxState],
     imports: [
         CommonModule,
         ReactiveFormsModule,
