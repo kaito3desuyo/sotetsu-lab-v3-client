@@ -15,7 +15,7 @@ npm run build:dev    # 開発（ソースマップあり、最適化なし）
 
 # テスト
 npm test                                          # Jest 全テスト
-npx jest --testPathPattern=src/path/to/spec.ts   # 単一テストファイル
+npx jest --testPathPatterns=src/path/to/spec.ts  # 単一テストファイル（jest 30 で複数形になった）
 
 # Lint
 npm run lint
@@ -27,7 +27,7 @@ npm run cypress:run    # ヘッドレス
 
 ## アーキテクチャ
 
-Angular 20 SPA。SSR 設定は存在するが無効（`ssr: false`）。バックエンドは `environment.apiUrl` で指定された別サービス。
+Angular 22 SPA。SSR 設定は存在するが無効（`ssr: false`）。バックエンドは `environment.apiUrl` で指定された別サービス。
 
 ### `src/app/` 配下のレイヤー構成
 
