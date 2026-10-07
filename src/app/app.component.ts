@@ -17,6 +17,7 @@ import {
 } from '@angular/router';
 import { interval } from 'rxjs';
 import { filter, first, map, switchMap } from 'rxjs/operators';
+import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
@@ -38,6 +39,7 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #title = inject(Title);
     readonly #appUpdateService = inject(AppUpdateService);
     readonly #socketService = inject(SocketService);
+    readonly #queryInvalidator = inject(QueryInvalidator);
     readonly #gaService = inject(GoogleAnalyticsService);
     readonly #loadingService = inject(LoadingService);
     readonly #notificationService = inject(NotificationService);
@@ -45,6 +47,15 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #tokenStateQuery = inject(TokenStateQuery);
 
     constructor() {
+        // 他人が目撃を投稿したら、どの画面でも目撃の画面内キャッシュを捨てる
+        // （ソケットに流れるのは sendSighting の転送だけ）
+        this.#socketService
+            .on()
+            .pipe(takeUntilDestroyed())
+            .subscribe(() =>
+                this.#queryInvalidator.invalidateLocal('sighting'),
+            );
+
         this.#router.events
             .pipe(
                 filter<NavigationStart>((ev) => ev instanceof NavigationStart),
@@ -80,9 +91,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         this.#router.events
             .pipe(
-                filter<NavigationError>(
-                    (ev) => ev instanceof NavigationError,
-                ),
+                filter<NavigationError>((ev) => ev instanceof NavigationError),
                 takeUntilDestroyed(),
             )
             .subscribe(() => {

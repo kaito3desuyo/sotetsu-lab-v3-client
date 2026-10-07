@@ -1,5 +1,4 @@
 import {
-    HttpClient,
     provideHttpClient,
     withInterceptorsFromDi,
 } from '@angular/common/http';
@@ -8,6 +7,7 @@ import {
     provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { environment } from 'src/environments/environment';
 import { TripBlockQuery } from './trip-block.query';
 
@@ -20,13 +20,23 @@ function setup() {
             provideHttpClientTesting(),
         ],
     });
-    const http = TestBed.inject(HttpClient);
     const controller = TestBed.inject(HttpTestingController);
-    return { query: new TripBlockQuery(http), controller };
+    return {
+        query: TestBed.inject(TripBlockQuery),
+        controller,
+        invalidator: TestBed.inject(QueryInvalidator),
+    };
 }
 
 describe('TripBlockQuery', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2026-10-07T12:00:00+09:00'));
+    });
+
     afterEach(() => {
+        jest.useRealTimers();
         TestBed.resetTestingModule();
     });
 
@@ -74,9 +84,7 @@ describe('TripBlockQuery', () => {
         query
             .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
             .subscribe();
-        controller
-            .expectOne((r) => r.url === v3ApiUrl)
-            .flush([]);
+        controller.expectOne((r) => r.url === v3ApiUrl).flush([]);
 
         query
             .findManyByFilter({
@@ -85,9 +93,7 @@ describe('TripBlockQuery', () => {
                 forceReload: true,
             })
             .subscribe();
-        controller
-            .expectOne((r) => r.url === v3ApiUrl)
-            .flush([]);
+        controller.expectOne((r) => r.url === v3ApiUrl).flush([]);
 
         controller.verify();
     });
@@ -101,12 +107,10 @@ describe('TripBlockQuery', () => {
             .subscribe((r) => (result = r));
 
         const upReq = controller.expectOne(
-            (r) =>
-                r.url === v3ApiUrl && r.params.get('tripDirection') === '0',
+            (r) => r.url === v3ApiUrl && r.params.get('tripDirection') === '0',
         );
         const downReq = controller.expectOne(
-            (r) =>
-                r.url === v3ApiUrl && r.params.get('tripDirection') === '1',
+            (r) => r.url === v3ApiUrl && r.params.get('tripDirection') === '1',
         );
         upReq.flush([{ tripBlockId: 'up-1', trips: [] }]);
         downReq.flush([{ tripBlockId: 'down-1', trips: [] }]);
@@ -121,26 +125,85 @@ describe('TripBlockQuery', () => {
         controller.verify(); // 追加のHTTPリクエストが無いことを確認（キャッシュヒット）
     });
 
-    it('invalidateAll causes subsequent calls to issue fresh requests', () => {
+    it("'timetable' を受けたら、findManyByFilter と findOneById を取り直す", () => {
+        const { query, controller, invalidator } = setup();
+
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
+            .subscribe();
+        query.findOneById({ id: 'b1' }).subscribe();
+        controller
+            .match(() => true)
+            .forEach((r) =>
+                r.flush(r.request.url.endsWith('/b1') ? { trips: [] } : []),
+            );
+
+        invalidator.invalidate('timetable');
+
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
+            .subscribe();
+        query.findOneById({ id: 'b1' }).subscribe();
+        const again = controller.match(() => true);
+        expect(again).toHaveLength(2);
+        again.forEach((r) =>
+            r.flush(r.request.url.endsWith('/b1') ? { trips: [] } : []),
+        );
+        controller.verify();
+    });
+
+    it("'sighting' では捨てない", () => {
+        const { query, controller, invalidator } = setup();
+
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
+            .subscribe();
+        controller.expectOne((r) => r.url === v3ApiUrl).flush([]);
+
+        invalidator.invalidate('sighting');
+        query
+            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
+            .subscribe();
+
+        controller.verify();
+    });
+
+    it('書き込みが無ければ cache は default', () => {
         const { query, controller } = setup();
 
         query
             .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
             .subscribe();
-        controller
-            .expectOne((r) => r.url === v3ApiUrl)
-            .flush([]);
+        const req = controller.expectOne((r) => r.url === v3ApiUrl);
 
-        query.invalidateAll();
+        expect(req.request.cache).toBe('default');
+        req.flush([]);
+    });
 
-        query
-            .findManyByFilter({ calendarId: 'cal-1', tripDirection: 0 })
-            .subscribe();
-        controller
-            .expectOne((r) => r.url === v3ApiUrl)
-            .flush([]);
+    it("'timetable' の後の findManyByCalendarId は、上下 2 本とも reload で取り直す", () => {
+        const { query, controller, invalidator } = setup();
+        query.findManyByCalendarId({ calendarId: 'cal-1' }).subscribe();
+        controller.match(() => true).forEach((r) => r.flush([]));
 
+        invalidator.invalidate('timetable');
+        query.findManyByCalendarId({ calendarId: 'cal-1' }).subscribe();
+
+        const reqs = controller.match((r) => r.url === v3ApiUrl);
+        expect(reqs.map((r) => r.request.cache)).toEqual(['reload', 'reload']);
+        reqs.forEach((r) => r.flush([]));
         controller.verify();
+    });
+
+    it('書き込みから 10 分を過ぎたら、取り直しても cache は default に戻る', () => {
+        const { query, controller, invalidator } = setup();
+
+        invalidator.invalidate('timetable');
+        jest.advanceTimersByTime(600_000);
+        query.findOneById({ id: 'b1' }).subscribe();
+        const req = controller.expectOne(`${v3ApiUrl}/b1`);
+
+        expect(req.request.cache).toBe('default');
+        req.flush({ trips: [] });
     });
 
     it('fields を指定すると fields[資源]=項目,項目 をクエリに載せ、キャッシュも fields ごとに分ける', () => {

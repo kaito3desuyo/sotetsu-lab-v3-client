@@ -1,9 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { omitBy } from 'es-toolkit';
-import { md5 } from 'js-md5';
 import { Observable, of } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
@@ -21,12 +23,35 @@ import { OperationGroupModel } from '../models/operation-group.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
 
+/** 列車情報が書かれたら捨てる取得（時刻表系。cache: 'reload' の対象） */
+const TIMETABLE_METHODS = [
+    'findManyByCalendarId',
+    'findManyWithTrips',
+    'findOneWithTrips',
+    'findManyBySpecificPeriod',
+] as const;
+
+/** 目撃が書かれたら捨てる取得（cache は目撃の窓で決める） */
+const SIGHTING_METHODS = [
+    'findOneWithCurrentPosition',
+    'findManyWithCurrentPosition',
+] as const;
+
 @Injectable({ providedIn: 'root' })
 export class OperationQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operations';
-    #obs: Record<string, Observable<any>> = {};
+    readonly #cache = new QueryCache();
+    readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {}
+    constructor(private readonly http: HttpClient) {
+        this.#invalidator.invalidated$
+            .pipe(takeUntilDestroyed())
+            .subscribe((tag) =>
+                this.#cache.clear(
+                    tag === 'timetable' ? TIMETABLE_METHODS : SIGHTING_METHODS,
+                ),
+            );
+    }
 
     findManyByCalendarId(params: {
         calendarId: string;
@@ -39,34 +64,21 @@ export class OperationQuery {
             return of([]);
         }
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyByCalendarId',
-                calendarId,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<
-                    OperationModel[]
-                >(`${this.#v3ApiUrl}/calendar/${calendarId}`, { observe: 'response' })
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationsDtoBuilder.buildFromModels(res.body);
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { calendarId },
+                fetch: () =>
+                    this.http.get<OperationModel[]>(
+                        `${this.#v3ApiUrl}/calendar/${calendarId}`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => OperationsDtoBuilder.buildFromModels(res.body)));
     }
 
     findManyBySpecificPeriod(params: {
@@ -76,35 +88,21 @@ export class OperationQuery {
     }): Observable<OperationDetailsDto[]> {
         const { from, to, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyBySpecificPeriod',
-                from,
-                to,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<
-                    OperationModel[]
-                >(`${this.#v3ApiUrl}/from/${from}/to/${to}`, { observe: 'response' })
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationsDtoBuilder.buildFromModels(res.body);
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { from, to },
+                fetch: () =>
+                    this.http.get<OperationModel[]>(
+                        `${this.#v3ApiUrl}/from/${from}/to/${to}`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => OperationsDtoBuilder.buildFromModels(res.body)));
     }
 
     findOneWithCurrentPosition(params: {
@@ -114,45 +112,33 @@ export class OperationQuery {
     }): Observable<OperationCurrentPositionDto> {
         const { operationId, searchTime, forceReload } = params;
 
-        const httpParams = new HttpParams({
-            fromObject: omitBy({ searchTime }, (v) => v === undefined),
-        });
-
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOneWithCurrentPosition',
-                operationId,
-                searchTime,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<OperationCurrentPositionModel>(
-                    `${this.#v3ApiUrl}/${operationId}/current-position`,
-                    {
-                        params: httpParams,
-                        observe: 'response',
-                    },
-                )
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationCurrentPositionDtoBuilder.buildFromModel(
-                            res.body,
-                        );
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { operationId, searchTime },
+                fetch: () => {
+                    const httpParams = new HttpParams({
+                        fromObject: omitBy(
+                            { searchTime },
+                            (v) => v === undefined,
+                        ),
+                    });
+                    return this.http.get<OperationCurrentPositionModel>(
+                        `${this.#v3ApiUrl}/${operationId}/current-position`,
+                        {
+                            params: httpParams,
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('sighting'),
+                        },
+                    );
+                },
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    OperationCurrentPositionDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 
     /** 複数の運用の現在位置を 1 回で取る（運用ごとの findOneWithCurrentPosition を束ねたもの）。 */
@@ -162,42 +148,30 @@ export class OperationQuery {
     }): Observable<OperationCurrentPositionDto[]> {
         const { operationIds, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyWithCurrentPosition',
-                operationIds,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<OperationCurrentPositionModel[]>(
-                    `${this.#v3ApiUrl}/current-positions`,
-                    {
-                        params: { operationIds: operationIds.join(',') },
-                        observe: 'response',
-                    },
-                )
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) =>
-                        (res.body ?? []).map((model) =>
-                            OperationCurrentPositionDtoBuilder.buildFromModel(
-                                model,
-                            ),
+                params: { operationIds },
+                fetch: () =>
+                    this.http.get<OperationCurrentPositionModel[]>(
+                        `${this.#v3ApiUrl}/current-positions`,
+                        {
+                            params: { operationIds: operationIds.join(',') },
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('sighting'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    (res.body ?? []).map((model) =>
+                        OperationCurrentPositionDtoBuilder.buildFromModel(
+                            model,
                         ),
                     ),
-                );
-        }
-
-        return this.#obs[key];
+                ),
+            );
     }
 
     /** ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。 */
@@ -207,38 +181,32 @@ export class OperationQuery {
     }): Observable<OperationTripsDto[]> {
         const { calendarId, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyWithTrips',
-                calendarId,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<
-                    OperationTripsModel[]
-                >(`${this.#v3ApiUrl}/calendar/${calendarId}/trips`, { observe: 'response' })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) =>
-                        res.body.map((operationTrips) => ({
-                            operation: OperationDtoBuilder.buildFromModel(
-                                operationTrips.operation,
-                            ),
-                            trips: operationTrips.trips.map((o) =>
-                                TripOperationListDtoBuilder.buildFromModel(o),
-                            ),
-                        })),
+                params: { calendarId },
+                fetch: () =>
+                    this.http.get<OperationTripsModel[]>(
+                        `${this.#v3ApiUrl}/calendar/${calendarId}/trips`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
                     ),
-                );
-        }
-
-        return this.#obs[key];
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    res.body.map((operationTrips) => ({
+                        operation: OperationDtoBuilder.buildFromModel(
+                            operationTrips.operation,
+                        ),
+                        trips: operationTrips.trips.map((o) =>
+                            TripOperationListDtoBuilder.buildFromModel(o),
+                        ),
+                    })),
+                ),
+            );
     }
 
     findOneWithTrips(params: {
@@ -247,62 +215,52 @@ export class OperationQuery {
     }): Observable<OperationTripsDto> {
         const { operationId, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOneWithTrips',
-                operationId,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<OperationTripsModel>(
-                    `${this.#v3ApiUrl}/${operationId}/trips`,
-                    { observe: 'response' },
-                )
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) => ({
-                        operation: OperationDtoBuilder.buildFromModel(
-                            res.body.operation,
-                        ),
-                        trips: res.body.trips.map((o) =>
-                            TripOperationListDtoBuilder.buildFromModel(o),
-                        ),
-                    })),
-                );
-        }
-
-        return this.#obs[key];
+                params: { operationId },
+                fetch: () =>
+                    this.http.get<OperationTripsModel>(
+                        `${this.#v3ApiUrl}/${operationId}/trips`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) => ({
+                    operation: OperationDtoBuilder.buildFromModel(
+                        res.body.operation,
+                    ),
+                    trips: res.body.trips.map((o) =>
+                        TripOperationListDtoBuilder.buildFromModel(o),
+                    ),
+                })),
+            );
     }
 
     findManyGroups(params?: {
         forceReload?: boolean;
     }): Observable<OperationGroupDto[]> {
         const { forceReload } = params ?? {};
-        const key = md5(JSON.stringify({ name: 'findManyGroups' }));
 
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<
-                    OperationGroupModel[]
-                >(`${this.#v3ApiUrl}/groups`, { observe: 'response' })
-                .pipe(
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                    map((res) =>
-                        OperationGroupsDtoBuilder.buildFromModels(res.body),
+        return this.#cache
+            .get({
+                name: 'findManyGroups',
+                params: {},
+                fetch: () =>
+                    this.http.get<OperationGroupModel[]>(
+                        `${this.#v3ApiUrl}/groups`,
+                        { observe: 'response' },
                     ),
-                );
-        }
-
-        return this.#obs[key];
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    OperationGroupsDtoBuilder.buildFromModels(res.body),
+                ),
+            );
     }
 }

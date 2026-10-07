@@ -1,9 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { omitBy } from 'es-toolkit';
-import { md5 } from 'js-md5';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { environment } from 'src/environments/environment';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -18,9 +20,17 @@ import { OperationSightingModel } from '../models/operation-sighting.model';
 @Injectable({ providedIn: 'root' })
 export class OperationSightingQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
-    #obs: Record<string, Observable<any>> = {};
+    readonly #cache = new QueryCache();
+    readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {}
+    constructor(private readonly http: HttpClient) {
+        this.#invalidator.invalidated$
+            .pipe(
+                filter((tag) => tag === 'sighting'),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => this.#cache.clear());
+    }
 
     findManyBySpecificPeriod(params: {
         from: string;
@@ -30,38 +40,29 @@ export class OperationSightingQuery {
     }): Observable<OperationSightingDetailsDto[]> {
         const { from, to, includeInvalidated, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findManyBySpecificPeriod',
-                from,
-                to,
-                includeInvalidated,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<
-                    OperationSightingModel[]
-                >(`${this.#v3ApiUrl}/from/${from}/to/${to}`, { params: omitBy({ includeInvalidated }, (v) => v === undefined), observe: 'response' })
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationSightingsDtoBuilder.buildFromModels(
-                            res.body,
-                        );
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { from, to, includeInvalidated },
+                fetch: () =>
+                    this.http.get<OperationSightingModel[]>(
+                        `${this.#v3ApiUrl}/from/${from}/to/${to}`,
+                        {
+                            params: omitBy(
+                                { includeInvalidated },
+                                (v) => v === undefined,
+                            ),
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('sighting'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    OperationSightingsDtoBuilder.buildFromModels(res.body),
+                ),
+            );
     }
 
     /**
@@ -99,45 +100,32 @@ export class OperationSightingQuery {
         numbers: string[],
         forceReload?: boolean,
     ): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: `findManyTimeCrossSections:${path}`,
-                numbers,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<Record<string, OperationSightingTimeCrossSectionModel>>(
-                    `${this.#v3ApiUrl}/time-cross-section/${path}`,
-                    {
+                params: { numbers },
+                fetch: () =>
+                    this.http.get<
+                        Record<string, OperationSightingTimeCrossSectionModel>
+                    >(`${this.#v3ApiUrl}/time-cross-section/${path}`, {
                         params: { [paramName]: numbers.join(',') },
                         observe: 'response',
-                    },
-                )
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
+                        cache: this.#invalidator.requestCache('sighting'),
                     }),
-                    map((res) =>
-                        Object.fromEntries(
-                            Object.entries(res.body ?? {}).map(([n, model]) => [
-                                n,
-                                OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                                    model,
-                                ),
-                            ]),
-                        ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    Object.fromEntries(
+                        Object.entries(res.body ?? {}).map(([n, model]) => [
+                            n,
+                            OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                                model,
+                            ),
+                        ]),
                     ),
-                );
-        }
-
-        return this.#obs[key];
+                ),
+            );
     }
 
     findOneTimeCrossSectionByOperationNumber(params: {
@@ -146,39 +134,27 @@ export class OperationSightingQuery {
     }): Observable<OperationSightingTimeCrossSectionDto> {
         const { operationNumber, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOneTimeCrossSectionByOperationNumber',
-                operationNumber,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<OperationSightingTimeCrossSectionModel>(
-                    `${this.#v3ApiUrl}/time-cross-section/operation-number/${operationNumber}`,
-                    {
-                        observe: 'response',
-                    },
-                )
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                            res.body,
-                        );
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { operationNumber },
+                fetch: () =>
+                    this.http.get<OperationSightingTimeCrossSectionModel>(
+                        `${this.#v3ApiUrl}/time-cross-section/operation-number/${operationNumber}`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('sighting'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                        res.body,
+                    ),
+                ),
+            );
     }
 
     findOneTimeCrossSectionByFormationNumber(params: {
@@ -187,38 +163,26 @@ export class OperationSightingQuery {
     }): Observable<OperationSightingTimeCrossSectionDto> {
         const { formationNumber, forceReload } = params;
 
-        const key = md5(
-            JSON.stringify({
+        return this.#cache
+            .get({
                 name: 'findOneTimeCrossSectionByFormationNumber',
-                formationNumber,
-            }),
-        );
-
-        if (forceReload) {
-            this.#obs[key] = undefined;
-        }
-
-        if (!this.#obs[key]) {
-            this.#obs[key] = this.http
-                .get<OperationSightingTimeCrossSectionModel>(
-                    `${this.#v3ApiUrl}/time-cross-section/formation-number/${formationNumber}`,
-                    {
-                        observe: 'response',
-                    },
-                )
-                .pipe(
-                    shareReplay({
-                        bufferSize: 1,
-                        refCount: true,
-                    }),
-                    map((res) => {
-                        return OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                            res.body,
-                        );
-                    }),
-                );
-        }
-
-        return this.#obs[key];
+                params: { formationNumber },
+                fetch: () =>
+                    this.http.get<OperationSightingTimeCrossSectionModel>(
+                        `${this.#v3ApiUrl}/time-cross-section/formation-number/${formationNumber}`,
+                        {
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('sighting'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(
+                map((res) =>
+                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                        res.body,
+                    ),
+                ),
+            );
     }
 }

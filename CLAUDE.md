@@ -129,4 +129,4 @@ async fetchData(): Promise<void> {
 
 ## HTTP / 認証
 
-`AuthInterceptor` が `x-sotetsu-lab-authorization` ヘッダーを付与する。API エンドポイントは `/v3/` を使用する（v2 は全て移行済み）。インフラクエリは `HttpParams` でクエリパラメータを構築し、`md5(JSON.stringify(params))` をキーに `shareReplay` でキャッシュし、`forceReload: true` でキャッシュを破棄できる。
+`AuthInterceptor` が `x-sotetsu-lab-authorization` ヘッダーを付与する。API エンドポイントは `/v3/` を使用する（v2 は全て移行済み）。インフラクエリは `HttpParams` でクエリパラメータを構築し、`core/query-cache/query-cache.ts` の `QueryCache`（`md5` のキー + `shareReplay`）でキャッシュする。`forceReload: true` でそのキーを作り直す。書き込みが成功したら、libs の usecase service が `QueryInvalidator.invalidate('timetable' | 'sighting')` を呼び、関係する query がキャッシュを捨てる。tag の付く取得は `cache: QueryInvalidator.requestCache(tag)` を渡す。列車情報を書いた後の 10 分は、時刻表系の GET が `cache: 'reload'` になる（API の `private, max-age=600` と対。目撃は `no-store` なので窓 0。docs/adr/0002）。
