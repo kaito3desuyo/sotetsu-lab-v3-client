@@ -8,11 +8,11 @@ export type QueryInvalidationTag = 'timetable' | 'sighting';
  * 書いた後、その tag の GET を `cache: 'reload'` で取る長さ。
  * API の CACHE_CONTROL と同じでなければならない
  * （sotetsu-lab-v3-api の docs/superpowers/specs/2026-10-07-browser-private-cache-design.md）。
- * - timetable: CACHE_CONTROL.TIMETABLE（`private, max-age=600`）
+ * - timetable: CACHE_CONTROL.TIMETABLE（`private, max-age=3600`）。改正では calendarId ごと URL が変わるので、1 時間でよい（docs/adr/0002 の追記）
  * - sighting: CACHE_CONTROL.REALTIME（`no-store`）なのでブラウザに残らず、窓は要らない
  */
 export const RELOAD_WINDOW_MS: Record<QueryInvalidationTag, number> = {
-    timetable: 600_000,
+    timetable: 3_600_000,
     sighting: 0,
 };
 

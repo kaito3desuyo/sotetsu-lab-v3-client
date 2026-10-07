@@ -42,13 +42,13 @@ describe('QueryInvalidator', () => {
         expect(invalidator.requestCache('timetable')).toBe('default');
     });
 
-    it("'timetable' から 10 分のあいだは reload、過ぎたら default", () => {
+    it("'timetable' から 1 時間（API の max-age=3600）のあいだは reload、過ぎたら default", () => {
         const { invalidator } = setup();
 
         invalidator.invalidate('timetable');
         expect(invalidator.requestCache('timetable')).toBe('reload');
 
-        jest.advanceTimersByTime(RELOAD_WINDOW_MS.timetable - 1);
+        jest.advanceTimersByTime(60 * 60 * 1000 - 1);
         expect(invalidator.requestCache('timetable')).toBe('reload');
 
         jest.advanceTimersByTime(1);
@@ -77,7 +77,7 @@ describe('QueryInvalidator', () => {
         expect(invalidator.requestCache('timetable')).toBe('default');
     });
 
-    it('localStorage が投げても、そのタブでは 10 分の窓が効く', () => {
+    it('localStorage が投げても、そのタブでは 1 時間の窓が効く', () => {
         jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
             throw new Error('blocked');
         });
