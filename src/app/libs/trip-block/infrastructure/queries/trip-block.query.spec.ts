@@ -194,11 +194,11 @@ describe('TripBlockQuery', () => {
         controller.verify();
     });
 
-    it('書き込みから 10 分を過ぎたら、取り直しても cache は default に戻る', () => {
+    it('書き込みから 1 時間を過ぎたら、取り直しても cache は default に戻る', () => {
         const { query, controller, invalidator } = setup();
 
         invalidator.invalidate('timetable');
-        jest.advanceTimersByTime(600_000);
+        jest.advanceTimersByTime(60 * 60 * 1000);
         query.findOneById({ id: 'b1' }).subscribe();
         const req = controller.expectOne(`${v3ApiUrl}/b1`);
 
