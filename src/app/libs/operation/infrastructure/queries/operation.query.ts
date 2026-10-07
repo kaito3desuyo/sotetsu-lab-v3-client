@@ -39,11 +39,13 @@ const SIGHTING_METHODS = [
 
 @Injectable({ providedIn: 'root' })
 export class OperationQuery {
+    private readonly http = inject(HttpClient);
+
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operations';
     readonly #cache = new QueryCache();
     readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {
+    constructor() {
         this.#invalidator.invalidated$
             .pipe(takeUntilDestroyed())
             .subscribe((tag) =>

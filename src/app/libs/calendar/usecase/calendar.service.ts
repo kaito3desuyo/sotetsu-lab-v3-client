@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CalendarQuery } from '../infrastructure/queries/calendar.query';
 import { CalendarDetailsDto } from './dtos/calendar-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarService {
-    constructor(private readonly calendarQuery: CalendarQuery) {}
+    private readonly calendarQuery = inject(CalendarQuery);
 
     findMany(params?: {
         serviceName?: string;

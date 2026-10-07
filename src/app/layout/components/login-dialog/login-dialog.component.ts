@@ -32,6 +32,8 @@ import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
     ],
 })
 export class LoginDialogComponent {
+    dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
+
     readonly #fb = inject(FormBuilder);
     readonly #http = inject(HttpClient);
     readonly #snackBar = inject(MatSnackBar);
@@ -57,8 +59,6 @@ export class LoginDialogComponent {
     });
     readonly passwordVisible = signal<boolean>(false);
     readonly submitting = signal<boolean>(false);
-
-    constructor(public dialogRef: MatDialogRef<LoginDialogComponent>) {}
 
     onClickClose() {
         this.dialogRef.close();

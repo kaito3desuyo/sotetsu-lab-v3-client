@@ -1,10 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-    ChangeDetectionStrategy,
-    Component,
-    inject,
-    Inject,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -31,6 +26,9 @@ import { OperationSightingRestorationDialogService } from './operation-sighting-
     ],
 })
 export class OperationSightingRestorationDialogComponent {
+    private readonly data =
+        inject<OperationSightingInvalidationDialogData>(MAT_DIALOG_DATA);
+
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
     readonly #operationSightingRestorationDialogService = inject(
@@ -40,11 +38,6 @@ export class OperationSightingRestorationDialogComponent {
     readonly form = this.#fb.group({
         reason: this.#fb.control('', [Validators.required]),
     });
-
-    constructor(
-        @Inject(MAT_DIALOG_DATA)
-        private readonly data: OperationSightingInvalidationDialogData,
-    ) {}
 
     onClickClose(): void {
         this.#operationSightingRestorationDialogService.close();

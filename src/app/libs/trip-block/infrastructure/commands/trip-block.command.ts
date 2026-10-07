@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -14,9 +14,9 @@ import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockCommand {
-    readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
+    private readonly http = inject(HttpClient);
 
-    constructor(private readonly http: HttpClient) {}
+    readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
 
     createMany(
         body: CreateTripBlockDto[],

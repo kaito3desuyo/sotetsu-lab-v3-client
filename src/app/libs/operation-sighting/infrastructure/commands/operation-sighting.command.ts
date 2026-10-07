@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
@@ -10,9 +10,9 @@ import { RestoreOperationSightingDto } from '../../usecase/dtos/restore-operatio
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingCommand {
-    readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
+    private readonly http = inject(HttpClient);
 
-    constructor(private readonly http: HttpClient) {}
+    readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
 
     post(body: PostOperationSightingDto): Observable<void> {
         return this.http.post(`${this.#v3ApiUrl}`, body).pipe(

@@ -36,6 +36,8 @@ import { UserService } from 'src/app/libs/user/usecase/user.service';
     ],
 })
 export class RegisterDialogComponent {
+    dialogRef = inject<MatDialogRef<RegisterDialogComponent>>(MatDialogRef);
+
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
     readonly #userService = inject(UserService);
@@ -111,8 +113,6 @@ export class RegisterDialogComponent {
     readonly passwordVisible = signal<boolean>(false);
     readonly confirmPasswordVisible = signal<boolean>(false);
     readonly submitting = signal<boolean>(false);
-
-    constructor(public dialogRef: MatDialogRef<RegisterDialogComponent>) {}
 
     onClickClose(): void {
         this.dialogRef.close();

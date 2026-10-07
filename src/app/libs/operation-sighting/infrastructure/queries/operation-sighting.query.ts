@@ -19,11 +19,13 @@ import { OperationSightingModel } from '../models/operation-sighting.model';
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingQuery {
+    private readonly http = inject(HttpClient);
+
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
     readonly #cache = new QueryCache();
     readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {
+    constructor() {
         this.#invalidator.invalidated$
             .pipe(
                 filter((tag) => tag === 'sighting'),

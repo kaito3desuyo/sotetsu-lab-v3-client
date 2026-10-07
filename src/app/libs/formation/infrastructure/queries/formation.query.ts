@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
@@ -10,10 +10,10 @@ import { FormationModel } from '../models/formation.model';
 
 @Injectable({ providedIn: 'root' })
 export class FormationQuery {
+    private readonly http = inject(HttpClient);
+
     readonly #v3ApiUrl = environment.apiUrl + '/v3/formations';
     readonly #cache = new QueryCache();
-
-    constructor(private readonly http: HttpClient) {}
 
     findManyBySpecificDate(params: {
         date: string;

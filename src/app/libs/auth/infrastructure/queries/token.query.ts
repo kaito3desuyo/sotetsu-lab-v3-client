@@ -1,5 +1,5 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TokenDetailsDto } from '../../usecase/dtos/token-details.dto';
@@ -9,7 +9,9 @@ export class TokenQuery {
     readonly #http: HttpClient;
     readonly #baseUrl = environment.backendUrl + '/auth';
 
-    constructor(handler: HttpBackend) {
+    constructor() {
+        const handler = inject(HttpBackend);
+
         this.#http = new HttpClient(handler);
     }
 

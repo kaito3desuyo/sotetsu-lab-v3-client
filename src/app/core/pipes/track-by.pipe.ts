@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import has from 'just-has';
 import get from 'just-safe-get';
 import set from 'just-safe-set';
@@ -12,10 +12,9 @@ const cache: TrackByFunctionCache = Object.create(null);
 
 @Pipe({
     name: 'trackBy',
-    standalone: false
 })
 export class TrackByPipe implements PipeTransform {
-    constructor(private readonly logger: NGXLogger) {}
+    private readonly logger = inject(NGXLogger);
 
     transform(
         propertyName: string | 'this',

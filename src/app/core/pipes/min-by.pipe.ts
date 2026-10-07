@@ -3,7 +3,6 @@ import { minBy } from 'lodash-es';
 
 @Pipe({
     name: 'minBy',
-    standalone: false
 })
 export class MinByPipe implements PipeTransform {
     transform<T>(array: T[], options: { propertyName: keyof T }): T {

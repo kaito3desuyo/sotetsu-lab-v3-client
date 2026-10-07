@@ -11,12 +11,12 @@ import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.d
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingService {
-    readonly #queryInvalidator = inject(QueryInvalidator);
+    private readonly operationSightingCommand = inject(
+        OperationSightingCommand,
+    );
+    private readonly operationSightingQuery = inject(OperationSightingQuery);
 
-    constructor(
-        private readonly operationSightingCommand: OperationSightingCommand,
-        private readonly operationSightingQuery: OperationSightingQuery,
-    ) {}
+    readonly #queryInvalidator = inject(QueryInvalidator);
 
     findManyBySpecificPeriod(params: {
         from: string;

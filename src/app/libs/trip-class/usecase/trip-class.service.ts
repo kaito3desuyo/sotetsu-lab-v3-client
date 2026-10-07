@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { TripClassQuery } from '../infrastructure/queries/trip-class.query';
 import { TripClassDetailsDto } from './dtos/trip-class-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripClassService {
-    constructor(private readonly tripClassQuery: TripClassQuery) {}
+    private readonly tripClassQuery = inject(TripClassQuery);
 
     findMany(params: {
         forceReload?: boolean;
