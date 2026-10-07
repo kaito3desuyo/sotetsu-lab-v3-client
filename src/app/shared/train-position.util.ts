@@ -123,6 +123,62 @@ export function findContinuations(
     return continuations;
 }
 
+/** 出庫する列車を、発時刻のどれだけ前から始発駅に停車中として出すか（ユーザー指示 2026-10-07: 3 分前ぐらい） */
+const DEPOT_OUT_LEAD_MS = 3 * 60 * 1000;
+
+/**
+ * 折り返し: 同じ運用の列車が終点に着き、別の trip block（逆向き）で同じ駅を発つとき、
+ * 発つ列車の tripId → 着く列車 を返す。折り返しは block に含まれないので運用でつなぐ。
+ * 入庫する列車・出庫する列車は車両基地を挟むので含めない。
+ */
+export function findTurnarounds(
+    tripBlocks: readonly TripBlockDetailsDto[],
+): ReadonlyMap<string, TripDetailsDto> {
+    const entriesByOperationId = new Map<
+        string,
+        {
+            trip: TripDetailsDto;
+            block: TripBlockDetailsDto;
+            stops: TimeDetailsDto[];
+        }[]
+    >();
+    for (const block of tripBlocks) {
+        for (const trip of block.trips ?? []) {
+            const operationId = trip.tripOperationLists?.[0]?.operationId;
+            const stops = timedStops(trip.times);
+            if (!operationId || stops.length === 0) {
+                continue;
+            }
+            const entries = entriesByOperationId.get(operationId) ?? [];
+            entries.push({ trip, block, stops });
+            entriesByOperationId.set(operationId, entries);
+        }
+    }
+
+    const turnarounds = new Map<string, TripDetailsDto>();
+    for (const entries of entriesByOperationId.values()) {
+        entries.sort(
+            (a, b) => minutesOfDay(a.stops[0]) - minutesOfDay(b.stops[0]),
+        );
+        for (let i = 0; i < entries.length - 1; i++) {
+            const previous = entries[i];
+            const next = entries[i + 1];
+            const last = previous.stops[previous.stops.length - 1];
+            if (
+                next.trip.tripId &&
+                previous.block !== next.block &&
+                !previous.trip.depotIn &&
+                !next.trip.depotOut &&
+                last.stationId != null &&
+                last.stationId === next.stops[0].stationId
+            ) {
+                turnarounds.set(next.trip.tripId, previous.trip);
+            }
+        }
+    }
+    return turnarounds;
+}
+
 /**
  * 1 trip 分の times から、駅軸に存在する停車点のみを stopSequence 順に抽出する。
  * 駅軸に存在しない駅（路線を跨ぐ列車の他路線区間）・発着時刻が両方とも
@@ -231,6 +287,8 @@ function estimateTripPosition(
  * - 停車中判定: 駅 s の着 ≤ at < 発 → stopped
  * - 走行中判定: 駅 s の発 ≤ at < 駅 s+1 の着 → between（progress は線形補間）
  * - 通過駅（駅軸に存在しない・発着時刻が両方欠落）は区間補間に自然に吸収される
+ * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に停車中として出す
+ * - 出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す（基地にいるあいだは出さない）
  * - 鉄道日（4 時境界）を考慮し、`at` の属する営業日を基準に times の日オフセットを実体化する
  *
  * @param tripBlocks 対象ダイヤの全 tripBlock（tripDirection 上下分含めて呼び出し側で束ねたもの）
@@ -249,6 +307,7 @@ export function estimatePositions(
     );
     const base = getRailwayDate(at);
     const continuations = findContinuations(tripBlocks);
+    const turnarounds = findTurnarounds(tripBlocks);
 
     const positions: TrainPosition[] = [];
     for (const block of tripBlocks) {
@@ -290,6 +349,37 @@ export function estimatePositions(
                         type: 'stopped',
                         tripId: trip.tripId,
                         stationId: last.stationId,
+                    });
+                    continue;
+                }
+            }
+            // 発時刻の前から始発駅に停車中として出す。
+            // 折り返しは前の列車が着いてから、出庫は発時刻の DEPOT_OUT_LEAD_MS 前から
+            const first = timedStops(trip.times)[0];
+            if (
+                first?.stationId != null &&
+                axisStationIds.has(first.stationId)
+            ) {
+                const departure = resolveDeparture(base, first);
+                const previous = turnarounds.get(trip.tripId);
+                const previousLast = previous
+                    ? timedStops(previous.times).at(-1)
+                    : undefined;
+                const appearsAt = previousLast
+                    ? resolveArrival(base, previousLast)
+                    : trip.depotOut && departure !== undefined
+                      ? new Date(departure.getTime() - DEPOT_OUT_LEAD_MS)
+                      : undefined;
+                if (
+                    appearsAt !== undefined &&
+                    departure !== undefined &&
+                    appearsAt <= at &&
+                    at < departure
+                ) {
+                    positions.push({
+                        type: 'stopped',
+                        tripId: trip.tripId,
+                        stationId: first.stationId,
                     });
                 }
             }

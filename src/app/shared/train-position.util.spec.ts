@@ -243,6 +243,140 @@ describe('estimatePositions', () => {
         ]);
     });
 
+    describe('折り返し（同じ運用が終点に着き、逆向きの別のまとまりで発つ）', () => {
+        function operatedTrip(
+            tripId: string,
+            operationId: string,
+            times: TimeDetailsDto[],
+            overrides: Partial<TripDetailsDto> = {},
+        ): TripDetailsDto {
+            return {
+                tripId,
+                times,
+                tripOperationLists: [{ operationId }],
+                ...overrides,
+            } as TripDetailsDto;
+        }
+
+        // 例: 上り T1 が C（横浜）に着き、同じ運用が下り T2 として C を発つ
+        function turnaroundBlocks(
+            nextOperationId = 'O1',
+            previousOverrides: Partial<TripDetailsDto> = {},
+            nextOverrides: Partial<TripDetailsDto> = {},
+        ): TripBlockDetailsDto[] {
+            return [
+                tripBlock([
+                    operatedTrip(
+                        'T1',
+                        'O1',
+                        [
+                            time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                            time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                        ],
+                        previousOverrides,
+                    ),
+                ]),
+                tripBlock([
+                    operatedTrip(
+                        'T2',
+                        nextOperationId,
+                        [
+                            time({ stationId: 'C', stopSequence: 1, departureTime: '08:18:00' }),
+                            time({ stationId: 'A', stopSequence: 2, arrivalTime: '08:28:00' }),
+                        ],
+                        nextOverrides,
+                    ),
+                ]),
+            ];
+        }
+
+        it('前の列車が着いてから発時刻までは、これから発つ列車を停車中として出す', () => {
+            expect(
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0)),
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C' }]);
+            expect(
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 17, 59)),
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C' }]);
+            expect(
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 18, 0)),
+            ).toEqual([
+                { type: 'between', tripId: 'T2', fromStationId: 'C', toStationId: 'A', progress: 0 },
+            ]);
+        });
+
+        it('前の列車が着く前は出さない', () => {
+            expect(
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 9, 59)),
+            ).toEqual([
+                expect.objectContaining({ type: 'between', tripId: 'T1' }),
+            ]);
+        });
+
+        it('運用が違えば出さない', () => {
+            expect(
+                estimatePositions(turnaroundBlocks('O2'), AXIS_ABC, new Date(2026, 6, 4, 8, 12, 0)),
+            ).toEqual([]);
+        });
+
+        it('前の列車が入庫するなら出さない（車両基地にいるので駅にはいない）', () => {
+            expect(
+                estimatePositions(
+                    turnaroundBlocks('O1', { depotIn: true }),
+                    AXIS_ABC,
+                    new Date(2026, 6, 4, 8, 12, 0),
+                ),
+            ).toEqual([]);
+        });
+
+        it('発つ列車が出庫なら、前の列車が着いても出さない', () => {
+            expect(
+                estimatePositions(
+                    turnaroundBlocks('O1', {}, { depotOut: true }),
+                    AXIS_ABC,
+                    new Date(2026, 6, 4, 8, 12, 0),
+                ),
+            ).toEqual([]);
+        });
+    });
+
+    it('出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す', () => {
+        const tripBlocks = [
+            tripBlock([
+                {
+                    ...trip('T1', [
+                        time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                        time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                    ]),
+                    depotOut: true,
+                },
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 56, 59))).toEqual([]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 57, 0))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 59, 59))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 0, 0))).toEqual([
+            { type: 'between', tripId: 'T1', fromStationId: 'A', toStationId: 'C', progress: 0 },
+        ]);
+    });
+
+    it('出庫しない列車は、発時刻の前には出さない', () => {
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                    time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                ]),
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 58, 0))).toEqual([]);
+    });
+
     it('駅軸の最後の停車駅から他線へ直通する列車は、そこを発つまで停車中として残す', () => {
         // 例: 本線の二俣川に着き、いずみ野線（駅軸外の D）へ直通する列車
         const axisAB = [station('A'), station('B')];
