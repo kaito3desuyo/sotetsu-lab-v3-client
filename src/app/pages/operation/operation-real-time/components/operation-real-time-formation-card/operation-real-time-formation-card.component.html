@@ -1,12 +1,14 @@
 @let expectedSightingOperationVm = expectedSightingOperation();
 @let sightingVm = latestSighting();
-@let dayCount = sightingVm?.sightingTime | operationRealTimeDayCount;
-@let sightingTime = sightingVm?.sightingTime;
-@let updatedAt = sightingVm?.updatedAt;
+@let dayCount =
+    $safeNavigationMigration(sightingVm?.sightingTime)
+        | operationRealTimeDayCount;
+@let sightingTime = $safeNavigationMigration(sightingVm?.sightingTime);
+@let updatedAt = $safeNavigationMigration(sightingVm?.updatedAt);
 @let positionVm = currentPosition();
-@let prev = positionVm?.prev;
-@let current = positionVm?.current;
-@let next = positionVm?.next;
+@let prev = $safeNavigationMigration(positionVm?.prev);
+@let current = $safeNavigationMigration(positionVm?.current);
+@let next = $safeNavigationMigration(positionVm?.next);
 @let showsHistories = isVisibleSightingHistories() && hasVisibleHistories();
 @let showsPosition =
     isVisibleCurrentPosition() && (!!prev || !!current || !!next);

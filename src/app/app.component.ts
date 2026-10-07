@@ -5,6 +5,7 @@ import {
     inject,
     OnDestroy,
     OnInit,
+    ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
@@ -30,6 +31,7 @@ import { LoadingService } from './shared/app-shared/loading/loading.service';
     selector: 'app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [LayoutComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {

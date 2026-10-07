@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TripClassChipComponent } from './trip-class-chip.component';
 
@@ -11,6 +11,7 @@ import { TripClassChipComponent } from './trip-class-chip.component';
             [size]="size"
         ></app-trip-class-chip>
     `,
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [TripClassChipComponent],
 })
 class HostComponent {

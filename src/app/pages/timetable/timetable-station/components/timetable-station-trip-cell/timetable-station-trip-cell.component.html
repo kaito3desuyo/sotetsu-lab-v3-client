@@ -18,7 +18,7 @@
     class="tw-grid tw-min-w-0 tw-grid-cols-[2.75rem_minmax(0,1fr)] tw-gap-x-2 tw-p-1.5"
 >
     @let operationNumber =
-        trip().tripOperationLists[0]?.operationId
+        $safeNavigationMigration(trip().tripOperationLists[0]?.operationId)
             | findById
                 : {
                       array: operations(),
@@ -37,9 +37,11 @@
             ? operationSightingTimeCrossSections()[operationNumber]
             : undefined;
     @let currentFormationNumber =
-        timeCrossSection?.expectedSighting?.formation?.formationNumber;
+        $safeNavigationMigration(
+            timeCrossSection?.expectedSighting?.formation?.formationNumber
+        );
     @let currentFormationDayCount =
-        timeCrossSection?.latestSighting?.sightingTime
+        $safeNavigationMigration(timeCrossSection?.latestSighting?.sightingTime)
             | calculateDayCountFromToday;
 
     <!-- 左の列: 幅 2.75rem 固定。運用番号チップ（最大「95G」）と充当編成番号（最大

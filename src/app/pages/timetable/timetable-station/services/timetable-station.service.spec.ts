@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { TestBed, inject } from '@angular/core/testing';
 import { lastValueFrom, of, throwError } from 'rxjs';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -12,7 +12,7 @@ import { TimetableStationService } from './timetable-station.service';
 describe('Service: TimetableStation', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [provideHttpClient(), TimetableStationService],
+            providers: [provideHttpClient(withXhr()), TimetableStationService],
         });
     });
 
@@ -45,7 +45,7 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
     const setupWith = (sightingService: unknown) => {
         TestBed.configureTestingModule({
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 TimetableStationService,
                 {
                     provide: OperationSightingService,
@@ -120,7 +120,7 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         const findManyByFilter = jest.fn(() => of(tripBlocks));
         TestBed.configureTestingModule({
             providers: [
-                provideHttpClient(),
+                provideHttpClient(withXhr()),
                 TimetableStationService,
                 { provide: TripBlockService, useValue: { findManyByFilter } },
             ],

@@ -179,9 +179,12 @@
                                             *ngTemplateOutlet="
                                                 endpointName;
                                                 context: {
-                                                    $implicit: endpoints().get(
-                                                        trip.tripId
-                                                    )?.originName,
+                                                    $implicit:
+                                                        $safeNavigationMigration(
+                                                            endpoints().get(
+                                                                trip.tripId
+                                                            )?.originName
+                                                        ),
                                                 }
                                             "
                                         ></ng-container>
@@ -436,9 +439,12 @@
                                             *ngTemplateOutlet="
                                                 endpointName;
                                                 context: {
-                                                    $implicit: endpoints().get(
-                                                        trip.tripId
-                                                    )?.terminusName,
+                                                    $implicit:
+                                                        $safeNavigationMigration(
+                                                            endpoints().get(
+                                                                trip.tripId
+                                                            )?.terminusName
+                                                        ),
                                                 }
                                             "
                                         ></ng-container>

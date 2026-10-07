@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import {
     ComponentFixture,
     ComponentFixtureAutoDetect,
@@ -99,7 +99,11 @@ const makeCrossSection = (
         },
     }) as never;
 
-@Component({ selector: 'app-timetable-search-card-c', template: '' })
+@Component({
+    selector: 'app-timetable-search-card-c',
+    changeDetection: ChangeDetectionStrategy.Eager,
+    template: '',
+})
 class StubSearchCardComponent {}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

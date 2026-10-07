@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LibraryListCardPComponent } from '../library-list-card-p/library-list-card-p.component';
 
 @Component({
     selector: 'app-library-list-card-c',
     templateUrl: './library-list-card-c.component.html',
     styleUrls: ['./library-list-card-c.component.scss'],
-    imports: [LibraryListCardPComponent]
+    changeDetection: ChangeDetectionStrategy.Eager,
+    imports: [LibraryListCardPComponent],
 })
 export class LibraryListCardCComponent {}

@@ -1,4 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import {
+    Component,
+    inject,
+    signal,
+    ChangeDetectionStrategy,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
     ActivatedRouteSnapshot,
@@ -18,7 +23,8 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     templateUrl: './layout.component.html',
     styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
-    imports: [RouterModule, HeaderComponent, SidenavComponent]
+    changeDetection: ChangeDetectionStrategy.Eager,
+    imports: [RouterModule, HeaderComponent, SidenavComponent],
 })
 export class LayoutComponent {
     readonly #router = inject(Router);

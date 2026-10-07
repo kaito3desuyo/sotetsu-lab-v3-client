@@ -5,7 +5,10 @@ import {
 } from '@angular/common/http';
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { provideClientHydration } from '@angular/platform-browser';
+import {
+    provideClientHydration,
+    withNoIncrementalHydration,
+} from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
     provideRouter,
@@ -22,7 +25,7 @@ export const appConfig: ApplicationConfig = {
             withEnabledBlockingInitialNavigation(),
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
         ),
-        provideClientHydration(),
+        provideClientHydration(withNoIncrementalHydration()),
         provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
         importProvidersFrom([CoreModule]),
