@@ -290,13 +290,13 @@ describe('estimatePositions', () => {
             ];
         }
 
-        it('前の列車が着いてから発時刻までは、これから発つ列車を折返しの印つきで停車中として出す', () => {
+        it('前の列車が着いてから発時刻までは、これから発つ列車を折返しとして出す', () => {
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0)),
-            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', turnaround: true }]);
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', stoppedReason: 'turnaround' }]);
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 17, 59)),
-            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', turnaround: true }]);
+            ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', stoppedReason: 'turnaround' }]);
             expect(
                 estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 18, 0)),
             ).toEqual([
@@ -318,12 +318,19 @@ describe('estimatePositions', () => {
             ).toEqual([]);
         });
 
-        it('前の列車が入庫するなら出さない（車両基地にいるので駅にはいない）', () => {
+        it('前の列車が入庫するなら、発つ列車は折返しとして出さない（着後 3 分は前の列車が入庫中）', () => {
             expect(
                 estimatePositions(
                     turnaroundBlocks('O1', { depotIn: true }),
                     AXIS_ABC,
                     new Date(2026, 6, 4, 8, 12, 0),
+                ),
+            ).toEqual([{ type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' }]);
+            expect(
+                estimatePositions(
+                    turnaroundBlocks('O1', { depotIn: true }),
+                    AXIS_ABC,
+                    new Date(2026, 6, 4, 8, 14, 0),
                 ),
             ).toEqual([]);
         });
@@ -339,7 +346,7 @@ describe('estimatePositions', () => {
         });
     });
 
-    it('出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す', () => {
+    it('出庫する列車は、発時刻の 3 分前から始発駅に出庫中として出す', () => {
         const tripBlocks = [
             tripBlock([
                 {
@@ -354,14 +361,36 @@ describe('estimatePositions', () => {
 
         expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 56, 59))).toEqual([]);
         expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 57, 0))).toEqual([
-            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+            { type: 'stopped', tripId: 'T1', stationId: 'A', stoppedReason: 'depotOut' },
         ]);
         expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 59, 59))).toEqual([
-            { type: 'stopped', tripId: 'T1', stationId: 'A' },
+            { type: 'stopped', tripId: 'T1', stationId: 'A', stoppedReason: 'depotOut' },
         ]);
         expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 0, 0))).toEqual([
             { type: 'between', tripId: 'T1', fromStationId: 'A', toStationId: 'C', progress: 0 },
         ]);
+    });
+
+    it('入庫する列車は、終点に着いてから 3 分間、入庫中として出す', () => {
+        const tripBlocks = [
+            tripBlock([
+                {
+                    ...trip('T1', [
+                        time({ stationId: 'A', stopSequence: 1, departureTime: '08:00:00' }),
+                        time({ stationId: 'C', stopSequence: 2, arrivalTime: '08:10:00' }),
+                    ]),
+                    depotIn: true,
+                },
+            ]),
+        ];
+
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 12, 59))).toEqual([
+            { type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' },
+        ]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 13, 0))).toEqual([]);
     });
 
     it('出庫しない列車は、発時刻の前には出さない', () => {

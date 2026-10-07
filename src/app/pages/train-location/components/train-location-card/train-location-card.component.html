@@ -54,7 +54,7 @@
         }
     </span>
 
-    <!-- 下段（モック09準拠）: 列車番号+進行方向矢印（停車中は矢印の代わりに「停車中」、折返し中は「折返し」）（左）
+    <!-- 下段（モック09準拠）: 列車番号+進行方向矢印（停車中は矢印の代わりに「停車中」、折返し・入庫・出庫は「折返し」「入庫中」「出庫中」）（左）
          + 充当編成番号・所属会社（右端。実装の補足情報として維持） -->
     <span
         class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-1 tw-text-grey-600"
@@ -63,7 +63,7 @@
             <span>{{ card().tripNumber }}</span>
             @if (status() === 'stopped') {
                 <span class="tw-font-bold tw-text-primary-700">{{
-                    card().isTurnaround ? '折返し' : '停車中'
+                    stoppedLabel()
                 }}</span>
             } @else {
                 <span aria-hidden="true">{{

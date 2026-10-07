@@ -55,14 +55,14 @@ describe('buildTrainLocationRows', () => {
         }
     });
 
-    it('折返しの位置のカードには isTurnaround を立てる（元のカードは書き換えない）', () => {
+    it('停車の理由（折返し・入庫・出庫）がある位置のカードには stoppedReason を付ける（元のカードは書き換えない）', () => {
         const original = card({ tripId: 't-out', direction: 'outbound' });
         const cardsById = new Map([
             ['t-out', original],
             ['t-in', card({ tripId: 't-in', direction: 'inbound' })],
         ]);
         const positions: TrainPosition[] = [
-            { type: 'stopped', tripId: 't-out', stationId: 'A', turnaround: true },
+            { type: 'stopped', tripId: 't-out', stationId: 'A', stoppedReason: 'turnaround' },
             { type: 'stopped', tripId: 't-in', stationId: 'A' },
         ];
 
@@ -72,9 +72,9 @@ describe('buildTrainLocationRows', () => {
         if (stationA?.kind !== 'station') {
             throw new Error('station A not found');
         }
-        expect(stationA.rightCards[0].isTurnaround).toBe(true);
-        expect(stationA.leftCards[0].isTurnaround).toBeUndefined();
-        expect(original.isTurnaround).toBeUndefined();
+        expect(stationA.rightCards[0].stoppedReason).toBe('turnaround');
+        expect(stationA.leftCards[0].stoppedReason).toBeUndefined();
+        expect(original.stoppedReason).toBeUndefined();
     });
 
     it('同一駅に複数停車 → 集約対象の配列に全件積む（省略しない）', () => {

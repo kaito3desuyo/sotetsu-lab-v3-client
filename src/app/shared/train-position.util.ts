@@ -10,13 +10,26 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
  * データ取得・HTTP・グローバル状態は一切扱わない（呼び出し側の責務）。
  */
 
+/**
+ * 駅にいる理由。ホームにいると言い切れないので「停車中」と出さないもの。
+ * turnaround = 折返しで発時刻を待つ / depotIn = 終点に着いて入庫する / depotOut = 出庫して発時刻を待つ
+ */
+export type StoppedReason = 'turnaround' | 'depotIn' | 'depotOut';
+
+/** 駅にいる理由の表示（カード・駅のパネルで使う） */
+export const STOPPED_REASON_LABEL: Readonly<Record<StoppedReason, string>> = {
+    turnaround: '折返し',
+    depotIn: '入庫中',
+    depotOut: '出庫中',
+};
+
 export type TrainPosition =
     | {
           type: 'stopped';
           tripId: string;
           stationId: string;
-          /** 折返しで発時刻を待っている（ホームか留置線かは分からない） */
-          turnaround?: true;
+          /** 駅にいる理由（ふつうの停車なら無い） */
+          stoppedReason?: StoppedReason;
       }
     | {
           type: 'between';
@@ -125,8 +138,11 @@ export function findContinuations(
     return continuations;
 }
 
-/** 出庫する列車を、発時刻のどれだけ前から始発駅に停車中として出すか（ユーザー指示 2026-10-07: 3 分前ぐらい） */
-const DEPOT_OUT_LEAD_MS = 3 * 60 * 1000;
+/**
+ * 出庫する列車を発時刻のどれだけ前から、入庫する列車を着いてからどれだけのあいだ、駅に出すか
+ * （ユーザー指示 2026-10-07: 出庫は発前 3 分「出庫中」、入庫は着後 3 分「入庫中」）
+ */
+const DEPOT_MARGIN_MS = 3 * 60 * 1000;
 
 /**
  * 折り返し: 同じ運用の列車が終点に着き、別の trip block（逆向き）で同じ駅を発つとき、
@@ -289,8 +305,9 @@ function estimateTripPosition(
  * - 停車中判定: 駅 s の着 ≤ at < 発 → stopped
  * - 走行中判定: 駅 s の発 ≤ at < 駅 s+1 の着 → between（progress は線形補間）
  * - 通過駅（駅軸に存在しない・発着時刻が両方欠落）は区間補間に自然に吸収される
- * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に停車中（turnaround: true）として出す
- * - 出庫する列車は、発時刻の 3 分前から始発駅に停車中として出す（基地にいるあいだは出さない）
+ * - 折り返し（findTurnarounds）は、前の列車が着いてから発時刻まで、発つ列車を始発駅に stoppedReason: 'turnaround' で出す
+ * - 出庫する列車は発時刻の 3 分前から始発駅に 'depotOut'、入庫する列車は着いてから 3 分間終点に 'depotIn' で出す
+ *   （基地にいるあいだは出さない）
  * - 鉄道日（4 時境界）を考慮し、`at` の属する営業日を基準に times の日オフセットを実体化する
  *
  * @param tripBlocks 対象ダイヤの全 tripBlock（tripDirection 上下分含めて呼び出し側で束ねたもの）
@@ -355,8 +372,29 @@ export function estimatePositions(
                     continue;
                 }
             }
-            // 発時刻の前から始発駅に停車中として出す。
-            // 折り返しは前の列車が着いてから、出庫は発時刻の DEPOT_OUT_LEAD_MS 前から
+            // 入庫: 終点に着いてから DEPOT_MARGIN_MS のあいだは終点に出す
+            if (
+                trip.depotIn &&
+                last?.stationId != null &&
+                axisStationIds.has(last.stationId)
+            ) {
+                const arrival = resolveArrival(base, last);
+                if (
+                    arrival !== undefined &&
+                    arrival <= at &&
+                    at.getTime() < arrival.getTime() + DEPOT_MARGIN_MS
+                ) {
+                    positions.push({
+                        type: 'stopped',
+                        tripId: trip.tripId,
+                        stationId: last.stationId,
+                        stoppedReason: 'depotIn',
+                    });
+                    continue;
+                }
+            }
+            // 発時刻の前から始発駅に出す。
+            // 折り返しは前の列車が着いてから、出庫は発時刻の DEPOT_MARGIN_MS 前から
             const first = timedStops(trip.times)[0];
             if (
                 first?.stationId != null &&
@@ -370,7 +408,7 @@ export function estimatePositions(
                 const appearsAt = previousLast
                     ? resolveArrival(base, previousLast)
                     : trip.depotOut && departure !== undefined
-                      ? new Date(departure.getTime() - DEPOT_OUT_LEAD_MS)
+                      ? new Date(departure.getTime() - DEPOT_MARGIN_MS)
                       : undefined;
                 if (
                     appearsAt !== undefined &&
@@ -382,7 +420,7 @@ export function estimatePositions(
                         type: 'stopped',
                         tripId: trip.tripId,
                         stationId: first.stationId,
-                        ...(previousLast ? { turnaround: true as const } : {}),
+                        stoppedReason: previousLast ? 'turnaround' : 'depotOut',
                     });
                 }
             }

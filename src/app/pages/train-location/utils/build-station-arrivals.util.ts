@@ -5,6 +5,7 @@ import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto'
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
+    STOPPED_REASON_LABEL,
     TrainPosition,
     findContinuations,
     resolveArrival,
@@ -143,8 +144,8 @@ function buildWhereText(
     const name = (id: string | undefined) =>
         id ? (input.stationNameById.get(id) ?? '') : '';
     if (position?.type === 'stopped') {
-        return position.turnaround
-            ? `いま ${name(position.stationId)}で折返し`
+        return position.stoppedReason
+            ? `いま ${name(position.stationId)}で${STOPPED_REASON_LABEL[position.stoppedReason]}`
             : `いま ${name(position.stationId)}に停車中`;
     }
     if (position?.type === 'between') {

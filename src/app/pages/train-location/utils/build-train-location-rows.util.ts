@@ -12,7 +12,7 @@ import {
  * 駅軸・在線一覧（`estimatePositions` の結果）・カード辞書から、描画用の行リストを構築する純関数。
  * 駅行 + 駅間行が交互に並ぶ（先頭・末尾は必ず駅行）。
  *
- * - 停車中の位置は当該駅行の leftCards/rightCards に振り分ける（折返しの位置は isTurnaround を立てた複製）
+ * - 停車中の位置は当該駅行の leftCards/rightCards に振り分ける（駅にいる理由のある位置は stoppedReason を付けた複製）
  * - 駅間走行中の位置は「駅軸インデックス空間での線形補間」で区間へ配置する。
  *   between の from/to は trip 自身の停車駅ペアであり、通過駅を挟む優等列車では
  *   **駅軸上で隣接しない**（例: 駅 index 2 → 6）。そのため
@@ -82,7 +82,9 @@ export function buildTrainLocationRows(
                 continue;
             }
             (targetArrays(row) as TrainLocationCard[]).push(
-                position.turnaround ? { ...card, isTurnaround: true } : card,
+                position.stoppedReason
+                    ? { ...card, stoppedReason: position.stoppedReason }
+                    : card,
             );
             continue;
         }
