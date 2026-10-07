@@ -12,12 +12,10 @@ import { TripBlockDetailsDto } from './dtos/trip-block-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockService {
-    readonly #queryInvalidator = inject(QueryInvalidator);
+    private readonly tripBlockCommand = inject(TripBlockCommand);
+    private readonly tripBlockQuery = inject(TripBlockQuery);
 
-    constructor(
-        private readonly tripBlockCommand: TripBlockCommand,
-        private readonly tripBlockQuery: TripBlockQuery,
-    ) {}
+    readonly #queryInvalidator = inject(QueryInvalidator);
 
     findManyByFilter(params: {
         calendarId: string;

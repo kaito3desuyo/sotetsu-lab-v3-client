@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ServiceQuery } from '../infrastructure/queries/service.query';
 import { ServiceAgenciesDto } from './dtos/service-agencies.dto';
@@ -8,7 +8,7 @@ import { ServiceStationsDto } from './dtos/service-stations.dto';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceService {
-    constructor(private readonly serviceQuery: ServiceQuery) {}
+    private readonly serviceQuery = inject(ServiceQuery);
 
     findMany(params?: {
         serviceName?: string;

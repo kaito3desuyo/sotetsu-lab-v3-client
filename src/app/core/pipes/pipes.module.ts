@@ -11,7 +11,8 @@ import { RangePipe } from './range.pipe';
 import { TrackByPipe } from './track-by.pipe';
 
 @NgModule({
-    declarations: [
+    imports: [
+        CommonModule,
         OperationNumberColorPipe,
         FindByIdPipe,
         TrackByPipe,
@@ -22,7 +23,6 @@ import { TrackByPipe } from './track-by.pipe';
         AntiBracketsPipe,
         PaddingPipe,
     ],
-    imports: [CommonModule],
     exports: [
         OperationNumberColorPipe,
         FindByIdPipe,

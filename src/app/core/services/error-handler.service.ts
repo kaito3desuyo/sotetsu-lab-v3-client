@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandler, Injectable } from '@angular/core';
+import { ErrorHandler, Injectable, inject } from '@angular/core';
 import ErrorStackParser from 'error-stack-parser';
 import { NGXLogger } from 'ngx-logger';
 
@@ -7,7 +7,7 @@ import { NGXLogger } from 'ngx-logger';
     providedIn: 'root',
 })
 export class ErrorHandlerService implements ErrorHandler {
-    constructor(private readonly logger: NGXLogger) {}
+    private readonly logger = inject(NGXLogger);
 
     handleError<T extends Error>(error: T): void {
         if (error instanceof HttpErrorResponse) {

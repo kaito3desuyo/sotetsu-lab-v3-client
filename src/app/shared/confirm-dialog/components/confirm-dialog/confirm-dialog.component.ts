@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interface';
 import {
@@ -17,10 +17,10 @@ import { ConfirmDialogMainCComponent } from '../confirm-dialog-main-c/confirm-di
     providers: [ConfirmDialogStateStore, ConfirmDialogStateQuery]
 })
 export class ConfirmDialogComponent {
-    constructor(
-        @Inject(MAT_DIALOG_DATA) private readonly data: IConfirmDialogData,
-        private readonly confirmDialogStateStore: ConfirmDialogStateStore,
-    ) {
+    private readonly data = inject<IConfirmDialogData>(MAT_DIALOG_DATA);
+    private readonly confirmDialogStateStore = inject(ConfirmDialogStateStore);
+
+    constructor() {
         this.confirmDialogStateStore.setData(this.data);
     }
 }

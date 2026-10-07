@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
 import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
@@ -8,7 +8,7 @@ import { OperationTripsDto } from './dtos/operation-trips.dto';
 
 @Injectable({ providedIn: 'root' })
 export class OperationService {
-    constructor(private readonly operationQuery: OperationQuery) {}
+    private readonly operationQuery = inject(OperationQuery);
 
     findManyByCalendarId(params: {
         calendarId: string;

@@ -13,11 +13,13 @@ import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockQuery {
+    private readonly http = inject(HttpClient);
+
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
     readonly #cache = new QueryCache();
     readonly #invalidator = inject(QueryInvalidator);
 
-    constructor(private readonly http: HttpClient) {
+    constructor() {
         // 列車情報が書かれたら全部捨てる（どのダイヤ・どの列車が変わったかは追わない）
         this.#invalidator.invalidated$
             .pipe(

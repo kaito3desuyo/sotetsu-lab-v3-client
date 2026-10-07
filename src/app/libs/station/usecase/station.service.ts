@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { StationQuery } from '../infrastructure/queries/station.query';
 import { StationDetailsDto } from './dtos/station-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class StationService {
-    constructor(private readonly stationQuery: StationQuery) {}
+    private readonly stationQuery = inject(StationQuery);
 
     findMany(params?: {
         forceReload?: boolean;

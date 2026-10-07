@@ -9,13 +9,13 @@ import { environment } from 'src/environments/environment';
     providedIn: 'root',
 })
 export class SocketService {
+    private readonly logger = inject(NGXLogger);
+
     readonly #platformId = inject(PLATFORM_ID);
     private readonly _tokenStateQuery = inject(TokenStateQuery);
     private readonly _url = environment.socketUrl;
     private readonly _ev$ = new Subject<unknown>();
     private _conn: WebSocket;
-
-    constructor(private readonly logger: NGXLogger) {}
 
     connect(): void {
         if (!isPlatformBrowser(this.#platformId)) return;

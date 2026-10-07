@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { TripQuery } from '../infrastructure/queries/trip.query';
 import { TripDetailsDto } from './dtos/trip-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripService {
-    constructor(private readonly tripQuery: TripQuery) {}
+    private readonly tripQuery = inject(TripQuery);
 
     findManyByStationId(params: {
         stationId: string;

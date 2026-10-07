@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
@@ -13,7 +13,7 @@ export class TripQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trips';
     readonly #cache = new QueryCache();
 
-    constructor(private readonly http: HttpClient) {}
+    private readonly http = inject(HttpClient);
 
     findManyByStationId(params: {
         stationId: string;
