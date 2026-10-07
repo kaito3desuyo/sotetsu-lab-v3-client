@@ -696,6 +696,28 @@ describe('buildStationArrivals', () => {
         expect(row.whereText).toBe('いま 星川に停車中');
     });
 
+    it.each([
+        ['turnaround', 'いま 星川で折返し'],
+        ['depotIn', 'いま 星川で入庫中'],
+        ['depotOut', 'いま 星川で出庫中'],
+    ] as const)('いまどこか: 停車の理由が %s なら「%s」', (stoppedReason, whereText) => {
+        const t = trip('1', 1, [
+            time({
+                stationId: 'B',
+                stopSequence: 1,
+                departureTime: '10:01:00',
+            }),
+            time({ stationId: 'C', stopSequence: 2, arrivalTime: '10:08:00' }),
+        ]);
+        const positions: TrainPosition[] = [
+            { type: 'stopped', tripId: '1', stationId: 'B', stoppedReason },
+        ];
+
+        const [row] = run(blocks(t), AT, { positions }).outbound;
+
+        expect(row.whereText).toBe(whereText);
+    });
+
     it('行先・運用・種別はカードから引き、無ければ trip から組み立てる', () => {
         const t = trip(
             '1',

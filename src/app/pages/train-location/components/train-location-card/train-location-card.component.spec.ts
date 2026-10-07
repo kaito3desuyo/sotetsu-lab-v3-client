@@ -47,6 +47,23 @@ describe('TrainLocationCardComponent', () => {
         expect(fixture.nativeElement).not.toHaveTextContent(/▼/);
     });
 
+    it.each([
+        ['turnaround', '折返し'],
+        ['depotIn', '入庫中'],
+        ['depotOut', '出庫中'],
+    ] as const)(
+        'stoppedReason=%s なら「停車中」の代わりに「%s」を表示する',
+        (stoppedReason, label) => {
+            fixture.componentRef.setInput('card', card({ stoppedReason }));
+            fixture.componentRef.setInput('status', 'stopped');
+            fixture.detectChanges();
+
+            expect(fixture.nativeElement).toHaveTextContent(label);
+            expect(fixture.nativeElement).not.toHaveTextContent(/停車中/);
+            expect(fixture.nativeElement).not.toHaveTextContent(/▲/);
+        },
+    );
+
     it('2段構成（モック09準拠）: 上段に種別・行き先・運用番号、下段に列車番号・矢印・所属会社・編成番号を表示する', () => {
         fixture.componentRef.setInput(
             'card',
