@@ -41,5 +41,8 @@
     <!-- 検索カードを広告より前に置く。時刻表が未選択のとき、このページで唯一の
          操作要素である検索カードが 280px の広告に押し下げられてフォールド外に
          出ていた（audit M5）。 -->
-    <app-timetable-search-card-c></app-timetable-search-card-c>
+    <app-timetable-search-card
+        [calendarId]="calendarId()"
+        [tripDirection]="tripDirection()"
+    ></app-timetable-search-card>
 </main>

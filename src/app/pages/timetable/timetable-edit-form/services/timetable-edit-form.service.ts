@@ -16,7 +16,7 @@ import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-b
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import {

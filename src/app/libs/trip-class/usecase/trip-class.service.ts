@@ -5,11 +5,11 @@ import { TripClassDetailsDto } from './dtos/trip-class-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TripClassService {
-    private readonly tripClassQuery = inject(TripClassQuery);
+    readonly #tripClassQuery = inject(TripClassQuery);
 
     findMany(params: {
         forceReload?: boolean;
     }): Observable<TripClassDetailsDto[]> {
-        return this.tripClassQuery.findMany(params);
+        return this.#tripClassQuery.findMany(params);
     }
 }

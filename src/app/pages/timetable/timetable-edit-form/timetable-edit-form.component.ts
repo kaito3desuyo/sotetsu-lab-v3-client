@@ -19,8 +19,8 @@ import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormTripsComponent } from './components/timetable-edit-form-trips/timetable-edit-form-trips.component';
@@ -29,7 +29,7 @@ import { ITimetableEditFormTripValue } from './interfaces/timetable-edit-form.in
 import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
-} from './special/enums/timetable-edit-form.enum';
+} from './enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
@@ -38,7 +38,7 @@ TimetableEditFormStore.resetLoading();
 @Component({
     selector: 'app-timetable-edit-form',
     templateUrl: './timetable-edit-form.component.html',
-    styleUrls: ['./timetable-edit-form.component.scss'],
+    styleUrl: './timetable-edit-form.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatProgressBarModule, TimetableEditFormTripsComponent],
 })

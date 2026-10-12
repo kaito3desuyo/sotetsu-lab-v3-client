@@ -39,8 +39,8 @@ import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.d
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
@@ -62,7 +62,7 @@ import {
 import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
-} from '../../special/enums/timetable-edit-form.enum';
+} from '../../enums/timetable-edit-form.enum';
 import {
     buildCopySourceGroups,
     filterCopySourceGroups,
@@ -74,7 +74,7 @@ import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/time
 @Component({
     selector: 'app-timetable-edit-form-trips',
     templateUrl: './timetable-edit-form-trips.component.html',
-    styleUrls: ['./timetable-edit-form-trips.component.scss'],
+    styleUrl: './timetable-edit-form-trips.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,

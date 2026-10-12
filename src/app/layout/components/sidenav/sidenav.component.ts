@@ -19,13 +19,13 @@ import { RouteStationListStateQuery } from 'src/app/global-states/route-station-
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 
 @Component({
     selector: 'app-sidenav',
     templateUrl: './sidenav.component.html',
-    styleUrls: ['./sidenav.component.scss'],
+    styleUrl: './sidenav.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         RouterLink,

@@ -12,7 +12,7 @@ import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-oper
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
-import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
+import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { DashboardStore } from '../../stores/dashboard.store';
 
@@ -35,7 +35,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
     imports: [
         DateFnsPipe,
         OperationNumberColorPipe,
-        NewOperationNumberLinkComponent,
+        OperationNumberLinkComponent,
         TripPositionComponent,
     ],
 })

@@ -8,13 +8,13 @@ import { EMPTY, firstValueFrom, Observable, of, throwError } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
-import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
+import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
 import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
-} from './special/enums/timetable-edit-form.enum';
+} from './enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 import { TimetableEditFormComponent } from './timetable-edit-form.component';
 

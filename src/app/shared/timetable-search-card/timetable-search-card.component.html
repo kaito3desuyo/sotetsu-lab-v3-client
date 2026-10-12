@@ -1,0 +1,67 @@
+<app-panel-card heading="時刻表を検索する">
+    <div class="tw-flex-grow">
+        <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+            <mat-form-field>
+                <mat-label>ダイヤ</mat-label>
+                <mat-select formControlName="calendarId">
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+                @if (form.get('calendarId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
+
+            <app-segment-toggle
+                [options]="tripDirectionOptions"
+                [value]="selectedTripDirection()"
+                (valueChange)="onTripDirectionChange($event)"
+            ></app-segment-toggle>
+
+            <mat-slide-toggle color="accent" formControlName="searchByStation">
+                駅を指定して検索する
+            </mat-slide-toggle>
+
+            <mat-form-field>
+                <mat-label>駅名</mat-label>
+                <mat-select formControlName="stationId">
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
+                            @for (
+                                station of group.stations;
+                                track station.stationId
+                            ) {
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+                @if (form.get('stationId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
+                }
+            </mat-form-field>
+        </form>
+    </div>
+    <footer class="tw-flex tw-flex-col">
+        <app-button
+            type="button"
+            [disabled]="form.invalid"
+            (buttonClick)="submit()"
+        >
+            検索
+        </app-button>
+    </footer>
+</app-panel-card>

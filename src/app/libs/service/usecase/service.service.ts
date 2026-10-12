@@ -8,33 +8,33 @@ import { ServiceStationsDto } from './dtos/service-stations.dto';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceService {
-    private readonly serviceQuery = inject(ServiceQuery);
+    readonly #serviceQuery = inject(ServiceQuery);
 
     findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<ServiceDetailsDto[]> {
-        return this.serviceQuery.findMany(params);
+        return this.#serviceQuery.findMany(params);
     }
 
     findOneWithStations(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceStationsDto> {
-        return this.serviceQuery.findOneWithStations(params);
+        return this.#serviceQuery.findOneWithStations(params);
     }
 
     findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceAgenciesDto> {
-        return this.serviceQuery.findOneWithAgencies(params);
+        return this.#serviceQuery.findOneWithAgencies(params);
     }
 
     findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
     }): Observable<ServiceRoutesDto> {
-        return this.serviceQuery.findOneWithRoutes(params);
+        return this.#serviceQuery.findOneWithRoutes(params);
     }
 }

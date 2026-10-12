@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { EMPTY } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OperationRealTimeService } from './services/operation-real-time.service';
 import { OperationRealTimeComponent } from './operation-real-time.component';
 
@@ -29,7 +29,7 @@ describe('OperationRealTimeComponent', () => {
                     useValue: { open: () => {} },
                 },
                 {
-                    provide: NewOperationPostCardService,
+                    provide: OperationPostCardService,
                     useValue: { submitEvent$: EMPTY },
                 },
             ],

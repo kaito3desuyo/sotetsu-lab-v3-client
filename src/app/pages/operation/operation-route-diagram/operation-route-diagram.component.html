@@ -24,6 +24,9 @@
         <app-operation-route-diagram-drawing-container
             (emptyStateActionClick)="onEmptyStateActionClick()"
         ></app-operation-route-diagram-drawing-container>
-        <app-operation-search-card-c></app-operation-search-card-c>
+        <app-operation-search-card
+            [calendarId]="searchCalendarId()"
+            [operationId]="searchOperationId()"
+        ></app-operation-search-card>
     </div>
 </main>

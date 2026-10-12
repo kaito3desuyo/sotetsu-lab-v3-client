@@ -9,10 +9,10 @@ import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.d
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 
 type StoreProps = {
     mode: ETimetableEditFormMode | null;

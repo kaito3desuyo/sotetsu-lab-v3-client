@@ -1,7 +1,7 @@
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 
 export type ITimetableEditForm = FormGroup<{
     trips: FormArray<ITimetableEditFormTrip>;

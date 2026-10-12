@@ -11,7 +11,7 @@ import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-co
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table-format-station-name.pipe';
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';

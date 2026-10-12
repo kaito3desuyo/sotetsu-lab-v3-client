@@ -10,12 +10,12 @@ import { RestoreOperationSightingDto } from '../../usecase/dtos/restore-operatio
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingCommand {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
 
     post(body: PostOperationSightingDto): Observable<void> {
-        return this.http.post(`${this.#v3ApiUrl}`, body).pipe(
+        return this.#http.post(`${this.#v3ApiUrl}`, body).pipe(
             map(() => undefined),
             catchError(({ status, error }) => {
                 return throwError(
@@ -32,7 +32,7 @@ export class OperationSightingCommand {
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {
         const { operationSightingId } = body;
 
-        return this.http
+        return this.#http
             .patch(`${this.#v3ApiUrl}/${operationSightingId}/invalidate`, body)
             .pipe(map(() => undefined));
     }
@@ -40,7 +40,7 @@ export class OperationSightingCommand {
     restore(body: RestoreOperationSightingDto): Observable<void> {
         const { operationSightingId } = body;
 
-        return this.http
+        return this.#http
             .patch(`${this.#v3ApiUrl}/${operationSightingId}/restore`, body)
             .pipe(map(() => undefined));
     }

@@ -4,7 +4,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AppButtonComponent } from './app-button.component';
 
 @Component({
-    standalone: true,
     imports: [AppButtonComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `

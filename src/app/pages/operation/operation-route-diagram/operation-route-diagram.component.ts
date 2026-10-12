@@ -7,11 +7,9 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
+import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { OperationRouteDiagramDrawingContainerComponent } from './components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
@@ -27,22 +25,33 @@ OperationRouteDiagramStore.resetLoading();
         MatProgressBarModule,
         OperationRouteDiagramRouteFilterComponent,
         OperationRouteDiagramDrawingContainerComponent,
-        OperationSearchCardCComponent,
+        OperationSearchCardComponent,
     ],
 })
 export class OperationRouteDiagramComponent {
     readonly #destroyRef = inject(DestroyRef);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
-    readonly #operationSearchCardService = inject(OperationSearchCardService);
-    readonly #operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore,
-    );
     readonly #operationRouteDiagramService = inject(
         OperationRouteDiagramService,
     );
 
     readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
+    /** 検索カードに出すダイヤと運用。取得し直す間も前の値を出し続ける。 */
+    readonly searchCalendarId = toSignal(
+        OperationRouteDiagramStore.calendar$.pipe(
+            filter((calendar) => !!calendar),
+            map((calendar) => calendar.calendarId),
+        ),
+        { initialValue: null },
+    );
+    readonly searchOperationId = toSignal(
+        OperationRouteDiagramStore.operation$.pipe(
+            filter((operation) => !!operation),
+            map((operation) => operation.operationId),
+        ),
+        { initialValue: null },
+    );
 
     constructor() {
         this.#route.paramMap
@@ -52,48 +61,6 @@ export class OperationRouteDiagramComponent {
 
                 OperationRouteDiagramStore.setOperationId(operationId);
                 this.fetchData();
-            });
-
-        OperationRouteDiagramStore.calendar$
-            .pipe(
-                filter((calendar) => !!calendar),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe((calendar) => {
-                this.#operationSearchCardStateStore.setCalendarId(
-                    calendar.calendarId,
-                );
-            });
-
-        OperationRouteDiagramStore.operation$
-            .pipe(
-                filter((operation) => !!operation),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe((operation) => {
-                this.#operationSearchCardStateStore.setOperationId(
-                    operation.operationId,
-                );
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationTableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((calendarId) => {
-                this.#router.navigate([
-                    '/operation/table',
-                    { calendar_id: calendarId },
-                ]);
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationRouteDiagramEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((operationId) => {
-                this.#router.navigate([
-                    '/operation/route-diagram',
-                    { operation_id: operationId },
-                ]);
             });
 
         this.#operationRouteDiagramService

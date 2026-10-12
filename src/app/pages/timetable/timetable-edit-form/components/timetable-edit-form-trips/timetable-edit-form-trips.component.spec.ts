@@ -2,11 +2,11 @@ import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormArray } from '@angular/forms';
 import { BehaviorSubject } from 'rxjs';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
-} from '../../special/enums/timetable-edit-form.enum';
+} from '../../enums/timetable-edit-form.enum';
 import { TimetableEditFormTripsComponent } from './timetable-edit-form-trips.component';
 
 function makeStation(stationId: string): any {

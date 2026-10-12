@@ -42,7 +42,7 @@
     <!-- 上段中央: 運用番号チップ（休車=運用番号100は「休」表示・リンク無効化） -->
     <div class="tw-col-start-2 tw-row-start-1 tw-self-center">
         @if (expectedSightingOperationVm) {
-            <app-new-operation-number-link
+            <app-operation-number-link
                 [text]="
                     (expectedSightingOperationVm.operationNumber === '100'
                         ? '休'
@@ -72,7 +72,7 @@
                               },
                           ]
                 "
-            ></app-new-operation-number-link>
+            ></app-operation-number-link>
         } @else if (isSightingLoading()) {
             <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
             <span

@@ -1,12 +1,8 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { EMPTY, firstValueFrom, of, Subject, throwError } from 'rxjs';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { ITimetablePostCardForm } from 'src/app/shared/timetable-post-card/interfaces/timetable-post-card-form.interface';
-import { TimetablePostCardService } from 'src/app/shared/timetable-post-card/services/timetable-post-card.service';
-import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
+import { provideRouter } from '@angular/router';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardService } from './services/dashboard.service';
 import { DashboardStore } from './stores/dashboard.store';
@@ -14,11 +10,8 @@ import { DashboardStore } from './stores/dashboard.store';
 describe('DashboardComponent', () => {
     let component: DashboardComponent;
     let fixture: ComponentFixture<DashboardComponent>;
-    let moveTimetableAdd$: Subject<ITimetablePostCardForm>;
 
     beforeEach(async () => {
-        moveTimetableAdd$ = new Subject<ITimetablePostCardForm>();
-
         await TestBed.configureTestingModule({
             imports: [DashboardComponent],
             providers: [
@@ -43,29 +36,6 @@ describe('DashboardComponent', () => {
                 set: {
                     imports: [],
                     schemas: [NO_ERRORS_SCHEMA],
-                    providers: [
-                        {
-                            provide: OperationSearchCardService,
-                            useValue: {
-                                receiveSearchOperationTableEvent: () => EMPTY,
-                                receiveSearchOperationRouteDiagramEvent: () =>
-                                    EMPTY,
-                            },
-                        },
-                        {
-                            provide: TimetableSearchCardService,
-                            useValue: {
-                                receiveSearchTimetableEvent: () => EMPTY,
-                            },
-                        },
-                        {
-                            provide: TimetablePostCardService,
-                            useValue: {
-                                receiveMoveTimetableAddEvent: () =>
-                                    moveTimetableAdd$.asObservable(),
-                            },
-                        },
-                    ],
                 },
             })
             .compileComponents();
@@ -107,22 +77,5 @@ describe('DashboardComponent', () => {
         await expect(component.fetchData()).rejects.toThrow('fetch failed');
 
         expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
-    });
-
-    it('列車の追加へ: calendar_id / trip_direction を matrix param で渡す（ルートの形に合わせる）', () => {
-        const navigate = jest
-            .spyOn(TestBed.inject(Router), 'navigate')
-            .mockResolvedValue(true);
-
-        moveTimetableAdd$.next({
-            calendarId: 'cal-1',
-            tripDirection: 1,
-        } as ITimetablePostCardForm);
-
-        expect(navigate).toHaveBeenCalledWith([
-            'timetable',
-            'add',
-            { calendar_id: 'cal-1', trip_direction: 1 },
-        ]);
     });
 });

@@ -1,5 +1,5 @@
 import { ITimetableEditFormTimeValue } from '../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 import {
     findEndpointIndexes,
     findTimeOrderErrors,

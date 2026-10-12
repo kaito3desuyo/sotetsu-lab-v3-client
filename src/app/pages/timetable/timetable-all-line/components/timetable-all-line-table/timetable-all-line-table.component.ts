@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import {
     afterRenderEffect,
     ChangeDetectionStrategy,
@@ -18,13 +18,13 @@ import { RouterLink } from '@angular/router';
 import { isAfter, parse } from 'date-fns';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
-import { TripClassShortNamePipe } from 'src/app/shared/pipes/trip-class-short-name.pipe';
+import { TripClassShortNamePipe } from 'src/app/core/pipes/trip-class-short-name.pipe';
 import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { ETimetableAllLineStationViewMode } from '../../enums/timetable-all-line.enum';
 import { TimetableAllLineGetStationNumberingPipe } from '../../pipes/timetable-all-line-get-station-numbering.pipe';
@@ -40,7 +40,7 @@ import { TripEndpoints } from '../../utils/trip-endpoints.util';
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
+        NgTemplateOutlet,
         RouterLink,
         MatPaginatorModule,
         MatTooltipModule,

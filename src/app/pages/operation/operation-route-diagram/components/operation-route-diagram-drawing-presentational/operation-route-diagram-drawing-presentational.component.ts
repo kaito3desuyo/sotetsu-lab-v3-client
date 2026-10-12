@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import {
     afterNextRender,
     ChangeDetectionStrategy,
@@ -10,7 +10,6 @@ import {
     input,
     output,
     signal,
-    ViewChild,
     viewChild,
 } from '@angular/core';
 import { format, parse } from 'date-fns';
@@ -20,7 +19,7 @@ import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { OperationRouteDiagramNavigateTimetable } from '../../interfaces/operation-route-diagram.interface';
@@ -250,11 +249,9 @@ export interface OperationRouteDiagramBandRow {
     selector: 'app-operation-route-diagram-drawing-presentational',
     templateUrl:
         './operation-route-diagram-drawing-presentational.component.html',
-    styleUrls: [
-        './operation-route-diagram-drawing-presentational.component.scss',
-    ],
+    styleUrl: './operation-route-diagram-drawing-presentational.component.scss',
     imports: [
-        CommonModule,
+        NgTemplateOutlet,
         PaddingPipe,
         OperationRouteDiagramFormatStationNamePipe,
         AppButtonComponent,
@@ -496,7 +493,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         });
     }
 
-    @ViewChild('svgElement') svgElement: ElementRef;
+    private readonly svgElement = viewChild<ElementRef>('svgElement');
 
     constructor() {
         const destroyRef = inject(DestroyRef);
@@ -611,7 +608,7 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
         this.drawingSVGForOutput.set(true);
         await wait(0);
 
-        const svgUrl = getSvgUrl(this.svgElement);
+        const svgUrl = getSvgUrl(this.svgElement());
         const image = await svgUrlToImageElement(svgUrl);
         URL.revokeObjectURL(svgUrl);
         const canvas = createCanvasElement(image);

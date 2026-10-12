@@ -5,7 +5,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 @Pipe({
-    standalone: true,
     name: 'timetableStationFindLastStopStation',
 })
 export class TimetableStationFindLastStopStationPipe implements PipeTransform {

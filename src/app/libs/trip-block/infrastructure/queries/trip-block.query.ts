@@ -13,7 +13,7 @@ import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
     readonly #cache = new QueryCache();
@@ -56,7 +56,7 @@ export class TripBlockQuery {
                             ),
                         },
                     });
-                    return this.http.get<TripBlockModel[]>(this.#v3ApiUrl, {
+                    return this.#http.get<TripBlockModel[]>(this.#v3ApiUrl, {
                         params: httpParams,
                         observe: 'response',
                         cache: this.#invalidator.requestCache('timetable'),
@@ -117,7 +117,7 @@ export class TripBlockQuery {
                 name: 'findOneById',
                 params: { id },
                 fetch: () =>
-                    this.http.get<TripBlockModel>(`${this.#v3ApiUrl}/${id}`, {
+                    this.#http.get<TripBlockModel>(`${this.#v3ApiUrl}/${id}`, {
                         observe: 'response',
                         cache: this.#invalidator.requestCache('timetable'),
                     }),

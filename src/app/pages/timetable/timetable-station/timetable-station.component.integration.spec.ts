@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import {
     ComponentFixture,
     ComponentFixtureAutoDetect,
@@ -12,7 +12,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { EMPTY, of } from 'rxjs';
+import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -28,8 +28,6 @@ import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.ser
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
-import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
@@ -100,11 +98,15 @@ const makeCrossSection = (
     }) as never;
 
 @Component({
-    selector: 'app-timetable-search-card-c',
+    selector: 'app-timetable-search-card',
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: '',
 })
-class StubSearchCardComponent {}
+class StubSearchCardComponent {
+    readonly calendarId = input<string>();
+    readonly tripDirection = input<number>();
+    readonly stationId = input<string>();
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -118,7 +120,6 @@ async function setup(overrides?: {
             provideRouter([]),
             { provide: ComponentFixtureAutoDetect, useValue: true },
             TimetableStationService,
-            TimetableSearchCardStateStore,
             {
                 provide: ActivatedRoute,
                 useValue: {
@@ -130,10 +131,6 @@ async function setup(overrides?: {
                         }),
                     ),
                 },
-            },
-            {
-                provide: TimetableSearchCardService,
-                useValue: { receiveSearchTimetableEvent: () => EMPTY },
             },
             { provide: NotificationService, useValue: { open: () => {} } },
             {

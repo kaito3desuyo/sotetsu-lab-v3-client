@@ -25,7 +25,7 @@ import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
 import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
 import { LayoutComponent } from './layout/layout.component';
-import { LoadingService } from './shared/app-shared/loading/loading.service';
+import { LoadingService } from './shared/loading/loading.service';
 
 @Component({
     selector: 'app-root',

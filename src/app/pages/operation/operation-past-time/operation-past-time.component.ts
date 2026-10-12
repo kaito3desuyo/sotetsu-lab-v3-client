@@ -11,8 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
+import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
@@ -32,7 +31,7 @@ OperationPastTimeStore.resetLoading();
         OperationPastTimeSearchFormComponent,
         OperationPastTimeFilterComponent,
         OperationPastTimeTableComponent,
-        OperationSearchCardCComponent,
+        OperationSearchCardComponent,
     ],
 })
 export class OperationPastTimeComponent {
@@ -40,7 +39,6 @@ export class OperationPastTimeComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
-    readonly #operationSearchCardService = inject(OperationSearchCardService);
 
     readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
 
@@ -91,26 +89,6 @@ export class OperationPastTimeComponent {
                 );
 
                 this.fetchData();
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationTableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((calendarId) => {
-                this.#router.navigate([
-                    '/operation/table',
-                    { calendar_id: calendarId },
-                ]);
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationRouteDiagramEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((operationId) => {
-                this.#router.navigate([
-                    '/operation/route-diagram',
-                    { operation_id: operationId },
-                ]);
             });
     }
 

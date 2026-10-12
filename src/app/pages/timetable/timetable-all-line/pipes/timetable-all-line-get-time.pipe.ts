@@ -5,7 +5,6 @@ import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.en
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
 @Pipe({
-    standalone: true,
     name: 'timetableAllLineGetTime',
 })
 export class TimetableAllLineGetTimePipe implements PipeTransform {

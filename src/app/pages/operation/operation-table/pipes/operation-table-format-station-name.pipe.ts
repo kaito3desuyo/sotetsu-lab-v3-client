@@ -6,7 +6,6 @@ import { Pipe, PipeTransform } from '@angular/core';
  * 情報要素としての駅名短縮マップのみ維持する）。
  */
 @Pipe({
-    standalone: true,
     name: 'operationTableFormatStationName',
 })
 export class OperationTableFormatStationNamePipe implements PipeTransform {

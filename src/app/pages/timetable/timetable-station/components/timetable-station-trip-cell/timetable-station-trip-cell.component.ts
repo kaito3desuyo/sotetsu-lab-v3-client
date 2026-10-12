@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
@@ -32,7 +31,6 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     templateUrl: './timetable-station-trip-cell.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         MatIconModule,
         FindByIdPipe,
         MaxByPipe,

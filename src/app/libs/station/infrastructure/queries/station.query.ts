@@ -10,7 +10,7 @@ import { StationModel } from '../models/station.model';
 
 @Injectable({ providedIn: 'root' })
 export class StationQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/stations';
     readonly #cache = new QueryCache();
@@ -25,7 +25,7 @@ export class StationQuery {
                 name: 'findMany',
                 params: {},
                 fetch: () =>
-                    this.http.get<StationModel[]>(this.#v3ApiUrl, {
+                    this.#http.get<StationModel[]>(this.#v3ApiUrl, {
                         observe: 'response',
                     }),
                 forceReload,

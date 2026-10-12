@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { ETripDirection } from '../../special/enums/trip.enum';
+import { ETripDirection } from '../enums/trip.enum';
 import { CreateTimeDto } from './create-time.dto';
 import { CreateTripOperationListDto } from './create-trip-operation-list.dto';
 

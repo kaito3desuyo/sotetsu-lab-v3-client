@@ -5,7 +5,7 @@ import { TestBed, inject } from '@angular/core/testing';
 import { lastValueFrom, of, throwError } from 'rxjs';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetableStationStore } from '../stores/timetable-station.store';
 import { TimetableStationService } from './timetable-station.service';
 

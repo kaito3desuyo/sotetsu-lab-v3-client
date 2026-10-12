@@ -1,5 +1,5 @@
 import { Exclude, Expose, Type } from 'class-transformer';
-import { ETripDirection } from '../../special/enums/trip.enum';
+import { ETripDirection } from '../enums/trip.enum';
 import { ReplaceTimeDto } from './replace-time.dto';
 import { ReplaceTripOperationListDto } from './replace-trip-operation-list.dto';
 

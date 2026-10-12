@@ -11,10 +11,8 @@ import { RestoreOperationSightingDto } from './dtos/restore-operation-sighting.d
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingService {
-    private readonly operationSightingCommand = inject(
-        OperationSightingCommand,
-    );
-    private readonly operationSightingQuery = inject(OperationSightingQuery);
+    readonly #operationSightingCommand = inject(OperationSightingCommand);
+    readonly #operationSightingQuery = inject(OperationSightingQuery);
 
     readonly #queryInvalidator = inject(QueryInvalidator);
 
@@ -24,14 +22,14 @@ export class OperationSightingService {
         includeInvalidated?: boolean;
         forceReload?: boolean;
     }): Observable<OperationSightingDetailsDto[]> {
-        return this.operationSightingQuery.findManyBySpecificPeriod(params);
+        return this.#operationSightingQuery.findManyBySpecificPeriod(params);
     }
 
     findManyTimeCrossSectionsByOperationNumbers(params: {
         operationNumbers: string[];
         forceReload?: boolean;
     }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
-        return this.operationSightingQuery.findManyTimeCrossSectionsByOperationNumbers(
+        return this.#operationSightingQuery.findManyTimeCrossSectionsByOperationNumbers(
             params,
         );
     }
@@ -40,7 +38,7 @@ export class OperationSightingService {
         formationNumbers: string[];
         forceReload?: boolean;
     }): Observable<Record<string, OperationSightingTimeCrossSectionDto>> {
-        return this.operationSightingQuery.findManyTimeCrossSectionsByFormationNumbers(
+        return this.#operationSightingQuery.findManyTimeCrossSectionsByFormationNumbers(
             params,
         );
     }
@@ -49,7 +47,7 @@ export class OperationSightingService {
         operationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionByOperationNumber(
+        return this.#operationSightingQuery.findOneTimeCrossSectionByOperationNumber(
             params,
         );
     }
@@ -58,25 +56,25 @@ export class OperationSightingService {
         formationNumber: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
-        return this.operationSightingQuery.findOneTimeCrossSectionByFormationNumber(
+        return this.#operationSightingQuery.findOneTimeCrossSectionByFormationNumber(
             params,
         );
     }
 
     post(body: PostOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand
+        return this.#operationSightingCommand
             .post(body)
             .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }
 
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand
+        return this.#operationSightingCommand
             .invalidate(body)
             .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }
 
     restore(body: RestoreOperationSightingDto): Observable<void> {
-        return this.operationSightingCommand
+        return this.#operationSightingCommand
             .restore(body)
             .pipe(tap(() => this.#queryInvalidator.invalidate('sighting')));
     }

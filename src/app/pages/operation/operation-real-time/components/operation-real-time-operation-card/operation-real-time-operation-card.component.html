@@ -23,7 +23,7 @@
 >
     <!-- 運用番号チップ -->
     <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
-        <app-new-operation-number-link
+        <app-operation-number-link
             [text]="operation().operationNumber"
             [bgColor]="operation().operationNumber | operationNumberColor"
             [link]="[
@@ -31,7 +31,7 @@
                 'route-diagram',
                 { operation_id: operation().operationId },
             ]"
-        ></app-new-operation-number-link>
+        ></app-operation-number-link>
     </div>
 
     <!-- 上段中央: 編成番号・所属会社/形式。

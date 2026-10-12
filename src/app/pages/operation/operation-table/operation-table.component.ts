@@ -15,9 +15,7 @@ import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calen
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
+import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
 import { OperationTableService } from './services/operation-table.service';
@@ -41,7 +39,7 @@ OperationTableStore.resetLoading();
         EmptyStateComponent,
         OperationTableFilterComponent,
         OperationTableCardComponent,
-        OperationSearchCardCComponent,
+        OperationSearchCardComponent,
     ],
 })
 export class OperationTableComponent {
@@ -50,10 +48,6 @@ export class OperationTableComponent {
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
     readonly #operationTableService = inject(OperationTableService);
-    readonly #operationSearchCardService = inject(OperationSearchCardService);
-    readonly #operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore,
-    );
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -127,35 +121,8 @@ export class OperationTableComponent {
                 }
 
                 OperationTableStore.setCalendarId(calendarId ?? null);
-                this.#operationSearchCardStateStore.setCalendarId(
-                    calendarId ?? null,
-                );
 
                 this.fetchData();
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationTableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((calendarId) => {
-                this.#handleNavigationResult(
-                    this.#router.navigate([
-                        '/operation/table',
-                        { calendar_id: calendarId },
-                    ]),
-                );
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationRouteDiagramEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((operationId) => {
-                this.#handleNavigationResult(
-                    this.#router.navigate([
-                        '/operation/route-diagram',
-                        { operation_id: operationId },
-                    ]),
-                );
             });
     }
 

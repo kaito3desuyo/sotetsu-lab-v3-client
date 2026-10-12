@@ -4,7 +4,6 @@ import { isString } from 'es-toolkit';
 import { isNumber } from 'es-toolkit/compat';
 
 @Pipe({
-    standalone: true,
     name: 'dateFns',
 })
 export class DateFnsPipe implements PipeTransform {

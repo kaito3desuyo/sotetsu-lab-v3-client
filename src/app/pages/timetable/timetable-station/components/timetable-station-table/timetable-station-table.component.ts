@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { TimetableStationTripCellComponent } from '../timetable-station-trip-cell/timetable-station-trip-cell.component';
 import { TimetableStationStore } from '../../stores/timetable-station.store';

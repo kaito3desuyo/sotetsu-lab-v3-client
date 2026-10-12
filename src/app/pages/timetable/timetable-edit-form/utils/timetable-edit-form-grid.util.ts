@@ -3,7 +3,7 @@ import {
     ITimetableEditFormTimeValue,
     TimetableEditFormTimeField,
 } from '../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 
 export const timetableEditFormStopTypeMark = new Map<
     ETimetableEditFormStopType,

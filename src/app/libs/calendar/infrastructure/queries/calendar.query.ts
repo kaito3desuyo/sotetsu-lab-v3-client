@@ -13,7 +13,7 @@ import { CalendarModel } from '../models/calendar.model';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/calendars';
     readonly #cache = new QueryCache();
@@ -32,7 +32,7 @@ export class CalendarQuery {
                     const httpParams = new HttpParams(
                         serviceName ? { fromObject: { serviceName } } : {},
                     );
-                    return this.http.get<CalendarModel[]>(this.#v3ApiUrl, {
+                    return this.#http.get<CalendarModel[]>(this.#v3ApiUrl, {
                         params: httpParams,
                         observe: 'response',
                     });
@@ -55,7 +55,7 @@ export class CalendarQuery {
                 name: 'findOne',
                 params: { calendarId },
                 fetch: () =>
-                    this.http.get<CalendarModel>(
+                    this.#http.get<CalendarModel>(
                         `${this.#v3ApiUrl}/${calendarId}`,
                         { observe: 'response' },
                     ),
@@ -75,7 +75,7 @@ export class CalendarQuery {
                 name: 'findOneBySpecificDate',
                 params: { date },
                 fetch: () =>
-                    this.http.get<CalendarModel>(
+                    this.#http.get<CalendarModel>(
                         `${this.#v3ApiUrl}/as/of/${date}`,
                         { observe: 'response' },
                     ),

@@ -10,7 +10,7 @@ import { TripClassModel } from '../models/trip-class.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripClassQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-classes';
     readonly #cache = new QueryCache();
@@ -25,7 +25,7 @@ export class TripClassQuery {
                 name: 'findMany',
                 params: {},
                 fetch: () =>
-                    this.http.get<TripClassModel[]>(this.#v3ApiUrl, {
+                    this.#http.get<TripClassModel[]>(this.#v3ApiUrl, {
                         observe: 'response',
                     }),
                 forceReload,

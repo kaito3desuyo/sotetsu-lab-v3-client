@@ -10,7 +10,7 @@ import { FormationModel } from '../models/formation.model';
 
 @Injectable({ providedIn: 'root' })
 export class FormationQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/formations';
     readonly #cache = new QueryCache();
@@ -26,7 +26,7 @@ export class FormationQuery {
                 name: 'findManyBySpecificDate',
                 params: { date },
                 fetch: () =>
-                    this.http.get<FormationModel[]>(
+                    this.#http.get<FormationModel[]>(
                         `${this.#v3ApiUrl}/as/of/${date}`,
                         { observe: 'response' },
                     ),
@@ -47,7 +47,7 @@ export class FormationQuery {
                 name: 'findManyBySpecificPeriod',
                 params: { startDate, endDate },
                 fetch: () =>
-                    this.http.get<FormationModel[]>(
+                    this.#http.get<FormationModel[]>(
                         `${this.#v3ApiUrl}/from/${startDate}/to/${endDate}`,
                         { observe: 'response' },
                     ),

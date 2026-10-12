@@ -7,15 +7,15 @@ import { NGXLogger } from 'ngx-logger';
     providedIn: 'root',
 })
 export class ErrorHandlerService implements ErrorHandler {
-    private readonly logger = inject(NGXLogger);
+    readonly #logger = inject(NGXLogger);
 
     handleError<T extends Error>(error: T): void {
         if (error instanceof HttpErrorResponse) {
-            this.logger.error(error.name, error.message, { ...error });
+            this.#logger.error(error.name, error.message, { ...error });
         }
 
         if (error instanceof Error) {
-            this.logger.error(error.name, error.message, {
+            this.#logger.error(error.name, error.message, {
                 ...error,
                 stack: ErrorStackParser.parse(error),
             });

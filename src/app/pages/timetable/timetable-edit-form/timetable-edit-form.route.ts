@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
-import { ETimetableEditFormMode } from './special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormMode } from './enums/timetable-edit-form.enum';
 import { TimetableEditFormDraftStore } from './stores/timetable-edit-form-draft.store';
 
 /**

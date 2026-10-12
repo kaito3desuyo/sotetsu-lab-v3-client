@@ -5,9 +5,9 @@ import { Title } from '@angular/platform-browser';
     providedIn: 'root',
 })
 export class TitleService {
-    private title = inject(Title);
+    readonly #title = inject(Title);
 
     setTitle(title: string): void {
-        this.title.setTitle(`${title ? title + ' - ' : ''}Sotetsu Lab. v3`);
+        this.#title.setTitle(`${title ? title + ' - ' : ''}Sotetsu Lab. v3`);
     }
 }

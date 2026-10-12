@@ -14,8 +14,8 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { SocketService } from 'src/app/core/services/socket.service';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
-import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
-import { NewOperationPostCardService } from 'src/app/shared/new-operation-post-card/new-operation-post-card.service';
+import { OperationPostCardComponent } from 'src/app/shared/operation-post-card/operation-post-card.component';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
@@ -42,7 +42,7 @@ OperationRealTimeStore.resetLoading();
         OperationRealTimeOperationTableComponent,
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
-        NewOperationPostCardComponent,
+        OperationPostCardComponent,
     ],
 })
 export class OperationRealTimeComponent {
@@ -50,7 +50,7 @@ export class OperationRealTimeComponent {
     readonly #socketService = inject(SocketService);
     readonly #notification = inject(NotificationService);
     readonly #operationRealTimeService = inject(OperationRealTimeService);
-    readonly #newOperationPostCardService = inject(NewOperationPostCardService);
+    readonly #operationPostCardService = inject(OperationPostCardService);
 
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
 
@@ -172,7 +172,7 @@ export class OperationRealTimeComponent {
         // });
 
         // 自分が運用目撃情報を投稿したとき
-        this.#newOperationPostCardService.submitEvent$
+        this.#operationPostCardService.submitEvent$
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();

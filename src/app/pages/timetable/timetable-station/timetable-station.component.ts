@@ -17,15 +17,13 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
-import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
-import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
+import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
@@ -37,7 +35,7 @@ TimetableStationStore.resetLoading();
 @Component({
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
-    styleUrls: ['./timetable-station.component.scss'],
+    styleUrl: './timetable-station.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatFormFieldModule,
@@ -48,7 +46,7 @@ TimetableStationStore.resetLoading();
         EmptyStateComponent,
         SegmentToggleComponent,
         TimetableStationTableComponent,
-        TimetableSearchCardCComponent,
+        TimetableSearchCardComponent,
     ],
 })
 export class TimetableStationComponent {
@@ -57,10 +55,6 @@ export class TimetableStationComponent {
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
     readonly #timetableStationService = inject(TimetableStationService);
-    readonly #timetableSearchCardService = inject(TimetableSearchCardService);
-    readonly #timetableSearchCardStateStore = inject(
-        TimetableSearchCardStateStore,
-    );
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
@@ -207,40 +201,7 @@ export class TimetableStationComponent {
                 TimetableStationStore.setStationId(stationId);
                 TimetableStationStore.setTripDirection(tripDirection);
 
-                this.#timetableSearchCardStateStore.setCalendarId(calendarId);
-                this.#timetableSearchCardStateStore.setTripDirection(
-                    tripDirection,
-                );
-                this.#timetableSearchCardStateStore.enableSearchByStation();
-                this.#timetableSearchCardStateStore.setStationId(stationId);
-
                 this.fetchData();
-            });
-
-        this.#timetableSearchCardService
-            .receiveSearchTimetableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((state) => {
-                const navigation = state.searchByStation
-                    ? this.#router.navigate([
-                          'timetable',
-                          'station',
-                          {
-                              calendar_id: state.calendarId,
-                              station_id: state.stationId,
-                              trip_direction: state.tripDirection,
-                          },
-                      ])
-                    : this.#router.navigate([
-                          'timetable',
-                          'all-line',
-                          {
-                              calendar_id: state.calendarId,
-                              trip_direction: state.tripDirection,
-                          },
-                      ]);
-
-                this.#handleNavigationResult(navigation);
             });
     }
 
