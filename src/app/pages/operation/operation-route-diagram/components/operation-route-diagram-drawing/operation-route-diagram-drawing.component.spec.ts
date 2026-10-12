@@ -15,7 +15,7 @@ import {
     ROUTE_DIAGRAM_OUTSIDE_RIGHT_ID,
     routeDiagramOutsideBetweenId,
 } from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
-import { OperationRouteDiagramDrawingPresentationalComponent } from './operation-route-diagram-drawing-presentational.component';
+import { OperationRouteDiagramDrawingComponent } from './operation-route-diagram-drawing.component';
 
 function station(
     stationId: string,
@@ -78,19 +78,19 @@ const operation: OperationDetailsDto = {
     operationNumber: '11',
 } as OperationDetailsDto;
 
-describe('OperationRouteDiagramDrawingPresentationalComponent', () => {
-    let component: OperationRouteDiagramDrawingPresentationalComponent;
-    let fixture: ComponentFixture<OperationRouteDiagramDrawingPresentationalComponent>;
+describe('OperationRouteDiagramDrawingComponent', () => {
+    let component: OperationRouteDiagramDrawingComponent;
+    let fixture: ComponentFixture<OperationRouteDiagramDrawingComponent>;
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            imports: [OperationRouteDiagramDrawingPresentationalComponent],
+            imports: [OperationRouteDiagramDrawingComponent],
         }).compileComponents();
     }));
 
     beforeEach(() => {
         fixture = TestBed.createComponent(
-            OperationRouteDiagramDrawingPresentationalComponent,
+            OperationRouteDiagramDrawingComponent,
         );
         component = fixture.componentInstance;
     });

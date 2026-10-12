@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -35,7 +35,6 @@ export class LoginDialogComponent {
     dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
 
     readonly #fb = inject(FormBuilder);
-    readonly #http = inject(HttpClient);
     readonly #snackBar = inject(MatSnackBar);
     readonly #authService = inject(AuthService);
     readonly #tokenStateStore = inject(TokenStateStore);

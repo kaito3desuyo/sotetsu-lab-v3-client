@@ -42,7 +42,7 @@ export type OperationRouteDiagramTripOperationList =
  * B5: 路線チップ OFF で縦軸（表示駅リスト）から消えた駅を始発/終着に持つ行路（線分）を、
  * 表示中の列へ付け替える。
  *
- * SVG 描画（drawing-presentational）は駅の並び順における index を直接座標計算に使うため、
+ * SVG 描画（drawing）は駅の並び順における index を直接座標計算に使うため、
  * 始発/終着駅が `visibleStations` に無いと座標が求まらない。付け替え先は `allStations`
  * （絞り込み前の全駅順）で決める。
  * - 表示中の先頭の駅より前の駅 → 左端の「図外」の列

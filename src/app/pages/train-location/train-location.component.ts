@@ -21,6 +21,7 @@ import { RouteStationListStateQuery } from 'src/app/global-states/route-station-
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import {
     estimatePositions,
     findContinuations,
@@ -153,22 +154,9 @@ export class TrainLocationComponent {
         return determineMajorStations(this.#allTripBlocks(), axisStationIds);
     });
 
-    /**
-     * 全ルートの駅から stationId → 駅名 のマップを作る。行き先（trip 最終駅）は
-     * 表示中の路線軸外（直通先の他社線駅）になりうるため、軸ではなく全駅から引く。
-     */
-    readonly #stationNameById = computed(() => {
-        const map = new Map<string, string>();
-        for (const route of this.#routeStations()) {
-            for (const rsl of route.routeStationLists ?? []) {
-                const station = rsl.station;
-                if (station?.stationId && station.stationName) {
-                    map.set(station.stationId, station.stationName);
-                }
-            }
-        }
-        return map;
-    });
+    readonly #stationNameById = computed(() =>
+        buildStationNameById(this.#routeStations()),
+    );
 
     /** stationId → その駅を含む路線名（図の外を走る列車の「いま ○○線内」に使う） */
     readonly #routeNamesByStationId = computed(() => {

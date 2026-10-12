@@ -29,6 +29,7 @@ import {
 } from 'src/app/shared/diagram-scale';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import { findContinuations } from 'src/app/shared/train-position.util';
 import { TrainDiagramControllerComponent } from './components/train-diagram-controller/train-diagram-controller.component';
 import { TrainDiagramInfoPanelComponent } from './components/train-diagram-info-panel/train-diagram-info-panel.component';
@@ -267,22 +268,9 @@ export class TrainDiagramComponent {
         this.isTodaySelected() ? railwayMinuteOfDay(this.#now()) : null,
     );
 
-    /**
-     * 全ルートの駅から stationId → 駅名 のマップを作る。行き先（trip 最終駅）は
-     * 表示中の路線軸外（直通先の他社線駅）になりうるため、軸ではなく全駅から引く。
-     */
-    readonly #stationNameById = computed(() => {
-        const map = new Map<string, string>();
-        for (const route of this.#routeStations()) {
-            for (const rsl of route.routeStationLists ?? []) {
-                const station = rsl.station;
-                if (station?.stationId && station.stationName) {
-                    map.set(station.stationId, station.stationName);
-                }
-            }
-        }
-        return map;
-    });
+    readonly #stationNameById = computed(() =>
+        buildStationNameById(this.#routeStations()),
+    );
 
     /**
      * Task 13: 表示中の列車（#chains。方向フィルタ後）の走行区間から観測を作る
