@@ -36,7 +36,7 @@ libs/           ← ドメインデータ層（12ドメイン）
 global-states/  ← アプリ全体で共有するグローバル状態
 pages/          ← 機能ページ（遅延ロード）
 shared/         ← 複数ページで再利用するコンポーネント
-core/           ← フレームワーク基盤（インターセプター・ガード・リゾルバー等）
+core/           ← フレームワーク基盤（インターセプター・ガード・リゾルバー・複数ページで使うパイプ等）
 layout/         ← シェルレイアウトコンポーネント
 ```
 
@@ -44,7 +44,7 @@ layout/         ← シェルレイアウトコンポーネント
 
 外部からは `usecase/` のみを参照する。
 
-- `usecase/` — ドメインの公開 API。`*.service.ts` ファサード、DTO（`dtos/`）、ビルダーを提供する。
+- `usecase/` — ドメインの公開 API。`*.service.ts` ファサード、DTO（`dtos/`）、ビルダー、ドメインの enum・定数（`enums/`・`constants/`）を提供する。
 - `infrastructure/` — HTTP 実装。`queries/` が `HttpClient` 呼び出しを保持し、`models/` が API レスポンス型、`builders/` がモデル → DTO 変換を担う。
 
 ページコードは `infrastructure/` を直接インポートしてはならない。
@@ -57,17 +57,16 @@ layout/         ← シェルレイアウトコンポーネント
 
 ## 標準ページ構成パターン
 
-新規ページを実装する際は以下の構成に従うこと。`dashboard/`・`timetable-*/`・`operation-table/` など多くの既存ページは移行前の古い構成（`states/`、`-c`/`-p` コンポーネント分割）を使っているため、それらを参考にしてはならない。
+新規ページを実装する際は以下の構成に従うこと。既存のページと `shared/` の部品は、すべてこの構成にそろえてある（旧構成の `states/`・`-c`/`-p` 分割・`*-resolver.service.ts` は 2026-10-08 に無くした。ADR-0004）。
 
 ### ファイル構成
 
 ```
 pages/<feature>/
   <feature>.component.ts      ← ルートコンポーネント（ローディング管理・イベント購読）
-  <feature>.route.ts
+  <feature>.route.ts          ← resolve に core/resolvers/page.resolver.ts の pageResolver(...)
   stores/<feature>.store.ts   ← Elf ストア（plain const object、データ + UI 状態をまとめて保持）
   services/<feature>.service.ts
-  services/<feature>-resolver.service.ts
   components/
     <feature>-<widget>/       ← 単一コンポーネント（-c/-p への分割は行わない）
   pipes/, enums/, interfaces/, utils/
@@ -75,7 +74,7 @@ pages/<feature>/
 
 ### ストア（`stores/*.store.ts`）
 
-`@Injectable` ではなく `const` オブジェクトとしてエクスポートし、`@ngneat/elf` の `createStore` を直接使う。データと UI フラグの両方をここで管理する（`states/` は作らない）。`core/utils/elf-store.ts` の `createElfStore()` は旧 `states/` パターン用のラッパーであり、新規コードでは使わない。メソッドと `$` サフィックスの Observable、`get` アクセサをすべて同一オブジェクトにまとめる。永続化が必要な場合は `@ngneat/elf-persist-state` + `localforage` を使う。
+`@Injectable` ではなく `const` オブジェクトとしてエクスポートし、`@ngneat/elf` の `createStore` を直接使う。データと UI フラグの両方をここで管理する（`states/` は作らない）。メソッドと `$` サフィックスの Observable、`get` アクセサをすべて同一オブジェクトにまとめる。永続化が必要な場合は `@ngneat/elf-persist-state` + `localforage` を使う。
 
 ```ts
 const store = createStore({ name: 'FooStore' }, withProps<StoreProps>({ ... }));
@@ -105,6 +104,7 @@ export const FooStore = {
 - すべて `imports: [...]` 形式のスタンドアロンコンポーネント
 - フィールド注入は `inject()` 関数を使い、private には `#` プレフィックスを付ける
 - Observable → Signal 変換は `toSignal()` を使う
+- 複数ページに置く `shared/` のカード（検索・投稿）は、表示中の値をページから `input` で受け、ボタンの遷移はカード自身が `Router` で行う（Subject のイベントサービスは作らない。遷移失敗の通知は `core/utils/notify-navigation-failure.ts`）
 
 ### ルートコンポーネントのデータ取得
 
