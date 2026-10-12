@@ -17,9 +17,11 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
+import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
@@ -90,8 +92,27 @@ export class TimetableAllLineComponent {
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
                 const calendarId = paramMap.get('calendar_id');
-                const tripDirection = +paramMap.get('trip_direction') as 0 | 1;
+                const tripDirection = parseTripDirectionParam(
+                    paramMap.get('trip_direction'),
+                );
                 const tripBlockId = paramMap.get('trip_block_id');
+
+                // 向きが無い・読めない URL は上りに置き換える（駅別時刻表と同じ）。
+                // 以前は +null で黙って上り、+'abc' で NaN を API に送っていた
+                if (calendarId && tripDirection === null) {
+                    this.#router.navigate(
+                        [
+                            'timetable',
+                            'all-line',
+                            {
+                                ...this.#route.snapshot.params,
+                                trip_direction: ETripDirection.INBOUND,
+                            },
+                        ],
+                        { replaceUrl: true },
+                    );
+                    return;
+                }
 
                 TimetableAllLineStore.setCalendarId(calendarId);
                 TimetableAllLineStore.setTripDirection(tripDirection);
