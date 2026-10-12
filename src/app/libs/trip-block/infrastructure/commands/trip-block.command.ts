@@ -14,14 +14,14 @@ import { TripBlockModel } from '../models/trip-block.model';
 
 @Injectable({ providedIn: 'root' })
 export class TripBlockCommand {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
 
     createMany(
         body: CreateTripBlockDto[],
     ): Observable<TripBlockDetailsDto[]> {
-        return this.http
+        return this.#http
             .post<TripBlockModel[]>(
                 `${this.#v3ApiUrl}/bulk`,
                 body.map((o) => TripBlockModelBuilder.buildFromCreateDto(o)),
@@ -38,7 +38,7 @@ export class TripBlockCommand {
         tripBlockId: string,
         body: ReplaceTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.http
+        return this.#http
             .put<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}`,
                 TripBlockModelBuilder.buildFromReplaceDto(body),
@@ -51,7 +51,7 @@ export class TripBlockCommand {
         tripBlockId: string,
         body: AddTripToTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.http
+        return this.#http
             .patch<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}/add-trip`,
                 body,
@@ -64,7 +64,7 @@ export class TripBlockCommand {
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
     ): Observable<TripBlockDetailsDto> {
-        return this.http
+        return this.#http
             .patch<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}/delete-trip`,
                 body,

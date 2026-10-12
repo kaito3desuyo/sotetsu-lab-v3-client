@@ -21,7 +21,6 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
 @Component({
     selector: 'app-layout',
     templateUrl: './layout.component.html',
-    styleUrls: ['./layout.component.scss'],
     animations: layoutAnimations,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterModule, HeaderComponent, SidenavComponent],

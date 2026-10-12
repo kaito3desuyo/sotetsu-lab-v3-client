@@ -1,11 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { format, parse, parseISO } from 'date-fns';
-import { Dayjs, isDayjs } from 'dayjs';
 import { isString } from 'es-toolkit';
 import { isNumber } from 'es-toolkit/compat';
 
 @Pipe({
-    standalone: true,
     name: 'dateFns',
 })
 export class DateFnsPipe implements PipeTransform {
@@ -14,9 +12,8 @@ export class DateFnsPipe implements PipeTransform {
         args: { format: string; parseFormat?: string; parseISO?: boolean },
     ): string;
     transform(value: number, args: { format: string }): string;
-    transform(value: Dayjs, args: { format: string }): string;
     transform(
-        value: string | number | Dayjs,
+        value: string | number,
         args: { format: string; parseFormat?: string; parseISO?: boolean },
     ): string {
         const formatFn = (date: Date) => {
@@ -34,10 +31,6 @@ export class DateFnsPipe implements PipeTransform {
 
         if (isNumber(value)) {
             return formatFn(new Date(value * 1000));
-        }
-
-        if (isDayjs(value)) {
-            return formatFn(value.toDate());
         }
 
         return '';

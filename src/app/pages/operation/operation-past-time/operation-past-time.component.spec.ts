@@ -1,9 +1,8 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { EMPTY, of } from 'rxjs';
+import { of } from 'rxjs';
 
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
 import { OperationPastTimeComponent } from './operation-past-time.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
@@ -24,13 +23,6 @@ describe('OperationPastTimeComponent', () => {
                         fetchFormations: () => of(undefined),
                         fetchOperationsV3: () => of(undefined),
                         fetchOperationSightingsV3: () => of(undefined),
-                    },
-                },
-                {
-                    provide: OperationSearchCardService,
-                    useValue: {
-                        receiveSearchOperationTableEvent: () => EMPTY,
-                        receiveSearchOperationRouteDiagramEvent: () => EMPTY,
                     },
                 },
             ],

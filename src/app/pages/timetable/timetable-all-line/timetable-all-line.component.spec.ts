@@ -7,11 +7,9 @@ import { EMPTY, of } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
+import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
-import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
@@ -27,11 +25,6 @@ describe('TimetableAllLineComponent', () => {
                 provideHttpClient(withXhr()),
                 provideRouter([]),
                 TimetableAllLineService,
-                TimetableSearchCardStateStore,
-                {
-                    provide: TimetableSearchCardService,
-                    useValue: { receiveSearchTimetableEvent: () => EMPTY },
-                },
                 {
                     provide: CalendarListStateQuery,
                     useValue: { selectByCalendarId: () => of(undefined) },

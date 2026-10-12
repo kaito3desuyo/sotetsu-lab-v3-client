@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { createStore, setProps, withProps } from '@ngneat/elf';
-import dayjs from 'dayjs';
+import { addMinutes, getUnixTime } from 'date-fns';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, tap } from 'rxjs/operators';
 import { AuthService } from '../libs/auth/usecase/auth.service';
@@ -46,6 +46,8 @@ export class TokenStateQuery {
 
     get isExpired(): boolean {
         const { expiresAt } = state.getValue();
-        return !!expiresAt && dayjs().add(1, 'minute').unix() > expiresAt;
+        return (
+            !!expiresAt && getUnixTime(addMinutes(new Date(), 1)) > expiresAt
+        );
     }
 }

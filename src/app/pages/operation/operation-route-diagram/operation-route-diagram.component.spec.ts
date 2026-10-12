@@ -1,10 +1,9 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { EMPTY } from 'rxjs';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
 
@@ -18,23 +17,8 @@ describe('OperationRouteDiagramComponent', () => {
             providers: [
                 provideRouter([]),
                 {
-                    provide: OperationSearchCardService,
-                    useValue: {
-                        receiveSearchOperationTableEvent: () => EMPTY,
-                        receiveSearchOperationRouteDiagramEvent: () => EMPTY,
-                    },
-                },
-                {
-                    provide: OperationSearchCardStateStore,
-                    useValue: {
-                        setCalendarId: () => {},
-                        setOperationId: () => {},
-                    },
-                },
-                {
                     provide: OperationRouteDiagramService,
                     useValue: {
-                        receiveNavigateTimetableEvent: () => EMPTY,
                         fetchOperationTrips: () => EMPTY,
                         fetchStations: () => EMPTY,
                     },
@@ -52,5 +36,25 @@ describe('OperationRouteDiagramComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+
+    it('列車の帯を押すと、その列車の全線時刻表へ移る', () => {
+        const navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+
+        component.onClickNavigateTimetable({
+            tripBlockId: 'block-1',
+            tripDirection: ETripDirection.OUTBOUND,
+        });
+
+        expect(navigate).toHaveBeenCalledWith([
+            '/timetable',
+            'all-line',
+            expect.objectContaining({
+                trip_block_id: 'block-1',
+                trip_direction: ETripDirection.OUTBOUND,
+            }),
+        ]);
     });
 });

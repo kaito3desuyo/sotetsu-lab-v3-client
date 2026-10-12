@@ -1,6 +1,6 @@
 import { FormArray, ValidationErrors } from '@angular/forms';
 import { ITimetableEditFormTripTime } from '../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 import { findTimeOrderErrors } from '../utils/timetable-edit-form-grid.util';
 
 const stopsStationCountShouldBeGreaterAndEqualThanTwo = (

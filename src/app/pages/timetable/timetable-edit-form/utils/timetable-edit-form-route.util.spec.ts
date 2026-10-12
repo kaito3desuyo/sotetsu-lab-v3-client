@@ -1,6 +1,6 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ITimetableEditFormTimeValue } from '../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 import {
     buildRouteReachability,
     findRouteErrors,

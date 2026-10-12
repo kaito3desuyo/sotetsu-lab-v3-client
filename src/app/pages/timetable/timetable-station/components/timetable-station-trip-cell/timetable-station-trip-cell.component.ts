@@ -1,8 +1,11 @@
-import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
+import { MaxByPipe } from 'src/app/core/pipes/max-by.pipe';
+import { MinByPipe } from 'src/app/core/pipes/min-by.pipe';
+import { CalculateDayCountFromTodayPipe } from 'src/app/core/pipes/calculate-day-count-from-today.pipe';
+import { AntiBracketsPipe } from 'src/app/core/pipes/anti-brackets.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -10,7 +13,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
-import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
@@ -29,14 +31,16 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     templateUrl: './timetable-station-trip-cell.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
-        CommonModule,
         MatIconModule,
-        PipesModule,
+        FindByIdPipe,
+        MaxByPipe,
+        MinByPipe,
+        CalculateDayCountFromTodayPipe,
+        AntiBracketsPipe,
         DateFnsPipe,
         OperationNumberTagComponent,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
-        TripClassBaseNamePipe,
         TripLabelComponent,
     ],
 })

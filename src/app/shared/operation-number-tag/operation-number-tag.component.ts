@@ -8,7 +8,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { OperationNumberTagContextMenu } from './operation-number-tag-context-menu.type';
 
 /**
@@ -37,7 +37,12 @@ import { OperationNumberTagContextMenu } from './operation-number-tag-context-me
     templateUrl: './operation-number-tag.component.html',
     styleUrl: './operation-number-tag.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, PipesModule, MatMenuModule, MatIconModule],
+    imports: [
+        RouterLink,
+        OperationNumberColorPipe,
+        MatMenuModule,
+        MatIconModule,
+    ],
     host: { class: 'tw-inline-block' },
 })
 export class OperationNumberTagComponent {

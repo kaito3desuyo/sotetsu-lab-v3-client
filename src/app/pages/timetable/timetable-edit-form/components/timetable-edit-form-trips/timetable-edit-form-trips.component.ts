@@ -17,7 +17,6 @@ import {
     FormBuilder,
     FormsModule,
     ReactiveFormsModule,
-    Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,22 +28,17 @@ import {
     MatSlideToggleModule,
 } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { plainToClass } from 'class-transformer';
-import dayjs from 'dayjs';
 import { map } from 'rxjs/operators';
-import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
-import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
@@ -60,22 +54,20 @@ import {
     ITimetableEditFormTripValue,
     ITimetableEditFormTripTime,
 } from '../../interfaces/timetable-edit-form.interface';
-import {
-    ETimetableEditFormMode,
-    ETimetableEditFormStopType,
-} from '../../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormMode } from '../../enums/timetable-edit-form.enum';
 import {
     buildCopySourceGroups,
     filterCopySourceGroups,
 } from '../../utils/timetable-edit-form-copy-source.util';
 import { offsetTimeString } from '../../utils/timetable-edit-form-offset.util';
-import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
+import { toTripDtos } from '../../utils/timetable-edit-form-to-trip-dtos.util';
+import { buildTripFormGroup } from '../../utils/timetable-edit-form-trip-form.util';
 import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/timetable-edit-form-grid.component';
 
 @Component({
     selector: 'app-timetable-edit-form-trips',
     templateUrl: './timetable-edit-form-trips.component.html',
-    styleUrls: ['./timetable-edit-form-trips.component.scss'],
+    styleUrl: './timetable-edit-form-trips.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
@@ -87,7 +79,6 @@ import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/time
         MatSlideToggleModule,
         MatTooltipModule,
         MatIconModule,
-        PipesModule,
         FilterChipsComponent,
         CollapsiblePanelComponent,
         AppButtonComponent,
@@ -372,107 +363,14 @@ export class TimetableEditFormTripsComponent {
     }
 
     #generateTripFormGroup(trip?: TripDetailsDto): ITimetableEditFormTrip {
-        const stations = this.stations();
-
-        if (trip) {
-            return this.#fb.group({
-                tripId: [trip.tripId],
-                serviceId: [this.serviceId(), [Validators.required]],
-                tripNumber: [trip.tripNumber, []],
-                tripClassId: [trip.tripClassId, [Validators.required]],
-                tripName: [''],
-                tripDirection: [this.tripDirection(), [Validators.required]],
-                tripBlockId: [trip.tripBlockId],
-                depotIn: [trip.depotIn],
-                depotOut: [trip.depotOut],
-                calendarId: [this.calendarId(), [Validators.required]],
-                extraCalendarId: [null],
-                times: this.#fb.array(
-                    stations.map((station) =>
-                        this.#generateTripTimeFormGroup(
-                            station,
-                            trip.times?.find(
-                                (o) => o.stationId === station.stationId,
-                            ),
-                        ),
-                    ),
-                    [
-                        TimetableEditFormValidator.stopsStationCountShouldBeGreaterAndEqualThanTwo,
-                        TimetableEditFormValidator.stopTimesShouldBeLaterThanPrevStopTimes,
-                    ],
-                ),
-                operationId: [
-                    this.mode() === ETimetableEditFormMode.UPDATE &&
-                    trip.tripOperationLists?.length
-                        ? trip.tripOperationLists[0].operationId
-                        : '',
-                ],
-            });
-        }
-
-        return this.#fb.group({
-            tripId: [null],
-            serviceId: [this.serviceId(), [Validators.required]],
-            tripNumber: ['', []],
-            tripClassId: ['', [Validators.required]],
-            tripName: [''],
-            tripDirection: [this.tripDirection(), [Validators.required]],
-            tripBlockId: [null],
-            depotIn: [false],
-            depotOut: [false],
-            calendarId: [this.calendarId(), [Validators.required]],
-            extraCalendarId: [null],
-            times: this.#fb.array(
-                stations.map((station) =>
-                    this.#generateTripTimeFormGroup(station),
-                ),
-                [
-                    TimetableEditFormValidator.stopsStationCountShouldBeGreaterAndEqualThanTwo,
-                    TimetableEditFormValidator.stopTimesShouldBeLaterThanPrevStopTimes,
-                ],
-            ),
-            operationId: [''],
-        });
-    }
-
-    #generateTripTimeFormGroup(
-        station: StationDetailsDto,
-        time?: TimeDetailsDto,
-    ): ITimetableEditFormTripTime {
-        if (time) {
-            return this.#fb.group({
-                timeId: [time.timeId],
-                tripId: [time.tripId],
-                stationId: [station.stationId, [Validators.required]],
-                stopId: [time.stopId],
-                stopType: [
-                    (time.pickupType === 1 && time.dropoffType === 1
-                        ? ETimetableEditFormStopType.PASS
-                        : ETimetableEditFormStopType.STOP) as ETimetableEditFormStopType,
-                ],
-                arrivalTime: [
-                    time.arrivalTime
-                        ? dayjs(time.arrivalTime, 'HH:mm:ss').format('HH:mm')
-                        : null,
-                ],
-                departureTime: [
-                    time.departureTime
-                        ? dayjs(time.departureTime, 'HH:mm:ss').format('HH:mm')
-                        : null,
-                ],
-            });
-        }
-
-        return this.#fb.group({
-            timeId: [null],
-            tripId: [null],
-            stationId: [station.stationId, [Validators.required]],
-            stopId: [null],
-            stopType: [
-                ETimetableEditFormStopType.NOT_GOING_THROUGH as ETimetableEditFormStopType,
-            ],
-            arrivalTime: [null],
-            departureTime: [null],
+        return buildTripFormGroup({
+            fb: this.#fb,
+            stations: this.stations(),
+            serviceId: this.serviceId(),
+            calendarId: this.calendarId(),
+            tripDirection: this.tripDirection(),
+            mode: this.mode(),
+            trip,
         });
     }
 
@@ -526,84 +424,6 @@ export class TimetableEditFormTripsComponent {
     }
 
     onClickSubmit(): void {
-        const dto = this.tripsForm.value.map((trip) => {
-            const times = trip.times.filter(
-                (o) =>
-                    o.stopType !== ETimetableEditFormStopType.NOT_GOING_THROUGH,
-            );
-
-            return plainToClass(
-                this.mode() === ETimetableEditFormMode.UPDATE
-                    ? ReplaceTripDto
-                    : CreateTripDto,
-                {
-                    ...trip,
-                    tripId: trip.tripId ?? undefined,
-                    tripNumber: trip.tripNumber || '不明',
-                    times: times.map((time, index, arr) => {
-                        const arrivalTime =
-                            time.arrivalTime && index !== 0
-                                ? dayjs(time.arrivalTime, 'HH:mm')
-                                : null;
-                        const departureTime =
-                            time.departureTime && index !== arr.length - 1
-                                ? dayjs(time.departureTime, 'HH:mm')
-                                : null;
-
-                        return {
-                            ...time,
-                            timeId: time.timeId ?? undefined,
-                            stopSequence: index + 1,
-                            pickupType:
-                                time.stopType ===
-                                    ETimetableEditFormStopType.STOP &&
-                                index !== arr.length - 1
-                                    ? 0
-                                    : 1,
-                            dropoffType:
-                                time.stopType ===
-                                    ETimetableEditFormStopType.STOP &&
-                                index !== 0
-                                    ? 0
-                                    : 1,
-                            arrivalDays:
-                                arrivalTime && index !== 0
-                                    ? arrivalTime.hour() < 4
-                                        ? 2
-                                        : 1
-                                    : null,
-                            arrivalTime:
-                                arrivalTime && index !== 0
-                                    ? arrivalTime.format('HH:mm')
-                                    : null,
-                            departureDays:
-                                departureTime && index !== arr.length - 1
-                                    ? departureTime.hour() < 4
-                                        ? 2
-                                        : 1
-                                    : null,
-                            departureTime:
-                                departureTime && index !== arr.length - 1
-                                    ? departureTime.format('HH:mm')
-                                    : null,
-                        };
-                    }),
-                    tripOperationLists: trip.operationId
-                        ? [
-                              {
-                                  operationId: trip.operationId,
-                                  startStationId: times[0]?.stationId ?? null,
-                                  endStationId:
-                                      times[times.length - 1]?.stationId ??
-                                      null,
-                              },
-                          ]
-                        : [],
-                },
-                classTransformerOptions,
-            );
-        });
-
-        this.clickSubmit.emit(dto);
+        this.clickSubmit.emit(toTripDtos(this.tripsForm.value, this.mode()));
     }
 }

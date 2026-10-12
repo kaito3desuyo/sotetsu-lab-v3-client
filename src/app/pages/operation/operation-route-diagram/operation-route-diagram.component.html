@@ -21,9 +21,28 @@
          実際に設定できるコントロールの間に 280px の広告が挟まっており、
          このページ上で操作できること自体が見えなかった（audit C6）。 -->
     <div class="tw-flex tw-flex-col tw-gap-4">
-        <app-operation-route-diagram-drawing-container
-            (emptyStateActionClick)="onEmptyStateActionClick()"
-        ></app-operation-route-diagram-drawing-container>
-        <app-operation-search-card-c></app-operation-search-card-c>
+        <div>
+            @if (drawingDisplayed()) {
+                <app-operation-route-diagram-drawing
+                    [stations]="stations()"
+                    [tripOperationLists]="tripOperationLists()"
+                    [calendar]="calendar()"
+                    [operation]="operation()"
+                    (clickNavigateTimetable)="onClickNavigateTimetable($event)"
+                ></app-operation-route-diagram-drawing>
+            } @else {
+                <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。 -->
+                <app-empty-state
+                    icon="route"
+                    message="運用番号を設定して検索してください"
+                    actionLabel="運用表を見る"
+                    (actionClick)="onEmptyStateActionClick()"
+                ></app-empty-state>
+            }
+        </div>
+        <app-operation-search-card
+            [calendarId]="searchCalendarId()"
+            [operationId]="searchOperationId()"
+        ></app-operation-search-card>
     </div>
 </main>

@@ -29,7 +29,6 @@ export const EMPTY_BETWEEN_ROW_HEIGHT_PX = 30;
 @Component({
     selector: 'app-train-location-line',
     templateUrl: './train-location-line.component.html',
-    styleUrl: './train-location-line.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TrainLocationCardComponent, RouterLink],
     host: { class: 'tw-block' },

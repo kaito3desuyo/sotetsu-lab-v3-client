@@ -2,8 +2,8 @@ import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
 import { debounceTime } from 'rxjs';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 
 export type TimetableEditFormDraftContext = {
     mode: ETimetableEditFormMode;

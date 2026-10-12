@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { maxBy } from 'lodash-es';
+import { maxBy } from 'es-toolkit/compat';
 
 @Pipe({
     name: 'maxBy',

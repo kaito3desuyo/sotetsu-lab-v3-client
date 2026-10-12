@@ -1,49 +1,111 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     DestroyRef,
     inject,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
-import { OperationRouteDiagramDrawingContainerComponent } from './components/operation-route-diagram-drawing-container/operation-route-diagram-drawing-container.component';
+import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
+import { OperationRouteDiagramDrawingComponent } from './components/operation-route-diagram-drawing/operation-route-diagram-drawing.component';
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
+import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
+import {
+    reconnectTripOperationLists,
+    withOutsideStationColumns,
+} from './utils/operation-route-diagram-reconnect-trip-operation-lists.util';
 
 OperationRouteDiagramStore.resetLoading();
 
 @Component({
     selector: 'app-operation-route-diagram',
     templateUrl: './operation-route-diagram.component.html',
-    styleUrls: ['./operation-route-diagram.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        EmptyStateComponent,
         OperationRouteDiagramRouteFilterComponent,
-        OperationRouteDiagramDrawingContainerComponent,
-        OperationSearchCardCComponent,
+        OperationRouteDiagramDrawingComponent,
+        OperationSearchCardComponent,
     ],
 })
 export class OperationRouteDiagramComponent {
     readonly #destroyRef = inject(DestroyRef);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
-    readonly #operationSearchCardService = inject(OperationSearchCardService);
-    readonly #operationSearchCardStateStore = inject(
-        OperationSearchCardStateStore,
-    );
     readonly #operationRouteDiagramService = inject(
         OperationRouteDiagramService,
     );
 
     readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
+    /** 検索カードに出すダイヤと運用。取得し直す間も前の値を出し続ける。 */
+    readonly searchCalendarId = toSignal(
+        OperationRouteDiagramStore.calendar$.pipe(
+            filter((calendar) => !!calendar),
+            map((calendar) => calendar.calendarId),
+        ),
+        { initialValue: null },
+    );
+    readonly searchOperationId = toSignal(
+        OperationRouteDiagramStore.operation$.pipe(
+            filter((operation) => !!operation),
+            map((operation) => operation.operationId),
+        ),
+        { initialValue: null },
+    );
+
+    readonly calendar = toSignal(OperationRouteDiagramStore.calendar$);
+    readonly operation = toSignal(OperationRouteDiagramStore.operation$);
+    readonly #rawTripOperationLists = toSignal(
+        OperationRouteDiagramStore.tripOperationLists$,
+    );
+    // B5: 路線チップ絞り込み前の全駅順（再接続の基準になる）。
+    readonly #allStations = toSignal(OperationRouteDiagramStore.stations$);
+    // B5: 路線チップの選択状態で絞り込んだ表示駅リスト（縦軸）。
+    readonly #visibleStations = toSignal(
+        OperationRouteDiagramStore.visibleStations$,
+    );
+
+    // B5: 路線チップ OFF で縦軸から消えた駅を始発/終着に持つ行路を、表示中の列へ
+    // 付け替える。表示中の駅より外の駅は端の「図外」の列、間の駅はその位置の「図外」の列。
+    // SVG 描画（drawing）の座標系・findById による index 計算は
+    // 一切変更せず、その入力となる駅 ID をここで付け替えるだけに留める。
+    readonly tripOperationLists = computed(() => {
+        const raw = this.#rawTripOperationLists();
+        if (!raw) return raw;
+
+        return reconnectTripOperationLists(
+            raw,
+            this.#allStations() ?? [],
+            this.#visibleStations() ?? [],
+        );
+    });
+
+    // 縦軸。図外の列を使う行路があるときだけ、その位置に「図外」の列を足す。
+    readonly stations = computed(() => {
+        const visibleStations = this.#visibleStations();
+        if (!visibleStations) return visibleStations;
+
+        return withOutsideStationColumns(
+            visibleStations,
+            this.tripOperationLists() ?? [],
+        );
+    });
+
+    readonly drawingDisplayed = computed(
+        () =>
+            !!this.calendar() &&
+            !!this.operation() &&
+            !!this.stations()?.length &&
+            !!this.tripOperationLists(),
+    );
 
     constructor() {
         this.#route.paramMap
@@ -54,63 +116,18 @@ export class OperationRouteDiagramComponent {
                 OperationRouteDiagramStore.setOperationId(operationId);
                 this.fetchData();
             });
+    }
 
-        OperationRouteDiagramStore.calendar$
-            .pipe(
-                filter((calendar) => !!calendar),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe((calendar) => {
-                this.#operationSearchCardStateStore.setCalendarId(
-                    calendar.calendarId,
-                );
-            });
-
-        OperationRouteDiagramStore.operation$
-            .pipe(
-                filter((operation) => !!operation),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe((operation) => {
-                this.#operationSearchCardStateStore.setOperationId(
-                    operation.operationId,
-                );
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationTableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((calendarId) => {
-                this.#router.navigate([
-                    '/operation/table',
-                    { calendar_id: calendarId },
-                ]);
-            });
-
-        this.#operationSearchCardService
-            .receiveSearchOperationRouteDiagramEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((operationId) => {
-                this.#router.navigate([
-                    '/operation/route-diagram',
-                    { operation_id: operationId },
-                ]);
-            });
-
-        this.#operationRouteDiagramService
-            .receiveNavigateTimetableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((ev) => {
-                this.#router.navigate([
-                    '/timetable',
-                    'all-line',
-                    {
-                        calendar_id: OperationRouteDiagramStore.calendarId,
-                        trip_block_id: ev.tripBlockId,
-                        trip_direction: ev.tripDirection,
-                    },
-                ]);
-            });
+    onClickNavigateTimetable(ev: OperationRouteDiagramNavigateTimetable): void {
+        this.#router.navigate([
+            '/timetable',
+            'all-line',
+            {
+                calendar_id: OperationRouteDiagramStore.calendarId,
+                trip_block_id: ev.tripBlockId,
+                trip_direction: ev.tripDirection,
+            },
+        ]);
     }
 
     /** G12: 空状態（運用番号未設定）の次アクション。運用表へ誘導する。 */

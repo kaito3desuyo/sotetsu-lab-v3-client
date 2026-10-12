@@ -3,7 +3,7 @@ import {
     ITimetableEditFormRouteError,
     ITimetableEditFormTimeValue,
 } from '../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 
 /**
  * 駅 from（格子の位置）から駅 to へ、列車の向きのまま路線をたどって行けるかを返す関数を作る。

@@ -1,5 +1,5 @@
 import { FormBuilder } from '@angular/forms';
-import { ETimetableEditFormStopType } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../enums/timetable-edit-form.enum';
 import { TimetableEditFormValidator } from './timetable-edit-form.validator';
 
 const S = ETimetableEditFormStopType;

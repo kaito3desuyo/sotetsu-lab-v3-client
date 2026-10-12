@@ -1,18 +1,18 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import dayjs from 'dayjs';
-import { minBy } from 'lodash-es';
+import { minBy } from 'es-toolkit/compat';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 
 type StoreProps = {
     mode: ETimetableEditFormMode | null;
@@ -56,8 +56,6 @@ const store = createStore(
 );
 
 function sortTripsByFirstTime(trips: TripDetailsDto[]): TripDetailsDto[] {
-    const format = 'HH:mm:ss';
-
     return [...trips].sort((a, b) => {
         const aTime = minBy(a.times ?? [], (o) => o.stopSequence);
         const bTime = minBy(b.times ?? [], (o) => o.stopSequence);
@@ -72,12 +70,7 @@ function sortTripsByFirstTime(trips: TripDetailsDto[]): TripDetailsDto[] {
         if (!aValue || !bValue) return 0;
 
         return (
-            dayjs(aValue, format)
-                .add(aDays - 1, 'days')
-                .unix() -
-            dayjs(bValue, format)
-                .add(bDays - 1, 'days')
-                .unix()
+            toServiceSeconds(aDays, aValue) - toServiceSeconds(bDays, bValue)
         );
     });
 }

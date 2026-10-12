@@ -1,0 +1,76 @@
+@use '@angular/material' as mat;
+
+:host {
+    h3,
+    h4,
+    h5 {
+        margin: 0;
+    }
+
+    // 本文の measure を 45 全角文字相当に制限する（docs/design.md「Content の measure」）。
+    // 1310px 幅では 1 行あたり約 80 全角文字あり読み進めるのが苦しかった（audit M10）。
+    // 編成図の表は横に広いので対象に含めない。
+    p,
+    .mat-typography > small {
+        max-width: 45em;
+    }
+
+    p {
+        margin: 0;
+    }
+
+    .deep-orange {
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-deep-orange-palette)
+        );
+    }
+
+    .red {
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-red-palette)
+        );
+    }
+
+    .teal {
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-teal-palette),
+            400
+        );
+    }
+
+    .blue {
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-blue-palette),
+            800
+        );
+    }
+
+    .indigo {
+        color: mat.m2-get-color-from-palette(
+            mat.m2-define-palette(mat.$m2-indigo-palette),
+            900
+        );
+    }
+
+    table.formation {
+        td {
+            white-space: nowrap;
+            padding: 2px 4px;
+
+            &:not(.description) {
+                border-top: 1px solid;
+                border-bottom: 1px solid;
+                border-left: 1px solid;
+                border-right: 1px solid;
+            }
+        }
+
+        td.left-controller {
+            border-left: 3px double !important;
+        }
+
+        td.right-controller {
+            border-right: 3px double !important;
+        }
+    }
+}

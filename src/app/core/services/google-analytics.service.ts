@@ -6,10 +6,10 @@ import { environment } from 'src/environments/environment';
     providedIn: 'root',
 })
 export class GoogleAnalyticsService {
-    private readonly logger = inject(NGXLogger);
+    readonly #logger = inject(NGXLogger);
 
     constructor() {
-        this.logger.log('GoogleAnalyticsService: Constructor', this._useGA());
+        this.#logger.log('GoogleAnalyticsService: Constructor', this._useGA());
     }
 
     /**
@@ -32,7 +32,7 @@ export class GoogleAnalyticsService {
             path = `/${path}`;
         }
 
-        this.logger.log('GoogleAnalyticsService: Send page view =>', path);
+        this.#logger.log('GoogleAnalyticsService: Send page view =>', path);
 
         gtag('event', 'page_view', {
             page_title: title,

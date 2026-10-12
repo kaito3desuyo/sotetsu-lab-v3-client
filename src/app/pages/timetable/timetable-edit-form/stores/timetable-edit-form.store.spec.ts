@@ -1,8 +1,8 @@
 import { firstValueFrom } from 'rxjs';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './timetable-edit-form.store';
 
 function makeStation(stationName: string, routeIds: string[]): any {

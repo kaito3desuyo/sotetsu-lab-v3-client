@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewAntiBracketsPipe } from 'src/app/core/pipes/new-anti-brackets.pipe';
-import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
+import { AntiBracketsPipe } from 'src/app/core/pipes/anti-brackets.pipe';
+import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -32,8 +32,8 @@ export type TripPosition = Pick<
     imports: [
         MatIconModule,
         DateFnsPipe,
-        NewFindByIdPipe,
-        NewAntiBracketsPipe,
+        FindByIdPipe,
+        AntiBracketsPipe,
         TripLabelComponent,
     ],
     host: { class: 'tw-block tw-min-w-0' },

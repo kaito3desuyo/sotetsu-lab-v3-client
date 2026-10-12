@@ -5,11 +5,11 @@ import { StationDetailsDto } from './dtos/station-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class StationService {
-    private readonly stationQuery = inject(StationQuery);
+    readonly #stationQuery = inject(StationQuery);
 
     findMany(params?: {
         forceReload?: boolean;
     }): Observable<StationDetailsDto[]> {
-        return this.stationQuery.findMany(params);
+        return this.#stationQuery.findMany(params);
     }
 }

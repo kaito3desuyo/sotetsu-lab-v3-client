@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormArray, FormBuilder } from '@angular/forms';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ITimetableEditFormTrip } from '../../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../../enums/timetable-edit-form.enum';
 import { TimetableEditFormValidator } from '../../validators/timetable-edit-form.validator';
 import { TimetableEditFormGridComponent } from './timetable-edit-form-grid.component';
 

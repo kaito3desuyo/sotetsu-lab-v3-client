@@ -5,26 +5,26 @@ import { CalendarDetailsDto } from './dtos/calendar-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class CalendarService {
-    private readonly calendarQuery = inject(CalendarQuery);
+    readonly #calendarQuery = inject(CalendarQuery);
 
     findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto[]> {
-        return this.calendarQuery.findMany(params);
+        return this.#calendarQuery.findMany(params);
     }
 
     findOne(params: {
         calendarId: string;
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto> {
-        return this.calendarQuery.findOne(params);
+        return this.#calendarQuery.findOne(params);
     }
 
     findOneBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
     }): Observable<CalendarDetailsDto> {
-        return this.calendarQuery.findOneBySpecificDate(params);
+        return this.#calendarQuery.findOneBySpecificDate(params);
     }
 }

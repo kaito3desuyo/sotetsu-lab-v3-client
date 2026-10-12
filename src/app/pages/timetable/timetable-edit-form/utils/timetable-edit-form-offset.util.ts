@@ -1,11 +1,11 @@
-import dayjs from 'dayjs';
+import { addMinutes, format, parse } from 'date-fns';
 
 const TIME_FORMAT = 'HH:mm';
 
 /**
  * B8 D-5: trip-block コピー後の一括オフセット（±分）。
  * "HH:mm" 表記の時刻へ分単位のオフセットを適用する純関数。
- * 24時をまたぐ場合は dayjs の日付ロールオーバーを利用し HH:mm へ丸め直す
+ * 24時をまたぐ場合は Date の日付ロールオーバーを利用し HH:mm へ丸め直す
  * （yyyy-MM-dd 部分は捨てるため日跨ぎそのものは呼び出し側の
  * arrivalDays/departureDays 判定に委ねる）。
  */
@@ -16,7 +16,10 @@ export function offsetTimeString(
     if (!time) return time ?? null;
     if (!minutes) return time;
 
-    return dayjs(time, TIME_FORMAT).add(minutes, 'minute').format(TIME_FORMAT);
+    return format(
+        addMinutes(parse(time, TIME_FORMAT, new Date()), minutes),
+        TIME_FORMAT,
+    );
 }
 
 export type OffsetTimeShape = {

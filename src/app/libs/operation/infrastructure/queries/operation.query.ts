@@ -39,7 +39,7 @@ const SIGHTING_METHODS = [
 
 @Injectable({ providedIn: 'root' })
 export class OperationQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operations';
     readonly #cache = new QueryCache();
@@ -71,7 +71,7 @@ export class OperationQuery {
                 name: 'findManyByCalendarId',
                 params: { calendarId },
                 fetch: () =>
-                    this.http.get<OperationModel[]>(
+                    this.#http.get<OperationModel[]>(
                         `${this.#v3ApiUrl}/calendar/${calendarId}`,
                         {
                             observe: 'response',
@@ -95,7 +95,7 @@ export class OperationQuery {
                 name: 'findManyBySpecificPeriod',
                 params: { from, to },
                 fetch: () =>
-                    this.http.get<OperationModel[]>(
+                    this.#http.get<OperationModel[]>(
                         `${this.#v3ApiUrl}/from/${from}/to/${to}`,
                         {
                             observe: 'response',
@@ -125,7 +125,7 @@ export class OperationQuery {
                             (v) => v === undefined,
                         ),
                     });
-                    return this.http.get<OperationCurrentPositionModel>(
+                    return this.#http.get<OperationCurrentPositionModel>(
                         `${this.#v3ApiUrl}/${operationId}/current-position`,
                         {
                             params: httpParams,
@@ -155,7 +155,7 @@ export class OperationQuery {
                 name: 'findManyWithCurrentPosition',
                 params: { operationIds },
                 fetch: () =>
-                    this.http.get<OperationCurrentPositionModel[]>(
+                    this.#http.get<OperationCurrentPositionModel[]>(
                         `${this.#v3ApiUrl}/current-positions`,
                         {
                             params: { operationIds: operationIds.join(',') },
@@ -188,7 +188,7 @@ export class OperationQuery {
                 name: 'findManyWithTrips',
                 params: { calendarId },
                 fetch: () =>
-                    this.http.get<OperationTripsModel[]>(
+                    this.#http.get<OperationTripsModel[]>(
                         `${this.#v3ApiUrl}/calendar/${calendarId}/trips`,
                         {
                             observe: 'response',
@@ -222,7 +222,7 @@ export class OperationQuery {
                 name: 'findOneWithTrips',
                 params: { operationId },
                 fetch: () =>
-                    this.http.get<OperationTripsModel>(
+                    this.#http.get<OperationTripsModel>(
                         `${this.#v3ApiUrl}/${operationId}/trips`,
                         {
                             observe: 'response',
@@ -253,7 +253,7 @@ export class OperationQuery {
                 name: 'findManyGroups',
                 params: {},
                 fetch: () =>
-                    this.http.get<OperationGroupModel[]>(
+                    this.#http.get<OperationGroupModel[]>(
                         `${this.#v3ApiUrl}/groups`,
                         { observe: 'response' },
                     ),

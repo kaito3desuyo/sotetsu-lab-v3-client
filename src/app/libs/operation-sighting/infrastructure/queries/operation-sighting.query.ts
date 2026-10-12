@@ -19,7 +19,7 @@ import { OperationSightingModel } from '../models/operation-sighting.model';
 
 @Injectable({ providedIn: 'root' })
 export class OperationSightingQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
     readonly #cache = new QueryCache();
@@ -47,7 +47,7 @@ export class OperationSightingQuery {
                 name: 'findManyBySpecificPeriod',
                 params: { from, to, includeInvalidated },
                 fetch: () =>
-                    this.http.get<OperationSightingModel[]>(
+                    this.#http.get<OperationSightingModel[]>(
                         `${this.#v3ApiUrl}/from/${from}/to/${to}`,
                         {
                             params: omitBy(
@@ -107,7 +107,7 @@ export class OperationSightingQuery {
                 name: `findManyTimeCrossSections:${path}`,
                 params: { numbers },
                 fetch: () =>
-                    this.http.get<
+                    this.#http.get<
                         Record<string, OperationSightingTimeCrossSectionModel>
                     >(`${this.#v3ApiUrl}/time-cross-section/${path}`, {
                         params: { [paramName]: numbers.join(',') },
@@ -141,7 +141,7 @@ export class OperationSightingQuery {
                 name: 'findOneTimeCrossSectionByOperationNumber',
                 params: { operationNumber },
                 fetch: () =>
-                    this.http.get<OperationSightingTimeCrossSectionModel>(
+                    this.#http.get<OperationSightingTimeCrossSectionModel>(
                         `${this.#v3ApiUrl}/time-cross-section/operation-number/${operationNumber}`,
                         {
                             observe: 'response',
@@ -170,7 +170,7 @@ export class OperationSightingQuery {
                 name: 'findOneTimeCrossSectionByFormationNumber',
                 params: { formationNumber },
                 fetch: () =>
-                    this.http.get<OperationSightingTimeCrossSectionModel>(
+                    this.#http.get<OperationSightingTimeCrossSectionModel>(
                         `${this.#v3ApiUrl}/time-cross-section/formation-number/${formationNumber}`,
                         {
                             observe: 'response',

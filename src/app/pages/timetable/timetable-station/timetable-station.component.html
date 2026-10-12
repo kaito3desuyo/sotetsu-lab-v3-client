@@ -114,5 +114,9 @@
         }
     </div>
 
-    <app-timetable-search-card-c></app-timetable-search-card-c>
+    <app-timetable-search-card
+        [calendarId]="calendarId()"
+        [tripDirection]="tripDirection()"
+        [stationId]="stationId()"
+    ></app-timetable-search-card>
 </main>

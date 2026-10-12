@@ -13,7 +13,6 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
  * 時刻が取れない列車は前後を判定できないので、情報を落とさないよう残す。
  */
 @Pipe({
-    standalone: true,
     name: 'timetableStationFindOtherTripsInSameTripBlock',
 })
 export class TimetableStationFindOtherTripsInSameTripBlockPipe

@@ -5,11 +5,11 @@ import { AgencyDetailsDto } from './dtos/agency-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class AgencyService {
-    private readonly agencyQuery = inject(AgencyQuery);
+    readonly #agencyQuery = inject(AgencyQuery);
 
     findMany(params?: {
         forceReload?: boolean;
     }): Observable<AgencyDetailsDto[]> {
-        return this.agencyQuery.findMany(params);
+        return this.#agencyQuery.findMany(params);
     }
 }

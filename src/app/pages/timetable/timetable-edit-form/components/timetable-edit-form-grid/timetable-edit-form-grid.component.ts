@@ -19,7 +19,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { merge } from 'rxjs';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import {
     ITimetableEditFormGridCell,
@@ -29,7 +29,7 @@ import {
     ITimetableEditFormTripTime,
     TimetableEditFormTimeField,
 } from '../../interfaces/timetable-edit-form.interface';
-import { ETimetableEditFormStopType } from '../../special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormStopType } from '../../enums/timetable-edit-form.enum';
 import {
     findEndpointIndexes,
     findTimeOrderErrors,

@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
-import { TimetableEditFormResolverService } from './services/timetable-edit-form-resolver.service';
+import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
-import { ETimetableEditFormMode } from './special/enums/timetable-edit-form.enum';
+import { ETimetableEditFormMode } from './enums/timetable-edit-form.enum';
+import { TimetableEditFormDraftStore } from './stores/timetable-edit-form-draft.store';
 
 /**
  * B8-5 / 30-architecture.md §1.2: add/copy/update の 3 ページを
@@ -17,12 +18,11 @@ function buildRoutes(mode: ETimetableEditFormMode, title: string): Routes {
                 import('./timetable-edit-form.component').then(
                     (mod) => mod.TimetableEditFormComponent,
                 ),
-            providers: [
-                TimetableEditFormService,
-                TimetableEditFormResolverService,
-            ],
+            providers: [TimetableEditFormService],
             resolve: {
-                from: TimetableEditFormResolverService,
+                from: pageResolver(
+                    TimetableEditFormDraftStore.persistInitialized$,
+                ),
             },
             data: {
                 title,

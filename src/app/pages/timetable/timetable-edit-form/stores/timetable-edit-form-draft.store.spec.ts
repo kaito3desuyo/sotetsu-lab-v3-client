@@ -1,5 +1,5 @@
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 import {
     draftMatchesContext,
     TimetableEditFormDraft,

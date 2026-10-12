@@ -1,15 +1,16 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { OperationSightingInvalidationDialogService } from './operation-sighting-invalidation-dialog.service';
-import { OperationSightingInvalidationDialogData } from './operation-sighting-invalidation-dialog.type';
-import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { UserStateQuery } from 'src/app/global-states/user.state';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { OperationSightingInvalidationDialogData } from './operation-sighting-invalidation-dialog.type';
 
 @Component({
     selector: 'app-operation-sighting-invalidation-dialog',
@@ -26,28 +27,35 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     ],
 })
 export class OperationSightingInvalidationDialogComponent {
-    private readonly data =
+    readonly #dialogRef =
+        inject<
+            MatDialogRef<OperationSightingInvalidationDialogComponent, boolean>
+        >(MatDialogRef);
+    readonly #data =
         inject<OperationSightingInvalidationDialogData>(MAT_DIALOG_DATA);
 
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
-    readonly #operationSightingInvalidationDialogService = inject(
-        OperationSightingInvalidationDialogService,
-    );
+    readonly #operationSightingService = inject(OperationSightingService);
+    readonly #userQuery = inject(UserStateQuery);
 
     readonly form = this.#fb.group({
         reason: this.#fb.control('', [Validators.required]),
     });
 
     onClickClose(): void {
-        this.#operationSightingInvalidationDialogService.close();
+        this.#dialogRef.close(false);
     }
 
     async onClickSubmit(): Promise<void> {
         const { reason } = this.form.value;
 
         const result = await tryCatchAsync(
-            this.#operationSightingInvalidationDialogService.invalidate(reason),
+            this.#operationSightingService.invalidate({
+                operationSightingId: this.#data.operationSightingId,
+                userId: this.#userQuery.userId,
+                reason,
+            }),
             (e) => e as HttpErrorResponse,
         );
 
@@ -65,6 +73,6 @@ export class OperationSightingInvalidationDialogComponent {
             duration: 3000,
         });
 
-        this.#operationSightingInvalidationDialogService.close(true);
+        this.#dialogRef.close(true);
     }
 }

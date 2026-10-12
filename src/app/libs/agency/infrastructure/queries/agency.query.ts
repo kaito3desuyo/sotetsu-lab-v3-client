@@ -10,7 +10,7 @@ import { AgencyModel } from '../models/agency.model';
 
 @Injectable({ providedIn: 'root' })
 export class AgencyQuery {
-    private readonly http = inject(HttpClient);
+    readonly #http = inject(HttpClient);
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/agencies';
     readonly #cache = new QueryCache();
@@ -25,7 +25,7 @@ export class AgencyQuery {
                 name: 'findMany',
                 params: {},
                 fetch: () =>
-                    this.http.get<AgencyModel[]>(this.#v3ApiUrl, {
+                    this.#http.get<AgencyModel[]>(this.#v3ApiUrl, {
                         observe: 'response',
                     }),
                 forceReload,

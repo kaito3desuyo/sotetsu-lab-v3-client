@@ -1,14 +1,12 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { EMPTY, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
-import { OperationSearchCardService } from 'src/app/shared/operation-search-card/services/operation-search-card.service';
-import { OperationSearchCardStateStore } from 'src/app/shared/operation-search-card/states/operation-search-card.state';
 import { OperationTableComponent } from './operation-table.component';
 import { OperationTableService } from './services/operation-table.service';
 import { OperationTableStore } from './stores/operation-table.store';
@@ -33,17 +31,6 @@ describe('OperationTableComponent', () => {
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                     },
-                },
-                {
-                    provide: OperationSearchCardService,
-                    useValue: {
-                        receiveSearchOperationTableEvent: () => EMPTY,
-                        receiveSearchOperationRouteDiagramEvent: () => EMPTY,
-                    },
-                },
-                {
-                    provide: OperationSearchCardStateStore,
-                    useValue: { setCalendarId: () => {} },
                 },
                 {
                     provide: CalendarListStateQuery,

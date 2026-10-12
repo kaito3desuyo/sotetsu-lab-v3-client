@@ -1,5 +1,5 @@
 import { Route } from '@angular/router';
-import { TrainLocationResolverService } from './services/train-location-resolver.service';
+import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TrainLocationService } from './services/train-location.service';
 
 export const TRAIN_LOCATION_ROUTES: Route[] = [
@@ -9,9 +9,9 @@ export const TRAIN_LOCATION_ROUTES: Route[] = [
             import('./train-location.component').then(
                 (mod) => mod.TrainLocationComponent,
             ),
-        providers: [TrainLocationService, TrainLocationResolverService],
+        providers: [TrainLocationService],
         resolve: {
-            from: TrainLocationResolverService,
+            from: pageResolver(),
         },
         data: {
             title: '列車位置情報',

@@ -94,7 +94,7 @@ export function buildBandViewModels(
         const style = classifyBandStyle(
             tripOperationList.trip?.tripClass?.tripClassName,
         );
-        // 99文書追補7 §5（P9-9）: 回送は表示側（drawing-presentational）で
+        // 99文書追補7 §5（P9-9）: 回送は表示側（drawing）で
         // 「回送 <列番>」という文字列（standard行の「バッジ＋列番」に近いレイアウト）を
         // 組み立てるため、tripNumber 自体に「回」を前置する必要が無くなった
         // （前置すると「回送 回9432」のように二重表記になってしまう）。

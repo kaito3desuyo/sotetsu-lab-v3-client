@@ -2,7 +2,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 
 @Pipe({
-    standalone: true,
     name: 'timetableAllLineGetStationNumbering',
 })
 /**

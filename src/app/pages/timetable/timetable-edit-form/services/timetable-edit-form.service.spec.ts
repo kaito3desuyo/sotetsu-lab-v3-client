@@ -7,8 +7,8 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
-import { ETripDirection } from 'src/app/libs/trip/special/enums/trip.enum';
-import { ETimetableEditFormMode } from '../special/enums/timetable-edit-form.enum';
+import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from '../stores/timetable-edit-form.store';
 import { TimetableEditFormService } from './timetable-edit-form.service';
 

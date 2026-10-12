@@ -1,0 +1,38 @@
+<section class="tw-flex tw-flex-col tw-gap-4 tw-p-6">
+    <header class="tw-flex tw-flex-row tw-items-center tw-justify-between">
+        <h2 class="mat-h2 !tw-m-0">
+            {{ data.title }}
+        </h2>
+        <button
+            mat-icon-button
+            aria-label="ダイアログを閉じる"
+            (click)="close(false)"
+            tabindex="-1"
+        >
+            <mat-icon>clear</mat-icon>
+        </button>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <div class="[&_*]:tw-m-0" [innerHTML]="data.html"></div>
+        <div
+            class="tw-flex tw-flex-row tw-items-center tw-justify-end tw-gap-4"
+        >
+            <button
+                #cancelButton
+                mat-button
+                [color]="data.cancelButtonColor"
+                (click)="close(false)"
+            >
+                {{ data.cancelButtonText }}
+            </button>
+            <button
+                #goButton
+                mat-raised-button
+                [color]="data.goButtonColor"
+                (click)="close(true)"
+            >
+                {{ data.goButtonText }}
+            </button>
+        </div>
+    </div>
+</section>

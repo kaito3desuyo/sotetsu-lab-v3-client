@@ -4,7 +4,7 @@ import {
     computed,
     input,
 } from '@angular/core';
-import dayjs from 'dayjs';
+import { format, parse } from 'date-fns';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 
 /**
@@ -47,7 +47,7 @@ export class CalendarBandComponent {
     readonly revisionLabel = computed(() => {
         const startDate = this.calendar().startDate;
         return startDate
-            ? `${dayjs(startDate, 'YYYY-MM-DD').format('YYYY/M/D')}改正`
+            ? `${format(parse(startDate, 'yyyy-MM-dd', new Date()), 'yyyy/M/d')}改正`
             : '';
     });
 }

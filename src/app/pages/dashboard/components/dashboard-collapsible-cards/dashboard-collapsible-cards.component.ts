@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { LibraryListCardCComponent } from 'src/app/shared/library-list-card/components/library-list-card-c/library-list-card-c.component';
-import { NewOperationPostCardComponent } from 'src/app/shared/new-operation-post-card/new-operation-post-card.component';
-import { OperationSearchCardCComponent } from 'src/app/shared/operation-search-card/components/operation-search-card-c/operation-search-card-c.component';
+import { LibraryListCardComponent } from 'src/app/shared/library-list-card/library-list-card.component';
+import { OperationPostCardComponent } from 'src/app/shared/operation-post-card/operation-post-card.component';
+import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { providePanelCardEmbedded } from 'src/app/shared/panel-card/panel-card.component';
-import { TimetablePostCardCComponent } from 'src/app/shared/timetable-post-card/components/timetable-post-card-c/timetable-post-card-c.component';
-import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
+import { TimetablePostCardComponent } from 'src/app/shared/timetable-post-card/timetable-post-card.component';
+import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { DashboardStore } from '../../stores/dashboard.store';
 
 /**
@@ -24,11 +24,11 @@ import { DashboardStore } from '../../stores/dashboard.store';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatExpansionModule,
-        OperationSearchCardCComponent,
-        NewOperationPostCardComponent,
-        TimetableSearchCardCComponent,
-        TimetablePostCardCComponent,
-        LibraryListCardCComponent,
+        OperationSearchCardComponent,
+        OperationPostCardComponent,
+        TimetableSearchCardComponent,
+        TimetablePostCardComponent,
+        LibraryListCardComponent,
     ],
     providers: [providePanelCardEmbedded()],
 })

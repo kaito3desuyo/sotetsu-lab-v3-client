@@ -17,12 +17,10 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { LoadingService } from 'src/app/shared/app-shared/loading/loading.service';
+import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
-import { TimetableSearchCardCComponent } from 'src/app/shared/timetable-search-card/components/timetable-search-card-c/timetable-search-card-c.component';
-import { TimetableSearchCardService } from 'src/app/shared/timetable-search-card/services/timetable-search-card.service';
-import { TimetableSearchCardStateStore } from 'src/app/shared/timetable-search-card/states/timetable-search-card.state';
+import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
@@ -34,13 +32,13 @@ TimetableAllLineStore.resetLoading();
 @Component({
     selector: 'app-timetable-all-line',
     templateUrl: './timetable-all-line.component.html',
-    styleUrls: ['./timetable-all-line.component.scss'],
+    styleUrl: './timetable-all-line.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
-        TimetableSearchCardCComponent,
+        TimetableSearchCardComponent,
     ],
 })
 export class TimetableAllLineComponent {
@@ -56,12 +54,9 @@ export class TimetableAllLineComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #timetableSearchCardService = inject(TimetableSearchCardService);
-    readonly #timetableSearchCardStateStore = inject(
-        TimetableSearchCardStateStore,
-    );
 
     readonly isLoading = toSignal(TimetableAllLineStore.isLoading$);
+    readonly calendarId = toSignal(TimetableAllLineStore.calendarId$);
     readonly tripDirection = toSignal(TimetableAllLineStore.tripDirection$);
     readonly stations = toSignal(TimetableAllLineStore.stations$, {
         initialValue: [],
@@ -102,38 +97,7 @@ export class TimetableAllLineComponent {
                 TimetableAllLineStore.setTripDirection(tripDirection);
                 TimetableAllLineStore.setTripBlockId(tripBlockId ?? null);
 
-                this.#timetableSearchCardStateStore.setCalendarId(calendarId);
-                this.#timetableSearchCardStateStore.setTripDirection(
-                    tripDirection,
-                );
-
                 this.fetchData();
-            });
-
-        this.#timetableSearchCardService
-            .receiveSearchTimetableEvent()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((state) => {
-                if (state.searchByStation) {
-                    this.#router.navigate([
-                        'timetable',
-                        'station',
-                        {
-                            calendar_id: state.calendarId,
-                            station_id: state.stationId,
-                            trip_direction: state.tripDirection,
-                        },
-                    ]);
-                } else {
-                    this.#router.navigate([
-                        'timetable',
-                        'all-line',
-                        {
-                            calendar_id: state.calendarId,
-                            trip_direction: state.tripDirection,
-                        },
-                    ]);
-                }
             });
     }
 

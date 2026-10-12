@@ -5,13 +5,13 @@ import { FormationDetailsDto } from './dtos/formation-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class FormationService {
-    private readonly formationQuery = inject(FormationQuery);
+    readonly #formationQuery = inject(FormationQuery);
 
     findManyBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificDate(params);
+        return this.#formationQuery.findManyBySpecificDate(params);
     }
 
     findManyBySpecificPeriod(params: {
@@ -19,6 +19,6 @@ export class FormationService {
         endDate: string;
         forceReload?: boolean;
     }): Observable<FormationDetailsDto[]> {
-        return this.formationQuery.findManyBySpecificPeriod(params);
+        return this.#formationQuery.findManyBySpecificPeriod(params);
     }
 }

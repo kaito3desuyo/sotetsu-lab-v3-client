@@ -1,0 +1,48 @@
+<section class="tw-flex tw-flex-col tw-gap-4 tw-p-6">
+    <header class="tw-flex tw-flex-row tw-items-center tw-justify-between">
+        <h2 class="mat-h2 !tw-m-0">ダイヤを選択する</h2>
+        <button
+            mat-icon-button
+            aria-label="ダイヤ選択ダイアログを閉じる"
+            (click)="close()"
+            tabindex="-1"
+        >
+            <mat-icon>clear</mat-icon>
+        </button>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <p class="!tw-m-0">ダイヤを選択してください。</p>
+        <mat-form-field>
+            <mat-select
+                placeholder="ダイヤ"
+                [(ngModel)]="selected"
+                tabindex="0"
+            >
+                @for (calendar of calendars(); track calendar.calendarId) {
+                    <mat-option [value]="calendar.calendarId">
+                        {{
+                            calendar.startDate
+                                | dateFns
+                                    : {
+                                          format: 'yyyy/M/d改正',
+                                          parseFormat: 'yyyy-MM-dd',
+                                      }
+                        }}
+                        {{ calendar.calendarName }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        <div class="tw-flex tw-flex-row tw-justify-center">
+            <button
+                mat-raised-button
+                color="primary"
+                tabindex="0"
+                [disabled]="selected === undefined"
+                (click)="close(selected)"
+            >
+                選択する
+            </button>
+        </div>
+    </div>
+</section>

@@ -1,10 +1,16 @@
 import {
+    HTTP_INTERCEPTORS,
     provideHttpClient,
     withFetch,
     withInterceptorsFromDi,
 } from '@angular/common/http';
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import {
+    ApplicationConfig,
+    ErrorHandler,
+    importProvidersFrom,
+} from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
     provideClientHydration,
     withNoIncrementalHydration,
@@ -16,8 +22,15 @@ import {
     withInMemoryScrolling,
     withRouterConfig,
 } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
+import { AdsenseModule } from 'ng2-adsense';
+import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
+import { environment } from 'src/environments/environment';
 import { APP_ROUTES } from './app.route';
-import { CoreModule } from './core/core.module';
+import { CustomPaginator } from './core/classes/custom-paginator';
+import { AuthInterceptor } from './core/interceptors/auth-interceptor';
+import { PayloadHashInterceptor } from './core/interceptors/payload-hash.interceptor';
+import { ErrorHandlerService } from './core/services/error-handler.service';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -31,7 +44,29 @@ export const appConfig: ApplicationConfig = {
         provideClientHydration(withNoIncrementalHydration()),
         provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
-        importProvidersFrom([CoreModule]),
+        provideServiceWorker('ngsw-worker.js', {
+            enabled: environment.production,
+        }),
+        importProvidersFrom(
+            AdsenseModule.forRoot({
+                adClient: 'ca-pub-8923857677281403',
+                fullWidthResponsive: false,
+            }),
+            LoggerModule.forRoot({
+                level: environment.production
+                    ? NgxLoggerLevel.OFF
+                    : NgxLoggerLevel.DEBUG,
+                serverLogLevel: NgxLoggerLevel.OFF,
+            }),
+        ),
+        { provide: ErrorHandler, useClass: ErrorHandlerService },
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: PayloadHashInterceptor,
+            multi: true,
+        },
+        { provide: MatPaginatorIntl, useClass: CustomPaginator },
         // G0-1: mat-form-field を全ページ outlined 既定にする（98 G0-1。
         // 従来の fill/underline を上書き。個別ページでの appearance 明示は不要）
         {

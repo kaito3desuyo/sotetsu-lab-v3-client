@@ -8,13 +8,13 @@ import { OperationTripsDto } from './dtos/operation-trips.dto';
 
 @Injectable({ providedIn: 'root' })
 export class OperationService {
-    private readonly operationQuery = inject(OperationQuery);
+    readonly #operationQuery = inject(OperationQuery);
 
     findManyByCalendarId(params: {
         calendarId: string;
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
-        return this.operationQuery.findManyByCalendarId(params);
+        return this.#operationQuery.findManyByCalendarId(params);
     }
 
     findManyBySpecificPeriod(params: {
@@ -22,7 +22,7 @@ export class OperationService {
         to: string;
         forceReload?: boolean;
     }): Observable<OperationDetailsDto[]> {
-        return this.operationQuery.findManyBySpecificPeriod(params);
+        return this.#operationQuery.findManyBySpecificPeriod(params);
     }
 
     findOneWithCurrentPosition(params: {
@@ -30,33 +30,33 @@ export class OperationService {
         searchTime?: string;
         forceReload?: boolean;
     }): Observable<OperationCurrentPositionDto> {
-        return this.operationQuery.findOneWithCurrentPosition(params);
+        return this.#operationQuery.findOneWithCurrentPosition(params);
     }
 
     findManyWithCurrentPosition(params: {
         operationIds: string[];
         forceReload?: boolean;
     }): Observable<OperationCurrentPositionDto[]> {
-        return this.operationQuery.findManyWithCurrentPosition(params);
+        return this.#operationQuery.findManyWithCurrentPosition(params);
     }
 
     findManyWithTrips(params: {
         calendarId: string;
         forceReload?: boolean;
     }): Observable<OperationTripsDto[]> {
-        return this.operationQuery.findManyWithTrips(params);
+        return this.#operationQuery.findManyWithTrips(params);
     }
 
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
     }): Observable<OperationTripsDto> {
-        return this.operationQuery.findOneWithTrips(params);
+        return this.#operationQuery.findOneWithTrips(params);
     }
 
     findManyGroups(params?: {
         forceReload?: boolean;
     }): Observable<OperationGroupDto[]> {
-        return this.operationQuery.findManyGroups(params);
+        return this.#operationQuery.findManyGroups(params);
     }
 }

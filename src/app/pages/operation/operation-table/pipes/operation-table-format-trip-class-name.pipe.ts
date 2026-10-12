@@ -1,7 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    standalone: true,
     name: 'operationTableFormatTripClassName',
 })
 export class OperationTableFormatTripClassNamePipe implements PipeTransform {

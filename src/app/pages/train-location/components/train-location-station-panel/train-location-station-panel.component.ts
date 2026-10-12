@@ -5,7 +5,7 @@ import {
     input,
     signal,
 } from '@angular/core';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
@@ -27,7 +27,12 @@ import {
     selector: 'app-train-location-station-panel',
     templateUrl: './train-location-station-panel.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, TripLabelComponent, NgTemplateOutlet, PipesModule],
+    imports: [
+        RouterLink,
+        TripLabelComponent,
+        NgTemplateOutlet,
+        OperationNumberColorPipe,
+    ],
     host: { class: 'tw-block' },
 })
 export class TrainLocationStationPanelComponent {
