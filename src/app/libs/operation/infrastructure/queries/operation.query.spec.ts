@@ -151,4 +151,30 @@ describe('OperationQuery', () => {
         expect(result).toEqual([]);
         controller.verify();
     });
+
+    it("次の運用の候補は 'timetable' が書かれたら reload で取り直す", () => {
+        const { query, controller, invalidator } = setup();
+        const params = {
+            calendarId: 'cal-1',
+            stationId: 's1',
+            afterSeconds: 30000,
+        };
+        const candidatesUrl = `${url}/next-operation-candidates`;
+
+        query.findManyNextSegmentCandidates(params).subscribe();
+        const first = controller.expectOne((r) => r.url === candidatesUrl);
+        expect(first.request.params.get('calendarId')).toBe('cal-1');
+        expect(first.request.params.get('stationId')).toBe('s1');
+        expect(first.request.params.get('afterSeconds')).toBe('30000');
+        first.flush([]);
+
+        query.findManyNextSegmentCandidates(params).subscribe();
+        controller.expectNone(candidatesUrl);
+
+        invalidator.invalidate('timetable');
+        query.findManyNextSegmentCandidates(params).subscribe();
+        const again = controller.expectOne((r) => r.url === candidatesUrl);
+        expect(again.request.cache).toBe('reload');
+        again.flush([]);
+    });
 });

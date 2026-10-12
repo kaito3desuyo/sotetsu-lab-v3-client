@@ -111,10 +111,40 @@
                                     </mat-option>
                                 }
                             </mat-select>
+                            @if (col.tripForm.controls.operationId.disabled) {
+                                <mat-hint>
+                                    区間が複数あるため、ここでは変えられません
+                                </mat-hint>
+                            }
                         </mat-form-field>
                     </td>
                 }
             </tr>
+            @if (showsNextSegmentRow()) {
+                <tr>
+                    <th
+                        scope="row"
+                        class="tw-sticky tw-left-0 tw-z-[5] tw-whitespace-nowrap tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-2 tw-text-right tw-font-normal tw-text-muted"
+                        title="この列車のあと、車両が運番を離れて次に入る運用。同じ運番を続けるなら「なし」"
+                    >
+                        次の運用
+                    </th>
+                    @for (col of cols; track col.tripForm) {
+                        <td
+                            colspan="3"
+                            class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-border-r-rule-strong tw-bg-white tw-p-1"
+                        >
+                            @if (hasSingleSegment(col.tripForm)) {
+                                <app-timetable-edit-form-next-segment
+                                    [tripForm]="col.tripForm"
+                                    [stationId]="col.endStationId"
+                                    [arrivalTime]="col.endArrivalTime"
+                                />
+                            }
+                        </td>
+                    }
+                </tr>
+            }
             <tr>
                 <th
                     scope="row"

@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom';
+import { of } from 'rxjs';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormArray, FormBuilder } from '@angular/forms';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -21,13 +23,25 @@ const NORMAL: Row[] = [
     [S.STOP, '12:10', null],
 ];
 
-function makeTrip(tripNumber: string, rows: Row[]): ITimetableEditFormTrip {
+function makeTrip(
+    tripNumber: string,
+    rows: Row[],
+    segmentCount?: number,
+): ITimetableEditFormTrip {
     const fb = new FormBuilder();
     return fb.group({
         tripNumber: [tripNumber],
         tripDirection: [0],
         tripClassId: [''],
         operationId: [''],
+        calendarId: ['cal-1'],
+        tripOperationLists: [
+            Array.from({ length: segmentCount ?? 0 }, (_, i) => ({
+                id: `seg-${i}`,
+                operationId: 'op-1',
+            })),
+        ],
+        nextTripOperationListId: [null],
         depotIn: [false],
         depotOut: [false],
         times: fb.array(
@@ -81,6 +95,14 @@ describe('TimetableEditFormGridComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [TimetableEditFormGridComponent],
+            providers: [
+                {
+                    provide: OperationService,
+                    useValue: {
+                        findManyNextSegmentCandidates: () => of([]),
+                    },
+                },
+            ],
         }).compileComponents();
     });
 
@@ -469,5 +491,25 @@ describe('TimetableEditFormGridComponent', () => {
             ),
         ).toHaveClass('tw-text-red-800');
         expect(times().valid).toBe(true);
+    });
+
+    it('「次の運用」は区間が 1 つの列車にだけ出す', () => {
+        setup([
+            makeTrip('3030', NORMAL, 1),
+            makeTrip('3031', NORMAL, 2),
+            makeTrip('3032', NORMAL),
+        ]);
+
+        expect(
+            fixture.nativeElement.querySelectorAll(
+                'app-timetable-edit-form-next-segment',
+            ),
+        ).toHaveLength(1);
+    });
+
+    it('区間が 2 つ以上の列車しかなければ「次の運用」の行ごと出さない', () => {
+        setup([makeTrip('3031', NORMAL, 2)]);
+
+        expect(fixture.nativeElement).not.toHaveTextContent('次の運用');
     });
 });

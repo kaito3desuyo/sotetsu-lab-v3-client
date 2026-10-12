@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
+import { NextSegmentCandidateDto } from './dtos/next-segment-candidate.dto';
 import { OperationCurrentPositionDto } from './dtos/operation-current-position.dto';
 import { OperationDetailsDto } from './dtos/operation-details.dto';
+import { OperationItineraryLinkDto } from './dtos/operation-itinerary-link.dto';
 import { OperationGroupDto } from './dtos/operation-group.dto';
 import { OperationTripsDto } from './dtos/operation-trips.dto';
 
@@ -58,5 +60,21 @@ export class OperationService {
         forceReload?: boolean;
     }): Observable<OperationGroupDto[]> {
         return this.#operationQuery.findManyGroups(params);
+    }
+
+    findManyNextSegmentCandidates(params: {
+        calendarId: string;
+        stationId: string;
+        afterSeconds: number;
+        forceReload?: boolean;
+    }): Observable<NextSegmentCandidateDto[]> {
+        return this.#operationQuery.findManyNextSegmentCandidates(params);
+    }
+
+    findManyItineraryLinks(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationItineraryLinkDto[]> {
+        return this.#operationQuery.findManyItineraryLinks(params);
     }
 }
