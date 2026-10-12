@@ -73,6 +73,11 @@
                           ]
                 "
             ></app-operation-number-link>
+            @if (sightedAsOperationNumber(); as sightedAs) {
+                <span class="tw-whitespace-nowrap tw-text-xs tw-text-grey-600">
+                    @{{ sightedAs }}
+                </span>
+            }
         } @else if (isSightingLoading()) {
             <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
             <span

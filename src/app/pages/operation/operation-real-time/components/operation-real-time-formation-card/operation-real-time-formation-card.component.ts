@@ -102,4 +102,11 @@ export class OperationRealTimeFormationCardComponent {
     readonly formationAnnotation = computed(() =>
         formatFormationAnnotation(this.formation(), this.agencies()),
     );
+
+    /** 引き継いだ目撃のときの元の運用番号（例: 12K のカードで 11K）。直接の目撃は null */
+    readonly sightedAsOperationNumber = computed(
+        () =>
+            this.timeCrossSection()?.sightedAsOperation?.operationNumber ??
+            null,
+    );
 }

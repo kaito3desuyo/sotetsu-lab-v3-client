@@ -93,4 +93,27 @@ describe('OperationRealTimeOperationCardComponent', () => {
     it('予想編成が無ければ付記しない', () => {
         expect(component.formationAnnotation()).toBe('');
     });
+
+    it('引き継いだ目撃には元の運用番号を返す', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: sighting('s1'),
+            expectedSighting: {},
+            sightedAsOperation: {
+                operationId: 'op-11K',
+                operationNumber: '11K',
+            },
+        } as OperationSightingTimeCrossSectionDto);
+
+        expect(component.sightedAsOperationNumber()).toBe('11K');
+    });
+
+    it('直接の目撃には何も返さない', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: sighting('s1'),
+            expectedSighting: {},
+            sightedAsOperation: null,
+        } as OperationSightingTimeCrossSectionDto);
+
+        expect(component.sightedAsOperationNumber()).toBeNull();
+    });
 });

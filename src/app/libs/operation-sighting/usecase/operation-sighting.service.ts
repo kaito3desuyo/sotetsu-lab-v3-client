@@ -20,6 +20,7 @@ export class OperationSightingService {
         from: string;
         to: string;
         includeInvalidated?: boolean;
+        includeCarriedOver?: boolean;
         forceReload?: boolean;
     }): Observable<OperationSightingDetailsDto[]> {
         return this.#operationSightingQuery.findManyBySpecificPeriod(params);

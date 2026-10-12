@@ -38,20 +38,27 @@ export class OperationSightingQuery {
         from: string;
         to: string;
         includeInvalidated?: boolean;
+        includeCarriedOver?: boolean;
         forceReload?: boolean;
     }): Observable<OperationSightingDetailsDto[]> {
-        const { from, to, includeInvalidated, forceReload } = params;
+        const {
+            from,
+            to,
+            includeInvalidated,
+            includeCarriedOver,
+            forceReload,
+        } = params;
 
         return this.#cache
             .get({
                 name: 'findManyBySpecificPeriod',
-                params: { from, to, includeInvalidated },
+                params: { from, to, includeInvalidated, includeCarriedOver },
                 fetch: () =>
                     this.#http.get<OperationSightingModel[]>(
                         `${this.#v3ApiUrl}/from/${from}/to/${to}`,
                         {
                             params: omitBy(
-                                { includeInvalidated },
+                                { includeInvalidated, includeCarriedOver },
                                 (v) => v === undefined,
                             ),
                             observe: 'response',
