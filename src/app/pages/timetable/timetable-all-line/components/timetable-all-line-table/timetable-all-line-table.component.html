@@ -394,13 +394,14 @@
                                     </tr>
                                 }
                             }
-                            <!-- 終着時刻・終着駅の 2 段は箱の下端に固定し、上を二重罫線にする
-                                 （ユーザー指示 2026-09-24）。終着時刻の段は終着駅の段の高さぶん上に置く -->
-                            <tr class="tw-h-6">
+                            <!-- 終着時刻・終着駅の 2 段と、その下の編集・コピー・削除・グループの段は
+                                 箱の下端に積んで固定する（ユーザー指示 2026-09-24・ボタンは 2026-10-12 で md 以上だけ）。
+                                 終着時刻の段の上は二重罫線。各段の bottom は、下にある段の高さの合計を測って決める -->
+                            <tr #bottomRow class="tw-h-6">
                                 <td
                                     colspan="2"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
-                                    [style.bottom.px]="terminusNameRowHeight()"
+                                    [style.bottom.px]="bottomRowOffsets()[0]"
                                 >
                                     終着時刻
                                 </td>
@@ -408,7 +409,7 @@
                                     <td
                                         class="dia tw-sticky tw-z-20 tw-border-0 tw-border-r tw-border-t-[3px] tw-border-double tw-border-rule tw-bg-white tw-text-center"
                                         [style.bottom.px]="
-                                            terminusNameRowHeight()
+                                            bottomRowOffsets()[0]
                                         "
                                         [style.color]="
                                             trip.tripClass.tripClassColor
@@ -421,16 +422,20 @@
                                     </td>
                                 }
                             </tr>
-                            <tr #terminusNameRow>
+                            <tr #bottomRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-bottom-0 tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                    [style.bottom.px]="bottomRowOffsets()[1]"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
                                 >
                                     終着駅
                                 </td>
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-sticky tw-bottom-0 tw-z-20 tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                        [style.bottom.px]="
+                                            bottomRowOffsets()[1]
+                                        "
+                                        class="tw-sticky tw-z-20 tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
                                     >
                                         <ng-container
                                             *ngTemplateOutlet="
@@ -447,17 +452,21 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr>
+                            <tr #bottomRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    [style.bottom.px]="bottomRowOffsets()[2]"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     編集
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-text-center"
+                                        [style.bottom.px]="
+                                            bottomRowOffsets()[2]
+                                        "
+                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -475,17 +484,21 @@
                                     </td>
                                 }
                             </tr>
-                            <tr>
+                            <tr #bottomRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    [style.bottom.px]="bottomRowOffsets()[3]"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     コピー
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                        [style.bottom.px]="
+                                            bottomRowOffsets()[3]
+                                        "
+                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -503,17 +516,21 @@
                                     </td>
                                 }
                             </tr>
-                            <tr>
+                            <tr #bottomRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    [style.bottom.px]="bottomRowOffsets()[4]"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     削除
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                        [style.bottom.px]="
+                                            bottomRowOffsets()[4]
+                                        "
+                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -534,17 +551,21 @@
                                     </td>
                                 }
                             </tr>
-                            <tr>
+                            <tr #bottomRow>
                                 <td
                                     colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-10 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    [style.bottom.px]="bottomRowOffsets()[5]"
+                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     グループ
                                 </td>
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-text-center"
+                                        [style.bottom.px]="
+                                            bottomRowOffsets()[5]
+                                        "
+                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         @if (!groupingBaseTrip()) {
                                             <button
