@@ -7,7 +7,6 @@ import { ConfirmDialogMainPComponent } from '../confirm-dialog-main-p/confirm-di
 @Component({
     selector: 'app-confirm-dialog-main-c',
     templateUrl: './confirm-dialog-main-c.component.html',
-    styleUrls: ['./confirm-dialog-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ConfirmDialogMainPComponent],
 })

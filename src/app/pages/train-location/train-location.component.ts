@@ -64,7 +64,6 @@ TrainLocationStore.resetLoading();
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
-    styleUrl: './train-location.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,

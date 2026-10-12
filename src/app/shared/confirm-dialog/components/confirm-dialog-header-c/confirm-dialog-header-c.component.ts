@@ -7,7 +7,6 @@ import { ConfirmDialogHeaderPComponent } from '../confirm-dialog-header-p/confir
 @Component({
     selector: 'app-confirm-dialog-header-c',
     templateUrl: './confirm-dialog-header-c.component.html',
-    styleUrls: ['./confirm-dialog-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ConfirmDialogHeaderPComponent]
 })

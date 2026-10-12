@@ -4,7 +4,6 @@ import { LibraryVehicleHeaderPComponent } from '../library-vehicle-header-p/libr
 @Component({
     selector: 'app-library-vehicle-header-c',
     templateUrl: './library-vehicle-header-c.component.html',
-    styleUrls: ['./library-vehicle-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryVehicleHeaderPComponent],
 })

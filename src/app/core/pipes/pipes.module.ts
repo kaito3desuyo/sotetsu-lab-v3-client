@@ -7,30 +7,24 @@ import { MaxByPipe } from './max-by.pipe';
 import { MinByPipe } from './min-by.pipe';
 import { OperationNumberColorPipe } from './operation-number-color.pipe';
 import { PaddingPipe } from './padding.pipe';
-import { RangePipe } from './range.pipe';
-import { TrackByPipe } from './track-by.pipe';
 
 @NgModule({
     imports: [
         CommonModule,
         OperationNumberColorPipe,
         FindByIdPipe,
-        TrackByPipe,
         MaxByPipe,
         MinByPipe,
         CalculateDayCountFromTodayPipe,
-        RangePipe,
         AntiBracketsPipe,
         PaddingPipe,
     ],
     exports: [
         OperationNumberColorPipe,
         FindByIdPipe,
-        TrackByPipe,
         MaxByPipe,
         MinByPipe,
         CalculateDayCountFromTodayPipe,
-        RangePipe,
         AntiBracketsPipe,
         PaddingPipe,
     ],

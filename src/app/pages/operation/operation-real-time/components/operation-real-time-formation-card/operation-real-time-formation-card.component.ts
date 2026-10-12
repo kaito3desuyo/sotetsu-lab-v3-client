@@ -18,7 +18,6 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
-import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
@@ -45,7 +44,6 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         NewFindByIdPipe,
         NewOperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
-        TripClassBaseNamePipe,
         TripPositionComponent,
     ],
 })

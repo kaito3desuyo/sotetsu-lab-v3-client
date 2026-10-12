@@ -32,7 +32,6 @@ OperationRealTimeStore.resetLoading();
 @Component({
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
-    styleUrls: ['./operation-real-time.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,

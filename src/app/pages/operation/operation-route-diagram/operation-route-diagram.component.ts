@@ -22,7 +22,6 @@ OperationRouteDiagramStore.resetLoading();
 @Component({
     selector: 'app-operation-route-diagram',
     templateUrl: './operation-route-diagram.component.html',
-    styleUrls: ['./operation-route-diagram.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,

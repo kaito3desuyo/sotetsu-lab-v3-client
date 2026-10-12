@@ -30,7 +30,6 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 @Component({
     selector: 'app-operation-real-time-filter',
     templateUrl: './operation-real-time-filter.component.html',
-    styleUrl: './operation-real-time-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [FilterChipsComponent],
 })

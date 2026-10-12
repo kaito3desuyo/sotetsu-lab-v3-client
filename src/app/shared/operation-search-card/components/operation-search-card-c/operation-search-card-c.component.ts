@@ -14,7 +14,6 @@ import { OperationSearchCardPComponent } from '../operation-search-card-p/operat
 @Component({
     selector: 'app-operation-search-card-c',
     templateUrl: './operation-search-card-c.component.html',
-    styleUrls: ['./operation-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [OperationSearchCardPComponent],
 })

@@ -34,7 +34,6 @@ import { TrainLocationMode } from '../../stores/train-location.store';
 @Component({
     selector: 'app-train-location-controller',
     templateUrl: './train-location-controller.component.html',
-    styleUrl: './train-location-controller.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatFormFieldModule,

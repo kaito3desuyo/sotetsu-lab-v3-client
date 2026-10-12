@@ -18,7 +18,6 @@ import { TimetableSearchCardPComponent } from '../timetable-search-card-p/timeta
 @Component({
     selector: 'app-timetable-search-card-c',
     templateUrl: './timetable-search-card-c.component.html',
-    styleUrls: ['./timetable-search-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetableSearchCardPComponent]
 })

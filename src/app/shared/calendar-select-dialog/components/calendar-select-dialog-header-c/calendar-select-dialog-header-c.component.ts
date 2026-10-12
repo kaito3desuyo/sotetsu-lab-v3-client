@@ -5,7 +5,6 @@ import { CalendarSelectDialogHeaderPComponent } from '../calendar-select-dialog-
 @Component({
     selector: 'app-calendar-select-dialog-header-c',
     templateUrl: './calendar-select-dialog-header-c.component.html',
-    styleUrls: ['./calendar-select-dialog-header-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CalendarSelectDialogHeaderPComponent]
 })

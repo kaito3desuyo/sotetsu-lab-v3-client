@@ -30,7 +30,6 @@ import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram
 @Component({
     selector: 'app-operation-route-diagram-route-filter',
     templateUrl: './operation-route-diagram-route-filter.component.html',
-    styleUrl: './operation-route-diagram-route-filter.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ControlBandComponent, FilterChipsComponent],
     host: { class: 'tw-contents' },

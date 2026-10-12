@@ -6,7 +6,6 @@ import { LibraryVehicleMainCComponent } from './components/library-vehicle-main-
 @Component({
     selector: 'app-library-vehicle',
     templateUrl: './library-vehicle.component.html',
-    styleUrls: ['./library-vehicle.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryVehicleHeaderCComponent, LibraryVehicleMainCComponent],
 })

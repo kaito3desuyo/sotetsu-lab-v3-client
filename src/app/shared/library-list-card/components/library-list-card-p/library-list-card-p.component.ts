@@ -7,7 +7,6 @@ import { PanelCardComponent } from '../../../panel-card/panel-card.component';
 @Component({
     selector: 'app-library-list-card-p',
     templateUrl: './library-list-card-p.component.html',
-    styleUrls: ['./library-list-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink, MatIconModule, MatListModule, PanelCardComponent]
 })

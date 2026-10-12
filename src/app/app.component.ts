@@ -30,7 +30,6 @@ import { LoadingService } from './shared/app-shared/loading/loading.service';
 @Component({
     selector: 'app-root',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LayoutComponent],
 })

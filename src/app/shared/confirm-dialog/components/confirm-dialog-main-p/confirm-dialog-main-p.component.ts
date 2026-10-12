@@ -13,7 +13,6 @@ import { IConfirmDialogData } from '../../interfaces/confirm-dialog-data.interfa
 @Component({
     selector: 'app-confirm-dialog-main-p',
     templateUrl: './confirm-dialog-main-p.component.html',
-    styleUrls: ['./confirm-dialog-main-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatButtonModule]
 })

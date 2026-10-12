@@ -8,7 +8,6 @@ import { TimetablePostCardPComponent } from '../timetable-post-card-p/timetable-
 @Component({
     selector: 'app-timetable-post-card-c',
     templateUrl: './timetable-post-card-c.component.html',
-    styleUrls: ['./timetable-post-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [TimetablePostCardPComponent]
 })

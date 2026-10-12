@@ -17,7 +17,6 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
 @Component({
     selector: 'app-train-location-card',
     templateUrl: './train-location-card.component.html',
-    styleUrl: './train-location-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterLink, TripClassChipComponent, PipesModule],
     host: { class: 'tw-block tw-max-w-full' },

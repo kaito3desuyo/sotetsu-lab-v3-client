@@ -11,7 +11,6 @@ import { ConfirmDialogMainCComponent } from '../confirm-dialog-main-c/confirm-di
 @Component({
     selector: 'app-confirm-dialog',
     templateUrl: './confirm-dialog.component.html',
-    styleUrls: ['./confirm-dialog.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [ConfirmDialogHeaderCComponent, ConfirmDialogMainCComponent],
     providers: [ConfirmDialogStateStore, ConfirmDialogStateQuery]

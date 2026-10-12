@@ -25,7 +25,6 @@ OperationPastTimeStore.resetLoading();
 @Component({
     selector: 'app-operation-past-time',
     templateUrl: './operation-past-time.component.html',
-    styleUrls: ['./operation-past-time.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,

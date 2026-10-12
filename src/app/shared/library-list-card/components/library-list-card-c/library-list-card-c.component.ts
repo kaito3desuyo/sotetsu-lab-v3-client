@@ -4,7 +4,6 @@ import { LibraryListCardPComponent } from '../library-list-card-p/library-list-c
 @Component({
     selector: 'app-library-list-card-c',
     templateUrl: './library-list-card-c.component.html',
-    styleUrls: ['./library-list-card-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryListCardPComponent],
 })

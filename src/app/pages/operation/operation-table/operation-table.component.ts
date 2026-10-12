@@ -34,7 +34,6 @@ OperationTableStore.resetLoading();
 @Component({
     selector: 'app-operation-table',
     templateUrl: './operation-table.component.html',
-    styleUrls: ['./operation-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,

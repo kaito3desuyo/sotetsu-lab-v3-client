@@ -4,7 +4,6 @@ import { LibraryVehicleMainPComponent } from '../library-vehicle-main-p/library-
 @Component({
     selector: 'app-library-vehicle-main-c',
     templateUrl: './library-vehicle-main-c.component.html',
-    styleUrls: ['./library-vehicle-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [LibraryVehicleMainPComponent],
 })

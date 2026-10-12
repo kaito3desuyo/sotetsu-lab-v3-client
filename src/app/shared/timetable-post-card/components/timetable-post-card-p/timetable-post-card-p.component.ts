@@ -33,7 +33,6 @@ type Form = FormGroup<{
 @Component({
     selector: 'app-timetable-post-card-p',
     templateUrl: './timetable-post-card-p.component.html',
-    styleUrls: ['./timetable-post-card-p.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         CommonModule,

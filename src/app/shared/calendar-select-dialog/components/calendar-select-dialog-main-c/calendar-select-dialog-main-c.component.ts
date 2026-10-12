@@ -8,7 +8,6 @@ import { CalendarSelectDialogMainPComponent } from '../calendar-select-dialog-ma
 @Component({
     selector: 'app-calendar-select-dialog-main-c',
     templateUrl: './calendar-select-dialog-main-c.component.html',
-    styleUrls: ['./calendar-select-dialog-main-c.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [CalendarSelectDialogMainPComponent]
 })

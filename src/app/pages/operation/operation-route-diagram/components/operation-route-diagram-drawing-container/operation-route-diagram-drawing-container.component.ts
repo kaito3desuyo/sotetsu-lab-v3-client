@@ -19,7 +19,6 @@ import { OperationRouteDiagramDrawingPresentationalComponent } from '../operatio
 @Component({
     selector: 'app-operation-route-diagram-drawing-container',
     templateUrl: './operation-route-diagram-drawing-container.component.html',
-    styleUrls: ['./operation-route-diagram-drawing-container.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         EmptyStateComponent,

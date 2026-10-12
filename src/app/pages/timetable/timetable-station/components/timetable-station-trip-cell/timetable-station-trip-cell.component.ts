@@ -10,7 +10,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
-import { TripClassBaseNamePipe } from 'src/app/shared/pipes/trip-class-base-name.pipe';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
@@ -36,7 +35,6 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
         OperationNumberTagComponent,
         TimetableStationFindLastStopStationPipe,
         TimetableStationFindOtherTripsInSameTripBlockPipe,
-        TripClassBaseNamePipe,
         TripLabelComponent,
     ],
 })
