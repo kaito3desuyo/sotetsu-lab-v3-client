@@ -27,6 +27,13 @@ import {
 import { TimetableEditFormStore } from '../stores/timetable-edit-form.store';
 import { routeIdsTraversedBy } from '../utils/timetable-edit-form-route.util';
 import { ownAgencyRouteIds } from 'src/app/shared/own-agency-route-ids.util';
+import { TripBlockFields } from 'src/app/libs/trip-block/usecase/trip-block-fields';
+
+/** コピー元の候補一覧（列番・種別・始発/終着駅・始発時刻）に使う項目 */
+const COPY_SOURCE_CANDIDATE_FIELDS: TripBlockFields = {
+    trip: ['tripNumber', 'tripClassId'],
+    time: ['stationId', 'stopSequence', 'arrivalTime', 'departureTime'],
+};
 
 @Injectable()
 export class TimetableEditFormService {
@@ -167,20 +174,18 @@ export class TimetableEditFormService {
             return of(undefined);
         }
 
+        // 一覧（buildCopySourceGroups）に使う項目だけを取る。全項目は平日 1 方向で
+        // 約 6.1MB になり、Lambda の応答上限 6MB を超えて本番で 502 になる（2026-10-12）。
+        // 項目が欠けるので、フォームに入れるコピー元は候補ではなく ID で取る（fetchTargetTripBlock・selectCopySource）。
         return this.#tripBlockService
-            .findManyByFilter({ calendarId, tripDirection })
+            .findManyByFilter({
+                calendarId,
+                tripDirection,
+                fields: COPY_SOURCE_CANDIDATE_FIELDS,
+            })
             .pipe(
                 tap((tripBlocks: TripBlockDetailsDto[]) => {
                     TimetableEditFormStore.setCopySourceCandidates(tripBlocks);
-
-                    const preselected = TimetableEditFormStore.tripBlockId;
-                    const match = tripBlocks.find(
-                        (o) => o.tripBlockId === preselected,
-                    );
-                    if (match) {
-                        TimetableEditFormStore.setTargetTripBlock(match);
-                        this.#selectRoutesOf(match);
-                    }
                 }),
                 map(() => undefined),
             );
