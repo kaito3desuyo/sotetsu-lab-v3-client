@@ -121,6 +121,35 @@ describe('TrainLocationControllerComponent', () => {
         expect(el.querySelector('[data-calendar-label]')).toBeNull();
     });
 
+    it('時刻指定のときは、時計の場所に時刻の入力欄を出す', () => {
+        fixture.componentRef.setInput('mode', 'specified');
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('[data-clock]')).toBeNull();
+    });
+
+    it.each(['now', 'specified'])(
+        '%s: 時刻 → ダイヤ → 切り替えの順に並べる',
+        (mode) => {
+            fixture.componentRef.setInput('mode', mode);
+            fixture.componentRef.setInput('calendarId', 'calendar-1');
+            fixture.detectChanges();
+
+            const row = (fixture.nativeElement as HTMLElement).querySelector(
+                'app-segment-toggle',
+            ).parentElement;
+            const kinds = Array.from(row.children).map((child) => {
+                if (child.matches('[data-clock]')) return 'time';
+                if (child.querySelector('input[type="time"]')) return 'time';
+                if (child.matches('[data-calendar-label]')) return 'calendar';
+                if (child.querySelector('mat-select')) return 'calendar';
+                if (child.matches('app-segment-toggle')) return 'toggle';
+                return child.tagName;
+            });
+            expect(kinds).toEqual(['time', 'calendar', 'toggle']);
+        },
+    );
+
     it('onTimeInputChange: 入力した時刻を emit する', () => {
         const spy = jest.spyOn(component.timeInputValueChange, 'emit');
         component.onTimeInputChange('12:34');
