@@ -356,10 +356,41 @@ export class TimetableEditFormTripsComponent {
                         ) ?? {},
                 ),
             });
+            this.#restoreSegments(tripForm, trip);
             this.tripsForm.push(tripForm);
         }
 
         this.#cd.markForCheck();
+    }
+
+    /**
+     * 古い下書きは元の区間を持たない。そのまま保存すると区間が作り直され、つながりが消えるので、
+     * 読み込んだ同じ tripId の列車から戻す。区間が 2 つ以上なら運番は変えられない
+     */
+    #restoreSegments(
+        tripForm: ITimetableEditFormTrip,
+        draft: ITimetableEditFormTripValue,
+    ): void {
+        if (
+            this.mode() === ETimetableEditFormMode.UPDATE &&
+            draft.tripId &&
+            !draft.tripOperationLists?.length
+        ) {
+            const source = this.trips().find((o) => o.tripId === draft.tripId);
+            if (source) {
+                const original = this.#generateTripFormGroup(source);
+                tripForm.patchValue({
+                    tripOperationLists:
+                        original.controls.tripOperationLists.value,
+                    nextTripOperationListId:
+                        original.controls.nextTripOperationListId.value,
+                });
+            }
+        }
+
+        if (tripForm.controls.tripOperationLists.value.length > 1) {
+            tripForm.controls.operationId.disable();
+        }
     }
 
     #generateTripFormGroup(trip?: TripDetailsDto): ITimetableEditFormTrip {

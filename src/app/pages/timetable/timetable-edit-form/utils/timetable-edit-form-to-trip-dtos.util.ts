@@ -1,5 +1,5 @@
 import { FormArray } from '@angular/forms';
-import { plainToClass } from 'class-transformer';
+import { ClassConstructor, plainToClass } from 'class-transformer';
 import { format, getHours, parse } from 'date-fns';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
@@ -8,7 +8,10 @@ import {
     ETimetableEditFormMode,
     ETimetableEditFormStopType,
 } from '../enums/timetable-edit-form.enum';
-import { ITimetableEditFormTrip } from '../interfaces/timetable-edit-form.interface';
+import {
+    ITimetableEditFormOriginalSegment,
+    ITimetableEditFormTrip,
+} from '../interfaces/timetable-edit-form.interface';
 
 /**
  * 列車のフォームの値を、保存する DTO にする。経由しない駅は落とし、始発の着・終着の発は
@@ -24,9 +27,11 @@ export function toTripDtos(
         );
 
         return plainToClass(
-            mode === ETimetableEditFormMode.UPDATE
+            (mode === ETimetableEditFormMode.UPDATE
                 ? ReplaceTripDto
-                : CreateTripDto,
+                : CreateTripDto) as ClassConstructor<
+                CreateTripDto | ReplaceTripDto
+            >,
             {
                 ...trip,
                 tripId: trip.tripId ?? undefined,
@@ -77,18 +82,43 @@ export function toTripDtos(
                                 : null,
                     };
                 }),
-                tripOperationLists: trip.operationId
-                    ? [
-                          {
-                              operationId: trip.operationId,
-                              startStationId: times[0]?.stationId ?? null,
-                              endStationId:
-                                  times[times.length - 1]?.stationId ?? null,
-                          },
-                      ]
-                    : [],
+                tripOperationLists: buildTripOperationLists(trip, times),
             },
             classTransformerOptions,
         );
     });
+}
+
+/**
+ * 区間の送り返し。区間が 2 つ以上なら元のまま、1 つなら id とつながりを残して運番・駅を今の値にする。
+ * id を落とすと API は区間を作り直し、つながり（次の運用）が消える
+ */
+function buildTripOperationLists(
+    trip: {
+        operationId?: string;
+        tripOperationLists?: ITimetableEditFormOriginalSegment[];
+        nextTripOperationListId?: string | null;
+    },
+    times: { stationId?: string }[],
+) {
+    const original = trip.tripOperationLists ?? [];
+    if (original.length > 1) {
+        return original.map((o) => ({
+            id: o.id,
+            operationId: o.operationId,
+            startStationId: o.startStationId,
+            endStationId: o.endStationId,
+            nextTripOperationListId: o.nextTripOperationListId ?? null,
+        }));
+    }
+    if (!trip.operationId) return [];
+    return [
+        {
+            id: original[0]?.id,
+            operationId: trip.operationId,
+            startStationId: times[0]?.stationId ?? null,
+            endStationId: times[times.length - 1]?.stationId ?? null,
+            nextTripOperationListId: trip.nextTripOperationListId ?? null,
+        },
+    ];
 }

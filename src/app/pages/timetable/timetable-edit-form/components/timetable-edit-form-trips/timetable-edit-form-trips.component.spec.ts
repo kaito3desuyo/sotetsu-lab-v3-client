@@ -146,6 +146,81 @@ describe('TimetableEditFormTripsComponent', () => {
         expect(component.tripsForm.getRawValue()).toEqual(saved);
     });
 
+    describe('区間の引き継ぎ（古い下書き）', () => {
+        const seg = (id: string, operationId: string, next: string | null) => ({
+            tripOperationListId: id,
+            operationId,
+            startStationId: '横浜',
+            endStationId: '二俣川',
+            nextTripOperationListId: next,
+        });
+        const setup = (lists: any[]) => {
+            fixture.componentRef.setInput(
+                'mode',
+                ETimetableEditFormMode.UPDATE,
+            );
+            fixture.componentRef.setInput('trips', [
+                {
+                    tripId: 'trip-1',
+                    tripNumber: '1',
+                    times: [],
+                    tripOperationLists: lists,
+                },
+            ]);
+            fixture.detectChanges();
+            fixture.componentRef.setInput('restoreTrips', [
+                {
+                    tripId: 'trip-1',
+                    tripNumber: '1',
+                    operationId: 'op-18K',
+                    times: [],
+                },
+            ]);
+            fixture.detectChanges();
+            return component.tripsForm.controls[0];
+        };
+
+        it('区間のない下書きは、読み込んだ列車の区間とつながりを戻す', () => {
+            const form = setup([seg('s1', 'op-11K', 's9')]);
+
+            expect(form.getRawValue().tripOperationLists).toEqual([
+                expect.objectContaining({
+                    id: 's1',
+                    nextTripOperationListId: 's9',
+                }),
+            ]);
+            expect(form.getRawValue().nextTripOperationListId).toBe('s9');
+        });
+
+        it('区間が 2 つ以上なら、戻したあとも運番は無効', () => {
+            const form = setup([
+                seg('s1', 'op-18K', null),
+                seg('s2', 'op-02K', null),
+            ]);
+
+            expect(form.getRawValue().tripOperationLists.length).toBe(2);
+            expect(form.controls.operationId.disabled).toBe(true);
+        });
+
+        it('読み込んだ列車に合う tripId がなければそのまま', () => {
+            fixture.componentRef.setInput(
+                'mode',
+                ETimetableEditFormMode.UPDATE,
+            );
+            fixture.componentRef.setInput('trips', []);
+            fixture.detectChanges();
+            fixture.componentRef.setInput('restoreTrips', [
+                { tripId: 'zzz', tripNumber: '1', times: [] },
+            ]);
+            fixture.detectChanges();
+
+            expect(
+                component.tripsForm.controls[0].getRawValue()
+                    .tripOperationLists,
+            ).toEqual([]);
+        });
+    });
+
     describe('G9: 種別バッジ・下書き保存ボタン', () => {
         it('onClickSaveDraft は formValueChange と saveDraftClick を emit する', () => {
             const formValueChangeSpy = jest.fn();

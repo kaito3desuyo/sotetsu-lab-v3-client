@@ -27,6 +27,9 @@ export class TripOperationListDetailsDto {
     endStationId?: string;
 
     @Expose()
+    nextTripOperationListId?: string | null;
+
+    @Expose()
     createdAt?: string;
 
     @Expose()

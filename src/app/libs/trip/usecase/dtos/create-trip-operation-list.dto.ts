@@ -21,4 +21,7 @@ export class CreateTripOperationListDto {
 
     @Exclude()
     endTimeId: undefined;
+
+    @Expose()
+    nextTripOperationListId?: string | null;
 }
