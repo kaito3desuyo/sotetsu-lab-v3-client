@@ -121,15 +121,21 @@ describe('TimetableEditFormService', () => {
             });
         });
 
-        it('URL でコピー元が決まっているときも足す', (done) => {
-            TimetableEditFormStore.setTripBlockId('block-1');
-            tripBlockService.findManyByFilter.mockReturnValue(of([block]));
-            service.fetchCopySourceCandidates().subscribe(() => {
-                expect(
-                    [...TimetableEditFormStore.selectedRouteIds].sort(),
-                ).toEqual(['izumino', 'main', 'shinyoko']);
-                done();
-            });
+    });
+
+    it('候補は一覧に使う項目だけなので、ID で読んだコピー元を候補で上書きしない', (done) => {
+        const target = { tripBlockId: 'block-1', trips: [{ times: [] }] };
+        TimetableEditFormStore.setTripBlockId('block-1');
+        TimetableEditFormStore.setTargetTripBlock(target as any);
+        tripBlockService.findManyByFilter.mockReturnValue(
+            of([{ tripBlockId: 'block-1', trips: [] }]),
+        );
+
+        service.fetchCopySourceCandidates().subscribe(async () => {
+            expect(
+                await firstValueFrom(TimetableEditFormStore.targetTripBlock$),
+            ).toBe(target);
+            done();
         });
     });
 
@@ -141,11 +147,20 @@ describe('TimetableEditFormService', () => {
         });
     });
 
-    it('fetchCopySourceCandidates は calendarId + tripDirection で候補一覧を取得する', (done) => {
+    it('fetchCopySourceCandidates は calendarId + tripDirection で、一覧に使う項目だけを取得する（全項目は Lambda の 6MB を超えて 502）', (done) => {
         service.fetchCopySourceCandidates().subscribe(() => {
             expect(tripBlockService.findManyByFilter).toHaveBeenCalledWith({
                 calendarId: 'calendar-1',
                 tripDirection: ETripDirection.OUTBOUND,
+                fields: {
+                    trip: ['tripNumber', 'tripClassId'],
+                    time: [
+                        'stationId',
+                        'stopSequence',
+                        'arrivalTime',
+                        'departureTime',
+                    ],
+                },
             });
             done();
         });
