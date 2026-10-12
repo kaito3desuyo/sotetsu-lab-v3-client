@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
-import { TrainDiagramResolverService } from './services/train-diagram-resolver.service';
+import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TrainDiagramService } from './services/train-diagram.service';
+import { TrainDiagramStore } from './stores/train-diagram.store';
 
 export const TRAIN_DIAGRAM_ROUTES: Route[] = [
     {
@@ -9,12 +10,9 @@ export const TRAIN_DIAGRAM_ROUTES: Route[] = [
             import('./train-diagram.component').then(
                 (mod) => mod.TrainDiagramComponent,
             ),
-        providers: [
-            TrainDiagramService,
-            TrainDiagramResolverService,
-        ],
+        providers: [TrainDiagramService],
         resolve: {
-            from: TrainDiagramResolverService,
+            from: pageResolver(TrainDiagramStore.persistInitialized$),
         },
         data: {
             title: 'ダイヤグラム',

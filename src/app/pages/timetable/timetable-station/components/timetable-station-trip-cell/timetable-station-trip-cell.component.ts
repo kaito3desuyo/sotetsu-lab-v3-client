@@ -2,7 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
+import { MaxByPipe } from 'src/app/core/pipes/max-by.pipe';
+import { MinByPipe } from 'src/app/core/pipes/min-by.pipe';
+import { CalculateDayCountFromTodayPipe } from 'src/app/core/pipes/calculate-day-count-from-today.pipe';
+import { AntiBracketsPipe } from 'src/app/core/pipes/anti-brackets.pipe';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -30,7 +34,11 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     imports: [
         CommonModule,
         MatIconModule,
-        PipesModule,
+        FindByIdPipe,
+        MaxByPipe,
+        MinByPipe,
+        CalculateDayCountFromTodayPipe,
+        AntiBracketsPipe,
         DateFnsPipe,
         OperationNumberTagComponent,
         TimetableStationFindLastStopStationPipe,

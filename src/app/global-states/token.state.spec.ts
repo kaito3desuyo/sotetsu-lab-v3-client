@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import dayjs from 'dayjs';
+import { addMinutes, addSeconds, getUnixTime, subMinutes } from 'date-fns';
 import { of } from 'rxjs';
 
 import { AuthService } from '../libs/auth/usecase/auth.service';
@@ -30,7 +30,7 @@ describe('TokenStateQuery.isExpired', () => {
     });
 
     it('returns true when expiresAt is in the past', () => {
-        const past = dayjs().subtract(10, 'minutes').unix();
+        const past = getUnixTime(subMinutes(new Date(), 10));
         mockGetToken.mockReturnValue(
             of({ accessToken: 'token', tokenType: 'Bearer', expiresAt: past }),
         );
@@ -39,7 +39,7 @@ describe('TokenStateQuery.isExpired', () => {
     });
 
     it('returns false when expiresAt is more than 1 minute in the future', () => {
-        const future = dayjs().add(10, 'minutes').unix();
+        const future = getUnixTime(addMinutes(new Date(), 10));
         mockGetToken.mockReturnValue(
             of({ accessToken: 'token', tokenType: 'Bearer', expiresAt: future }),
         );
@@ -48,7 +48,7 @@ describe('TokenStateQuery.isExpired', () => {
     });
 
     it('returns true when expiresAt is within 1 minute ahead (30 seconds)', () => {
-        const soon = dayjs().add(30, 'seconds').unix();
+        const soon = getUnixTime(addSeconds(new Date(), 30));
         mockGetToken.mockReturnValue(
             of({ accessToken: 'token', tokenType: 'Bearer', expiresAt: soon }),
         );

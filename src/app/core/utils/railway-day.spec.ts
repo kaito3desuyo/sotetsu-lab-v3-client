@@ -2,6 +2,7 @@ import {
     getRailwayDate,
     toAbsoluteTime,
     toDisplayTime,
+    toServiceSeconds,
 } from './railway-day';
 
 describe('getRailwayDate', () => {
@@ -104,5 +105,30 @@ describe('toDisplayTime', () => {
 
     it('分が1桁でも2桁ゼロ埋めされる', () => {
         expect(toDisplayTime(0, '05:03:00')).toBe('5:03');
+    });
+});
+
+describe('toServiceSeconds', () => {
+    it('日オフセットが同じなら時刻の順になる', () => {
+        expect(toServiceSeconds(1, '06:20:00')).toBeLessThan(
+            toServiceSeconds(1, '06:45:00'),
+        );
+    });
+
+    it('翌日（days=2）の 0:30 は当日（days=1）の 23:50 より後になる', () => {
+        expect(toServiceSeconds(2, '00:30:00')).toBeGreaterThan(
+            toServiceSeconds(1, '23:50:00'),
+        );
+    });
+
+    it('差は秒で出る', () => {
+        expect(
+            toServiceSeconds(2, '00:00:30') - toServiceSeconds(1, '23:59:30'),
+        ).toBe(60);
+    });
+
+    it('時刻が無ければ NaN（比較はどれも false になる）', () => {
+        expect(toServiceSeconds(1, null)).toBeNaN();
+        expect(toServiceSeconds(1, undefined)).toBeNaN();
     });
 });

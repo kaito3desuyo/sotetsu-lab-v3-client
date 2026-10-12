@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { minBy } from 'lodash-es';
+import { minBy } from 'es-toolkit/compat';
 
 @Pipe({
     name: 'minBy',

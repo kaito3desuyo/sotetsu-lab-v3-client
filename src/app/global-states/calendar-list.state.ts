@@ -4,13 +4,9 @@ import {
     getAllEntities,
     selectAllEntities,
     selectEntity,
-    selectEntityByPredicate,
     setEntities,
     withEntities,
 } from '@ngneat/elf-entities';
-import dayjs from 'dayjs';
-import 'dayjs/plugin/isSameOrAfter';
-import 'dayjs/plugin/isSameOrBefore';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
@@ -55,17 +51,5 @@ export class CalendarListStateQuery {
 
     selectByCalendarId(calendarId: string): Observable<CalendarDetailsDto> {
         return state.pipe(selectEntity(calendarId));
-    }
-
-    selectByDate(date: string): Observable<CalendarDetailsDto> {
-        const format = 'YYYY-MM-DD';
-        const targetDate = dayjs(date, format);
-        return state.pipe(
-            selectEntityByPredicate(
-                (e) =>
-                    dayjs(e.startDate, format).isSameOrBefore(targetDate) &&
-                    dayjs(e.endDate, format).isSameOrAfter(targetDate),
-            ),
-        );
     }
 }

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
+import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import TIMETABLE_SEARCH_CARD_PROVIDERS from 'src/app/shared/timetable-search-card/timetable-search-card.provider';
-import { TimetableAllLineResolverService } from './services/timetable-all-line-resolver.service';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 
 export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
@@ -12,11 +12,10 @@ export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
             ),
         providers: [
             TimetableAllLineService,
-            TimetableAllLineResolverService,
             ...TIMETABLE_SEARCH_CARD_PROVIDERS,
         ],
         resolve: {
-            from: TimetableAllLineResolverService,
+            from: pageResolver(),
         },
         data: {
             title: '全線時刻表',

@@ -6,8 +6,9 @@ import {
     setEntities,
     withEntities,
 } from '@ngneat/elf-entities';
-import dayjs from 'dayjs';
+import { format } from 'date-fns';
 import { Observable } from 'rxjs';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { map, tap } from 'rxjs/operators';
 import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from '../libs/formation/usecase/formation.service';
@@ -32,9 +33,7 @@ export class TodaysFormationListStateStore {
     fetch(): Observable<void> {
         return this.#formationService
             .findManyBySpecificDate({
-                date: dayjs()
-                    .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD'),
+                date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
             })
             .pipe(
                 tap((data: FormationDetailsDto[]) => {

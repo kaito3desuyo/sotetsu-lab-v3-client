@@ -13,9 +13,9 @@ import {
     ViewChild,
     viewChild,
 } from '@angular/core';
-import dayjs from 'dayjs';
+import { format, parse } from 'date-fns';
 import { saveAs } from 'file-saver';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { PaddingPipe } from 'src/app/core/pipes/padding.pipe';
 import { wait } from 'src/app/core/utils/wait';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -255,7 +255,7 @@ export interface OperationRouteDiagramBandRow {
     ],
     imports: [
         CommonModule,
-        PipesModule,
+        PaddingPipe,
         OperationRouteDiagramFormatStationNamePipe,
         AppButtonComponent,
         CalendarBandComponent,
@@ -526,17 +526,16 @@ export class OperationRouteDiagramDrawingPresentationalComponent {
     }
 
     async downloadAsPng() {
-        const name = `${dayjs(this.calendar().startDate, 'YYYY-MM-DD').format(
-            'YYYY/M/D',
-        )}改正 ${this.calendar().calendarName} ${
+        const revisedOn = format(
+            parse(this.calendar().startDate, 'yyyy-MM-dd', new Date()),
+            'yyyy/M/d',
+        );
+        const name = `${revisedOn}改正 ${this.calendar().calendarName} ${
             this.operation().operationNumber
         }運 運用行路図`;
 
         // 画面の見出しと同じ 2 行にする（1 行だと Canvas の幅を超えて右が切れる）
-        const nameLine1 = `${dayjs(
-            this.calendar().startDate,
-            'YYYY-MM-DD',
-        ).format('YYYY/M/D')}改正`;
+        const nameLine1 = `${revisedOn}改正`;
         const nameLine2 = `${this.calendar().calendarName} ${
             this.operation().operationNumber
         }運`;

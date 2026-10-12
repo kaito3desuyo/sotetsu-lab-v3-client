@@ -16,17 +16,17 @@
             chipSize="sm"
             [tripClassName]="
                 current.trip.tripClassId
-                    | newFindById
+                    | findById
                         : {
                               array: tripClasses(),
                               propertyName: 'tripClassId',
                               outputPropertyName: 'tripClassName',
                           }
-                    | newAntiBrackets
+                    | antiBrackets
             "
             [tripClassColor]="
                 current.trip.tripClassId
-                    | newFindById
+                    | findById
                         : {
                               array: tripClasses(),
                               propertyName: 'tripClassId',
@@ -61,7 +61,7 @@
             <span>
                 {{
                     current.startTime.stationId
-                        | newFindById
+                        | findById
                             : {
                                   array: stations(),
                                   propertyName: 'stationId',
@@ -82,7 +82,7 @@
             <span>
                 {{
                     prev.endTime.stationId
-                        | newFindById
+                        | findById
                             : {
                                   array: stations(),
                                   propertyName: 'stationId',
@@ -125,7 +125,7 @@
             <span>
                 {{
                     next.startTime.stationId
-                        | newFindById
+                        | findById
                             : {
                                   array: stations(),
                                   propertyName: 'stationId',
@@ -146,7 +146,7 @@
             <span>
                 {{
                     current.endTime.stationId
-                        | newFindById
+                        | findById
                             : {
                                   array: stations(),
                                   propertyName: 'stationId',
@@ -174,7 +174,7 @@
                 } @else {
                     {{
                         next.startTime.stationId
-                            | newFindById
+                            | findById
                                 : {
                                       array: stations(),
                                       propertyName: 'stationId',

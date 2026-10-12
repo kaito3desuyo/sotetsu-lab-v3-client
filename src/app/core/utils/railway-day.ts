@@ -45,3 +45,16 @@ export function toDisplayTime(days: number, time: string): string {
     const paddedMinutes = String(minutes).padStart(2, '0');
     return `${totalHours}:${paddedMinutes}`;
 }
+
+/**
+ * `HH:mm:ss` と日オフセット（arrivalDays/departureDays）を、並べ替え・比較用の秒数にする。
+ * 起点は固定なので、値どうしの差と大小だけに意味がある。time が無ければ NaN。
+ */
+export function toServiceSeconds(
+    days: number | null | undefined,
+    time: string | null | undefined,
+): number {
+    if (!time) return NaN;
+    const { hours, minutes, seconds } = parseHms(time);
+    return (days ?? 0) * 86400 + hours * 3600 + minutes * 60 + (seconds || 0);
+}

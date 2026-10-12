@@ -2,10 +2,6 @@ import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { enableElfProdMode } from '@ngneat/elf';
 import { devTools } from '@ngneat/elf-devtools';
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import localForage from 'localforage';
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
@@ -17,10 +13,6 @@ localForage.config({
     version: 1.0,
     storeName: 'elf_state',
 });
-
-dayjs.extend(customParseFormat);
-dayjs.extend(isSameOrBefore);
-dayjs.extend(isSameOrAfter);
 
 if (environment.production) {
     enableProdMode();

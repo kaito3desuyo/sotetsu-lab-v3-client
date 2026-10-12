@@ -4,7 +4,7 @@ import {
     computed,
     input,
 } from '@angular/core';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { RouterLink } from '@angular/router';
 import { STOPPED_REASON_LABEL } from 'src/app/shared/train-position.util';
 import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
@@ -18,7 +18,7 @@ import { TrainLocationCard } from '../../interfaces/train-location-card.interfac
     selector: 'app-train-location-card',
     templateUrl: './train-location-card.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink, TripClassChipComponent, PipesModule],
+    imports: [RouterLink, TripClassChipComponent, OperationNumberColorPipe],
     host: { class: 'tw-block tw-max-w-full' },
 })
 export class TrainLocationCardComponent {

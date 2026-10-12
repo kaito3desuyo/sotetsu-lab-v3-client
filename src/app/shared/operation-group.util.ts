@@ -1,7 +1,7 @@
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { FilterChipOption } from './filter-chips/filter-chip-option.type';
 
-const operationNumberColor = new NewOperationNumberColorPipe();
+const operationNumberColor = new OperationNumberColorPipe();
 
 /**
  * 休車（運用番号 100）は API の /v3/operations/groups には含まれない

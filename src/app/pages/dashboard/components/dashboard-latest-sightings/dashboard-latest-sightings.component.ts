@@ -9,7 +9,7 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { NewOperationNumberLinkComponent } from 'src/app/shared/new-operation-number-link/new-operation-number-link.component';
@@ -34,7 +34,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         DateFnsPipe,
-        NewOperationNumberColorPipe,
+        OperationNumberColorPipe,
         NewOperationNumberLinkComponent,
         TripPositionComponent,
     ],

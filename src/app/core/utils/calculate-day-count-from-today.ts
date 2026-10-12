@@ -1,16 +1,17 @@
-import dayjs from 'dayjs';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { getRailwayDate } from './railway-day';
 
-export function calculateDayCountFromToday(dateTime: string): number {
-    const target = dayjs(dateTime).subtract(
-        dayjs(dateTime).hour() < 4 ? 1 : 0,
-        'days',
+/**
+ * 目撃日時が、今日の営業日から何日前かを返す（4 時より前は前日の営業日に数える）。
+ * 目撃が無ければ NaN。
+ */
+export function calculateDayCountFromToday(
+    dateTime: string | null | undefined,
+): number {
+    if (!dateTime) return NaN;
+
+    return differenceInCalendarDays(
+        getRailwayDate(new Date()),
+        getRailwayDate(parseISO(dateTime)),
     );
-    const now = dayjs().subtract(dayjs().hour() < 4 ? 1 : 0, 'days');
-
-    return now
-        .hour(0)
-        .minute(0)
-        .second(0)
-        .millisecond(0)
-        .diff(target.hour(0).minute(0).second(0).millisecond(0), 'days');
 }

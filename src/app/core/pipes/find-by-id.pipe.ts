@@ -1,5 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import get from 'just-safe-get';
+import { Pipe, type PipeTransform } from '@angular/core';
+import { get } from 'es-toolkit/compat';
 
 @Pipe({
     name: 'findById',

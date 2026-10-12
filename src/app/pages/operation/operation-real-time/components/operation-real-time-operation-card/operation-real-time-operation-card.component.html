@@ -1,7 +1,6 @@
 @let formationVm = expectedSightingFormation();
 @let sightingVm = latestSighting();
-<!-- 目撃が無いときは null を渡す。undefined だと dayjs が「今」とみなし、今日の目撃に見えてしまう -->
-@let dayCount = sightingVm?.sightingTime ?? null | operationRealTimeDayCount;
+@let dayCount = sightingVm?.sightingTime | operationRealTimeDayCount;
 @let sightingTime = sightingVm?.sightingTime;
 @let updatedAt = sightingVm?.updatedAt;
 @let positionVm = currentPosition();
@@ -26,7 +25,7 @@
     <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
         <app-new-operation-number-link
             [text]="operation().operationNumber"
-            [bgColor]="operation().operationNumber | newOperationNumberColor"
+            [bgColor]="operation().operationNumber | operationNumberColor"
             [link]="[
                 '/operation',
                 'route-diagram',
@@ -126,7 +125,7 @@
                                 <span class="tw-text-xs tw-text-grey-600">
                                     {{
                                         history.formationId
-                                            | newFindById
+                                            | findById
                                                 : {
                                                       array: formations(),
                                                       propertyName:

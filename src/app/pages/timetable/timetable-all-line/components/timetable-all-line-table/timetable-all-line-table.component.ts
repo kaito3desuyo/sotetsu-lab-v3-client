@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
-import dayjs from 'dayjs';
+import { isAfter, parse } from 'date-fns';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { tripDirectionLabel } from 'src/app/libs/trip/special/constants/trip.constant';
@@ -133,6 +133,8 @@ export class TimetableAllLineTableComponent {
 
     readonly isFeatureDate = computed(() => {
         const date = this.calendar()?.startDate;
-        return !!date && dayjs() > dayjs(date, 'YYYY-MM-DD');
+        return (
+            !!date && isAfter(new Date(), parse(date, 'yyyy-MM-dd', new Date()))
+        );
     });
 }

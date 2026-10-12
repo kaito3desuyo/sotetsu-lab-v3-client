@@ -7,8 +7,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
-import { NewOperationNumberColorPipe } from 'src/app/core/pipes/new-operation-number-color.pipe';
+import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -41,8 +41,8 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         MatTooltipModule,
         NewOperationNumberLinkComponent,
         DateFnsPipe,
-        NewFindByIdPipe,
-        NewOperationNumberColorPipe,
+        FindByIdPipe,
+        OperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripPositionComponent,
     ],

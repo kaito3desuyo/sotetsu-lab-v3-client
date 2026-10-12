@@ -30,10 +30,9 @@ import {
 } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { plainToClass } from 'class-transformer';
-import dayjs from 'dayjs';
+import { format, getHours, parse } from 'date-fns';
 import { map } from 'rxjs/operators';
 import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
@@ -87,7 +86,6 @@ import { TimetableEditFormGridComponent } from '../timetable-edit-form-grid/time
         MatSlideToggleModule,
         MatTooltipModule,
         MatIconModule,
-        PipesModule,
         FilterChipsComponent,
         CollapsiblePanelComponent,
         AppButtonComponent,
@@ -452,12 +450,18 @@ export class TimetableEditFormTripsComponent {
                 ],
                 arrivalTime: [
                     time.arrivalTime
-                        ? dayjs(time.arrivalTime, 'HH:mm:ss').format('HH:mm')
+                        ? format(
+                              parse(time.arrivalTime, 'HH:mm:ss', new Date()),
+                              'HH:mm',
+                          )
                         : null,
                 ],
                 departureTime: [
                     time.departureTime
-                        ? dayjs(time.departureTime, 'HH:mm:ss').format('HH:mm')
+                        ? format(
+                              parse(time.departureTime, 'HH:mm:ss', new Date()),
+                              'HH:mm',
+                          )
                         : null,
                 ],
             });
@@ -543,11 +547,11 @@ export class TimetableEditFormTripsComponent {
                     times: times.map((time, index, arr) => {
                         const arrivalTime =
                             time.arrivalTime && index !== 0
-                                ? dayjs(time.arrivalTime, 'HH:mm')
+                                ? parse(time.arrivalTime, 'HH:mm', new Date())
                                 : null;
                         const departureTime =
                             time.departureTime && index !== arr.length - 1
-                                ? dayjs(time.departureTime, 'HH:mm')
+                                ? parse(time.departureTime, 'HH:mm', new Date())
                                 : null;
 
                         return {
@@ -568,23 +572,23 @@ export class TimetableEditFormTripsComponent {
                                     : 1,
                             arrivalDays:
                                 arrivalTime && index !== 0
-                                    ? arrivalTime.hour() < 4
+                                    ? getHours(arrivalTime) < 4
                                         ? 2
                                         : 1
                                     : null,
                             arrivalTime:
                                 arrivalTime && index !== 0
-                                    ? arrivalTime.format('HH:mm')
+                                    ? format(arrivalTime, 'HH:mm')
                                     : null,
                             departureDays:
                                 departureTime && index !== arr.length - 1
-                                    ? departureTime.hour() < 4
+                                    ? getHours(departureTime) < 4
                                         ? 2
                                         : 1
                                     : null,
                             departureTime:
                                 departureTime && index !== arr.length - 1
-                                    ? departureTime.format('HH:mm')
+                                    ? format(departureTime, 'HH:mm')
                                     : null,
                         };
                     }),

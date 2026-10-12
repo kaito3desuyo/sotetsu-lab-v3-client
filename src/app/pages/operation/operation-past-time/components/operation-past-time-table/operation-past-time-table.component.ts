@@ -8,7 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { format, subDays, subHours } from 'date-fns';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { NewFindByIdPipe } from 'src/app/core/pipes/new-find-by-id.pipe';
+import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -31,7 +31,7 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
     imports: [
         OperationNumberTagComponent,
         DateFnsPipe,
-        NewFindByIdPipe,
+        FindByIdPipe,
         EmptyStateComponent,
     ],
 })

@@ -4,7 +4,7 @@ import {
     MatDialogConfig,
     MatDialogRef,
 } from '@angular/material/dialog';
-import extend from 'just-extend';
+import { merge } from 'es-toolkit/compat';
 import { ConfirmDialogComponent } from '../components/confirm-dialog/confirm-dialog.component';
 import { IConfirmDialogData } from '../interfaces/confirm-dialog-data.interface';
 
@@ -28,7 +28,7 @@ export class ConfirmDialogService {
             ConfirmDialogComponent,
             IConfirmDialogData,
             boolean
-        >(ConfirmDialogComponent, extend(true, defaultConfig, config));
+        >(ConfirmDialogComponent, merge(defaultConfig, config));
 
         return this.#dialogRef;
     }

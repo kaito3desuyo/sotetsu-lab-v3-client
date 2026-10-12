@@ -1,7 +1,6 @@
 @let expectedSightingOperationVm = expectedSightingOperation();
 @let sightingVm = latestSighting();
-<!-- 目撃が無いときは null を渡す。undefined だと dayjs が「今」とみなし、今日の目撃に見えてしまう -->
-@let dayCount = sightingVm?.sightingTime ?? null | operationRealTimeDayCount;
+@let dayCount = sightingVm?.sightingTime | operationRealTimeDayCount;
 @let sightingTime = sightingVm?.sightingTime;
 @let updatedAt = sightingVm?.updatedAt;
 @let positionVm = currentPosition();
@@ -59,7 +58,7 @@
                 "
                 [bgColor]="
                     expectedSightingOperationVm.operationNumber
-                        | newOperationNumberColor
+                        | operationNumberColor
                 "
                 [link]="
                     expectedSightingOperationVm.operationNumber === '100'
@@ -115,7 +114,7 @@
                         ) {
                             @let historyOperationNumber =
                                 history.operationId
-                                    | newFindById
+                                    | findById
                                         : {
                                               array: operations(),
                                               propertyName: 'operationId',

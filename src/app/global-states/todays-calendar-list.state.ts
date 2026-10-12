@@ -7,8 +7,9 @@ import {
     setEntities,
     withEntities,
 } from '@ngneat/elf-entities';
-import dayjs from 'dayjs';
+import { format } from 'date-fns';
 import { Observable } from 'rxjs';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { map, tap } from 'rxjs/operators';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
@@ -30,9 +31,7 @@ export class TodaysCalendarListStateStore {
     fetch(): Observable<void> {
         return this.#calendarService
             .findOneBySpecificDate({
-                date: dayjs()
-                    .subtract(dayjs().hour() < 4 ? 1 : 0, 'days')
-                    .format('YYYY-MM-DD'),
+                date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
             })
             .pipe(
                 tap((data: CalendarDetailsDto) => {

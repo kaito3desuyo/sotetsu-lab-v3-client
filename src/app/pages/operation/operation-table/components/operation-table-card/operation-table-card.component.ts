@@ -7,7 +7,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { PipesModule } from 'src/app/core/pipes/pipes.module';
+import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -103,7 +103,7 @@ const STATION_WIDTH = 3;
     imports: [
         NgTemplateOutlet,
         RouterLink,
-        PipesModule,
+        OperationNumberColorPipe,
         DateFnsPipe,
         TripLabelComponent,
     ],

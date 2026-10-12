@@ -182,8 +182,8 @@ describe('TimetableStationTripCellComponent', () => {
         expect(text).not.toContain('不明');
     });
 
-    // 目撃の無い編成は推測なので「?」を付ける。日数のパイプに undefined を渡すと
-    // dayjs が「今」とみなし、今日の目撃に見えてしまう（Angular 22 で ?. が undefined を返す）
+    // 目撃の無い編成は推測なので「?」を付ける。目撃が無いと日数は NaN になり、
+    // 今日の目撃（0・太字）と見分けられる（Angular 22 で ?. は undefined を返す）
     it('目撃が無く推測だけの編成には「?」を付ける', async () => {
         const fixture = await createFixture({
             showCurrentFormation: true,

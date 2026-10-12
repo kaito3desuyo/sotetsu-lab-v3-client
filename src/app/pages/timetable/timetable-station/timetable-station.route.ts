@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
+import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import TIMETABLE_SEARCH_CARD_PROVIDERS from 'src/app/shared/timetable-search-card/timetable-search-card.provider';
-import { TimetableStationResolverService } from './services/timetable-station-resolver.service';
 import { TimetableStationService } from './services/timetable-station.service';
 
 export const TIMETABLE_STATION_ROUTES: Routes = [
@@ -12,11 +12,10 @@ export const TIMETABLE_STATION_ROUTES: Routes = [
             ),
         providers: [
             TimetableStationService,
-            TimetableStationResolverService,
             ...TIMETABLE_SEARCH_CARD_PROVIDERS,
         ],
         resolve: {
-            from: TimetableStationResolverService,
+            from: pageResolver(),
         },
         data: {
             title: '駅別時刻表',

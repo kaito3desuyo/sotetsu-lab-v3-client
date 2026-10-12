@@ -1,8 +1,9 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import dayjs from 'dayjs';
-import { minBy } from 'lodash-es';
+import { format, parse } from 'date-fns';
+import { minBy } from 'es-toolkit/compat';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -74,14 +75,15 @@ function sortTrips(
                     const aTime = minBy(a.times, (o2) => o2.stopSequence);
                     const bTime = minBy(b.times, (o2) => o2.stopSequence);
                     if (!aTime || !bTime) return 0;
-                    const format = 'HH:mm:ss';
                     return (
-                        dayjs(aTime.departureTime, format)
-                            .add(aTime.departureDays - 1, 'days')
-                            .unix() -
-                        dayjs(bTime.departureTime, format)
-                            .add(bTime.departureDays - 1, 'days')
-                            .unix()
+                        toServiceSeconds(
+                            aTime.departureDays,
+                            aTime.departureTime,
+                        ) -
+                        toServiceSeconds(
+                            bTime.departureDays,
+                            bTime.departureTime,
+                        )
                     );
                 }),
             },
@@ -99,12 +101,7 @@ function sortTrips(
                 bStationTime?.departureTime ?? bStationTime?.arrivalTime ?? null;
 
             return (
-                dayjs(aTime, 'HH:mm:ss')
-                    .add(aDay - 1, 'days')
-                    .unix() -
-                dayjs(bTime, 'HH:mm:ss')
-                    .add(bDay - 1, 'days')
-                    .unix()
+                toServiceSeconds(aDay, aTime) - toServiceSeconds(bDay, bTime)
             );
         });
 }
@@ -139,7 +136,9 @@ function generateTableData(
             stationTime?.departureDays ?? stationTime?.arrivalDays ?? null;
         const time =
             stationTime?.departureTime ?? stationTime?.arrivalTime ?? null;
-        const hour = dayjs(time, 'HH:mm:ss').format('H');
+        const hour = time
+            ? format(parse(time, 'HH:mm:ss', new Date()), 'H')
+            : null;
 
         const index = data.findIndex((o) => o.day === day && o.hour === hour);
 
