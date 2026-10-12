@@ -84,6 +84,7 @@ export const TimetableEditFormStore = {
      */
     resetForNewSession(): void {
         store.update(
+            setProp('tripDirection', () => initialProps.tripDirection),
             setProp('tripBlockId', () => initialProps.tripBlockId),
             setProp('selectedRouteIds', () => initialProps.selectedRouteIds),
             setProp(

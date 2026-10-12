@@ -19,8 +19,8 @@ import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
-import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
+import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormTripsComponent } from './components/timetable-edit-form-trips/timetable-edit-form-trips.component';
@@ -110,9 +110,9 @@ export class TimetableEditFormComponent {
                 const mode = this.#route.snapshot.data
                     .mode as ETimetableEditFormMode;
                 const calendarId = paramMap.get('calendar_id');
-                const tripDirection = paramMap.has('trip_direction')
-                    ? (Number(paramMap.get('trip_direction')) as ETripDirection)
-                    : null;
+                const tripDirection = parseTripDirectionParam(
+                    paramMap.get('trip_direction'),
+                );
                 const tripBlockId = paramMap.get('trip_block_id');
 
                 TimetableEditFormStore.resetForNewSession();
@@ -149,6 +149,13 @@ export class TimetableEditFormComponent {
                     this.#timetableEditFormService.fetchTargetTripBlock(),
                 );
             } else {
+                // COPY のコピー元は別のダイヤの列車でもよい。先に ID で取り、
+                // フォームに入れると同時に向きを決める（URL に向きは無い）。
+                if (this.mode() === ETimetableEditFormMode.COPY) {
+                    await lastValueFrom(
+                        this.#timetableEditFormService.fetchTargetTripBlock(),
+                    );
+                }
                 // G9: ADD/COPY 両モードで「既存列車からコピー」を提供するため、
                 // コピー元候補（同一ダイヤ・同一方向の trip-block 一覧）を取得する。
                 await lastValueFrom(

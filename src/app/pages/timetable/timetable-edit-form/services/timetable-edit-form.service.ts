@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -161,6 +161,12 @@ export class TimetableEditFormService {
         const calendarId = TimetableEditFormStore.calendarId;
         const tripDirection = TimetableEditFormStore.tripDirection;
 
+        // 向きが無いまま取りに行くと tripDirection=null で 422 になる
+        if (!calendarId || tripDirection === null) {
+            TimetableEditFormStore.setCopySourceCandidates([]);
+            return of(undefined);
+        }
+
         return this.#tripBlockService
             .findManyByFilter({ calendarId, tripDirection })
             .pipe(
@@ -234,6 +240,13 @@ export class TimetableEditFormService {
 
     replaceTripBlock(trips: ReplaceTripDto[]): Observable<void> {
         const tripBlockId = TimetableEditFormStore.tripBlockId;
+
+        // URL に trip_block_id が無いまま保存すると PUT /trip-blocks/null になる
+        if (!tripBlockId) {
+            return throwError(
+                () => new Error('編集する列車が決まっていません'),
+            );
+        }
 
         const tripBlock: ReplaceTripBlockDto = {
             tripBlockId,
