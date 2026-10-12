@@ -1,6 +1,7 @@
 <!-- 表示設定は畳まず 2 行（ユーザー判断 2026-09-26）。
      1 行目: 路線チップ（全線時刻表と同じ横スクロール 1 行・会社名は行の中の小見出し）
-     2 行目: 時計と時刻の操作（現在時刻/時刻指定・表示時刻・ダイヤ） -->
+     2 行目: 時刻 → ダイヤ → 現在時刻/時刻指定の切り替え（ユーザー指示 2026-10-12）。
+     時刻指定のときは、時計の場所が時刻の入力欄に、ダイヤの字が選択欄に変わる -->
 <div class="tw-px-3 tw-pt-2">
     <app-filter-chips
         mode="single"
@@ -13,19 +14,6 @@
     <div
         class="tw-flex tw-min-h-14 tw-flex-wrap tw-items-center tw-gap-x-4 tw-gap-y-2 tw-py-2"
     >
-        <span
-            data-clock
-            class="tw-text-2xl tw-font-bold tw-tabular-nums tw-text-ink"
-            >{{ clockText() }}</span
-        >
-
-        <app-segment-toggle
-            class="tw-w-48"
-            [options]="modeOptions"
-            [value]="mode()"
-            (valueChange)="onModeChange($event)"
-        ></app-segment-toggle>
-
         @if (mode() === 'specified') {
             <!-- 枠のどこを押しても時刻の選択画面を開く。Android の Chrome は input 本体（80×16px）を
                  押したときしか開かず、枠の余白やラベルを押すとフォーカスが移るだけだった（2026-10-06） -->
@@ -45,6 +33,15 @@
                     (ngModelChange)="onTimeInputChange($event)"
                 />
             </mat-form-field>
+        } @else {
+            <span
+                data-clock
+                class="tw-text-2xl tw-font-bold tw-tabular-nums tw-text-ink"
+                >{{ clockText() }}</span
+            >
+        }
+
+        @if (mode() === 'specified') {
             <mat-form-field
                 subscriptSizing="dynamic"
                 class="tw-min-w-0 tw-flex-1 sm:tw-w-64 sm:tw-flex-none"
@@ -79,5 +76,12 @@
                 calendarLabel()
             }}</span>
         }
+
+        <app-segment-toggle
+            class="tw-w-48"
+            [options]="modeOptions"
+            [value]="mode()"
+            (valueChange)="onModeChange($event)"
+        ></app-segment-toggle>
     </div>
 </div>

@@ -113,6 +113,21 @@ describe('TimetableEditFormComponent', () => {
         ).not.toHaveBeenCalled();
     });
 
+    it('COPY モードは、コピー元を ID で取ってから（向きが決まってから）候補を取る', async () => {
+        TimetableEditFormStore.setMode(ETimetableEditFormMode.COPY);
+        jest.clearAllMocks();
+
+        await component.fetchData();
+
+        const target =
+            timetableEditFormService.fetchTargetTripBlock.mock
+                .invocationCallOrder[0];
+        const candidates =
+            timetableEditFormService.fetchCopySourceCandidates.mock
+                .invocationCallOrder[0];
+        expect(target).toBeLessThan(candidates);
+    });
+
     it('駅・路線・運用・種別・ダイヤの取得を同時に購読する（順番待ちしない）', () => {
         const subscribed: string[] = [];
         const names = [

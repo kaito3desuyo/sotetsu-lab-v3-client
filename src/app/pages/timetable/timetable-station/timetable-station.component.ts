@@ -18,6 +18,7 @@ import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.stat
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
@@ -154,14 +155,13 @@ export class TimetableStationComponent {
             .subscribe((paramMap) => {
                 const rawCalendarId = paramMap.get('calendar_id');
                 const rawStationId = paramMap.get('station_id');
-                const rawTripDirection = paramMap.get('trip_direction');
+                // 読めない向き（"abc" など）は、無いときと同じ扱いにする
+                const tripDirection = parseTripDirectionParam(
+                    paramMap.get('trip_direction'),
+                );
 
                 // 既定表示（mockup-01）: パラメータ不足時は 横浜 / 今日のダイヤ / 上り へ補完
-                if (
-                    !rawCalendarId ||
-                    !rawStationId ||
-                    rawTripDirection === null
-                ) {
+                if (!rawCalendarId || !rawStationId || tripDirection === null) {
                     const defaultCalendarId =
                         rawCalendarId ??
                         this.#todaysCalendarListStateQuery.todaysCalendarId;
@@ -171,8 +171,9 @@ export class TimetableStationComponent {
                             (s) => s.stationName === '横浜',
                         )?.stationId ??
                         this.stationOptions()[0]?.stationId;
-                    const defaultTripDirection =
-                        rawTripDirection ?? String(ETripDirection.INBOUND);
+                    const defaultTripDirection = String(
+                        tripDirection ?? ETripDirection.INBOUND,
+                    );
 
                     if (defaultCalendarId && defaultStationId) {
                         this.#router.navigate(
@@ -193,9 +194,6 @@ export class TimetableStationComponent {
 
                 const calendarId = rawCalendarId;
                 const stationId = rawStationId;
-                const tripDirection = Number(
-                    rawTripDirection,
-                ) as ETripDirection;
 
                 TimetableStationStore.setCalendarId(calendarId);
                 TimetableStationStore.setStationId(stationId);

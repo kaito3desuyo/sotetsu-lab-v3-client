@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
@@ -146,6 +147,36 @@ describe('TimetableEditFormService', () => {
                 calendarId: 'calendar-1',
                 tripDirection: ETripDirection.OUTBOUND,
             });
+            done();
+        });
+    });
+
+    it('編集する列車の ID が無ければ、PUT /trip-blocks/null を送らずに失敗させる', (done) => {
+        TimetableEditFormStore.setTripBlockId(null);
+
+        service.replaceTripBlock([]).subscribe({
+            error: (e: Error) => {
+                expect(tripBlockService.replaceOne).not.toHaveBeenCalled();
+                expect(e.message).toBe('編集する列車が決まっていません');
+                done();
+            },
+        });
+    });
+
+    it('向きが決まっていなければ、候補を取りに行かず空にする（tripDirection=null で 422 になるため）', (done) => {
+        TimetableEditFormStore.resetForNewSession();
+        TimetableEditFormStore.setCalendarId('calendar-1');
+        TimetableEditFormStore.setCopySourceCandidates([
+            { tripBlockId: 'stale' },
+        ] as TripBlockDetailsDto[]);
+
+        service.fetchCopySourceCandidates().subscribe(async () => {
+            expect(tripBlockService.findManyByFilter).not.toHaveBeenCalled();
+            expect(
+                await firstValueFrom(
+                    TimetableEditFormStore.copySourceCandidates$,
+                ),
+            ).toEqual([]);
             done();
         });
     });

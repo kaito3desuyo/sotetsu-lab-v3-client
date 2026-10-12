@@ -111,9 +111,11 @@ describe('TimetableEditFormStore', () => {
         TimetableEditFormStore.setTripBlockId('some-block');
         TimetableEditFormStore.setSelectedRouteIds(['本線']);
         TimetableEditFormStore.setIsSaveTripsIndividually(true);
+        TimetableEditFormStore.setTripDirection(ETripDirection.INBOUND);
 
         TimetableEditFormStore.resetForNewSession();
 
+        expect(TimetableEditFormStore.tripDirection).toBeNull();
         expect(TimetableEditFormStore.tripBlockId).toBeNull();
         expect(TimetableEditFormStore.selectedRouteIds).toEqual([]);
         expect(TimetableEditFormStore.isSaveTripsIndividually).toBe(false);

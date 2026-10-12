@@ -62,15 +62,30 @@ export class OperationRealTimeFilterComponent {
         { initialValue: [] },
     );
 
-    /** 会社は相鉄と直通を始めた順に並べる（agenciesInThroughServiceOrder）。 */
-    readonly agencyOptions = computed<FilterChipOption[]>(() =>
-        agenciesInThroughServiceOrder(this.agencies(), this.routes()).map(
-            (agency) => ({
-                value: agency.agencyId,
-                label: agency.agencyName,
-            }),
-        ),
-    );
+    readonly formations = toSignal(OperationRealTimeStore.formations$, {
+        initialValue: [],
+    });
+
+    /**
+     * 会社は相鉄と直通を始めた順に並べる（agenciesInThroughServiceOrder）。
+     * 出すのは編成を持つ会社だけ（ユーザー指示 2026-10-12）。選んだまま保存されている会社は、
+     * 外せなくならないよう残す。
+     */
+    readonly agencyOptions = computed<FilterChipOption[]>(() => {
+        const visibleAgencyIds = new Set([
+            ...this.formations().map((formation) => formation.agencyId),
+            ...this.selectedAgencyIds(),
+        ]);
+        return agenciesInThroughServiceOrder(
+            this.agencies().filter((agency) =>
+                visibleAgencyIds.has(agency.agencyId),
+            ),
+            this.routes(),
+        ).map((agency) => ({
+            value: agency.agencyId,
+            label: agency.agencyName,
+        }));
+    });
 
     /**
      * 実在する運用番号 → 群名。休（運用番号 100）は API にも運用一覧にも

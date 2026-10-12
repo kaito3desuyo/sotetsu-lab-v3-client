@@ -1,4 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { BehaviorSubject, of } from 'rxjs';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { OperationRealTimeFilterComponent } from './operation-real-time-filter.component';
@@ -16,6 +21,7 @@ const operationOf = (operationNumber: string): OperationDetailsDto =>
 describe('OperationRealTimeFilterComponent', () => {
     let component: OperationRealTimeFilterComponent;
     let fixture: ComponentFixture<OperationRealTimeFilterComponent>;
+    let agencies$: BehaviorSubject<AgencyDetailsDto[]>;
 
     beforeEach(async () => {
         OperationRealTimeStore.setOperations(
@@ -24,8 +30,17 @@ describe('OperationRealTimeFilterComponent', () => {
         OperationRealTimeStore.setSelectedAgencyIds([]);
         OperationRealTimeStore.setSelectedGroupNames([]);
 
+        agencies$ = new BehaviorSubject<AgencyDetailsDto[]>([]);
+
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFilterComponent],
+            providers: [
+                { provide: AgencyListStateQuery, useValue: { agencies$ } },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: { routeStations$: of([]) },
+                },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(OperationRealTimeFilterComponent);
@@ -35,6 +50,7 @@ describe('OperationRealTimeFilterComponent', () => {
 
     afterEach(() => {
         OperationRealTimeStore.setOperations([]);
+        OperationRealTimeStore.setFormations([]);
         OperationRealTimeStore.setSelectedAgencyIds([]);
         OperationRealTimeStore.setSelectedGroupNames([]);
     });
@@ -109,6 +125,27 @@ describe('OperationRealTimeFilterComponent', () => {
             );
         // 1 段目=会社（このテストでは未 seed なので空）/ 2 段目=運用群
         expect(labelsOf(rows[1])).toEqual(['1群', 'G群（東横線）', '休']);
+    });
+
+    it('会社チップは、編成を持つ会社だけを出す（選んだままの会社は外せるよう残す）', () => {
+        agencies$.next([
+            { agencyId: 'a-sotetsu', agencyName: '相鉄' },
+            { agencyId: 'a-jr', agencyName: 'JR東日本' },
+            { agencyId: 'a-tokyu', agencyName: '東急' },
+            { agencyId: 'a-seibu', agencyName: '西武' },
+        ] as AgencyDetailsDto[]);
+        OperationRealTimeStore.setFormations([
+            { formationId: 'f-1', agencyId: 'a-sotetsu' },
+            { formationId: 'f-2', agencyId: 'a-tokyu' },
+        ] as FormationDetailsDto[]);
+        OperationRealTimeStore.setSelectedAgencyIds(['a-seibu']);
+        fixture.detectChanges();
+
+        expect(component.agencyOptions().map((o) => o.label)).toEqual([
+            '相鉄',
+            '東急',
+            '西武',
+        ]);
     });
 
     it('選択色はページで上書きせず app-filter-chips の既定に委ねる', () => {
