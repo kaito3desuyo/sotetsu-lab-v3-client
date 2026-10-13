@@ -8,8 +8,9 @@ export const TripOperationListModelBuilder = {
         endStationId: dto.endStationId,
         nextTripOperationListId: dto.nextTripOperationListId,
     }),
-    /** 今の本文に合わせ、区間の id はまだ送らない（不具合。次の fix コミットで直す） */
+    /** 既存の区間は id を送る。無いと API が区間を作り直し、ほかの区間からのつながりが切れる */
     buildFromReplaceDto: (dto: ReplaceTripOperationListDto) => ({
+        id: dto.id,
         ...TripOperationListModelBuilder.buildFromCreateDto(dto),
     }),
 } as const;

@@ -127,4 +127,63 @@ describe('TripBlockModelBuilder', () => {
         expect(body.trips[0]).not.toHaveProperty('tripId');
         expect(body.trips[0].times[0]).not.toHaveProperty('timeId');
     });
+
+    it('更新は既存の区間の id を送り、新しい区間には id を付けない', () => {
+        const trip: ReplaceTripDto = {
+            ...createTrip,
+            tripId: 'trip-1',
+            times: [{ ...createTrip.times[0], timeId: 'time-a' }],
+            tripOperationLists: [
+                {
+                    operationId: 'op-1',
+                    startStationId: 'a',
+                    endStationId: 'b',
+                    nextTripOperationListId: null,
+                    id: 'tol-1',
+                },
+                {
+                    operationId: 'op-2',
+                    startStationId: 'b',
+                    endStationId: 'd',
+                    nextTripOperationListId: 'tol-next',
+                },
+            ],
+        };
+
+        const body = TripBlockModelBuilder.buildFromReplaceDto({
+            tripBlockId: 'block-1',
+            trips: [trip],
+        });
+        const [kept, added] = JSON.parse(JSON.stringify(body)).trips[0]
+            .tripOperationLists;
+
+        expect(kept).toEqual({
+            id: 'tol-1',
+            operationId: 'op-1',
+            startStationId: 'a',
+            endStationId: 'b',
+            nextTripOperationListId: null,
+        });
+        expect(added).toEqual({
+            operationId: 'op-2',
+            startStationId: 'b',
+            endStationId: 'd',
+            nextTripOperationListId: 'tol-next',
+        });
+    });
+
+    it('登録は区間に id が紛れ込んでも送らない', () => {
+        const polluted = {
+            ...createTrip,
+            tripOperationLists: [
+                { ...createTrip.tripOperationLists[0], id: 'tol-x' },
+            ],
+        } as never;
+
+        const body = TripBlockModelBuilder.buildFromCreateDto({
+            trips: [polluted],
+        });
+
+        expect(body.trips[0].tripOperationLists[0]).not.toHaveProperty('id');
+    });
 });
