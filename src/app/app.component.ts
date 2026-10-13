@@ -16,7 +16,7 @@ import {
     NavigationStart,
     Router,
 } from '@angular/router';
-import { interval } from 'rxjs';
+import { combineLatest, interval } from 'rxjs';
 import { filter, first, map, switchMap } from 'rxjs/operators';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
@@ -24,6 +24,7 @@ import { GoogleAnalyticsService } from './core/services/google-analytics.service
 import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
 import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
+import { UserStateQuery } from './global-states/user.state';
 import { LayoutComponent } from './layout/layout.component';
 import { LoadingService } from './shared/loading/loading.service';
 
@@ -46,6 +47,7 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #notificationService = inject(NotificationService);
     readonly #tokenStateStore = inject(TokenStateStore);
     readonly #tokenStateQuery = inject(TokenStateQuery);
+    readonly #userStateQuery = inject(UserStateQuery);
 
     constructor() {
         // 他人が目撃を投稿したら、どの画面でも目撃の画面内キャッシュを捨てる
@@ -79,6 +81,16 @@ export class AppComponent implements OnInit, OnDestroy {
                 );
             });
 
+        // 編集する人と見るだけの人を分けて集計できるよう、ログインの状態を GA に載せる
+        combineLatest([
+            this.#userStateQuery.isLoggedIn$,
+            this.#userStateQuery.role$,
+        ])
+            .pipe(takeUntilDestroyed())
+            .subscribe(([loggedIn, role]) => {
+                this.#gaService.setUserProperties({ loggedIn, role });
+            });
+
         this.#router.events
             .pipe(
                 filter<NavigationCancel>(
@@ -95,8 +107,15 @@ export class AppComponent implements OnInit, OnDestroy {
                 filter<NavigationError>((ev) => ev instanceof NavigationError),
                 takeUntilDestroyed(),
             )
-            .subscribe(() => {
+            .subscribe((ev) => {
                 this.#loadingService.close();
+                this.#gaService.sendEvent('page_load_error', {
+                    // GA のイベントの値は 100 文字まで
+                    error_message: (ev.error instanceof Error
+                        ? `${ev.error.name}: ${ev.error.message}`
+                        : String(ev.error)
+                    ).slice(0, 100),
+                });
                 this.#notificationService.open(
                     'ページの読み込みに失敗しました',
                     'OK',

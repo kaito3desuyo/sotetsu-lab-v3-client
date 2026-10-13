@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
+import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { LoadingService } from '../loading/loading.service';
@@ -19,6 +20,7 @@ describe('OperationPostCardComponent', () => {
     let socketEmit: jest.Mock;
     let handleError: jest.Mock;
     let resetForm: jest.Mock;
+    let sendEvent: jest.Mock;
 
     beforeEach(async () => {
         postOperationSighting = jest.fn(() => of(undefined));
@@ -27,6 +29,7 @@ describe('OperationPostCardComponent', () => {
         socketEmit = jest.fn();
         handleError = jest.fn();
         resetForm = jest.fn();
+        sendEvent = jest.fn();
 
         await TestBed.configureTestingModule({
             imports: [OperationPostCardComponent],
@@ -49,6 +52,7 @@ describe('OperationPostCardComponent', () => {
                 },
                 { provide: ErrorHandlerService, useValue: { handleError } },
                 { provide: SocketService, useValue: { emit: socketEmit } },
+                { provide: GoogleAnalyticsService, useValue: { sendEvent } },
             ],
         })
             .overrideComponent(OperationPostCardComponent, {
@@ -166,5 +170,59 @@ describe('OperationPostCardComponent', () => {
         );
         expect(resetForm).not.toHaveBeenCalled();
         expect(emitSubmitEvent).not.toHaveBeenCalled();
+    });
+
+    const eventNames = () => sendEvent.mock.calls.map(([name]) => name);
+
+    it('フォームに最初に触ったときだけ sighting_form_start を送る', () => {
+        expect(eventNames()).toEqual([]);
+
+        component.sightingForm.patchValue({ agencyId: 'sotetsu' });
+        component.sightingForm.patchValue({ operationNumber: '12' });
+
+        expect(eventNames()).toEqual(['sighting_form_start']);
+    });
+
+    it('投稿に成功したら sighting_submit と sighting_submit_success を送る', async () => {
+        fill();
+        sendEvent.mockClear();
+
+        await submit();
+
+        expect(eventNames()).toEqual([
+            'sighting_submit',
+            'sighting_submit_success',
+        ]);
+    });
+
+    it('投稿に失敗したら sighting_submit_failure を理由つきで送る', async () => {
+        postOperationSighting.mockReturnValue(
+            throwError(() => new FetchError(400, '編成が見つかりません')),
+        );
+        fill();
+        sendEvent.mockClear();
+
+        await submit();
+
+        expect(sendEvent.mock.calls).toEqual([
+            ['sighting_submit'],
+            [
+                'sighting_submit_failure',
+                { error_message: '編成が見つかりません' },
+            ],
+        ]);
+    });
+
+    it('失敗の理由は 100 文字までに切って送る', async () => {
+        postOperationSighting.mockReturnValue(
+            throwError(() => new FetchError(500, 'あ'.repeat(150))),
+        );
+        fill();
+
+        await submit();
+
+        expect(sendEvent).toHaveBeenLastCalledWith('sighting_submit_failure', {
+            error_message: 'あ'.repeat(100),
+        });
     });
 });
