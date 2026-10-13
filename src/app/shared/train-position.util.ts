@@ -1,4 +1,6 @@
 import { getRailwayDate, toAbsoluteTime } from 'src/app/core/utils/railway-day';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
@@ -144,13 +146,28 @@ export function findContinuations(
  */
 const DEPOT_MARGIN_MS = 3 * 60 * 1000;
 
+function isTransferEndOf(
+    trip: TripDetailsDto,
+    side: 'in' | 'out',
+    links: readonly OperationItineraryLinkDto[],
+): boolean {
+    return isTransferEnd({
+        side,
+        tripOperationListId: trip.tripOperationLists?.[0]?.tripOperationListId,
+        tripId: trip.tripId,
+        links: links as OperationItineraryLinkDto[],
+    });
+}
+
 /**
  * 折り返し: 同じ運用の列車が終点に着き、別の trip block（逆向き）で同じ駅を発つとき、
  * 発つ列車の tripId → 着く列車 を返す。折り返しは block に含まれないので運用でつなぐ。
  * 入庫する列車・出庫する列車は車両基地を挟むので含めない。
+ * 別の運用へ移る端・別の運用から来る端（乗り移り・決まり 2）も、入出庫の値に頼らず links で見分けて含めない。
  */
 export function findTurnarounds(
     tripBlocks: readonly TripBlockDetailsDto[],
+    links: readonly OperationItineraryLinkDto[] = [],
 ): ReadonlyMap<string, TripDetailsDto> {
     const entriesByOperationId = new Map<
         string,
@@ -187,6 +204,8 @@ export function findTurnarounds(
                 previous.block !== next.block &&
                 !previous.trip.depotIn &&
                 !next.trip.depotOut &&
+                !isTransferEndOf(previous.trip, 'in', links) &&
+                !isTransferEndOf(next.trip, 'out', links) &&
                 last.stationId != null &&
                 last.stationId === next.stops[0].stationId
             ) {
@@ -313,11 +332,13 @@ function estimateTripPosition(
  * @param tripBlocks 対象ダイヤの全 tripBlock（tripDirection 上下分含めて呼び出し側で束ねたもの）
  * @param stationAxis 対象路線の駅リスト（route-stations 由来。順序は問わない）
  * @param at 位置算出の基準時刻
+ * @param links 運用の乗り移りを見分けるつながり（省略すると乗り移りは見分けない）
  */
 export function estimatePositions(
     tripBlocks: TripBlockDetailsDto[],
     stationAxis: RouteStationDto[],
     at: Date,
+    links: readonly OperationItineraryLinkDto[] = [],
 ): TrainPosition[] {
     const axisStationIds = new Set(
         stationAxis
@@ -326,7 +347,7 @@ export function estimatePositions(
     );
     const base = getRailwayDate(at);
     const continuations = findContinuations(tripBlocks);
-    const turnarounds = findTurnarounds(tripBlocks);
+    const turnarounds = findTurnarounds(tripBlocks, links);
 
     const positions: TrainPosition[] = [];
     for (const block of tripBlocks) {

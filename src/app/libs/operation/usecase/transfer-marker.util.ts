@@ -1,4 +1,7 @@
-import { OperationItineraryLinkDto } from './dtos/operation-itinerary-link.dto';
+import {
+    ItineraryLinkEndDto,
+    OperationItineraryLinkDto,
+} from './dtos/operation-itinerary-link.dto';
 
 /** 端が「別の運用へ・から」の乗り移りか（◎）。それ以外の入出庫は車庫の △○。 */
 export type DepotEndKind = 'transfer' | 'depot';
@@ -10,21 +13,30 @@ export type DepotEndKind = 'transfer' | 'depot';
  * 列車とは tripOperationListId、なければ tripId で結ぶ。
  * 決まり 1（列車の途中で運番が変わる）は扱わない。
  */
-export function isTransferEnd(params: {
+export function findTransferEnd(params: {
     side: 'in' | 'out';
     tripOperationListId?: string;
     tripId?: string;
     links: OperationItineraryLinkDto[];
-}): boolean {
+}): ItineraryLinkEndDto | undefined {
     const { side, tripOperationListId, tripId, links } = params;
     const link =
         (tripOperationListId
             ? links.find((l) => l.tripOperationListId === tripOperationListId)
             : undefined) ??
         (tripId ? links.find((l) => l.tripId === tripId) : undefined);
-    if (!link) return false;
+    if (!link) return undefined;
     const end = side === 'in' ? link.next : link.previous;
-    return !!end && end.rule === 2;
+    return !!end && end.rule === 2 ? end : undefined;
+}
+
+export function isTransferEnd(params: {
+    side: 'in' | 'out';
+    tripOperationListId?: string;
+    tripId?: string;
+    links: OperationItineraryLinkDto[];
+}): boolean {
+    return !!findTransferEnd(params);
 }
 
 export function transferLabel(side: 'in' | 'out'): string {

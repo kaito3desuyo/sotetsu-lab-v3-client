@@ -25,9 +25,10 @@ function tol(params: {
     toTime: string;
     depotIn?: boolean;
     depotOut?: boolean;
+    id?: string;
 }): TripOperationListDetailsDto {
     return {
-        tripOperationListId: 'tol',
+        tripOperationListId: params.id ?? 'tol',
         trip: {
             tripNumber: '2021',
             tripClassId: 'tc-rapid',
@@ -142,5 +143,91 @@ describe('TripPositionComponent', () => {
         });
 
         expect(text).toBe('海老名 08:23 → 入庫済△');
+    });
+
+    describe('入出庫をともなわない乗り移り（depot=false）', () => {
+        const to = (rule: number, operationNumber = '15K') => ({
+            tripOperationListId: 'x',
+            tripId: 'x',
+            operationId: 'op-2',
+            operationNumber,
+            stationId: 's-ebina',
+            rule,
+        });
+        const link = (id: string, p: object) => ({
+            tripOperationListId: id,
+            tripId: id,
+            operationId: 'op-1',
+            previous: null,
+            next: null,
+            ...p,
+        });
+
+        it('別の運用から来る列車の手前は「出庫前○」', () => {
+            fixture.componentRef.setInput('links', [
+                link('n', { previous: to(2, '16K') }),
+            ]);
+            const text = render({
+                next: tol({
+                    id: 'n',
+                    from: 's-ebina',
+                    fromTime: '18:16:00',
+                    to: 's-yokohama',
+                    toTime: '18:50:00',
+                }),
+            });
+            expect(text).toBe('16K から → 海老名 18:16');
+            expect(
+                fixture.nativeElement.querySelectorAll('svg circle').length,
+            ).toBe(2);
+        });
+
+        it('別の運用へ移る列車の後は「入庫済△」', () => {
+            fixture.componentRef.setInput('links', [
+                link('p', { next: to(2) }),
+            ]);
+            const text = render({
+                prev: tol({
+                    id: 'p',
+                    from: 's-yokohama',
+                    fromTime: '07:50:00',
+                    to: 's-ebina',
+                    toTime: '08:23:00',
+                }),
+            });
+            expect(text).toBe('海老名 08:23 → 15K へ');
+            expect(
+                fixture.nativeElement.querySelectorAll('svg circle').length,
+            ).toBe(2);
+        });
+
+        it('入出庫も立つ乗り移りの端は従来どおり「出庫前○」', () => {
+            fixture.componentRef.setInput('links', [
+                link('n', { previous: to(2) }),
+            ]);
+            const text = render({
+                next: tol({
+                    id: 'n',
+                    from: 's-ebina',
+                    fromTime: '18:16:00',
+                    to: 's-yokohama',
+                    toTime: '18:50:00',
+                    depotOut: true,
+                }),
+            });
+            expect(text).toBe('出庫前○ → 海老名 18:16');
+        });
+
+        it('つながりが無ければ従来どおり「不明？」', () => {
+            const text = render({
+                next: tol({
+                    from: 's-ebina',
+                    fromTime: '18:16:00',
+                    to: 's-yokohama',
+                    toTime: '18:50:00',
+                }),
+            });
+            expect(text).toBe('不明？ → 海老名 18:16');
+        });
     });
 });

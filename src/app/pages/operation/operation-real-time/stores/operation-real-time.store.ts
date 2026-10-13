@@ -12,6 +12,7 @@ import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { normalizeGroupNames } from 'src/app/shared/operation-group.util';
@@ -24,6 +25,8 @@ type StoreProps = {
     tripClasses: TripClassDetailsDto[];
     calendar: CalendarDetailsDto;
     operations: OperationDetailsDto[];
+    /** 運用のつながり（乗り移りの端の判定用）。永続化しない */
+    itineraryLinks: OperationItineraryLinkDto[];
     formations: FormationDetailsDto[];
     operationGroups: OperationGroupDto[];
     selectedAgencyIds: string[];
@@ -55,6 +58,7 @@ const store = createStore(
         tripClasses: [],
         calendar: null,
         operations: [],
+        itineraryLinks: [],
         formations: [],
         operationGroups: [],
         selectedAgencyIds: [],
@@ -139,6 +143,9 @@ export const OperationRealTimeStore = {
     },
     setStations(stations: StationDetailsDto[]): void {
         store.update(setProp('stations', () => stations));
+    },
+    setItineraryLinks(links: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => links));
     },
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
         store.update(setProp('tripClasses', () => tripClasses));
@@ -241,6 +248,7 @@ export const OperationRealTimeStore = {
 
     routes$: store.pipe(select((state) => state.routes)),
     stations$: store.pipe(select((state) => state.stations)),
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
     calendar$: store.pipe(select((state) => state.calendar)),
     operations$: store.pipe(

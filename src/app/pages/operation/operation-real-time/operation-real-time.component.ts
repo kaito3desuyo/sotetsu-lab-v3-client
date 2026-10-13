@@ -128,6 +128,9 @@ export class OperationRealTimeComponent {
                 this.#operationRealTimeService.fetchOperations(),
             );
             await lastValueFrom(
+                this.#operationRealTimeService.fetchItineraryLinks(),
+            );
+            await lastValueFrom(
                 this.#operationRealTimeService.fetchFormations(),
             );
             // 現在位置は operations にのみ依存するため、

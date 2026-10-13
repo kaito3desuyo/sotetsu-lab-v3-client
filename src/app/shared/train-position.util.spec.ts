@@ -2,6 +2,7 @@ import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { estimatePositions } from './train-position.util';
 
 function station(stationId: string): RouteStationDto {
@@ -310,6 +311,77 @@ describe('estimatePositions', () => {
             ).toEqual([
                 expect.objectContaining({ type: 'between', tripId: 'T1' }),
             ]);
+        });
+
+        describe('運用の乗り移り（入出庫の値が false でも折返しにしない）', () => {
+            function endOf(
+                tripId: string,
+                rule: 1 | 2 | 3,
+            ): OperationItineraryLinkDto['next'] {
+                return {
+                    tripOperationListId: `l-${tripId}`,
+                    tripId,
+                    operationId: 'O9',
+                    operationNumber: '3824',
+                    stationId: 'C',
+                    rule,
+                };
+            }
+            function link(
+                tripId: string,
+                ends: Partial<OperationItineraryLinkDto>,
+            ): OperationItineraryLinkDto {
+                return {
+                    tripOperationListId: `l-${tripId}`,
+                    tripId,
+                    operationId: 'O1',
+                    previous: null,
+                    next: null,
+                    ...ends,
+                };
+            }
+            const at = new Date(2026, 6, 4, 8, 12, 0);
+
+            it('前の列車が別の運用へ移る（決まり 2 の next）なら、発つ列車を折返しとして出さない', () => {
+                expect(
+                    estimatePositions(turnaroundBlocks(), AXIS_ABC, at, [
+                        link('T1', { next: endOf('T2', 2) }),
+                    ]),
+                ).toEqual([]);
+            });
+
+            it('発つ列車が別の運用から来る（決まり 2 の previous）なら、折返しとして出さない', () => {
+                expect(
+                    estimatePositions(turnaroundBlocks(), AXIS_ABC, at, [
+                        link('T2', { previous: endOf('T1', 2) }),
+                    ]),
+                ).toEqual([]);
+            });
+
+            it('入出庫をともなわない乗り移り（depot=false）は、着いた列車が消え、次の運用の列車は発車で走行中として現れる', () => {
+                const links = [link('T1', { next: endOf('T2', 2) })];
+                const positions = estimatePositions(
+                    turnaroundBlocks(),
+                    AXIS_ABC,
+                    new Date(2026, 6, 4, 8, 20, 0),
+                    links,
+                );
+                expect(positions).toHaveLength(1);
+                expect(positions[0]).toMatchObject({ tripId: 'T2' });
+                expect(positions[0].type).not.toBe('stopped');
+            });
+
+            it('決まり 2 でないつながり、つながりが無い場合は従来どおり折返しにする', () => {
+                const expected = [
+                    { type: 'stopped', tripId: 'T2', stationId: 'C', stoppedReason: 'turnaround' },
+                ];
+                expect(
+                    estimatePositions(turnaroundBlocks(), AXIS_ABC, at, [
+                        link('T1', { next: endOf('T2', 1) }),
+                    ]),
+                ).toEqual(expected);
+                expect(estimatePositions(turnaroundBlocks(), AXIS_ABC, at, [])).toEqual(expected);
+            });
         });
 
         it('運用が違えば出さない', () => {
