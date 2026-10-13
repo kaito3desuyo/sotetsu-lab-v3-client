@@ -33,6 +33,18 @@ describe('GoogleAnalyticsService', () => {
         });
     });
 
+    it('イベントを名前と値つきで送る', () => {
+        service.sendEvent('sighting_submit_failure', {
+            error_message: '編成が見つかりません',
+        });
+
+        expect(gtagMock).toHaveBeenCalledWith(
+            'event',
+            'sighting_submit_failure',
+            { error_message: '編成が見つかりません' },
+        );
+    });
+
     it('ログインしていなければ役割は guest にする', () => {
         service.setUserProperties({ loggedIn: false, role: null });
 

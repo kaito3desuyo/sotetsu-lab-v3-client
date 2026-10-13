@@ -20,8 +20,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { addDays, getHours, parse, subDays } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
+import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -67,6 +69,7 @@ export class OperationPostCardComponent {
     readonly #loading = inject(LoadingService);
     readonly #error = inject(ErrorHandlerService);
     readonly #socket = inject(SocketService);
+    readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
 
     readonly sightingForm: Form = this.#fb.group({
@@ -138,6 +141,13 @@ export class OperationPostCardComponent {
                         break;
                 }
             });
+
+        // 投稿までの流れを GA で追う入口（カード 1 枚につき 1 回）
+        this.sightingForm.valueChanges
+            .pipe(take(1), takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => {
+                this.#ga.sendEvent('sighting_form_start');
+            });
     }
 
     async submit(formGroupDirective: FormGroupDirective): Promise<void> {
@@ -169,6 +179,8 @@ export class OperationPostCardComponent {
             convertedSightingTime = adjustedSightingTime.toISOString();
         }
 
+        this.#ga.sendEvent('sighting_submit');
+
         this.#loading.open();
 
         const result = await tryCatchAsync<void, FetchError>(
@@ -183,6 +195,10 @@ export class OperationPostCardComponent {
         this.#loading.close();
 
         if (result.isFailure()) {
+            this.#ga.sendEvent('sighting_submit_failure', {
+                // GA のイベントの値は 100 文字まで
+                error_message: result.error.message.slice(0, 100),
+            });
             this.#error.handleError(result.error);
             this.#snackBar.open(result.error.message, 'OK', {
                 duration: 3000,
@@ -191,6 +207,7 @@ export class OperationPostCardComponent {
         }
 
         if (result.isSuccess()) {
+            this.#ga.sendEvent('sighting_submit_success');
             this.#snackBar.open('目撃情報を投稿しました', 'OK', {
                 duration: 3000,
             });

@@ -42,6 +42,18 @@ export class GoogleAnalyticsService {
     }
 
     /**
+     * イベントの送信。値をレポートで見るには、GA 側に同じ名前の
+     * イベントスコープのカスタムディメンションが要る
+     */
+    sendEvent(name: string, params?: Record<string, string>): void {
+        if (!this._useGA()) {
+            return;
+        }
+
+        gtag('event', name, params);
+    }
+
+    /**
      * 編集する人と見るだけの人を分けて集計するためのユーザープロパティ
      * （GA 側にユーザースコープのカスタムディメンション logged_in・user_role が要る）
      */
