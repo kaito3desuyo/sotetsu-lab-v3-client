@@ -1,4 +1,4 @@
-export class OperationGroupModel {
+export interface OperationGroupModel {
     groupName: string;
     operationNumbers: string[];
 }

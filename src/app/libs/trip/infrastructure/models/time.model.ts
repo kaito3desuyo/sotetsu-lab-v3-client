@@ -49,7 +49,6 @@ export class TimeModel {
     trip?: TripModel;
 
     @Expose()
-    @Type(() => StationModel)
     station?: StationModel;
 
     @Expose()

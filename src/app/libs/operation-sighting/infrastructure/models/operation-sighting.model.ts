@@ -40,7 +40,6 @@ export class OperationSightingModel {
     operation?: OperationModel;
 
     @Expose()
-    @Type(() => FormationModel)
     formation?: FormationModel;
 
     @Expose()

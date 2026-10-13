@@ -1,6 +1,6 @@
 import { TripModel } from 'src/app/libs/trip/infrastructure/models/trip.model';
 
-export class TripClassModel {
+export interface TripClassModel {
     id: string;
     serviceId?: string;
     tripClassName?: string;

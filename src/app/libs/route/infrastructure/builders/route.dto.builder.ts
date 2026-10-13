@@ -1,17 +1,19 @@
-import { classToPlain, plainToClass } from 'class-transformer';
-import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
 import { RouteDetailsDto } from '../../usecase/dtos/route-details.dto';
 import { RouteModel } from '../models/route.model';
+import { RouteStationListDtoBuilder } from './route-station-list.dto.builder';
 
 export const RouteDtoBuilder = {
-    buildFromModel: (model: RouteModel): RouteDetailsDto => {
-        const plainObject = classToPlain(model, classTransformerOptions);
-        return plainToClass(
-            RouteDetailsDto,
-            plainObject,
-            classTransformerOptions,
-        );
-    },
+    buildFromModel: ({
+        id,
+        routeStationLists,
+        ...rest
+    }: RouteModel): RouteDetailsDto => ({
+        ...rest,
+        routeId: id,
+        routeStationLists:
+            routeStationLists &&
+            RouteStationListDtoBuilder.buildFromModels(routeStationLists),
+    }),
     buildFromModels: (models: RouteModel[]): RouteDetailsDto[] =>
         models.map((model) => RouteDtoBuilder.buildFromModel(model)),
 } as const;
