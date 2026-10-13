@@ -1,12 +1,12 @@
 import { StationModel } from 'src/app/libs/station/infrastructure/models/station.model';
 import { RouteModel } from './route.model';
 
-export class RouteStationsModel {
+export interface RouteStationsModel {
     route: RouteModel;
     stations: RouteStationModel[];
 }
 
-export class RouteStationModel extends StationModel {
+export interface RouteStationModel extends StationModel {
     stationSequence: number;
     stationNumbering: string;
 }

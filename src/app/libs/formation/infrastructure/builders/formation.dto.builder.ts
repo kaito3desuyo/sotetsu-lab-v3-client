@@ -1,21 +1,17 @@
-import { classToPlain, plainToClass } from 'class-transformer';
-import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
+import { AgencyDtoBuilder } from 'src/app/libs/agency/infrastructure/builders/agency.dto.builder';
 import { FormationDetailsDto } from '../../usecase/dtos/formation-details.dto';
 import { FormationModel } from '../models/formation.model';
 
 export const FormationDtoBuilder = {
-    buildFromModel: (model: FormationModel): FormationDetailsDto => {
-        const plainObject = classToPlain(model, classTransformerOptions);
-        return plainToClass(
-            FormationDetailsDto,
-            plainObject,
-            classTransformerOptions,
-        );
-    },
-} as const;
-
-export const FormationsDtoBuilder = {
-    buildFromModels: (models: FormationModel[]): FormationDetailsDto[] => {
-        return models.map((model) => FormationDtoBuilder.buildFromModel(model));
-    },
+    buildFromModel: ({
+        id,
+        agency,
+        ...rest
+    }: FormationModel): FormationDetailsDto => ({
+        ...rest,
+        formationId: id,
+        agency: agency && AgencyDtoBuilder.buildFromModel(agency),
+    }),
+    buildFromModels: (models: FormationModel[]): FormationDetailsDto[] =>
+        models.map((model) => FormationDtoBuilder.buildFromModel(model)),
 } as const;

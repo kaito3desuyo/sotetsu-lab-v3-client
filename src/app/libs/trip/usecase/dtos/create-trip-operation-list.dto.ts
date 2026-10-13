@@ -1,27 +1,6 @@
-import { Exclude, Expose } from 'class-transformer';
-
-export class CreateTripOperationListDto {
-    @Exclude()
-    tripOperationListId: undefined;
-
-    @Exclude()
-    tripId: undefined;
-
-    @Expose()
+export interface CreateTripOperationListDto {
     operationId: string;
-
-    @Expose()
     startStationId: string;
-
-    @Expose()
     endStationId: string;
-
-    @Exclude()
-    startTimeId: undefined;
-
-    @Exclude()
-    endTimeId: undefined;
-
-    @Expose()
     nextTripOperationListId?: string | null;
 }

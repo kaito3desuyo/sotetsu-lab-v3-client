@@ -1,4 +1,4 @@
-export class CalendarDateModel {
+export interface CalendarDateModel {
     id: string;
     calendarId?: string;
     date?: string;

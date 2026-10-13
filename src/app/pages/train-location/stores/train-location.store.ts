@@ -3,7 +3,7 @@ import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/o
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 export type TrainLocationMode = 'now' | 'specified';
 

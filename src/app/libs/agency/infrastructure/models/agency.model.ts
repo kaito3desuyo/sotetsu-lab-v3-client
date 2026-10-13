@@ -1,4 +1,4 @@
-export class AgencyModel {
+export interface AgencyModel {
     id: string;
     agencyNumber?: string;
     parentAgencyNumber?: string;

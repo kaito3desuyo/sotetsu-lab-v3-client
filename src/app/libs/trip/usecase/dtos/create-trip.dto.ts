@@ -1,47 +1,17 @@
-import { Exclude, Expose, Type } from 'class-transformer';
 import { ETripDirection } from '../enums/trip.enum';
 import { CreateTimeDto } from './create-time.dto';
 import { CreateTripOperationListDto } from './create-trip-operation-list.dto';
 
-export class CreateTripDto {
-    @Exclude()
-    tripId: undefined;
-
-    @Expose()
+export interface CreateTripDto {
     serviceId: string;
-
-    @Expose()
     tripNumber: string;
-
-    @Expose()
     tripClassId: string;
-
-    @Expose()
     tripName: string | null;
-
-    @Expose()
     tripDirection: ETripDirection;
-
-    @Exclude()
-    tripBlockId: undefined;
-
-    @Expose()
     depotIn: boolean;
-
-    @Expose()
     depotOut: boolean;
-
-    @Expose()
     calendarId: string | null;
-
-    @Expose()
     extraCalendarId: string | null;
-
-    @Expose()
-    @Type(() => CreateTimeDto)
     times: CreateTimeDto[];
-
-    @Expose()
-    @Type(() => CreateTripOperationListDto)
     tripOperationLists: CreateTripOperationListDto[];
 }

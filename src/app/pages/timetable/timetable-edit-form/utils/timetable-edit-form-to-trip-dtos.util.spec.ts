@@ -1,5 +1,3 @@
-import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
-import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import {
     ETimetableEditFormMode,
@@ -49,13 +47,25 @@ const trip = (
 const { STOP, PASS, NOT_GOING_THROUGH } = ETimetableEditFormStopType;
 
 describe('toTripDtos', () => {
-    it('登録は CreateTripDto、更新は ReplaceTripDto にする', () => {
-        expect(
-            toTripDtos([trip({})], ETimetableEditFormMode.ADD)[0],
-        ).toBeInstanceOf(CreateTripDto);
-        expect(
-            toTripDtos([trip({})], ETimetableEditFormMode.UPDATE)[0],
-        ).toBeInstanceOf(ReplaceTripDto);
+    it('登録は列車・時刻の ID を持たせず、更新は持たせる', () => {
+        const withIds = trip({
+            tripId: 'trip-1',
+            times: [
+                time('a', STOP, null, '05:01'),
+                time('b', STOP, '05:10', null),
+            ].map((t, i) => ({ ...t, timeId: `time-${i}`, tripId: 'trip-1' })),
+        });
+
+        const [created] = toTripDtos([withIds], ETimetableEditFormMode.COPY);
+        const [replaced] = toTripDtos([withIds], ETimetableEditFormMode.UPDATE);
+
+        expect(created).not.toHaveProperty('tripId');
+        expect(created.times[0]).not.toHaveProperty('timeId');
+        expect(created).not.toHaveProperty('stopType');
+        expect(replaced).toMatchObject({ tripId: 'trip-1' });
+        expect(replaced.times[0]).toMatchObject({ timeId: 'time-0' });
+        expect(replaced.times[0]).not.toHaveProperty('stopType');
+        expect(replaced.times[0]).not.toHaveProperty('tripId');
     });
 
     it('列車番号が空なら「不明」にする', () => {

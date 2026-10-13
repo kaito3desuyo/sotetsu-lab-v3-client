@@ -1,8 +1,7 @@
-export class ServiceModel {
+export interface ServiceModel {
     id: string;
-    serviceName?: string;
-    serviceDescription?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    // operatingSystems?: OperatingSystemDetailsDto[];
+    serviceName: string;
+    serviceDescription: string;
+    createdAt: string;
+    updatedAt: string;
 }

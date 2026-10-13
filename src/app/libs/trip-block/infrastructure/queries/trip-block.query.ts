@@ -123,6 +123,12 @@ export class TripBlockQuery {
                     }),
                 forceReload,
             })
-            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body &&
+                        TripBlockDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 }

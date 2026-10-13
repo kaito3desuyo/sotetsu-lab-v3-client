@@ -1,4 +1,6 @@
-export class RouteModel {
+import { RouteStationListModel } from './route-station-list.model';
+
+export interface RouteModel {
     id: string;
     agencyId?: string;
     routeNumber?: string;
@@ -11,4 +13,5 @@ export class RouteModel {
     routeTextColor?: string;
     createdAt?: string;
     updatedAt?: string;
+    routeStationLists?: RouteStationListModel[];
 }

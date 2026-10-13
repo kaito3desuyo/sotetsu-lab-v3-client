@@ -18,9 +18,7 @@ export class TripBlockCommand {
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
 
-    createMany(
-        body: CreateTripBlockDto[],
-    ): Observable<TripBlockDetailsDto[]> {
+    createMany(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
         return this.#http
             .post<TripBlockModel[]>(
                 `${this.#v3ApiUrl}/bulk`,
@@ -28,8 +26,12 @@ export class TripBlockCommand {
                 { observe: 'response' },
             )
             .pipe(
-                map((res) =>
-                    res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
+                map(
+                    (res) =>
+                        res.body &&
+                        res.body.map((o) =>
+                            TripBlockDtoBuilder.buildFromModel(o),
+                        ),
                 ),
             );
     }
@@ -44,7 +46,13 @@ export class TripBlockCommand {
                 TripBlockModelBuilder.buildFromReplaceDto(body),
                 { observe: 'response' },
             )
-            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body &&
+                        TripBlockDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 
     addTripToTripBlock(
@@ -57,7 +65,13 @@ export class TripBlockCommand {
                 body,
                 { observe: 'response' },
             )
-            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body &&
+                        TripBlockDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 
     deleteTripFromTripBlock(
@@ -70,6 +84,12 @@ export class TripBlockCommand {
                 body,
                 { observe: 'response' },
             )
-            .pipe(map((res) => TripBlockDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body &&
+                        TripBlockDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 }

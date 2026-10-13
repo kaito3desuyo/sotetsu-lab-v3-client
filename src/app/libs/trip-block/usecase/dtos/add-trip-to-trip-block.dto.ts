@@ -1,6 +1,3 @@
-import { Expose } from 'class-transformer';
-
-export class AddTripToTripBlockDto {
-    @Expose()
+export interface AddTripToTripBlockDto {
     tripId: string;
 }

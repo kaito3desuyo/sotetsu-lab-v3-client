@@ -1,4 +1,6 @@
-export class FormationModel {
+import { AgencyModel } from 'src/app/libs/agency/infrastructure/models/agency.model';
+
+export interface FormationModel {
     id: string;
     agencyId?: string;
     vehicleType?: string;
@@ -8,4 +10,5 @@ export class FormationModel {
     endDate?: string;
     createdAt?: string;
     updatedAt?: string;
+    agency?: AgencyModel;
 }

@@ -11,7 +11,7 @@ export class UserCommand {
     readonly #baseUrl = `${environment.backendUrl}/user`;
 
     registerUser(user: RegisterUserDto): Observable<void> {
-        const model = UserModelBuilder.buildFromDto(user);
+        const model = UserModelBuilder.buildFromRegisterUserDto(user);
 
         return this.#http
             .post<void>(`${this.#baseUrl}/register`, model)

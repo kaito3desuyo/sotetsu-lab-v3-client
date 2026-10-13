@@ -235,8 +235,8 @@ export class TimetableEditFormService {
             TimetableEditFormStore.isSaveTripsIndividually;
 
         const tripBlocks: CreateTripBlockDto[] = isSaveTripsIndividually
-            ? trips.map((trip) => ({ tripBlockId: undefined, trips: [trip] }))
-            : [{ tripBlockId: undefined, trips }];
+            ? trips.map((trip) => ({ trips: [trip] }))
+            : [{ trips }];
 
         return this.#tripBlockService
             .createMany(tripBlocks)

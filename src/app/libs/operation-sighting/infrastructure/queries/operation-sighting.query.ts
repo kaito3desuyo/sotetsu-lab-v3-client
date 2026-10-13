@@ -9,10 +9,7 @@ import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { environment } from 'src/environments/environment';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
-import {
-    OperationSightingDtoBuilder,
-    OperationSightingsDtoBuilder,
-} from '../builders/operation-sighting.dto.builder';
+import { OperationSightingDtoBuilder } from '../builders/operation-sighting.dto.builder';
 import { OperationSightingTimeCrossSectionDtoBuilder } from '../builders/operation-sighting-time-cross-section.dto.builder';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
@@ -69,7 +66,7 @@ export class OperationSightingQuery {
             })
             .pipe(
                 map((res) =>
-                    OperationSightingsDtoBuilder.buildFromModels(res.body),
+                    OperationSightingDtoBuilder.buildFromModels(res.body),
                 ),
             );
     }
@@ -158,10 +155,12 @@ export class OperationSightingQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                        res.body,
-                    ),
+                map(
+                    (res) =>
+                        res.body &&
+                        OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                            res.body,
+                        ),
                 ),
             );
     }
@@ -187,10 +186,12 @@ export class OperationSightingQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                        res.body,
-                    ),
+                map(
+                    (res) =>
+                        res.body &&
+                        OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                            res.body,
+                        ),
                 ),
             );
     }

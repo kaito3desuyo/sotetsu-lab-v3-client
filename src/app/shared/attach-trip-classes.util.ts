@@ -1,5 +1,5 @@
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 /**
  * 項目を絞って取った列車データ（種別の中身を含まない）に、種別の一覧から種別（名前・色）を補う純関数。

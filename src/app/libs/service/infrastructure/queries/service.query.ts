@@ -70,7 +70,9 @@ export class ServiceQuery {
             })
             .pipe(
                 map((res) => ({
-                    service: ServiceDtoBuilder.buildFromModel(res.body.service),
+                    service:
+                        res.body.service &&
+                        ServiceDtoBuilder.buildFromModel(res.body.service),
                     stations: res.body.stations.map((o) =>
                         StationDtoBuilder.buildFromModel(o),
                     ),
@@ -96,8 +98,10 @@ export class ServiceQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    ServiceAgenciesDtoBuilder.buildFromModel(res.body),
+                map(
+                    (res) =>
+                        res.body &&
+                        ServiceAgenciesDtoBuilder.buildFromModel(res.body),
                 ),
             );
     }
@@ -120,7 +124,11 @@ export class ServiceQuery {
                 forceReload,
             })
             .pipe(
-                map((res) => ServiceRoutesDtoBuilder.buildFromModel(res.body)),
+                map(
+                    (res) =>
+                        res.body &&
+                        ServiceRoutesDtoBuilder.buildFromModel(res.body),
+                ),
             );
     }
 }

@@ -1,4 +1,4 @@
-export class ItineraryLinkEndDto {
+export interface ItineraryLinkEndDto {
     tripOperationListId: string;
     tripId: string;
     operationId: string;
@@ -9,7 +9,7 @@ export class ItineraryLinkEndDto {
 }
 
 /** 運番が変わるつながりだけを、区間ごとに返す（同じ運番どうしのつながりは返さない） */
-export class OperationItineraryLinkDto {
+export interface OperationItineraryLinkDto {
     tripOperationListId: string;
     tripId: string;
     operationId: string;

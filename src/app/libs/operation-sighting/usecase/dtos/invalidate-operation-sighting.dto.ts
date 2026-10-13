@@ -1,4 +1,4 @@
-export class InvalidateOperationSightingDto {
+export interface InvalidateOperationSightingDto {
     operationSightingId: string;
     userId: string;
     reason: string;

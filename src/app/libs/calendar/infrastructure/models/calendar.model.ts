@@ -1,4 +1,4 @@
-export class CalendarModel {
+export interface CalendarModel {
     id: string;
     serviceId?: string;
     calendarName?: string;

@@ -3,7 +3,7 @@ import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/o
 import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 /**

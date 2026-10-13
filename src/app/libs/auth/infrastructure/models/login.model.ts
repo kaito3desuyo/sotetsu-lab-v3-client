@@ -1,9 +1,4 @@
-import { Expose } from 'class-transformer';
-
-export class LoginModel {
-    @Expose()
+export interface LoginModel {
     username: string;
-
-    @Expose()
     password: string;
 }

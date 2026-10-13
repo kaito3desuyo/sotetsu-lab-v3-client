@@ -1,11 +1,28 @@
-import { plainToClass } from 'class-transformer';
-import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
+import { TripBlockDtoBuilder } from 'src/app/libs/trip-block/infrastructure/builders/trip-block.dto.builder';
+import { TripClassDtoBuilder } from 'src/app/libs/trip-class/infrastructure/builders/trip-class.dto.builder';
 import { TripDetailsDto } from '../../usecase/dtos/trip-details.dto';
 import { TripModel } from '../models/trip.model';
+import { TimeDtoBuilder } from './time.dto.builder';
+import { TripOperationListDtoBuilder } from './trip-operation-list.dto.builder';
 
 export const TripDtoBuilder = {
-    /** model は HTTP の応答（素の JSON）。TripBlockDtoBuilder と同じく複製を挟まずに変換する。 */
-    buildFromModel: (model: TripModel): TripDetailsDto => {
-        return plainToClass(TripDetailsDto, model, classTransformerOptions);
-    },
+    buildFromModel: ({
+        id,
+        times,
+        tripOperationLists,
+        tripClass,
+        tripBlock,
+        ...rest
+    }: TripModel): TripDetailsDto => ({
+        ...rest,
+        tripId: id,
+        times: times && TimeDtoBuilder.buildFromModels(times),
+        tripOperationLists:
+            tripOperationLists &&
+            TripOperationListDtoBuilder.buildFromModels(tripOperationLists),
+        tripClass: tripClass && TripClassDtoBuilder.buildFromModel(tripClass),
+        tripBlock: tripBlock && TripBlockDtoBuilder.buildFromModel(tripBlock),
+    }),
+    buildFromModels: (models: TripModel[]): TripDetailsDto[] =>
+        models.map((model) => TripDtoBuilder.buildFromModel(model)),
 } as const;

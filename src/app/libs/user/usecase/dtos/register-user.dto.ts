@@ -1,9 +1,4 @@
-import { Expose } from 'class-transformer';
-
-export class RegisterUserDto {
-    @Expose()
+export interface RegisterUserDto {
     username: string;
-
-    @Expose()
     password: string;
 }

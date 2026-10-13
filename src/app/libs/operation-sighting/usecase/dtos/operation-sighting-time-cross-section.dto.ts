@@ -1,13 +1,8 @@
-import { Expose, Type } from 'class-transformer';
 import { OperationSightingDetailsDto } from './operation-sighting-details.dto';
 
-export class OperationSightingTimeCrossSectionDto {
-    @Expose()
-    @Type(() => OperationSightingDetailsDto)
+export interface OperationSightingTimeCrossSectionDto {
     latestSighting: OperationSightingDetailsDto;
 
-    @Expose()
-    @Type(() => OperationSightingDetailsDto)
     expectedSighting: Omit<
         Partial<OperationSightingDetailsDto>,
         'operation' | 'formation'
@@ -17,7 +12,6 @@ export class OperationSightingTimeCrossSectionDto {
     };
 
     /** 引き継いだ目撃のとき、目撃されたときの運用。直接の目撃は null */
-    @Expose()
     sightedAsOperation?: {
         operationId: string;
         operationNumber: string;

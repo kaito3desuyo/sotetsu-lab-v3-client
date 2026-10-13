@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { TripClassDetailsDto } from '../../usecase/dtos/trip-class-details.dto';
-import { TripClassesDtoBuilder } from '../builders/trip-class.dto.builder';
+import { TripClassDtoBuilder } from '../builders/trip-class.dto.builder';
 import { TripClassModel } from '../models/trip-class.model';
 
 @Injectable({ providedIn: 'root' })
@@ -30,8 +30,6 @@ export class TripClassQuery {
                     }),
                 forceReload,
             })
-            .pipe(
-                map((res) => TripClassesDtoBuilder.buildFromModels(res.body)),
-            );
+            .pipe(map((res) => TripClassDtoBuilder.buildFromModels(res.body)));
     }
 }
