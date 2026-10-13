@@ -218,7 +218,7 @@ describe('TripPositionComponent', () => {
             expect(text).toBe('海老名 08:52 → 17K へ□');
         });
 
-        it('入庫も立つ乗り移りの間隙は従来どおり「一時入庫」', () => {
+        it('入庫も立つ乗り移りの間隙は「一時入庫」と移る先を △ で出す', () => {
             fixture.componentRef.setInput('links', [
                 link('p', { next: to(2, '15K') }),
             ]);
@@ -239,7 +239,31 @@ describe('TripPositionComponent', () => {
                     toTime: '16:50:00',
                 }),
             });
-            expect(text).toBe('海老名 09:33 → 一時入庫 16:16');
+            expect(text).toBe('海老名 09:33 → 一時入庫 15K へ△');
+        });
+
+        it('入庫も立つ乗り移りで続きが別の駅から始まっても「一時入庫」と移る先を出す', () => {
+            fixture.componentRef.setInput('links', [
+                link('p', { next: to(2, '15K') }),
+            ]);
+            const text = render({
+                prev: tol({
+                    id: 'p',
+                    from: 's-ebina',
+                    fromTime: '11:23:00',
+                    to: 's-yokohama',
+                    toTime: '11:27:00',
+                    depotIn: true,
+                }),
+                next: tol({
+                    id: 'n',
+                    from: 's-ebina',
+                    fromTime: '20:55:00',
+                    to: 's-yokohama',
+                    toTime: '21:22:00',
+                }),
+            });
+            expect(text).toBe('横浜 11:27 → 一時入庫 15K へ△');
         });
 
         it('入出庫も立つ乗り移りの端は従来どおり「出庫前○」', () => {

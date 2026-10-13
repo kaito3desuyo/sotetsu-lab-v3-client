@@ -179,6 +179,19 @@
                         *ngTemplateOutlet="transferMark"
                     ></ng-container>
                 </span>
+            } @else if (!!gapTransferIn) {
+                <!-- 入庫も伴って別の運用へ移る間隙。図の端と同じ △（ユーザー指示 2026-10-13）。
+                     続きの始発駅を出すと「星川 11:27 → 海老名 20:55」と1本の列車に見えた -->
+                <span
+                    [attr.aria-label]="
+                        '一時入庫 ' + gapTransferIn.operationNumber + ' へ'
+                    "
+                >
+                    一時入庫 {{ gapTransferIn.operationNumber }} へ<span
+                        aria-hidden="true"
+                        >△</span
+                    >
+                </span>
             } @else {
                 <span>
                     @if (prev.endTime.stationId === next.startTime.stationId) {
