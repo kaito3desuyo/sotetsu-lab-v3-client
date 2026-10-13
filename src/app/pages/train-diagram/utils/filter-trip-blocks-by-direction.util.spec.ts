@@ -1,4 +1,4 @@
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { filterTripBlocksByDirection } from './filter-trip-blocks-by-direction.util';
 
 function block(id: string): TripBlockDetailsDto {

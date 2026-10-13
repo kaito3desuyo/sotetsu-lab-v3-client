@@ -1,4 +1,4 @@
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 /** 主要駅の根拠にしない種別（系統サフィックス「（…）」付きも先頭一致で捉える） */
 const NON_MAJOR_CLASS_PREFIXES = ['各停', '回送'] as const;

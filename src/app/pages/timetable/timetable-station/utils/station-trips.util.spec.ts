@@ -1,4 +1,4 @@
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { stationTrips } from './station-trips.util';
 
 function trip(

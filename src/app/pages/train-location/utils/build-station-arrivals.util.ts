@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     STOPPED_REASON_LABEL,

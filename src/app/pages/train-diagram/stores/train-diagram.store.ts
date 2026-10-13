@@ -8,7 +8,7 @@ import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/o
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import {
     buildSegmentMinutesMap,
     buildStationAxis,

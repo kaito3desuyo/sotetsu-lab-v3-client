@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TimeDetailsDto } from './time-details.dto';
-import { TripBlockDetailsDto } from './trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripOperationListDetailsDto } from './trip-operation-list-details.dto';
 import 'reflect-metadata';
 

@@ -1,6 +1,6 @@
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
-import { TripBlockDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-block-details.dto';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 
 /**
  * 図の駅の並びを、上りの列車がいつも図の上へ進む向きにそろえる純関数。
