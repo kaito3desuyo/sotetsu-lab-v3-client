@@ -321,7 +321,7 @@ describe('buildBandViewModels', () => {
                 ...patch,
             }) as never;
 
-        it('depot が false でも、乗り移りの端は線を切り ◎ を出す', () => {
+        it('depot が false でも、乗り移りの端は線を切り □ を出す', () => {
             const [vm] = buildBandViewModels([tripOperationList()], stations, [
                 link({ previous: end(2), next: end(2) }),
             ]);
@@ -333,7 +333,7 @@ describe('buildBandViewModels', () => {
             expect(vm.depotOutTransfer).toBe(true);
         });
 
-        it('depot も立つ乗り移りの端は △○ のまま ◎ にしない', () => {
+        it('depot も立つ乗り移りの端は △○ のまま □ にしない', () => {
             const [vm] = buildBandViewModels(
                 [
                     tripOperationList({

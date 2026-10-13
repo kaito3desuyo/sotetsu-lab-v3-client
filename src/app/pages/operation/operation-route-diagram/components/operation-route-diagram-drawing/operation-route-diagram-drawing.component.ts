@@ -107,7 +107,7 @@ export class OperationRouteDiagramDrawingComponent {
 
     /** 前後・途中の運用の文言。点の横に絵の中で描く */
     readonly linkLabels = input<ItineraryLinkLabels | null>(null);
-    /** 車両の前後の運用。入出庫の端が乗り移りなら ◎ で描く。取れなければ空 */
+    /** 車両の前後の運用。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     readonly itineraryLinks = input<OperationItineraryLinkDto[]>([]);
 
     readonly clickNavigateTimetable =

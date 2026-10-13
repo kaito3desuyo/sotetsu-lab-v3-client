@@ -3,7 +3,7 @@ import {
     OperationItineraryLinkDto,
 } from './dtos/operation-itinerary-link.dto';
 
-/** 端が「別の運用へ・から」の乗り移りか（◎）。それ以外の入出庫は車庫の △○。 */
+/** 端が「別の運用へ・から」の乗り移りか（□）。それ以外の入出庫は車庫の △○。 */
 export type DepotEndKind = 'transfer' | 'depot';
 
 /**

@@ -57,7 +57,7 @@
             } @else if (!!transferOut) {
                 <span [attr.aria-label]="transferOut.operationNumber + ' から'">
                     {{ transferOut.operationNumber }} から<ng-container
-                        *ngTemplateOutlet="doubleCircle"
+                        *ngTemplateOutlet="transferMark"
                     ></ng-container>
                 </span>
             } @else {
@@ -176,7 +176,7 @@
             @if (!prev.trip.depotIn && !!gapTransferIn) {
                 <span [attr.aria-label]="gapTransferIn.operationNumber + ' へ'">
                     {{ gapTransferIn.operationNumber }} へ<ng-container
-                        *ngTemplateOutlet="doubleCircle"
+                        *ngTemplateOutlet="transferMark"
                     ></ng-container>
                 </span>
             } @else {
@@ -216,7 +216,7 @@
             } @else if (!!transferIn) {
                 <span [attr.aria-label]="transferIn.operationNumber + ' へ'">
                     {{ transferIn.operationNumber }} へ<ng-container
-                        *ngTemplateOutlet="doubleCircle"
+                        *ngTemplateOutlet="transferMark"
                     ></ng-container>
                 </span>
             } @else {
@@ -226,5 +226,5 @@
     </span>
 </div>
 
-<!-- 別の運用への・からの乗り移りの印。隣の「出庫前○」「入庫済△」が文字なので、ここも文字の ◎（ユーザー指示 2026-10-13） -->
-<ng-template #doubleCircle><span aria-hidden="true">◎</span></ng-template>
+<!-- 別の運用への・からの乗り移りの印。隣の「出庫前○」「入庫済△」が文字なので、ここも文字の □（ユーザー指示 2026-10-13。◎ は図で小さく ⊙ に見えるので □ にそろえた） -->
+<ng-template #transferMark><span aria-hidden="true">□</span></ng-template>

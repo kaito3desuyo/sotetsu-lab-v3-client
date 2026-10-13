@@ -198,7 +198,7 @@ describe('buildChainDiagramLines', () => {
         expect(qLine?.depotMarks).toEqual([{ kind: 'in', minute: 200, y: 20 }]);
     });
 
-    it('depotOut/depotIn が false でも、決まり 2 のつながりがあれば ◎ の印が付く', () => {
+    it('depotOut/depotIn が false でも、決まり 2 のつながりがあれば □ の印が付く', () => {
         const p = trip({
             tripId: 'trip-p',
             tripNumber: 'P',

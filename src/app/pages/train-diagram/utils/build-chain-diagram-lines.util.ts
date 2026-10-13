@@ -145,7 +145,7 @@ export function buildChainDiagramLines(params: {
      * 線が切れる区間（分断）の途中にある時刻の空の通過駅を推測で埋めて描き直す。
      */
     standardRunMinutes?: ReadonlyMap<string, number>;
-    /** 車両の前後の運用。入出庫の端が乗り移りなら印を ◎ にする。省略は空 */
+    /** 車両の前後の運用。入出庫の端が乗り移りなら印を □ にする。省略は空 */
     itineraryLinks?: readonly OperationItineraryLinkDto[];
 }): TripDiagramLine[] {
     const {

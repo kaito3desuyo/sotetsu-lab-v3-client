@@ -250,7 +250,7 @@ describe('OperationTableCardComponent', () => {
             expect(second.rightEdge).toMatchObject({ up: false, down: false });
         });
 
-        it('depot が false でも、乗り移りの端に ◎ だけを出す', () => {
+        it('depot が false でも、乗り移りの端に □ だけを出す', () => {
             setTransfer();
             const el: HTMLElement = fixture.nativeElement;
             expect(
@@ -263,7 +263,7 @@ describe('OperationTableCardComponent', () => {
             expect(el.querySelector('svg[aria-label="出庫"]')).toBeNull();
         });
 
-        it('depot も立つ乗り移りの端は △○ だけで ◎ は出さず、線は切る', () => {
+        it('depot も立つ乗り移りの端は △○ だけで □ は出さず、線は切る', () => {
             const base = operationTrip.trips;
             fixture.componentRef.setInput('operationTrip', {
                 ...operationTrip,

@@ -230,22 +230,15 @@
                                             : '別の運用へ'
                                     }}
                                 </title>
-                                <circle
-                                    [attr.cx]="x(mark.minute)"
-                                    [attr.cy]="mark.y"
-                                    r="3.5"
+                                <rect
+                                    [attr.x]="x(mark.minute) - 3.5"
+                                    [attr.y]="mark.y - 3.5"
+                                    width="7"
+                                    height="7"
                                     fill="white"
                                     [attr.stroke]="line.tripClassColor"
                                     stroke-width="1.5"
-                                ></circle>
-                                <circle
-                                    [attr.cx]="x(mark.minute)"
-                                    [attr.cy]="mark.y"
-                                    r="1.5"
-                                    fill="none"
-                                    [attr.stroke]="line.tripClassColor"
-                                    stroke-width="0.9"
-                                ></circle>
+                                ></rect>
                             </g>
                         } @else if (mark.kind === 'out') {
                             <circle

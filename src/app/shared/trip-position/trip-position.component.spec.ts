@@ -176,7 +176,7 @@ describe('TripPositionComponent', () => {
                     toTime: '18:50:00',
                 }),
             });
-            expect(text).toBe('16K から◎ → 海老名 18:16');
+            expect(text).toBe('16K から□ → 海老名 18:16');
         });
 
         it('別の運用へ移る列車の後は「入庫済△」', () => {
@@ -192,7 +192,7 @@ describe('TripPositionComponent', () => {
                     toTime: '08:23:00',
                 }),
             });
-            expect(text).toBe('海老名 08:23 → 15K へ◎');
+            expect(text).toBe('海老名 08:23 → 15K へ□');
         });
 
         it('別の運用へ移り、あとで同じ運用に戻ってくる間隙は「停車中」でなく移る先を出す', () => {
@@ -215,7 +215,7 @@ describe('TripPositionComponent', () => {
                     toTime: '17:34:00',
                 }),
             });
-            expect(text).toBe('海老名 08:52 → 17K へ◎');
+            expect(text).toBe('海老名 08:52 → 17K へ□');
         });
 
         it('入庫も立つ乗り移りの間隙は従来どおり「一時入庫」', () => {
