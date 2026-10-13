@@ -8,6 +8,7 @@ import { RouteStationListStateQuery } from 'src/app/global-states/route-station-
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
@@ -91,14 +92,20 @@ export class DashboardService {
             routes: this.#routeStationListStateQuery.routeStations$.pipe(
                 first(),
             ),
+            // 乗り移り（折り返しではない）の端を数えないため。取れなくても本数は出す
+            links: this.#operationService
+                .findManyItineraryLinks({ calendarId: calendar.calendarId })
+                .pipe(catchError(() => of([] as OperationItineraryLinkDto[]))),
         }).pipe(
-            tap(({ tripBlocksByDirection, routes }) => {
+            tap(({ tripBlocksByDirection, routes, links }) => {
+                DashboardStore.setItineraryLinks(links);
                 const tripBlocks = Object.values(tripBlocksByDirection).flat();
                 const stationAxis = buildNetworkStationAxis(routes);
                 const positions = estimatePositions(
                     tripBlocks,
                     stationAxis,
                     new Date(),
+                    links,
                 );
                 DashboardStore.setRunningTripCount(positions.length);
             }),

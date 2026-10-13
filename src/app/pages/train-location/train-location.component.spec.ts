@@ -28,6 +28,7 @@ describe('TrainLocationComponent', () => {
                     useValue: {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
                         fetchStationAxis: () => of(undefined),
                         fetchMissingOperationSightingTimeCrossSections: () =>
                             of(undefined),
@@ -260,6 +261,7 @@ describe('TrainLocationComponent', () => {
                         useValue: {
                             fetchTripClasses: () => of(undefined),
                             fetchTripBlocks: () => of(undefined),
+                            fetchItineraryLinks: () => of(undefined),
                             fetchStationAxis: () => of(undefined),
                             fetchMissingOperationSightingTimeCrossSections:
                                 () => of(undefined),

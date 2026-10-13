@@ -218,7 +218,34 @@
                      すべての線の上（後）に描く。 -->
                 @for (line of visibleLines(); track line.tripId) {
                     @for (mark of line.depotMarks; track $index) {
-                        @if (mark.kind === 'out') {
+                        @if (mark.transfer) {
+                            <g
+                                data-depot-mark="transfer"
+                                [attr.opacity]="lineOpacity(line.tripId)"
+                            >
+                                <title>
+                                    {{
+                                        mark.kind === 'out'
+                                            ? '別の運用から'
+                                            : '別の運用へ'
+                                    }}
+                                </title>
+                                <circle
+                                    [attr.cx]="x(mark.minute)"
+                                    [attr.cy]="mark.y"
+                                    r="3.5"
+                                    fill="white"
+                                    [attr.stroke]="line.tripClassColor"
+                                    stroke-width="1.5"
+                                ></circle>
+                                <circle
+                                    [attr.cx]="x(mark.minute)"
+                                    [attr.cy]="mark.y"
+                                    r="1.4"
+                                    [attr.fill]="line.tripClassColor"
+                                ></circle>
+                            </g>
+                        } @else if (mark.kind === 'out') {
                             <circle
                                 data-depot-mark="out"
                                 [attr.cx]="x(mark.minute)"

@@ -63,6 +63,13 @@
                         {{ formationAnnotation() }}
                     </span>
                 }
+                @if (sightedAsOperationNumber(); as sightedAs) {
+                    <span
+                        class="tw-whitespace-nowrap tw-text-xs tw-text-grey-600"
+                    >
+                        @{{ sightedAs }}
+                    </span>
+                }
             </div>
         } @else if (isSightingLoading()) {
             <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
@@ -175,6 +182,7 @@
                     [stations]="stations()"
                     [tripClasses]="tripClasses()"
                     [calendarId]="calendarId()"
+                    [links]="links()"
                 ></app-trip-position>
             }
         </div>

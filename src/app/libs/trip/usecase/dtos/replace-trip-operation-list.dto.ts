@@ -2,7 +2,7 @@ import { Exclude, Expose } from 'class-transformer';
 
 export class ReplaceTripOperationListDto {
     @Expose()
-    tripOperationListId: undefined;
+    id?: string;
 
     @Exclude()
     tripId: undefined;
@@ -21,4 +21,7 @@ export class ReplaceTripOperationListDto {
 
     @Exclude()
     endTimeId: undefined;
+
+    @Expose()
+    nextTripOperationListId?: string | null;
 }

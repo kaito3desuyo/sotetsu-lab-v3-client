@@ -46,4 +46,10 @@ export class OperationSightingModel {
     @Expose()
     @Type(() => OperationSightingInvalidationModel)
     invalidation?: OperationSightingInvalidationModel | null;
+
+    @Expose()
+    sightedAsOperation?: {
+        operationId: string;
+        operationNumber: string;
+    } | null;
 }

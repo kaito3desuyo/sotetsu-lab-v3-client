@@ -18,4 +18,5 @@ export class TrainDiagramLegendComponent {
     /** Task 14: 出庫（◯）・入庫（△）の印を持つ線が1本でもあるとき、凡例に見本を出す。 */
     readonly hasDepotOut = input<boolean>(false);
     readonly hasDepotIn = input<boolean>(false);
+    readonly hasTransfer = input<boolean>(false);
 }

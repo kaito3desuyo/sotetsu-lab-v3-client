@@ -46,4 +46,7 @@ export class OperationSightingDetailsDto {
     @Expose()
     @Type(() => OperationSightingInvalidationDetailsDto)
     invalidation?: OperationSightingInvalidationDetailsDto | null;
+
+    @Expose()
+    sightedAsOperation?: { operationId: string; operationNumber: string };
 }

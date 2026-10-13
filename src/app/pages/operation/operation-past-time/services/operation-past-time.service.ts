@@ -125,6 +125,7 @@ export class OperationPastTimeService {
                 from: format(dates[0], 'yyyy-MM-dd'),
                 to: format(dates[dates.length - 1], 'yyyy-MM-dd'),
                 includeInvalidated: includeInvalidated ? true : undefined,
+                includeCarriedOver: true,
             })
             .pipe(
                 tap((sightings: OperationSightingDetailsDto[]) => {

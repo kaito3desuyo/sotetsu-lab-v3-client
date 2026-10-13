@@ -63,6 +63,9 @@ export interface OperationRouteDiagramBandRow {
     /** ○・△ を描くか（図の外の端には描かない） */
     depotOutMarker: boolean;
     depotInMarker: boolean;
+    /** 別の運用への乗り移りの端（◎で描く） */
+    depotOutTransfer: boolean;
+    depotInTransfer: boolean;
     depotOutX: number;
     depotInX: number;
     /** 次の列車へ下ろす縦線の x。入庫する列車・最後の列車では無い */
@@ -149,6 +152,8 @@ export function buildBandRows(
             depotIn: vm.depotIn,
             depotOutMarker: vm.depotOutMarker,
             depotInMarker: vm.depotInMarker,
+            depotOutTransfer: vm.depotOutTransfer,
+            depotInTransfer: vm.depotInTransfer,
             depotOutX: xOf(vm.depotOutIndex),
             depotInX: xOf(vm.depotInIndex),
             connectorGradientId: `route-diagram-connector-gradient-${vm.tripOperationListId}`,

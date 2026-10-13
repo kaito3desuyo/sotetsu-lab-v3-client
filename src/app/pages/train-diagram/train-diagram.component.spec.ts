@@ -51,6 +51,7 @@ describe('TrainDiagramComponent', () => {
                     useValue: {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: () =>
                             of(undefined),
@@ -909,6 +910,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     useValue: {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: () =>
                             of(undefined),

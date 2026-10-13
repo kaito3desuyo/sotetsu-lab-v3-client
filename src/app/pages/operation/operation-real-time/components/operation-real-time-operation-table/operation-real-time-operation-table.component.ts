@@ -34,6 +34,7 @@ export class OperationRealTimeOperationTableComponent {
     readonly stations = toSignal(OperationRealTimeStore.stations$);
     readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
     readonly calendar = toSignal(OperationRealTimeStore.calendar$);
+    readonly itineraryLinks = toSignal(OperationRealTimeStore.itineraryLinks$);
     readonly operations = toSignal(OperationRealTimeStore.operations$);
     readonly formations = toSignal(OperationRealTimeStore.formations$);
     readonly timeCrossSections = toSignal(

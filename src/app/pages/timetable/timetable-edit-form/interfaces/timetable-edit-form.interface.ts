@@ -21,7 +21,18 @@ export type ITimetableEditFormTrip = FormGroup<{
     extraCalendarId: FormControl<string | null>;
     times: FormArray<ITimetableEditFormTripTime>;
     operationId: FormControl<string>;
+    tripOperationLists: FormControl<ITimetableEditFormOriginalSegment[]>;
+    nextTripOperationListId: FormControl<string | null>;
 }>;
+
+/** 編集前の運用区間（表示しない。保存で id とつながりを送り返す） */
+export interface ITimetableEditFormOriginalSegment {
+    id?: string;
+    operationId: string;
+    startStationId?: string;
+    endStationId?: string;
+    nextTripOperationListId?: string | null;
+}
 
 /** 1 列車ぶんのフォームの値（下書きに保存する形） */
 export type ITimetableEditFormTripValue = ReturnType<
@@ -93,6 +104,9 @@ export interface ITimetableEditFormGridTripView {
     tripForm: ITimetableEditFormTrip;
     tripNumber: string;
     destination: string;
+    /** 終着駅と、その到着時刻（`HH:mm`）。「次の運用」の候補を引く */
+    endStationId: string | null;
+    endArrivalTime: string | null;
     tripClass: TripClassDetailsDto | undefined;
     /** visibleStations と同じ並び */
     cells: ITimetableEditFormGridCell[];

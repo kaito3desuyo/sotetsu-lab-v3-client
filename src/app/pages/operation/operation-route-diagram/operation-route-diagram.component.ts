@@ -17,6 +17,7 @@ import { OperationRouteDiagramRouteFilterComponent } from './components/operatio
 import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
+import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import {
     reconnectTripOperationLists,
     withOutsideStationColumns,
@@ -99,6 +100,31 @@ export class OperationRouteDiagramComponent {
         );
     });
 
+    readonly itineraryLinks = toSignal(
+        OperationRouteDiagramStore.itineraryLinks$,
+        { initialValue: [] },
+    );
+
+    /** 前後の運用の文言（運用表と同じ）。図の中の点の横に描く */
+    readonly linkLabels = computed(() => {
+        const operation = this.operation();
+        const trips = this.#rawTripOperationLists() ?? [];
+        if (!operation) return null;
+
+        const stationNames = new Map(
+            (this.#allStations() ?? []).map((s) => [
+                s.stationId,
+                s.stationName,
+            ]),
+        );
+        return buildItineraryLinkLabels({
+            operationId: operation.operationId,
+            tripIds: trips.map(({ trip }) => trip.tripId),
+            links: this.itineraryLinks(),
+            stationNameById: (id) => stationNames.get(id) ?? '',
+        });
+    });
+
     readonly drawingDisplayed = computed(
         () =>
             !!this.calendar() &&
@@ -147,6 +173,15 @@ export class OperationRouteDiagramComponent {
             ),
             lastValueFrom(this.#operationRouteDiagramService.fetchStations()),
         ]);
+
+        // 前後の運用はダイヤが分かってから取る。取れなくても行路図は出す
+        try {
+            await lastValueFrom(
+                this.#operationRouteDiagramService.fetchItineraryLinks(),
+            );
+        } catch {
+            OperationRouteDiagramStore.setItineraryLinks([]);
+        }
 
         // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
         OperationRouteDiagramStore.initializeSelectedRouteIds();

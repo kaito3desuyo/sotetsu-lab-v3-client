@@ -9,6 +9,7 @@ import {
     ETimetableEditFormStopType,
 } from '../enums/timetable-edit-form.enum';
 import {
+    ITimetableEditFormOriginalSegment,
     ITimetableEditFormTrip,
     ITimetableEditFormTripTime,
 } from '../interfaces/timetable-edit-form.interface';
@@ -64,10 +65,37 @@ export function buildTripFormGroup({
                 ],
             ),
             operationId: [
-                mode === ETimetableEditFormMode.UPDATE &&
-                trip.tripOperationLists?.length
-                    ? trip.tripOperationLists[0].operationId
-                    : '',
+                {
+                    value:
+                        mode === ETimetableEditFormMode.UPDATE &&
+                        trip.tripOperationLists?.length
+                            ? (trip.tripOperationLists[0].operationId ?? '')
+                            : '',
+                    // 区間が 2 つ以上の列車は、ここでは運番を変えない（区間を潰さない）
+                    disabled:
+                        mode === ETimetableEditFormMode.UPDATE &&
+                        (trip.tripOperationLists?.length ?? 0) > 1,
+                },
+            ],
+            /** 元の区間（表示しない）。保存で id とつながりを送り返すため */
+            tripOperationLists: [
+                (mode === ETimetableEditFormMode.UPDATE
+                    ? (trip.tripOperationLists ?? []).map((o) => ({
+                          id: o.tripOperationListId,
+                          operationId: o.operationId ?? '',
+                          startStationId: o.startStationId,
+                          endStationId: o.endStationId,
+                          nextTripOperationListId:
+                              o.nextTripOperationListId ?? null,
+                      }))
+                    : []) as ITimetableEditFormOriginalSegment[],
+            ],
+            nextTripOperationListId: [
+                (mode === ETimetableEditFormMode.UPDATE &&
+                trip.tripOperationLists?.length === 1
+                    ? (trip.tripOperationLists[0].nextTripOperationListId ??
+                      null)
+                    : null) as string | null,
             ],
         });
     }
@@ -92,6 +120,8 @@ export function buildTripFormGroup({
             ],
         ),
         operationId: [''],
+        tripOperationLists: [[] as ITimetableEditFormOriginalSegment[]],
+        nextTripOperationListId: [null as string | null],
     });
 }
 

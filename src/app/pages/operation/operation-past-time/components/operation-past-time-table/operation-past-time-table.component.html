@@ -139,6 +139,7 @@
                                                                 text: '無効化',
                                                                 disabled:
                                                                     contextMenuDisabled() ||
+                                                                    !!sighting.sightedAsOperation ||
                                                                     sighting.invalidation !==
                                                                         null,
                                                                 onClick:
@@ -151,6 +152,7 @@
                                                                 text: '復元',
                                                                 disabled:
                                                                     contextMenuDisabled() ||
+                                                                    !!sighting.sightedAsOperation ||
                                                                     sighting.invalidation ===
                                                                         null,
                                                                 onClick:
@@ -160,6 +162,18 @@
                                                             },
                                                         ]"
                                                     ></app-operation-number-tag>
+                                                    @if (
+                                                        sighting.sightedAsOperation;
+                                                        as sightedAs
+                                                    ) {
+                                                        <span
+                                                            class="tw-text-xs tw-text-grey-600"
+                                                            [title]="sightedAs.operationNumber + 'として目撃（車両のつながりで引き継いだ目撃）'"
+                                                            >@{{
+                                                                sightedAs.operationNumber
+                                                            }}</span
+                                                        >
+                                                    }
                                                 </span>
                                             }
                                         </div>

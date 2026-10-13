@@ -10,6 +10,8 @@ import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/bu
 import { environment } from 'src/environments/environment';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
+import { NextSegmentCandidateDto } from '../../usecase/dtos/next-segment-candidate.dto';
+import { OperationItineraryLinkDto } from '../../usecase/dtos/operation-itinerary-link.dto';
 import { OperationGroupDto } from '../../usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import {
@@ -29,6 +31,8 @@ const TIMETABLE_METHODS = [
     'findManyWithTrips',
     'findOneWithTrips',
     'findManyBySpecificPeriod',
+    'findManyNextSegmentCandidates',
+    'findManyItineraryLinks',
 ] as const;
 
 /** 目撃が書かれたら捨てる取得（cache は目撃の窓で決める） */
@@ -264,5 +268,61 @@ export class OperationQuery {
                     OperationGroupsDtoBuilder.buildFromModels(res.body),
                 ),
             );
+    }
+
+    /** 車両が運番を離れるとき、駅・時刻のあとに入れる運用区間の候補（最大 20 件） */
+    findManyNextSegmentCandidates(params: {
+        calendarId: string;
+        stationId: string;
+        afterSeconds: number;
+        forceReload?: boolean;
+    }): Observable<NextSegmentCandidateDto[]> {
+        const { calendarId, stationId, afterSeconds, forceReload } = params;
+
+        return this.#cache
+            .get({
+                name: 'findManyNextSegmentCandidates',
+                params: { calendarId, stationId, afterSeconds },
+                fetch: () =>
+                    this.#http.get<NextSegmentCandidateDto[]>(
+                        `${this.#v3ApiUrl}/next-operation-candidates`,
+                        {
+                            params: {
+                                calendarId,
+                                stationId,
+                                afterSeconds: String(afterSeconds),
+                            },
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => res.body ?? []));
+    }
+
+    /** ダイヤ内の運用ごとの、車両の前後の運用（運番が変わるつながりだけ） */
+    findManyItineraryLinks(params: {
+        calendarId: string;
+        forceReload?: boolean;
+    }): Observable<OperationItineraryLinkDto[]> {
+        const { calendarId, forceReload } = params;
+
+        return this.#cache
+            .get({
+                name: 'findManyItineraryLinks',
+                params: { calendarId },
+                fetch: () =>
+                    this.#http.get<OperationItineraryLinkDto[]>(
+                        `${this.#v3ApiUrl}/itinerary-links`,
+                        {
+                            params: { calendarId },
+                            observe: 'response',
+                            cache: this.#invalidator.requestCache('timetable'),
+                        },
+                    ),
+                forceReload,
+            })
+            .pipe(map((res) => res.body ?? []));
     }
 }

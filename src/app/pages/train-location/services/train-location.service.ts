@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -15,6 +16,7 @@ export class TrainLocationService {
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #operationService = inject(OperationService);
 
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
@@ -49,6 +51,32 @@ export class TrainLocationService {
                     TrainLocationStore.setTripBlocksByDirection(
                         attachTripClasses(data, TrainLocationStore.tripClasses),
                     );
+                }),
+                map(() => undefined),
+            );
+    }
+
+    /**
+     * 運用の乗り移りを見分けるつながり（運用表・行路図・列車ダイヤグラムと同じ口）を取る。
+     * 折返しの判定にだけ使うので、取れなくても空として扱い（従来の判定のまま）、ページは止めない。
+     */
+    fetchItineraryLinks(): Observable<void> {
+        const calendarId = TrainLocationStore.calendarId;
+
+        if (!calendarId) {
+            TrainLocationStore.setItineraryLinks([]);
+            return of(undefined);
+        }
+
+        return this.#operationService
+            .findManyItineraryLinks({ calendarId })
+            .pipe(
+                tap((links) => {
+                    TrainLocationStore.setItineraryLinks(links);
+                }),
+                catchError(() => {
+                    TrainLocationStore.setItineraryLinks([]);
+                    return of(undefined);
                 }),
                 map(() => undefined),
             );

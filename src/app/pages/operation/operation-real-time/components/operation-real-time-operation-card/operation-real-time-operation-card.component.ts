@@ -1,3 +1,4 @@
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -57,6 +58,8 @@ export class OperationRealTimeOperationCardComponent {
     readonly stations = input<StationDetailsDto[]>([]);
     readonly tripClasses = input<TripClassDetailsDto[]>([]);
     readonly calendarId = input<string | undefined>(undefined);
+    /** 運用のつながり。位置表示で乗り移りの端を見分ける */
+    readonly links = input<OperationItineraryLinkDto[]>([]);
     readonly isVisibleSightingHistories = input<boolean>(false);
     readonly isVisibleCurrentPosition = input<boolean>(false);
     /**
@@ -94,6 +97,13 @@ export class OperationRealTimeOperationCardComponent {
                 !formationVm || latestId !== history.operationSightingId,
         );
     });
+
+    /** 引き継いだ目撃のときの元の運用番号（例: 12K のカードで 11K）。直接の目撃は null */
+    readonly sightedAsOperationNumber = computed(
+        () =>
+            this.timeCrossSection()?.sightedAsOperation?.operationNumber ??
+            null,
+    );
 
     /** 編成の「形式・所属会社」付記（例: 10000・相鉄）。 */
     readonly formationAnnotation = computed(() => {

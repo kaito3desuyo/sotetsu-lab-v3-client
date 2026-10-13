@@ -29,6 +29,7 @@ import {
     ITimetableEditFormTripTime,
     TimetableEditFormTimeField,
 } from '../../interfaces/timetable-edit-form.interface';
+import { TimetableEditFormNextSegmentComponent } from '../timetable-edit-form-next-segment/timetable-edit-form-next-segment.component';
 import { ETimetableEditFormStopType } from '../../enums/timetable-edit-form.enum';
 import {
     findEndpointIndexes,
@@ -73,6 +74,7 @@ const GRID_MOVES: Readonly<Record<string, readonly [number, number]>> = {
         MatIconModule,
         MatInputModule,
         MatSelectModule,
+        TimetableEditFormNextSegmentComponent,
     ],
 })
 export class TimetableEditFormGridComponent {
@@ -144,6 +146,11 @@ export class TimetableEditFormGridComponent {
             );
     });
 
+    /** 区間が 1 つの列車がひとつでもあれば「次の運用」の行を出す */
+    readonly showsNextSegmentRow = computed(() =>
+        this.columns().some((col) => this.hasSingleSegment(col.tripForm)),
+    );
+
     readonly messages = computed(() =>
         this.tripViews().flatMap((view) => view.messages),
     );
@@ -158,6 +165,11 @@ export class TimetableEditFormGridComponent {
             this.#revision.update((v) => v + 1);
             onCleanup(() => subscription.unsubscribe());
         });
+    }
+
+    /** 元の区間が 1 つだけの列車（新しい列車は指す側の区間が無いので含まない） */
+    hasSingleSegment(tripForm: ITimetableEditFormTrip): boolean {
+        return tripForm.get('tripOperationLists')?.value?.length === 1;
     }
 
     onToggleStopType(
@@ -353,6 +365,12 @@ export class TimetableEditFormGridComponent {
             tripNumber,
             destination:
                 last === null ? '' : (stations[last]?.stationName ?? ''),
+            endStationId:
+                last === null ? null : (stations[last]?.stationId ?? null),
+            endArrivalTime:
+                last === null || first === last
+                    ? null
+                    : times[last]?.arrivalTime || null,
             tripClass: this.#tripClassMap().get(
                 tripForm.get('tripClassId').value,
             ),

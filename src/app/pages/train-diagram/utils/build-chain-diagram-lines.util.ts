@@ -1,3 +1,5 @@
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { StationAxis } from 'src/app/shared/diagram-scale';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
@@ -143,6 +145,8 @@ export function buildChainDiagramLines(params: {
      * 線が切れる区間（分断）の途中にある時刻の空の通過駅を推測で埋めて描き直す。
      */
     standardRunMinutes?: ReadonlyMap<string, number>;
+    /** 車両の前後の運用。入出庫の端が乗り移りなら印を ◎ にする。省略は空 */
+    itineraryLinks?: readonly OperationItineraryLinkDto[];
 }): TripDiagramLine[] {
     const {
         trips,
@@ -151,6 +155,7 @@ export function buildChainDiagramLines(params: {
         base,
         stationNameById,
         standardRunMinutes,
+        itineraryLinks = [],
     } = params;
     if (trips.length === 0) {
         return [];
@@ -463,7 +468,26 @@ export function buildChainDiagramLines(params: {
         // なので、trip 自身の最初/最後の時刻のある停車が軸上に無ければ印は置かない
         // （軸の外の入出庫を、軸の切れ目の駅に誤って表示しないため）。
         const depotMarks: TripDiagramDepotMark[] = [];
-        if (index === 0 && trip.depotOut) {
+        // 入出庫と乗り移り（つながりで見分ける）は、どちらも端に印を置く
+        const transferOut =
+            index === 0 &&
+            isTransferEnd({
+                side: 'out',
+                tripOperationListId:
+                    trip.tripOperationLists?.[0]?.tripOperationListId,
+                tripId: trip.tripId,
+                links: itineraryLinks as OperationItineraryLinkDto[],
+            });
+        const transferIn =
+            index === trips.length - 1 &&
+            isTransferEnd({
+                side: 'in',
+                tripOperationListId:
+                    trip.tripOperationLists?.at(-1)?.tripOperationListId,
+                tripId: trip.tripId,
+                links: itineraryLinks as OperationItineraryLinkDto[],
+            });
+        if (index === 0 && (trip.depotOut || transferOut)) {
             const ownFirstStop = timedStops(trip.times)[0];
             if (
                 ownFirstStop?.stationId &&
@@ -472,12 +496,15 @@ export function buildChainDiagramLines(params: {
                 const firstPoint = state.allPoints[0];
                 depotMarks.push({
                     kind: 'out',
+                    ...(transferOut && !trip.depotOut
+                        ? { transfer: true }
+                        : {}),
                     minute: firstPoint.minute,
                     y: firstPoint.y,
                 });
             }
         }
-        if (index === trips.length - 1 && trip.depotIn) {
+        if (index === trips.length - 1 && (trip.depotIn || transferIn)) {
             const ownStops = timedStops(trip.times);
             const ownLastStop = ownStops[ownStops.length - 1];
             if (
@@ -487,6 +514,7 @@ export function buildChainDiagramLines(params: {
                 const lastPoint = state.allPoints[state.allPoints.length - 1];
                 depotMarks.push({
                     kind: 'in',
+                    ...(transferIn && !trip.depotIn ? { transfer: true } : {}),
                     minute: lastPoint.minute,
                     y: lastPoint.y,
                 });

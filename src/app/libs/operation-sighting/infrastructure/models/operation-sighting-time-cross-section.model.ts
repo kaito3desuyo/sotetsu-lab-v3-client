@@ -15,4 +15,11 @@ export class OperationSightingTimeCrossSectionModel {
         formation?: Partial<OperationSightingModel['formation']>;
         operation?: Partial<OperationSightingModel['operation']>;
     };
+
+    /** 引き継いだ目撃のとき、目撃されたときの運用。直接の目撃は null */
+    @Expose()
+    sightedAsOperation?: {
+        operationId: string;
+        operationNumber: string;
+    } | null;
 }

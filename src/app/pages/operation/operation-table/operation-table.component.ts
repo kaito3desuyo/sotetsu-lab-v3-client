@@ -24,6 +24,8 @@ import {
     deriveGroupName,
     matchesGroupFilter,
 } from 'src/app/shared/operation-group.util';
+import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
+import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { formatOperationTableSummary } from './utils/operation-table-summary.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
@@ -60,6 +62,9 @@ export class OperationTableComponent {
         initialValue: [],
     });
     readonly operationTrips = toSignal(OperationTableStore.operationTrips$, {
+        initialValue: [],
+    });
+    readonly itineraryLinks = toSignal(OperationTableStore.itineraryLinks$, {
         initialValue: [],
     });
     readonly stations = toSignal(OperationTableStore.stations$, {
@@ -129,7 +134,7 @@ export class OperationTableComponent {
     async fetchData(): Promise<void> {
         OperationTableStore.enableLoading();
 
-        // 4 つは互いに依存しないので並行に取る。カードは全部そろってから 1 回だけ描く
+        // 5 つは互いに依存しないので並行に取る。カードは全部そろってから 1 回だけ描く
         // （順に取ると、届くたびに 104 枚・2,500 行余りを描き直していた）
         const results = await Promise.allSettled([
             lastValueFrom(this.#operationTableService.fetchCalendar()),
@@ -137,9 +142,15 @@ export class OperationTableComponent {
             lastValueFrom(this.#operationTableService.fetchStations()),
             lastValueFrom(this.#operationTableService.fetchTripClasses()),
         ]);
+        // 前後の運用が取れなくても運用表は出す（つながりを出さないだけ）。
+        // 上の 4 つとは別に取り、失敗しても throw の対象にしない
+        const linksPromise = lastValueFrom(
+            this.#operationTableService.fetchItineraryLinks(),
+        ).catch(() => undefined);
 
         // 取得に失敗しても読み込み中を解く。ストアは通信断に備えて全体を保存しており、
         // 取れなかった分は前回保存したデータでカードを出す
+        await linksPromise;
         OperationTableStore.disableLoading();
 
         const failure = results.find(
@@ -162,19 +173,46 @@ export class OperationTableComponent {
     /**
      * @defer の場所取りの高さ。カードと同じく、見出しと上下の余白（計 63px）+ 列車 1 本 32px
      * + 同じ向きへ続けて走る所のつなぎの行 8px（operation-table-card と同じ判定）。
+     * 前後の運用の文言（text-xs = 行の高さ 16px。カードと同じ buildItineraryLinkLabels で数える）:
+     * 頭 = 上余白 8px（pt-2）+ 16px = 24px、末尾 = 下余白 8px（pb-2）+ 16px = 24px、
+     * 列車の途中の切り替え = 下余白 4px（pb-1）+ 16px = 20px を 1 件ごと。
      */
     placeholderHeight(operationTrip: OperationTripsDto): number {
         const trips = operationTrip.trips.map(({ trip }) => trip);
+        const itineraryLinks = this.itineraryLinks();
+        const transferAt = (index: number, side: 'in' | 'out'): boolean =>
+            isTransferEnd({
+                side,
+                tripOperationListId:
+                    operationTrip.trips[index].tripOperationListId,
+                tripId: trips[index].tripId,
+                links: itineraryLinks,
+            });
         const links = trips.filter((trip, index) => {
             const next = trips[index + 1];
             return (
                 !!next &&
                 !trip.depotIn &&
                 !next.depotOut &&
+                !transferAt(index, 'in') &&
+                !transferAt(index + 1, 'out') &&
                 next.tripDirection === trip.tripDirection
             );
         }).length;
-        return 63 + trips.length * 32 + links * 8;
+        const labels = buildItineraryLinkLabels({
+            operationId: operationTrip.operation.operationId,
+            tripIds: trips.map((trip) => trip.tripId),
+            links: itineraryLinks,
+            stationNameById: () => '',
+        });
+        const labelHeight =
+            (labels.from ? 24 : 0) +
+            (labels.to ? 24 : 0) +
+            Object.values(labels.midTrip).reduce(
+                (sum, mid) => sum + (mid.from ? 20 : 0) + (mid.to ? 20 : 0),
+                0,
+            );
+        return 63 + trips.length * 32 + links * 8 + labelHeight;
     }
 
     /** カードヘッダの群バッジ。導けない運用番号なら undefined（バッジ非表示）。 */

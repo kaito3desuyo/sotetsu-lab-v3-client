@@ -5,6 +5,7 @@ import { debounceTime, map } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 
 type StoreProps = {
@@ -15,6 +16,8 @@ type StoreProps = {
     sightingCountToday: number;
     latestSightings: OperationSightingDetailsDto[];
     latestSightingPositions: Record<string, OperationCurrentPositionDto>;
+    /** 運用のつながり（目撃時の位置と走行本数で乗り移りの端を見分ける） */
+    itineraryLinks: OperationItineraryLinkDto[];
     /** 目撃時の位置に出す種別チップの名称・色の解決用 */
     tripClasses: TripClassDetailsDto[];
     /** 「サイト説明」パネルを初回訪問時のみ自動展開するための既訪問フラグ */
@@ -31,6 +34,7 @@ const store = createStore(
         sightingCountToday: 0,
         latestSightings: [],
         latestSightingPositions: {},
+        itineraryLinks: [],
         tripClasses: [],
         hasVisitedBefore: false,
         loadingQueue: [],
@@ -78,6 +82,9 @@ export const DashboardStore = {
             })),
         );
     },
+    setItineraryLinks(links: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => links));
+    },
     setTripClasses(tripClasses: TripClassDetailsDto[]): void {
         store.update(setProp('tripClasses', () => tripClasses));
     },
@@ -101,6 +108,7 @@ export const DashboardStore = {
     latestSightingPositions$: store.pipe(
         select((state) => state.latestSightingPositions),
     ),
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
     hasVisitedBefore$: store.pipe(select((state) => state.hasVisitedBefore)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),

@@ -1,4 +1,5 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -16,6 +17,7 @@ type StoreProps = {
     stationAxisStations: RouteStationDto[];
     tripClasses: TripClassDetailsDto[];
     tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>;
+    itineraryLinks: OperationItineraryLinkDto[];
     operationSightingTimeCrossSections: Record<
         string,
         OperationSightingTimeCrossSectionDto
@@ -34,6 +36,7 @@ const store = createStore(
         stationAxisStations: [],
         tripClasses: [],
         tripBlocksByDirection: {},
+        itineraryLinks: [],
         operationSightingTimeCrossSections: {},
         loadingQueue: [],
     }),
@@ -68,6 +71,9 @@ export const TrainLocationStore = {
             setProp('tripBlocksByDirection', () => tripBlocksByDirection),
         );
     },
+    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => itineraryLinks));
+    },
     setOperationSightingTimeCrossSection(
         operationNumber: string,
         dto: OperationSightingTimeCrossSectionDto,
@@ -101,6 +107,7 @@ export const TrainLocationStore = {
     tripBlocksByDirection$: store.pipe(
         select((state) => state.tripBlocksByDirection),
     ),
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),
     ),

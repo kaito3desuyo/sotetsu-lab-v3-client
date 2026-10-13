@@ -1,3 +1,5 @@
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { isTransferOf } from './merge-same-direction-continuations.util';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     resolveArrival,
@@ -63,8 +65,11 @@ export function findTurnbacks(params: {
     chainHeadOf: ReadonlyMap<string, string>;
     chainTailOf: ReadonlyMap<string, string>;
     axisStationIds: ReadonlySet<string>;
+    /** 乗り移り（決まり 2）の端を、入出庫と同じく折り返しにしないために使う。 */
+    itineraryLinks?: readonly OperationItineraryLinkDto[];
 }): Turnback[] {
     const { trips, chainHeadOf, chainTailOf, axisStationIds } = params;
+    const links = params.itineraryLinks ?? [];
 
     const tripById = new Map<string, TripDetailsDto>();
     for (const trip of trips) {
@@ -118,8 +123,12 @@ export function findTurnbacks(params: {
             firstDepartureMs: firstDeparture.getTime(),
             lastStationId: lastStop.stationId,
             lastArrivalMs: lastArrival.getTime(),
-            headDepotOut: headTrip.depotOut === true,
-            tailDepotIn: tailTrip.depotIn === true,
+            headDepotOut:
+                headTrip.depotOut === true ||
+                isTransferOf('out', headTrip, links),
+            tailDepotIn:
+                tailTrip.depotIn === true ||
+                isTransferOf('in', tailTrip, links),
             tailDirection: tailTrip.tripDirection,
             headDirection: headTrip.tripDirection,
         });

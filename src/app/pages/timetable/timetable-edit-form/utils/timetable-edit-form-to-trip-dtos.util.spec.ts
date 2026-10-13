@@ -41,6 +41,8 @@ const trip = (
     extraCalendarId: null,
     times: [],
     operationId: '',
+    tripOperationLists: [],
+    nextTripOperationListId: null,
     ...overrides,
 });
 
@@ -152,5 +154,102 @@ describe('toTripDtos', () => {
             }),
         ]);
         expect(withoutOperation.tripOperationLists).toEqual([]);
+    });
+});
+
+describe('区間の送り返し', () => {
+    const buildDtos = (overrides: Partial<ITimetableEditFormTripValue>) =>
+        toTripDtos(
+            [
+                trip({
+                    times: [
+                        time('a', STOP, null, '05:01'),
+                        time('b', STOP, '05:10', null),
+                    ],
+                    ...overrides,
+                }),
+            ],
+            ETimetableEditFormMode.UPDATE,
+        );
+
+    it('区間が 1 つの列車は id と次の運用を送り返す', () => {
+        const dtos = buildDtos({
+            operationId: 'op-11K',
+            tripOperationLists: [
+                {
+                    id: 'seg-1',
+                    operationId: 'op-11K',
+                    nextTripOperationListId: 'seg-9',
+                },
+            ],
+            nextTripOperationListId: 'seg-9',
+        });
+
+        expect(dtos[0].tripOperationLists).toEqual([
+            expect.objectContaining({
+                id: 'seg-1',
+                operationId: 'op-11K',
+                nextTripOperationListId: 'seg-9',
+            }),
+        ]);
+    });
+
+    it('運番を変えても id は残す', () => {
+        const dtos = buildDtos({
+            operationId: 'op-12K',
+            tripOperationLists: [
+                {
+                    id: 'seg-1',
+                    operationId: 'op-11K',
+                    nextTripOperationListId: null,
+                },
+            ],
+        });
+
+        expect(dtos[0].tripOperationLists[0]).toEqual(
+            expect.objectContaining({
+                id: 'seg-1',
+                operationId: 'op-12K',
+                nextTripOperationListId: null,
+            }),
+        );
+    });
+
+    it('区間が 2 つ以上の列車は区間をそのまま送り返す', () => {
+        const original = [
+            {
+                id: 's1',
+                operationId: 'op-18K',
+                startStationId: 'a',
+                endStationId: 'b',
+                nextTripOperationListId: null,
+            },
+            {
+                id: 's2',
+                operationId: 'op-02K',
+                startStationId: 'b',
+                endStationId: 'c',
+                nextTripOperationListId: null,
+            },
+        ];
+        const dtos = buildDtos({
+            operationId: 'op-18K',
+            tripOperationLists: original,
+        });
+
+        expect(dtos[0].tripOperationLists).toEqual(
+            original.map((o) => expect.objectContaining(o)),
+        );
+    });
+
+    it('新しい列車（区間なし）は今どおり id なしで 1 つ作る', () => {
+        const dtos = buildDtos({ operationId: 'op-11K' });
+
+        expect(dtos[0].tripOperationLists).toEqual([
+            expect.objectContaining({ operationId: 'op-11K' }),
+        ]);
+        expect(
+            (dtos[0].tripOperationLists[0] as { id?: string }).id,
+        ).toBeUndefined();
     });
 });

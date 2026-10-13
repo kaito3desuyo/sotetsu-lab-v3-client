@@ -101,4 +101,25 @@ describe('OperationSightingQuery', () => {
 
         expect(load(query, controller)).toHaveLength(0);
     });
+
+    it('includeCarriedOver: true のときだけクエリに付け、キャッシュも分ける', () => {
+        const { query, controller } = setup();
+        query
+            .findManyBySpecificPeriod({
+                from: '2026-10-07',
+                to: '2026-10-07',
+                includeCarriedOver: true,
+            })
+            .subscribe();
+        query
+            .findManyBySpecificPeriod({ from: '2026-10-07', to: '2026-10-07' })
+            .subscribe();
+
+        const reqs = controller.match(() => true);
+
+        expect(reqs).toHaveLength(2);
+        expect(reqs[0].request.params.get('includeCarriedOver')).toBe('true');
+        expect(reqs[1].request.params.has('includeCarriedOver')).toBe(false);
+        reqs.forEach((r) => r.flush([]));
+    });
 });

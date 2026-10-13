@@ -56,6 +56,23 @@ export class OperationTableService {
         );
     }
 
+    fetchItineraryLinks(): Observable<void> {
+        const calendarId = OperationTableStore.calendarId;
+
+        if (!calendarId) {
+            return of(undefined);
+        }
+
+        return this.#operationService
+            .findManyItineraryLinks({ calendarId })
+            .pipe(
+                tap((links) => {
+                    OperationTableStore.setItineraryLinks(links);
+                }),
+                map(() => undefined),
+            );
+    }
+
     fetchStations(): Observable<void> {
         return this.#stationService.findMany({}).pipe(
             tap((stations: StationDetailsDto[]) => {

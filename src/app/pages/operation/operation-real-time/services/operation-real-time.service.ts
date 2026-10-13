@@ -11,7 +11,7 @@ import {
 import { toZonedTime } from 'date-fns-tz';
 import { flow } from 'es-toolkit';
 import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -115,6 +115,30 @@ export class OperationRealTimeService {
             .pipe(
                 tap((data) => {
                     OperationRealTimeStore.setOperations(data);
+                }),
+                map(() => undefined),
+            );
+    }
+
+    /**
+     * 運用のつながり。位置表示で乗り移りの端を見分けるためだけに使うので、
+     * 取れなくても空として扱い（従来の入出庫の値だけの判定）、ページは止めない。
+     */
+    fetchItineraryLinks(): Observable<void> {
+        const calendarId = OperationRealTimeStore.calendar?.calendarId;
+        if (!calendarId) {
+            OperationRealTimeStore.setItineraryLinks([]);
+            return of(undefined);
+        }
+        return this.#operationService
+            .findManyItineraryLinks({ calendarId })
+            .pipe(
+                tap((links) => {
+                    OperationRealTimeStore.setItineraryLinks(links);
+                }),
+                catchError(() => {
+                    OperationRealTimeStore.setItineraryLinks([]);
+                    return of(undefined);
                 }),
                 map(() => undefined),
             );

@@ -4,6 +4,7 @@ import localForage from 'localforage';
 import { debounceTime, map } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -13,6 +14,7 @@ type StoreProps = {
     calendarId: string | null;
     calendar: CalendarDetailsDto | null;
     operationTrips: OperationTripsDto[];
+    itineraryLinks: OperationItineraryLinkDto[];
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     selectedGroupNames: string[];
@@ -25,6 +27,7 @@ const store = createStore(
         calendarId: null,
         calendar: null,
         operationTrips: [],
+        itineraryLinks: [],
         stations: [],
         tripClasses: [],
         selectedGroupNames: [],
@@ -50,6 +53,9 @@ export const OperationTableStore = {
     },
     setOperationTrips(operationTrips: OperationTripsDto[]): void {
         store.update(setProp('operationTrips', () => operationTrips));
+    },
+    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => itineraryLinks));
     },
     setStations(stations: StationDetailsDto[]): void {
         store.update(setProp('stations', () => stations));
@@ -89,6 +95,8 @@ export const OperationTableStore = {
             ),
         ),
     ),
+    // 保存済みの古い状態には無い項目なので、無ければ空にする
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks ?? [])),
     stations$: store.pipe(select((state) => state.stations)),
     tripClasses$: store.pipe(select((state) => state.tripClasses)),
     // 2026-10-06 より前に保存した群名（「3G群」など）は今の名前に置き換える

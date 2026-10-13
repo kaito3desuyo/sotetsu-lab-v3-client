@@ -1,19 +1,23 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
 import { OperationPastTimeService } from '../../services/operation-past-time.service';
 import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { OperationPastTimeTableComponent } from './operation-past-time-table.component';
 
 describe('OperationPastTimeTableComponent', () => {
     let component: OperationPastTimeTableComponent;
     let fixture: ComponentFixture<OperationPastTimeTableComponent>;
+    let role$: BehaviorSubject<string>;
 
     beforeEach(async () => {
+        role$ = new BehaviorSubject<string>('viewer');
         OperationPastTimeStore.setFormations([
             { formationId: 'f-1', formationNumber: '8708', agencyId: 'agency-1' },
             { formationId: 'f-2', formationNumber: '9704', agencyId: 'agency-2' },
@@ -26,7 +30,7 @@ describe('OperationPastTimeTableComponent', () => {
                 provideRouter([]),
                 {
                     provide: UserStateQuery,
-                    useValue: { role$: of('viewer') },
+                    useValue: { role$ },
                 },
                 {
                     provide: OperationPastTimeService,
@@ -137,5 +141,80 @@ describe('OperationPastTimeTableComponent', () => {
             'f-1',
             'f-2',
         ]);
+    });
+
+    describe('引き継いだ目撃', () => {
+        const setupCell = () => {
+            OperationPastTimeStore.setCalendars([
+                { date: '2026-10-12', calendar: {} },
+            ] as never);
+            OperationPastTimeStore.setReferenceDate('2026-10-12');
+            OperationPastTimeStore.setDays(1);
+            OperationPastTimeStore.setOperations([
+                { operationId: 'o-11', operationNumber: '11K' },
+                { operationId: 'o-12', operationNumber: '12K' },
+            ] as never);
+            OperationPastTimeStore.setOperationSightings([
+                {
+                    operationSightingId: 's-1',
+                    formationId: 'f-1',
+                    operationId: 'o-11',
+                    sightingTime: '2026-10-12T03:00:00.000Z',
+                    invalidation: null,
+                },
+                {
+                    operationSightingId: 's-1#12K',
+                    formationId: 'f-1',
+                    operationId: 'o-12',
+                    sightingTime: '2026-10-12T03:00:00.000Z',
+                    invalidation: null,
+                    sightedAsOperation: {
+                        operationId: 'o-11',
+                        operationNumber: '11K',
+                    },
+                },
+            ] as never);
+            fixture.detectChanges();
+            return fixture.nativeElement.querySelector('tbody td:nth-child(2)')
+                .textContent as string;
+        };
+
+        afterEach(() => {
+            OperationPastTimeStore.setCalendars([]);
+            OperationPastTimeStore.setOperations([]);
+            OperationPastTimeStore.setOperationSightings([]);
+        });
+
+        it('引き継いだ目撃は運用番号のタグに「@11K」を添える', () => {
+            const text = setupCell();
+
+            expect(text).toContain('12K');
+            expect(text).toContain('@11K');
+        });
+
+        it('引き継いだ目撃は無効化・復元できず、直接の目撃はできる', () => {
+            role$.next('manager');
+            setupCell();
+
+            const menus = fixture.debugElement
+                .queryAll(By.directive(OperationNumberTagComponent))
+                .map((d) => d.componentInstance.contextMenus());
+
+            // 直接（11K）→ 引き継ぎ（12K）の順
+            expect(menus[0].map((m: { disabled: boolean }) => m.disabled)).toEqual([
+                false,
+                true,
+            ]);
+            expect(menus[1].map((m: { disabled: boolean }) => m.disabled)).toEqual([
+                true,
+                true,
+            ]);
+        });
+
+        it('直接の目撃には添え書きを付けない', () => {
+            const text = setupCell();
+
+            expect(text.match(/@\d+K/g)).toHaveLength(1);
+        });
     });
 });

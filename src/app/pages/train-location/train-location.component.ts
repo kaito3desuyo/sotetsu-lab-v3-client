@@ -109,6 +109,9 @@ export class TrainLocationComponent {
         TrainLocationStore.tripBlocksByDirection$,
         { initialValue: {} },
     );
+    readonly #itineraryLinks = toSignal(TrainLocationStore.itineraryLinks$, {
+        initialValue: [],
+    });
     readonly operationSightingTimeCrossSections = toSignal(
         TrainLocationStore.operationSightingTimeCrossSections$,
         { initialValue: {} },
@@ -207,6 +210,7 @@ export class TrainLocationComponent {
             this.#allTripBlocks(),
             this.stationAxisStations(),
             this.at(),
+            this.#itineraryLinks(),
         ),
     );
 
@@ -451,9 +455,14 @@ export class TrainLocationComponent {
                     );
                 }
                 if (flags.refetchTripBlocks) {
-                    await lastValueFrom(
-                        this.#trainLocationService.fetchTripBlocks(),
-                    );
+                    await Promise.all([
+                        lastValueFrom(
+                            this.#trainLocationService.fetchTripBlocks(),
+                        ),
+                        lastValueFrom(
+                            this.#trainLocationService.fetchItineraryLinks(),
+                        ),
+                    ]);
                 }
             };
             await Promise.all([

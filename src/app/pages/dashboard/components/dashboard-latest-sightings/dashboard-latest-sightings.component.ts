@@ -63,6 +63,9 @@ export class DashboardLatestSightingsComponent {
     readonly stations = toSignal(this.#routeStationListStateQuery.stations$, {
         initialValue: [],
     });
+    readonly itineraryLinks = toSignal(DashboardStore.itineraryLinks$, {
+        initialValue: [],
+    });
     readonly tripClasses = toSignal(DashboardStore.tripClasses$, {
         initialValue: [],
     });
