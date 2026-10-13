@@ -174,33 +174,46 @@
             </span>
         }
         @if (!!prev && !current && !!next) {
-            <span>
-                @if (prev.endTime.stationId === next.startTime.stationId) {
-                    @if (prev.trip.depotIn) {
-                        一時入庫
+            @let gapTransferIn = prevTransferIn();
+            <!-- 別の運用へ移り、この運用の続きが始まるまでの間隙。駅に止まり続けてはいない -->
+            @if (!prev.trip.depotIn && !!gapTransferIn) {
+                <span
+                    class="tw-inline-flex tw-items-center tw-gap-0.5"
+                    [attr.aria-label]="gapTransferIn.operationNumber + ' へ'"
+                >
+                    {{ gapTransferIn.operationNumber }} へ<ng-container
+                        *ngTemplateOutlet="doubleCircle"
+                    ></ng-container>
+                </span>
+            } @else {
+                <span>
+                    @if (prev.endTime.stationId === next.startTime.stationId) {
+                        @if (prev.trip.depotIn) {
+                            一時入庫
+                        } @else {
+                            停車中
+                        }
                     } @else {
-                        停車中
+                        {{
+                            next.startTime.stationId
+                                | findById
+                                    : {
+                                          array: stations(),
+                                          propertyName: 'stationId',
+                                          outputPropertyName: 'stationName',
+                                      }
+                        }}
                     }
-                } @else {
                     {{
-                        next.startTime.stationId
-                            | findById
+                        next.startTime.departureTime
+                            | dateFns
                                 : {
-                                      array: stations(),
-                                      propertyName: 'stationId',
-                                      outputPropertyName: 'stationName',
+                                      format: 'HH:mm',
+                                      parseFormat: 'HH:mm:ss',
                                   }
                     }}
-                }
-                {{
-                    next.startTime.departureTime
-                        | dateFns
-                            : {
-                                  format: 'HH:mm',
-                                  parseFormat: 'HH:mm:ss',
-                              }
-                }}
-            </span>
+                </span>
+            }
         }
         @if (!!prev && !current && !next) {
             @let transferIn = prevTransferIn();
