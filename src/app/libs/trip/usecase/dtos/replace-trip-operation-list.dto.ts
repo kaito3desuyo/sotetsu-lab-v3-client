@@ -1,27 +1,6 @@
-import { Exclude, Expose } from 'class-transformer';
+import { CreateTripOperationListDto } from './create-trip-operation-list.dto';
 
-export class ReplaceTripOperationListDto {
-    @Expose()
+/** id は既存の区間だけが持つ（新しい区間は無い） */
+export interface ReplaceTripOperationListDto extends CreateTripOperationListDto {
     id?: string;
-
-    @Exclude()
-    tripId: undefined;
-
-    @Expose()
-    operationId: string;
-
-    @Expose()
-    startStationId: string;
-
-    @Expose()
-    endStationId: string;
-
-    @Exclude()
-    startTimeId: undefined;
-
-    @Exclude()
-    endTimeId: undefined;
-
-    @Expose()
-    nextTripOperationListId?: string | null;
 }

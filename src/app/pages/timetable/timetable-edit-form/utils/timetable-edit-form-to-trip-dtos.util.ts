@@ -1,7 +1,5 @@
 import { FormArray } from '@angular/forms';
-import { ClassConstructor, plainToClass } from 'class-transformer';
 import { format, getHours, parse } from 'date-fns';
-import { classTransformerOptions } from 'src/app/core/configs/class-transformer';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import {
@@ -25,68 +23,86 @@ export function toTripDtos(
         const times = trip.times.filter(
             (o) => o.stopType !== ETimetableEditFormStopType.NOT_GOING_THROUGH,
         );
+        const timeDtos = times.map((time, index, arr) => {
+            const arrivalTime =
+                time.arrivalTime && index !== 0
+                    ? parse(time.arrivalTime, 'HH:mm', new Date())
+                    : null;
+            const departureTime =
+                time.departureTime && index !== arr.length - 1
+                    ? parse(time.departureTime, 'HH:mm', new Date())
+                    : null;
 
-        return plainToClass(
-            (mode === ETimetableEditFormMode.UPDATE
-                ? ReplaceTripDto
-                : CreateTripDto) as ClassConstructor<
-                CreateTripDto | ReplaceTripDto
-            >,
-            {
-                ...trip,
+            return {
+                timeId: time.timeId ?? undefined,
+                stationId: time.stationId,
+                stopId: time.stopId,
+                stopSequence: index + 1,
+                pickupType:
+                    time.stopType === ETimetableEditFormStopType.STOP &&
+                    index !== arr.length - 1
+                        ? 0
+                        : 1,
+                dropoffType:
+                    time.stopType === ETimetableEditFormStopType.STOP &&
+                    index !== 0
+                        ? 0
+                        : 1,
+                arrivalDays:
+                    arrivalTime && index !== 0
+                        ? getHours(arrivalTime) < 4
+                            ? 2
+                            : 1
+                        : null,
+                arrivalTime:
+                    arrivalTime && index !== 0
+                        ? format(arrivalTime, 'HH:mm')
+                        : null,
+                departureDays:
+                    departureTime && index !== arr.length - 1
+                        ? getHours(departureTime) < 4
+                            ? 2
+                            : 1
+                        : null,
+                departureTime:
+                    departureTime && index !== arr.length - 1
+                        ? format(departureTime, 'HH:mm')
+                        : null,
+            };
+        });
+        const tripFields = {
+            serviceId: trip.serviceId,
+            tripNumber: trip.tripNumber || '不明',
+            tripClassId: trip.tripClassId,
+            tripName: trip.tripName,
+            tripDirection: trip.tripDirection,
+            depotIn: trip.depotIn,
+            depotOut: trip.depotOut,
+            calendarId: trip.calendarId,
+            extraCalendarId: trip.extraCalendarId,
+        };
+        const tripOperationLists = buildTripOperationLists(trip, times);
+
+        if (mode === ETimetableEditFormMode.UPDATE) {
+            const dto: ReplaceTripDto = {
+                ...tripFields,
                 tripId: trip.tripId ?? undefined,
-                tripNumber: trip.tripNumber || '不明',
-                times: times.map((time, index, arr) => {
-                    const arrivalTime =
-                        time.arrivalTime && index !== 0
-                            ? parse(time.arrivalTime, 'HH:mm', new Date())
-                            : null;
-                    const departureTime =
-                        time.departureTime && index !== arr.length - 1
-                            ? parse(time.departureTime, 'HH:mm', new Date())
-                            : null;
+                times: timeDtos,
+                tripOperationLists,
+            };
+            return dto;
+        }
 
-                    return {
-                        ...time,
-                        timeId: time.timeId ?? undefined,
-                        stopSequence: index + 1,
-                        pickupType:
-                            time.stopType === ETimetableEditFormStopType.STOP &&
-                            index !== arr.length - 1
-                                ? 0
-                                : 1,
-                        dropoffType:
-                            time.stopType === ETimetableEditFormStopType.STOP &&
-                            index !== 0
-                                ? 0
-                                : 1,
-                        arrivalDays:
-                            arrivalTime && index !== 0
-                                ? getHours(arrivalTime) < 4
-                                    ? 2
-                                    : 1
-                                : null,
-                        arrivalTime:
-                            arrivalTime && index !== 0
-                                ? format(arrivalTime, 'HH:mm')
-                                : null,
-                        departureDays:
-                            departureTime && index !== arr.length - 1
-                                ? getHours(departureTime) < 4
-                                    ? 2
-                                    : 1
-                                : null,
-                        departureTime:
-                            departureTime && index !== arr.length - 1
-                                ? format(departureTime, 'HH:mm')
-                                : null,
-                    };
-                }),
-                tripOperationLists: buildTripOperationLists(trip, times),
-            },
-            classTransformerOptions,
-        );
-    });
+        // 登録・コピーは ID を持たせない（コピー元の ID がフォームに残っていても落とす）
+        const dto: CreateTripDto = {
+            ...tripFields,
+            times: timeDtos.map(({ timeId, ...rest }) => rest),
+            tripOperationLists: tripOperationLists.map(
+                ({ id, ...rest }) => rest,
+            ),
+        };
+        return dto;
+    }) as CreateTripDto[] | ReplaceTripDto[];
 }
 
 /**

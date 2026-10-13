@@ -1,24 +1,9 @@
-import { Expose } from 'class-transformer';
-
-export class UserModel {
-    @Expose()
+export interface UserModel {
     userId: string;
-
-    @Expose()
     username: string;
-
-    @Expose()
     password: string;
-
-    @Expose()
     displayName: string;
-
-    @Expose()
     role: string;
-
-    @Expose()
     createdAt: string;
-
-    @Expose()
     updatedAt: string;
 }
