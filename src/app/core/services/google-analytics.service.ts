@@ -40,4 +40,25 @@ export class GoogleAnalyticsService {
             page_path: path,
         });
     }
+
+    /**
+     * 編集する人と見るだけの人を分けて集計するためのユーザープロパティ
+     * （GA 側にユーザースコープのカスタムディメンション logged_in・user_role が要る）
+     */
+    setUserProperties({
+        loggedIn,
+        role,
+    }: {
+        loggedIn: boolean;
+        role: string | null;
+    }): void {
+        if (!this._useGA()) {
+            return;
+        }
+
+        gtag('set', 'user_properties', {
+            logged_in: String(loggedIn),
+            user_role: role ?? 'guest',
+        });
+    }
 }

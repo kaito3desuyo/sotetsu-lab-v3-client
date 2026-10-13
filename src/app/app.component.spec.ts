@@ -2,11 +2,12 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
-import { Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { SocketService } from './core/services/socket.service';
+import { UserStateQuery } from './global-states/user.state';
 import {
     QueryInvalidationTag,
     QueryInvalidator,
@@ -15,9 +16,15 @@ import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
     let socketMessages: Subject<unknown>;
+    let isLoggedIn$: BehaviorSubject<boolean>;
+    let role$: BehaviorSubject<string | null>;
+    let setUserProperties: jest.Mock;
 
     beforeEach(async () => {
         socketMessages = new Subject<unknown>();
+        isLoggedIn$ = new BehaviorSubject<boolean>(false);
+        role$ = new BehaviorSubject<string | null>(null);
+        setUserProperties = jest.fn();
         await TestBed.configureTestingModule({
             imports: [AppComponent],
             providers: [
@@ -26,7 +33,11 @@ describe('AppComponent', () => {
                 { provide: AppUpdateService, useValue: {} },
                 {
                     provide: GoogleAnalyticsService,
-                    useValue: { sendPageView: () => {} },
+                    useValue: { sendPageView: () => {}, setUserProperties },
+                },
+                {
+                    provide: UserStateQuery,
+                    useValue: { isLoggedIn$, role$ },
                 },
                 {
                     provide: SocketService,
@@ -60,5 +71,22 @@ describe('AppComponent', () => {
         socketMessages.next(new MessageEvent('message', { data: '{}' }));
 
         expect(tags).toEqual(['sighting']);
+    });
+
+    it('ログインの状態と役割を GA のユーザープロパティに載せ、変わったら載せ直す', () => {
+        TestBed.createComponent(AppComponent);
+
+        expect(setUserProperties).toHaveBeenLastCalledWith({
+            loggedIn: false,
+            role: null,
+        });
+
+        isLoggedIn$.next(true);
+        role$.next('editor');
+
+        expect(setUserProperties).toHaveBeenLastCalledWith({
+            loggedIn: true,
+            role: 'editor',
+        });
     });
 });
