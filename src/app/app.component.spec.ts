@@ -1,11 +1,12 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
+import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
 import { UserStateQuery } from './global-states/user.state';
 import {
@@ -19,22 +20,39 @@ describe('AppComponent', () => {
     let isLoggedIn$: BehaviorSubject<boolean>;
     let role$: BehaviorSubject<string | null>;
     let setUserProperties: jest.Mock;
+    let sendEvent: jest.Mock;
 
     beforeEach(async () => {
         socketMessages = new Subject<unknown>();
         isLoggedIn$ = new BehaviorSubject<boolean>(false);
         role$ = new BehaviorSubject<string | null>(null);
         setUserProperties = jest.fn();
+        sendEvent = jest.fn();
         await TestBed.configureTestingModule({
             imports: [AppComponent],
             providers: [
                 provideHttpClient(withXhr()),
-                provideRouter([]),
+                provideRouter([
+                    {
+                        path: 'broken',
+                        canActivate: [
+                            () => {
+                                throw new Error('壊れた');
+                            },
+                        ],
+                        children: [],
+                    },
+                ]),
                 { provide: AppUpdateService, useValue: {} },
                 {
                     provide: GoogleAnalyticsService,
-                    useValue: { sendPageView: () => {}, setUserProperties },
+                    useValue: {
+                        sendPageView: () => {},
+                        setUserProperties,
+                        sendEvent,
+                    },
                 },
+                { provide: NotificationService, useValue: { open: () => {} } },
                 {
                     provide: UserStateQuery,
                     useValue: { isLoggedIn$, role$ },
@@ -87,6 +105,18 @@ describe('AppComponent', () => {
         expect(setUserProperties).toHaveBeenLastCalledWith({
             loggedIn: true,
             role: 'editor',
+        });
+    });
+
+    it('ページの読み込みに失敗したら page_load_error を理由つきで送る', async () => {
+        TestBed.createComponent(AppComponent);
+
+        await TestBed.inject(Router)
+            .navigateByUrl('/broken')
+            .catch(() => {});
+
+        expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
+            error_message: 'Error: 壊れた',
         });
     });
 });

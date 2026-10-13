@@ -8,6 +8,8 @@ import {
     ApplicationConfig,
     ErrorHandler,
     importProvidersFrom,
+    inject,
+    provideAppInitializer,
 } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatPaginatorIntl } from '@angular/material/paginator';
@@ -31,6 +33,7 @@ import { CustomPaginator } from './core/classes/custom-paginator';
 import { AuthInterceptor } from './core/interceptors/auth-interceptor';
 import { PayloadHashInterceptor } from './core/interceptors/payload-hash.interceptor';
 import { ErrorHandlerService } from './core/services/error-handler.service';
+import { WebVitalsReporter } from './core/web-vitals/web-vitals-reporter';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -60,6 +63,7 @@ export const appConfig: ApplicationConfig = {
             }),
         ),
         { provide: ErrorHandler, useClass: ErrorHandlerService },
+        provideAppInitializer(() => inject(WebVitalsReporter).start()),
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         {
             provide: HTTP_INTERCEPTORS,

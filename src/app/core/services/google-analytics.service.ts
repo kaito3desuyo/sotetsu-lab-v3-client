@@ -45,7 +45,7 @@ export class GoogleAnalyticsService {
      * イベントの送信。値をレポートで見るには、GA 側に同じ名前の
      * イベントスコープのカスタムディメンションが要る
      */
-    sendEvent(name: string, params?: Record<string, string>): void {
+    sendEvent(name: string, params?: Record<string, string | number>): void {
         if (!this._useGA()) {
             return;
         }

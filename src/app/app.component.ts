@@ -107,8 +107,15 @@ export class AppComponent implements OnInit, OnDestroy {
                 filter<NavigationError>((ev) => ev instanceof NavigationError),
                 takeUntilDestroyed(),
             )
-            .subscribe(() => {
+            .subscribe((ev) => {
                 this.#loadingService.close();
+                this.#gaService.sendEvent('page_load_error', {
+                    // GA のイベントの値は 100 文字まで
+                    error_message: (ev.error instanceof Error
+                        ? `${ev.error.name}: ${ev.error.message}`
+                        : String(ev.error)
+                    ).slice(0, 100),
+                });
                 this.#notificationService.open(
                     'ページの読み込みに失敗しました',
                     'OK',
