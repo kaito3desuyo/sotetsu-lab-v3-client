@@ -140,6 +140,20 @@ describe('OperationQuery', () => {
         );
     });
 
+    it('現在位置の応答の本文が null のときは、builder に通さず null を返す', () => {
+        const { query, controller } = setup();
+        let result: unknown = undefined;
+
+        query
+            .findOneWithCurrentPosition({ operationId: 'op-1' })
+            .subscribe((v) => (result = v));
+        controller
+            .expectOne((r) => r.url.endsWith('/op-1/current-position'))
+            .flush(null);
+
+        expect(result).toBeNull();
+    });
+
     it('calendarId が無ければ取得せず空配列を返す', () => {
         const { query, controller } = setup();
         let result: unknown;

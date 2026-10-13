@@ -63,7 +63,11 @@ export class RouteQuery {
                 forceReload,
             })
             .pipe(
-                map((res) => RouteStationsDtoBuilder.buildFromModel(res.body)),
+                map(
+                    (res) =>
+                        res.body &&
+                        RouteStationsDtoBuilder.buildFromModel(res.body),
+                ),
             );
     }
 }

@@ -1,9 +1,11 @@
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
+import { TripOperationListModel } from 'src/app/libs/trip/infrastructure/models/trip-operation-list.model';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationDtoBuilder } from './operation.dto.builder';
 
-const buildSegment = TripOperationListDtoBuilder.buildFromModel;
+const buildSegment = (model: TripOperationListModel) =>
+    TripOperationListDtoBuilder.buildFromModel(model);
 
 export const OperationCurrentPositionDtoBuilder = {
     buildFromModel: ({

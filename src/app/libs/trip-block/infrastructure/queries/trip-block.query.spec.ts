@@ -258,4 +258,14 @@ describe('TripBlockQuery', () => {
         reqs.forEach((r) => r.flush([]));
         controller.verify();
     });
+
+    it('findOneById の応答の本文が null のときは、builder に通さず null を返す', () => {
+        const { query, controller } = setup();
+        let result: unknown = undefined;
+
+        query.findOneById({ id: 'b1' }).subscribe((v) => (result = v));
+        controller.expectOne(`${v3ApiUrl}/b1`).flush(null);
+
+        expect(result).toBeNull();
+    });
 });

@@ -138,8 +138,12 @@ export class OperationQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    OperationCurrentPositionDtoBuilder.buildFromModel(res.body),
+                map(
+                    (res) =>
+                        res.body &&
+                        OperationCurrentPositionDtoBuilder.buildFromModel(
+                            res.body,
+                        ),
                 ),
             );
     }

@@ -56,7 +56,12 @@ export class CalendarQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => CalendarDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body && CalendarDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 
     findOneBySpecificDate(params: {
@@ -76,6 +81,11 @@ export class CalendarQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => CalendarDtoBuilder.buildFromModel(res.body)));
+            .pipe(
+                map(
+                    (res) =>
+                        res.body && CalendarDtoBuilder.buildFromModel(res.body),
+                ),
+            );
     }
 }

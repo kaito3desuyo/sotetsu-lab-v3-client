@@ -51,6 +51,18 @@ describe('RouteQuery', () => {
         controller.verify();
     });
 
+    it('駅つきの応答の本文が null のときは、builder に通さず null を返す', () => {
+        const { query, controller } = setup();
+        let result: unknown = undefined;
+
+        query
+            .findOneWithStations({ routeId: 'r1' })
+            .subscribe((v) => (result = v));
+        controller.expectOne(`${url}/r1/stations`).flush(null);
+
+        expect(result).toBeNull();
+    });
+
     it('取得には cache を付けない', () => {
         const { query, controller } = setup();
 

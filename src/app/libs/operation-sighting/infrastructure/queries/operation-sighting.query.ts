@@ -155,10 +155,12 @@ export class OperationSightingQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                        res.body,
-                    ),
+                map(
+                    (res) =>
+                        res.body &&
+                        OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                            res.body,
+                        ),
                 ),
             );
     }
@@ -184,10 +186,12 @@ export class OperationSightingQuery {
                 forceReload,
             })
             .pipe(
-                map((res) =>
-                    OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
-                        res.body,
-                    ),
+                map(
+                    (res) =>
+                        res.body &&
+                        OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(
+                            res.body,
+                        ),
                 ),
             );
     }
