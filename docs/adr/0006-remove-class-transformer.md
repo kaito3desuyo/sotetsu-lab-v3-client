@@ -78,17 +78,35 @@ buildFromModels: (models: TimeModel[]): TimeDetailsDto[] =>
 
 - 自前の API を自前の画面が読むだけの client に、同じ形の二重定義とリフレクションの層は要らない。interface なら 1 行足すだけで済み、デコレーターの付け忘れも無い。
 - 速さ。この branch で、本番の trip-blocks（616 ブロック）に手書きの `TripBlockDtoBuilder.buildFromModels` を通した中央値は 5.5 ms だった。class-transformer 版は同じデータで約 338 ms かかった（Node、CPU 制限なし）。
-- 画面ごとの効果は、ローカルで master とブランチを同じ条件でビルドして測り、PR に記録する。この ADR を書いた時点では測っていないので、数字は載せない。
+- 画面ごとの効果は、ローカルで master とブランチを同じ条件でビルドして測った。
+
+| ページ | CPU 合計 ms（master→branch） | うち class-transformer ms | スマホ TBT ms | スマホ LCP ms | スマホ Perf | PC TBT ms | PC Perf |
+|---|---|---|---|---|---|---|---|
+| top | 2951 → 1724 | 1544 → 0 | 860 → 1063 | 16558 → 16327 | 36 → 34 | 127 → 138 | 74 → 74 |
+| real-time | 4195 → 4120 | 315 → 0 | 1231 → 1062 | 16926 → 16769 | 13 → 14 | 89 → 76 | 48 → 49 |
+| past-time | 1239 → 1142 | 106 → 0 | 359 → 337 | 16497 → 16322 | 48 → 48 | 34 → 35 | 72 → 73 |
+| table | 2211 → 1589 | 741 → 0 | 935 → 513 | 17525 → 17218 | 12 → 20 | 112 → 32 | 46 → 48 |
+| route-diagram | 998 → 920 | 102 → 0 | 494 → 458 | 15875 → 15720 | 44 → 45 | 31 → 33 | 76 → 77 |
+| all-line | 1103 → 1021 | 98 → 0 | 320 → 312 | 16476 → 16326 | 49 → 49 | 40 → 41 | 75 → 76 |
+| station | 3005 → 2295 | 915 → 0 | 2438 → 1191 | 29141 → 28689 | 9 → 14 | 484 → 199 | 26 → 41 |
+| train-diagram | 4278 → 2828 | 1658 → 0 | 2764 → 1481 | 16111 → 15956 | 18 → 22 | 557 → 298 | 45 → 57 |
+| train-location | 3151 → 1879 | 1644 → 0 | 1772 → 571 | 15955 → 15956 | 29 → 41 | 345 → 64 | 56 → 71 |
+| vehicle | 552 → 543 | 0 → 0 | 167 → 163 | 10681 → 10680 | 55 → 55 | 4 → 3 | 81 → 82 |
+
+条件: ローカルで `--optimization` つきのビルド、Lighthouse と CPU プロファイル（4 倍のスロットリング）、3 回の中央値、2026-10-13。
+
+top のスマホ TBT は 860 → 1063 ms と増えたが、2 回目と 3 回目が高かっただけで、CPU 合計は 2951 → 1724 ms、class-transformer の時間は 1544 → 0 ms と下がっている。Lighthouse のばらつきと判断した。
 
 ## 結果
 
 - 読み取りの結果が、クラスのインスタンスから素のオブジェクトになった。`instanceof`・メソッド・`new` を使う所は無い。
 - 読み取りでは、DTO が宣言していない API のキーが、スプレッドで素通しになる。キーの有無で分岐するコードは無いことを確かめた。
 - `OperationCurrentPositionDto.position` は、これまで捨てられていた。今は写される。
+- 実データで素通しになると分かったキーは、ほかに次の 3 つがある。`formations[].vehicleFormations`（約 0.56 MB）、`services/:id/stations` の `service.operatingSystems`（約 0.38 MB）、`operation-sightings[].managementLogs`（今は空）。どれも UI は参照せず、永続化もしない。
 - Model の任意（`?`）は、対応する DTO の任意にそろえる。`strict: false` でも、Model で任意・DTO で必須だと TS2322 になる。
 - Create は ID を送らない。Replace は運用区間（trip-operation-list）の `id` を送る。
 - 更新で運用区間の `id` が落ちていた不具合を、同じブランチで直した（コミット 200cffc3）。`TripOperationListModel` の `@Expose({ name: 'tripOperationListId' })` が、`id` というキーを拾えなかったのが原因だった。API は `id` があることを前提に区間を更新するので、届かないと区間を作り直し、ほかの区間からの「次の運用」のつながりが切れうる。本番で実害が出たかは調べていない。
-- 永続化しているストア（localStorage）は素の JSON のままなので、保存済みデータとの互換は変わらない。
+- 永続化しているストア（localforage、IndexedDB）は素の JSON のままなので、保存済みデータとの互換は変わらない。
 
 ## 新しく DTO を足すときの決まり
 
