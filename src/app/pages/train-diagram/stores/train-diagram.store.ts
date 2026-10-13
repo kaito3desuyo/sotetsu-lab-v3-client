@@ -58,7 +58,7 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     loadingQueue: boolean[];
-    /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら ◎ で描く。取れなければ空 */
+    /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
     /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
     controlCollapsed: boolean;

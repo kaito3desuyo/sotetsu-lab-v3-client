@@ -760,7 +760,7 @@ export class TrainDiagramComponent {
         ),
     );
 
-    /** 描いている線に乗り移り（◎）の印を持つものが1本でもあるか。凡例の見本の表示条件。 */
+    /** 描いている線に乗り移り（□）の印を持つものが1本でもあるか。凡例の見本の表示条件。 */
     readonly hasTransfer = computed(() =>
         this.diagramLines().some((line) =>
             line.depotMarks.some((mark) => mark.transfer),
@@ -1003,7 +1003,7 @@ export class TrainDiagramComponent {
                         lastValueFrom(
                             this.#timetableDiagramService.fetchTripBlocks(),
                         ),
-                        // ◎ の判定用。取れなくても空として扱うので図は止めない
+                        // □ の判定用。取れなくても空として扱うので図は止めない
                         lastValueFrom(
                             this.#timetableDiagramService.fetchItineraryLinks(),
                         ),

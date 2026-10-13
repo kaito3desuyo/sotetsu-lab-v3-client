@@ -54,7 +54,7 @@ export class TrainDiagramService {
 
     /**
      * 車両の前後の運用（運用表・行路図と同じ口）を取る。
-     * 入出庫の端を ◎ で描くためだけに使うので、取れなくても空として扱い（今の △○ のまま）、図は止めない。
+     * 入出庫の端を □ で描くためだけに使うので、取れなくても空として扱い（今の △○ のまま）、図は止めない。
      */
     fetchItineraryLinks(): Observable<void> {
         const calendarId = TrainDiagramStore.calendarId;

@@ -63,7 +63,7 @@ export interface OperationRouteDiagramBandRow {
     /** ○・△ を描くか（図の外の端には描かない） */
     depotOutMarker: boolean;
     depotInMarker: boolean;
-    /** 別の運用への乗り移りの端（◎で描く） */
+    /** 別の運用への乗り移りの端（□で描く） */
     depotOutTransfer: boolean;
     depotInTransfer: boolean;
     depotOutX: number;
