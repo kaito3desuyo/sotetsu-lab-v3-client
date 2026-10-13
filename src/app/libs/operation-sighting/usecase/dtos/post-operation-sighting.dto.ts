@@ -1,4 +1,4 @@
-export class PostOperationSightingDto {
+export interface PostOperationSightingDto {
     agencyId: string;
     formationOrVehicleNumber: string;
     operationNumber: string;

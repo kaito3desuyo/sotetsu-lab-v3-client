@@ -1,12 +1,7 @@
-import { Expose } from 'class-transformer';
-
-export class TokenDetailsDto {
-    @Expose()
+export interface TokenDetailsDto {
     accessToken: string;
 
-    @Expose()
     tokenType: string;
 
-    @Expose()
     expiresAt: number;
 }

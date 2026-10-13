@@ -1,21 +1,13 @@
-import { Expose } from 'class-transformer';
-
-export class UserDetailsDto {
-    @Expose()
+export interface UserDetailsDto {
     userId: string;
 
-    @Expose()
     username: string;
 
-    @Expose()
     displayName: string;
 
-    @Expose()
     role: string;
 
-    @Expose()
     createdAt: string;
 
-    @Expose()
     updatedAt: string;
 }

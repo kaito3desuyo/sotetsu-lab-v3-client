@@ -1,45 +1,29 @@
-import { Expose, Type } from 'class-transformer';
 import { RouteStationListDetailsDto } from './route-station-list-details.dto';
-import 'reflect-metadata';
 
-export class RouteDetailsDto {
-    @Expose({ name: 'id' })
+export interface RouteDetailsDto {
     routeId: string;
 
-    @Expose()
     agencyId?: string;
 
-    @Expose()
     routeNumber?: string;
 
-    @Expose()
     routeName?: string;
 
-    @Expose()
     routeNickName?: string;
 
-    @Expose()
     routeDescription?: string;
 
-    @Expose()
     routeType?: number;
 
-    @Expose()
     routeUrl?: string;
 
-    @Expose()
     routeColor?: string;
 
-    @Expose()
     routeTextColor?: string;
 
-    @Expose()
     createdAt?: string;
 
-    @Expose()
     updatedAt?: string;
 
-    @Expose()
-    @Type(() => RouteStationListDetailsDto)
     routeStationLists?: RouteStationListDetailsDto[];
 }

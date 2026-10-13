@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';

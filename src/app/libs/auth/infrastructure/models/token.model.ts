@@ -1,12 +1,7 @@
-import { Expose } from 'class-transformer';
-
-export class TokenModel {
-    @Expose()
+export interface TokenModel {
     accessToken: string;
 
-    @Expose()
     tokenType: string;
 
-    @Expose()
     expiresAt: number;
 }

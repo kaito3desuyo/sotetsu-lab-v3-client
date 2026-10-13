@@ -1,9 +1,5 @@
-import { Expose } from 'class-transformer';
-
-export class DeleteTripFromTripBlockDto {
-    @Expose()
+export interface DeleteTripFromTripBlockDto {
     tripId: string;
 
-    @Expose()
     holdAsAnotherTripBlock: boolean;
 }

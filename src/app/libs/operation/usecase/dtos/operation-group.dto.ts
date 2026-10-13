@@ -1,9 +1,5 @@
-import { Expose } from 'class-transformer';
-
-export class OperationGroupDto {
-    @Expose()
+export interface OperationGroupDto {
     groupName: string;
 
-    @Expose()
     operationNumbers: string[];
 }

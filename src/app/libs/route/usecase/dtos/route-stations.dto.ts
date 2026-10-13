@@ -1,21 +1,14 @@
-import { Expose, Type } from 'class-transformer';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { RouteDetailsDto } from './route-details.dto';
 
-export class RouteStationsDto {
-    @Expose()
-    @Type(() => RouteDetailsDto)
+export interface RouteStationsDto {
     route: RouteDetailsDto;
 
-    @Expose()
-    @Type(() => RouteStationDto)
     stations: RouteStationDto[];
 }
 
-export class RouteStationDto extends StationDetailsDto {
-    @Expose()
+export interface RouteStationDto extends StationDetailsDto {
     stationSequence: number;
 
-    @Expose()
     stationNumbering: string;
 }

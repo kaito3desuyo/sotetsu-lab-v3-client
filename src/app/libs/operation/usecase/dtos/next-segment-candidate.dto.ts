@@ -1,5 +1,5 @@
 /** 「次の運用」に選べる運用区間（車両が運番を離れて次に入る区間） */
-export class NextSegmentCandidateDto {
+export interface NextSegmentCandidateDto {
     tripOperationListId: string;
     tripId: string;
     operationId: string;
