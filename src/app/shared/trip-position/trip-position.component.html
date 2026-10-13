@@ -55,10 +55,7 @@
             @if (!!next.trip.depotOut) {
                 <span>出庫前○</span>
             } @else if (!!transferOut) {
-                <span
-                    class="tw-inline-flex tw-items-center tw-gap-0.5"
-                    [attr.aria-label]="transferOut.operationNumber + ' から'"
-                >
+                <span [attr.aria-label]="transferOut.operationNumber + ' から'">
                     {{ transferOut.operationNumber }} から<ng-container
                         *ngTemplateOutlet="doubleCircle"
                     ></ng-container>
@@ -177,10 +174,7 @@
             @let gapTransferIn = prevTransferIn();
             <!-- 別の運用へ移り、この運用の続きが始まるまでの間隙。駅に止まり続けてはいない -->
             @if (!prev.trip.depotIn && !!gapTransferIn) {
-                <span
-                    class="tw-inline-flex tw-items-center tw-gap-0.5"
-                    [attr.aria-label]="gapTransferIn.operationNumber + ' へ'"
-                >
+                <span [attr.aria-label]="gapTransferIn.operationNumber + ' へ'">
                     {{ gapTransferIn.operationNumber }} へ<ng-container
                         *ngTemplateOutlet="doubleCircle"
                     ></ng-container>
@@ -220,10 +214,7 @@
             @if (prev.trip.depotIn) {
                 <span>入庫済△</span>
             } @else if (!!transferIn) {
-                <span
-                    class="tw-inline-flex tw-items-center tw-gap-0.5"
-                    [attr.aria-label]="transferIn.operationNumber + ' へ'"
-                >
+                <span [attr.aria-label]="transferIn.operationNumber + ' へ'">
                     {{ transferIn.operationNumber }} へ<ng-container
                         *ngTemplateOutlet="doubleCircle"
                     ></ng-container>
@@ -235,21 +226,5 @@
     </span>
 </div>
 
-<!-- 別の運用への・からの乗り移りの印 ◎（運用表カードと同じ 10px の SVG。文字の ◎ は使わない） -->
-<ng-template #doubleCircle>
-    <svg
-        class="tw-h-[10px] tw-w-[10px] tw-shrink-0"
-        viewBox="0 0 10 10"
-        aria-hidden="true"
-    >
-        <circle
-            cx="5"
-            cy="5"
-            r="4.25"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-        />
-        <circle cx="5" cy="5" r="1.75" fill="currentColor" />
-    </svg>
-</ng-template>
+<!-- 別の運用への・からの乗り移りの印。隣の「出庫前○」「入庫済△」が文字なので、ここも文字の ◎（ユーザー指示 2026-10-13） -->
+<ng-template #doubleCircle><span aria-hidden="true">◎</span></ng-template>

@@ -233,12 +233,14 @@
                         stroke-width="2"
                     ></circle>
                     @if (row.depotOutTransfer) {
-                        <!-- 別の運用から: ○の中に黒丸を足して ◎ にする -->
+                        <!-- 別の運用から: ○の中にもう一つ輪を足して ◎ にする（黒丸だと ⊙ に見える） -->
                         <circle
                             [attr.cx]="row.depotOutX"
                             [attr.cy]="row.centerY + offset"
-                            r="2.5"
-                            fill="#001556"
+                            r="3"
+                            fill="none"
+                            stroke="#001556"
+                            stroke-width="1.5"
                         >
                             <title>別の運用から</title>
                         </circle>
@@ -261,8 +263,10 @@
                         <circle
                             [attr.cx]="row.depotInX"
                             [attr.cy]="row.centerY + offset"
-                            r="2.5"
-                            fill="#001556"
+                            r="3"
+                            fill="none"
+                            stroke="#001556"
+                            stroke-width="1.5"
                         ></circle>
                     } @else {
                         <polygon

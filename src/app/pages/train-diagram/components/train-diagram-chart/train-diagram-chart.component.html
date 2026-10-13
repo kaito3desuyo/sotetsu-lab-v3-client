@@ -241,8 +241,10 @@
                                 <circle
                                     [attr.cx]="x(mark.minute)"
                                     [attr.cy]="mark.y"
-                                    r="1.4"
-                                    [attr.fill]="line.tripClassColor"
+                                    r="1.5"
+                                    fill="none"
+                                    [attr.stroke]="line.tripClassColor"
+                                    stroke-width="0.9"
                                 ></circle>
                             </g>
                         } @else if (mark.kind === 'out') {
