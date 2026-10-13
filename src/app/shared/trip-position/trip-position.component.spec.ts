@@ -201,6 +201,56 @@ describe('TripPositionComponent', () => {
             ).toBe(2);
         });
 
+        it('別の運用へ移り、あとで同じ運用に戻ってくる間隙は「停車中」でなく移る先を出す', () => {
+            fixture.componentRef.setInput('links', [
+                link('p', { next: to(2, '17K') }),
+            ]);
+            const text = render({
+                prev: tol({
+                    id: 'p',
+                    from: 's-yokohama',
+                    fromTime: '08:24:00',
+                    to: 's-ebina',
+                    toTime: '08:52:00',
+                }),
+                next: tol({
+                    id: 'n',
+                    from: 's-ebina',
+                    fromTime: '17:09:00',
+                    to: 's-yokohama',
+                    toTime: '17:34:00',
+                }),
+            });
+            expect(text).toBe('海老名 08:52 → 17K へ');
+            expect(
+                fixture.nativeElement.querySelectorAll('svg circle').length,
+            ).toBe(2);
+        });
+
+        it('入庫も立つ乗り移りの間隙は従来どおり「一時入庫」', () => {
+            fixture.componentRef.setInput('links', [
+                link('p', { next: to(2, '15K') }),
+            ]);
+            const text = render({
+                prev: tol({
+                    id: 'p',
+                    from: 's-yokohama',
+                    fromTime: '09:00:00',
+                    to: 's-ebina',
+                    toTime: '09:33:00',
+                    depotIn: true,
+                }),
+                next: tol({
+                    id: 'n',
+                    from: 's-ebina',
+                    fromTime: '16:16:00',
+                    to: 's-yokohama',
+                    toTime: '16:50:00',
+                }),
+            });
+            expect(text).toBe('海老名 09:33 → 一時入庫 16:16');
+        });
+
         it('入出庫も立つ乗り移りの端は従来どおり「出庫前○」', () => {
             fixture.componentRef.setInput('links', [
                 link('n', { previous: to(2) }),
