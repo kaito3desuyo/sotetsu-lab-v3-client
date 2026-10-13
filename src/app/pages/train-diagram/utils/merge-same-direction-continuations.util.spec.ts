@@ -137,6 +137,64 @@ describe('mergeSameDirectionContinuations', () => {
         },
     );
 
+    it('depot が false でも、前が別の運用へ移る（決まり 2）なら1本にまとめない（16K の 9385 と 3824）', () => {
+        const mk = (
+            tripId: string,
+            from: string,
+            to: string,
+            d: string,
+            a: string,
+        ) =>
+            trip({
+                tripId,
+                operationId: 'op-1',
+                tripDirection: 1,
+                times: [
+                    time({
+                        stationId: from,
+                        stopSequence: 1,
+                        departureTime: d,
+                    }),
+                    time({ stationId: to, stopSequence: 2, arrivalTime: a }),
+                ],
+            });
+        const p = mk('p', 'Y', 'K', '09:51:00', '09:57:00');
+        const q = mk('q', 'K', 'A', '10:30:00', '10:40:00');
+        const end = (rule: number) => ({
+            tripOperationListId: 'x',
+            tripId: 'x',
+            operationId: 'op-2',
+            operationNumber: '15K',
+            stationId: 'K',
+            rule,
+        });
+        const link = (tripId: string, patch: object) =>
+            ({
+                tripOperationListId: `tol-${tripId}`,
+                tripId,
+                operationId: 'op-1',
+                previous: null,
+                next: null,
+                ...patch,
+            }) as never;
+
+        expect(mergeSameDirectionContinuations([[p], [q]], [])).toEqual([
+            [p, q],
+        ]);
+        expect(
+            mergeSameDirectionContinuations(
+                [[p], [q]],
+                [link('p', { next: end(2) })],
+            ),
+        ).toEqual([[p], [q]]);
+        expect(
+            mergeSameDirectionContinuations(
+                [[p], [q]],
+                [link('q', { previous: end(2) })],
+            ),
+        ).toEqual([[p], [q]]);
+    });
+
     it('方向が違えば1本にまとめない（折り返しの可能性があるので別チェーンのまま）', () => {
         const p = trip({
             tripId: 'p',

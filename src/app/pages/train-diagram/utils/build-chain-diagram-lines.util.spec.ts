@@ -198,6 +198,102 @@ describe('buildChainDiagramLines', () => {
         expect(qLine?.depotMarks).toEqual([{ kind: 'in', minute: 200, y: 20 }]);
     });
 
+    it('depotOut/depotIn が false でも、決まり 2 のつながりがあれば ◎ の印が付く', () => {
+        const p = trip({
+            tripId: 'trip-p',
+            tripNumber: 'P',
+            times: [
+                time({
+                    stationId: 'A',
+                    stopSequence: 1,
+                    departureTime: '07:00:00',
+                }),
+                time({
+                    stationId: 'B',
+                    stopSequence: 2,
+                    arrivalTime: '07:10:00',
+                }),
+            ],
+        });
+        const end = (rule: 1 | 2 | 3) => ({
+            tripOperationListId: 'x',
+            tripId: 'x',
+            operationId: 'o2',
+            operationNumber: '15K',
+            stationId: 'B',
+            rule,
+        });
+        const lines = buildChainDiagramLines({
+            trips: [p],
+            axis: smallAxis,
+            axisStationIds: smallAxisStationIds,
+            base,
+            stationNameById: new Map(),
+            itineraryLinks: [
+                {
+                    tripOperationListId: 'tol',
+                    tripId: 'trip-p',
+                    operationId: 'o1',
+                    previous: end(2),
+                    next: end(2),
+                },
+            ],
+        });
+        expect(lines[0]?.depotMarks).toEqual([
+            expect.objectContaining({ kind: 'out', transfer: true }),
+            expect.objectContaining({ kind: 'in', transfer: true }),
+        ]);
+    });
+
+    it('depotOut/depotIn も true の乗り移りの端は △○ だけで transfer を付けない', () => {
+        const p = trip({
+            tripId: 'trip-p',
+            tripNumber: 'P',
+            depotOut: true,
+            depotIn: true,
+            times: [
+                time({
+                    stationId: 'A',
+                    stopSequence: 1,
+                    departureTime: '07:00:00',
+                }),
+                time({
+                    stationId: 'B',
+                    stopSequence: 2,
+                    arrivalTime: '07:10:00',
+                }),
+            ],
+        });
+        const end = {
+            tripOperationListId: 'x',
+            tripId: 'x',
+            operationId: 'o2',
+            operationNumber: '15K',
+            stationId: 'B',
+            rule: 2 as const,
+        };
+        const lines = buildChainDiagramLines({
+            trips: [p],
+            axis: smallAxis,
+            axisStationIds: smallAxisStationIds,
+            base,
+            stationNameById: new Map(),
+            itineraryLinks: [
+                {
+                    tripOperationListId: 'tol',
+                    tripId: 'trip-p',
+                    operationId: 'o1',
+                    previous: end,
+                    next: end,
+                },
+            ],
+        });
+        expect(lines[0]?.depotMarks).toEqual([
+            { kind: 'out', minute: 180, y: 0 },
+            { kind: 'in', minute: 190, y: 10 },
+        ]);
+    });
+
     it('fix round 3: trip自身の最初/最後の時刻のある停車が軸の外なら、depotOut/depotIn が true でも depotMarks は空', () => {
         // Z（軸の外・他社線内）→ A → B → C → W（軸の外・他社線内）という
         // 他線直通の trip を想定。depotOut/depotIn は true だが、trip 自身の

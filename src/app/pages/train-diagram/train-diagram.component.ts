@@ -530,7 +530,7 @@ export class TrainDiagramComponent {
                 }
             }
         }
-        return mergeSameDirectionContinuations(chains);
+        return mergeSameDirectionContinuations(chains, this.#itineraryLinks());
     }
 
     /** Task 14: tripId → そのつながり（方向フィルタ前）の先頭 tripId。findTurnbacks 用。 */
@@ -590,6 +590,7 @@ export class TrainDiagramComponent {
             chainHeadOf: this.#chainHeadOf(),
             chainTailOf: this.#chainTailOf(),
             axisStationIds: this.#axisStationIds(),
+            itineraryLinks: this.#itineraryLinks(),
         }),
     );
 
@@ -657,6 +658,10 @@ export class TrainDiagramComponent {
      * この線の y を新しい行の y へ移し替えるだけで DP は再計算しない
      * （#turnbackClearance 参照）。外部へは公開せず、必ず #turnbackClearance 経由で使う。
      */
+    readonly #itineraryLinks = toSignal(TrainDiagramStore.itineraryLinks$, {
+        initialValue: [],
+    });
+
     readonly #rawDiagramLines = computed<TripDiagramLine[]>(() => {
         const axis = this.#pixelAxis();
         if (!axis) return [];
@@ -672,6 +677,7 @@ export class TrainDiagramComponent {
                 base,
                 stationNameById,
                 standardRunMinutes,
+                itineraryLinks: this.#itineraryLinks(),
             }),
         );
     });
@@ -739,14 +745,25 @@ export class TrainDiagramComponent {
     /** Task 14: 描いている線に出庫（◯）の印を持つものが1本でもあるか。凡例の見本の表示条件。 */
     readonly hasDepotOut = computed(() =>
         this.diagramLines().some((line) =>
-            line.depotMarks.some((mark) => mark.kind === 'out'),
+            line.depotMarks.some(
+                (mark) => mark.kind === 'out' && !mark.transfer,
+            ),
         ),
     );
 
     /** Task 14: 描いている線に入庫（△）の印を持つものが1本でもあるか。凡例の見本の表示条件。 */
     readonly hasDepotIn = computed(() =>
         this.diagramLines().some((line) =>
-            line.depotMarks.some((mark) => mark.kind === 'in'),
+            line.depotMarks.some(
+                (mark) => mark.kind === 'in' && !mark.transfer,
+            ),
+        ),
+    );
+
+    /** 描いている線に乗り移り（◎）の印を持つものが1本でもあるか。凡例の見本の表示条件。 */
+    readonly hasTransfer = computed(() =>
+        this.diagramLines().some((line) =>
+            line.depotMarks.some((mark) => mark.transfer),
         ),
     );
 
@@ -982,9 +999,15 @@ export class TrainDiagramComponent {
                     );
                 }
                 if (flags.refetchTripBlocks) {
-                    await lastValueFrom(
-                        this.#timetableDiagramService.fetchTripBlocks(),
-                    );
+                    await Promise.all([
+                        lastValueFrom(
+                            this.#timetableDiagramService.fetchTripBlocks(),
+                        ),
+                        // ◎ の判定用。取れなくても空として扱うので図は止めない
+                        lastValueFrom(
+                            this.#timetableDiagramService.fetchItineraryLinks(),
+                        ),
+                    ]);
                 }
             };
             await Promise.all([

@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -16,6 +17,7 @@ export class TrainDiagramService {
     readonly #serviceListStateQuery = inject(ServiceListStateQuery);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
+    readonly #operationService = inject(OperationService);
     readonly #operationSightingService = inject(OperationSightingService);
 
     fetchTripClasses(): Observable<void> {
@@ -45,6 +47,32 @@ export class TrainDiagramService {
                     TrainDiagramStore.setTripBlocksByDirection(
                         attachTripClasses(data, TrainDiagramStore.tripClasses),
                     );
+                }),
+                map(() => undefined),
+            );
+    }
+
+    /**
+     * 車両の前後の運用（運用表・行路図と同じ口）を取る。
+     * 入出庫の端を ◎ で描くためだけに使うので、取れなくても空として扱い（今の △○ のまま）、図は止めない。
+     */
+    fetchItineraryLinks(): Observable<void> {
+        const calendarId = TrainDiagramStore.calendarId;
+
+        if (!calendarId) {
+            TrainDiagramStore.setItineraryLinks([]);
+            return of(undefined);
+        }
+
+        return this.#operationService
+            .findManyItineraryLinks({ calendarId })
+            .pipe(
+                tap((links) => {
+                    TrainDiagramStore.setItineraryLinks(links);
+                }),
+                catchError(() => {
+                    TrainDiagramStore.setItineraryLinks([]);
+                    return of(undefined);
                 }),
                 map(() => undefined),
             );

@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
@@ -21,6 +22,7 @@ import { visitedRouteIds } from '../utils/operation-route-diagram-visited-route-
 type StoreProps = {
     operationId: string | null;
     operationTrips: OperationTripsDto | null;
+    itineraryLinks: OperationItineraryLinkDto[];
     stations: StationDetailsDto[];
     stationAliases: RouteDiagramStationAliases;
     selectedRouteIds: string[];
@@ -32,6 +34,7 @@ const store = createStore(
     withProps<StoreProps>({
         operationId: null,
         operationTrips: null,
+        itineraryLinks: [],
         stations: [],
         stationAliases: {},
         selectedRouteIds: [],
@@ -78,6 +81,9 @@ export const OperationRouteDiagramStore = {
     setOperationTrips(operationTrips: OperationTripsDto): void {
         store.update(setProp('operationTrips', () => operationTrips));
     },
+    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => itineraryLinks));
+    },
     setStations(stations: StationDetailsDto[]): void {
         store.update(setProp('stations', () => stations));
     },
@@ -116,6 +122,7 @@ export const OperationRouteDiagramStore = {
             state.operationTrips?.trips ? tripsOf(state) : undefined,
         ),
     ),
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     stations$: store.pipe(select((state) => state.stations)),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),

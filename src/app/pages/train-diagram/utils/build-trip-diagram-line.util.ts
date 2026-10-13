@@ -33,6 +33,8 @@ export type TripDiagramStopLabel = {
  */
 export type TripDiagramDepotMark = {
     kind: 'out' | 'in';
+    /** 別の運用へ・からの乗り移り（◎で描く）。無ければ車庫の △○ */
+    transfer?: boolean;
     minute: number;
     y: number;
 };

@@ -38,7 +38,11 @@
             <ng-container
                 *ngTemplateOutlet="
                     bandsTpl;
-                    context: { rows: bandRows(), offset: 0 }
+                    context: {
+                        rows: bandRows(),
+                        placements: linkLabelPlacements(),
+                        offset: 0,
+                    }
                 "
             ></ng-container>
         </svg>
@@ -82,7 +86,11 @@
                 <ng-container
                     *ngTemplateOutlet="
                         bandsTpl;
-                        context: { rows: outputBandRows(), offset: HEADER_HEIGHT }
+                        context: {
+                            rows: outputBandRows(),
+                            placements: outputLinkLabelPlacements(),
+                            offset: HEADER_HEIGHT,
+                        }
                     "
                 ></ng-container>
             </svg>
@@ -134,7 +142,12 @@
 <!-- 列車（本番の行路図と同じ骨格）: 横線（旅客=種別色の実線・回送=灰の点線）、
      両端の時刻は線の外側、種別チップ＋列番は線の上の中央、出庫○・入庫△は端、
      着いた端から次の列車の線まで縦線。列車番号を押すと全線時刻表へ移る。 -->
-<ng-template #bandsTpl let-rows="rows" let-offset="offset">
+<ng-template
+    #bandsTpl
+    let-rows="rows"
+    let-placements="placements"
+    let-offset="offset"
+>
     <svg>
         @for (row of rows; track row.tripOperationListId) {
             <g>
@@ -219,27 +232,58 @@
                         fill="white"
                         stroke-width="2"
                     ></circle>
+                    @if (row.depotOutTransfer) {
+                        <!-- 別の運用から: ○の中に黒丸を足して ◎ にする -->
+                        <circle
+                            [attr.cx]="row.depotOutX"
+                            [attr.cy]="row.centerY + offset"
+                            r="2.5"
+                            fill="#001556"
+                        >
+                            <title>別の運用から</title>
+                        </circle>
+                    }
                 }
                 <!-- 入庫: 白抜きの上向き△。外接する箱の中心を線の位置と端の駅に合わせる -->
                 @if (row.depotInMarker) {
-                    <polygon
-                        [attr.points]="
-                            row.depotInX +
-                            ',' +
-                            (row.centerY + offset - 6.5) +
-                            ' ' +
-                            (row.depotInX - 7.5) +
-                            ',' +
-                            (row.centerY + offset + 6.5) +
-                            ' ' +
-                            (row.depotInX + 7.5) +
-                            ',' +
-                            (row.centerY + offset + 6.5)
-                        "
-                        stroke="black"
-                        fill="white"
-                        stroke-width="2"
-                    ></polygon>
+                    @if (row.depotInTransfer) {
+                        <!-- 別の運用へ: ◎ -->
+                        <circle
+                            [attr.cx]="row.depotInX"
+                            [attr.cy]="row.centerY + offset"
+                            r="6"
+                            stroke="#001556"
+                            fill="white"
+                            stroke-width="2"
+                        >
+                            <title>別の運用へ</title>
+                        </circle>
+                        <circle
+                            [attr.cx]="row.depotInX"
+                            [attr.cy]="row.centerY + offset"
+                            r="2.5"
+                            fill="#001556"
+                        ></circle>
+                    } @else {
+                        <polygon
+                            [attr.points]="
+                                row.depotInX +
+                                ',' +
+                                (row.centerY + offset - 6.5) +
+                                ' ' +
+                                (row.depotInX - 7.5) +
+                                ',' +
+                                (row.centerY + offset + 6.5) +
+                                ' ' +
+                                (row.depotInX + 7.5) +
+                                ',' +
+                                (row.centerY + offset + 6.5)
+                            "
+                            stroke="black"
+                            fill="white"
+                            stroke-width="2"
+                        ></polygon>
+                    }
                 }
 
                 <!-- 次の列車への縦線。色は接続元の種別色から接続先の種別色へ移るグラデーション。
@@ -279,6 +323,17 @@
                     ></path>
                 }
             </g>
+        }
+        <!-- 前後・途中の運用: 点のすぐ上・下に、時刻と同じ字の色で出す -->
+        @for (p of placements; track p.key) {
+            <text
+                class="link-label"
+                [attr.x]="p.x"
+                [attr.y]="p.y + offset"
+                [attr.text-anchor]="p.anchor"
+                [attr.font-size]="LINK_LABEL_FONT_SIZE"
+                fill="#212121"
+            >{{ p.text }}</text>
         }
     </svg>
 </ng-template>

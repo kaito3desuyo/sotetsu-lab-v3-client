@@ -1,3 +1,5 @@
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { baseTripClassName } from 'src/app/shared/trip-class-base-name.util';
 import {
@@ -42,6 +44,9 @@ export interface OperationRouteDiagramBandViewModel {
      */
     depotOutMarker: boolean;
     depotInMarker: boolean;
+    /** 出庫・入庫の端が別の運用からの乗り移り・別の運用への乗り移りか（◎で描く） */
+    depotOutTransfer: boolean;
+    depotInTransfer: boolean;
     /** 出庫ノードの駅 index（startTime 側） */
     depotOutIndex: number;
     /** 入庫ノードの駅 index（endTime 側） */
@@ -67,6 +72,7 @@ const FALLBACK_COLOR = '#666666';
 export function buildBandViewModels(
     tripOperationLists: readonly OperationRouteDiagramTripOperationList[],
     stations: readonly StationDetailsDto[],
+    links: OperationItineraryLinkDto[] = [],
 ): OperationRouteDiagramBandViewModel[] {
     const indexById = new Map(stations.map((s, i) => [s.stationId, i]));
     const nameById = new Map(stations.map((s) => [s.stationId, s.stationName]));
@@ -88,8 +94,27 @@ export function buildBandViewModels(
             : tripOperationList.startTime?.departureTime;
         const { startHiddenStationName, endHiddenStationName } =
             tripOperationList;
-        const depotOut = !!tripOperationList.trip?.depotOut;
-        const depotIn = !!tripOperationList.trip?.depotIn;
+        // 乗り移り（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
+        const isOutTransfer = isTransferEnd({
+            side: 'out',
+            tripOperationListId: tripOperationList.tripOperationListId,
+            tripId: tripOperationList.trip?.tripId,
+            links,
+        });
+        const isInTransfer = isTransferEnd({
+            side: 'in',
+            tripOperationListId: tripOperationList.tripOperationListId,
+            tripId: tripOperationList.trip?.tripId,
+            links,
+        });
+        // 入出庫と乗り移りは、どちらもそこで線を切る端
+        const depotOut = !!tripOperationList.trip?.depotOut || isOutTransfer;
+        const depotIn = !!tripOperationList.trip?.depotIn || isInTransfer;
+        // ◎ は入出庫をともなわない乗り移りだけ。depot も立つ端は △○ のまま
+        const depotOutTransfer =
+            isOutTransfer && !tripOperationList.trip?.depotOut;
+        const depotInTransfer =
+            isInTransfer && !tripOperationList.trip?.depotIn;
 
         const style = classifyBandStyle(
             tripOperationList.trip?.tripClass?.tripClassName,
@@ -136,6 +161,8 @@ export function buildBandViewModels(
             depotIn,
             depotOutMarker: depotOut && !startHiddenStationName,
             depotInMarker: depotIn && !endHiddenStationName,
+            depotOutTransfer,
+            depotInTransfer,
             depotOutIndex: startIndex,
             depotInIndex: endIndex,
             depotOutTime: tripOperationList.startTime?.departureTime,

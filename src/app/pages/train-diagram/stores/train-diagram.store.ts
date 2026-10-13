@@ -4,6 +4,7 @@ import localForage from 'localforage';
 import { combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
@@ -57,6 +58,8 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     loadingQueue: boolean[];
+    /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら ◎ で描く。取れなければ空 */
+    itineraryLinks: OperationItineraryLinkDto[];
     /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
     controlCollapsed: boolean;
 };
@@ -75,6 +78,7 @@ const store = createStore(
         tripBlocksByDirection: {},
         selectedTripId: null,
         operationSightingTimeCrossSections: {},
+        itineraryLinks: [],
         loadingQueue: [],
         controlCollapsed: false,
     }),
@@ -246,6 +250,9 @@ export const TrainDiagramStore = {
             setProp('tripBlocksByDirection', () => tripBlocksByDirection),
         );
     },
+    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
+        store.update(setProp('itineraryLinks', () => itineraryLinks));
+    },
     setSelectedTripId(tripId: string | null): void {
         store.update(setProp('selectedTripId', () => tripId));
     },
@@ -284,6 +291,7 @@ export const TrainDiagramStore = {
     tripBlocksByDirection$: store.pipe(
         select((state) => state.tripBlocksByDirection),
     ),
+    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     selectedTripId$: store.pipe(select((state) => state.selectedTripId)),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),

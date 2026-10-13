@@ -16,6 +16,8 @@ import { format, parse } from 'date-fns';
 import { saveAs } from 'file-saver';
 import { PaddingPipe } from 'src/app/core/pipes/padding.pipe';
 import { wait } from 'src/app/core/utils/wait';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { ItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -47,6 +49,10 @@ import {
     ROUTE_DIAGRAM_SIDE_PAD,
 } from '../../utils/operation-route-diagram-fit-columns.util';
 import {
+    buildLinkLabelPlacements,
+    ROUTE_DIAGRAM_LINK_LABEL_FONT_SIZE,
+} from '../../utils/operation-route-diagram-link-label-placements.util';
+import {
     isRouteDiagramOutsideStationId,
     OperationRouteDiagramTripOperationList,
 } from '../../utils/operation-route-diagram-reconnect-trip-operation-lists.util';
@@ -57,7 +63,7 @@ const HEADER_HEIGHT = 96;
 /** 駅名 1 文字ぶんの送り。1 文字目のベースラインもこの値にして、上端で欠けないようにする */
 const STATION_CHAR_STEP = 14;
 const STATION_LABEL_CHARS = 6;
-const ROW_BOTTOM_MARGIN = 24;
+const ROW_BOTTOM_MARGIN = 32;
 /**
  * 画像出力の列間隔。画面はカードの幅に合わせて広げるが、画像はカードの幅
  * （保存した端末）に左右されないよう、駅数だけで幅が決まる固定の間隔で描く。
@@ -89,6 +95,7 @@ export class OperationRouteDiagramDrawingComponent {
     readonly TRIP_NUMBER_FONT_SIZE = ROUTE_DIAGRAM_TRIP_NUMBER_FONT_SIZE;
     readonly NON_REVENUE_COLOR = ROUTE_DIAGRAM_NON_REVENUE_COLOR;
     readonly OUTSIDE_HEADER_COLOR = OUTSIDE_HEADER_COLOR;
+    readonly LINK_LABEL_FONT_SIZE = ROUTE_DIAGRAM_LINK_LABEL_FONT_SIZE;
 
     readonly drawingSVGForOutput = signal(false);
 
@@ -97,6 +104,11 @@ export class OperationRouteDiagramDrawingComponent {
     readonly stations = input.required<StationDetailsDto[]>();
     readonly tripOperationLists =
         input.required<OperationRouteDiagramTripOperationList[]>();
+
+    /** 前後・途中の運用の文言。点の横に絵の中で描く */
+    readonly linkLabels = input<ItineraryLinkLabels | null>(null);
+    /** 車両の前後の運用。入出庫の端が乗り移りなら ◎ で描く。取れなければ空 */
+    readonly itineraryLinks = input<OperationItineraryLinkDto[]>([]);
 
     readonly clickNavigateTimetable =
         output<OperationRouteDiagramNavigateTimetable>();
@@ -111,7 +123,11 @@ export class OperationRouteDiagramDrawingComponent {
     });
 
     readonly bandViewModels = computed(() =>
-        buildBandViewModels(this.tripOperationLists(), this.stations()),
+        buildBandViewModels(
+            this.tripOperationLists(),
+            this.stations(),
+            this.itineraryLinks(),
+        ),
     );
     readonly bandLabels = computed(() =>
         this.bandViewModels().map((vm) => buildBandLabels(vm, this.stations())),
@@ -201,6 +217,27 @@ export class OperationRouteDiagramDrawingComponent {
             this.outputColumnMetrics(),
         ),
     );
+
+    readonly linkLabelPlacements = computed(() =>
+        this.#placeLinkLabels(this.bandRows(), this.columnMetrics().width),
+    );
+    readonly outputLinkLabelPlacements = computed(() =>
+        this.#placeLinkLabels(
+            this.outputBandRows(),
+            this.outputColumnMetrics().width,
+        ),
+    );
+
+    #placeLinkLabels(rows: ReturnType<typeof buildBandRows>, width: number) {
+        const labels = this.linkLabels();
+        if (!labels) return [];
+        return buildLinkLabelPlacements({
+            rows,
+            tripIds: this.tripOperationLists().map(({ trip }) => trip.tripId),
+            labels,
+            width,
+        });
+    }
 
     private readonly svgElement = viewChild<ElementRef>('svgElement');
 

@@ -30,6 +30,7 @@ describe('OperationTableComponent', () => {
                         fetchOperationTrips: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
                     },
                 },
                 {
@@ -157,17 +158,129 @@ describe('OperationTableComponent', () => {
     it('placeholderHeight: 見出しと余白 63px + 列車 32px + つなぎの行 8px', () => {
         createComponent();
         const trip = (tripDirection: number, depotIn = false) => ({
-            trip: { tripDirection, depotIn, depotOut: false },
+            trip: {
+                tripId: `t${tripDirection}`,
+                tripDirection,
+                depotIn,
+                depotOut: false,
+            },
         });
 
         // 上り → 上り（つなぎ）→ 下り（折り返し）→ 下りで入庫（つなぎ）→ 下り（入庫後なのでつながない）
         const operationTrip = {
+            operation: { operationId: 'op-1' },
             trips: [trip(0), trip(0), trip(1), trip(1, true), trip(1)],
         } as unknown as OperationTripsDto;
 
         expect(component.placeholderHeight(operationTrip)).toBe(
             63 + 5 * 32 + 2 * 8,
         );
+    });
+
+    describe('fetchData: つながりの取得', () => {
+        it('つながりの取得が失敗しても fetchData は成功し、読み込み中を解く', async () => {
+            createComponent();
+            const service = TestBed.inject(OperationTableService);
+            jest.spyOn(service, 'fetchItineraryLinks').mockReturnValue(
+                throwError(() => new Error('500')),
+            );
+
+            await expect(component.fetchData()).resolves.toBeUndefined();
+
+            let loading = true;
+            OperationTableStore.isLoading$
+                .subscribe((v) => (loading = v))
+                .unsubscribe();
+            expect(loading).toBe(false);
+        });
+
+        it('種別の取得が失敗したら、これまでどおり fetchData は失敗する', async () => {
+            createComponent();
+            const service = TestBed.inject(OperationTableService);
+            jest.spyOn(service, 'fetchTripClasses').mockReturnValue(
+                throwError(() => new Error('tripClasses failed')),
+            );
+
+            await expect(component.fetchData()).rejects.toThrow(
+                'tripClasses failed',
+            );
+        });
+    });
+
+    describe('placeholderHeight: 前後の運用の文言', () => {
+        const end = (p: object) =>
+            ({
+                stationId: 's',
+                rule: 2,
+                operationNumber: '12K',
+                ...p,
+            }) as never;
+        const operationTrip = {
+            operation: { operationId: 'op-1' },
+            trips: [
+                { trip: { tripId: 't1', tripDirection: 0, depotIn: true } },
+                { trip: { tripId: 't2', tripDirection: 1, depotIn: true } },
+            ],
+        } as unknown as OperationTripsDto;
+        const base = 63 + 2 * 32;
+
+        const heightWith = (links: object[]) => {
+            createComponent();
+            OperationTableStore.setItineraryLinks(links as never);
+            fixture.detectChanges();
+            return component.placeholderHeight(operationTrip);
+        };
+
+        afterEach(() => OperationTableStore.setItineraryLinks([]));
+
+        it('つながりが無ければ増えない', () => {
+            expect(heightWith([])).toBe(base);
+        });
+
+        it('頭は 24px 増える', () => {
+            expect(
+                heightWith([
+                    {
+                        tripId: 't1',
+                        operationId: 'op-1',
+                        previous: end({}),
+                        next: null,
+                    },
+                ]),
+            ).toBe(base + 24);
+        });
+
+        it('末尾は 24px 増える', () => {
+            expect(
+                heightWith([
+                    {
+                        tripId: 't2',
+                        operationId: 'op-1',
+                        previous: null,
+                        next: end({}),
+                    },
+                ]),
+            ).toBe(base + 24);
+        });
+
+        it('列車の途中の切り替えは 1 件ごとに 20px 増える', () => {
+            expect(
+                heightWith([
+                    {
+                        tripId: 't1',
+                        operationId: 'op-1',
+                        previous: null,
+                        next: end({ rule: 1 }),
+                    },
+                    {
+                        tripId: 't2',
+                        operationId: 'op-1',
+                        previous: null,
+                        next: end({ rule: 1 }),
+                    },
+                ]),
+            ).toBe(base + 40);
+        });
     });
 
     it('isCardVisible: 選択した群の運用だけを出す', () => {

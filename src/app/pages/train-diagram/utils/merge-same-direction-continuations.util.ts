@@ -1,3 +1,5 @@
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     resolveArrival,
@@ -22,9 +24,27 @@ type ChainInfo = {
     tailDepotIn: boolean;
 };
 
+export function isTransferOf(
+    side: 'in' | 'out',
+    trip: TripDetailsDto | undefined,
+    links: readonly OperationItineraryLinkDto[],
+): boolean {
+    if (!trip) return false;
+    return isTransferEnd({
+        side,
+        tripOperationListId:
+            side === 'in'
+                ? trip.tripOperationLists?.at(-1)?.tripOperationListId
+                : trip.tripOperationLists?.[0]?.tripOperationListId,
+        tripId: trip.tripId,
+        links: links as OperationItineraryLinkDto[],
+    });
+}
+
 function toChainInfo(
     chain: readonly TripDetailsDto[],
     index: number,
+    links: readonly OperationItineraryLinkDto[],
 ): ChainInfo {
     const headTrip = chain[0];
     const tailTrip = chain[chain.length - 1];
@@ -43,8 +63,11 @@ function toChainInfo(
         firstDepartureMs: firstDeparture?.getTime(),
         lastStationId: lastStop?.stationId ?? undefined,
         lastArrivalMs: lastArrival?.getTime(),
-        headDepotOut: headTrip?.depotOut === true,
-        tailDepotIn: tailTrip?.depotIn === true,
+        // 入出庫と、別の運用への乗り移り（つながりで見分ける）は、どちらも切れ目
+        headDepotOut:
+            headTrip?.depotOut === true || isTransferOf('out', headTrip, links),
+        tailDepotIn:
+            tailTrip?.depotIn === true || isTransferOf('in', tailTrip, links),
     };
 }
 
@@ -78,8 +101,11 @@ function toChainInfo(
  */
 export function mergeSameDirectionContinuations(
     chains: readonly (readonly TripDetailsDto[])[],
+    links: readonly OperationItineraryLinkDto[] = [],
 ): TripDetailsDto[][] {
-    const infos = chains.map((chain, index) => toChainInfo(chain, index));
+    const infos = chains.map((chain, index) =>
+        toChainInfo(chain, index, links),
+    );
 
     const byOperation = new Map<string, ChainInfo[]>();
     for (const info of infos) {

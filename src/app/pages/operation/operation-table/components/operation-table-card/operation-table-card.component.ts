@@ -8,11 +8,18 @@ import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
+import { FitWidthDirective } from '../../directives/fit-width.directive';
+import {
+    isTransferEnd,
+    transferLabel,
+} from 'src/app/libs/operation/usecase/transfer-marker.util';
+import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import { OperationTableFormatStationNamePipe } from '../../pipes/operation-table-format-station-name.pipe';
 import { OperationTableFormatTripClassNamePipe } from '../../pipes/operation-table-format-trip-class-name.pipe';
 
@@ -21,6 +28,8 @@ export type RowEdge = {
     up: boolean;
     down: boolean;
     depot: 'out' | 'in' | null;
+    /** 入出庫の端が別の運用への・からの乗り移り（◎で描く）か */
+    transfer?: boolean;
     /** 端の線の SVG path（viewBox 0 0 16 16）。線が無ければ空文字。 */
     path: string;
 };
@@ -59,6 +68,7 @@ export type TripRow = {
     key: string;
     tripDirection: number;
     tripBlockId: string;
+    tripId: string;
     tripNumber: string;
     tripClassName: string;
     tripClassColor: string;
@@ -90,7 +100,7 @@ const STATION_WIDTH = 3;
  * 下り（OUTBOUND）は右 → 左へ流す。地図と同じ向きで行ったり来たりが読める。
  * 行の端の線は、同じ駅で次の列車へ続く（折り返す）ことを表す。
  * 同じ向きへ続けて走るときは、つなぎの行を挟んで Z 字につなぐ。
- * 出庫は ◯、入庫は △ を、線の代わりに端へ置く。
+ * 出庫は ◯、入庫は △ を、線の代わりに端へ置く。別の運用へ・からの乗り移りは ◎。
  *
  * 線は本番の罫線文字（┏┗┓┛━）ではなく SVG で描く（字・種別チップ・リンクは HTML）。
  * 列車の行は、発時刻から着時刻へ伸びる種別色の矢印に種別・列番を載せ、余った幅は矢印線が吸う。
@@ -106,6 +116,7 @@ const STATION_WIDTH = 3;
         OperationNumberColorPipe,
         DateFnsPipe,
         TripLabelComponent,
+        FitWidthDirective,
     ],
 })
 export class OperationTableCardComponent {
@@ -115,6 +126,8 @@ export class OperationTableCardComponent {
     readonly calendarId = input.required<string | null>();
     /** 運用番号が属する群名（実データそのまま）。モック 03: ヘッダの運用番号バッジ。未解決なら非表示。 */
     readonly groupName = input<string>();
+    /** 車両の前後の運用（運番が変わるつながり）。取れなければ空 */
+    readonly links = input<OperationItineraryLinkDto[]>([]);
 
     readonly #formatStationName = new OperationTableFormatStationNamePipe();
     readonly #formatTripClassName = new OperationTableFormatTripClassNamePipe();
@@ -135,6 +148,22 @@ export class OperationTableCardComponent {
         return map;
     });
 
+    readonly linkLabels = computed(() =>
+        buildItineraryLinkLabels({
+            operationId: this.operationTrip().operation.operationId,
+            tripIds: this.operationTrip().trips.map(({ trip }) => trip.tripId),
+            links: this.links(),
+            stationNameById: (id) => this.#stationNameById().get(id) ?? '',
+        }),
+    );
+
+    depotLabel(edge: RowEdge): string {
+        if (edge.transfer) {
+            return transferLabel(edge.depot === 'out' ? 'out' : 'in');
+        }
+        return edge.depot === 'out' ? '出庫' : '入庫';
+    }
+
     readonly rows = computed<CardRow[]>(() => {
         const stationNameById = this.#stationNameById();
         const tripClassById = this.#tripClassById();
@@ -154,11 +183,29 @@ export class OperationTableCardComponent {
         };
 
         // 前の列車の終点から次の列車が出る（入庫・出庫で切れていない）
-        const connects = (index: number): boolean => {
-            const current = trips[index]?.trip;
-            const next = trips[index + 1]?.trip;
-            return !!current && !!next && !current.depotIn && !next.depotOut;
+        // 乗り移り（決まり 2 のつながり）は入出庫の値に頼らず、つながりで見分ける
+        const transferAt = (index: number, side: 'in' | 'out'): boolean => {
+            const item = trips[index];
+            return (
+                !!item &&
+                isTransferEnd({
+                    side,
+                    tripOperationListId: item.tripOperationListId,
+                    tripId: item.trip.tripId,
+                    links: this.links(),
+                })
+            );
         };
+        // 入出庫と乗り移りは、どちらもそこで線を切る
+        const cutsAfter = (index: number): boolean =>
+            !!trips[index]?.trip.depotIn || transferAt(index, 'in');
+        const cutsBefore = (index: number): boolean =>
+            !!trips[index]?.trip.depotOut || transferAt(index, 'out');
+        const connects = (index: number): boolean =>
+            !!trips[index] &&
+            !!trips[index + 1] &&
+            !cutsAfter(index) &&
+            !cutsBefore(index + 1);
 
         const rows: CardRow[] = [];
         trips.forEach((tripOperationList, index) => {
@@ -178,15 +225,19 @@ export class OperationTableCardComponent {
                 tripOperationList.endTime.arrivalTime,
             );
             // 始点側の端は前の行と、終点側の端は次の行とつながる
+            const startTransfer = transferAt(index, 'out');
+            const finishTransfer = transferAt(index, 'in');
             const startEdge: EdgeLinks = {
                 up: connects(index - 1),
                 down: false,
-                depot: trip.depotOut ? 'out' : null,
+                depot: trip.depotOut || startTransfer ? 'out' : null,
+                ...(startTransfer && !trip.depotOut ? { transfer: true } : {}),
             };
             const finishEdge: EdgeLinks = {
                 up: false,
                 down: connects(index),
-                depot: trip.depotIn ? 'in' : null,
+                depot: trip.depotIn || finishTransfer ? 'in' : null,
+                ...(finishTransfer && !trip.depotIn ? { transfer: true } : {}),
             };
 
             rows.push({
@@ -194,6 +245,7 @@ export class OperationTableCardComponent {
                 key: tripOperationList.tripOperationListId,
                 tripDirection: trip.tripDirection,
                 tripBlockId: trip.tripBlockId,
+                tripId: trip.tripId,
                 tripNumber: trip.tripNumber,
                 tripClassName,
                 tripClassColor: tripClass?.tripClassColor ?? '#9e9e9e',

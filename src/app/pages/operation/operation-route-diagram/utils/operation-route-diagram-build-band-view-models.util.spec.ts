@@ -301,4 +301,67 @@ describe('buildBandViewModels', () => {
         expect(vm.depotOutMarker).toBe(true);
         expect(vm.depotInMarker).toBe(true);
     });
+
+    describe('乗り移りは入出庫の値に頼らず、つながりで見分ける', () => {
+        const end = (rule: number) => ({
+            tripOperationListId: 'x',
+            tripId: 'x',
+            operationId: 'o2',
+            operationNumber: '15K',
+            stationId: 's-ebina',
+            rule,
+        });
+        const link = (patch: object) =>
+            ({
+                tripOperationListId: 'tol-1',
+                tripId: 'trip-1',
+                operationId: 'o1',
+                previous: null,
+                next: null,
+                ...patch,
+            }) as never;
+
+        it('depot が false でも、乗り移りの端は線を切り ◎ を出す', () => {
+            const [vm] = buildBandViewModels([tripOperationList()], stations, [
+                link({ previous: end(2), next: end(2) }),
+            ]);
+            expect(vm.depotIn).toBe(true);
+            expect(vm.depotOut).toBe(true);
+            expect(vm.depotInMarker).toBe(true);
+            expect(vm.depotInTransfer).toBe(true);
+            expect(vm.depotOutMarker).toBe(true);
+            expect(vm.depotOutTransfer).toBe(true);
+        });
+
+        it('depot も立つ乗り移りの端は △○ のまま ◎ にしない', () => {
+            const [vm] = buildBandViewModels(
+                [
+                    tripOperationList({
+                        trip: {
+                            ...tripOperationList().trip,
+                            depotOut: true,
+                            depotIn: true,
+                        },
+                    }),
+                ],
+                stations,
+                [link({ previous: end(2), next: end(2) })],
+            );
+            expect(vm.depotInMarker).toBe(true);
+            expect(vm.depotOutMarker).toBe(true);
+            expect(vm.depotInTransfer).toBe(false);
+            expect(vm.depotOutTransfer).toBe(false);
+        });
+
+        it('depot が false でつながりも無ければ何も出さない', () => {
+            const [vm] = buildBandViewModels(
+                [tripOperationList()],
+                stations,
+                [],
+            );
+            expect(vm.depotIn).toBe(false);
+            expect(vm.depotInMarker).toBe(false);
+            expect(vm.depotInTransfer).toBe(false);
+        });
+    });
 });

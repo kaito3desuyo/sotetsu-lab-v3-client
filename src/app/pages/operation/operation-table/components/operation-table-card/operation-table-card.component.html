@@ -34,10 +34,22 @@
         </a>
     </header>
 
+    @if (linkLabels().from; as from) {
+        <p class="link-from tw-m-0 tw-px-4 tw-pt-2 tw-text-center tw-text-xs tw-text-grey-600">
+            {{ from }}
+        </p>
+    }
     <!-- 折返し表: 西側を左・横浜を右に置き、上りは左→右、下りは右→左（本番の構造） -->
     <div class="tw-px-2 tw-py-3 tw-text-[13px] tw-leading-tight">
         @for (row of rows(); track row.key) {
             @if (row.kind === 'trip') {
+                @if (linkLabels().midTrip[row.tripId]?.from; as midFrom) {
+                    <p
+                        class="link-mid-trip-from tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-grey-600"
+                    >
+                        {{ midFrom }}
+                    </p>
+                }
                 <div
                     class="op-row tw-grid tw-min-h-8 tw-items-center tw-gap-x-[3px]"
                     [class.tw-text-grey-500]="row.isDeadhead"
@@ -66,7 +78,7 @@
                     <!-- 発時刻から着時刻へ伸びる 1 本の矢印に種別・列番を載せる。
                          余った幅は矢印線が吸う。線は種別色（回送は灰） -->
                     <span
-                        class="tw-flex tw-min-w-0 tw-items-center tw-gap-1"
+                        class="tw-flex tw-min-w-0 tw-items-center tw-gap-0.5"
                         [style.color]="
                             row.isDeadhead
                                 ? 'var(--color-grey-400, #bdbdbd)'
@@ -82,9 +94,12 @@
                                 }
                             "
                         ></ng-container>
-                        <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05） -->
+                        <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05）。
+                             横に入らない行だけ横に縮める（時刻に重ねない。ユーザー判断 2026-10-13）。24 = 両側の矢じり 10px と隙間 2px -->
                         <app-trip-label
-                            class="tw-shrink-0 tw-font-bold"
+                            appFitWidth
+                            [appFitWidthReserve]="24"
+                            class="tw-shrink-0 tw-font-bold [&>*]:tw-shrink-0"
                             [class.tw-text-ink]="!row.isDeadhead"
                             [class.tw-text-grey-500]="row.isDeadhead"
                             [tripClassName]="row.tripClassName"
@@ -133,6 +148,13 @@
                         "
                     ></ng-container>
                 </div>
+                @if (linkLabels().midTrip[row.tripId]?.to; as midTo) {
+                    <p
+                        class="link-mid-trip-to tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-grey-600"
+                    >
+                        {{ midTo }}
+                    </p>
+                }
             } @else {
                 <!-- 同じ向きへ続けて走る: 終点側の線を次の列車の始点側へ渡す -->
                 <div class="op-row tw-relative tw-grid tw-h-2 tw-gap-x-[3px]">
@@ -157,6 +179,13 @@
             }
         }
     </div>
+    @if (linkLabels().to; as to) {
+        <p
+            class="link-to tw-m-0 tw-px-4 tw-pb-2 tw-text-center tw-text-xs tw-text-grey-600"
+        >
+            {{ to }}
+        </p>
+    }
 </article>
 
 <ng-template #station let-end>
@@ -198,10 +227,20 @@
                 class="tw-absolute tw-left-1/2 tw-top-1/2 tw-h-2.5 tw-w-2.5 tw--translate-x-1/2 tw--translate-y-1/2 tw-overflow-visible tw-text-ink"
                 viewBox="0 0 10 10"
                 role="img"
-                [attr.aria-label]="edge.depot === 'out' ? '出庫' : '入庫'"
+                [attr.aria-label]="depotLabel(edge)"
             >
-                <title>{{ edge.depot === 'out' ? '出庫' : '入庫' }}</title>
-                @if (edge.depot === 'out') {
+                <title>{{ depotLabel(edge) }}</title>
+                @if (edge.transfer) {
+                    <circle
+                        cx="5"
+                        cy="5"
+                        r="4.25"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.75" fill="currentColor" />
+                } @else if (edge.depot === 'out') {
                     <circle
                         cx="5"
                         cy="5"
@@ -227,7 +266,7 @@
 <ng-template #arrow let-head let-tail="tail">
     <!-- 向きの矢印線。head: 矢じりをこの線の外側の端に付けるか。tail: 右側の線か -->
     <span
-        class="tw-flex tw-min-w-3 tw-flex-1 tw-items-center"
+        class="tw-flex tw-min-w-2.5 tw-flex-1 tw-items-center"
         [class.tw-flex-row-reverse]="!tail"
         aria-hidden="true"
     >
