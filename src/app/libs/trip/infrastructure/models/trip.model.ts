@@ -1,4 +1,6 @@
 import { Expose, Type } from 'class-transformer';
+import { TripBlockModel } from 'src/app/libs/trip-block/infrastructure/models/trip-block.model';
+import { TripClassModel } from 'src/app/libs/trip-class/infrastructure/models/trip-class.model';
 import { TimeModel } from './time.model';
 import { TripOperationListModel } from './trip-operation-list.model';
 
@@ -49,4 +51,8 @@ export class TripModel {
     @Expose()
     @Type(() => TripOperationListModel)
     tripOperationLists?: TripOperationListModel[];
+
+    tripClass?: TripClassModel;
+
+    tripBlock?: TripBlockModel;
 }

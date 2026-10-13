@@ -39,7 +39,6 @@ export class TripOperationListModel {
     trip?: TripModel;
 
     @Expose()
-    @Type(() => OperationModel)
     operation?: OperationModel;
 
     @Expose()
