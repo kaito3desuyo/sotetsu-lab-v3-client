@@ -6,6 +6,12 @@ import { RouteModel } from '../models/route.model';
 export const RouteDtoBuilder = {
     buildFromModel: (model: RouteModel): RouteDetailsDto => {
         const plainObject = classToPlain(model, classTransformerOptions);
-        return plainToClass(RouteDetailsDto, plainObject, classTransformerOptions);
+        return plainToClass(
+            RouteDetailsDto,
+            plainObject,
+            classTransformerOptions,
+        );
     },
+    buildFromModels: (models: RouteModel[]): RouteDetailsDto[] =>
+        models.map((model) => RouteDtoBuilder.buildFromModel(model)),
 } as const;

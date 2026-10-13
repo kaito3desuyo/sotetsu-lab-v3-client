@@ -12,4 +12,6 @@ export const AgencyDtoBuilder = {
             classTransformerOptions,
         );
     },
+    buildFromModels: (models: AgencyModel[]): AgencyDetailsDto[] =>
+        models.map((model) => AgencyDtoBuilder.buildFromModel(model)),
 } as const;

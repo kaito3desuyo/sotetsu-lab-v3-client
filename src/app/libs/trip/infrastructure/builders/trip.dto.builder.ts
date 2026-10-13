@@ -8,4 +8,6 @@ export const TripDtoBuilder = {
     buildFromModel: (model: TripModel): TripDetailsDto => {
         return plainToClass(TripDetailsDto, model, classTransformerOptions);
     },
+    buildFromModels: (models: TripModel[]): TripDetailsDto[] =>
+        models.map((model) => TripDtoBuilder.buildFromModel(model)),
 } as const;

@@ -12,12 +12,6 @@ export const OperationGroupDtoBuilder = {
             classTransformerOptions,
         );
     },
-} as const;
-
-export const OperationGroupsDtoBuilder = {
-    buildFromModels: (models: OperationGroupModel[]): OperationGroupDto[] => {
-        return models.map((model) =>
-            OperationGroupDtoBuilder.buildFromModel(model),
-        );
-    },
+    buildFromModels: (models: OperationGroupModel[]): OperationGroupDto[] =>
+        models.map((model) => OperationGroupDtoBuilder.buildFromModel(model)),
 } as const;

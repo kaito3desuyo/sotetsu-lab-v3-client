@@ -5,10 +5,7 @@ import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
-import {
-    buildCalendarDetailsDto,
-    CalendarDtoBuilder,
-} from '../builders/calendar.dto.builder';
+import { CalendarDtoBuilder } from '../builders/calendar.dto.builder';
 import { CalendarModel } from '../models/calendar.model';
 
 @Injectable({ providedIn: 'root' })
@@ -39,9 +36,7 @@ export class CalendarQuery {
                 },
                 forceReload,
             })
-            .pipe(
-                map((res) => res.body.map((o) => buildCalendarDetailsDto(o))),
-            );
+            .pipe(map((res) => CalendarDtoBuilder.buildFromModels(res.body)));
     }
 
     findOne(params: {

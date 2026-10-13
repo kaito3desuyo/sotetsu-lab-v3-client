@@ -5,7 +5,7 @@ import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { FormationDetailsDto } from '../../usecase/dtos/formation-details.dto';
-import { FormationsDtoBuilder } from '../builders/formation.dto.builder';
+import { FormationDtoBuilder } from '../builders/formation.dto.builder';
 import { FormationModel } from '../models/formation.model';
 
 @Injectable({ providedIn: 'root' })
@@ -32,7 +32,7 @@ export class FormationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => FormationsDtoBuilder.buildFromModels(res.body)));
+            .pipe(map((res) => FormationDtoBuilder.buildFromModels(res.body)));
     }
 
     findManyBySpecificPeriod(params: {
@@ -53,6 +53,6 @@ export class FormationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => FormationsDtoBuilder.buildFromModels(res.body)));
+            .pipe(map((res) => FormationDtoBuilder.buildFromModels(res.body)));
     }
 }

@@ -6,4 +6,6 @@ export const CalendarDateDtoBuilder = {
     buildFromModel: (model: CalendarDateModel): CalendarDateDetailsDto => {
         return classTransformer(model, CalendarDateDetailsDto);
     },
+    buildFromModels: (models: CalendarDateModel[]): CalendarDateDetailsDto[] =>
+        models.map((model) => CalendarDateDtoBuilder.buildFromModel(model)),
 } as const;

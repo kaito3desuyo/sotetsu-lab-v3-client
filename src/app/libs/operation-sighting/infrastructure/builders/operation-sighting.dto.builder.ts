@@ -14,14 +14,10 @@ export const OperationSightingDtoBuilder = {
             classTransformerOptions,
         );
     },
-} as const;
-
-export const OperationSightingsDtoBuilder = {
     buildFromModels: (
         models: OperationSightingModel[],
-    ): OperationSightingDetailsDto[] => {
-        return models.map((model) =>
+    ): OperationSightingDetailsDto[] =>
+        models.map((model) =>
             OperationSightingDtoBuilder.buildFromModel(model),
-        );
-    },
+        ),
 } as const;

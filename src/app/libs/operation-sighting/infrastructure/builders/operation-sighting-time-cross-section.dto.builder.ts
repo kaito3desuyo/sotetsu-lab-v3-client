@@ -8,4 +8,10 @@ export const OperationSightingTimeCrossSectionDtoBuilder = {
     ): OperationSightingTimeCrossSectionDto => {
         return classTransformer(model, OperationSightingTimeCrossSectionDto);
     },
+    buildFromModels: (
+        models: OperationSightingTimeCrossSectionModel[],
+    ): OperationSightingTimeCrossSectionDto[] =>
+        models.map((model) =>
+            OperationSightingTimeCrossSectionDtoBuilder.buildFromModel(model),
+        ),
 } as const;

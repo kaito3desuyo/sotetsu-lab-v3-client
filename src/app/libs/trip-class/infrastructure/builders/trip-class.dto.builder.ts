@@ -12,10 +12,6 @@ export const TripClassDtoBuilder = {
             classTransformerOptions,
         );
     },
-} as const;
-
-export const TripClassesDtoBuilder = {
-    buildFromModels: (models: TripClassModel[]): TripClassDetailsDto[] => {
-        return models.map((model) => TripClassDtoBuilder.buildFromModel(model));
-    },
+    buildFromModels: (models: TripClassModel[]): TripClassDetailsDto[] =>
+        models.map((model) => TripClassDtoBuilder.buildFromModel(model)),
 } as const;

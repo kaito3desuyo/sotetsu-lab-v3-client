@@ -3,7 +3,15 @@ import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-curren
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 
 export const OperationCurrentPositionDtoBuilder = {
-    buildFromModel: (model: OperationCurrentPositionModel) => {
+    buildFromModel: (
+        model: OperationCurrentPositionModel,
+    ): OperationCurrentPositionDto => {
         return classTransformer(model, OperationCurrentPositionDto);
     },
+    buildFromModels: (
+        models: OperationCurrentPositionModel[],
+    ): OperationCurrentPositionDto[] =>
+        models.map((model) =>
+            OperationCurrentPositionDtoBuilder.buildFromModel(model),
+        ),
 } as const;

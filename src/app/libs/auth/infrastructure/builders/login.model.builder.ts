@@ -16,7 +16,7 @@ const transformer = <Source, Target>(
 };
 
 export const LoginModelBuilder = {
-    buildFromDto: (dto: LoginDto) => {
+    buildFromLoginDto: (dto: LoginDto) => {
         return transformer(dto, LoginModel);
     },
 } as const;

@@ -6,4 +6,6 @@ export const ServiceAgenciesDtoBuilder = {
     buildFromModel: (model: ServiceAgenciesModel): ServiceAgenciesDto => {
         return classTransformer(model, ServiceAgenciesDto);
     },
+    buildFromModels: (models: ServiceAgenciesModel[]): ServiceAgenciesDto[] =>
+        models.map((model) => ServiceAgenciesDtoBuilder.buildFromModel(model)),
 } as const;

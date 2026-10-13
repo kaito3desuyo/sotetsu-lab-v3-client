@@ -12,10 +12,6 @@ export const OperationDtoBuilder = {
             classTransformerOptions,
         );
     },
-} as const;
-
-export const OperationsDtoBuilder = {
-    buildFromModels: (models: OperationModel[]): OperationDetailsDto[] => {
-        return models.map((model) => OperationDtoBuilder.buildFromModel(model));
-    },
+    buildFromModels: (models: OperationModel[]): OperationDetailsDto[] =>
+        models.map((model) => OperationDtoBuilder.buildFromModel(model)),
 } as const;

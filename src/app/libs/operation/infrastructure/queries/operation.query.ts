@@ -14,12 +14,9 @@ import { NextSegmentCandidateDto } from '../../usecase/dtos/next-segment-candida
 import { OperationItineraryLinkDto } from '../../usecase/dtos/operation-itinerary-link.dto';
 import { OperationGroupDto } from '../../usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
-import {
-    OperationDtoBuilder,
-    OperationsDtoBuilder,
-} from '../builders/operation.dto.builder';
+import { OperationDtoBuilder } from '../builders/operation.dto.builder';
 import { OperationCurrentPositionDtoBuilder } from '../builders/operation-current-position.dto.builder';
-import { OperationGroupsDtoBuilder } from '../builders/operation-group.dto.builder';
+import { OperationGroupDtoBuilder } from '../builders/operation-group.dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
 import { OperationGroupModel } from '../models/operation-group.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
@@ -84,7 +81,7 @@ export class OperationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => OperationsDtoBuilder.buildFromModels(res.body)));
+            .pipe(map((res) => OperationDtoBuilder.buildFromModels(res.body)));
     }
 
     findManyBySpecificPeriod(params: {
@@ -108,7 +105,7 @@ export class OperationQuery {
                     ),
                 forceReload,
             })
-            .pipe(map((res) => OperationsDtoBuilder.buildFromModels(res.body)));
+            .pipe(map((res) => OperationDtoBuilder.buildFromModels(res.body)));
     }
 
     findOneWithCurrentPosition(params: {
@@ -265,7 +262,7 @@ export class OperationQuery {
             })
             .pipe(
                 map((res) =>
-                    OperationGroupsDtoBuilder.buildFromModels(res.body),
+                    OperationGroupDtoBuilder.buildFromModels(res.body),
                 ),
             );
     }

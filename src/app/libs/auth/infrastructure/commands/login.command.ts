@@ -11,7 +11,7 @@ export class LoginCommand {
     readonly #baseUrl = `${environment.backendUrl}/auth`;
 
     login(dto: LoginDto): Observable<void> {
-        const model = LoginModelBuilder.buildFromDto(dto);
+        const model = LoginModelBuilder.buildFromLoginDto(dto);
         return this.#http
             .post<void>(`${this.#baseUrl}/login`, model)
             .pipe(map(() => undefined));

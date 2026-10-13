@@ -16,7 +16,7 @@ const transformer = <Source, Target>(
 };
 
 export const UserModelBuilder = {
-    buildFromDto: (dto: RegisterUserDto) => {
+    buildFromRegisterUserDto: (dto: RegisterUserDto) => {
         return transformer(dto, UserModel);
     },
 } as const;

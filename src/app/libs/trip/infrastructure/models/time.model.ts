@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { StationModel } from 'src/app/libs/station/infrastructure/models/station.model';
+import { StopModel } from 'src/app/libs/station/infrastructure/models/stop.model';
 import { TripOperationListModel } from './trip-operation-list.model';
 import { TripModel } from './trip.model';
 
@@ -52,7 +53,7 @@ export class TimeModel {
     station?: StationModel;
 
     @Expose()
-    stop?: any;
+    stop?: StopModel;
 
     @Expose()
     @Type(() => TripOperationListModel)

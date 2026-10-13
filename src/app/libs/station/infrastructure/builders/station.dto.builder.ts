@@ -12,4 +12,6 @@ export const StationDtoBuilder = {
             classTransformerOptions,
         );
     },
+    buildFromModels: (models: StationModel[]): StationDetailsDto[] =>
+        models.map((model) => StationDtoBuilder.buildFromModel(model)),
 } as const;

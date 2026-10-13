@@ -16,4 +16,6 @@ export const TripBlockDtoBuilder = {
             classTransformerOptions,
         );
     },
+    buildFromModels: (models: TripBlockModel[]): TripBlockDetailsDto[] =>
+        models.map((model) => TripBlockDtoBuilder.buildFromModel(model)),
 } as const;

@@ -6,4 +6,6 @@ export const RouteStationsDtoBuilder = {
     buildFromModel: (model: RouteStationsModel): RouteStationsDto => {
         return classTransformer(model, RouteStationsDto);
     },
+    buildFromModels: (models: RouteStationsModel[]): RouteStationsDto[] =>
+        models.map((model) => RouteStationsDtoBuilder.buildFromModel(model)),
 } as const;

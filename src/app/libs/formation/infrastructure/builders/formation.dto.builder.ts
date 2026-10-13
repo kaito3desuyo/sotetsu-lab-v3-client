@@ -12,10 +12,6 @@ export const FormationDtoBuilder = {
             classTransformerOptions,
         );
     },
-} as const;
-
-export const FormationsDtoBuilder = {
-    buildFromModels: (models: FormationModel[]): FormationDetailsDto[] => {
-        return models.map((model) => FormationDtoBuilder.buildFromModel(model));
-    },
+    buildFromModels: (models: FormationModel[]): FormationDetailsDto[] =>
+        models.map((model) => FormationDtoBuilder.buildFromModel(model)),
 } as const;

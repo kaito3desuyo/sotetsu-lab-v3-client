@@ -12,4 +12,6 @@ export const ServiceDtoBuilder = {
             classTransformerOptions,
         );
     },
+    buildFromModels: (models: ServiceModel[]): ServiceDetailsDto[] =>
+        models.map((model) => ServiceDtoBuilder.buildFromModel(model)),
 } as const;
