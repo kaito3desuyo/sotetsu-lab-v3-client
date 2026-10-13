@@ -79,7 +79,10 @@ export class OperationTableComponent {
     );
 
     readonly isEmpty = computed(
-        () => !!this.calendar() && this.operationTrips().length === 0,
+        () =>
+            !this.isLoading() &&
+            !!this.calendar() &&
+            this.operationTrips().length === 0,
     );
 
     readonly filterActive = computed(
