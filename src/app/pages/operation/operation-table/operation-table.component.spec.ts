@@ -155,6 +155,28 @@ describe('OperationTableComponent', () => {
         subscription.unsubscribe();
     });
 
+    describe('isEmpty: 運用が 0 件のときの案内', () => {
+        beforeEach(() => {
+            createComponent();
+            OperationTableStore.setCalendar({ calendarId: 'c1' } as never);
+            OperationTableStore.setOperationTrips([]);
+        });
+
+        afterEach(() => {
+            OperationTableStore.setCalendar(null);
+        });
+
+        it('取得中は出さない（届く前に「登録されていません」と見せない）', () => {
+            OperationTableStore.enableLoading();
+
+            expect(component.isEmpty()).toBe(false);
+        });
+
+        it('取得が終わって 0 件なら出す', () => {
+            expect(component.isEmpty()).toBe(true);
+        });
+    });
+
     it('placeholderHeight: 見出しと余白 63px + 列車 32px + つなぎの行 8px', () => {
         createComponent();
         const trip = (tripDirection: number, depotIn = false) => ({
