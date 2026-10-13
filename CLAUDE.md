@@ -45,7 +45,7 @@ layout/         ← シェルレイアウトコンポーネント
 外部からは `usecase/` のみを参照する。
 
 - `usecase/` — ドメインの公開 API。`*.service.ts` ファサード、DTO（`dtos/`）、ビルダー、ドメインの enum・定数（`enums/`・`constants/`）を提供する。
-- `infrastructure/` — HTTP 実装。`queries/` が `HttpClient` 呼び出しを保持し、`models/` が API レスポンス型、`builders/` がモデル → DTO 変換を担う。
+- `infrastructure/` — HTTP 実装。`queries/` が `HttpClient` 呼び出しを保持し、`models/` が API レスポンス型、`builders/` がモデル → DTO 変換を担う。class-transformer は使わない。DTO・Model は interface で、builder が `id` ↔ `xxxId` を手で付け替える（ADR-0006）。
 
 ページコードは `infrastructure/` を直接インポートしてはならない。
 
