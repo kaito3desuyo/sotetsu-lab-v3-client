@@ -112,6 +112,14 @@ export const TimeDtoBuilder = {
 - 入力画面の `toTripDtos`（`pages/timetable/timetable-edit-form/utils/timetable-edit-form-to-trip-dtos.util.ts`）も、`...trip`・`...time` のスプレッドと `plainToClass` をやめ、Create/Replace の項目を並べたオブジェクトリテラルを返す。
 - 目撃の投稿・無効化・復元（`OperationSightingCommand`）は DTO をそのまま送っていて、変換を通らない。型を interface にするだけで済む。
 
+### 3-1. 更新で運用区間の id が落ちている不具合（同じブランチで直す）
+
+今の書き込み経路を実際に動かして、API に送る本文を取った（登録・コピー・更新の 5 通り）。更新では、列車と時刻の `id` は届いているのに、**運用区間の `id` だけが落ちていた**。
+
+- 原因：`toTripDtos` は区間の `id` を残している。だが `TripBlockModelBuilder` が `plainToClass(TripBlockModel, …)` するとき、`TripOperationListModel` の `@Expose({ name: 'tripOperationListId' })` が `tripOperationListId` という名前のキーを探す。区間のキーは `id` なので拾えない。
+- 影響：API（`ReplaceTripOperationListDto.id`・`clearChangingNextLinks`）は `id` があることを前提にしている。届かないと区間を作り直し、ほかの区間からこの区間への「次の運用」のつながりが切れうる。入力画面のコメントが避けようとしている事態そのものである。本番で実害が出たかは調べていない。
+- 対応：新しい `TripBlockModelBuilder.buildFromReplaceDto` で区間の `id` を送る。refactor のコミットとは分けて `fix` のコミットにする。refactor のコミットの時点では今と同じ本文（区間の `id` なし）を保ち、新旧比較を完全一致で通す。そのあとの `fix` のコミットで `id` を足す。
+
 ### 4. 消すもの
 
 - `src/app/core/configs/class-transformer.ts`
@@ -132,8 +140,8 @@ export const TimeDtoBuilder = {
    - 読み取り：主キーの付け替えと、入れ子の各階層の付け替え
    - 書き込み：Create に ID が載らない、Replace は `xxxId` → `id`、フォームにしか無い項目が載らない
 2. **本番データでの新旧比較（読み取り）**：手元のブラウザで閲覧用の全ページを回り、API の応答を `.context/` に保存する。それを master の builder（旧）とブランチの builder（新）の両方に通す。そして「旧の出力にあるキーと値が、新の出力に全部ある」ことを包含で確かめる。新は余分なキーを素通しにするので、完全一致ではなく包含で見る。
-3. **新旧比較（書き込み）**：入力画面の spec にある列車の値を、旧と新の `toTripDtos` → `TripBlockModelBuilder` に通す。API に送る本文が JSON で一致することを確かめる。登録・更新・コピーの 3 通りでやる。
-4. **実際の保存テスト**：手元の画面から「2021年10月JR渋谷駅工事臨時ダイヤ」（`27792766-0031-4b89-9c32-23eea267cbbc`）に登録・更新・コピーを行い、保存された中身を DB で確かめる。列番は `9999T` などそのダイヤに無いものを使う。後始末の SQL（`trip_operation_lists` → `trips` → `trip_blocks` の順）はユーザーに渡して流してもらう。
+3. **新旧比較（書き込み）**：同じフォームの値を、旧と新の `toTripDtos` → `TripBlockModelBuilder` に通す。API に送る本文が JSON で一致することを確かめる。登録（運用なし・あり）・コピー（元の ID が残っている）・更新（区間 1 つ・2 つ）の 5 通りでやる。旧の本文は master の時点で取って `.context/` に保存しておく。3-1 の `fix` のあとは、更新の区間に `id` が増える差分だけが出ることを確かめる。
+4. **実際の保存テスト**：手元の画面から「2021年10月JR渋谷駅工事臨時ダイヤ」（`27792766-0031-4b89-9c32-23eea267cbbc`）に登録・更新・コピーを行い、保存された中身を DB で確かめる。更新では、区間の `id` が変わらないこと、ほかの区間からのつながり（`next_trip_operation_list_id`）が残ることも確かめる。列番は `9999T` などそのダイヤに無いものを使う。後始末の SQL（`trip_operation_lists` → `trips` → `trip_blocks` の順）はユーザーに渡して流してもらう。
 5. **全体**：`npx jest` 全件、`ng build`、`npm run lint` が通る。
 6. **効果の測定（ローカルで完結）**
    - master とブランチを、本番と同じ最適化（`optimization` 有効・source map なし）でビルドする。API の向き先はどちらも手元の API（`http://localhost:3000`、本番 DB を読む）にそろえる。ビルドの仕方（CLI フラグで上書きするか、計測用の構成を足すか）は計画で決める。
