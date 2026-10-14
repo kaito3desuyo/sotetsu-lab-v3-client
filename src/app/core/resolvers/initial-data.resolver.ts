@@ -12,6 +12,7 @@ import { TodaysFormationListStateStore } from 'src/app/global-states/todays-form
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
 import { TokenStateStore } from 'src/app/global-states/token.state';
 import { UserStateStore } from 'src/app/global-states/user.state';
+import { preloadRouteComponents } from './preload-route-components';
 
 export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const tokenStateStore = inject(TokenStateStore);
@@ -24,6 +25,9 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const todaysOperationListStateStore = inject(TodaysOperationListStateStore);
     const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
     const initializeStateStore = inject(InitializeStateStore);
+
+    // router は resolver の後で loadComponent を呼ぶので、ページの chunk を先に取り始めておく
+    preloadRouteComponents(state.root);
 
     // 画面を移るたびに確かめる（使っている途中のログイン切れに気づくため）。
     // 開いた直後の replaceUrl で二度走らないよう、ROUTE_CHECK_MAX_AGE_MS の間は使い回す。
