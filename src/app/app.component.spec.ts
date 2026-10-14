@@ -2,12 +2,13 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
+import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
 import { UserStateQuery } from './global-states/user.state';
 import {
     QueryInvalidationTag,
@@ -21,8 +22,10 @@ describe('AppComponent', () => {
     let role$: BehaviorSubject<string | null>;
     let setUserProperties: jest.Mock;
     let sendEvent: jest.Mock;
+    let tokenFetch: jest.Mock;
 
     beforeEach(async () => {
+        tokenFetch = jest.fn(() => of(undefined));
         socketMessages = new Subject<unknown>();
         isLoggedIn$ = new BehaviorSubject<boolean>(false);
         role$ = new BehaviorSubject<string | null>(null);
@@ -44,6 +47,11 @@ describe('AppComponent', () => {
                     },
                 ]),
                 { provide: AppUpdateService, useValue: {} },
+                { provide: TokenStateStore, useValue: { fetch: tokenFetch } },
+                {
+                    provide: TokenStateQuery,
+                    useValue: { isExpired: true },
+                },
                 {
                     provide: GoogleAnalyticsService,
                     useValue: {
@@ -118,5 +126,23 @@ describe('AppComponent', () => {
         expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
             error_message: 'Error: 壊れた',
         });
+    });
+
+    it('トークンの取り直しが 1 回失敗しても、次の 10 秒でまた取り直す', async () => {
+        jest.useFakeTimers();
+        try {
+            tokenFetch.mockImplementationOnce(() =>
+                throwError(() => new Error('offline')),
+            );
+            TestBed.createComponent(AppComponent);
+
+            await jest.advanceTimersByTimeAsync(10_000);
+            expect(tokenFetch).toHaveBeenCalledTimes(1);
+
+            await jest.advanceTimersByTimeAsync(10_000);
+            expect(tokenFetch).toHaveBeenCalledTimes(2);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 });

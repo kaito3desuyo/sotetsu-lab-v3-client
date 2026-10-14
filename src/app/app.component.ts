@@ -16,8 +16,8 @@ import {
     NavigationStart,
     Router,
 } from '@angular/router';
-import { combineLatest, interval } from 'rxjs';
-import { filter, first, map, switchMap } from 'rxjs/operators';
+import { combineLatest, EMPTY, interval } from 'rxjs';
+import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
@@ -127,7 +127,10 @@ export class AppComponent implements OnInit, OnDestroy {
             .pipe(
                 map(() => this.#tokenStateQuery.isExpired),
                 filter((bool) => !!bool),
-                switchMap(() => this.#tokenStateStore.fetch()),
+                // 1 回の失敗で流れごと止まらないよう、その回だけ捨てて次の 10 秒で取り直す
+                switchMap(() =>
+                    this.#tokenStateStore.fetch().pipe(catchError(() => EMPTY)),
+                ),
                 takeUntilDestroyed(this.#destroyRef),
             )
             .subscribe();
