@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 
@@ -22,6 +23,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 })
 export class OperationRealTimeControllerComponent {
     readonly #operationRealTimeService = inject(OperationRealTimeService);
+    readonly #notification = inject(NotificationService);
 
     /** 再読み込みボタンの真横に出す最終更新時刻（ユーザー指示 2026-08-22）。 */
     readonly finalUpdateTime = toSignal(
@@ -52,26 +54,32 @@ export class OperationRealTimeControllerComponent {
 
     async reload(): Promise<void> {
         OperationRealTimeStore.enableLoading();
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
-                {
+        try {
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
+                    {
+                        forceReload: true,
+                    },
+                ),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
+                    {
+                        forceReload: true,
+                    },
+                ),
+            );
+            await lastValueFrom(
+                this.#operationRealTimeService.fetchSightingHistories({
                     forceReload: true,
-                },
-            ),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
-                {
-                    forceReload: true,
-                },
-            ),
-        );
-        await lastValueFrom(
-            this.#operationRealTimeService.fetchSightingHistories({
-                forceReload: true,
-            }),
-        );
-        OperationRealTimeStore.disableLoading();
-        OperationRealTimeStore.setFinalUpdateTime();
+                }),
+            );
+            OperationRealTimeStore.setFinalUpdateTime();
+        } catch (error) {
+            console.error(error);
+            this.#notification.open('データの取得に失敗しました', 'OK');
+        } finally {
+            OperationRealTimeStore.disableLoading();
+        }
     }
 }

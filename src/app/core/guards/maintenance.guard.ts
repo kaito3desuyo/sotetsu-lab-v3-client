@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
 import {
     MaintenanceStateQuery,
     MaintenanceStateStore,
@@ -11,7 +12,9 @@ export const maintenanceGuard: CanActivateFn = async (route, state) => {
     const maintenanceStateStore = inject(MaintenanceStateStore);
     const maintenanceStateQuery = inject(MaintenanceStateQuery);
 
-    await lastValueFrom(maintenanceStateStore.fetch());
+    await lastValueFrom(
+        maintenanceStateStore.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS }),
+    );
 
     const isMaintenance = maintenanceStateQuery.isMaintenance;
 

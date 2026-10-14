@@ -1,8 +1,8 @@
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
 import { createStore, select, setProps, withProps } from '@ngneat/elf';
 import { map, Observable, tap } from 'rxjs';
+import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 
 type State = {
@@ -22,10 +22,26 @@ const state = createStore(
 export class MaintenanceStateStore {
     readonly #handler = inject(HttpBackend);
     readonly #http = new HttpClient(this.#handler);
+    readonly #cache = new QueryCache();
 
-    fetch(): Observable<void> {
-        return this.#http
-            .get<State>(environment.backendUrl + '/maintenance')
+    /**
+     * maxAgeMs を渡したとき（maintenanceGuard）だけ、届いてからその間は使い回す。
+     * 渡さなければ必ず取りに行く。
+     */
+    fetch(options?: { maxAgeMs?: number }): Observable<void> {
+        const { maxAgeMs } = options ?? {};
+
+        return this.#cache
+            .get({
+                name: 'fetch',
+                params: {},
+                fetch: () =>
+                    this.#http.get<State>(
+                        environment.backendUrl + '/maintenance',
+                    ),
+                forceReload: maxAgeMs === undefined,
+                maxAgeMs,
+            })
             .pipe(
                 tap((v) => {
                     state.update(setProps(v));

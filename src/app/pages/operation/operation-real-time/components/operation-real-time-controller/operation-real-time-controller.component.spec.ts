@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { OperationRealTimeControllerComponent } from './operation-real-time-controller.component';
@@ -9,6 +10,8 @@ describe('OperationRealTimeControllerComponent', () => {
     let component: OperationRealTimeControllerComponent;
     let fixture: ComponentFixture<OperationRealTimeControllerComponent>;
     let calls: string[];
+    let notification: { open: jest.Mock };
+    let service: Record<string, jest.Mock>;
 
     beforeEach(async () => {
         calls = [];
@@ -18,20 +21,19 @@ describe('OperationRealTimeControllerComponent', () => {
                 return of(undefined);
             });
 
+        notification = { open: jest.fn() };
+        service = {
+            fetchOperationSightingTimeCrossSections: fetcher('operation'),
+            fetchFormationSightingTimeCrossSections: fetcher('formation'),
+            fetchSightingHistories: fetcher('histories'),
+        };
+
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeControllerComponent],
             providers: [
                 provideNoopAnimations(),
-                {
-                    provide: OperationRealTimeService,
-                    useValue: {
-                        fetchOperationSightingTimeCrossSections:
-                            fetcher('operation'),
-                        fetchFormationSightingTimeCrossSections:
-                            fetcher('formation'),
-                        fetchSightingHistories: fetcher('histories'),
-                    },
-                },
+                { provide: OperationRealTimeService, useValue: service },
+                { provide: NotificationService, useValue: notification },
             ],
         }).compileComponents();
 
@@ -66,5 +68,22 @@ describe('OperationRealTimeControllerComponent', () => {
         expect(component.isEnableAutoReload()).toBe(false);
         expect(component.isVisibleSightingHistories()).toBe(true);
         expect(component.isVisibleCurrentPosition()).toBe(true);
+    });
+
+    it('再読み込みが失敗したら、読み込み中が残らず失敗を知らせ、最終更新時刻は進めない', async () => {
+        service['fetchFormationSightingTimeCrossSections'].mockImplementation(
+            () => throwError(() => new Error('offline')),
+        );
+
+        await component.reload();
+
+        expect(await firstValueFrom(OperationRealTimeStore.isLoading$)).toBe(
+            false,
+        );
+        expect(notification.open).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+        expect(component.finalUpdateTime()).toBe(0);
     });
 });

@@ -167,10 +167,15 @@ export class OperationRealTimeComponent {
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
-                );
-                OperationRealTimeStore.disableLoading();
+                try {
+                    await lastValueFrom(
+                        this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
+                    );
+                } catch {
+                    // 毎秒通知しないよう黙って捨て、次の 1 秒で取り直す
+                } finally {
+                    OperationRealTimeStore.disableLoading();
+                }
             });
         // });
 
@@ -179,27 +184,15 @@ export class OperationRealTimeComponent {
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
                 OperationRealTimeStore.enableLoading();
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
-                        {
-                            forceReload: true,
-                        },
-                    ),
-                );
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
-                        {
-                            forceReload: true,
-                        },
-                    ),
-                );
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchSightingHistories({
-                        forceReload: true,
-                    }),
-                );
-                OperationRealTimeStore.disableLoading();
-                OperationRealTimeStore.setFinalUpdateTime();
+                try {
+                    await this.#reloadSightings();
+                    OperationRealTimeStore.setFinalUpdateTime();
+                } catch (error) {
+                    console.error(error);
+                    this.#notification.open('データの取得に失敗しました', 'OK');
+                } finally {
+                    OperationRealTimeStore.disableLoading();
+                }
             });
 
         // 他人が運用目撃情報を投稿したとき
@@ -211,28 +204,39 @@ export class OperationRealTimeComponent {
 
                 this.#notification.open('更新中...', 'OK');
                 OperationRealTimeStore.enableLoading();
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
-                        {
-                            forceReload: true,
-                        },
-                    ),
-                );
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
-                        {
-                            forceReload: true,
-                        },
-                    ),
-                );
-                await lastValueFrom(
-                    this.#operationRealTimeService.fetchSightingHistories({
-                        forceReload: true,
-                    }),
-                );
-                OperationRealTimeStore.disableLoading();
-                OperationRealTimeStore.setFinalUpdateTime();
-                this.#notification.open('データが更新されました', 'OK');
+                try {
+                    await this.#reloadSightings();
+                    OperationRealTimeStore.setFinalUpdateTime();
+                    this.#notification.open('データが更新されました', 'OK');
+                } catch (error) {
+                    console.error(error);
+                    this.#notification.open('データの取得に失敗しました', 'OK');
+                } finally {
+                    OperationRealTimeStore.disableLoading();
+                }
             });
+    }
+
+    /** 目撃の断面と履歴を、キャッシュを使わず取り直す */
+    async #reloadSightings(): Promise<void> {
+        await lastValueFrom(
+            this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
+                {
+                    forceReload: true,
+                },
+            ),
+        );
+        await lastValueFrom(
+            this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(
+                {
+                    forceReload: true,
+                },
+            ),
+        );
+        await lastValueFrom(
+            this.#operationRealTimeService.fetchSightingHistories({
+                forceReload: true,
+            }),
+        );
     }
 }

@@ -25,6 +25,11 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
+              {
+                "glob": "material-icons-latin-400-normal.woff*",
+                "input": "node_modules/@fontsource/material-icons/files",
+                "output": "assets/fonts"
+              },
               "src/manifest.webmanifest",
               "src/robots.txt",
               "src/sitemap.xml"

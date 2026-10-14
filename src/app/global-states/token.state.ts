@@ -21,9 +21,9 @@ const state = createStore(
 export class TokenStateStore {
     readonly #authService = inject(AuthService);
 
-    fetch(): Observable<void> {
+    fetch(options?: { maxAgeMs?: number }): Observable<void> {
         return of(undefined).pipe(
-            mergeMap(() => this.#authService.getToken()),
+            mergeMap(() => this.#authService.getToken(options)),
             tap((v) => {
                 state.update(setProps(v));
             }),

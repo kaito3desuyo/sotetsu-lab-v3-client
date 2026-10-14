@@ -22,10 +22,14 @@ const state = createStore(
 export class UserStateStore {
     readonly #userService = inject(UserService);
 
-    fetch(): Observable<void> {
-        return this.#userService.getProfile().pipe(
+    fetch(options?: { maxAgeMs?: number }): Observable<void> {
+        return this.#userService.getProfile(options).pipe(
             tap((user) => {
-                state.update(setProps(user));
+                if (user) {
+                    state.update(setProps(user));
+                } else {
+                    state.reset();
+                }
             }),
             map(() => undefined),
             catchError(() => {

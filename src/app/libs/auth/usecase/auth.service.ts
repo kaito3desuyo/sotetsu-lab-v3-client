@@ -20,7 +20,7 @@ export class AuthService {
         return this.#logoutCommand.logout();
     }
 
-    getToken(): Observable<TokenDetailsDto> {
-        return this.#tokenQuery.getToken();
+    getToken(options?: { maxAgeMs?: number }): Observable<TokenDetailsDto> {
+        return this.#tokenQuery.getToken(options);
     }
 }
