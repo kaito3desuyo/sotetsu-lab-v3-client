@@ -16,7 +16,7 @@
             href="./assets/icons/favicon.ico"
         />
         <!-- 別 origin への接続（DNS・TCP・TLS）を JS の起動と重ねる。docs/adr/0008 -->
-        <!-- v3 API は認証ヘッダー付きの CORS の fetch なので crossorigin が要る（無いと作った接続が使われない） -->
+        <!-- v3 API は cookie を送らない CORS の fetch なので、anonymous の接続を作る crossorigin が要る（無いと作った接続が使われない） -->
         <link rel="preconnect" href="https://api.sotetsu-lab.com" crossorigin />
         <!-- fonts.gstatic.com の preconnect は、ビルドが Quicksand の CSS を埋め込むときに自分で足す -->
         <link

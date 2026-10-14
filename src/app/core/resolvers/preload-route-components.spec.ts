@@ -57,6 +57,28 @@ describe('preloadRouteComponents', () => {
         expect(catchSpy).toHaveBeenCalledTimes(1);
     });
 
+    it('Promise でない thenable が返っても、取り込んで拒否を握る', async () => {
+        const thenable = {
+            then: jest.fn(
+                (_resolve: (v: unknown) => void, reject: (e: Error) => void) =>
+                    reject(new Error('chunk load failed')),
+            ),
+        };
+
+        preloadRouteComponents(
+            snapshot(null, [
+                snapshot({
+                    path: '',
+                    loadComponent: () =>
+                        thenable as unknown as Promise<new () => unknown>,
+                }),
+            ]),
+        );
+        await flush();
+
+        expect(thenable.then).toHaveBeenCalledTimes(1);
+    });
+
     it('loadComponent が同期で例外を投げても外に漏らさない', () => {
         expect(() =>
             preloadRouteComponents(
