@@ -2,7 +2,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
@@ -128,19 +128,14 @@ describe('AppComponent', () => {
         });
     });
 
-    it('トークンの取り直しが 1 回失敗しても、次の 10 秒でまた取り直す', async () => {
+    it('期限が切れていても、時間で勝手にトークンを取り直さない（取り直しは送る直前と 401 のときに interceptor がする）', async () => {
         jest.useFakeTimers();
         try {
-            tokenFetch.mockImplementationOnce(() =>
-                throwError(() => new Error('offline')),
-            );
             TestBed.createComponent(AppComponent);
 
-            await jest.advanceTimersByTimeAsync(10_000);
-            expect(tokenFetch).toHaveBeenCalledTimes(1);
+            await jest.advanceTimersByTimeAsync(60_000);
 
-            await jest.advanceTimersByTimeAsync(10_000);
-            expect(tokenFetch).toHaveBeenCalledTimes(2);
+            expect(tokenFetch).not.toHaveBeenCalled();
         } finally {
             jest.useRealTimers();
         }

@@ -67,6 +67,33 @@ describe('TokenQuery', () => {
         controller.verify();
     });
 
+    it('bypassHttpCache を渡すと、毎回違う乱数のクエリを付けて取りに行く（使い回された応答を避ける）', () => {
+        const { query, controller } = setup();
+
+        query.getToken({ bypassHttpCache: true }).subscribe();
+        query.getToken({ bypassHttpCache: true }).subscribe();
+
+        const reqs = controller.match((r) => r.url === url);
+        expect(reqs).toHaveLength(2);
+        const [a, b] = reqs.map((r) => r.request.params.get('r'));
+        expect(a).toMatch(/^[0-9a-z]+$/);
+        expect(b).toMatch(/^[0-9a-z]+$/);
+        expect(a).not.toBe(b);
+        reqs.forEach((r) => r.flush(token));
+        controller.verify();
+    });
+
+    it('bypassHttpCache を渡さなければ、クエリは付けない', () => {
+        const { query, controller } = setup();
+
+        query.getToken().subscribe();
+
+        const req = controller.expectOne(url);
+        expect(req.request.params.keys()).toEqual([]);
+        req.flush(token);
+        controller.verify();
+    });
+
     it('渡さずに取った値は、続く maxAgeMs 付きの呼び出しで使い回される（ログイン直後の画面移動）', () => {
         const { query, controller } = setup();
         const guest = { accessToken: null, tokenType: null, expiresAt: null };
