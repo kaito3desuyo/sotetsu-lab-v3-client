@@ -1,7 +1,5 @@
 import {
-    ApplicationRef,
     Component,
-    DestroyRef,
     inject,
     OnDestroy,
     OnInit,
@@ -16,14 +14,13 @@ import {
     NavigationStart,
     Router,
 } from '@angular/router';
-import { combineLatest, EMPTY, interval } from 'rxjs';
-import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
-import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
 import { UserStateQuery } from './global-states/user.state';
 import { LayoutComponent } from './layout/layout.component';
 import { LoadingService } from './shared/loading/loading.service';
@@ -35,8 +32,6 @@ import { LoadingService } from './shared/loading/loading.service';
     imports: [LayoutComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
-    readonly #appRef = inject(ApplicationRef);
-    readonly #destroyRef = inject(DestroyRef);
     readonly #router = inject(Router);
     readonly #title = inject(Title);
     readonly #appUpdateService = inject(AppUpdateService);
@@ -45,8 +40,6 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #gaService = inject(GoogleAnalyticsService);
     readonly #loadingService = inject(LoadingService);
     readonly #notificationService = inject(NotificationService);
-    readonly #tokenStateStore = inject(TokenStateStore);
-    readonly #tokenStateQuery = inject(TokenStateQuery);
     readonly #userStateQuery = inject(UserStateQuery);
 
     constructor() {
@@ -121,20 +114,6 @@ export class AppComponent implements OnInit, OnDestroy {
                     'OK',
                 );
             });
-
-        // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
-        interval(1000 * 10)
-            .pipe(
-                map(() => this.#tokenStateQuery.isExpired),
-                filter((bool) => !!bool),
-                // 1 回の失敗で流れごと止まらないよう、その回だけ捨てて次の 10 秒で取り直す
-                switchMap(() =>
-                    this.#tokenStateStore.fetch().pipe(catchError(() => EMPTY)),
-                ),
-                takeUntilDestroyed(this.#destroyRef),
-            )
-            .subscribe();
-        // });
     }
 
     ngOnInit(): void {
