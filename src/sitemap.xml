@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> 
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
-		<loc>https://v3.sotetsu-lab.com</loc>
+		<loc>https://v3.sotetsu-lab.com/</loc>
 	</url>
 	<url>
 		<loc>https://v3.sotetsu-lab.com/operation/real-time</loc>
@@ -14,5 +14,20 @@
 	</url>
 	<url>
 		<loc>https://v3.sotetsu-lab.com/operation/route-diagram</loc>
+	</url>
+	<url>
+		<loc>https://v3.sotetsu-lab.com/timetable/all-line</loc>
+	</url>
+	<url>
+		<loc>https://v3.sotetsu-lab.com/timetable/station</loc>
+	</url>
+	<url>
+		<loc>https://v3.sotetsu-lab.com/train-diagram</loc>
+	</url>
+	<url>
+		<loc>https://v3.sotetsu-lab.com/train-location</loc>
+	</url>
+	<url>
+		<loc>https://v3.sotetsu-lab.com/library/vehicle</loc>
 	</url>
 </urlset>
