@@ -27,7 +27,8 @@
 ### v3 API への preconnect
 
 - `index.html` に `<link rel="preconnect" href="https://api.sotetsu-lab.com" crossorigin />` を足した。
-- `crossorigin` は外せない。v3 API は、認証ヘッダー付きの CORS の fetch で呼んでいる。これが無いと、作った接続が使われない。
+- `crossorigin`（anonymous）は外せない。ブラウザは、fetch の credentials mode ごとに接続を分ける。v3 API は、cookie を送らない（credentials を指定しない）CORS の fetch で呼んでいるので、anonymous の接続を使う。`crossorigin` が無い preconnect は credentials 付きの接続になり、使われない。
+- 将来 v3 API の呼び出しを `withCredentials`（cookie を送る形）に変えたら、この preconnect は接続が合わなくなる。そのときは `crossorigin="use-credentials"` に変える。
 - `fonts.gstatic.com` には書かない。Quicksand の CSS を index.html に埋め込むとき、ビルドが自分で preconnect を足す（master の出力にもすでにある）。
 
 ### ページの chunk の先読み
@@ -35,7 +36,8 @@
 - `core/resolvers/preload-route-components.ts` の `preloadRouteComponents(snapshot)` を新しく作った。行き先のルートを子孫まで辿り、`loadComponent()` を待たずに呼ぶ。
 - `initialDataResolver` の先頭で、`state.root` を渡して呼ぶ。`loadChildren` は resolver より前の段で読み終わっている。なので、この時点で行き先の葉のルートまでそろっている。
 - `import()` は、ブラウザがモジュールを使い回す。router が後で呼んでも、すぐ返る。
-- 失敗（reject・同期の例外）は握りつぶす。router が自分で取り直し、いつもどおりのエラーになる。
+- 失敗（reject・同期の例外）は握りつぶし、エラーの扱いは router 自身の読み込みに任せる。router は `loadComponent` を 1 回呼ぶだけで、再試行はしない。失敗した `import()` をブラウザが覚えていれば、router の呼び出しも同じ失敗になり、いつもどおりのナビゲーションのエラーになる。
+- 返り値は `Promise.resolve(...)` で取り込んでから `catch` を付ける。`Promise` でない thenable が返っても、未処理の拒否にならない。
 
 ### gtag の後回し
 
