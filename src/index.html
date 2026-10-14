@@ -15,6 +15,11 @@
             type="image/x-icon"
             href="./assets/icons/favicon.ico"
         />
+        <!-- 別 origin への接続（DNS・TCP・TLS）を JS の起動と重ねる。docs/adr/0008 -->
+        <!-- v3 API は認証ヘッダー付きの CORS の fetch なので crossorigin が要る（無いと作った接続が使われない） -->
+        <link rel="preconnect" href="https://api.sotetsu-lab.com" crossorigin />
+        <!-- Quicksand の CSS はビルドで index.html に埋め込まれる。woff2 はヘッダーを描くまで取りに行かないので、接続だけ先に作る -->
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Quicksand&display=swap"
