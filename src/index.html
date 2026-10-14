@@ -15,6 +15,10 @@
             type="image/x-icon"
             href="./assets/icons/favicon.ico"
         />
+        <!-- 別 origin への接続（DNS・TCP・TLS）を JS の起動と重ねる。docs/adr/0008 -->
+        <!-- v3 API は cookie を送らない CORS の fetch なので、anonymous の接続を作る crossorigin が要る（無いと作った接続が使われない） -->
+        <link rel="preconnect" href="https://api.sotetsu-lab.com" crossorigin />
+        <!-- fonts.gstatic.com の preconnect は、ビルドが Quicksand の CSS を埋め込むときに自分で足す -->
         <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css?family=Quicksand&display=swap"
@@ -268,15 +272,34 @@
             Please enable JavaScript to continue using this application.
         </noscript>
         <!-- Google tag (gtag.js) -->
-        <script
-            async
-            src="https://www.googletagmanager.com/gtag/js?id=G-CFKSDNMCY3"
-        ></script>
+        <!-- 起動の邪魔をしないよう、load の後の空いた時間に読み込む（docs/adr/0008）。 -->
+        <!-- それまでの gtag() は dataLayer に積まれ、読み込まれたときにまとめて送られる -->
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag() {
                 dataLayer.push(arguments);
             }
+            (function () {
+                function inject() {
+                    var s = document.createElement('script');
+                    s.async = true;
+                    s.src =
+                        'https://www.googletagmanager.com/gtag/js?id=G-CFKSDNMCY3';
+                    document.head.appendChild(s);
+                }
+                function schedule() {
+                    if ('requestIdleCallback' in window) {
+                        requestIdleCallback(inject, { timeout: 3000 });
+                    } else {
+                        setTimeout(inject, 0);
+                    }
+                }
+                if (document.readyState === 'complete') {
+                    schedule();
+                } else {
+                    window.addEventListener('load', schedule, { once: true });
+                }
+            })();
         </script>
     </body>
 </html>

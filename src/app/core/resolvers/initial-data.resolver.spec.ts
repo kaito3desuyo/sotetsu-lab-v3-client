@@ -85,14 +85,34 @@ describe('initialDataResolver', () => {
         });
     });
 
-    function run(): Promise<boolean> {
+    function run(
+        state: RouterStateSnapshot = {
+            root: { routeConfig: null, children: [] },
+        } as unknown as RouterStateSnapshot,
+    ): Promise<boolean> {
         return TestBed.runInInjectionContext(() =>
-            initialDataResolver(
-                {} as ActivatedRouteSnapshot,
-                {} as RouterStateSnapshot,
-            ),
+            initialDataResolver({} as ActivatedRouteSnapshot, state),
         ) as Promise<boolean>;
     }
+
+    it('token・profile を待たずに、行き先のページの loadComponent を呼ぶ', () => {
+        const loadComponent = jest.fn(() => Promise.resolve(class {}));
+
+        run({
+            root: {
+                routeConfig: null,
+                children: [
+                    {
+                        routeConfig: { path: '', loadComponent },
+                        children: [],
+                    },
+                ],
+            },
+        } as unknown as RouterStateSnapshot);
+
+        expect(loadComponent).toHaveBeenCalledTimes(1);
+        expect(agency.fetch).not.toHaveBeenCalled();
+    });
 
     it('token・profile には ROUTE_CHECK_MAX_AGE_MS を渡す', () => {
         run();
