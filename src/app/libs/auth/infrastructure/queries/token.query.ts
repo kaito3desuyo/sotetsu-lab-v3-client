@@ -1,4 +1,4 @@
-import { HttpBackend, HttpClient } from '@angular/common/http';
+import { HttpBackend, HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
@@ -20,15 +20,25 @@ export class TokenQuery {
     /**
      * maxAgeMs を渡したとき（ガード・resolver）だけ、届いてからその間は使い回す。
      * 渡さなければ（ログイン・ログアウト・期限切れの取り直し）必ず取りに行き、取った値はキャッシュにも入れる。
+     * bypassHttpCache を渡すと、URL に乱数を付けてブラウザ側に残った応答を使わせない
+     * （Google の描画は Cache-Control を無視して古いトークンを返すことがある）。乱数は時計に頼らない。
      */
-    getToken(options?: { maxAgeMs?: number }): Observable<TokenDetailsDto> {
-        const { maxAgeMs } = options ?? {};
+    getToken(options?: {
+        maxAgeMs?: number;
+        bypassHttpCache?: boolean;
+    }): Observable<TokenDetailsDto> {
+        const { maxAgeMs, bypassHttpCache } = options ?? {};
+        const params = bypassHttpCache
+            ? new HttpParams().set('r', Math.random().toString(36).slice(2))
+            : undefined;
 
         return this.#cache.get({
             name: 'getToken',
             params: {},
             fetch: () =>
-                this.#http.get<TokenDetailsDto>(`${this.#baseUrl}/token`),
+                this.#http.get<TokenDetailsDto>(`${this.#baseUrl}/token`, {
+                    params,
+                }),
             forceReload: maxAgeMs === undefined,
             maxAgeMs,
         });
