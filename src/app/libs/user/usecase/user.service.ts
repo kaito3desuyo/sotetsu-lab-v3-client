@@ -10,8 +10,10 @@ export class UserService {
     readonly #userCommand = inject(UserCommand);
     readonly #userQuery = inject(UserQuery);
 
-    getProfile(): Observable<UserDetailsDto> {
-        return this.#userQuery.getProfile();
+    getProfile(options?: {
+        maxAgeMs?: number;
+    }): Observable<UserDetailsDto | null> {
+        return this.#userQuery.getProfile(options);
     }
 
     registerUser(dto: RegisterUserDto): Observable<void> {
