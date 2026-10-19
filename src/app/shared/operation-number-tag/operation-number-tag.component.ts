@@ -52,11 +52,15 @@ export class OperationNumberTagComponent {
     readonly borderColor = input<string>(undefined);
     readonly contextMenus = input<OperationNumberTagContextMenu[]>(undefined);
     readonly longPressMs = input<number>(500);
+    /** 車両のつながりから推測した運用。運番の後ろに「?」を付ける（ユーザー判断 2026-10-19。斜線は撤回） */
+    readonly inferred = input<boolean>(false);
 
     /** 休車（運用番号 100）か。 */
     readonly isRetired = computed(() => this.operationNumber() === '100');
-    readonly label = computed(() =>
-        this.isRetired() ? '休' : this.operationNumber(),
+    readonly label = computed(
+        () =>
+            (this.isRetired() ? '休' : this.operationNumber()) +
+            (this.inferred() ? '?' : ''),
     );
 
     /** メニューを開く位置（ビューポート座標）。トリガーをここへ置く。 */

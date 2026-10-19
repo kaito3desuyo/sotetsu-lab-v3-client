@@ -69,8 +69,9 @@
                                 track calendar.date
                             ) {
                                 <!-- マスの幅は全日付で同じ 8rem（2 桁のタグ 3 個ぶん。1440px で 7 日が収まる幅）。
-                                     入らなければ折り返す。目撃の順番（API が目撃時刻の古い順で
-                                     返す）が読めるよう、2 個目からは前に › を置く。› は後ろの
+                                     入らなければ折り返す。受け持った順番（API が行程の順、行程が
+                                     分からなければ目撃時刻の古い順で返す）が読めるよう、2 個目からは前に › を置く。
+                                     車両のつながりから推し量った運用は「?」付きのタグにする（@ と斜線は出さない。ユーザー判断 2026-10-19）。› は後ろの
                                      タグと 1 塊にして、行末に取り残されないようにする
                                      （4 案を実物で比較してユーザーが選択 2026-09-24） -->
                                 <td class="tw-align-top">
@@ -161,19 +162,18 @@
                                                                     ),
                                                             },
                                                         ]"
+                                                        [inferred]="
+                                                            !!sighting.sightedAsOperation
+                                                        "
+                                                        [attr.title]="
+                                                            sighting.sightedAsOperation
+                                                                ? sighting
+                                                                      .sightedAsOperation
+                                                                      .operationNumber +
+                                                                  'の目撃から車両のつながりで推し量った運用'
+                                                                : null
+                                                        "
                                                     ></app-operation-number-tag>
-                                                    @if (
-                                                        sighting.sightedAsOperation;
-                                                        as sightedAs
-                                                    ) {
-                                                        <span
-                                                            class="tw-text-xs tw-text-grey-600"
-                                                            [title]="sightedAs.operationNumber + 'として目撃（車両のつながりで引き継いだ目撃）'"
-                                                            >@{{
-                                                                sightedAs.operationNumber
-                                                            }}</span
-                                                        >
-                                                    }
                                                 </span>
                                             }
                                         </div>

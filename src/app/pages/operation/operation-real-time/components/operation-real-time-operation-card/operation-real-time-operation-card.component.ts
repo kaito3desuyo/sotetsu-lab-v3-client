@@ -98,11 +98,9 @@ export class OperationRealTimeOperationCardComponent {
         );
     });
 
-    /** 引き継いだ目撃のときの元の運用番号（例: 12K のカードで 11K）。直接の目撃は null */
-    readonly sightedAsOperationNumber = computed(
-        () =>
-            this.timeCrossSection()?.sightedAsOperation?.operationNumber ??
-            null,
+    /** 車両のつながりから推測した割り当てか。順送りと同じく「?」を付ける */
+    readonly isInferred = computed(
+        () => !!this.timeCrossSection()?.sightedAsOperation,
     );
 
     /** 編成の「形式・所属会社」付記（例: 10000・相鉄）。 */

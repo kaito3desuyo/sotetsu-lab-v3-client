@@ -185,11 +185,16 @@ describe('OperationPastTimeTableComponent', () => {
             OperationPastTimeStore.setOperationSightings([]);
         });
 
-        it('引き継いだ目撃は運用番号のタグに「@11K」を添える', () => {
+        it('推測した目撃は「?」付きのタグにし、「@11K」は添えない', () => {
             const text = setupCell();
 
-            expect(text).toContain('12K');
-            expect(text).toContain('@11K');
+            const inferred = fixture.debugElement
+                .queryAll(By.directive(OperationNumberTagComponent))
+                .map((d) => d.componentInstance.inferred());
+            // 直接（11K）→ 推測（12K）の順
+            expect(inferred).toEqual([false, true]);
+            expect(text).toContain('12K?');
+            expect(text).not.toContain('@');
         });
 
         it('引き継いだ目撃は無効化・復元できず、直接の目撃はできる', () => {
@@ -209,12 +214,6 @@ describe('OperationPastTimeTableComponent', () => {
                 true,
                 true,
             ]);
-        });
-
-        it('直接の目撃には添え書きを付けない', () => {
-            const text = setupCell();
-
-            expect(text.match(/@\d+K/g)).toHaveLength(1);
         });
     });
 });

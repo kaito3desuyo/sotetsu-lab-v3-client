@@ -129,6 +129,26 @@ describe('OperationNumberTagComponent', () => {
         });
     });
 
+    describe('inferred（車両のつながりから推測した運用）', () => {
+        it('inferred 指定時は運番の後ろに「?」を付け、群色の塗りはそのまま', () => {
+            fixture.componentRef.setInput('operationNumber', '18K');
+            fixture.componentRef.setInput('inferred', true);
+            fixture.detectChanges();
+
+            expect(getTagEl()).toHaveTextContent('18K?');
+            expect(getTagEl()).toHaveStyle({
+                backgroundColor: 'rgba(183, 28, 28, 0.12)',
+            });
+        });
+
+        it('inferred 未指定時は「?」を付けない', () => {
+            fixture.componentRef.setInput('operationNumber', '18K');
+            fixture.detectChanges();
+
+            expect(getTagEl().textContent?.trim()).toBe('18K');
+        });
+    });
+
     describe('contextMenus（B9: 右クリック/長押しコンテキストメニュー）', () => {
         let mockTrigger: { openMenu: jest.Mock };
 
