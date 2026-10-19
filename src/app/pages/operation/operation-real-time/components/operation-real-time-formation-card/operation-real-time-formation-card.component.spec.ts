@@ -76,7 +76,7 @@ describe('OperationRealTimeFormationCardComponent', () => {
         expect(component.formationAnnotation()).toBe('10000・相鉄');
     });
 
-    it('引き継いだ目撃には元の運用番号を返す', () => {
+    it('車両のつながりから推測した割り当て（sightedAsOperation あり）なら推測扱い', () => {
         fixture.componentRef.setInput('timeCrossSection', {
             latestSighting: sighting('s1'),
             expectedSighting: {},
@@ -86,16 +86,16 @@ describe('OperationRealTimeFormationCardComponent', () => {
             },
         } as OperationSightingTimeCrossSectionDto);
 
-        expect(component.sightedAsOperationNumber()).toBe('11K');
+        expect(component.isInferred()).toBe(true);
     });
 
-    it('直接の目撃には何も返さない', () => {
+    it('実目撃（sightedAsOperation なし）なら推測扱いにしない', () => {
         fixture.componentRef.setInput('timeCrossSection', {
             latestSighting: sighting('s1'),
             expectedSighting: {},
             sightedAsOperation: null,
         } as OperationSightingTimeCrossSectionDto);
 
-        expect(component.sightedAsOperationNumber()).toBeNull();
+        expect(component.isInferred()).toBe(false);
     });
 });
