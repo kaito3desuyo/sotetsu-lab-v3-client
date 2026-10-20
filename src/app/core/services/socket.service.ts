@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { NGXLogger } from 'ngx-logger';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, filter, take } from 'rxjs';
 import { TokenStateQuery } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
 
@@ -17,11 +17,22 @@ export class SocketService {
     private readonly _ev$ = new Subject<unknown>();
     private _conn: WebSocket;
 
+    /**
+     * socket もトークンを求める（ゲストは backend が作る匿名セッションのトークン）。
+     * まだ取れていなければ（backend の 503 など）、取れたときにつなぐ。
+     */
     connect(): void {
         if (!isPlatformBrowser(this.#platformId)) return;
-        this._conn = new WebSocket(
-            `${this._url}?token=${this.#tokenStateQuery.accessToken}`,
-        );
+        this.#tokenStateQuery.accessToken$
+            .pipe(
+                filter((token): token is string => !!token),
+                take(1),
+            )
+            .subscribe((token) => this.#open(token));
+    }
+
+    #open(token: string): void {
+        this._conn = new WebSocket(`${this._url}?token=${token}`);
         this._conn.onmessage = (ev: MessageEvent<unknown>) => {
             this._ev$.next(ev);
         };

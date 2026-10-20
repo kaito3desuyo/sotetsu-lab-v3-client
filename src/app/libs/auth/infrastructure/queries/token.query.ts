@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
-import { TokenDetailsDto } from '../../usecase/dtos/token-details.dto';
+import { TokenResult } from '../../usecase/dtos/token-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class TokenQuery {
@@ -26,7 +26,7 @@ export class TokenQuery {
     getToken(options?: {
         maxAgeMs?: number;
         bypassHttpCache?: boolean;
-    }): Observable<TokenDetailsDto> {
+    }): Observable<TokenResult> {
         const { maxAgeMs, bypassHttpCache } = options ?? {};
         const params = bypassHttpCache
             ? new HttpParams().set('r', Math.random().toString(36).slice(2))
@@ -36,7 +36,7 @@ export class TokenQuery {
             name: 'getToken',
             params: {},
             fetch: () =>
-                this.#http.get<TokenDetailsDto>(`${this.#baseUrl}/token`, {
+                this.#http.get<TokenResult>(`${this.#baseUrl}/token`, {
                     params,
                 }),
             forceReload: maxAgeMs === undefined,
