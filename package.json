@@ -99,8 +99,5 @@
   "akitaCli": {
     "customFolderName": "true",
     "template": "angular"
-  },
-  "volta": {
-    "node": "22.23.3"
   }
 }
