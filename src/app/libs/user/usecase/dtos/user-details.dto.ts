@@ -6,8 +6,4 @@ export interface UserDetailsDto {
     displayName: string;
 
     role: string;
-
-    createdAt: string;
-
-    updatedAt: string;
 }

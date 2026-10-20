@@ -13,8 +13,6 @@ const state = createStore(
         username: null,
         displayName: null,
         role: null,
-        createdAt: null,
-        updatedAt: null,
     }),
 );
 

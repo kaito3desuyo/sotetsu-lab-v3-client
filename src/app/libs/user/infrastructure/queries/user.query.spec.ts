@@ -14,8 +14,6 @@ const model = {
     password: 'x',
     displayName: 'K',
     role: 'admin',
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
 };
 
 function setup() {
@@ -50,8 +48,6 @@ describe('UserQuery.getProfile', () => {
             username: 'kaito',
             displayName: 'K',
             role: 'admin',
-            createdAt: '2026-01-01T00:00:00Z',
-            updatedAt: '2026-01-01T00:00:00Z',
         });
         controller.verify();
     });

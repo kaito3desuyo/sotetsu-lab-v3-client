@@ -4,6 +4,4 @@ export interface UserModel {
     password: string;
     displayName: string;
     role: string;
-    createdAt: string;
-    updatedAt: string;
 }

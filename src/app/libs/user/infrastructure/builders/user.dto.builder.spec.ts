@@ -8,8 +8,6 @@ describe('UserDtoBuilder', () => {
             password: 'secret',
             displayName: 'A',
             role: 'admin',
-            createdAt: 'c',
-            updatedAt: 'u',
         });
 
         expect(dto).toEqual({
@@ -17,8 +15,6 @@ describe('UserDtoBuilder', () => {
             username: 'a',
             displayName: 'A',
             role: 'admin',
-            createdAt: 'c',
-            updatedAt: 'u',
         });
         expect(dto).not.toHaveProperty('password');
     });
