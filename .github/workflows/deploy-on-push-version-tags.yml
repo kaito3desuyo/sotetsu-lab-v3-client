@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: mise.toml
 
       - name: Cache dependencies
         uses: actions/cache@v3
