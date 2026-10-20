@@ -4,6 +4,7 @@ import {
     provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { lastValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TokenQuery } from './token.query';
 
@@ -107,6 +108,19 @@ describe('TokenQuery', () => {
 
         controller.expectNone(url);
         expect(got).toEqual(token);
+        controller.verify();
+    });
+
+    it('204 なら null を返す', async () => {
+        const { query, controller } = setup();
+        jest.useRealTimers();
+
+        const result = lastValueFrom(query.getToken());
+        controller
+            .expectOne(url)
+            .flush(null, { status: 204, statusText: 'No Content' });
+
+        await expect(result).resolves.toBeNull();
         controller.verify();
     });
 });

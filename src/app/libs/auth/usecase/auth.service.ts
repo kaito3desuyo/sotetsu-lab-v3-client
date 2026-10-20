@@ -4,7 +4,7 @@ import { LoginCommand } from '../infrastructure/commands/login.command';
 import { LogoutCommand } from '../infrastructure/commands/logout.command';
 import { TokenQuery } from '../infrastructure/queries/token.query';
 import { LoginDto } from './dtos/login.dto';
-import { TokenDetailsDto } from './dtos/token-details.dto';
+import { TokenResult } from './dtos/token-details.dto';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -23,7 +23,7 @@ export class AuthService {
     getToken(options?: {
         maxAgeMs?: number;
         bypassHttpCache?: boolean;
-    }): Observable<TokenDetailsDto> {
+    }): Observable<TokenResult> {
         return this.#tokenQuery.getToken(options);
     }
 }

@@ -8,8 +8,6 @@ export const UserDtoBuilder = {
         username: model.username,
         displayName: model.displayName,
         role: model.role,
-        createdAt: model.createdAt,
-        updatedAt: model.updatedAt,
     }),
     buildFromModels: (models: UserModel[]): UserDetailsDto[] =>
         models.map((model) => UserDtoBuilder.buildFromModel(model)),
