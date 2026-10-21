@@ -31,6 +31,7 @@ import { environment } from 'src/environments/environment';
 import { APP_ROUTES } from './app.route';
 import { CustomPaginator } from './core/classes/custom-paginator';
 import { AuthInterceptor } from './core/interceptors/auth-interceptor';
+import { FetchErrorInterceptor } from './core/interceptors/fetch-error.interceptor';
 import { PayloadHashInterceptor } from './core/interceptors/payload-hash.interceptor';
 import { ErrorHandlerService } from './core/services/error-handler.service';
 import { WebVitalsReporter } from './core/web-vitals/web-vitals-reporter';
@@ -64,6 +65,12 @@ export const appConfig: ApplicationConfig = {
         ),
         { provide: ErrorHandler, useClass: ErrorHandlerService },
         provideAppInitializer(() => inject(WebVitalsReporter).start()),
+        // 先に登録した方が外側。失敗を FetchError に直すのは、AuthInterceptor が 401 で取り直した後
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: FetchErrorInterceptor,
+            multi: true,
+        },
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         {
             provide: HTTP_INTERCEPTORS,

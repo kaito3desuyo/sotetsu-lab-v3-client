@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -123,7 +123,7 @@ export class RegisterDialogComponent {
 
         this.submitting.set(true);
 
-        const result = await tryCatchAsync<void, HttpErrorResponse>(
+        const result = await tryCatchAsync<void, FetchError>(
             this.#userService.registerUser({
                 username,
                 password,
@@ -131,9 +131,9 @@ export class RegisterDialogComponent {
         );
 
         if (result.isFailure()) {
-            console.error('Registration failed:', result.error.error);
+            console.error('Registration failed:', result.error.body);
 
-            if (result.error.error.message === 'User already exists.') {
+            if (result.error.message === 'User already exists.') {
                 this.#snackBar.open(
                     'ユーザー名が既に使用されています',
                     '閉じる',

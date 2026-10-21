@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -71,7 +71,7 @@ describe('OperationSightingInvalidationDialogComponent', () => {
 
     it('失敗したら知らせて、閉じない', async () => {
         invalidate.mockReturnValue(
-            throwError(() => new HttpErrorResponse({ status: 500 })),
+            throwError(() => new FetchError(500, '不明なエラーが発生しました')),
         );
 
         await component.onClickSubmit();

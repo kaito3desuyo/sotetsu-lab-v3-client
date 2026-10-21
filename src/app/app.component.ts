@@ -16,6 +16,7 @@ import {
 } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { toErrorMessage } from './core/errors/to-error-message';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
@@ -103,11 +104,7 @@ export class AppComponent implements OnInit, OnDestroy {
             .subscribe((ev) => {
                 this.#loadingService.close();
                 this.#gaService.sendEvent('page_load_error', {
-                    // GA のイベントの値は 100 文字まで
-                    error_message: (ev.error instanceof Error
-                        ? `${ev.error.name}: ${ev.error.message}`
-                        : String(ev.error)
-                    ).slice(0, 100),
+                    error_message: toErrorMessage(ev.error),
                 });
                 this.#notificationService.open(
                     'ページの読み込みに失敗しました',

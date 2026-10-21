@@ -1,6 +1,7 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { UserDetailsDto } from '../../usecase/dtos/user-details.dto';
@@ -31,8 +32,7 @@ export class UserQuery {
                     map((res) => UserDtoBuilder.buildFromModel(res)),
                     // ゲストは 401 になる。失敗にせず「ゲスト（null）」としてキャッシュに入れる
                     catchError((error: unknown) =>
-                        error instanceof HttpErrorResponse &&
-                        error.status === 401
+                        error instanceof FetchError && error.statusCode === 401
                             ? of(null)
                             : throwError(() => error),
                     ),

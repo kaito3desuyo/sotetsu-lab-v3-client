@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -56,11 +56,11 @@ export class OperationSightingRestorationDialogComponent {
                 userId: this.#userQuery.userId,
                 reason,
             }),
-            (e) => e as HttpErrorResponse,
+            (e) => e as FetchError,
         );
 
         if (result.isFailure()) {
-            console.error('Invalidate failed:', result.error.error);
+            console.error('Invalidate failed:', result.error.body);
 
             this.#snackBar.open('復元に失敗しました。', '閉じる', {
                 duration: 3000,

@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -68,7 +68,7 @@ export class LoginDialogComponent {
 
         this.submitting.set(true);
 
-        const result = await tryCatchAsync<void, HttpErrorResponse>(
+        const result = await tryCatchAsync<void, FetchError>(
             this.#authService.login({
                 username,
                 password,
@@ -76,7 +76,7 @@ export class LoginDialogComponent {
         );
 
         if (result.isFailure()) {
-            console.error('Login failed:', result.error.error);
+            console.error('Login failed:', result.error.body);
 
             this.#snackBar.open('ログインに失敗しました', '閉じる', {
                 duration: 3000,
