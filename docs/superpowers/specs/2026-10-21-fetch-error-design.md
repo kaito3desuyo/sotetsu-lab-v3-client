@@ -18,7 +18,7 @@ HTTP のエラーを、アプリ全体で `ts-custom-error` の `FetchError` に
   - ログイン・登録・ログアウト・目撃の取り消しと復元の失敗表示
   - 登録で「ユーザー名が既に使用されています」を出し分けること
   - 目撃の投稿の失敗表示と `sighting_submit_failure`
-- 変わってよいのは 1 点だけ: 列車情報の入力画面で保存に失敗した時の通知が、英語の「Http failure response for …」から API の返す日本語のメッセージになる（ユーザー了承済み）。
+- 変わってよいのは 1 点だけ: 列車情報の入力画面で保存に失敗した時の通知が、英語の「Http failure response for …」から API の返すメッセージになる（ユーザー了承済み）。API の業務エラー（UseCaseError・422）と想定外のエラー（500）は日本語だが、Nest 標準の例外（404・401・403）・入力検証（ValidationPipe）・フィルター外の 500 は英語のまま（2026-10-21 に API を確認）。日本語にそろえるのは API 側の別の作業にする。
 
 ## 範囲外
 
@@ -76,7 +76,7 @@ export class FetchError extends CustomError {
 | `layout/components/register-dialog` | 同上・`.error.error.message === 'User already exists.'` | `FetchError`・`result.error.message === 'User already exists.'` |
 | `layout/components/header`（ログアウト） | `e as HttpErrorResponse`・`.error.error` | `e as FetchError`・`.error.body` |
 | `shared/operation-sighting-invalidation-dialog`・`restoration-dialog` | 同上 | 同上 |
-| `pages/timetable/timetable-edit-form` | `e as HttpErrorResponse`・`e.message` | `e as FetchError`・`e.message`（日本語のメッセージになる） |
+| `pages/timetable/timetable-edit-form` | `e as HttpErrorResponse`・`e.message` | `e as FetchError`・`e.message`（API の返すメッセージになる） |
 | `core/services/error-handler.service.ts` | `instanceof HttpErrorResponse` でログを出し分け | 出し分けを消す（`FetchError` は `instanceof Error` の側で出る） |
 | `libs/operation-sighting/.../operation-sighting.command.ts` | 自前の `catchError` で `FetchError` を作る | `catchError` を消す（interceptor が作る） |
 
