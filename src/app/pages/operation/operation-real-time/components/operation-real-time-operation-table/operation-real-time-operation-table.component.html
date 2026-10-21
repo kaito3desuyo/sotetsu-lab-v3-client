@@ -1,4 +1,11 @@
-@if (filteredOperations().length === 0) {
+@if (!hasFetchedOperations()) {
+    <!-- 運用を取る前は、画面からヘッダーを引いた高さを取っておく。下の投稿カードを画面の外に置き、
+         届いた一覧に押し出されて CLS になるのを防ぐ（2026-10-21・CLS 0.749 のうち 0.643 がこれ） -->
+    <div
+        class="tw-h-[calc(100dvh-48px)] md:tw-h-[calc(100dvh-64px)]"
+        data-testid="operation-table-placeholder"
+    ></div>
+} @else if (filteredOperations().length === 0) {
     <app-empty-state
         icon="filter_alt_off"
         message="条件に一致する運用がありません"

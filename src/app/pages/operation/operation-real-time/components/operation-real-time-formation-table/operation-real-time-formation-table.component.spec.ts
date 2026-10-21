@@ -20,6 +20,57 @@ const expecting = (operationNumber: string) =>
         expectedSighting: { operation: { operationNumber } },
     }) as OperationSightingTimeCrossSectionDto;
 
+async function createTable(): Promise<
+    ComponentFixture<OperationRealTimeFormationTableComponent>
+> {
+    await TestBed.configureTestingModule({
+        imports: [OperationRealTimeFormationTableComponent],
+        providers: [
+            {
+                provide: AgencyListStateQuery,
+                useValue: { agencies$: of([]) },
+            },
+        ],
+    })
+        .overrideComponent(OperationRealTimeFormationTableComponent, {
+            set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+        })
+        .compileComponents();
+
+    const fixture = TestBed.createComponent(
+        OperationRealTimeFormationTableComponent,
+    );
+    fixture.detectChanges();
+    return fixture;
+}
+
+// ストアはこのファイルの中で共有される。編成をまだ入れていない状態を見るため、先頭に置く
+describe('OperationRealTimeFormationTableComponent（編成を取る前）', () => {
+    it('空表示の代わりに、画面からヘッダーを引いた高さを取っておく', async () => {
+        const el: HTMLElement = (await createTable()).nativeElement;
+
+        expect(el.querySelector('app-empty-state')).toBeNull();
+        const placeholder = el.querySelector(
+            '[data-testid="formation-table-placeholder"]',
+        );
+        expect(placeholder?.className).toContain('tw-h-[calc(100dvh-48px)]');
+        expect(placeholder?.className).toContain('md:tw-h-[calc(100dvh-64px)]');
+    });
+});
+
+describe('OperationRealTimeFormationTableComponent（編成が 0 件）', () => {
+    it('取った結果が 0 件なら、空表示を出す', async () => {
+        OperationRealTimeStore.setFormations([]);
+
+        const el: HTMLElement = (await createTable()).nativeElement;
+
+        expect(el.querySelector('app-empty-state')).not.toBeNull();
+        expect(
+            el.querySelector('[data-testid="formation-table-placeholder"]'),
+        ).toBeNull();
+    });
+});
+
 describe('OperationRealTimeFormationTableComponent', () => {
     let component: OperationRealTimeFormationTableComponent;
     let fixture: ComponentFixture<OperationRealTimeFormationTableComponent>;

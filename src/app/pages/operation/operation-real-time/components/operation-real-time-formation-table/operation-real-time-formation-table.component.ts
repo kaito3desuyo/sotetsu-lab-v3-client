@@ -38,6 +38,10 @@ export class OperationRealTimeFormationTableComponent {
     readonly itineraryLinks = toSignal(OperationRealTimeStore.itineraryLinks$);
     readonly operations = toSignal(OperationRealTimeStore.operations$);
     readonly formations = toSignal(OperationRealTimeStore.formations$);
+    readonly hasFetchedFormations = toSignal(
+        OperationRealTimeStore.hasFetchedFormations$,
+        { initialValue: false },
+    );
     readonly timeCrossSections = toSignal(
         OperationRealTimeStore.formationSightingTimeCrossSections$,
     );

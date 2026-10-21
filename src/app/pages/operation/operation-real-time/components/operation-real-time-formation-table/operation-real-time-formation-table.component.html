@@ -1,4 +1,10 @@
-@if (filteredFormations().length === 0) {
+@if (!hasFetchedFormations()) {
+    <!-- 編成を取る前は、画面からヘッダーを引いた高さを取っておく（作りと理由は運用順の一覧と同じ） -->
+    <div
+        class="tw-h-[calc(100dvh-48px)] md:tw-h-[calc(100dvh-64px)]"
+        data-testid="formation-table-placeholder"
+    ></div>
+} @else if (filteredFormations().length === 0) {
     <app-empty-state
         icon="filter_alt_off"
         message="条件に一致する編成がありません"
