@@ -4,6 +4,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 
+import { FetchError } from './core/classes/custom-error';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
@@ -41,6 +42,20 @@ describe('AppComponent', () => {
                         canActivate: [
                             () => {
                                 throw new Error('壊れた');
+                            },
+                        ],
+                        children: [],
+                    },
+                    {
+                        path: 'broken-http',
+                        canActivate: [
+                            () => {
+                                throw new FetchError(
+                                    503,
+                                    '止まっています',
+                                    {},
+                                    'https://api.example.com/v3/agencies',
+                                );
                             },
                         ],
                         children: [],
@@ -125,6 +140,18 @@ describe('AppComponent', () => {
 
         expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
             error_message: 'Error: 壊れた',
+        });
+    });
+
+    it('API の失敗で読み込めなければ、ステータスと道筋を送る', async () => {
+        TestBed.createComponent(AppComponent);
+
+        await TestBed.inject(Router)
+            .navigateByUrl('/broken-http')
+            .catch(() => {});
+
+        expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
+            error_message: 'FetchError 503 /v3/agencies: 止まっています',
         });
     });
 

@@ -1,7 +1,7 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ErrorHandler, Injectable, inject } from '@angular/core';
 import ErrorStackParser from 'error-stack-parser';
 import { NGXLogger } from 'ngx-logger';
+import { toErrorMessage } from '../errors/to-error-message';
 import { GoogleAnalyticsService } from './google-analytics.service';
 
 @Injectable({
@@ -16,10 +16,6 @@ export class ErrorHandlerService implements ErrorHandler {
     handleError<T extends Error>(error: T): void {
         this.#sendToGA(error);
 
-        if (error instanceof HttpErrorResponse) {
-            this.#logger.error(error.name, error.message, { ...error });
-        }
-
         if (error instanceof Error) {
             this.#logger.error(error.name, error.message, {
                 ...error,
@@ -33,8 +29,7 @@ export class ErrorHandlerService implements ErrorHandler {
             return;
         }
 
-        // GA のイベントの値は 100 文字まで
-        const message = `${error.name}: ${error.message}`.slice(0, 100);
+        const message = toErrorMessage(error);
         if (this.#sentErrorMessages.has(message)) {
             return;
         }

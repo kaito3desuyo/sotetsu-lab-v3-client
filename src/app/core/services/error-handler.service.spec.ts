@@ -23,7 +23,22 @@ describe('ErrorHandlerService', () => {
         service.handleError(new FetchError(400, '編成が見つかりません'));
 
         expect(sendEvent).toHaveBeenCalledWith('app_error', {
-            error_message: 'FetchError: 編成が見つかりません',
+            error_message: 'FetchError 400: 編成が見つかりません',
+        });
+    });
+
+    it('HTTP の失敗はステータスと道筋つきで送る', () => {
+        service.handleError(
+            new FetchError(
+                503,
+                '止まっています',
+                {},
+                'https://api.example.com/v3/agencies',
+            ),
+        );
+
+        expect(sendEvent).toHaveBeenCalledWith('app_error', {
+            error_message: 'FetchError 503 /v3/agencies: 止まっています',
         });
     });
 
