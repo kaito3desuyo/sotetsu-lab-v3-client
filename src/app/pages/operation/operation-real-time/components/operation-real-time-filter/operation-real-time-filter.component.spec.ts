@@ -59,6 +59,17 @@ describe('OperationRealTimeFilterComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('チップの 2 行は、選択肢が届く前から 1 行分の高さを取っておく', () => {
+        const rows: HTMLElement[] = Array.from(
+            fixture.nativeElement.querySelectorAll('app-filter-chips'),
+        );
+
+        expect(rows).toHaveLength(2);
+        for (const row of rows) {
+            expect(row.classList).toContain('tw-min-h-[42px]');
+        }
+    });
+
     it('運用群チップに「休」の疑似グループが末尾に追加される', () => {
         const options = component.groupOptions();
         expect(options.map((o) => o.value)).toEqual([

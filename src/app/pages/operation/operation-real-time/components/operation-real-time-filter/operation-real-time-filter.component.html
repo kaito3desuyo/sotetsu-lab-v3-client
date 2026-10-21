@@ -2,8 +2,11 @@
     <p class="tw-m-0 tw-text-xs tw-text-grey-600">絞り込み</p>
     <!-- 会社と運用群は段を分ける（ユーザー指示 2026-08-22）。
          1 行に混在させると、どちらの軸で絞っているのか読み取りにくく、
-         横スクロールでどちらかが見切れる。 -->
+         横スクロールでどちらかが見切れる。
+         選択肢は運用・編成が届いてから出るので、その前から 1 行分（42px）の高さを取っておく。
+         後から伸びると下の一覧がずれて CLS になる（2026-10-21） -->
     <app-filter-chips
+        class="tw-min-h-[42px]"
         mode="multiple"
         [scrollMode]="true"
         [options]="agencyOptions()"
@@ -11,6 +14,7 @@
         (selectedChange)="onAgencyChange($event)"
     ></app-filter-chips>
     <app-filter-chips
+        class="tw-min-h-[42px]"
         mode="multiple"
         [scrollMode]="true"
         [options]="groupOptions()"
