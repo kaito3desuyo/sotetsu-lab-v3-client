@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -74,11 +74,11 @@ export class HeaderComponent {
     async onClickLogout(): Promise<void> {
         const result = await tryCatchAsync(
             this.#authService.logout(),
-            (e) => e as HttpErrorResponse,
+            (e) => e as FetchError,
         );
 
         if (result.isFailure()) {
-            console.error('Logout failed:', result.error.error);
+            console.error('Logout failed:', result.error.body);
 
             this.#snackBar.open('ログアウトに失敗しました', '閉じる', {
                 duration: 3000,

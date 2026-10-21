@@ -1,8 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { TokenStateStore } from 'src/app/global-states/token.state';
 import { UserStateStore } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
@@ -74,7 +74,7 @@ describe('LoginDialogComponent', () => {
 
     it('失敗したら知らせて、送信中を解き、閉じない', async () => {
         login.mockReturnValue(
-            throwError(() => new HttpErrorResponse({ status: 401 })),
+            throwError(() => new FetchError(401, '不明なエラーが発生しました')),
         );
 
         await component.onClickSubmit();

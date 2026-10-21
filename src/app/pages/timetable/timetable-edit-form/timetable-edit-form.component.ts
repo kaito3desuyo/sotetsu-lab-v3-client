@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -224,7 +224,7 @@ export class TimetableEditFormComponent {
 
         const result = await tryCatchAsync(
             fn(trips),
-            (e) => e as HttpErrorResponse,
+            (e) => e as FetchError,
         );
 
         this.#loading.close();

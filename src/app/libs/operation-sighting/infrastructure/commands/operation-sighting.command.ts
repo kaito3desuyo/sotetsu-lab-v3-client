@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { FetchError } from 'src/app/core/classes/custom-error';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { InvalidateOperationSightingDto } from '../../usecase/dtos/invalidate-operation-sighting.dto';
 import { PostOperationSightingDto } from '../../usecase/dtos/post-operation-sighting.dto';
@@ -15,18 +14,9 @@ export class OperationSightingCommand {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/operation-sightings';
 
     post(body: PostOperationSightingDto): Observable<void> {
-        return this.#http.post(`${this.#v3ApiUrl}`, body).pipe(
-            map(() => undefined),
-            catchError(({ status, error }) => {
-                return throwError(
-                    () =>
-                        new FetchError(
-                            status,
-                            error?.message ?? '不明なエラーが発生しました',
-                        ),
-                );
-            }),
-        );
+        return this.#http
+            .post(`${this.#v3ApiUrl}`, body)
+            .pipe(map(() => undefined));
     }
 
     invalidate(body: InvalidateOperationSightingDto): Observable<void> {

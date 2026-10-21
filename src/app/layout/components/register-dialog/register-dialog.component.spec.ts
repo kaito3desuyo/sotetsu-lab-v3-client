@@ -1,8 +1,8 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { RegisterDialogComponent } from './register-dialog.component';
 
@@ -46,8 +46,7 @@ describe('RegisterDialogComponent', () => {
     const failWith = (message: string) =>
         registerUser.mockReturnValue(
             throwError(
-                () =>
-                    new HttpErrorResponse({ status: 400, error: { message } }),
+                () => new FetchError(400, message, {}, null, { message }),
             ),
         );
 

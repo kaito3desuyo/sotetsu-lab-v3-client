@@ -1,9 +1,15 @@
-import { provideHttpClient } from '@angular/common/http';
+import {
+    HTTP_INTERCEPTORS,
+    provideHttpClient,
+    withInterceptorsFromDi,
+} from '@angular/common/http';
 import {
     HttpTestingController,
     provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { FetchError } from 'src/app/core/classes/custom-error';
+import { FetchErrorInterceptor } from 'src/app/core/interceptors/fetch-error.interceptor';
 import { environment } from 'src/environments/environment';
 import { UserQuery } from './user.query';
 
@@ -18,7 +24,15 @@ const model = {
 
 function setup() {
     TestBed.configureTestingModule({
-        providers: [provideHttpClient(), provideHttpClientTesting()],
+        providers: [
+            provideHttpClient(withInterceptorsFromDi()),
+            provideHttpClientTesting(),
+            {
+                provide: HTTP_INTERCEPTORS,
+                useClass: FetchErrorInterceptor,
+                multi: true,
+            },
+        ],
     });
     return {
         query: TestBed.inject(UserQuery),
@@ -80,7 +94,7 @@ describe('UserQuery.getProfile', () => {
             .flush(null, { status: 500, statusText: 'Server Error' });
         query.getProfile({ maxAgeMs: 5000 }).subscribe();
 
-        expect(error).toBeTruthy();
+        expect(error).toBeInstanceOf(FetchError);
         controller.expectOne(url).flush(model);
         controller.verify();
     });
