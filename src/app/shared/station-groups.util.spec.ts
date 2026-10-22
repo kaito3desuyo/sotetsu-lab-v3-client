@@ -1,6 +1,11 @@
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
-import { buildStationGroups } from './station-groups.util';
+import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
+import {
+    buildStationGroups,
+    findNeighborStations,
+    StationGroup,
+} from './station-groups.util';
 
 const agencies = [
     { agencyId: 'a-sotetsu', agencyName: '相鉄' },
@@ -87,5 +92,82 @@ describe('buildStationGroups', () => {
             'JR東日本 埼京線',
             '東急 東横線',
         ]);
+    });
+});
+
+describe('findNeighborStations', () => {
+    const st = (stationId: string, stationName: string) =>
+        ({ stationId, stationName }) as StationDetailsDto;
+    const groups: StationGroup[] = [
+        {
+            routeId: 'main',
+            label: '相鉄 本線',
+            stations: [
+                st('yokohama', '横浜'),
+                st('tsurugamine', '鶴ヶ峰'),
+                st('futamatagawa', '二俣川'),
+                st('kibogaoka', '希望ヶ丘'),
+            ],
+        },
+        {
+            routeId: 'izumino',
+            label: '相鉄 いずみ野線',
+            stations: [
+                st('futamatagawa', '二俣川'),
+                st('minamimakigahara', '南万騎が原'),
+            ],
+        },
+        {
+            routeId: 'toyoko',
+            label: '東急 東横線',
+            stations: [st('hiyoshi', '日吉'), st('tamagawa', '多摩川')],
+        },
+        {
+            routeId: 'meguro',
+            label: '東急 目黒線',
+            stations: [st('hiyoshi', '日吉'), st('tamagawa', '多摩川')],
+        },
+    ];
+
+    it('分岐駅は、駅を含む路線ごとの隣を全部返す', () => {
+        expect(findNeighborStations(groups, 'futamatagawa')).toEqual({
+            prev: [{ id: 'tsurugamine', label: '鶴ヶ峰' }],
+            next: [
+                { id: 'kibogaoka', label: '希望ヶ丘' },
+                { id: 'minamimakigahara', label: '南万騎が原' },
+            ],
+        });
+    });
+
+    it('起点の駅は前が無い', () => {
+        expect(findNeighborStations(groups, 'yokohama')).toEqual({
+            prev: [],
+            next: [{ id: 'tsurugamine', label: '鶴ヶ峰' }],
+        });
+    });
+
+    it('終点の駅は次が無い', () => {
+        expect(findNeighborStations(groups, 'kibogaoka')).toEqual({
+            prev: [{ id: 'futamatagawa', label: '二俣川' }],
+            next: [],
+        });
+    });
+
+    it('同じ駅を持つ 2 路線で、同じ隣を二重に出さない', () => {
+        expect(findNeighborStations(groups, 'hiyoshi')).toEqual({
+            prev: [],
+            next: [{ id: 'tamagawa', label: '多摩川' }],
+        });
+    });
+
+    it('駅が無い・見つからないときは両方空', () => {
+        expect(findNeighborStations(groups, null)).toEqual({
+            prev: [],
+            next: [],
+        });
+        expect(findNeighborStations(groups, 'nowhere')).toEqual({
+            prev: [],
+            next: [],
+        });
     });
 });
