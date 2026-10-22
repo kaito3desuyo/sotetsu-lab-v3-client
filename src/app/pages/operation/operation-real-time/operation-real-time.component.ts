@@ -1,3 +1,4 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -9,7 +10,7 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { interval, lastValueFrom } from 'rxjs';
+import { interval, lastValueFrom, map } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -25,6 +26,9 @@ import { OperationRealTimeService } from './services/operation-real-time.service
 import { OperationRealTimeStore } from './stores/operation-real-time.store';
 import { filterRealTimeOperations } from './utils/operation-real-time-filter.util';
 import { formatRealTimeSummary } from './utils/operation-real-time-summary.util';
+
+/** Tailwind の md。これ以上は運用順・編成順を横並び、未満はタブ */
+const DESKTOP_QUERY = '(min-width: 768px)';
 
 const firstLoading = signal(true);
 OperationRealTimeStore.resetLoading();
@@ -51,6 +55,15 @@ export class OperationRealTimeComponent {
     readonly #notification = inject(NotificationService);
     readonly #operationRealTimeService = inject(OperationRealTimeService);
     readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #breakpointObserver = inject(BreakpointObserver);
+
+    /** 最初の描画から正しい側を作るよう、初期値は同期で読む（違う配置が一瞬出ると CLS になる） */
+    readonly isDesktop = toSignal(
+        this.#breakpointObserver
+            .observe(DESKTOP_QUERY)
+            .pipe(map((state) => state.matches)),
+        { initialValue: this.#breakpointObserver.isMatched(DESKTOP_QUERY) },
+    );
 
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
 
