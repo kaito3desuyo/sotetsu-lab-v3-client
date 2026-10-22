@@ -23,6 +23,7 @@ import { ControlBandComponent } from 'src/app/shared/control-band/control-band.c
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
@@ -46,6 +47,7 @@ TimetableStationStore.resetLoading();
         ControlBandComponent,
         EmptyStateComponent,
         SegmentToggleComponent,
+        SkeletonBarComponent,
         TimetableStationTableComponent,
         TimetableSearchCardComponent,
     ],
@@ -93,6 +95,13 @@ export class TimetableStationComponent {
     ];
 
     readonly isLoading = toSignal(TimetableStationStore.isLoading$);
+    readonly hasFetchedTimetable = toSignal(
+        TimetableStationStore.hasFetchedTimetable$,
+        { initialValue: false },
+    );
+    /** 骨組みの時の行の数と、1 行の列車のセルの数 */
+    readonly skeletonHours = Array.from({ length: 4 }, (_, i) => i);
+    readonly skeletonCells = Array.from({ length: 6 }, (_, i) => i);
     readonly calendarId = toSignal(TimetableStationStore.calendarId$);
     readonly stationId = toSignal(TimetableStationStore.stationId$);
     readonly tripDirection = toSignal(TimetableStationStore.tripDirection$);
@@ -205,6 +214,7 @@ export class TimetableStationComponent {
 
     async fetchData(): Promise<void> {
         TimetableStationStore.enableLoading();
+        TimetableStationStore.setHasFetchedTimetable(false);
 
         try {
             // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
@@ -215,6 +225,8 @@ export class TimetableStationComponent {
                 lastValueFrom(this.#timetableStationService.fetchStations()),
                 lastValueFrom(this.#timetableStationService.fetchOperations()),
             ]);
+            // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
+            TimetableStationStore.setHasFetchedTimetable(true);
 
             // 充当編成は列車の運用番号とダイヤ（今日かどうか）が揃ってから取る。
             // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
@@ -226,7 +238,8 @@ export class TimetableStationComponent {
                 TimetableStationStore.resetOperationSightingTimeCrossSections();
             }
         } finally {
-            // 途中の reject でローディングバーが永久残留しないことを保証する
+            // 途中の reject でローディングバーと骨組みが永久残留しないことを保証する
+            TimetableStationStore.setHasFetchedTimetable(true);
             TimetableStationStore.disableLoading();
         }
     }
