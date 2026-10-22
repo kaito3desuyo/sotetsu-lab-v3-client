@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
@@ -189,5 +190,52 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
         expect(band.summary()).toBe('路線：本線');
         expect(band.filterActive()).toBe(true);
         expect(band.clearable()).toBe(false);
+    });
+});
+
+describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
+    let fixture: ComponentFixture<OperationRouteDiagramRouteFilterComponent>;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramRouteFilterComponent],
+        })
+            .overrideComponent(OperationRouteDiagramRouteFilterComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    });
+
+    afterEach(() => {
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+    });
+
+    it('運用番号があって取る前は、操作帯に路線のチップの形の骨組みを出す', () => {
+        OperationRouteDiagramStore.setOperationId('op-1');
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('app-control-band')).not.toBeNull();
+        expect(el.querySelector('app-skeleton-chips')).not.toBeNull();
+        expect(el.querySelector('app-filter-chips')).toBeNull();
+    });
+
+    it('運用番号が無ければ、操作帯ごと出さない（audit C6 のまま）', () => {
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-control-band',
+            ),
+        ).toBeNull();
     });
 });

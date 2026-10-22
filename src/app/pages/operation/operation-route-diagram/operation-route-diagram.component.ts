@@ -12,6 +12,7 @@ import { filter, map } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationRouteDiagramDrawingComponent } from './components/operation-route-diagram-drawing/operation-route-diagram-drawing.component';
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
@@ -35,6 +36,7 @@ OperationRouteDiagramStore.resetLoading();
         OperationRouteDiagramRouteFilterComponent,
         OperationRouteDiagramDrawingComponent,
         OperationSearchCardComponent,
+        SkeletonBarComponent,
     ],
 })
 export class OperationRouteDiagramComponent {
@@ -46,6 +48,14 @@ export class OperationRouteDiagramComponent {
     );
 
     readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
+    readonly isAwaitingOperationTrips = toSignal(
+        OperationRouteDiagramStore.isAwaitingOperationTrips$,
+        { initialValue: false },
+    );
+    /** 骨組みの縦書きの駅名の列の数（スマホ幅で横にあふれない数） */
+    readonly skeletonStationColumns = Array.from({ length: 8 }, (_, i) => i);
+    /** 骨組みの列車の線の数 */
+    readonly skeletonTripRows = Array.from({ length: 10 }, (_, i) => i);
     /** 検索カードに出すダイヤと運用。取得し直す間も前の値を出し続ける。 */
     readonly searchCalendarId = toSignal(
         OperationRouteDiagramStore.calendar$.pipe(
@@ -165,6 +175,7 @@ export class OperationRouteDiagramComponent {
         if (!OperationRouteDiagramStore.operationId) return;
 
         OperationRouteDiagramStore.enableLoading();
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
 
         // 列車と駅は互いに依存しないので並行に取る
         const results = await Promise.allSettled([
@@ -186,6 +197,7 @@ export class OperationRouteDiagramComponent {
         // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
         OperationRouteDiagramStore.initializeSelectedRouteIds();
         OperationRouteDiagramStore.disableLoading();
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
 
         const failure = results.find(
             (result): result is PromiseRejectedResult =>

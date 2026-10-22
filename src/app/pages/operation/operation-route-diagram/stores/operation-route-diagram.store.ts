@@ -26,6 +26,7 @@ type StoreProps = {
     stations: StationDetailsDto[];
     stationAliases: RouteDiagramStationAliases;
     selectedRouteIds: string[];
+    hasFetchedOperationTrips: boolean;
     loadingQueue: boolean[];
 };
 
@@ -38,6 +39,7 @@ const store = createStore(
         stations: [],
         stationAliases: {},
         selectedRouteIds: [],
+        hasFetchedOperationTrips: false,
         loadingQueue: [],
     }),
 );
@@ -102,6 +104,10 @@ export const OperationRouteDiagramStore = {
         const routeIds = visitedRouteIds(state.stations, tripsOf(state));
         store.update(setProp('selectedRouteIds', () => routeIds));
     },
+    /** いまの運用の取得が終わったか（失敗しても true）。取る前は図と路線のチップの代わりに骨組みを出す */
+    setHasFetchedOperationTrips(value: boolean): void {
+        store.update(setProp('hasFetchedOperationTrips', () => value));
+    },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));
     },
@@ -125,6 +131,15 @@ export const OperationRouteDiagramStore = {
     itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
     stations$: store.pipe(select((state) => state.stations)),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
+    hasFetchedOperationTrips$: store.pipe(
+        select((state) => state.hasFetchedOperationTrips),
+    ),
+    /** 運用番号があって、まだ取り終えていない（骨組みを出すとき） */
+    isAwaitingOperationTrips$: store.pipe(
+        select(
+            (state) => !!state.operationId && !state.hasFetchedOperationTrips,
+        ),
+    ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 
     /**
