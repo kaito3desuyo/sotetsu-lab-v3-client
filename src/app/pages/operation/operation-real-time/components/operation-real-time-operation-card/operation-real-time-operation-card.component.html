@@ -19,7 +19,7 @@
      外側は帳票の 1 行（角丸・白地は一覧側の白地が持つ。2026-10-06）。h-full で同じ段の高さにそろえ、
      content-start で中身は上に詰める（引き伸ばすと隣の行と上段の高さがずれる）。 -->
 <div
-    class="tw-box-border tw-grid tw-h-full tw-grid-cols-[auto_1fr_auto] tw-content-start tw-items-start tw-gap-x-3 tw-gap-y-0.5 tw-px-3 tw-py-2"
+    class="tw-box-border tw-grid tw-h-full tw-grid-cols-[auto_1fr_auto_auto] tw-content-start tw-items-start tw-gap-x-3 tw-gap-y-0.5 tw-px-3 tw-py-2"
 >
     <!-- 運用番号チップ -->
     <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
@@ -257,4 +257,19 @@
             }
         </div>
     </div>
+
+    <!-- この運用を投稿する（2026-10-22）。運用番号を入れた状態でダイアログを開く。
+         グリッドは行 1（上段）と行 2（履歴・現在位置）の最大 2 行。行 2 があるときだけ
+         2 行にまたがせて、カードの縦の中央に来るようにする -->
+    <button
+        mat-icon-button
+        type="button"
+        data-testid="row-post"
+        class="tw-col-start-4 tw-row-start-1 tw-self-center !tw-text-grey-600"
+        [class.tw-row-span-2]="showsHistories || showsPosition"
+        [attr.aria-label]="operation().operationNumber + '運用を投稿する'"
+        (click)="openPost()"
+    >
+        <mat-icon>edit_note</mat-icon>
+    </button>
 </div>
