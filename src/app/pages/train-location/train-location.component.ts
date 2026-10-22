@@ -133,6 +133,10 @@ export class TrainLocationComponent {
         this.#todaysCalendarListStateQuery.todaysCalendarIds$,
         { initialValue: [] },
     );
+    readonly #operatingSystemEndsByRouteId = toSignal(
+        this.#routeStationListStateQuery.operatingSystemEndsByRouteId$,
+        { initialValue: {} },
+    );
     readonly #routeStations = toSignal(
         this.#routeStationListStateQuery.routeStations$,
         { initialValue: [] },
@@ -234,9 +238,12 @@ export class TrainLocationComponent {
         ),
     );
 
-    /** 図の駅の並び。上りの列車がいつも図の上へ進む向き（新横浜線などは起点→終点を裏返す） */
+    /** 図の駅の並び。上りの列車がいつも図の上へ進む向き（新横浜線などは起点→終点を裏返す。向きは運行系統から） */
     readonly #orientedStationAxis = computed(() =>
-        orientStationAxis(this.stationAxisStations(), this.#allTripBlocks()),
+        orientStationAxis(
+            this.stationAxisStations(),
+            this.#operatingSystemEndsByRouteId()[this.selectedRouteId() ?? ''],
+        ),
     );
 
     /** 図のカード。種別が変わる駅に着いて停車中の列車は変更後の種別・列番 */

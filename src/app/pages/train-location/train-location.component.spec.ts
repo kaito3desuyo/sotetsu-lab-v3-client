@@ -47,6 +47,7 @@ describe('TrainLocationComponent', () => {
                         routeStations$: of([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
+                        operatingSystemEndsByRouteId$: of({}),
                     },
                 },
             ],
@@ -295,6 +296,7 @@ describe('TrainLocationComponent', () => {
                             routeStations$: of([
                                 { routeId: 'route-1', routeName: '本線' },
                             ]),
+                            operatingSystemEndsByRouteId$: of({}),
                         },
                     },
                 ],
@@ -440,6 +442,7 @@ describe('TrainLocationComponent の再訪', () => {
                         routeStations$: of([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
+                        operatingSystemEndsByRouteId$: of({}),
                     },
                 },
             ],
