@@ -209,6 +209,9 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     afterEach(() => {
         OperationRouteDiagramStore.setOperationId(null as unknown as string);
         OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        OperationRouteDiagramStore.setStations([]);
+        OperationRouteDiagramStore.setOperationTrips(null);
+        OperationRouteDiagramStore.setSelectedRouteIds([]);
     });
 
     it('運用番号があって取る前は、操作帯に路線のチップの形の骨組みを出す', () => {
@@ -223,6 +226,41 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
         expect(el.querySelector('app-control-band')).not.toBeNull();
         expect(el.querySelector('app-skeleton-chips')).not.toBeNull();
         expect(el.querySelector('app-filter-chips')).toBeNull();
+    });
+
+    it('取る前から取った後まで、操作帯は同じ要素のまま（取り直しで作り直さない）', () => {
+        OperationRouteDiagramStore.setOperationId('op-1');
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+        const before = el.querySelector('app-control-band');
+
+        OperationRouteDiagramStore.setStations([
+            {
+                stationId: 's1',
+                routeStationLists: [
+                    { route: { routeId: 'r1', routeName: '本線' } },
+                ],
+            },
+        ] as never);
+        OperationRouteDiagramStore.setOperationTrips({
+            operation: {},
+            trips: [
+                {
+                    startTime: { stationId: 's1' },
+                    endTime: { stationId: 's1' },
+                },
+            ],
+        } as never);
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
+        fixture.detectChanges();
+
+        expect(el.querySelector('app-filter-chips')).not.toBeNull();
+        expect(before).not.toBeNull();
+        expect(el.querySelector('app-control-band')).toBe(before);
     });
 
     it('運用番号が無ければ、操作帯ごと出さない（audit C6 のまま）', () => {
