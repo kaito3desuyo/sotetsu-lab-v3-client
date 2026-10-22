@@ -27,10 +27,11 @@
                         {{ calendar.calendarName }}
                     </span>
                 } @else {
-                    <span
-                        class="tw-inline-block tw-h-6 tw-w-24 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
-                        aria-label="読み込み中"
-                    ></span>
+                    <span class="tw-inline-block" aria-label="読み込み中">
+                        <app-skeleton-bar
+                            class="tw-h-6 tw-w-24"
+                        ></app-skeleton-bar>
+                    </span>
                 }
                 @if (revisionLabel()) {
                     <span class="tw-text-xs tw-text-muted">
@@ -52,10 +53,9 @@
         >
             <!-- データ確定前は骨組みを出し、偽の 0 と区別する -->
             @if (isLoading()) {
-                <span
-                    class="tw-block tw-h-9 tw-w-12 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
-                    aria-label="読み込み中"
-                ></span>
+                <div aria-label="読み込み中">
+                    <app-skeleton-bar class="tw-h-9 tw-w-12"></app-skeleton-bar>
+                </div>
             } @else {
                 <span
                     class="tw-text-3xl tw-font-bold tw-tabular-nums tw-text-structure"
@@ -69,10 +69,9 @@
             class="tw-flex tw-flex-col tw-gap-1 tw-rounded-control tw-bg-paper-2 tw-p-3"
         >
             @if (isLoading()) {
-                <span
-                    class="tw-block tw-h-9 tw-w-12 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
-                    aria-label="読み込み中"
-                ></span>
+                <div aria-label="読み込み中">
+                    <app-skeleton-bar class="tw-h-9 tw-w-12"></app-skeleton-bar>
+                </div>
             } @else {
                 <span
                     class="tw-text-3xl tw-font-bold tw-tabular-nums tw-text-structure"

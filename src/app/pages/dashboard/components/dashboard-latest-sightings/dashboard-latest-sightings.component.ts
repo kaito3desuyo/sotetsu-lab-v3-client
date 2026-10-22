@@ -13,6 +13,7 @@ import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-co
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { DashboardStore } from '../../stores/dashboard.store';
 
@@ -36,6 +37,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
         DateFnsPipe,
         OperationNumberColorPipe,
         OperationNumberLinkComponent,
+        SkeletonBarComponent,
         TripPositionComponent,
     ],
 })

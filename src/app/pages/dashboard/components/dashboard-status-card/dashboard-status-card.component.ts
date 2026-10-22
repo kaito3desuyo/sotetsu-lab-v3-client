@@ -11,6 +11,7 @@ import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { interval } from 'rxjs';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { DashboardStore } from '../../stores/dashboard.store';
 
 /**
@@ -23,6 +24,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
     selector: 'app-dashboard-status-card',
     templateUrl: './dashboard-status-card.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [SkeletonBarComponent],
 })
 export class DashboardStatusCardComponent {
     readonly #destroyRef = inject(DestroyRef);

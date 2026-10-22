@@ -34,7 +34,7 @@ describe('DashboardStatusCardComponent', () => {
         fixture.detectChanges();
 
         const skeletons = fixture.nativeElement.querySelectorAll(
-            '.tw-animate-pulse[aria-label="読み込み中"]',
+            '[aria-label="読み込み中"] app-skeleton-bar',
         ) as NodeListOf<HTMLElement>;
         expect(statTexts()).toEqual([]);
         // カレンダー名（未取得）1 + スタット 2
