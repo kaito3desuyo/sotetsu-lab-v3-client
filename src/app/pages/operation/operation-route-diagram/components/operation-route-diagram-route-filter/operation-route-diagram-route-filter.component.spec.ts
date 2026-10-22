@@ -276,4 +276,37 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
             ),
         ).toBeNull();
     });
+
+    it('alwaysVisible なら、運用番号が未設定でチップが無くても帯を出す', () => {
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.componentRef.setInput('alwaysVisible', true);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-control-band',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('路線のチップが無いとき（運用を開いていない）は、要約に路線を付けない', () => {
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        fixture = TestBed.createComponent(
+            OperationRouteDiagramRouteFilterComponent,
+        );
+        fixture.componentRef.setInput('alwaysVisible', true);
+        fixture.componentRef.setInput(
+            'summaryLead',
+            '2026/3/14改正 平日ダイヤ',
+        );
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.routeOptions()).toEqual([]);
+        expect(fixture.componentInstance.summary()).toBe(
+            '2026/3/14改正 平日ダイヤ',
+        );
+    });
 });

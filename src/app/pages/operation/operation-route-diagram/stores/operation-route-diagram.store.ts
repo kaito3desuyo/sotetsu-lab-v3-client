@@ -80,7 +80,7 @@ export const OperationRouteDiagramStore = {
     setOperationId(operationId: string): void {
         store.update(setProp('operationId', () => operationId));
     },
-    setOperationTrips(operationTrips: OperationTripsDto): void {
+    setOperationTrips(operationTrips: OperationTripsDto | null): void {
         store.update(setProp('operationTrips', () => operationTrips));
     },
     setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
