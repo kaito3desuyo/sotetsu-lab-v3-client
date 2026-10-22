@@ -238,16 +238,6 @@ export const TimetableStationStore = {
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 
-    stationName$: store.pipe(
-        select((state) => ({
-            stationId: state.stationId,
-            stations: state.stations,
-        })),
-        map(
-            ({ stationId, stations }) =>
-                stations.find((o) => o.stationId === stationId)?.stationName,
-        ),
-    ),
     timetableData$: combineLatest([
         store.pipe(select((state) => state.trips)),
         store.pipe(select((state) => state.tripBlocks)),

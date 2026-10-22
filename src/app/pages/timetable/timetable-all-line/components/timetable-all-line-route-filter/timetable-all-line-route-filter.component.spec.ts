@@ -63,6 +63,26 @@ describe('TimetableAllLineRouteFilterComponent', () => {
         expect(band.filterActive()).toBe(true);
         expect(band.clearable()).toBe(false);
     });
+
+    it('帯は列車ダイヤグラムと同じ manual（余白は他ページと同じ gutter なので flush にしない）で、畳んだ状態をページと受け渡す', () => {
+        const band = fixture.debugElement.query(
+            By.directive(ControlBandComponent),
+        ).componentInstance as ControlBandComponent;
+        expect(band.collapse()).toBe('manual');
+        expect(band.flush()).toBe(false);
+        expect(band.collapsed()).toBe(false);
+
+        fixture.componentRef.setInput('collapsed', true);
+        fixture.detectChanges();
+        expect(band.collapsed()).toBe(true);
+
+        const emitted: boolean[] = [];
+        fixture.componentInstance.collapsed.subscribe((value) =>
+            emitted.push(value),
+        );
+        band.collapsed.set(false);
+        expect(emitted).toEqual([false]);
+    });
 });
 
 describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
@@ -128,5 +148,38 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
                 'app-control-band',
             ),
         ).toBeNull();
+    });
+
+    it('alwaysVisible なら、選択肢が無くても帯を出す', () => {
+        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
+        fixture.componentRef.setInput('alwaysVisible', true);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-control-band',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('summaryLead は路線の要約の前に付き、取る前は頭だけになる', () => {
+        TimetableAllLineStore.setCalendarId('cal-1');
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
+        fixture.componentRef.setInput(
+            'summaryLead',
+            '2026/3/14改正 平日ダイヤ 下り',
+        );
+        fixture.detectChanges();
+        expect(fixture.componentInstance.bandSummaryOrEmpty()).toBe(
+            '2026/3/14改正 平日ダイヤ 下り',
+        );
+
+        TimetableAllLineStore.setHasFetchedTripBlocks(true);
+        fixture.detectChanges();
+        expect(fixture.componentInstance.bandSummaryOrEmpty()).toBe(
+            '2026/3/14改正 平日ダイヤ 下り 全路線',
+        );
     });
 });

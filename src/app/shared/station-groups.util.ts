@@ -2,6 +2,7 @@ import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-detail
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { sortByThroughServiceAgency } from './agencies-in-through-service-order.util';
+import { StepTarget } from './step-nav/step-target.type';
 
 /** 駅 select の 1 グループ（mat-optgroup 1 つ分）。 */
 export interface StationGroup {
@@ -39,4 +40,38 @@ export function buildStationGroups(
             stations: (route.routeStationLists ?? []).map((rsl) => rsl.station),
         };
     });
+}
+
+/**
+ * 前後の駅（駅別時刻表の「前後へ送る」）。今の駅を含む路線ごとに、路線の中の 1 つ前と 1 つ後を取る。
+ * 分岐駅は隣を全部返す（二俣川: 前 鶴ヶ峰／次 希望ヶ丘・南万騎が原）。駅 ID で重複を除く
+ * （目黒線と東横線のように同じ駅を持つ路線で、同じ隣が二重に出ないように）。
+ */
+export function findNeighborStations(
+    groups: StationGroup[],
+    stationId: string | null | undefined,
+): { prev: StepTarget[]; next: StepTarget[] } {
+    const prev = new Map<string, StepTarget>();
+    const next = new Map<string, StepTarget>();
+    if (!stationId) return { prev: [], next: [] };
+
+    for (const { stations } of groups) {
+        const index = stations.findIndex((s) => s.stationId === stationId);
+        if (index < 0) continue;
+        const before = stations[index - 1];
+        const after = stations[index + 1];
+        if (before && !prev.has(before.stationId)) {
+            prev.set(before.stationId, {
+                id: before.stationId,
+                label: before.stationName,
+            });
+        }
+        if (after && !next.has(after.stationId)) {
+            next.set(after.stationId, {
+                id: after.stationId,
+                label: after.stationName,
+            });
+        }
+    }
+    return { prev: [...prev.values()], next: [...next.values()] };
 }

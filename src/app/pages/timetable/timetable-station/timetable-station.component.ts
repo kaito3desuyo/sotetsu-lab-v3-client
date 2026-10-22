@@ -6,6 +6,7 @@ import {
     inject,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,15 +18,20 @@ import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
-import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
-import { buildStationGroups } from 'src/app/shared/station-groups.util';
-import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
+import {
+    buildStationGroups,
+    findNeighborStations,
+} from 'src/app/shared/station-groups.util';
+import { StepNavComponent } from 'src/app/shared/step-nav/step-nav.component';
+import { StepTarget } from 'src/app/shared/step-nav/step-target.type';
+import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-toggle/sticky-direction-toggle.component';
+import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
@@ -38,22 +44,26 @@ TimetableStationStore.resetLoading();
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
 
+/** 駅の選択欄の先頭の「全線（駅を選ばない）」の値。選ぶと全線時刻表へ移る（2026-10-22） */
+export const ALL_LINE_OPTION = '__all-line__';
+
 @Component({
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
-    styleUrl: './timetable-station.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        MatDividerModule,
         MatFormFieldModule,
         MatProgressBarModule,
         MatSelectModule,
         DateFnsPipe,
         ControlBandComponent,
         EmptyStateComponent,
-        SegmentToggleComponent,
         SkeletonBarComponent,
+        StepNavComponent,
+        StickyDirectionToggleComponent,
         TimetableStationTableComponent,
-        TimetableSearchCardComponent,
+        TodayCalendarButtonComponent,
     ],
 })
 export class TimetableStationComponent {
@@ -89,14 +99,14 @@ export class TimetableStationComponent {
         buildStationGroups(this.#routeStations(), this.#agencies()),
     );
 
+    readonly allLineOption = ALL_LINE_OPTION;
+
+    /** 前後の駅（分岐駅は隣を全部）。docs/design.md「前後へ送る」 */
+    readonly neighborStations = computed(() =>
+        findNeighborStations(this.stationGroups(), this.stationId()),
+    );
+
     /** 上り/下り 全幅2セグメントトグルの選択肢（98 G0-3・mockup-01） */
-    readonly tripDirectionOptions: readonly [
-        SegmentToggleOption,
-        SegmentToggleOption,
-    ] = [
-        { value: ETripDirection.INBOUND, label: '上り' },
-        { value: ETripDirection.OUTBOUND, label: '下り' },
-    ];
 
     readonly isLoading = toSignal(TimetableStationStore.isLoading$);
     readonly hasFetchedTimetable = toSignal(
@@ -145,9 +155,7 @@ export class TimetableStationComponent {
                 (station) => station.stationId === this.stationId(),
             )?.stationName,
             calendar: this.selectedCalendar(),
-            directionLabel: this.tripDirectionOptions.find(
-                (option) => option.value === this.tripDirection(),
-            )?.label,
+            directionLabel: tripDirectionLabel.get(this.tripDirection()),
         }),
     );
 
@@ -255,6 +263,19 @@ export class TimetableStationComponent {
     }
 
     onStationChange(stationId: string): void {
+        if (stationId === ALL_LINE_OPTION) {
+            this.#handleNavigationResult(
+                this.#router.navigate([
+                    'timetable',
+                    'all-line',
+                    {
+                        calendar_id: this.calendarId(),
+                        trip_direction: this.tripDirection(),
+                    },
+                ]),
+            );
+            return;
+        }
         if (stationId === this.stationId()) return;
         const navigation = this.#router.navigate([
             'timetable',
@@ -280,6 +301,10 @@ export class TimetableStationComponent {
             },
         ]);
         this.#handleNavigationResult(navigation);
+    }
+
+    onStep(target: StepTarget): void {
+        this.onStationChange(target.id);
     }
 
     onDirectionChange(value: number | string): void {

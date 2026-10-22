@@ -1,14 +1,15 @@
 @if (calendar()) {
-    <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
-        <!-- 改正日・ダイヤ名・方向は、平日は青・土休日は赤の帯で出す（運用行路図と同じ帯）。
-             7 月にモックに無いとして消していたが、検索カードは長い表の下にあり見えないため戻した（2026-10-05） -->
-        <app-calendar-band
-            [calendar]="calendar()"
-            [suffix]="tripDirectionLabel.get(tripDirection()) + '時刻表'"
-        ></app-calendar-band>
-        <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+    <article
+        class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-clip tw-rounded-card tw-bg-white"
+    >
+        <!-- 改正日・ダイヤ名・方向の帯（app-calendar-band）は 2026-10-22 ユーザー指示で外した。
+             操作帯の要約の行に改正日・ダイヤ・方向が出る -->
+        <div
+            class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-1 tw-px-4 tw-pb-4 tw-pt-1"
+        >
             @if (trips().length) {
                 <mat-paginator
+                    class="tw-shrink-0"
                     [length]="pageSettings().length"
                     [pageIndex]="pageSettings().pageIndex"
                     [pageSize]="pageSettings().pageSize"
@@ -19,15 +20,15 @@
                 <!-- 縦にも横にも大きい表なので、この箱の中で縦横スクロールさせる
                      （design.md 面の掟・2026-09-24）。横だけの箱にすると箱がスクロール
                      コンテナになり、見出し 3 段の縦の sticky がページ基準で効かず流れて
-                     消えていた。高さは「画面 − トップバー − 16/32px」（過去の運用情報と同じ）。
+                     消えていた。高さは px の決め打ちをせず、ページ（画面いっぱいの箱）の残りを
+                     カードが全部取り、そのカードの中でページ送りを引いた残りを
+                     この箱が取る（tw-flex-1。列車ダイヤグラムと同じ・2026-10-22）。
                      罫線は border-separate + 各セルの右・下で引く（面の掟）。以前は
                      border-collapse の罫線が sticky のセルから外れて消えるのを、疑似要素で
                      描き直して補っていた。外枠は表自身の罫線で閉じるので、箱には枠を付けない。
                      見出しのセルは余白 0 で 3 段とも 24px ちょうどにする（運用番号のタグ 21.5px に
                      UA の余白が乗ると 24.5px になり、sticky の位置とずれて隙間が透けた） -->
-                <div
-                    class="tw-max-h-[calc(100dvh_-_80px_-_var(--control-band-offset,0px))] tw-overflow-auto md:tw-max-h-[calc(100dvh_-_96px_-_var(--control-band-offset,0px))]"
-                >
+                <div class="tw-min-h-0 tw-flex-1 tw-overflow-auto">
                     <table
                         class="tw-border-separate tw-border-spacing-0 tw-whitespace-nowrap tw-text-[16px] tw-leading-none"
                     >
@@ -394,8 +395,8 @@
                                     </tr>
                                 }
                             }
-                            <!-- 終着時刻・終着駅の 2 段と、その下の編集・コピー・削除・グループの段は
-                                 箱の下端に積んで固定する（ユーザー指示 2026-09-24・ボタンは 2026-10-12 で md 以上だけ）。
+                            <!-- 終着時刻・終着駅の 2 段は箱の下端に固定する。編集・コピー・削除・グループの段は
+                                 2026-10-22 ユーザー指示で貼り付けず、表の最後まで送ると出る。
                                  終着時刻の段の上は二重罫線。各段の bottom は、下にある段の高さの合計を測って決める -->
                             <tr #bottomRow class="tw-h-6">
                                 <td
@@ -452,10 +453,9 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr #bottomRow>
+                            <tr>
                                 <td
                                     colspan="2"
-                                    [style.bottom.px]="bottomRowOffsets()[2]"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     編集
@@ -463,10 +463,7 @@
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        [style.bottom.px]="
-                                            bottomRowOffsets()[2]
-                                        "
-                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -484,10 +481,9 @@
                                     </td>
                                 }
                             </tr>
-                            <tr #bottomRow>
+                            <tr>
                                 <td
                                     colspan="2"
-                                    [style.bottom.px]="bottomRowOffsets()[3]"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     コピー
@@ -495,10 +491,7 @@
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        [style.bottom.px]="
-                                            bottomRowOffsets()[3]
-                                        "
-                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -516,10 +509,9 @@
                                     </td>
                                 }
                             </tr>
-                            <tr #bottomRow>
+                            <tr>
                                 <td
                                     colspan="2"
-                                    [style.bottom.px]="bottomRowOffsets()[4]"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     削除
@@ -527,10 +519,7 @@
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        [style.bottom.px]="
-                                            bottomRowOffsets()[4]
-                                        "
-                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         <button
                                             class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
@@ -551,10 +540,9 @@
                                     </td>
                                 }
                             </tr>
-                            <tr #bottomRow>
+                            <tr>
                                 <td
                                     colspan="2"
-                                    [style.bottom.px]="bottomRowOffsets()[5]"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                 >
                                     グループ
@@ -562,10 +550,7 @@
 
                                 @for (trip of trips(); track trip.tripId) {
                                     <td
-                                        [style.bottom.px]="
-                                            bottomRowOffsets()[5]
-                                        "
-                                        class="tw-sticky tw-z-20 tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                     >
                                         @if (!groupingBaseTrip()) {
                                             <button

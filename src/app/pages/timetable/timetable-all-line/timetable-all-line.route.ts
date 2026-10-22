@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
+import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 
 export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
     {
@@ -11,7 +12,7 @@ export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
             ),
         providers: [TimetableAllLineService],
         resolve: {
-            from: pageResolver(),
+            from: pageResolver(TimetableAllLineStore.persistInitialized$),
         },
         data: {
             title: '全線時刻表',

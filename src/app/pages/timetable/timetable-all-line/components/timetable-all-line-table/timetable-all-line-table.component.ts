@@ -1,4 +1,3 @@
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
 import {
     afterRenderEffect,
@@ -6,14 +5,12 @@ import {
     Component,
     computed,
     ElementRef,
-    inject,
     input,
     output,
     signal,
     viewChild,
     viewChildren,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -21,13 +18,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { isAfter, parse } from 'date-fns';
 import { isEqual } from 'es-toolkit';
-import { map } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { CalendarBandComponent } from 'src/app/shared/calendar-band/calendar-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripClassShortNamePipe } from 'src/app/core/pipes/trip-class-short-name.pipe';
@@ -53,7 +48,6 @@ import { TripEndpoints } from '../../utils/trip-endpoints.util';
         MatTooltipModule,
         MatButtonModule,
         MatIconModule,
-        CalendarBandComponent,
         EmptyStateComponent,
         OperationNumberTagComponent,
         TimetableAllLineGetStationNumberingPipe,
@@ -102,7 +96,7 @@ export class TimetableAllLineTableComponent {
     // signal query は ES private（#）にできない Angular 制約があるため protected
     protected readonly originNameRow =
         viewChild<ElementRef<HTMLElement>>('originNameRow');
-    /** 箱の下端に積んで固定する段（終着時刻・終着駅・編集・コピー・削除・グループ）。上から順 */
+    /** 箱の下端に積んで固定する段（終着時刻・終着駅）。上から順 */
     protected readonly bottomRows =
         viewChildren<ElementRef<HTMLElement>>('bottomRow');
     /**
@@ -111,18 +105,10 @@ export class TimetableAllLineTableComponent {
      */
     readonly originNameRowHeight = signal(0);
     /**
-     * 下端に積む段それぞれの bottom（px）。null の段は固定しない。終着駅の高さは駅名の長さで、
-     * ボタンの段はグルーピング中のボタンで変わるので、描画後に測る。
-     * ボタンの 4 段を固定するのは md 以上だけ（ユーザー指示 2026-10-12。スマホ幅では
-     * 上下の固定で時刻の見える高さが 330px ほどになり窮屈だった）。
+     * 下端に積む段それぞれの bottom（px）。終着駅の高さは駅名の長さで変わるので、描画後に測る。
+     * 編集・コピー・削除・グループの段は固定しない（ユーザー指示 2026-10-22「縦幅が狭い」）。
      */
-    readonly bottomRowOffsets = signal<(number | null)[]>([]);
-    readonly #isMdUp = toSignal(
-        inject(BreakpointObserver)
-            .observe('(min-width: 768px)')
-            .pipe(map((state) => state.matches)),
-        { initialValue: false },
-    );
+    readonly bottomRowOffsets = signal<number[]>([]);
 
     /** G12: 空状態の次アクションラベル（mockup-07 準拠）。 */
     readonly oppositeDirectionActionLabel = computed(() => {
@@ -145,12 +131,8 @@ export class TimetableAllLineTableComponent {
             if (origin !== this.originNameRowHeight()) {
                 this.originNameRowHeight.set(origin);
             }
-            const isMdUp = this.#isMdUp();
-            const rows = this.bottomRows();
-            // 上の 2 段（終着時刻・終着駅）はいつも固定、残りのボタンの段は md 以上だけ
             const offsets = stickyBottomOffsets(
-                rows.map((row) => measure(row)),
-                rows.map((_, index) => index < 2 || isMdUp),
+                this.bottomRows().map((row) => measure(row)),
             );
             if (!isEqual(offsets, this.bottomRowOffsets())) {
                 this.bottomRowOffsets.set(offsets);
