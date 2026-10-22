@@ -58,6 +58,8 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     loadingQueue: boolean[];
+    /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す。保存しない */
+    hasFetchedTrainDiagram: boolean;
     /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
     /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
@@ -80,6 +82,7 @@ const store = createStore(
         operationSightingTimeCrossSections: {},
         itineraryLinks: [],
         loadingQueue: [],
+        hasFetchedTrainDiagram: false,
         controlCollapsed: false,
     }),
 );
@@ -276,6 +279,10 @@ export const TrainDiagramStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す */
+    setHasFetchedTrainDiagram(value: boolean): void {
+        store.update(setProp('hasFetchedTrainDiagram', () => value));
+    },
     setControlCollapsed(collapsed: boolean): void {
         store.update(setProp('controlCollapsed', () => collapsed));
     },
@@ -297,6 +304,9 @@ export const TrainDiagramStore = {
         select((state) => state.operationSightingTimeCrossSections),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    hasFetchedTrainDiagram$: store.pipe(
+        select((state) => state.hasFetchedTrainDiagram),
+    ),
     controlCollapsed$: store.pipe(select((state) => state.controlCollapsed)),
 
     /**

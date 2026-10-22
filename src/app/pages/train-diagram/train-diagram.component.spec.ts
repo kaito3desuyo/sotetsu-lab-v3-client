@@ -7,7 +7,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { BehaviorSubject, firstValueFrom, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, firstValueFrom, of, throwError } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainDiagramComponent } from './train-diagram.component';
@@ -109,6 +109,7 @@ describe('TrainDiagramComponent', () => {
         TrainDiagramStore.setPxPerMinute(10);
         TrainDiagramStore.setAxisPxPerMinute(null);
         TrainDiagramStore.setNetworkStations([]);
+        TrainDiagramStore.setHasFetchedTrainDiagram(false);
         TrainDiagramStore.resetLoading();
     });
 
@@ -166,6 +167,125 @@ describe('TrainDiagramComponent', () => {
         ).rejects.toThrow('fetch failed');
 
         expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+    });
+
+    it('列車を取り終わるまでは図の代わりに骨組みを出し、空表示も出さない', () => {
+        TrainDiagramStore.setHasFetchedTrainDiagram(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="train-diagram-skeleton"]'),
+        ).not.toBeNull();
+        expect(el.querySelector('app-train-diagram-chart')).toBeNull();
+        expect(el.querySelector('app-empty-state')).toBeNull();
+    });
+
+    it('取り終えたら骨組みを消して図を出す', () => {
+        TrainDiagramStore.setHasFetchedTrainDiagram(true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="train-diagram-skeleton"]'),
+        ).toBeNull();
+    });
+
+    it('列車の取得が失敗しても骨組みを消す', async () => {
+        const service = TestBed.inject(TrainDiagramService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        service.fetchTripBlocks = () =>
+            throwError(() => new Error('fetch failed'));
+
+        await component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(true);
+    });
+
+    it('路線・方向だけを変えた取得では骨組みに戻さない', async () => {
+        await component.fetchData({ refetchTripBlocks: true });
+        const pending = new Subject<undefined>();
+        const service = TestBed.inject(TrainDiagramService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        service.fetchTripBlocks = () => pending;
+
+        void component.fetchData({ refetchTripBlocks: false });
+
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(true);
+    });
+
+    it('ダイヤを変えた取得の途中で路線だけの取得が先に終わっても、骨組みのまま', async () => {
+        await component.fetchData({ refetchTripBlocks: true });
+        const pending = new Subject<undefined>();
+        const service = TestBed.inject(TrainDiagramService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        service.fetchTripBlocks = () => pending;
+
+        void component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await component.fetchData({ refetchTripBlocks: false });
+
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(false);
+    });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        // 実タイマーは使わない（コンストラクタの Router.navigate の失敗が他のテストに漏れるため）
+        const flush = async () => {
+            for (let i = 0; i < 20; i++) await Promise.resolve();
+        };
+        const service = TestBed.inject(TrainDiagramService) as {
+            fetchTripBlocks: () => unknown;
+        };
+        let calls = 0;
+        let tripBlocks$ = new Subject<undefined>();
+        service.fetchTripBlocks = () => {
+            calls++;
+            return tripBlocks$;
+        };
+
+        void component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        // 1 つ目の取得が fetchTripBlocks を購読するまで待つ（待たないと 1 つ目も新しい Subject を受け取る）
+        await flush();
+        expect(calls).toBe(1);
+        const previousTripBlocks$ = tripBlocks$;
+        fixture.destroy();
+
+        tripBlocks$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(TrainDiagramComponent);
+        component = fixture.componentInstance;
+        void component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await flush();
+        expect(calls).toBe(2);
+
+        previousTripBlocks$.next(undefined);
+        previousTripBlocks$.complete();
+        await flush();
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(false);
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(true);
     });
 
     it('highlightedTripIds: 続きのある2本を持つ block で片方を選ぶと、つながりの両方の tripId が入る', () => {
