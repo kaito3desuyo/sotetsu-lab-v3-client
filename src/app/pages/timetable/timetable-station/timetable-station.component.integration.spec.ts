@@ -252,6 +252,18 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         expect(text).not.toContain('不明');
     });
 
+    it('下部に「時刻表を検索する」カードは出ない（帯に寄せた）', async () => {
+        const fixture = await setup();
+        await sleep(300);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-timetable-search-card',
+            ),
+        ).toBeNull();
+    });
+
     it('まとめて返る結果に無い運用だけが「不明」になり、他の充当編成は描画される', async () => {
         const fixture = await setup({
             operationSighting: {

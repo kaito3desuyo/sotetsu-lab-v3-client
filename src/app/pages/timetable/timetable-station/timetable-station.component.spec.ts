@@ -12,7 +12,10 @@ import { Subject, of } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
-import { TimetableStationComponent } from './timetable-station.component';
+import {
+    ALL_LINE_OPTION,
+    TimetableStationComponent,
+} from './timetable-station.component';
 
 describe('TimetableStationComponent', () => {
     let component: TimetableStationComponent;
@@ -252,5 +255,73 @@ describe('TimetableStationComponent の読み込み中', () => {
 
         await finishFetch();
         expect(query('[data-testid="timetable-station-skeleton"]')).toBeNull();
+    });
+});
+
+describe('TimetableStationComponent の帯の操作', () => {
+    let component: TimetableStationComponent;
+    let navigate: jest.SpyInstance;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableStationComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                calendar_id: 'cal-1',
+                                station_id: 'st-1',
+                                trip_direction: '1',
+                            }),
+                        ),
+                    },
+                },
+                {
+                    provide: TimetableStationService,
+                    useValue: {
+                        fetchCalendar: () => of(undefined),
+                        fetchTrips: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
+                        fetchStations: () => of(undefined),
+                        fetchOperations: () => of(undefined),
+                        fetchOperationSightingTimeCrossSections: () =>
+                            of(undefined),
+                    },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+            ],
+        })
+            .overrideComponent(TimetableStationComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        component = TestBed.createComponent(
+            TimetableStationComponent,
+        ).componentInstance;
+        navigate.mockClear();
+    });
+
+    it('駅の選択欄で「全線」を選ぶと、同じダイヤ・方向で全線時刻表へ移る', () => {
+        component.onStationChange(ALL_LINE_OPTION);
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'all-line',
+            { calendar_id: 'cal-1', trip_direction: 1 },
+        ]);
+    });
+
+    it('前後の駅へ送ると、ダイヤ・方向を引き継いで駅だけ替える', () => {
+        component.onStep({ id: 'st-2', label: '希望ヶ丘' });
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'station',
+            { calendar_id: 'cal-1', station_id: 'st-2', trip_direction: 1 },
+        ]);
     });
 });
