@@ -22,6 +22,7 @@ import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
@@ -31,6 +32,10 @@ import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableAllLineStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-timetable-all-line',
     templateUrl: './timetable-all-line.component.html',
@@ -38,6 +43,7 @@ TimetableAllLineStore.resetLoading();
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        SkeletonBarComponent,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
         TimetableSearchCardComponent,
@@ -79,6 +85,14 @@ export class TimetableAllLineComponent {
     readonly previousTrips = toSignal(TimetableAllLineStore.previousTrips$, {
         initialValue: new Map(),
     });
+    readonly isAwaitingTripBlocks = toSignal(
+        TimetableAllLineStore.isAwaitingTripBlocks$,
+        { initialValue: false },
+    );
+    /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
+    readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
+    /** 骨組みの列車の列の数 */
+    readonly skeletonColumns = Array.from({ length: 30 }, (_, i) => i);
     readonly calendar = toSignal(
         TimetableAllLineStore.calendarId$.pipe(
             mergeMap((id) =>
@@ -88,6 +102,9 @@ export class TimetableAllLineComponent {
     );
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -125,7 +142,9 @@ export class TimetableAllLineComponent {
     async fetchData(): Promise<void> {
         if (!TimetableAllLineStore.calendarId) return;
 
+        const seq = ++fetchSeq;
         TimetableAllLineStore.enableLoading();
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -147,6 +166,10 @@ export class TimetableAllLineComponent {
             TimetableAllLineStore.initializeSelectedRouteIds();
         } finally {
             TimetableAllLineStore.disableLoading();
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === fetchSeq) {
+                TimetableAllLineStore.setHasFetchedTripBlocks(true);
+            }
         }
     }
 

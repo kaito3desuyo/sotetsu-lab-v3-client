@@ -21,6 +21,10 @@ import { formatPastTimeSummary } from './utils/operation-past-time-summary.util'
 
 OperationPastTimeStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-operation-past-time',
     templateUrl: './operation-past-time.component.html',
@@ -73,6 +77,9 @@ export class OperationPastTimeComponent {
     }
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -93,7 +100,9 @@ export class OperationPastTimeComponent {
     }
 
     async fetchData(): Promise<void> {
+        const seq = ++fetchSeq;
         OperationPastTimeStore.enableLoading();
+        OperationPastTimeStore.setHasFetchedPastTime(false);
 
         try {
             // どれも日付の範囲だけで取れるので並行に取る（以前は 1 本ずつ待っていた）
@@ -112,6 +121,10 @@ export class OperationPastTimeComponent {
         } finally {
             // 途中の reject でローディングバーが残り続けないようにする
             OperationPastTimeStore.disableLoading();
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === fetchSeq) {
+                OperationPastTimeStore.setHasFetchedPastTime(true);
+            }
         }
     }
 }

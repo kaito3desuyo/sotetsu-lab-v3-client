@@ -21,6 +21,7 @@ import { RouteStationListStateQuery } from 'src/app/global-states/route-station-
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import {
     estimatePositions,
@@ -62,6 +63,10 @@ const CURRENT_TIME_REFRESH_MS = 10_000;
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（train-diagram と同一パターン）
 TrainLocationStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
@@ -70,6 +75,7 @@ TrainLocationStore.resetLoading();
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        SkeletonBarComponent,
         TrainLocationControllerComponent,
         TrainLocationLineComponent,
         TrainLocationStationPanelComponent,
@@ -89,6 +95,12 @@ export class TrainLocationComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
 
     readonly isLoading = toSignal(TrainLocationStore.isLoading$);
+    readonly hasFetchedTrainLocation = toSignal(
+        TrainLocationStore.hasFetchedTrainLocation$,
+        { initialValue: false },
+    );
+    /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
+    readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
     readonly calendarId = toSignal(TrainLocationStore.calendarId$, {
         initialValue: null,
     });
@@ -252,7 +264,7 @@ export class TrainLocationComponent {
      * 単一路線選択で駅軸は常に非空のため「駅軸0件」ではなく「在線0本」で判定する。
      */
     readonly hasNoTrainsInService = computed(() => {
-        if (this.isLoading()) return false;
+        if (!this.hasFetchedTrainLocation()) return false;
         return this.positions().length === 0;
     });
     /** 時刻指定モードのみ「現在時刻に戻す」を次アクションとして提示する。 */
@@ -357,6 +369,9 @@ export class TrainLocationComponent {
     readonly #firstLoadDone = signal(false);
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の路線図が一瞬出ないようにする
+        TrainLocationStore.setHasFetchedTrainLocation(false);
+
         interval(CURRENT_TIME_REFRESH_MS)
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(() => this.#now.set(new Date()));
@@ -442,7 +457,9 @@ export class TrainLocationComponent {
         refetchTripBlocks: boolean;
         refetchStationAxis: boolean;
     }): Promise<void> {
+        const seq = ++fetchSeq;
         TrainLocationStore.enableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -476,6 +493,10 @@ export class TrainLocationComponent {
             this.#firstLoadDone.set(true);
         } finally {
             TrainLocationStore.disableLoading();
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === fetchSeq) {
+                TrainLocationStore.setHasFetchedTrainLocation(true);
+            }
         }
     }
 

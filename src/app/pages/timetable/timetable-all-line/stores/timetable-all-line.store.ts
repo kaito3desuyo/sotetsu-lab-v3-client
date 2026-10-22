@@ -30,6 +30,7 @@ type StoreProps = {
     selectedRouteIds: string[];
     pageSettings: PageEvent;
     loadingQueue: boolean[];
+    hasFetchedTripBlocks: boolean;
 };
 
 const store = createStore(
@@ -49,6 +50,7 @@ const store = createStore(
             length: 0,
         },
         loadingQueue: [],
+        hasFetchedTripBlocks: false,
     }),
 );
 
@@ -270,6 +272,10 @@ export const TimetableAllLineStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    /** いまの条件の取得が終わったか（失敗しても true）。取る前は表と路線のチップの代わりに骨組みを出す */
+    setHasFetchedTripBlocks(value: boolean): void {
+        store.update(setProp('hasFetchedTripBlocks', () => value));
+    },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
     tripDirection$: store.pipe(select((state) => state.tripDirection)),
@@ -286,6 +292,13 @@ export const TimetableAllLineStore = {
     ),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    hasFetchedTripBlocks$: store.pipe(
+        select((state) => state.hasFetchedTripBlocks),
+    ),
+    /** ダイヤがあって、まだ取り終えていない（骨組みを出すとき） */
+    isAwaitingTripBlocks$: store.pipe(
+        select((state) => !!state.calendarId && !state.hasFetchedTripBlocks),
+    ),
 
     /** 表示駅（並び替え + 路線絞り込み済み）。 */
     stations$: visibleStations$,

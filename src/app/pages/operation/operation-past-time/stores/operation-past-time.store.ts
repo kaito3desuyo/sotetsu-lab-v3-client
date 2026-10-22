@@ -35,6 +35,7 @@ type StoreProps = {
     operationSightings: OperationSightingDetailsDto[];
     selectedAgencyIds: string[];
     loadingQueue: boolean[];
+    hasFetchedPastTime: boolean;
 };
 
 const store = createStore(
@@ -49,6 +50,7 @@ const store = createStore(
         operationSightings: [],
         selectedAgencyIds: [],
         loadingQueue: [],
+        hasFetchedPastTime: false,
     }),
 );
 
@@ -64,9 +66,7 @@ export function generateDates(referenceDate: string, days: number): string[] {
     );
 
     const dates: string[] = [];
-    const base = initializeTime(
-        parse(referenceDate, 'yyyy-MM-dd', new Date()),
-    );
+    const base = initializeTime(parse(referenceDate, 'yyyy-MM-dd', new Date()));
 
     for (let i = 0; i < days; i++) {
         dates.push(format(addDays(base, i), 'yyyy-MM-dd'));
@@ -143,6 +143,10 @@ export const OperationPastTimeStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    /** いまの条件の取得が終わったか（失敗しても true）。取る前は表の代わりに骨組みを出す */
+    setHasFetchedPastTime(value: boolean): void {
+        store.update(setProp('hasFetchedPastTime', () => value));
+    },
 
     referenceDate$: store.pipe(select((state) => state.referenceDate)),
     days$: store.pipe(select((state) => state.days)),
@@ -152,9 +156,14 @@ export const OperationPastTimeStore = {
     calendars$: store.pipe(select((state) => state.calendars)),
     operations$: store.pipe(select((state) => state.operations)),
     formations$: store.pipe(select((state) => state.formations)),
-    operationSightings$: store.pipe(select((state) => state.operationSightings)),
+    operationSightings$: store.pipe(
+        select((state) => state.operationSightings),
+    ),
     selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    hasFetchedPastTime$: store.pipe(
+        select((state) => state.hasFetchedPastTime),
+    ),
     operationSightingsGroupedByDate$: store.pipe(
         select((state) => state.operationSightings),
         map(groupSightingsByFormationAndDate),

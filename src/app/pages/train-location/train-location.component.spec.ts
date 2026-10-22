@@ -7,7 +7,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainLocationComponent } from './train-location.component';
@@ -69,6 +69,7 @@ describe('TrainLocationComponent', () => {
         TrainLocationStore.setStationAxisStations([]);
         TrainLocationStore.setTripBlocksByDirection({});
         TrainLocationStore.resetLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
     });
 
     it('should create', () => {
@@ -131,12 +132,17 @@ describe('TrainLocationComponent', () => {
         TrainLocationStore.disableLoading();
     });
 
-    it('ロード中はプログレスバーだけ（スピナーは出さない）で、本文は出さない。バーはヘッダーの下', () => {
+    it('取る前は骨組みを出し、本文は出さない。取得中のプログレスバーはヘッダーの下', () => {
         TrainLocationStore.enableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
         fixture.detectChanges();
 
         const el = fixture.nativeElement as HTMLElement;
+        expect(
+            el.querySelector('[data-testid="train-location-skeleton"]'),
+        ).not.toBeNull();
         expect(el.querySelector('app-train-location-line')).toBeNull();
+        expect(el.querySelector('app-empty-state')).toBeNull();
         expect(el.querySelector('app-loading')).toBeNull();
         const bar = el.querySelector('mat-progress-bar');
         expect(bar?.getAttribute('color')).toBe('accent');
@@ -145,8 +151,12 @@ describe('TrainLocationComponent', () => {
         expect(bar?.parentElement?.className).toContain('md:tw-top-[64px]');
 
         TrainLocationStore.disableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
+        expect(
+            el.querySelector('[data-testid="train-location-skeleton"]'),
+        ).toBeNull();
         expect(el.querySelector('app-train-location-line')).toBeTruthy();
         expect(el.querySelector('mat-progress-bar')).toBeNull();
     });
@@ -154,6 +164,7 @@ describe('TrainLocationComponent', () => {
     it('G12: 在線列車が0本のとき、駅ラインを残したまま空文脈メッセージを重ねて表示する', () => {
         // ロード完了・在線列車なし（tripBlocks 空 = positions 0）の状態。
         TrainLocationStore.disableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
         expect(component.hasNoTrainsInService()).toBe(true);
@@ -182,6 +193,10 @@ describe('TrainLocationComponent', () => {
         ).rejects.toThrow('fetch failed');
 
         expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
+        // 失敗しても骨組みを消す
+        expect(
+            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
+        ).toBe(true);
     });
 
     it('免責文はページ下端の 1 か所だけ', () => {
@@ -333,5 +348,207 @@ describe('TrainLocationComponent', () => {
 
             expect(navigate).not.toHaveBeenCalled();
         });
+    });
+
+    it('入ったときは前の訪問の「取り終えた」を引き継がない', () => {
+        TrainLocationStore.setHasFetchedTrainLocation(true);
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="train-location-skeleton"]',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('路線を変えて取り直すときは骨組みに戻す', async () => {
+        await component.fetchData({
+            refetchTripBlocks: true,
+            refetchStationAxis: true,
+        });
+        fixture.detectChanges();
+        const service = TestBed.inject(TrainLocationService) as {
+            fetchStationAxis: () => unknown;
+        };
+        service.fetchStationAxis = () => new Subject<undefined>();
+
+        component
+            .fetchData({ refetchTripBlocks: false, refetchStationAxis: true })
+            .catch(() => undefined);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="train-location-skeleton"]',
+            ),
+        ).not.toBeNull();
+    });
+});
+
+describe('TrainLocationComponent の再訪', () => {
+    let fixture: ComponentFixture<TrainLocationComponent>;
+    let tripBlocks$: Subject<undefined>;
+
+    // 先のテストが残す未処理の遷移の失敗を、これらのテストの待ちで表に出さないよう、マクロタスクは挟まず
+    // マイクロタスクだけを回す
+    const flush = async () => {
+        for (let i = 0; i < 20; i++) {
+            await Promise.resolve();
+        }
+    };
+    const skeleton = () =>
+        (fixture.nativeElement as HTMLElement).querySelector(
+            '[data-testid="train-location-skeleton"]',
+        );
+
+    beforeEach(async () => {
+        tripBlocks$ = new Subject<undefined>();
+        const params = { route_id: 'route-1', station_id: 's1' };
+        await TestBed.configureTestingModule({
+            imports: [TrainLocationComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                        snapshot: { params },
+                    },
+                },
+                {
+                    provide: TrainLocationService,
+                    useValue: {
+                        fetchTripClasses: () => of(undefined),
+                        fetchTripBlocks: () => tripBlocks$,
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchStationAxis: () => of(undefined),
+                        fetchMissingOperationSightingTimeCrossSections: () =>
+                            of(undefined),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarId: 'cal-today',
+                        todaysCalendarIds$: of(['cal-today']),
+                    },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                    },
+                },
+            ],
+        })
+            .overrideComponent(TrainLocationComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    });
+
+    afterEach(() => {
+        fixture.destroy();
+        TrainLocationStore.setCalendarId(null);
+        TrainLocationStore.setSelectedRouteId(null);
+        TrainLocationStore.setSelectedStationId(null);
+        TrainLocationStore.setMode('now');
+        TrainLocationStore.setSpecifiedTime(null);
+        TrainLocationStore.resetLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
+    });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+        // 種別の取得を待ってから trip-blocks を取り始めるので、取り始めるのを待ってから離れる
+        await flush();
+        const previousTripBlocks$ = tripBlocks$;
+        fixture.destroy();
+        tripBlocks$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+
+        previousTripBlocks$.next(undefined);
+        previousTripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(skeleton()).not.toBeNull();
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(skeleton()).toBeNull();
+    });
+
+    it('取り終えた後、時計が進んでも、目撃の取り足しが走っても、骨組みには戻らない', async () => {
+        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00') });
+        try {
+            const missingSightings = jest.fn(() => of(undefined));
+            const service = TestBed.inject(TrainLocationService) as {
+                fetchMissingOperationSightingTimeCrossSections: unknown;
+            };
+            service.fetchMissingOperationSightingTimeCrossSections =
+                missingSightings;
+
+            fixture = TestBed.createComponent(TrainLocationComponent);
+            fixture.detectChanges();
+            await flush();
+            tripBlocks$.next(undefined);
+            tripBlocks$.complete();
+            await flush();
+            fixture.detectChanges();
+            expect(skeleton()).toBeNull();
+
+            // 9:10 に駅 a から駅 b へ走っている今日の列車を在線させる（取り足しの対象になる）
+            TrainLocationStore.setStationAxisStations([
+                { stationId: 'a' },
+                { stationId: 'b' },
+            ] as never);
+            TrainLocationStore.setTripBlocksByDirection({
+                0: [
+                    {
+                        trips: [
+                            {
+                                tripId: 't1',
+                                times: [
+                                    {
+                                        stationId: 'a',
+                                        departureTime: '09:00:00',
+                                        stopSequence: 1,
+                                    },
+                                    {
+                                        stationId: 'b',
+                                        arrivalTime: '09:30:00',
+                                        stopSequence: 2,
+                                    },
+                                ],
+                                tripOperationLists: [
+                                    { operation: { operationNumber: '11' } },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            } as never);
+            fixture.detectChanges();
+            expect(missingSightings).toHaveBeenCalledWith(['11']);
+            expect(skeleton()).toBeNull();
+
+            const before = fixture.componentInstance.at().getTime();
+            jest.advanceTimersByTime(30_000);
+            fixture.detectChanges();
+
+            expect(fixture.componentInstance.at().getTime()).toBeGreaterThan(
+                before,
+            );
+            expect(skeleton()).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
     });
 });

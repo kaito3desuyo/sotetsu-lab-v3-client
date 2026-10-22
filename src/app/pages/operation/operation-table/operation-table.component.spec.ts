@@ -474,4 +474,25 @@ describe('OperationTableComponent の読み込み中', () => {
             query('[data-testid="operation-table-skeleton"]'),
         ).not.toBeNull();
     });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        const previousTrips$ = trips$;
+        fixture.destroy();
+        trips$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+
+        previousTrips$.next(undefined);
+        previousTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(
+            query('[data-testid="operation-table-skeleton"]'),
+        ).not.toBeNull();
+
+        await finishFetch();
+        expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
+    });
 });

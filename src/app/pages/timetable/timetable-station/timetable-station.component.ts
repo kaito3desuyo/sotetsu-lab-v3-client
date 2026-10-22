@@ -34,6 +34,10 @@ import { formatTimetableStationSummary } from './utils/timetable-station-summary
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableStationStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-timetable-station',
     templateUrl: './timetable-station.component.html',
@@ -54,7 +58,6 @@ TimetableStationStore.resetLoading();
 })
 export class TimetableStationComponent {
     readonly #destroyRef = inject(DestroyRef);
-    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -214,7 +217,7 @@ export class TimetableStationComponent {
     }
 
     async fetchData(): Promise<void> {
-        const seq = ++this.#fetchSeq;
+        const seq = ++fetchSeq;
         TimetableStationStore.enableLoading();
         TimetableStationStore.setHasFetchedTimetable(false);
 
@@ -229,7 +232,7 @@ export class TimetableStationComponent {
             ]);
             // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === this.#fetchSeq) {
+            if (seq === fetchSeq) {
                 TimetableStationStore.setHasFetchedTimetable(true);
             }
 
@@ -244,7 +247,7 @@ export class TimetableStationComponent {
             }
         } finally {
             // 途中の reject でローディングバーと骨組みが永久残留しないことを保証する
-            if (seq === this.#fetchSeq) {
+            if (seq === fetchSeq) {
                 TimetableStationStore.setHasFetchedTimetable(true);
             }
             TimetableStationStore.disableLoading();

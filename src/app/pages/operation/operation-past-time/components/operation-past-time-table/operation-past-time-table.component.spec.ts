@@ -19,8 +19,16 @@ describe('OperationPastTimeTableComponent', () => {
     beforeEach(async () => {
         role$ = new BehaviorSubject<string>('viewer');
         OperationPastTimeStore.setFormations([
-            { formationId: 'f-1', formationNumber: '8708', agencyId: 'agency-1' },
-            { formationId: 'f-2', formationNumber: '9704', agencyId: 'agency-2' },
+            {
+                formationId: 'f-1',
+                formationNumber: '8708',
+                agencyId: 'agency-1',
+            },
+            {
+                formationId: 'f-2',
+                formationNumber: '9704',
+                agencyId: 'agency-2',
+            },
         ] as never);
         OperationPastTimeStore.setSelectedAgencyIds([]);
 
@@ -34,15 +42,21 @@ describe('OperationPastTimeTableComponent', () => {
                 },
                 {
                     provide: OperationPastTimeService,
-                    useValue: { fetchOperationSightingsV3: () => of(undefined) },
+                    useValue: {
+                        fetchOperationSightingsV3: () => of(undefined),
+                    },
                 },
                 {
                     provide: OperationSightingInvalidationDialogService,
-                    useValue: { open: () => ({ afterClosed: () => of(false) }) },
+                    useValue: {
+                        open: () => ({ afterClosed: () => of(false) }),
+                    },
                 },
                 {
                     provide: OperationSightingRestorationDialogService,
-                    useValue: { open: () => ({ afterClosed: () => of(false) }) },
+                    useValue: {
+                        open: () => ({ afterClosed: () => of(false) }),
+                    },
                 },
             ],
         })
@@ -61,6 +75,7 @@ describe('OperationPastTimeTableComponent', () => {
         OperationPastTimeStore.setSelectedAgencyIds([]);
         OperationPastTimeStore.setReferenceDate(null);
         OperationPastTimeStore.setDays(null);
+        OperationPastTimeStore.setHasFetchedPastTime(false);
     });
 
     it('should create', () => {
@@ -77,6 +92,58 @@ describe('OperationPastTimeTableComponent', () => {
         fixture.detectChanges();
 
         expect(component.tableDisplayed()).toBe(true);
+    });
+
+    it('基準日と日数があって取る前は、表の骨組みを出し、空表示も表も出さない', () => {
+        OperationPastTimeStore.setReferenceDate('2026-07-01');
+        OperationPastTimeStore.setDays(2);
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="past-time-table-skeleton"]'),
+        ).not.toBeNull();
+        expect(el.querySelector('app-empty-state')).toBeNull();
+        expect(el.querySelector('table')).toBeNull();
+    });
+
+    it('取り終えたら骨組みを消す', () => {
+        OperationPastTimeStore.setReferenceDate('2026-07-01');
+        OperationPastTimeStore.setDays(2);
+        OperationPastTimeStore.setHasFetchedPastTime(true);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="past-time-table-skeleton"]',
+            ),
+        ).toBeNull();
+    });
+
+    it('取り終えて 0 件なら空表示を出す', () => {
+        OperationPastTimeStore.setFormations([]);
+        OperationPastTimeStore.setReferenceDate('2026-07-01');
+        OperationPastTimeStore.setDays(2);
+        OperationPastTimeStore.setHasFetchedPastTime(true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('app-empty-state')).not.toBeNull();
+        expect(
+            el.querySelector('[data-testid="past-time-table-skeleton"]'),
+        ).toBeNull();
+    });
+
+    it('基準日が無ければ骨組みでなく「基準日と日数を設定して検索してください」を出す', () => {
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="past-time-table-skeleton"]'),
+        ).toBeNull();
+        expect(el.querySelector('app-empty-state')).not.toBeNull();
     });
 
     it('onDefaultSearch: 直近 7 日間（6 日前を基準日に 7 日間）で検索する', () => {
@@ -116,19 +183,18 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('visibleFormations: 会社未選択時は全編成を表示する', () => {
-        expect(component.visibleFormations().map((f) => f.formationId)).toEqual([
-            'f-1',
-            'f-2',
-        ]);
+        expect(component.visibleFormations().map((f) => f.formationId)).toEqual(
+            ['f-1', 'f-2'],
+        );
     });
 
     it('visibleFormations: 会社チップ選択で行が絞り込まれる（B9 追加分）', () => {
         OperationPastTimeStore.setSelectedAgencyIds(['agency-1']);
         fixture.detectChanges();
 
-        expect(component.visibleFormations().map((f) => f.formationId)).toEqual([
-            'f-1',
-        ]);
+        expect(component.visibleFormations().map((f) => f.formationId)).toEqual(
+            ['f-1'],
+        );
     });
 
     it('visibleFormations: 全解除で全編成表示に戻る', () => {
@@ -137,10 +203,9 @@ describe('OperationPastTimeTableComponent', () => {
         OperationPastTimeStore.setSelectedAgencyIds([]);
         fixture.detectChanges();
 
-        expect(component.visibleFormations().map((f) => f.formationId)).toEqual([
-            'f-1',
-            'f-2',
-        ]);
+        expect(component.visibleFormations().map((f) => f.formationId)).toEqual(
+            ['f-1', 'f-2'],
+        );
     });
 
     describe('引き継いだ目撃', () => {
@@ -174,6 +239,7 @@ describe('OperationPastTimeTableComponent', () => {
                     },
                 },
             ] as never);
+            OperationPastTimeStore.setHasFetchedPastTime(true);
             fixture.detectChanges();
             return fixture.nativeElement.querySelector('tbody td:nth-child(2)')
                 .textContent as string;
@@ -206,14 +272,12 @@ describe('OperationPastTimeTableComponent', () => {
                 .map((d) => d.componentInstance.contextMenus());
 
             // 直接（11K）→ 引き継ぎ（12K）の順
-            expect(menus[0].map((m: { disabled: boolean }) => m.disabled)).toEqual([
-                false,
-                true,
-            ]);
-            expect(menus[1].map((m: { disabled: boolean }) => m.disabled)).toEqual([
-                true,
-                true,
-            ]);
+            expect(
+                menus[0].map((m: { disabled: boolean }) => m.disabled),
+            ).toEqual([false, true]);
+            expect(
+                menus[1].map((m: { disabled: boolean }) => m.disabled),
+            ).toEqual([true, true]);
         });
     });
 });
