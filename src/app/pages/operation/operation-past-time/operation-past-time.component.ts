@@ -68,11 +68,16 @@ export class OperationPastTimeComponent {
         }),
     );
 
+    #fetchSeq = 0;
+
     onClearFilter(): void {
         OperationPastTimeStore.setSelectedAgencyIds([]);
     }
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -93,7 +98,9 @@ export class OperationPastTimeComponent {
     }
 
     async fetchData(): Promise<void> {
+        const seq = ++this.#fetchSeq;
         OperationPastTimeStore.enableLoading();
+        OperationPastTimeStore.setHasFetchedPastTime(false);
 
         try {
             // どれも日付の範囲だけで取れるので並行に取る（以前は 1 本ずつ待っていた）
@@ -112,6 +119,10 @@ export class OperationPastTimeComponent {
         } finally {
             // 途中の reject でローディングバーが残り続けないようにする
             OperationPastTimeStore.disableLoading();
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === this.#fetchSeq) {
+                OperationPastTimeStore.setHasFetchedPastTime(true);
+            }
         }
     }
 }

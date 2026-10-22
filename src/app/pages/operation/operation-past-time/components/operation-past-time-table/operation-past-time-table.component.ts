@@ -12,6 +12,7 @@ import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
@@ -33,6 +34,7 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
         DateFnsPipe,
         FindByIdPipe,
         EmptyStateComponent,
+        SkeletonBarComponent,
     ],
 })
 export class OperationPastTimeTableComponent {
@@ -68,6 +70,14 @@ export class OperationPastTimeTableComponent {
         OperationPastTimeStore.operationSightingsGroupedByDate$,
         { initialValue: {} },
     );
+    readonly hasFetchedPastTime = toSignal(
+        OperationPastTimeStore.hasFetchedPastTime$,
+        { initialValue: false },
+    );
+    /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
+    readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
+    /** 骨組みの日付の列の数（7 日分） */
+    readonly skeletonDays = Array.from({ length: 7 }, (_, i) => i);
 
     readonly tableDisplayed = computed(() => {
         const referenceDate = this.referenceDate();
@@ -90,7 +100,8 @@ export class OperationPastTimeTableComponent {
      * 編成データが無い場合の両方をカバーする。
      */
     readonly hasResults = computed(
-        () => this.calendars().length > 0 && this.visibleFormations().length > 0,
+        () =>
+            this.calendars().length > 0 && this.visibleFormations().length > 0,
     );
 
     generateOnClickInvalidateCallback(

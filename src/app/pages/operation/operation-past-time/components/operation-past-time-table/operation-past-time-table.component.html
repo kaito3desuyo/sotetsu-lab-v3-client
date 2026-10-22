@@ -1,5 +1,49 @@
 <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
-    @if (tableDisplayed() && !hasResults()) {
+    @if (tableDisplayed() && !hasFetchedPastTime()) {
+        <!-- 取る前は本物のスクロールの箱と同じ高さを取り、編成の列（87px）と日付の列（145px）の形で
+             見出しの行 51px・行 39px の骨組みを出す。以前は表が途中の高さで一度出てから伸び、
+             検索カードを押し出していた（CLS 0.30・2026-10-22） -->
+        <div
+            class="tw-flex tw-h-[calc(100dvh_-_80px_-_var(--control-band-offset,0px))] tw-flex-col tw-overflow-hidden md:tw-h-[calc(100dvh_-_96px_-_var(--control-band-offset,0px))]"
+            aria-label="読み込み中"
+            data-testid="past-time-table-skeleton"
+        >
+            <div
+                class="tw-flex tw-h-[51px] tw-shrink-0 tw-flex-row tw-items-center"
+            >
+                <div class="tw-w-[87px] tw-shrink-0 tw-px-2">
+                    <app-skeleton-bar
+                        class="tw-h-5 tw-w-full"
+                    ></app-skeleton-bar>
+                </div>
+                @for (day of skeletonDays; track day) {
+                    <div class="tw-w-[145px] tw-shrink-0 tw-px-2">
+                        <app-skeleton-bar
+                            class="tw-h-5 tw-w-full"
+                        ></app-skeleton-bar>
+                    </div>
+                }
+            </div>
+            @for (row of skeletonRows; track row) {
+                <div
+                    class="tw-flex tw-h-[39px] tw-shrink-0 tw-flex-row tw-items-center"
+                >
+                    <div class="tw-w-[87px] tw-shrink-0 tw-px-2">
+                        <app-skeleton-bar
+                            class="tw-h-4 tw-w-12"
+                        ></app-skeleton-bar>
+                    </div>
+                    @for (day of skeletonDays; track day) {
+                        <div class="tw-w-[145px] tw-shrink-0 tw-px-2">
+                            <app-skeleton-bar
+                                class="tw-h-4 tw-w-3/4"
+                            ></app-skeleton-bar>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    } @else if (tableDisplayed() && !hasResults()) {
         <!-- G12: 検索条件に一致する編成/日付が0件の空状態（mockup-07 の3点セット）。
              次アクションは会社チップ絞り込みの解除（表示フィルタなので即座に全編成へ戻せる）。 -->
         <app-empty-state
