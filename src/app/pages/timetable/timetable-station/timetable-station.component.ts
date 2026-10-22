@@ -28,6 +28,7 @@ import {
     buildStationGroups,
     findNeighborStations,
 } from 'src/app/shared/station-groups.util';
+import { findInboundDirection } from 'src/app/shared/inbound-direction.util';
 import { StepNavComponent } from 'src/app/shared/step-nav/step-nav.component';
 import { StepTarget } from 'src/app/shared/step-nav/step-target.type';
 import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-toggle/sticky-direction-toggle.component';
@@ -101,10 +102,27 @@ export class TimetableStationComponent {
 
     readonly allLineOption = ALL_LINE_OPTION;
 
-    /** 前後の駅（分岐駅は隣を全部）。docs/design.md「前後へ送る」 */
-    readonly neighborStations = computed(() =>
-        findNeighborStations(this.stationGroups(), this.stationId()),
+    readonly #operatingSystemEndsByRouteId = toSignal(
+        this.#routeStationListStateQuery.operatingSystemEndsByRouteId$,
+        { initialValue: {} },
     );
+
+    /**
+     * 前後の駅（分岐駅は隣を全部）。右が上り側・左が下り側（2026-10-23）。docs/design.md「前後へ送る」
+     * 路線ごとの上りの向きは運行系統の始点側（列車位置情報の図の向きと同じ）
+     */
+    readonly neighborStations = computed(() => {
+        const endsByRouteId = this.#operatingSystemEndsByRouteId();
+        return findNeighborStations(
+            this.stationGroups(),
+            this.stationId(),
+            (group) =>
+                findInboundDirection(
+                    group.stations.map((station) => station.stationId),
+                    endsByRouteId[group.routeId],
+                ),
+        );
+    });
 
     /** 上り/下り 全幅2セグメントトグルの選択肢（98 G0-3・mockup-01） */
 

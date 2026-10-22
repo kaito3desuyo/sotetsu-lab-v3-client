@@ -16,35 +16,12 @@
          本文の h1/h2 重複は置かない -->
     <!-- G1: 駅/ダイヤの select は横並び配置（mockup-01）。ただし sm 未満は縦に積む。
          ダイヤの選択中表示「2026/3/14改正 土休日ダイヤ」は約 270px 要り、390px で
-         横に並べると改正日の途中で省略される（2026-09-23 実測） -->
+         横に並べると改正日の途中で省略される（2026-09-23 実測）。
+         並びはダイヤ → 駅（ユーザー指示 2026-10-23。運用表・運用行路図と同じく左がダイヤ） -->
     <app-control-band [summary]="bandSummary()">
         <header
             class="tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[48rem]"
         >
-            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
-                <mat-label>駅</mat-label>
-                <mat-select
-                    [value]="stationId()"
-                    (valueChange)="onStationChange($event)"
-                >
-                    <mat-option [value]="allLineOption"
-                        >全線（駅を選ばない）</mat-option
-                    >
-                    <mat-divider></mat-divider>
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">
-                                    {{ station.stationName }}
-                                </mat-option>
-                            }
-                        </mat-optgroup>
-                    }
-                </mat-select>
-            </mat-form-field>
             <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
                 <mat-form-field
                     class="tw-min-w-0 tw-flex-1"
@@ -94,10 +71,37 @@
                     (selectToday)="onCalendarChange($event)"
                 ></app-today-calendar-button>
             </div>
+            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                <mat-label>駅</mat-label>
+                <mat-select
+                    [value]="stationId()"
+                    (valueChange)="onStationChange($event)"
+                >
+                    <mat-option [value]="allLineOption"
+                        >全線（駅を選ばない）</mat-option
+                    >
+                    <mat-divider></mat-divider>
+                    @for (group of stationGroups(); track group.routeId) {
+                        <mat-optgroup [label]="group.label">
+                            @for (
+                                station of group.stations;
+                                track station.stationId
+                            ) {
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                </mat-select>
+            </mat-form-field>
         </header>
-        <!-- 前後の駅（docs/design.md「前後へ送る」・2026-10-22）。どちらの向きにも無ければ段ごと出さない -->
+        <!-- 前後の駅（docs/design.md「前後へ送る」・2026-10-22）。どちらの向きにも無ければ段ごと出さない。
+             右が上り側（運行系統の始点側） -->
         @if (neighborStations().prev.length || neighborStations().next.length) {
-            <div class="tw-mt-4 tw-flex tw-flex-col tw-gap-2">
+            <div
+                class="tw-mt-4 tw-flex tw-flex-col tw-gap-2 md:tw-max-w-[48rem]"
+            >
                 <p class="tw-m-0 tw-text-xs tw-text-grey-600">前後の駅</p>
                 <app-step-nav
                     [prev]="neighborStations().prev"

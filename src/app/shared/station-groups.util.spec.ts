@@ -41,6 +41,7 @@ describe('buildStationGroups', () => {
             {
                 routeId: 'r-main',
                 label: '相鉄 本線',
+                routeName: '本線',
                 stations: [
                     { stationId: 's-yokohama', stationName: '横浜' },
                     { stationId: 's-hiranumabashi', stationName: '平沼橋' },
@@ -49,6 +50,7 @@ describe('buildStationGroups', () => {
             {
                 routeId: 'r-toyoko',
                 label: '東急 東横線',
+                routeName: '東横線',
                 stations: [{ stationId: 's-yokohama', stationName: '横浜' }],
             },
         ]);
@@ -102,6 +104,7 @@ describe('findNeighborStations', () => {
         {
             routeId: 'main',
             label: '相鉄 本線',
+            routeName: '本線',
             stations: [
                 st('yokohama', '横浜'),
                 st('tsurugamine', '鶴ヶ峰'),
@@ -112,6 +115,7 @@ describe('findNeighborStations', () => {
         {
             routeId: 'izumino',
             label: '相鉄 いずみ野線',
+            routeName: 'いずみ野線',
             stations: [
                 st('futamatagawa', '二俣川'),
                 st('minamimakigahara', '南万騎が原'),
@@ -120,11 +124,13 @@ describe('findNeighborStations', () => {
         {
             routeId: 'toyoko',
             label: '東急 東横線',
+            routeName: '東横線',
             stations: [st('hiyoshi', '日吉'), st('tamagawa', '多摩川')],
         },
         {
             routeId: 'meguro',
             label: '東急 目黒線',
+            routeName: '目黒線',
             stations: [st('hiyoshi', '日吉'), st('tamagawa', '多摩川')],
         },
     ];
@@ -157,6 +163,78 @@ describe('findNeighborStations', () => {
         expect(findNeighborStations(groups, 'hiyoshi')).toEqual({
             prev: [],
             next: [{ id: 'tamagawa', label: '多摩川' }],
+        });
+    });
+
+    it('右（next）は上り側・左（prev）は下り側。上りの向きは路線ごと（西谷: 右に上星川・羽沢横浜国大、左に鶴ヶ峰）', () => {
+        const nishiya: StationGroup[] = [
+            {
+                routeId: 'main',
+                label: '相鉄 本線',
+                routeName: '本線',
+                stations: [
+                    st('yokohama', '横浜'),
+                    st('kamihoshikawa', '上星川'),
+                    st('nishiya', '西谷'),
+                    st('tsurugamine', '鶴ヶ峰'),
+                ],
+            },
+            {
+                routeId: 'shinyokohama',
+                label: '相鉄 新横浜線',
+                routeName: '新横浜線',
+                stations: [st('nishiya', '西谷'), st('hazawa', '羽沢横浜国大')],
+            },
+        ];
+        // 本線は上りが起点（横浜）へ、新横浜線は上りが終点（新横浜）へ
+        const inbound = (group: StationGroup) =>
+            group.routeId === 'main' ? 'towardStart' : 'towardEnd';
+
+        expect(findNeighborStations(nishiya, 'nishiya', inbound)).toEqual({
+            prev: [{ id: 'tsurugamine', label: '鶴ヶ峰' }],
+            next: [
+                { id: 'kamihoshikawa', label: '上星川' },
+                { id: 'hazawa', label: '羽沢横浜国大' },
+            ],
+        });
+    });
+
+    it('上りの向きが分からない路線は、駅の並びのまま（前を左・後を右）', () => {
+        expect(
+            findNeighborStations(groups, 'futamatagawa', () => null),
+        ).toEqual(findNeighborStations(groups, 'futamatagawa'));
+    });
+
+    it('同じ名前の駅が並ぶときだけ、路線名を付けて区別する（小竹向原の千川）', () => {
+        const kotake: StationGroup[] = [
+            {
+                routeId: 'fukutoshin',
+                label: '東京メトロ 副都心線',
+                routeName: '副都心線',
+                stations: [
+                    st('senkawa-f', '千川'),
+                    st('kotake', '小竹向原'),
+                    st('hikawadai', '氷川台'),
+                ],
+            },
+            {
+                routeId: 'yurakucho',
+                label: '東京メトロ 有楽町線',
+                routeName: '有楽町線',
+                stations: [
+                    st('senkawa-y', '千川'),
+                    st('kotake', '小竹向原'),
+                    st('hikawadai', '氷川台'),
+                ],
+            },
+        ];
+
+        expect(findNeighborStations(kotake, 'kotake')).toEqual({
+            prev: [
+                { id: 'senkawa-f', label: '千川（副都心線）' },
+                { id: 'senkawa-y', label: '千川（有楽町線）' },
+            ],
+            next: [{ id: 'hikawadai', label: '氷川台' }],
         });
     });
 
