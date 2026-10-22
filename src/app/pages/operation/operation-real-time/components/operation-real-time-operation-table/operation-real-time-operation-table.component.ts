@@ -8,6 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
+import { OperationRealTimeSkeletonLedgerComponent } from '../operation-real-time-skeleton-ledger/operation-real-time-skeleton-ledger.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { filterRealTimeOperations } from '../../utils/operation-real-time-filter.util';
 
@@ -16,7 +17,11 @@ import { filterRealTimeOperations } from '../../utils/operation-real-time-filter
     templateUrl: './operation-real-time-operation-table.component.html',
     styleUrl: './operation-real-time-operation-table.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [EmptyStateComponent, OperationRealTimeOperationCardComponent],
+    imports: [
+        EmptyStateComponent,
+        OperationRealTimeOperationCardComponent,
+        OperationRealTimeSkeletonLedgerComponent,
+    ],
 })
 export class OperationRealTimeOperationTableComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
@@ -36,6 +41,10 @@ export class OperationRealTimeOperationTableComponent {
     readonly calendar = toSignal(OperationRealTimeStore.calendar$);
     readonly itineraryLinks = toSignal(OperationRealTimeStore.itineraryLinks$);
     readonly operations = toSignal(OperationRealTimeStore.operations$);
+    readonly hasFetchedOperations = toSignal(
+        OperationRealTimeStore.hasFetchedOperations$,
+        { initialValue: false },
+    );
     readonly formations = toSignal(OperationRealTimeStore.formations$);
     readonly timeCrossSections = toSignal(
         OperationRealTimeStore.operationSightingTimeCrossSections$,

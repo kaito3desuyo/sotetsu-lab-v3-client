@@ -28,6 +28,12 @@ type StoreProps = {
     /** 運用のつながり（乗り移りの端の判定用）。永続化しない */
     itineraryLinks: OperationItineraryLinkDto[];
     formations: FormationDetailsDto[];
+    /**
+     * 運用・編成を 1 回でも取ったか。空の配列だけでは「まだ取っていない」と「0 件」を区別できない。
+     * 取る前の表は画面 1 枚分の高さを取っておく（下の投稿カードが押し出されて CLS になるため）
+     */
+    hasFetchedOperations: boolean;
+    hasFetchedFormations: boolean;
     operationGroups: OperationGroupDto[];
     selectedAgencyIds: string[];
     selectedGroupNames: string[];
@@ -60,6 +66,8 @@ const store = createStore(
         operations: [],
         itineraryLinks: [],
         formations: [],
+        hasFetchedOperations: false,
+        hasFetchedFormations: false,
         operationGroups: [],
         selectedAgencyIds: [],
         selectedGroupNames: [],
@@ -154,10 +162,16 @@ export const OperationRealTimeStore = {
         store.update(setProp('calendar', () => calendar));
     },
     setOperations(operations: OperationDetailsDto[]): void {
-        store.update(setProp('operations', () => operations));
+        store.update(
+            setProp('operations', () => operations),
+            setProp('hasFetchedOperations', () => true),
+        );
     },
     setFormations(formations: FormationDetailsDto[]): void {
-        store.update(setProp('formations', () => formations));
+        store.update(
+            setProp('formations', () => formations),
+            setProp('hasFetchedFormations', () => true),
+        );
     },
     setOperationGroups(operationGroups: OperationGroupDto[]): void {
         store.update(setProp('operationGroups', () => operationGroups));
@@ -280,6 +294,12 @@ export const OperationRealTimeStore = {
                 )
                 .sort((a, b) => rank(a.agencyId) - rank(b.agencyId));
         }),
+    ),
+    hasFetchedOperations$: store.pipe(
+        select((state) => state.hasFetchedOperations),
+    ),
+    hasFetchedFormations$: store.pipe(
+        select((state) => state.hasFetchedFormations),
     ),
     operationGroups$: store.pipe(select((state) => state.operationGroups)),
     selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),

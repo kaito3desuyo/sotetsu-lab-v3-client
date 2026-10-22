@@ -1,0 +1,38 @@
+<!-- 本物の一覧と同じ帳票（白地・罫線・xl から 2 列）。行は運用順カードの 2 段をなぞる:
+     1 段目 運用番号・編成番号・目撃/更新、2 段目 現在位置 -->
+<div
+    class="tw-h-full tw-overflow-hidden tw-rounded-card tw-bg-white"
+    aria-label="読み込み中"
+>
+    <div class="-tw-mb-px -tw-mr-px tw-grid tw-grid-cols-1 xl:tw-grid-cols-2">
+        @for (row of rows; track row) {
+            <div
+                class="tw-box-border tw-grid tw-h-[67px] tw-grid-cols-[auto_1fr_auto] tw-content-center tw-items-center tw-gap-x-3 tw-gap-y-1.5 tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-px-3 tw-py-2"
+                data-testid="skeleton-row"
+            >
+                <span
+                    class="tw-block tw-h-6 tw-w-9 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                ></span>
+                <span
+                    class="tw-block tw-h-5 tw-w-24 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                ></span>
+                <span class="tw-flex tw-flex-col tw-items-end tw-gap-1">
+                    <span
+                        class="tw-block tw-h-3 tw-w-[88px] tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                    <span
+                        class="tw-block tw-h-3 tw-w-[88px] tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                </span>
+                <span class="tw-col-span-3 tw-flex tw-flex-row tw-gap-2">
+                    <span
+                        class="tw-block tw-h-3.5 tw-w-10 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                    <span
+                        class="tw-block tw-h-3.5 tw-w-44 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
+                    ></span>
+                </span>
+            </div>
+        }
+    </div>
+</div>
