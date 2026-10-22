@@ -1,3 +1,4 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -61,5 +62,71 @@ describe('TimetableAllLineRouteFilterComponent', () => {
         expect(band.summary()).toBe('路線：本線');
         expect(band.filterActive()).toBe(true);
         expect(band.clearable()).toBe(false);
+    });
+});
+
+describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
+    let fixture: ComponentFixture<TimetableAllLineRouteFilterComponent>;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineRouteFilterComponent],
+        })
+            .overrideComponent(TimetableAllLineRouteFilterComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    });
+
+    afterEach(() => {
+        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TimetableAllLineStore.setStations([]);
+    });
+
+    it('ダイヤがあって取る前は、操作帯にチップの形の骨組みを出し、要約は空にする', () => {
+        TimetableAllLineStore.setCalendarId('cal-1');
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelectorAll('app-control-band').length).toBe(1);
+        expect(el.querySelector('app-skeleton-chips')).not.toBeNull();
+        expect(el.querySelector('app-filter-chips')).toBeNull();
+        expect(fixture.componentInstance.bandSummaryOrEmpty()).toBe('');
+    });
+
+    it('取り終えたら骨組みを本物のチップに替える（帯は作り直さない）', () => {
+        TimetableAllLineStore.setStations([
+            makeRouteStation('st-r1', 'r1', '本線'),
+        ]);
+        TimetableAllLineStore.setCalendarId('cal-1');
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
+        fixture.detectChanges();
+        const band = (fixture.nativeElement as HTMLElement).querySelector(
+            'app-control-band',
+        );
+
+        TimetableAllLineStore.setHasFetchedTripBlocks(true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('app-skeleton-chips')).toBeNull();
+        expect(el.querySelector('app-filter-chips')).not.toBeNull();
+        expect(el.querySelector('app-control-band')).toBe(band);
+    });
+
+    it('ダイヤが無く選択肢も無ければ、操作帯ごと出さない（今のまま）', () => {
+        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-control-band',
+            ),
+        ).toBeNull();
     });
 });

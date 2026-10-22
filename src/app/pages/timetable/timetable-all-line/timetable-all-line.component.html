@@ -1,11 +1,11 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <!-- trip-blocks バルク取得（数 MB）中は「件数 0 / 0」と全チップ非選択の
-         偽表示になるため、ロード完了までチップ・テーブルを出さない。
-         読み込み中の合図はロック済みページと同じくトップバー直下のプログレスバーだけ。
-         以前は中央にスピナーも出していたが、プログレスバーと二重の合図だったので外した
-         （2026-09-24） -->
+    <!-- 読み込み中の合図はトップバー直下のプログレスバー（ロック済みページと同じ）。
+         取る前は、路線の絞り込みはチップの形の骨組み、表は本物と同じ高さの骨組みを出す。
+         以前は trip-blocks（数 MB）を取り終えるまで絞り込みと表を出さず、約 2 秒検索カードだけが見えて
+         いて、届くと絞り込みと表がその上に入り検索カードを押し出していた（CLS 0.46・2026-10-22）。
+         偽の「件数 0 / 0」を出さないのは前と同じ -->
     @if (isLoading()) {
         <div
             class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
@@ -15,9 +15,43 @@
                 mode="indeterminate"
             ></mat-progress-bar>
         </div>
-    } @else {
-        <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
+    }
 
+    <app-timetable-all-line-route-filter></app-timetable-all-line-route-filter>
+
+    @if (isAwaitingTripBlocks()) {
+        <!-- 本物の表と同じ並び: ダイヤの帯 48px・ページ送り 48px・スクロールの箱（本物の max-h と同じ式の高さ） -->
+        <article
+            class="tw-overflow-clip tw-rounded-card tw-bg-white"
+            aria-label="読み込み中"
+            data-testid="all-line-table-skeleton"
+        >
+            <app-skeleton-bar
+                class="tw-h-12 tw-w-full tw-rounded-none"
+            ></app-skeleton-bar>
+            <div class="tw-flex tw-flex-col tw-gap-4 tw-p-4">
+                <app-skeleton-bar
+                    class="tw-h-12 tw-w-64 tw-max-w-full tw-self-end"
+                ></app-skeleton-bar>
+                <div
+                    class="tw-flex tw-h-[calc(100dvh_-_80px_-_var(--control-band-offset,0px))] tw-flex-col tw-gap-2 tw-overflow-hidden md:tw-h-[calc(100dvh_-_96px_-_var(--control-band-offset,0px))]"
+                >
+                    @for (row of skeletonRows; track row) {
+                        <div class="tw-flex tw-shrink-0 tw-flex-row tw-gap-2">
+                            <app-skeleton-bar
+                                class="tw-h-5 tw-w-[119px] tw-shrink-0"
+                            ></app-skeleton-bar>
+                            @for (column of skeletonColumns; track column) {
+                                <app-skeleton-bar
+                                    class="tw-h-5 tw-w-8 tw-shrink-0"
+                                ></app-skeleton-bar>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </article>
+    } @else {
         <app-timetable-all-line-table
             [calendar]="calendar()"
             [tripDirection]="tripDirection()"

@@ -7,6 +7,7 @@ import {
     isRouteFilterActive,
 } from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
+import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
 import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
 
 /**
@@ -19,7 +20,11 @@ import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
     selector: 'app-timetable-all-line-route-filter',
     templateUrl: './timetable-all-line-route-filter.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ControlBandComponent, FilterChipsComponent],
+    imports: [
+        ControlBandComponent,
+        FilterChipsComponent,
+        SkeletonChipsComponent,
+    ],
     host: { class: 'tw-contents' },
 })
 export class TimetableAllLineRouteFilterComponent {
@@ -41,6 +46,25 @@ export class TimetableAllLineRouteFilterComponent {
         );
         return routes === '全路線' ? routes : `路線：${routes}`;
     });
+    readonly isAwaitingTripBlocks = toSignal(
+        TimetableAllLineStore.isAwaitingTripBlocks$,
+        { initialValue: false },
+    );
+    /** 取る前は要約を出さない（「全路線」と出してから「路線：…」に変わらないように） */
+    readonly bandSummaryOrEmpty = computed(() =>
+        this.isAwaitingTripBlocks() ? '' : this.bandSummary(),
+    );
+    /** 路線のチップの骨組みの幅（本番で測った本線・いずみ野線・厚木線・新横浜線・相鉄・JR直通線…の幅） */
+    readonly routeSkeletonWidths = [
+        'tw-w-[83px]',
+        'tw-w-[125px]',
+        'tw-w-[97px]',
+        'tw-w-[111px]',
+        'tw-w-[129px]',
+        'tw-w-[69px]',
+        'tw-w-[69px]',
+        'tw-w-[97px]',
+    ];
 
     onChange(values: FilterChipValue[]): void {
         TimetableAllLineStore.setSelectedRouteIds(values);
