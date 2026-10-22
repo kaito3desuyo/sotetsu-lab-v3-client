@@ -28,7 +28,39 @@
     </app-control-band>
 
     <div class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-3">
-        @if (!isLoading()) {
+        @if (!hasFetchedTrainLocation()) {
+            <!-- 取る前は本物と同じ格子で、駅のパネル（45px）と路線図のカード（画面 1 枚分）の骨組みを出す。
+                 以前は本文が空でフッターが見えていて、届くと押し出されていた（CLS 0.13・2026-10-22）。
+                 isLoading() で本文を消すのもやめた -->
+            <div
+                class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-[40rem_minmax(0,1fr)] lg:tw-items-start"
+                aria-label="読み込み中"
+                data-testid="train-location-skeleton"
+            >
+                <app-skeleton-bar
+                    class="tw-h-[45px] tw-w-full tw-rounded-card lg:tw-col-start-2 lg:tw-row-start-1"
+                ></app-skeleton-bar>
+                <div
+                    class="tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-gap-6 tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-4 md:tw-h-[calc(100dvh-64px)] lg:tw-col-start-1 lg:tw-row-start-1"
+                >
+                    @for (row of skeletonStationRows; track row) {
+                        <div
+                            class="tw-flex tw-shrink-0 tw-flex-row tw-items-center tw-gap-4"
+                        >
+                            <app-skeleton-bar
+                                class="tw-h-4 tw-w-4 tw-shrink-0 tw-rounded-full"
+                            ></app-skeleton-bar>
+                            <app-skeleton-bar
+                                class="tw-h-5 tw-w-24 tw-shrink-0"
+                            ></app-skeleton-bar>
+                            <app-skeleton-bar
+                                class="tw-h-8 tw-w-28 tw-shrink-0"
+                            ></app-skeleton-bar>
+                        </div>
+                    }
+                </div>
+            </div>
+        } @else {
             <div
                 class="tw-grid tw-grid-cols-1 tw-gap-3 lg:tw-grid-cols-[40rem_minmax(0,1fr)] lg:tw-items-start"
             >

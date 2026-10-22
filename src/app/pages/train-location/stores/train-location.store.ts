@@ -23,6 +23,7 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     loadingQueue: boolean[];
+    hasFetchedTrainLocation: boolean;
 };
 
 const store = createStore(
@@ -39,6 +40,7 @@ const store = createStore(
         itineraryLinks: [],
         operationSightingTimeCrossSections: {},
         loadingQueue: [],
+        hasFetchedTrainLocation: false,
     }),
 );
 
@@ -94,6 +96,10 @@ export const TrainLocationStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    /** いまの路線・ダイヤの取得が終わったか（失敗しても true）。取る前は本文の代わりに骨組みを出す */
+    setHasFetchedTrainLocation(value: boolean): void {
+        store.update(setProp('hasFetchedTrainLocation', () => value));
+    },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
     selectedRouteId$: store.pipe(select((state) => state.selectedRouteId)),
@@ -112,6 +118,9 @@ export const TrainLocationStore = {
         select((state) => state.operationSightingTimeCrossSections),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    hasFetchedTrainLocation$: store.pipe(
+        select((state) => state.hasFetchedTrainLocation),
+    ),
 
     get calendarId(): string | null {
         return store.getValue().calendarId;

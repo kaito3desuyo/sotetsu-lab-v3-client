@@ -7,7 +7,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainLocationComponent } from './train-location.component';
@@ -69,6 +69,7 @@ describe('TrainLocationComponent', () => {
         TrainLocationStore.setStationAxisStations([]);
         TrainLocationStore.setTripBlocksByDirection({});
         TrainLocationStore.resetLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
     });
 
     it('should create', () => {
@@ -131,12 +132,17 @@ describe('TrainLocationComponent', () => {
         TrainLocationStore.disableLoading();
     });
 
-    it('ロード中はプログレスバーだけ（スピナーは出さない）で、本文は出さない。バーはヘッダーの下', () => {
+    it('取る前は骨組みを出し、本文は出さない。取得中のプログレスバーはヘッダーの下', () => {
         TrainLocationStore.enableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
         fixture.detectChanges();
 
         const el = fixture.nativeElement as HTMLElement;
+        expect(
+            el.querySelector('[data-testid="train-location-skeleton"]'),
+        ).not.toBeNull();
         expect(el.querySelector('app-train-location-line')).toBeNull();
+        expect(el.querySelector('app-empty-state')).toBeNull();
         expect(el.querySelector('app-loading')).toBeNull();
         const bar = el.querySelector('mat-progress-bar');
         expect(bar?.getAttribute('color')).toBe('accent');
@@ -145,8 +151,12 @@ describe('TrainLocationComponent', () => {
         expect(bar?.parentElement?.className).toContain('md:tw-top-[64px]');
 
         TrainLocationStore.disableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
+        expect(
+            el.querySelector('[data-testid="train-location-skeleton"]'),
+        ).toBeNull();
         expect(el.querySelector('app-train-location-line')).toBeTruthy();
         expect(el.querySelector('mat-progress-bar')).toBeNull();
     });
@@ -154,6 +164,7 @@ describe('TrainLocationComponent', () => {
     it('G12: 在線列車が0本のとき、駅ラインを残したまま空文脈メッセージを重ねて表示する', () => {
         // ロード完了・在線列車なし（tripBlocks 空 = positions 0）の状態。
         TrainLocationStore.disableLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
         expect(component.hasNoTrainsInService()).toBe(true);
@@ -182,6 +193,10 @@ describe('TrainLocationComponent', () => {
         ).rejects.toThrow('fetch failed');
 
         expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
+        // 失敗しても骨組みを消す
+        expect(
+            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
+        ).toBe(true);
     });
 
     it('免責文はページ下端の 1 か所だけ', () => {
@@ -333,5 +348,40 @@ describe('TrainLocationComponent', () => {
 
             expect(navigate).not.toHaveBeenCalled();
         });
+    });
+
+    it('入ったときは前の訪問の「取り終えた」を引き継がない', () => {
+        TrainLocationStore.setHasFetchedTrainLocation(true);
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="train-location-skeleton"]',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('路線を変えて取り直すときは骨組みに戻す', async () => {
+        await component.fetchData({
+            refetchTripBlocks: true,
+            refetchStationAxis: true,
+        });
+        fixture.detectChanges();
+        const service = TestBed.inject(TrainLocationService) as {
+            fetchStationAxis: () => unknown;
+        };
+        service.fetchStationAxis = () => new Subject<undefined>();
+
+        component
+            .fetchData({ refetchTripBlocks: false, refetchStationAxis: true })
+            .catch(() => undefined);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="train-location-skeleton"]',
+            ),
+        ).not.toBeNull();
     });
 });
