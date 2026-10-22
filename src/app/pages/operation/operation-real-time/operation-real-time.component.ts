@@ -8,6 +8,8 @@ import {
     signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { interval, lastValueFrom, map } from 'rxjs';
@@ -15,7 +17,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { SocketService } from 'src/app/core/services/socket.service';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
-import { OperationPostCardComponent } from 'src/app/shared/operation-post-card/operation-post-card.component';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
@@ -38,6 +40,8 @@ OperationRealTimeStore.resetLoading();
     templateUrl: './operation-real-time.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        MatButtonModule,
+        MatIconModule,
         MatProgressBarModule,
         ControlBandComponent,
         MatTabsModule,
@@ -46,7 +50,6 @@ OperationRealTimeStore.resetLoading();
         OperationRealTimeOperationTableComponent,
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
-        OperationPostCardComponent,
     ],
 })
 export class OperationRealTimeComponent {
@@ -56,6 +59,7 @@ export class OperationRealTimeComponent {
     readonly #operationRealTimeService = inject(OperationRealTimeService);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #breakpointObserver = inject(BreakpointObserver);
+    readonly #postDialog = inject(OperationPostDialogService);
 
     /** 最初の描画から正しい側を作るよう、初期値は同期で読む（違う配置が一瞬出ると CLS になる） */
     readonly isDesktop = toSignal(
@@ -115,6 +119,10 @@ export class OperationRealTimeComponent {
     onClearFilter(): void {
         OperationRealTimeStore.setSelectedAgencyIds([]);
         OperationRealTimeStore.setSelectedGroupNames([]);
+    }
+
+    openPost(): void {
+        this.#postDialog.open();
     }
 
     constructor() {

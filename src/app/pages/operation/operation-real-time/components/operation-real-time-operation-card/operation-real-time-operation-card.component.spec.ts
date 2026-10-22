@@ -1,13 +1,19 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
+import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeOperationCardComponent } from './operation-real-time-operation-card.component';
 
 const sighting = (operationSightingId: string) =>
     ({ operationSightingId }) as OperationSightingDetailsDto;
+
+const open = jest.fn();
 
 describe('OperationRealTimeOperationCardComponent', () => {
     let component: OperationRealTimeOperationCardComponent;
@@ -16,9 +22,20 @@ describe('OperationRealTimeOperationCardComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeOperationCardComponent],
+            providers: [
+                { provide: OperationPostDialogService, useValue: { open } },
+            ],
         })
+            // 本物のテンプレートで行の投稿ボタンを確かめる。子の部品（運用番号チップ・
+            // 現在位置）は別の spec で見るので外す
             .overrideComponent(OperationRealTimeOperationCardComponent, {
-                set: { template: '', imports: [] },
+                remove: {
+                    imports: [
+                        OperationNumberLinkComponent,
+                        TripPositionComponent,
+                    ],
+                },
+                add: { schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
 
@@ -115,5 +132,16 @@ describe('OperationRealTimeOperationCardComponent', () => {
         } as OperationSightingTimeCrossSectionDto);
 
         expect(component.isInferred()).toBe(false);
+    });
+
+    it('行の投稿ボタンは、その運用番号を入れて投稿ダイアログを開く', () => {
+        fixture.detectChanges();
+        const button = (fixture.nativeElement as HTMLElement).querySelector(
+            'button[data-testid="row-post"]',
+        ) as HTMLButtonElement;
+        button.click();
+        expect(open).toHaveBeenCalledWith({
+            operationNumber: component.operation().operationNumber,
+        });
     });
 });

@@ -9,8 +9,10 @@
     </div>
 }
 
+<!-- 下の余白は右下の投稿ボタンの分（下からの位置 16/24 ＋ 高さ 48 ＋ 間 16 = 80/88px）。
+     最後の行がボタンに隠れないようにする（2026-10-23） -->
 <main
-    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 tw-pb-20 md:tw-p-6 md:tw-pb-[88px] lg:tw-p-8 lg:tw-pb-[88px] xl:tw-p-16 xl:tw-pb-[88px]"
 >
     <!-- 最終更新時刻は controller の再読み込みボタンの横へ移した
          （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。
@@ -92,7 +94,18 @@
             </mat-tab-group>
         </div>
     }
-    <div>
-        <app-operation-post-card></app-operation-post-card>
-    </div>
+    <!-- 投稿は右下の固定ボタンからダイアログで（ユーザー指示 2026-10-22「投稿までの手数を少なくしたい」）。
+         ボタンの分の余白は main の下の padding で取る（空の div は main > :empty の規則で消える） -->
+    <button
+        mat-fab
+        extended
+        color="primary"
+        type="button"
+        data-testid="post-fab"
+        class="!tw-fixed tw-bottom-4 tw-right-4 tw-z-40 md:tw-bottom-6 md:tw-right-6"
+        (click)="openPost()"
+    >
+        <mat-icon>edit_note</mat-icon>
+        投稿する
+    </button>
 </main>

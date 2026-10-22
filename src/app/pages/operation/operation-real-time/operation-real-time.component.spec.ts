@@ -13,6 +13,7 @@ import {
 } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OperationRealTimeService } from './services/operation-real-time.service';
 import { OperationRealTimeComponent } from './operation-real-time.component';
@@ -21,6 +22,7 @@ import { OperationRealTimeStore } from './stores/operation-real-time.store';
 describe('OperationRealTimeComponent', () => {
     let component: OperationRealTimeComponent;
     let fixture: ComponentFixture<OperationRealTimeComponent>;
+    const open = jest.fn();
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -41,6 +43,7 @@ describe('OperationRealTimeComponent', () => {
                     provide: OperationPostCardService,
                     useValue: { submitEvent$: EMPTY },
                 },
+                { provide: OperationPostDialogService, useValue: { open } },
             ],
         })
             .overrideComponent(OperationRealTimeComponent, {
@@ -55,6 +58,24 @@ describe('OperationRealTimeComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+
+    it('右下の投稿ボタンは、空の投稿ダイアログを開く', () => {
+        fixture.detectChanges();
+        const fab = (fixture.nativeElement as HTMLElement).querySelector(
+            'button[data-testid="post-fab"]',
+        ) as HTMLButtonElement;
+        fab.click();
+        expect(open).toHaveBeenCalledWith();
+    });
+
+    it('投稿カードを出さない', () => {
+        fixture.detectChanges();
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-operation-post-card',
+            ),
+        ).toBeNull();
     });
 });
 

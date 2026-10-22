@@ -3,8 +3,10 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    inject,
     input,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
@@ -18,6 +20,7 @@ import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
@@ -34,6 +37,7 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     styleUrl: './operation-real-time-operation-card.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        MatButtonModule,
         MatIconModule,
         MatTooltipModule,
         OperationNumberLinkComponent,
@@ -45,6 +49,8 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
     ],
 })
 export class OperationRealTimeOperationCardComponent {
+    readonly #postDialog = inject(OperationPostDialogService);
+
     readonly operation = input.required<OperationDetailsDto>();
     readonly timeCrossSection = input<
         OperationSightingTimeCrossSectionDto | undefined
@@ -114,4 +120,10 @@ export class OperationRealTimeOperationCardComponent {
             this.agencies(),
         );
     });
+
+    openPost(): void {
+        this.#postDialog.open({
+            operationNumber: this.operation().operationNumber,
+        });
+    }
 }
