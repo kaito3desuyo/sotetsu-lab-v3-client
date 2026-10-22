@@ -1,5 +1,7 @@
 import { PageEvent } from '@angular/material/paginator';
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { persistState } from '@ngneat/elf-persist-state';
+import localForage from 'localforage';
 import { combineLatest } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
@@ -31,6 +33,8 @@ type StoreProps = {
     pageSettings: PageEvent;
     loadingQueue: boolean[];
     hasFetchedTripBlocks: boolean;
+    /** 操作帯を畳んでいるか。これだけを persistState で保存する（列車ダイヤグラムと同じ） */
+    controlCollapsed: boolean;
 };
 
 const store = createStore(
@@ -51,8 +55,21 @@ const store = createStore(
         },
         loadingQueue: [],
         hasFetchedTripBlocks: false,
+        controlCollapsed: false,
     }),
 );
+
+// 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
+// 開いたときに前のダイヤ・路線へ戻ってしまう
+const persist = persistState(store, {
+    key: 'TimetableAllLineStore',
+    storage: localForage,
+    source: (s) =>
+        s.pipe(
+            select((state) => state.controlCollapsed),
+            map((controlCollapsed) => ({ controlCollapsed })),
+        ),
+});
 
 /** 表示方向に並べ替えた駅リスト（上り = 逆順）。 */
 function orderStations(
@@ -276,6 +293,11 @@ export const TimetableAllLineStore = {
     setHasFetchedTripBlocks(value: boolean): void {
         store.update(setProp('hasFetchedTripBlocks', () => value));
     },
+    setControlCollapsed(collapsed: boolean): void {
+        store.update(setProp('controlCollapsed', () => collapsed));
+    },
+
+    persistInitialized$: persist.initialized$,
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
     tripDirection$: store.pipe(select((state) => state.tripDirection)),
@@ -292,6 +314,7 @@ export const TimetableAllLineStore = {
     ),
     selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+    controlCollapsed$: store.pipe(select((state) => state.controlCollapsed)),
     hasFetchedTripBlocks$: store.pipe(
         select((state) => state.hasFetchedTripBlocks),
     ),

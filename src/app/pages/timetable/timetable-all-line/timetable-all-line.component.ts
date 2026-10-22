@@ -2,28 +2,38 @@ import {
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    computed,
     inject,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
+import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
-import { TimetableSearchCardComponent } from 'src/app/shared/timetable-search-card/timetable-search-card.component';
+import { buildStationGroups } from 'src/app/shared/station-groups.util';
+import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-toggle/sticky-direction-toggle.component';
+import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
@@ -42,11 +52,15 @@ let fetchSeq = 0;
     styleUrl: './timetable-all-line.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        MatFormFieldModule,
         MatProgressBarModule,
+        MatSelectModule,
+        DateFnsPipe,
         SkeletonBarComponent,
+        StickyDirectionToggleComponent,
         TimetableAllLineRouteFilterComponent,
         TimetableAllLineTableComponent,
-        TimetableSearchCardComponent,
+        TodayCalendarButtonComponent,
     ],
 })
 export class TimetableAllLineComponent {
@@ -89,6 +103,11 @@ export class TimetableAllLineComponent {
         TimetableAllLineStore.isAwaitingTripBlocks$,
         { initialValue: false },
     );
+    /** 操作帯を畳んでいるか（列車ダイヤグラムと同じく、畳んだ状態をページが持つ） */
+    readonly controlCollapsed = toSignal(
+        TimetableAllLineStore.controlCollapsed$,
+        { initialValue: false },
+    );
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
@@ -100,6 +119,30 @@ export class TimetableAllLineComponent {
             ),
         ),
     );
+
+    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
+        initialValue: [],
+    });
+    readonly #routeStations = toSignal(
+        this.#routeStationListStateQuery.routeStations$,
+        { initialValue: [] },
+    );
+    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
+        initialValue: [],
+    });
+    /** 駅別時刻表へ移る選択欄の選択肢（駅別時刻表と同じ）。 */
+    readonly stationGroups = computed(() =>
+        buildStationGroups(this.#routeStations(), this.#agencies()),
+    );
+    /** 要約の頭に付ける「改正日 ダイヤ名 上り」 */
+    readonly summaryLead = computed(() => {
+        const calendar = this.calendar();
+        const tripDirection = this.tripDirection();
+        return joinSummaryParts([
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+            tripDirectionLabel.get(tripDirection as ETripDirection) ?? null,
+        ]);
+    });
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
@@ -171,6 +214,61 @@ export class TimetableAllLineComponent {
                 TimetableAllLineStore.setHasFetchedTripBlocks(true);
             }
         }
+    }
+
+    onCalendarChange(calendarId: string): void {
+        if (!calendarId || calendarId === this.calendarId()) return;
+        notifyNavigationFailure(
+            this.#router.navigate([
+                'timetable',
+                'all-line',
+                { ...this.#paramsWithoutTripBlock(), calendar_id: calendarId },
+            ]),
+            this.#notification,
+        );
+    }
+
+    onStationSelect(stationId: string): void {
+        notifyNavigationFailure(
+            this.#router.navigate([
+                'timetable',
+                'station',
+                {
+                    calendar_id: this.calendarId(),
+                    station_id: stationId,
+                    trip_direction: this.tripDirection(),
+                },
+            ]),
+            this.#notification,
+        );
+    }
+
+    onDirectionChange(tripDirection: number): void {
+        notifyNavigationFailure(
+            this.#router.navigate([
+                'timetable',
+                'all-line',
+                {
+                    ...this.#paramsWithoutTripBlock(),
+                    trip_direction: tripDirection,
+                },
+            ]),
+            this.#notification,
+        );
+    }
+
+    /**
+     * 今の URL のパラメータから trip_block_id（列車番号のリンクで開いた 1 本）を除いたもの。
+     * ダイヤ・方向を替えたら、前の 1 本ではなくその条件の全列車を出す（消した検索カードと同じ）
+     */
+    #paramsWithoutTripBlock(): Params {
+        const params: Params = { ...this.#route.snapshot.params };
+        delete params['trip_block_id'];
+        return params;
+    }
+
+    onControlCollapsedChange(collapsed: boolean): void {
+        TimetableAllLineStore.setControlCollapsed(collapsed);
     }
 
     onPaged(pageSettings: PageEvent): void {

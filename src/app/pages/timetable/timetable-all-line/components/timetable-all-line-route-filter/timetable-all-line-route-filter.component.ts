@@ -1,10 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+    model,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import {
     formatRouteFilterSummary,
     isRouteFilterActive,
+    joinSummaryParts,
 } from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
@@ -28,6 +35,13 @@ import { TimetableAllLineStore } from '../../stores/timetable-all-line.store';
     host: { class: 'tw-contents' },
 })
 export class TimetableAllLineRouteFilterComponent {
+    /** ページが帯に選択欄を差し込むときは、取る前やチップが無いときも帯を出す（2026-10-22） */
+    readonly alwaysVisible = input(false);
+    /** 要約の頭（ダイヤと方向）。路線の要約の前に付ける */
+    readonly summaryLead = input('');
+    /** 操作帯を畳んでいるか。畳んだ状態はページが持つ（列車ダイヤグラムと同じ manual の帯） */
+    readonly collapsed = model(false);
+
     readonly routeOptions = toSignal(TimetableAllLineStore.routeOptions$, {
         initialValue: [],
     });
@@ -52,7 +66,10 @@ export class TimetableAllLineRouteFilterComponent {
     );
     /** 取る前は要約を出さない（「全路線」と出してから「路線：…」に変わらないように） */
     readonly bandSummaryOrEmpty = computed(() =>
-        this.isAwaitingTripBlocks() ? '' : this.bandSummary(),
+        joinSummaryParts([
+            this.summaryLead(),
+            this.isAwaitingTripBlocks() ? null : this.bandSummary(),
+        ]),
     );
     /** 路線のチップの骨組みの幅（本番で測った本線・いずみ野線・厚木線・新横浜線・相鉄・JR直通線…の幅） */
     readonly routeSkeletonWidths = [

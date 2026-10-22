@@ -1,23 +1,33 @@
-@if (isAwaitingTripBlocks() || routeOptions().length) {
+@if (alwaysVisible() || isAwaitingTripBlocks() || routeOptions().length) {
     <!-- 操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05）。
          取る前も帯の高さを取り、チップの形の骨組みを出す（2026-10-22） -->
     <app-control-band
+        collapse="manual"
+        [(collapsed)]="collapsed"
         [summary]="bandSummaryOrEmpty()"
         [filterActive]="!isAwaitingTripBlocks() && filterActive()"
     >
-        @if (isAwaitingTripBlocks()) {
-            <app-skeleton-chips
-                [widths]="routeSkeletonWidths"
-            ></app-skeleton-chips>
-        } @else {
-            <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
-            <app-filter-chips
-                mode="multiple"
-                [scrollMode]="true"
-                [options]="routeOptions()"
-                [selected]="selectedRouteIds()"
-                (selectedChange)="onChange($event)"
-            ></app-filter-chips>
-        }
+        <div>
+            <ng-content select="[bandLead]"></ng-content>
+            @if (isAwaitingTripBlocks() || routeOptions().length) {
+                <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
+                    路線で絞り込み
+                </p>
+                @if (isAwaitingTripBlocks()) {
+                    <app-skeleton-chips
+                        [widths]="routeSkeletonWidths"
+                    ></app-skeleton-chips>
+                } @else {
+                    <!-- mockup-05: 路線チップは折返し多段ではなく横スクロール 1 行表示 -->
+                    <app-filter-chips
+                        mode="multiple"
+                        [scrollMode]="true"
+                        [options]="routeOptions()"
+                        [selected]="selectedRouteIds()"
+                        (selectedChange)="onChange($event)"
+                    ></app-filter-chips>
+                }
+            }
+        </div>
     </app-control-band>
 }

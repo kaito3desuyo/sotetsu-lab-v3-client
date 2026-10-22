@@ -32,7 +32,10 @@ describe('TimetableAllLineComponent', () => {
                 TimetableAllLineService,
                 {
                     provide: CalendarListStateQuery,
-                    useValue: { selectByCalendarId: () => of(undefined) },
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
                 },
                 {
                     provide: ErrorHandlerService,
@@ -89,7 +92,10 @@ describe('TimetableAllLineComponent の URL の向き', () => {
                 },
                 {
                     provide: CalendarListStateQuery,
-                    useValue: { selectByCalendarId: () => of(undefined) },
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
                 },
                 {
                     provide: ErrorHandlerService,
@@ -188,7 +194,10 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 },
                 {
                     provide: CalendarListStateQuery,
-                    useValue: { selectByCalendarId: () => of(undefined) },
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
                 },
                 {
                     provide: ErrorHandlerService,
@@ -261,11 +270,11 @@ describe('TimetableAllLineComponent の読み込み中', () => {
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
     });
 
-    it('ダイヤが無ければ骨組みを出さない（検索カードだけ）', async () => {
+    it('ダイヤが無ければ骨組みを出さない（検索カードも置かない）', async () => {
         await setup({});
 
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
-        expect(query('app-timetable-search-card')).not.toBeNull();
+        expect(query('app-timetable-search-card')).toBeNull();
     });
 
     it('条件を変えて取り直すときは骨組みに戻す', async () => {
@@ -357,5 +366,134 @@ describe('TimetableAllLineComponent の読み込み中', () => {
         await flush();
         fixture.detectChanges();
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+    });
+});
+
+describe('TimetableAllLineComponent の帯の操作', () => {
+    let component: TimetableAllLineComponent;
+    let navigate: jest.SpyInstance;
+    const params: Record<string, string> = {
+        calendar_id: 'cal-1',
+        trip_direction: '1',
+    };
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        snapshot: { params },
+                        paramMap: of(convertToParamMap(params)),
+                    },
+                },
+                {
+                    provide: TimetableAllLineService,
+                    useValue: {
+                        fetchStations: jest.fn(() => of(undefined)),
+                        fetchTripBlocks: jest.fn(() => of(undefined)),
+                    },
+                },
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        component = TestBed.createComponent(
+            TimetableAllLineComponent,
+        ).componentInstance;
+        navigate.mockClear();
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TimetableAllLineStore.resetLoading();
+        TimetableAllLineStore.setControlCollapsed(false);
+        delete params['trip_block_id'];
+    });
+
+    it('列車番号のリンクで開いた画面でダイヤ・方向を替えると、trip_block_id を落として全列車に戻す', () => {
+        params['trip_block_id'] = 'tb-1';
+        component.onCalendarChange('cal-2');
+        component.onDirectionChange(0);
+        expect(navigate).toHaveBeenNthCalledWith(1, [
+            'timetable',
+            'all-line',
+            { calendar_id: 'cal-2', trip_direction: '1' },
+        ]);
+        expect(navigate).toHaveBeenNthCalledWith(2, [
+            'timetable',
+            'all-line',
+            { calendar_id: 'cal-1', trip_direction: 0 },
+        ]);
+    });
+
+    it('ダイヤを替えると、方向などはそのままで calendar_id だけ替える', () => {
+        component.onCalendarChange('cal-2');
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'all-line',
+            { calendar_id: 'cal-2', trip_direction: '1' },
+        ]);
+    });
+
+    it('同じダイヤを選んでも移らない', () => {
+        TimetableAllLineStore.setCalendarId('cal-1');
+        component.onCalendarChange('cal-1');
+        expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('駅を選ぶと、同じダイヤ・方向で駅別時刻表へ移る', () => {
+        TimetableAllLineStore.setCalendarId('cal-1');
+        TimetableAllLineStore.setTripDirection(1);
+        component.onStationSelect('st-9');
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'station',
+            { calendar_id: 'cal-1', station_id: 'st-9', trip_direction: 1 },
+        ]);
+    });
+
+    it('畳んだ状態は collapsedChange で受け、collapsed に返す', () => {
+        expect(component.controlCollapsed()).toBe(false);
+        component.onControlCollapsedChange(true);
+        expect(component.controlCollapsed()).toBe(true);
+        component.onControlCollapsedChange(false);
+        expect(component.controlCollapsed()).toBe(false);
+    });
+
+    it('上り下りの切替は、押した向きへ移る', () => {
+        component.onDirectionChange(0);
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'all-line',
+            { calendar_id: 'cal-1', trip_direction: 0 },
+        ]);
     });
 });
