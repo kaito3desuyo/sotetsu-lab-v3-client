@@ -16,12 +16,9 @@
             (selectedChange)="onAgencyChange($event)"
         ></app-filter-chips>
     } @else {
-        <ng-container
-            *ngTemplateOutlet="
-                chipsSkeleton;
-                context: { widths: agencySkeletonWidths }
-            "
-        ></ng-container>
+        <app-skeleton-chips
+            [widths]="agencySkeletonWidths"
+        ></app-skeleton-chips>
     }
     @if (hasFetchedOperations()) {
         <app-filter-chips
@@ -33,27 +30,6 @@
             (selectedChange)="onGroupChange($event)"
         ></app-filter-chips>
     } @else {
-        <ng-container
-            *ngTemplateOutlet="
-                chipsSkeleton;
-                context: { widths: groupSkeletonWidths }
-            "
-        ></ng-container>
+        <app-skeleton-chips [widths]="groupSkeletonWidths"></app-skeleton-chips>
     }
 </div>
-
-<!-- 作りはダッシュボードの最新の目撃情報の骨組みと同じ。チップの高さは 32px -->
-<ng-template #chipsSkeleton let-widths="widths">
-    <div
-        class="tw-flex tw-h-[42px] tw-flex-row tw-items-center tw-gap-2 tw-overflow-hidden"
-        aria-label="読み込み中"
-        data-testid="filter-chips-skeleton"
-    >
-        @for (width of widths; track $index) {
-            <span
-                class="tw-block tw-h-8 tw-shrink-0 tw-animate-pulse tw-rounded-control tw-bg-paper-3 motion-reduce:tw-animate-none"
-                [class]="width"
-            ></span>
-        }
-    </div>
-</ng-template>

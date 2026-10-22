@@ -97,7 +97,40 @@
     </div>
 
     <div>
-        @if (isEmpty()) {
+        @if (!hasFetchedTimetable()) {
+            <!-- 取る前は画面からヘッダーを引いた高さで、時刻表と同じ形（ダイヤの帯・時の列・列車のセル 81px）の
+                 骨組みを出す。以前は取る前に「この条件の列車情報はありません」が出て、その下の検索カードが
+                 届いた時刻表に押し出されていた（CLS 0.51・2026-10-22） -->
+            <div
+                class="tw-h-[calc(100dvh-48px)] tw-overflow-hidden md:tw-h-[calc(100dvh-64px)]"
+                aria-label="読み込み中"
+                data-testid="timetable-station-skeleton"
+            >
+                <div class="tw-overflow-hidden tw-rounded-card tw-bg-white">
+                    <app-skeleton-bar
+                        class="tw-h-12 tw-w-full tw-rounded-none"
+                    ></app-skeleton-bar>
+                    @for (hour of skeletonHours; track hour) {
+                        <div
+                            class="tw-flex tw-flex-row tw-border-0 tw-border-t tw-border-solid tw-border-rule"
+                        >
+                            <app-skeleton-bar
+                                class="tw-w-14 tw-flex-shrink-0 tw-self-stretch tw-rounded-none max-[359px]:tw-w-10"
+                            ></app-skeleton-bar>
+                            <div
+                                class="tw-grid tw-min-w-0 tw-flex-1 tw-grid-cols-[repeat(auto-fill,minmax(min(14rem,100%),1fr))] tw-content-start tw-gap-x-2 tw-gap-y-1 tw-p-2 max-[359px]:tw-px-1"
+                            >
+                                @for (cell of skeletonCells; track cell) {
+                                    <app-skeleton-bar
+                                        class="tw-h-[81px] tw-w-full"
+                                    ></app-skeleton-bar>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        } @else if (isEmpty()) {
             <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。
                  次アクションは反対方向への切り替え（ダイヤ/方向を変えて再検索する動線）。 -->
             <app-empty-state

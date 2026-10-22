@@ -35,6 +35,7 @@ type StoreProps = {
         string,
         OperationSightingTimeCrossSectionDto
     >;
+    hasFetchedTimetable: boolean;
     loadingQueue: boolean[];
 };
 
@@ -51,6 +52,7 @@ const store = createStore(
         stations: [],
         operations: [],
         operationSightingTimeCrossSections: {},
+        hasFetchedTimetable: false,
         loadingQueue: [],
     }),
 );
@@ -206,6 +208,10 @@ export const TimetableStationStore = {
             setProp('operationSightingTimeCrossSections', () => ({})),
         );
     },
+    /** いまの駅・ダイヤ・方向の取得が終わったか（失敗しても true）。取る前は時刻表の代わりに骨組みを出す */
+    setHasFetchedTimetable(value: boolean): void {
+        store.update(setProp('hasFetchedTimetable', () => value));
+    },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));
     },
@@ -226,6 +232,9 @@ export const TimetableStationStore = {
     operations$: store.pipe(select((state) => state.operations)),
     operationSightingTimeCrossSections$: store.pipe(
         select((state) => state.operationSightingTimeCrossSections),
+    ),
+    hasFetchedTimetable$: store.pipe(
+        select((state) => state.hasFetchedTimetable),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 

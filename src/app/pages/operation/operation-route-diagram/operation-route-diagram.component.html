@@ -22,7 +22,33 @@
          このページ上で操作できること自体が見えなかった（audit C6）。 -->
     <div class="tw-flex tw-flex-col tw-gap-4">
         <div>
-            @if (drawingDisplayed()) {
+            @if (isAwaitingOperationTrips()) {
+                <!-- 取る前は図と同じ白地に、ダイヤの帯（48px）と図の場所を画面 1 枚分取る。
+                     以前は路線の絞り込みの行が後から出て図を押し下げていた（CLS 0.89・2026-10-22） -->
+                <div
+                    class="tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-overflow-hidden tw-rounded-card tw-bg-white md:tw-h-[calc(100dvh-64px)]"
+                    aria-label="読み込み中"
+                    data-testid="route-diagram-skeleton"
+                >
+                    <app-skeleton-bar
+                        class="tw-h-12 tw-w-full tw-shrink-0 tw-rounded-none"
+                    ></app-skeleton-bar>
+                    <div class="tw-flex tw-flex-row tw-gap-6 tw-p-4">
+                        @for (column of skeletonStationColumns; track column) {
+                            <app-skeleton-bar
+                                class="tw-h-16 tw-w-4"
+                            ></app-skeleton-bar>
+                        }
+                    </div>
+                    <div class="tw-flex tw-flex-col tw-gap-10 tw-px-4">
+                        @for (row of skeletonTripRows; track row) {
+                            <app-skeleton-bar
+                                class="tw-h-3 tw-w-3/4"
+                            ></app-skeleton-bar>
+                        }
+                    </div>
+                </div>
+            } @else if (drawingDisplayed()) {
                 <app-operation-route-diagram-drawing
                     [stations]="stations()"
                     [tripOperationLists]="tripOperationLists()"

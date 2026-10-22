@@ -31,15 +31,60 @@
         ></app-operation-table-filter>
     </app-control-band>
 
-    @if (isEmpty()) {
+    @if (!hasFetchedOperationTrips()) {
+        <!-- 取る前は画面からヘッダーを引いた高さで、縦カードの骨組みを出す。以前は一覧の場所が空で、
+             下の検索カードが操作帯のすぐ下に見え、届いた一覧に押し出されていた（CLS 0.57・2026-10-22）。
+             取得中にカードを出さない理由（ダイヤを替えたとき前のダイヤのカードが混ざる）は前と同じ -->
+        <div
+            class="tw-h-[calc(100dvh-48px)] tw-overflow-hidden md:tw-h-[calc(100dvh-64px)]"
+            aria-label="読み込み中"
+            data-testid="operation-table-skeleton"
+        >
+            <div
+                class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"
+            >
+                @for (card of skeletonCards; track card) {
+                    <div
+                        class="tw-rounded-card tw-bg-white tw-px-3 tw-pb-2 tw-pt-3"
+                    >
+                        <div
+                            class="tw-mb-3 tw-flex tw-flex-row tw-items-center tw-gap-2"
+                        >
+                            <app-skeleton-bar
+                                class="tw-h-7 tw-w-16"
+                            ></app-skeleton-bar>
+                            <app-skeleton-bar
+                                class="tw-h-5 tw-w-12"
+                            ></app-skeleton-bar>
+                        </div>
+                        @for (row of skeletonRows; track row) {
+                            <div
+                                class="tw-flex tw-h-8 tw-flex-row tw-items-center tw-gap-2"
+                            >
+                                <app-skeleton-bar
+                                    class="tw-h-4 tw-w-10"
+                                ></app-skeleton-bar>
+                                <app-skeleton-bar
+                                    class="tw-h-4 tw-w-14"
+                                ></app-skeleton-bar>
+                                <app-skeleton-bar
+                                    class="tw-h-4 tw-flex-1"
+                                ></app-skeleton-bar>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    } @else if (isEmpty()) {
         <app-empty-state
             icon="event_busy"
             message="このダイヤには運用情報が登録されていません"
         ></app-empty-state>
-    } @else if (!isLoading()) {
+    } @else {
         <!-- 折返し表のカードは幅 18.5rem 前後で敷き詰める（本番と同じく 1440 幅で 4 面）。
              カードごとに高さが大きく違うため items-start で各カードの高さを保つ。
-             取得中は出さない: 運用・駅・種別がそろう前に描くと、届くたびに全カードを
+             取得中は上の骨組みを出す: 運用・駅・種別がそろう前に描くと、届くたびに全カードを
              描き直すうえ、ダイヤを替えたときに前のダイヤのカードが混ざって見える。 -->
         <div
             class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"

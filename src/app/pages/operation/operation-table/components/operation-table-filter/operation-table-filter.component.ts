@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    input,
+    output,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,6 +18,7 @@ import {
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { operationGroupOptions } from 'src/app/shared/operation-group.util';
+import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
 
 /**
  * 運用表: ダイヤ select（常設・変更で calendar_id を差し替えて再取得）+
@@ -32,6 +39,7 @@ import { operationGroupOptions } from 'src/app/shared/operation-group.util';
         MatSelectModule,
         DateFnsPipe,
         FilterChipsComponent,
+        SkeletonChipsComponent,
     ],
 })
 export class OperationTableFilterComponent {
@@ -45,6 +53,20 @@ export class OperationTableFilterComponent {
         OperationTableStore.selectedGroupNames$,
         { initialValue: [] },
     );
+
+    readonly hasFetchedOperationTrips = toSignal(
+        OperationTableStore.hasFetchedOperationTrips$,
+        { initialValue: false },
+    );
+    /** 運用群のチップの骨組みの幅（リアルタイムの運用群の行と同じ） */
+    readonly groupSkeletonWidths = [
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-14',
+    ];
 
     /**
      * 運用群チップはリアルタイム運用情報と同じもの（ユーザー指示 2026-09-25）。

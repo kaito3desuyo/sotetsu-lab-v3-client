@@ -18,6 +18,7 @@ import {
     isRouteFilterActive,
 } from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
+import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 
 /**
@@ -31,7 +32,11 @@ import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram
     selector: 'app-operation-route-diagram-route-filter',
     templateUrl: './operation-route-diagram-route-filter.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [ControlBandComponent, FilterChipsComponent],
+    imports: [
+        ControlBandComponent,
+        FilterChipsComponent,
+        SkeletonChipsComponent,
+    ],
     host: { class: 'tw-contents' },
 })
 export class OperationRouteDiagramRouteFilterComponent {
@@ -85,6 +90,12 @@ export class OperationRouteDiagramRouteFilterComponent {
                 };
             });
     });
+    readonly isAwaitingOperationTrips = toSignal(
+        OperationRouteDiagramStore.isAwaitingOperationTrips$,
+        { initialValue: false },
+    );
+    /** 路線のチップの骨組みの幅（本線・いずみ野線・厚木線・新横浜線の幅に近い値） */
+    readonly routeSkeletonWidths = ['tw-w-16', 'tw-w-24', 'tw-w-20', 'tw-w-24'];
     readonly selectedRouteIds = toSignal(
         OperationRouteDiagramStore.selectedRouteIds$,
         { initialValue: [] },
