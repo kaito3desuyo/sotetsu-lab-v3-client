@@ -92,7 +92,10 @@
         </div>
     </div>
     <footer class="tw-flex tw-flex-col">
-        <app-button type="submit" [disabled]="sightingForm.invalid">
+        <app-button
+            type="submit"
+            [disabled]="sightingForm.invalid || submitting()"
+        >
             投稿する
         </app-button>
     </footer>

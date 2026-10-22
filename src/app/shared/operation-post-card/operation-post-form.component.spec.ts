@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroupDirective } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
@@ -228,6 +228,42 @@ describe('OperationPostFormComponent', () => {
         );
         expect(resetForm).not.toHaveBeenCalled();
         expect(emitSubmitEvent).not.toHaveBeenCalled();
+    });
+
+    it('初めの値を入れただけでは sighting_form_start を送らない', () => {
+        fixture.componentRef.setInput('initialValue', {
+            operationNumber: '11',
+        });
+        fixture.detectChanges();
+        expect(eventNames()).toEqual([]);
+
+        component.sightingForm.patchValue({ agencyId: 'sotetsu' });
+        expect(eventNames()).toEqual(['sighting_form_start']);
+    });
+
+    it('応答を待っている間にもう一度送っても、1 回しか送らない', async () => {
+        const response = new Subject<void>();
+        postOperationSighting.mockReturnValue(response);
+        fill();
+
+        const first = submit();
+        await submit();
+        response.next();
+        response.complete();
+        await first;
+
+        expect(postOperationSighting).toHaveBeenCalledTimes(1);
+    });
+
+    it('送っている間だけ submittingChange で true を流し、終わったら false に戻す', async () => {
+        const changes: boolean[] = [];
+        component.submittingChange.subscribe((v) => changes.push(v));
+        fill();
+
+        await submit();
+
+        expect(changes).toEqual([true, false]);
+        expect(component.submitting()).toBe(false);
     });
 
     it('フォームに最初に触ったときだけ sighting_form_start を送る', () => {

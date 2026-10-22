@@ -9,18 +9,23 @@ import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-form
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from '../operation-post-card/operation-post-card.service';
 import { OperationPostFormComponent } from '../operation-post-card/operation-post-form.component';
-import { OperationPostDialogComponent } from './operation-post-dialog.component';
+import {
+    OPERATION_POST_DIALOG_TITLE_ID,
+    OperationPostDialogComponent,
+} from './operation-post-dialog.component';
 
 describe('OperationPostDialogComponent', () => {
     let fixture: ComponentFixture<OperationPostDialogComponent>;
     const close = jest.fn();
+    const dialogRef = { close, disableClose: false };
 
     beforeEach(async () => {
         close.mockClear();
+        dialogRef.disableClose = false;
         await TestBed.configureTestingModule({
             imports: [OperationPostDialogComponent],
             providers: [
-                { provide: MatDialogRef, useValue: { close } },
+                { provide: MatDialogRef, useValue: dialogRef },
                 {
                     provide: MAT_DIALOG_DATA,
                     useValue: { operationNumber: '11' },
@@ -81,5 +86,22 @@ describe('OperationPostDialogComponent', () => {
         ) as HTMLButtonElement;
         button.click();
         expect(close).toHaveBeenCalledTimes(1);
+    });
+
+    it('送っている間は Esc・背景で閉じない', () => {
+        const form = fixture.debugElement.query(
+            By.directive(OperationPostFormComponent),
+        ).componentInstance as OperationPostFormComponent;
+        form.submittingChange.emit(true);
+        expect(dialogRef.disableClose).toBe(true);
+        form.submittingChange.emit(false);
+        expect(dialogRef.disableClose).toBe(false);
+    });
+
+    it('見出しの id でダイアログの名前を付ける', () => {
+        const heading = (fixture.nativeElement as HTMLElement).querySelector(
+            'h2',
+        ) as HTMLElement;
+        expect(heading.id).toBe(OPERATION_POST_DIALOG_TITLE_ID);
     });
 });

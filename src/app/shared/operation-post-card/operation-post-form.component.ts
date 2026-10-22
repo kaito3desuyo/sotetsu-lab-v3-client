@@ -7,6 +7,7 @@ import {
     inject,
     input,
     output,
+    signal,
     untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -84,6 +85,9 @@ export class OperationPostFormComponent {
     readonly initialValue = input<OperationPostInitialValue>({});
     /** 投稿に成功したときだけ流す（ダイアログを閉じるため） */
     readonly submitted = output<void>();
+    /** 送っている間（2 回送らない・ダイアログを閉じさせないため。2026-10-23） */
+    readonly submitting = signal(false);
+    readonly submittingChange = output<boolean>();
 
     readonly sightingForm: Form = this.#fb.group({
         agencyId: this.#fb.control('', [Validators.required]),
@@ -171,6 +175,8 @@ export class OperationPostFormComponent {
     }
 
     async submit(formGroupDirective: FormGroupDirective): Promise<void> {
+        // 応答待ちのあいだに Enter で 2 回送らない
+        if (this.submitting()) return;
         const {
             agencyId,
             formationOrVehicleNumber,
@@ -201,6 +207,7 @@ export class OperationPostFormComponent {
 
         this.#ga.sendEvent('sighting_submit');
 
+        this.#setSubmitting(true);
         this.#loading.open();
 
         const result = await tryCatchAsync<void, FetchError>(
@@ -213,6 +220,7 @@ export class OperationPostFormComponent {
         );
 
         this.#loading.close();
+        this.#setSubmitting(false);
 
         if (result.isFailure()) {
             this.#ga.sendEvent('sighting_submit_failure', {
@@ -245,5 +253,10 @@ export class OperationPostFormComponent {
             this.#operationPostCardService.emitSubmitEvent();
             this.submitted.emit();
         }
+    }
+
+    #setSubmitting(value: boolean): void {
+        this.submitting.set(value);
+        this.submittingChange.emit(value);
     }
 }
