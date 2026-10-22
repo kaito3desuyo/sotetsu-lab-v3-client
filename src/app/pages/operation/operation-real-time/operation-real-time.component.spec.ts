@@ -1,8 +1,16 @@
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { EMPTY, firstValueFrom, of, Subject, throwError } from 'rxjs';
+import {
+    BehaviorSubject,
+    EMPTY,
+    firstValueFrom,
+    of,
+    Subject,
+    throwError,
+} from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -47,6 +55,80 @@ describe('OperationRealTimeComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+});
+
+describe('OperationRealTimeComponent の配置', () => {
+    let fixture: ComponentFixture<OperationRealTimeComponent>;
+    let breakpoint$: BehaviorSubject<BreakpointState>;
+
+    const setup = async (desktop: boolean) => {
+        breakpoint$ = new BehaviorSubject<BreakpointState>({
+            matches: desktop,
+            breakpoints: {},
+        });
+        await TestBed.configureTestingModule({
+            imports: [OperationRealTimeComponent],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideRouter([]),
+                OperationRealTimeService,
+                { provide: SocketService, useValue: { on: () => EMPTY } },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: OperationPostCardService,
+                    useValue: { submitEvent$: EMPTY },
+                },
+                {
+                    provide: BreakpointObserver,
+                    useValue: {
+                        observe: () => breakpoint$,
+                        isMatched: () => breakpoint$.value.matches,
+                    },
+                },
+            ],
+        })
+            .overrideComponent(OperationRealTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        fixture = TestBed.createComponent(OperationRealTimeComponent);
+        fixture.detectChanges();
+    };
+
+    const count = (selector: string) =>
+        (fixture.nativeElement as HTMLElement).querySelectorAll(selector)
+            .length;
+
+    afterEach(() => fixture.destroy());
+
+    it('md 以上では横並びだけを作り、タブは作らない', async () => {
+        await setup(true);
+
+        expect(count('mat-tab-group')).toBe(0);
+        expect(count('app-operation-real-time-operation-table')).toBe(1);
+        expect(count('app-operation-real-time-formation-table')).toBe(1);
+    });
+
+    it('md 未満ではタブだけを作り、横並びは作らない', async () => {
+        await setup(false);
+
+        expect(count('mat-tab-group')).toBe(1);
+        expect(
+            count('mat-tab-group app-operation-real-time-operation-table'),
+        ).toBe(1);
+        expect(count('app-operation-real-time-operation-table')).toBe(1);
+    });
+
+    it('画面幅が md をまたいだら、作る方を入れ替える', async () => {
+        await setup(false);
+
+        breakpoint$.next({ matches: true, breakpoints: {} });
+        fixture.detectChanges();
+
+        expect(count('mat-tab-group')).toBe(0);
+        expect(count('app-operation-real-time-operation-table')).toBe(1);
     });
 });
 
