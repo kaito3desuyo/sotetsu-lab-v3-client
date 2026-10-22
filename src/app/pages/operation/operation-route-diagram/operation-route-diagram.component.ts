@@ -26,6 +26,10 @@ import {
 
 OperationRouteDiagramStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-operation-route-diagram',
     templateUrl: './operation-route-diagram.component.html',
@@ -41,7 +45,6 @@ OperationRouteDiagramStore.resetLoading();
 })
 export class OperationRouteDiagramComponent {
     readonly #destroyRef = inject(DestroyRef);
-    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #operationRouteDiagramService = inject(
@@ -175,7 +178,7 @@ export class OperationRouteDiagramComponent {
     async fetchData(): Promise<void> {
         if (!OperationRouteDiagramStore.operationId) return;
 
-        const seq = ++this.#fetchSeq;
+        const seq = ++fetchSeq;
         OperationRouteDiagramStore.enableLoading();
         OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
 
@@ -200,7 +203,7 @@ export class OperationRouteDiagramComponent {
         OperationRouteDiagramStore.initializeSelectedRouteIds();
         OperationRouteDiagramStore.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-        if (seq === this.#fetchSeq) {
+        if (seq === fetchSeq) {
             OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
         }
 

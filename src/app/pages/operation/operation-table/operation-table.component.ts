@@ -32,6 +32,10 @@ import { formatOperationTableSummary } from './utils/operation-table-summary.uti
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 OperationTableStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-operation-table',
     templateUrl: './operation-table.component.html',
@@ -48,7 +52,6 @@ OperationTableStore.resetLoading();
 })
 export class OperationTableComponent {
     readonly #destroyRef = inject(DestroyRef);
-    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -147,7 +150,7 @@ export class OperationTableComponent {
     }
 
     async fetchData(): Promise<void> {
-        const seq = ++this.#fetchSeq;
+        const seq = ++fetchSeq;
         OperationTableStore.enableLoading();
         OperationTableStore.setHasFetchedOperationTrips(false);
 
@@ -170,7 +173,7 @@ export class OperationTableComponent {
         await linksPromise;
         OperationTableStore.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-        if (seq === this.#fetchSeq) {
+        if (seq === fetchSeq) {
             OperationTableStore.setHasFetchedOperationTrips(true);
         }
 

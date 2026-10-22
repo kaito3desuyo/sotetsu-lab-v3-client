@@ -280,4 +280,25 @@ describe('TimetableAllLineComponent の読み込み中', () => {
 
         expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
     });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+        const previousTripBlocks$ = tripBlocks$;
+        fixture.destroy();
+        tripBlocks$ = new ReplaySubject<undefined>(1);
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        fixture.detectChanges();
+
+        previousTripBlocks$.next(undefined);
+        previousTripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+    });
 });

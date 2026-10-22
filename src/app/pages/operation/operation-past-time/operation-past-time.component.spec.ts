@@ -162,4 +162,22 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
 
         expect(hasFetched()).toBe(false);
     });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで false のまま', async () => {
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        const previous$ = sightings$;
+        fixture.destroy();
+        sightings$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+
+        previous$.next(undefined);
+        previous$.complete();
+        await flush();
+        expect(hasFetched()).toBe(false);
+
+        sightings$.next(undefined);
+        sightings$.complete();
+        await flush();
+        expect(hasFetched()).toBe(true);
+    });
 });

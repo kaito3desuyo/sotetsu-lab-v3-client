@@ -385,3 +385,103 @@ describe('TrainLocationComponent', () => {
         ).not.toBeNull();
     });
 });
+
+describe('TrainLocationComponent の再訪', () => {
+    let fixture: ComponentFixture<TrainLocationComponent>;
+    let tripBlocks$: Subject<undefined>;
+
+    // 先のテストが残す未処理の遷移の失敗を、これらのテストの待ちで表に出さないよう、マクロタスクは挟まず
+    // マイクロタスクだけを回す
+    const flush = async () => {
+        for (let i = 0; i < 20; i++) {
+            await Promise.resolve();
+        }
+    };
+    const skeleton = () =>
+        (fixture.nativeElement as HTMLElement).querySelector(
+            '[data-testid="train-location-skeleton"]',
+        );
+
+    beforeEach(async () => {
+        tripBlocks$ = new Subject<undefined>();
+        const params = { route_id: 'route-1', station_id: 's1' };
+        await TestBed.configureTestingModule({
+            imports: [TrainLocationComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                        snapshot: { params },
+                    },
+                },
+                {
+                    provide: TrainLocationService,
+                    useValue: {
+                        fetchTripClasses: () => of(undefined),
+                        fetchTripBlocks: () => tripBlocks$,
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchStationAxis: () => of(undefined),
+                        fetchMissingOperationSightingTimeCrossSections: () =>
+                            of(undefined),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarId: 'cal-today',
+                        todaysCalendarIds$: of(['cal-today']),
+                    },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                    },
+                },
+            ],
+        })
+            .overrideComponent(TrainLocationComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    });
+
+    afterEach(() => {
+        fixture.destroy();
+        TrainLocationStore.setCalendarId(null);
+        TrainLocationStore.setSelectedRouteId(null);
+        TrainLocationStore.setSelectedStationId(null);
+        TrainLocationStore.setMode('now');
+        TrainLocationStore.setSpecifiedTime(null);
+        TrainLocationStore.resetLoading();
+        TrainLocationStore.setHasFetchedTrainLocation(false);
+    });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+        // 種別の取得を待ってから trip-blocks を取り始めるので、取り始めるのを待ってから離れる
+        await flush();
+        const previousTripBlocks$ = tripBlocks$;
+        fixture.destroy();
+        tripBlocks$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+
+        previousTripBlocks$.next(undefined);
+        previousTripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(skeleton()).not.toBeNull();
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(skeleton()).toBeNull();
+    });
+});

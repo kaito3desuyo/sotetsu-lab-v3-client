@@ -226,4 +226,25 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
 
         expect(query('[data-testid="route-diagram-skeleton"]')).not.toBeNull();
     });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        await setup({ operation_id: 'op-1' });
+        const previousTrips$ = trips$;
+        fixture.destroy();
+        trips$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        fixture.detectChanges();
+
+        previousTrips$.next(undefined);
+        previousTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="route-diagram-skeleton"]')).not.toBeNull();
+
+        trips$.next(undefined);
+        trips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="route-diagram-skeleton"]')).toBeNull();
+    });
 });

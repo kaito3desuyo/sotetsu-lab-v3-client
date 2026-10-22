@@ -63,6 +63,10 @@ const CURRENT_TIME_REFRESH_MS = 10_000;
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（train-diagram と同一パターン）
 TrainLocationStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
@@ -97,7 +101,6 @@ export class TrainLocationComponent {
     );
     /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
     readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
-    #fetchSeq = 0;
     readonly calendarId = toSignal(TrainLocationStore.calendarId$, {
         initialValue: null,
     });
@@ -454,7 +457,7 @@ export class TrainLocationComponent {
         refetchTripBlocks: boolean;
         refetchStationAxis: boolean;
     }): Promise<void> {
-        const seq = ++this.#fetchSeq;
+        const seq = ++fetchSeq;
         TrainLocationStore.enableLoading();
         TrainLocationStore.setHasFetchedTrainLocation(false);
 
@@ -491,7 +494,7 @@ export class TrainLocationComponent {
         } finally {
             TrainLocationStore.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === this.#fetchSeq) {
+            if (seq === fetchSeq) {
                 TrainLocationStore.setHasFetchedTrainLocation(true);
             }
         }

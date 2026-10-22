@@ -234,4 +234,23 @@ describe('TimetableStationComponent の読み込み中', () => {
             query('[data-testid="timetable-station-skeleton"]'),
         ).not.toBeNull();
     });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        const previousCalendar$ = calendar$;
+        fixture.destroy();
+        calendar$ = new Subject<undefined>();
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        fixture.detectChanges();
+
+        previousCalendar$.next(undefined);
+        previousCalendar$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(
+            query('[data-testid="timetable-station-skeleton"]'),
+        ).not.toBeNull();
+
+        await finishFetch();
+        expect(query('[data-testid="timetable-station-skeleton"]')).toBeNull();
+    });
 });

@@ -32,6 +32,10 @@ import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableAllLineStore.resetLoading();
 
+// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
+// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-timetable-all-line',
     templateUrl: './timetable-all-line.component.html',
@@ -89,7 +93,6 @@ export class TimetableAllLineComponent {
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
     readonly skeletonColumns = Array.from({ length: 30 }, (_, i) => i);
-    #fetchSeq = 0;
     readonly calendar = toSignal(
         TimetableAllLineStore.calendarId$.pipe(
             mergeMap((id) =>
@@ -139,7 +142,7 @@ export class TimetableAllLineComponent {
     async fetchData(): Promise<void> {
         if (!TimetableAllLineStore.calendarId) return;
 
-        const seq = ++this.#fetchSeq;
+        const seq = ++fetchSeq;
         TimetableAllLineStore.enableLoading();
         TimetableAllLineStore.setHasFetchedTripBlocks(false);
 
@@ -164,7 +167,7 @@ export class TimetableAllLineComponent {
         } finally {
             TimetableAllLineStore.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === this.#fetchSeq) {
+            if (seq === fetchSeq) {
                 TimetableAllLineStore.setHasFetchedTripBlocks(true);
             }
         }
