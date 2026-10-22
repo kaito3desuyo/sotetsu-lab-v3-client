@@ -22,6 +22,7 @@ import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto'
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormTripsComponent } from './components/timetable-edit-form-trips/timetable-edit-form-trips.component';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
@@ -35,12 +36,20 @@ import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableEditFormStore.resetLoading();
 
+// 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+// 後から終わって新しい骨組みを消さないよう、インスタンスでなくファイル単位で数える
+let fetchSeq = 0;
+
 @Component({
     selector: 'app-timetable-edit-form',
     templateUrl: './timetable-edit-form.component.html',
     styleUrl: './timetable-edit-form.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatProgressBarModule, TimetableEditFormTripsComponent],
+    imports: [
+        MatProgressBarModule,
+        SkeletonBarComponent,
+        TimetableEditFormTripsComponent,
+    ],
 })
 export class TimetableEditFormComponent {
     readonly #destroyRef = inject(DestroyRef);
@@ -53,7 +62,14 @@ export class TimetableEditFormComponent {
     readonly #timetableEditFormService = inject(TimetableEditFormService);
 
     readonly isLoading = toSignal(TimetableEditFormStore.isLoading$);
+    readonly hasFetchedEditForm = toSignal(
+        TimetableEditFormStore.hasFetchedEditForm$,
+        { initialValue: false },
+    );
     readonly mode = toSignal(TimetableEditFormStore.mode$);
+    readonly EMode = ETimetableEditFormMode;
+    /** 骨組みの格子の行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
+    readonly skeletonGridRows = Array.from({ length: 14 }, (_, i) => i);
     readonly serviceId = toSignal(this.#serviceListStateQuery.serviceId$);
     readonly calendarId = toSignal(TimetableEditFormStore.calendarId$);
     readonly tripDirection = toSignal(TimetableEditFormStore.tripDirection$);
@@ -104,6 +120,9 @@ export class TimetableEditFormComponent {
     readonly restoreTrips = signal<ITimetableEditFormTripValue[] | null>(null);
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前のフォームが一瞬出ないようにする
+        TimetableEditFormStore.setHasFetchedEditForm(false);
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -130,7 +149,9 @@ export class TimetableEditFormComponent {
     }
 
     async fetchData(): Promise<void> {
+        const seq = ++fetchSeq;
         TimetableEditFormStore.enableLoading();
+        TimetableEditFormStore.setHasFetchedEditForm(false);
 
         try {
             // 5 本は互いに依存しないので同時に投げる
@@ -164,6 +185,10 @@ export class TimetableEditFormComponent {
             }
         } finally {
             TimetableEditFormStore.disableLoading();
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === fetchSeq) {
+                TimetableEditFormStore.setHasFetchedEditForm(true);
+            }
         }
 
         this.#proposeDraftRestoreIfAny();
@@ -222,10 +247,7 @@ export class TimetableEditFormComponent {
 
         this.#loading.open();
 
-        const result = await tryCatchAsync(
-            fn(trips),
-            (e) => e as FetchError,
-        );
+        const result = await tryCatchAsync(fn(trips), (e) => e as FetchError);
 
         this.#loading.close();
 
