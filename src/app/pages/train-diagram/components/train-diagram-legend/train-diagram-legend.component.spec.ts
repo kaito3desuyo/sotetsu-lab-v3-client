@@ -89,3 +89,40 @@ describe('TrainDiagramLegendComponent', () => {
         expect(items.length).toBe(0);
     });
 });
+
+describe('TrainDiagramLegendComponent の読み込み中', () => {
+    let fixture: ComponentFixture<TrainDiagramLegendComponent>;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TrainDiagramLegendComponent],
+        }).compileComponents();
+        fixture = TestBed.createComponent(TrainDiagramLegendComponent);
+    });
+
+    it('読み込み中は項目の代わりに棒を出し、現在時刻の見本は残す', () => {
+        fixture.componentRef.setInput('loading', true);
+        fixture.componentRef.setInput('showCurrentTimeCursor', true);
+        fixture.componentRef.setInput('hasDepotOut', true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="train-diagram-legend-skeleton"]'),
+        ).not.toBeNull();
+        expect(el).not.toHaveTextContent('出庫');
+        expect(el).toHaveTextContent('現在時刻');
+    });
+
+    it('読み込みが終わったら棒を消して項目を出す', () => {
+        fixture.componentRef.setInput('loading', false);
+        fixture.componentRef.setInput('hasDepotOut', true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="train-diagram-legend-skeleton"]'),
+        ).toBeNull();
+        expect(el).toHaveTextContent('出庫');
+    });
+});

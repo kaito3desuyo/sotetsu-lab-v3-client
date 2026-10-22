@@ -29,6 +29,7 @@ import {
 } from 'src/app/shared/diagram-scale';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import { findContinuations } from 'src/app/shared/train-position.util';
 import { TrainDiagramControllerComponent } from './components/train-diagram-controller/train-diagram-controller.component';
@@ -84,6 +85,10 @@ import { buildRouteOptions } from './utils/build-route-options.util';
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TrainDiagramStore.resetLoading();
 
+// 列車を取り直す取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+// 後から終わって新しい骨組みを消さないよう、インスタンスでなくファイル単位で数える
+let fetchSeq = 0;
+
 const BODY_TOP_PADDING = 12;
 const BODY_BOTTOM_PADDING = 24;
 /**
@@ -118,6 +123,7 @@ const EMPTY_TRIP_ID_SET: ReadonlySet<string> = new Set();
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        SkeletonBarComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
         TrainDiagramChartComponent,
@@ -138,6 +144,12 @@ export class TrainDiagramComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
 
     readonly isLoading = toSignal(TrainDiagramStore.isLoading$);
+    readonly hasFetchedTrainDiagram = toSignal(
+        TrainDiagramStore.hasFetchedTrainDiagram$,
+        { initialValue: false },
+    );
+    /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
+    readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
     readonly calendarId = toSignal(TrainDiagramStore.calendarId$, {
         initialValue: null,
     });
@@ -212,7 +224,7 @@ export class TrainDiagramComponent {
      * mockup-07 の空状態を chart の代わりに表示する。
      */
     readonly isEmpty = computed(() => {
-        if (this.isLoading()) return false;
+        if (!this.hasFetchedTrainDiagram()) return false;
         return !Object.values(this.filteredTripBlocksByDirection())
             .flat()
             .some((block) => (block.trips?.length ?? 0) > 0);
@@ -846,24 +858,29 @@ export class TrainDiagramComponent {
      * URL に載ったら空に戻す。
      */
     #viewParamOverrides: Record<string, string> = {};
-    /** I3: isEmpty の直前値（true→false の遷移だけを検出するため） */
-    #wasEmpty = false;
+    /** I3: chart が隠れていたかの直前値（隠れた→見えるの立ち上がりだけを検出するため） */
+    #wasChartHidden = false;
 
     constructor() {
+        // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
+        TrainDiagramStore.setHasFetchedTrainDiagram(false);
+
         this.#routeStationListStateQuery.routeStations$
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((routeStations) => {
                 TrainDiagramStore.setRouteStations(routeStations);
             });
 
-        // I3: 表示条件に合う列車が無い（isEmpty）状態から復帰したら、chart は
-        // 再生成されて jumpRequest を読み直す（最後の要求が初期表示時刻のことが多い）ため、
-        // 最新の左端の分へ跳び直して表示位置の喪失を防ぐ。
+        // I3: chart が隠れていた（列車を取る前の骨組み、または表示条件に合う列車が
+        // 無い isEmpty）状態から見える状態に戻ったら、chart は再生成されて jumpRequest を
+        // 読み直す（最後の要求が初期表示時刻のことが多い）ため、最新の左端の分へ
+        // 跳び直して表示位置の喪失を防ぐ。ダイヤを替える取得も骨組みを経由する。
         effect(() => {
-            const empty = this.isEmpty();
-            const wasEmpty = this.#wasEmpty;
-            this.#wasEmpty = empty;
-            if (wasEmpty && !empty) {
+            const chartHidden =
+                !this.hasFetchedTrainDiagram() || this.isEmpty();
+            const wasChartHidden = this.#wasChartHidden;
+            this.#wasChartHidden = chartHidden;
+            if (wasChartHidden && !chartHidden) {
                 this.#requestJump(this.#leftMinute ?? 0, 'start');
             }
         });
@@ -985,7 +1002,12 @@ export class TrainDiagramComponent {
     }
 
     async fetchData(flags: { refetchTripBlocks: boolean }): Promise<void> {
+        // 路線・方向だけの取得は世代を進めず、骨組みにも触らない（図を出したまま）
+        const seq = flags.refetchTripBlocks ? ++fetchSeq : fetchSeq;
         TrainDiagramStore.enableLoading();
+        if (flags.refetchTripBlocks) {
+            TrainDiagramStore.setHasFetchedTrainDiagram(false);
+        }
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -1021,6 +1043,10 @@ export class TrainDiagramComponent {
             this.#firstLoadDone.set(true);
         } finally {
             TrainDiagramStore.disableLoading();
+            // 列車を取り直した取得のうち、いちばん新しいものだけが骨組みを消す
+            if (flags.refetchTripBlocks && seq === fetchSeq) {
+                TrainDiagramStore.setHasFetchedTrainDiagram(true);
+            }
         }
     }
 

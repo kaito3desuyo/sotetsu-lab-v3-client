@@ -12,31 +12,78 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <app-timetable-edit-form-trips
-        [serviceId]="serviceId()"
-        [calendarId]="calendarId()"
-        [calendar]="calendar()"
-        [mode]="mode()"
-        [tripDirection]="tripDirection()"
-        [stations]="stations()"
-        [visibleStationIds]="visibleStationIds()"
-        [routes]="routes()"
-        [selectedRouteIds]="selectedRouteIds()"
-        [operations]="operations()"
-        [tripClasses]="tripClasses()"
-        [trips]="trips()"
-        [copySourceCandidates]="copySourceCandidates()"
-        [selectedTripBlockId]="selectedTripBlockId()"
-        [lastSubmittedAt]="lastSubmittedAt()"
-        [restoreTrips]="restoreTrips()"
-        (clickSubmit)="onReceiveClickSubmit($event)"
-        (toggleIsSaveTripsIndividually)="
-            onToggleIsSaveTripsIndividually($event)
-        "
-        (selectedRouteIdsChange)="onRouteFilterChange($event)"
-        (selectCopySource)="onSelectCopySource($event)"
-        (formValueChange)="onFormValueChange($event)"
-        (restored)="onDraftRestored()"
-        (saveDraftClick)="onSaveDraftClick()"
-    ></app-timetable-edit-form-trips>
+    @if (!hasFetchedEditForm()) {
+        <!-- 取る前は本物のカードと同じ並びで骨組みを出す: ダイヤの帯 48・路線で絞り込み 44・
+             （登録とコピーは）初期値の取り込み・列車個別保存の行・入力の格子（画面 1 枚分）。
+             以前はダイヤの帯が後から上に入り、駅が届くと格子が伸びて下のボタンを押し出していた
+             （CLS 0.05〜0.07・2026-10-22） -->
+        <article
+            class="tw-flex tw-flex-col tw-gap-4 tw-overflow-clip tw-rounded-card tw-bg-white tw-p-4"
+            aria-label="読み込み中"
+            data-testid="edit-form-skeleton"
+        >
+            <app-skeleton-bar
+                class="-tw-mx-4 -tw-mt-4 tw-h-12 tw-rounded-none"
+            ></app-skeleton-bar>
+            <app-skeleton-bar class="tw-h-11 tw-w-full"></app-skeleton-bar>
+            @if (mode() !== EMode.UPDATE) {
+                <app-skeleton-bar
+                    data-testid="edit-form-skeleton-initial-value"
+                    class="tw-w-full !tw-rounded-card"
+                    [class]="
+                        mode() === EMode.COPY
+                            ? 'tw-h-[224px] sm:tw-h-[152px]'
+                            : 'tw-h-[192px] sm:tw-h-[120px]'
+                    "
+                ></app-skeleton-bar>
+                <app-skeleton-bar
+                    class="tw-h-[68px] tw-w-full sm:tw-h-12"
+                ></app-skeleton-bar>
+            }
+            <div
+                class="tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-gap-2 tw-overflow-hidden md:tw-h-[calc(100dvh-64px)]"
+            >
+                @for (row of skeletonGridRows; track row) {
+                    <div
+                        class="tw-flex tw-h-[57px] tw-shrink-0 tw-flex-row tw-items-center tw-gap-2"
+                    >
+                        <app-skeleton-bar
+                            class="tw-h-5 tw-w-24 tw-shrink-0"
+                        ></app-skeleton-bar>
+                        <app-skeleton-bar
+                            class="tw-h-10 tw-flex-1"
+                        ></app-skeleton-bar>
+                    </div>
+                }
+            </div>
+        </article>
+    } @else {
+        <app-timetable-edit-form-trips
+            [serviceId]="serviceId()"
+            [calendarId]="calendarId()"
+            [calendar]="calendar()"
+            [mode]="mode()"
+            [tripDirection]="tripDirection()"
+            [stations]="stations()"
+            [visibleStationIds]="visibleStationIds()"
+            [routes]="routes()"
+            [selectedRouteIds]="selectedRouteIds()"
+            [operations]="operations()"
+            [tripClasses]="tripClasses()"
+            [trips]="trips()"
+            [copySourceCandidates]="copySourceCandidates()"
+            [selectedTripBlockId]="selectedTripBlockId()"
+            [lastSubmittedAt]="lastSubmittedAt()"
+            [restoreTrips]="restoreTrips()"
+            (clickSubmit)="onReceiveClickSubmit($event)"
+            (toggleIsSaveTripsIndividually)="
+                onToggleIsSaveTripsIndividually($event)
+            "
+            (selectedRouteIdsChange)="onRouteFilterChange($event)"
+            (selectCopySource)="onSelectCopySource($event)"
+            (formValueChange)="onFormValueChange($event)"
+            (restored)="onDraftRestored()"
+            (saveDraftClick)="onSaveDraftClick()"
+        ></app-timetable-edit-form-trips>
+    }
 </main>

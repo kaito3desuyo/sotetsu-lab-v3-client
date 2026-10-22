@@ -29,6 +29,8 @@ type StoreProps = {
     targetTripBlock: TripBlockDetailsDto | null;
     isSaveTripsIndividually: boolean;
     loadingQueue: boolean[];
+    /** 駅・路線・ダイヤ・（更新とコピーは）元の列車を取り終えたか（失敗しても true）。取る前はフォームの代わりに骨組みを出す */
+    hasFetchedEditForm: boolean;
     submittedAt: number | null;
 };
 
@@ -47,6 +49,7 @@ const initialProps: StoreProps = {
     targetTripBlock: null,
     isSaveTripsIndividually: false,
     loadingQueue: [],
+    hasFetchedEditForm: false,
     submittedAt: null,
 };
 
@@ -150,6 +153,10 @@ export const TimetableEditFormStore = {
     setSubmittedAt(time: number): void {
         store.update(setProp('submittedAt', () => time));
     },
+    /** 駅・路線・ダイヤ・（更新とコピーは）元の列車を取り終えたか（失敗しても true）。取る前はフォームの代わりに骨組みを出す */
+    setHasFetchedEditForm(value: boolean): void {
+        store.update(setProp('hasFetchedEditForm', () => value));
+    },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (s) => s.concat(true)));
     },
@@ -176,6 +183,7 @@ export const TimetableEditFormStore = {
         select((s) => s.isSaveTripsIndividually),
     ),
     isLoading$: store.pipe(select((s) => s.loadingQueue.length > 0)),
+    hasFetchedEditForm$: store.pipe(select((s) => s.hasFetchedEditForm)),
     submittedAt$: store.pipe(select((s) => s.submittedAt)),
 
     /** 方向反映済みの全駅リスト（フォームの times FormArray 構築に使う。情報は削減しない） */

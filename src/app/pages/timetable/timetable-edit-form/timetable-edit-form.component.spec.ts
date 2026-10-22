@@ -3,7 +3,14 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { EMPTY, firstValueFrom, Observable, of, throwError } from 'rxjs';
+import {
+    EMPTY,
+    firstValueFrom,
+    Observable,
+    of,
+    Subject,
+    throwError,
+} from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -93,6 +100,10 @@ describe('TimetableEditFormComponent', () => {
         component = fixture.componentInstance;
     });
 
+    afterEach(() => {
+        TimetableEditFormStore.setHasFetchedEditForm(false);
+    });
+
     it('should create', () => {
         expect(component).toBeTruthy();
     });
@@ -161,6 +172,107 @@ describe('TimetableEditFormComponent', () => {
         expect(await firstValueFrom(TimetableEditFormStore.isLoading$)).toBe(
             false,
         );
+    });
+
+    it('取り終わるまではフォームの代わりに骨組みを出す', () => {
+        TimetableEditFormStore.setHasFetchedEditForm(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="edit-form-skeleton"]'),
+        ).not.toBeNull();
+        expect(el.querySelector('app-timetable-edit-form-trips')).toBeNull();
+    });
+
+    it('取り終えたら骨組みを消してフォームを出す', async () => {
+        await component.fetchData();
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="edit-form-skeleton"]'),
+        ).toBeNull();
+        expect(
+            el.querySelector('app-timetable-edit-form-trips'),
+        ).not.toBeNull();
+    });
+
+    it('取得が失敗しても骨組みを消す', async () => {
+        TimetableEditFormStore.resetLoading();
+        timetableEditFormService.fetchStations.mockReturnValue(
+            throwError(() => new Error('network')),
+        );
+
+        await expect(component.fetchData()).rejects.toThrow('network');
+        expect(
+            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
+        ).toBe(true);
+    });
+
+    it('更新のときは初期値の取り込みと列車個別保存の行の骨組みを出さない', () => {
+        TimetableEditFormStore.setMode(ETimetableEditFormMode.UPDATE);
+        TimetableEditFormStore.setHasFetchedEditForm(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(
+            el.querySelector('[data-testid="edit-form-skeleton"]'),
+        ).not.toBeNull();
+        expect(
+            el.querySelector(
+                '[data-testid="edit-form-skeleton-initial-value"]',
+            ),
+        ).toBeNull();
+    });
+
+    it('登録のときは初期値の取り込みの骨組みを出す', () => {
+        TimetableEditFormStore.setMode(ETimetableEditFormMode.ADD);
+        TimetableEditFormStore.setHasFetchedEditForm(false);
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[data-testid="edit-form-skeleton-initial-value"]',
+            ),
+        ).not.toBeNull();
+    });
+
+    it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
+        // 実タイマーは使わず、取得の続きが進むまでマイクロタスクを回す
+        const flush = async () => {
+            for (let i = 0; i < 50; i++) await Promise.resolve();
+        };
+        const stations: Subject<undefined>[] = [];
+        timetableEditFormService.fetchStations.mockImplementation(() => {
+            const subject = new Subject<undefined>();
+            stations.push(subject);
+            return subject;
+        });
+        const finish = async (subject: Subject<undefined>) => {
+            subject.next(undefined);
+            subject.complete();
+            await flush();
+        };
+
+        // 1 つ目の取得が駅の取得を購読するまで待つ（待たないと 1 つ目も後の Subject を受け取りうる）
+        const first = TestBed.createComponent(TimetableEditFormComponent);
+        await flush();
+        expect(stations).toHaveLength(1);
+        first.destroy();
+        TestBed.createComponent(TimetableEditFormComponent);
+        await flush();
+        expect(stations).toHaveLength(2);
+
+        await finish(stations[0]);
+        expect(
+            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
+        ).toBe(false);
+
+        await finish(stations[1]);
+        expect(
+            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
+        ).toBe(true);
     });
 
     describe('下書きの復元の案内', () => {

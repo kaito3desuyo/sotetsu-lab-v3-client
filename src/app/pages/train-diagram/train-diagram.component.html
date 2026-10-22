@@ -45,11 +45,33 @@
         [hasDepotOut]="hasDepotOut()"
         [hasDepotIn]="hasDepotIn()"
         [hasTransfer]="hasTransfer()"
+        [loading]="!hasFetchedTrainDiagram()"
     ></app-train-diagram-legend>
 
     <!-- 図のカード: 高さは画面の残り。縦横スクロールはカードの中 -->
     <div class="tw-flex tw-min-h-[320px] tw-flex-1 tw-flex-col tw-p-3">
-        @if (isEmpty()) {
+        @if (!hasFetchedTrainDiagram()) {
+            <!-- 取る前は図と同じ白いカードに、駅名の列（88px）と駅の行の骨組みを出す。
+                 以前は駅の行が先に出て、列車が届くと行の間隔が変わって下へ動いていた（CLS 0.05・2026-10-22） -->
+            <div
+                class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-6 tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-3"
+                aria-label="読み込み中"
+                data-testid="train-diagram-skeleton"
+            >
+                @for (row of skeletonStationRows; track row) {
+                    <div
+                        class="tw-flex tw-shrink-0 tw-flex-row tw-items-center tw-gap-3"
+                    >
+                        <app-skeleton-bar
+                            class="tw-h-3 tw-w-[88px] tw-shrink-0"
+                        ></app-skeleton-bar>
+                        <app-skeleton-bar
+                            class="tw-h-px tw-flex-1"
+                        ></app-skeleton-bar>
+                    </div>
+                }
+            </div>
+        } @else if (isEmpty()) {
             <div
                 class="tw-flex tw-flex-1 tw-items-center tw-justify-center tw-rounded-card tw-bg-white"
             >
