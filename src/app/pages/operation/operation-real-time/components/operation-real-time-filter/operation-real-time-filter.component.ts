@@ -1,4 +1,3 @@
-import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -15,6 +14,7 @@ import {
 } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { operationGroupOptions } from 'src/app/shared/operation-group.util';
+import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 
 /**
@@ -32,7 +32,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
     selector: 'app-operation-real-time-filter',
     templateUrl: './operation-real-time-filter.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [NgTemplateOutlet, FilterChipsComponent],
+    imports: [FilterChipsComponent, SkeletonChipsComponent],
 })
 export class OperationRealTimeFilterComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
