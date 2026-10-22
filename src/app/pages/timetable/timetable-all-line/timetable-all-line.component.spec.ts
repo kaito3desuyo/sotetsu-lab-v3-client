@@ -337,6 +337,9 @@ describe('TimetableAllLineComponent の読み込み中', () => {
 
     it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
         await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+        // 1 つ目の取得が駅を取り終えて trip-blocks を取りに行くまで待つ（待たないと 1 つ目も新しい Subject を受け取る）
+        await flush();
+        expect(fetchTripBlocksCalls).toBe(1);
         const previousTripBlocks$ = tripBlocks$;
         fixture.destroy();
         tripBlocks$ = new ReplaySubject<undefined>(1);
