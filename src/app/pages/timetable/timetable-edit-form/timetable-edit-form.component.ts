@@ -247,7 +247,10 @@ export class TimetableEditFormComponent {
 
         this.#loading.open();
 
-        const result = await tryCatchAsync(fn(trips), (e) => e as FetchError);
+        const result = await tryCatchAsync(
+            fn(trips),
+            (e) => e as FetchError,
+        );
 
         this.#loading.close();
 
