@@ -154,6 +154,17 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
         expect(query('app-empty-state')).toBeNull();
     });
 
+    it('取り終えたら骨組みを消す（成功）', async () => {
+        await setup({ operation_id: 'op-1' });
+
+        trips$.next(undefined);
+        trips$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(query('[data-testid="route-diagram-skeleton"]')).toBeNull();
+    });
+
     it('取り終えたら骨組みを消す（失敗しても）', async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
         // zone.js が未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す

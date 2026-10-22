@@ -378,6 +378,7 @@ describe('OperationTableComponent の読み込み中', () => {
     afterEach(() => {
         fixture.destroy();
         OperationTableStore.setOperationTrips([]);
+        OperationTableStore.setCalendar(null as never);
         OperationTableStore.setHasFetchedOperationTrips(false);
         OperationTableStore.resetLoading();
     });
@@ -391,6 +392,7 @@ describe('OperationTableComponent の読み込み中', () => {
 
     it('取り終わるまでは骨組みを出し、空表示もカードも出さない', () => {
         fixture = TestBed.createComponent(OperationTableComponent);
+        OperationTableStore.setCalendar({ calendarId: 'cal-1' } as never);
         fixture.detectChanges();
 
         expect(
