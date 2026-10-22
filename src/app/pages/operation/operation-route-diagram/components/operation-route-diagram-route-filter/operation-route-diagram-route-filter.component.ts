@@ -3,6 +3,7 @@ import {
     Component,
     computed,
     inject,
+    input,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -16,6 +17,7 @@ import { ControlBandComponent } from 'src/app/shared/control-band/control-band.c
 import {
     formatRouteFilterSummary,
     isRouteFilterActive,
+    joinSummaryParts,
 } from 'src/app/shared/control-band/control-band-summary.util';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
@@ -54,6 +56,11 @@ export class OperationRouteDiagramRouteFilterComponent {
     readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
         initialValue: [],
     });
+
+    /** 運用番号が無くてもチップが無くても帯を出す（帯に選択欄を差し込むページ用） */
+    readonly alwaysVisible = input(false);
+    /** 要約の頭（運用番号とダイヤ）。路線の要約の前に付ける */
+    readonly summaryLead = input('');
 
     readonly routeOptions = computed<FilterChipOption[]>(() => {
         const agencyNameById = new Map(
@@ -111,6 +118,15 @@ export class OperationRouteDiagramRouteFilterComponent {
         );
         return routes === '全路線' ? routes : `路線：${routes}`;
     });
+    /** 路線のチップが無いとき（運用を開いていない）は、路線の要約を付けない */
+    readonly summary = computed(() =>
+        joinSummaryParts([
+            this.summaryLead(),
+            this.isAwaitingOperationTrips() || this.routeOptions().length === 0
+                ? null
+                : this.bandSummary(),
+        ]),
+    );
 
     onChange(values: FilterChipValue[]): void {
         OperationRouteDiagramStore.setSelectedRouteIds(values);

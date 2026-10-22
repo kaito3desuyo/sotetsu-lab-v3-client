@@ -15,11 +15,89 @@
     <!-- ページ名はヘッダー（layout header の pageTitle）だけに出し、本文に重ねない -->
     <!-- 操作帯（sticky）を div で包まない。包むと貼り付く範囲がその div の高さまでになり、
          スクロールすると帯ごと流れていく -->
-    <app-operation-route-diagram-route-filter></app-operation-route-diagram-route-filter>
+    <!-- 検索カードの中身（ダイヤ・運用番号）を帯に寄せた（2026-10-22）。前後の運用は帯の中の名前付きボタン -->
+    <app-operation-route-diagram-route-filter
+        [alwaysVisible]="true"
+        [summaryLead]="summaryLead()"
+    >
+        <div
+            bandLead
+            class="tw-mb-4 tw-flex tw-flex-col tw-gap-4 md:tw-max-w-[48rem]"
+        >
+            <div
+                class="tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+            >
+                <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                    <mat-form-field
+                        class="tw-min-w-0 tw-flex-1"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>ダイヤ</mat-label>
+                        <mat-select
+                            [value]="selectedCalendarId()"
+                            (valueChange)="onCalendarChange($event)"
+                        >
+                            @for (
+                                calendar of calendars();
+                                track calendar.calendarId
+                            ) {
+                                <mat-option [value]="calendar.calendarId">
+                                    {{
+                                        calendar.startDate
+                                            | dateFns
+                                                : {
+                                                      format: 'yyyy/M/d改正',
+                                                      parseFormat: 'yyyy-MM-dd',
+                                                  }
+                                    }}
+                                    {{ calendar.calendarName }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+                    <app-today-calendar-button
+                        [calendarId]="selectedCalendarId()"
+                        (selectToday)="onCalendarChange($event)"
+                    ></app-today-calendar-button>
+                </div>
+                <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                    <mat-label>運用番号</mat-label>
+                    <mat-select
+                        [value]="searchOperationId()"
+                        (valueChange)="onOperationChange($event)"
+                    >
+                        @for (
+                            operation of operationOptions();
+                            track operation.operationId
+                        ) {
+                            <mat-option [value]="operation.operationId">
+                                {{ operation.operationNumber }}運
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <!-- 運用を開いていないときは段ごと出さない。運用の一覧は別に取るので、
+                 届く前もボタンの高さ（36px）を取っておき、届いたときに図を押し下げない -->
+            @if (searchOperationId()) {
+                <div class="tw-flex tw-flex-col tw-gap-2">
+                    <p class="tw-m-0 tw-text-xs tw-text-grey-600">前後の運用</p>
+                    <div class="tw-min-h-[36px]">
+                        <app-step-nav
+                            [prev]="neighborOperations().prev"
+                            [next]="neighborOperations().next"
+                            (step)="onStep($event)"
+                        ></app-step-nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </app-operation-route-diagram-route-filter>
     <!-- 運用番号を選ぶ手段（検索カード）を広告より前に置く。
          運用番号が未設定のとき、「運用番号を設定して検索してください」という空状態と
          実際に設定できるコントロールの間に 280px の広告が挟まっており、
-         このページ上で操作できること自体が見えなかった（audit C6）。 -->
+         このページ上で操作できること自体が見えなかった（audit C6）。
+         2026-10-22 に検索カードを無くし、選択欄は上の帯に寄せた。 -->
     <div class="tw-flex tw-flex-col tw-gap-4">
         <div>
             @if (isAwaitingOperationTrips()) {
@@ -68,9 +146,5 @@
                 ></app-empty-state>
             }
         </div>
-        <app-operation-search-card
-            [calendarId]="searchCalendarId()"
-            [operationId]="searchOperationId()"
-        ></app-operation-search-card>
     </div>
 </main>

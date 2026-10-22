@@ -4,15 +4,37 @@ import {
     computed,
     DestroyRef,
     inject,
+    linkedSignal,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import {
+    takeUntilDestroyed,
+    toObservable,
+    toSignal,
+} from '@angular/core/rxjs-interop';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter, map } from 'rxjs/operators';
-import { lastValueFrom } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { lastValueFrom, of } from 'rxjs';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
+import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
+import {
+    findNeighborOperations,
+    toOperationSelectOptions,
+} from 'src/app/shared/operation-select-options.util';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
+import { StepNavComponent } from 'src/app/shared/step-nav/step-nav.component';
+import { StepTarget } from 'src/app/shared/step-nav/step-target.type';
+import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { OperationRouteDiagramDrawingComponent } from './components/operation-route-diagram-drawing/operation-route-diagram-drawing.component';
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
@@ -29,6 +51,8 @@ OperationRouteDiagramStore.resetLoading();
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+// ダイヤの替えの世代番号（同じ理由でモジュールに置く）
+let calendarChangeSeq = 0;
 
 @Component({
     selector: 'app-operation-route-diagram',
@@ -36,11 +60,15 @@ let fetchSeq = 0;
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        DateFnsPipe,
         EmptyStateComponent,
         OperationRouteDiagramRouteFilterComponent,
         OperationRouteDiagramDrawingComponent,
-        OperationSearchCardComponent,
         SkeletonBarComponent,
+        StepNavComponent,
+        TodayCalendarButtonComponent,
     ],
 })
 export class OperationRouteDiagramComponent {
@@ -49,6 +77,14 @@ export class OperationRouteDiagramComponent {
     readonly #router = inject(Router);
     readonly #operationRouteDiagramService = inject(
         OperationRouteDiagramService,
+    );
+    readonly #operationService = inject(OperationService);
+    readonly #notification = inject(NotificationService);
+    readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
+        initialValue: [],
+    });
+    readonly #todaysCalendarId = toSignal(
+        inject(TodaysCalendarListStateQuery).todaysCalendarId$,
     );
 
     readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
@@ -60,24 +96,68 @@ export class OperationRouteDiagramComponent {
     readonly skeletonStationColumns = Array.from({ length: 8 }, (_, i) => i);
     /** 骨組みの列車の線の数 */
     readonly skeletonTripRows = Array.from({ length: 10 }, (_, i) => i);
-    /** 検索カードに出すダイヤと運用。取得し直す間も前の値を出し続ける。 */
-    readonly searchCalendarId = toSignal(
-        OperationRouteDiagramStore.calendar$.pipe(
-            filter((calendar) => !!calendar),
-            map((calendar) => calendar.calendarId),
-        ),
-        { initialValue: null },
-    );
+    readonly calendar = toSignal(OperationRouteDiagramStore.calendar$);
+    readonly operation = toSignal(OperationRouteDiagramStore.operation$);
+    /** URL の運用。運用番号を外したら選択欄も空にする */
     readonly searchOperationId = toSignal(
-        OperationRouteDiagramStore.operation$.pipe(
-            filter((operation) => !!operation),
-            map((operation) => operation.operationId),
-        ),
+        OperationRouteDiagramStore.operationId$,
         { initialValue: null },
     );
 
-    readonly calendar = toSignal(OperationRouteDiagramStore.calendar$);
-    readonly operation = toSignal(OperationRouteDiagramStore.operation$);
+    /**
+     * 帯で選んでいるダイヤ（2026-10-22。検索カードから帯へ寄せた）。
+     * - 届いた運用のダイヤが替わったら、そのダイヤにする（「戻る」で前の運用に戻ったときも）
+     * - 運用を開いて取り終える前は、今日のダイヤに補わない（今日の一覧を余分に取らない）
+     * - 運用が無いときは今日のダイヤ。ダイヤだけ替えて同じ運用番号が無かったときは、選んだダイヤを残す
+     */
+    readonly selectedCalendarId = linkedSignal<
+        {
+            calendarId: string | undefined;
+            operationId: string | null;
+            todaysCalendarId: string | undefined;
+        },
+        string | null
+    >({
+        source: () => ({
+            calendarId: this.calendar()?.calendarId,
+            operationId: this.searchOperationId(),
+            todaysCalendarId: this.#todaysCalendarId(),
+        }),
+        computation: (source, previous) => {
+            if (
+                source.calendarId &&
+                source.calendarId !== previous?.source.calendarId
+            ) {
+                return source.calendarId;
+            }
+            if (previous?.value) return previous.value;
+            if (source.operationId) return source.calendarId ?? null;
+            return source.todaysCalendarId ?? null;
+        },
+    });
+
+    /** 帯の運用番号の選択肢（検索カードと同じ並び）。 */
+    readonly operationOptions = toSignal(
+        toObservable(this.selectedCalendarId).pipe(
+            switchMap((calendarId) =>
+                calendarId
+                    ? this.#operationService
+                          .findManyByCalendarId({ calendarId })
+                          .pipe(catchError(() => of([])))
+                    : of([]),
+            ),
+            map(toOperationSelectOptions),
+        ),
+        { initialValue: [] },
+    );
+
+    readonly neighborOperations = computed(() =>
+        findNeighborOperations(
+            this.operationOptions(),
+            this.searchOperationId(),
+        ),
+    );
+
     readonly #rawTripOperationLists = toSignal(
         OperationRouteDiagramStore.tripOperationLists$,
     );
@@ -147,6 +227,83 @@ export class OperationRouteDiagramComponent {
             !!this.tripOperationLists(),
     );
 
+    /** 要約の頭「43G運 2026/3/14改正 平日ダイヤ」。運用が無いときは選んでいるダイヤだけ */
+    readonly summaryLead = computed(() => {
+        const operationNumber = this.operation()?.operationNumber;
+        const calendar =
+            this.calendar() ??
+            this.calendars().find(
+                (c) => c.calendarId === this.selectedCalendarId(),
+            );
+        return joinSummaryParts([
+            operationNumber ? `${operationNumber}運` : null,
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
+
+    onOperationChange(operationId: string): void {
+        notifyNavigationFailure(
+            this.#router.navigate([
+                '/operation/route-diagram',
+                { operation_id: operationId },
+            ]),
+            this.#notification,
+        );
+    }
+
+    onStep(target: StepTarget): void {
+        this.onOperationChange(target.id);
+    }
+
+    /**
+     * 同じ運用番号が新しいダイヤにあればその運用へ、無ければ運用番号を外す。
+     * 運用を開いていないときは選択肢を替えるだけ（同じ URL へは移れない）
+     */
+    async onCalendarChange(calendarId: string): Promise<void> {
+        const previousCalendarId = this.selectedCalendarId();
+        if (!calendarId || calendarId === previousCalendarId) return;
+        // URL の運用の番号（読み込み中でも前の運用の番号で探さない）
+        const operationId = this.searchOperationId();
+        const operationNumber =
+            this.operationOptions().find((o) => o.operationId === operationId)
+                ?.operationNumber ??
+            (this.operation()?.operationId === operationId
+                ? this.operation()?.operationNumber
+                : undefined);
+        this.selectedCalendarId.set(calendarId);
+        if (!operationNumber) return;
+
+        // 続けて替えたとき、先に選んだダイヤの結果で移らない
+        const seq = ++calendarChangeSeq;
+        let operations: OperationDetailsDto[];
+        try {
+            operations = await lastValueFrom(
+                this.#operationService.findManyByCalendarId({ calendarId }),
+            );
+        } catch {
+            if (seq !== calendarChangeSeq) return;
+            // 「その番号が無い」と取り違えないよう、移らずに知らせて選択を戻す
+            this.selectedCalendarId.set(previousCalendarId);
+            this.#notification.open('運用の一覧を取得できませんでした', 'OK');
+            return;
+        }
+        if (seq !== calendarChangeSeq) return;
+        const same = operations.find(
+            (o) => o.operationNumber === operationNumber,
+        );
+        notifyNavigationFailure(
+            this.#router.navigate(
+                same
+                    ? [
+                          '/operation/route-diagram',
+                          { operation_id: same.operationId },
+                      ]
+                    : ['/operation/route-diagram'],
+            ),
+            this.#notification,
+        );
+    }
+
     constructor() {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -154,6 +311,9 @@ export class OperationRouteDiagramComponent {
                 const operationId = paramMap.get('operation_id');
 
                 OperationRouteDiagramStore.setOperationId(operationId);
+                // 運用番号を外したとき（ダイヤを替えて同じ番号が無かった）、前の運用の図を残さない（2026-10-22）
+                if (!operationId)
+                    OperationRouteDiagramStore.setOperationTrips(null);
                 this.fetchData();
             });
     }

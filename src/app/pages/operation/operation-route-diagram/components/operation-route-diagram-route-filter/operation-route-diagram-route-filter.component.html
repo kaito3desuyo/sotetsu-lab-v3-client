@@ -3,24 +3,31 @@
      （audit C6）。取る前も操作帯を出して高さを取る（以前はチップが届くまで帯ごと無く、
      届くと図を 146px 押し下げていた・2026-10-22）。帯は 1 つにして、取り直しで畳んだ状態などが
      消えないようにする。操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
-@if (isAwaitingOperationTrips() || routeOptions().length > 0) {
+@if (
+    alwaysVisible() || isAwaitingOperationTrips() || routeOptions().length > 0
+) {
     <app-control-band
-        [summary]="isAwaitingOperationTrips() ? '' : bandSummary()"
+        [summary]="summary()"
         [filterActive]="!isAwaitingOperationTrips() && filterActive()"
     >
-        <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">路線で絞り込み</p>
-        @if (isAwaitingOperationTrips()) {
-            <app-skeleton-chips
-                [widths]="routeSkeletonWidths"
-            ></app-skeleton-chips>
-        } @else {
-            <app-filter-chips
-                mode="multiple"
-                [scrollMode]="true"
-                [options]="routeOptions()"
-                [selected]="selectedRouteIds()"
-                (selectedChange)="onChange($event)"
-            ></app-filter-chips>
+        <ng-content select="[bandLead]"></ng-content>
+        @if (isAwaitingOperationTrips() || routeOptions().length > 0) {
+            <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
+                路線で絞り込み
+            </p>
+            @if (isAwaitingOperationTrips()) {
+                <app-skeleton-chips
+                    [widths]="routeSkeletonWidths"
+                ></app-skeleton-chips>
+            } @else {
+                <app-filter-chips
+                    mode="multiple"
+                    [scrollMode]="true"
+                    [options]="routeOptions()"
+                    [selected]="selectedRouteIds()"
+                    (selectedChange)="onChange($event)"
+                ></app-filter-chips>
+            }
         }
     </app-control-band>
 }

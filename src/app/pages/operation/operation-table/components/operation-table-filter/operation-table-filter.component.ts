@@ -19,6 +19,7 @@ import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.c
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { operationGroupOptions } from 'src/app/shared/operation-group.util';
 import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
+import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 
 /**
  * 運用表: ダイヤ select（常設・変更で calendar_id を差し替えて再取得）+
@@ -40,6 +41,7 @@ import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.c
         DateFnsPipe,
         FilterChipsComponent,
         SkeletonChipsComponent,
+        TodayCalendarButtonComponent,
     ],
 })
 export class OperationTableFilterComponent {

@@ -15,7 +15,6 @@ import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calen
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
@@ -46,7 +45,6 @@ let fetchSeq = 0;
         EmptyStateComponent,
         OperationTableFilterComponent,
         OperationTableCardComponent,
-        OperationSearchCardComponent,
         SkeletonBarComponent,
     ],
 })

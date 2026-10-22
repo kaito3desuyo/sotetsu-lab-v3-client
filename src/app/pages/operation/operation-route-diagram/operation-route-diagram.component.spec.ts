@@ -6,7 +6,12 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { EMPTY, of, Subject } from 'rxjs';
+import { BehaviorSubject, EMPTY, of, Subject, throwError } from 'rxjs';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
+import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
@@ -246,5 +251,291 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
         await flush();
         fixture.detectChanges();
         expect(query('[data-testid="route-diagram-skeleton"]')).toBeNull();
+    });
+});
+
+describe('OperationRouteDiagramComponent の帯の操作', () => {
+    let component: OperationRouteDiagramComponent;
+    let navigate: jest.SpyInstance;
+    const paramMap$ = new BehaviorSubject(
+        convertToParamMap({ operation_id: 'b1' }),
+    );
+    const op = (operationId: string, operationNumber: string) =>
+        ({ operationId, operationNumber }) as OperationDetailsDto;
+    const byCalendar: Record<string, OperationDetailsDto[]> = {
+        'cal-1': [op('a1', '42G'), op('b1', '43G')],
+        'cal-2': [op('b2', '43G'), op('c2', '44G')],
+        'cal-3': [op('d3', '11')],
+    };
+
+    beforeEach(async () => {
+        // 前のテストで URL を変えていても、毎回 運用 b1 の URL から始める
+        paramMap$.next(convertToParamMap({ operation_id: 'b1' }));
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    // EMPTY だと constructor の fetchData が未処理の拒否になり、テストの実行が落ちる
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        fetchOperationTrips: () => of(undefined),
+                        fetchStations: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: OperationService,
+                    useValue: {
+                        findManyByCalendarId: ({ calendarId }) =>
+                            of(byCalendar[calendarId] ?? []),
+                    },
+                },
+                { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarIds$: of(['cal-today']),
+                        todaysCalendarId$: of('cal-today'),
+                    },
+                },
+                { provide: NotificationService, useValue: { open: jest.fn() } },
+            ],
+        })
+            .overrideComponent(OperationRouteDiagramComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        component = TestBed.createComponent(
+            OperationRouteDiagramComponent,
+        ).componentInstance;
+        component.selectedCalendarId.set('cal-1');
+        navigate.mockClear();
+    });
+
+    it('運用番号を選ぶと、その運用の行路図へ移る', () => {
+        component.onOperationChange('a1');
+        expect(navigate).toHaveBeenCalledWith([
+            '/operation/route-diagram',
+            { operation_id: 'a1' },
+        ]);
+    });
+
+    it('ダイヤを替えたとき、同じ運用番号があればその運用へ移る', async () => {
+        OperationRouteDiagramStore.setOperationTrips({
+            operation: op('b1', '43G'),
+            trips: [],
+        } as unknown as OperationTripsDto);
+        await component.onCalendarChange('cal-2');
+        expect(navigate).toHaveBeenCalledWith([
+            '/operation/route-diagram',
+            { operation_id: 'b2' },
+        ]);
+        expect(component.selectedCalendarId()).toBe('cal-2');
+    });
+
+    it('同じ運用番号が無ければ運用番号を外し、選んだダイヤを残す', async () => {
+        OperationRouteDiagramStore.setOperationTrips({
+            operation: op('b1', '43G'),
+            trips: [],
+        } as unknown as OperationTripsDto);
+        await component.onCalendarChange('cal-3');
+        expect(navigate).toHaveBeenCalledWith(['/operation/route-diagram']);
+        expect(component.selectedCalendarId()).toBe('cal-3');
+    });
+
+    it('前後の運用へ送ると、その運用へ移る', () => {
+        component.onStep({ id: 'a1', label: '42G' });
+        expect(navigate).toHaveBeenCalledWith([
+            '/operation/route-diagram',
+            { operation_id: 'a1' },
+        ]);
+    });
+
+    it('運用番号の無い URL に移ったら、前の運用の図を消す', () => {
+        OperationRouteDiagramStore.setOperationTrips({
+            operation: op('b1', '43G'),
+            trips: [],
+        } as unknown as OperationTripsDto);
+        paramMap$.next(convertToParamMap({}));
+        expect(component.operation()).toBeUndefined();
+    });
+
+    it('運用番号の無い URL に移ったら、運用番号の選択欄も空にする', () => {
+        paramMap$.next(convertToParamMap({}));
+        expect(component.searchOperationId()).toBeNull();
+    });
+
+    it('運用を開いていないときにダイヤを替えても、同じ URL へは移らず選択肢だけ替える', async () => {
+        paramMap$.next(convertToParamMap({}));
+        await component.onCalendarChange('cal-2');
+        expect(navigate).not.toHaveBeenCalled();
+        expect(component.selectedCalendarId()).toBe('cal-2');
+    });
+
+    const withCalendar = (o: OperationDetailsDto, calendarId: string) =>
+        ({
+            operation: { ...o, calendar: { calendarId } },
+            trips: [],
+        }) as unknown as OperationTripsDto;
+
+    it('同じ番号が無いダイヤに替えた後、「戻る」で元の運用に戻ると、ダイヤの選択欄も元に戻る', async () => {
+        OperationRouteDiagramStore.setOperationTrips(
+            withCalendar(op('b1', '43G'), 'cal-1'),
+        );
+        expect(component.selectedCalendarId()).toBe('cal-1');
+        await component.onCalendarChange('cal-3');
+        paramMap$.next(convertToParamMap({}));
+        expect(component.selectedCalendarId()).toBe('cal-3');
+
+        paramMap$.next(convertToParamMap({ operation_id: 'b1' }));
+        expect(component.selectedCalendarId()).toBe('cal-3');
+        OperationRouteDiagramStore.setOperationTrips(
+            withCalendar(op('b1', '43G'), 'cal-1'),
+        );
+        expect(component.selectedCalendarId()).toBe('cal-1');
+    });
+
+    it('運用を開いて取り終える前は、今日のダイヤに補わない', () => {
+        OperationRouteDiagramStore.setOperationTrips(null);
+        const fresh = TestBed.createComponent(
+            OperationRouteDiagramComponent,
+        ).componentInstance;
+        expect(fresh.selectedCalendarId()).toBeNull();
+        OperationRouteDiagramStore.setOperationTrips(
+            withCalendar(op('b1', '43G'), 'cal-1'),
+        );
+        expect(fresh.selectedCalendarId()).toBe('cal-1');
+    });
+
+    it('運用が無ければ今日のダイヤにする', () => {
+        paramMap$.next(convertToParamMap({}));
+        const fresh = TestBed.createComponent(
+            OperationRouteDiagramComponent,
+        ).componentInstance;
+        expect(fresh.selectedCalendarId()).toBe('cal-today');
+    });
+
+    it('ダイヤを続けて替えたとき、先に選んだダイヤの結果が後から届いても移らない', async () => {
+        OperationRouteDiagramStore.setOperationTrips(
+            withCalendar(op('b1', '43G'), 'cal-1'),
+        );
+        const slow = new Subject<OperationDetailsDto[]>();
+        jest.spyOn(
+            TestBed.inject(OperationService),
+            'findManyByCalendarId',
+        ).mockImplementation(({ calendarId }) =>
+            calendarId === 'cal-2' ? slow : of(byCalendar[calendarId] ?? []),
+        );
+
+        const first = component.onCalendarChange('cal-2');
+        await component.onCalendarChange('cal-3');
+        slow.next(byCalendar['cal-2']);
+        slow.complete();
+        await first;
+
+        expect(navigate).toHaveBeenCalledTimes(1);
+        expect(navigate).toHaveBeenCalledWith(['/operation/route-diagram']);
+        expect(component.selectedCalendarId()).toBe('cal-3');
+    });
+
+    it('一覧の取得に失敗したら移らず、知らせて選択を戻す', async () => {
+        OperationRouteDiagramStore.setOperationTrips(
+            withCalendar(op('b1', '43G'), 'cal-1'),
+        );
+        jest.spyOn(
+            TestBed.inject(OperationService),
+            'findManyByCalendarId',
+        ).mockReturnValue(throwError(() => new Error('offline')));
+
+        await component.onCalendarChange('cal-2');
+
+        expect(navigate).not.toHaveBeenCalled();
+        expect(component.selectedCalendarId()).toBe('cal-1');
+        expect(TestBed.inject(NotificationService).open).toHaveBeenCalled();
+    });
+
+    it('運用が無いときの要約の頭は、選んでいるダイヤ', () => {
+        paramMap$.next(convertToParamMap({}));
+        component.selectedCalendarId.set('cal-x');
+        jest.spyOn(component, 'calendars').mockReturnValue([
+            {
+                calendarId: 'cal-x',
+                calendarName: '平日ダイヤ',
+                startDate: '2026-03-14',
+            },
+        ] as never);
+        expect(component.summaryLead()).toBe('2026/3/14改正 平日ダイヤ');
+    });
+});
+
+describe('OperationRouteDiagramComponent の帯の配線（本物のテンプレート）', () => {
+    it('「今日」を押すと onCalendarChange、前後の運用を押すと onStep が呼ばれる', async () => {
+        const op = (operationId: string, operationNumber: string) =>
+            ({ operationId, operationNumber }) as OperationDetailsDto;
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        fetchOperationTrips: () => of(undefined),
+                        fetchStations: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: OperationService,
+                    useValue: {
+                        findManyByCalendarId: () =>
+                            of([op('a1', '42G'), op('b1', '43G')]),
+                    },
+                },
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap({ operation_id: 'b1' })),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarIds$: of(['cal-today']),
+                        todaysCalendarId$: of('cal-today'),
+                    },
+                },
+            ],
+        }).compileComponents();
+        jest.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+        const fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        const component = fixture.componentInstance;
+        component.selectedCalendarId.set('cal-old');
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const onCalendarChange = jest
+            .spyOn(component, 'onCalendarChange')
+            .mockResolvedValue();
+        const onStep = jest.spyOn(component, 'onStep').mockReturnValue();
+        const root = fixture.nativeElement as HTMLElement;
+
+        (
+            root.querySelector(
+                'app-today-calendar-button button',
+            ) as HTMLButtonElement
+        ).click();
+        expect(onCalendarChange).toHaveBeenCalledWith('cal-today');
+
+        (
+            root.querySelector('app-step-nav button') as HTMLButtonElement
+        ).click();
+        expect(onStep).toHaveBeenCalledWith({ id: 'a1', label: '42G' });
     });
 });

@@ -15,7 +15,6 @@ import { EMPTY, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -24,6 +23,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { PanelCardComponent } from '../panel-card/panel-card.component';
+import { toOperationSelectOptions } from '../operation-select-options.util';
 
 @Component({
     selector: 'app-operation-search-card',
@@ -76,19 +76,7 @@ export class OperationSearchCardComponent {
                           .pipe(catchError(() => EMPTY))
                     : of([]),
             ),
-            map((operations) =>
-                operations
-                    .filter((o) => o.operationNumber !== '100')
-                    .sort(
-                        (a, b) =>
-                            Number(
-                                generateOperationSortNumber(a.operationNumber),
-                            ) -
-                            Number(
-                                generateOperationSortNumber(b.operationNumber),
-                            ),
-                    ),
-            ),
+            map(toOperationSelectOptions),
         ),
         { initialValue: [] },
     );
