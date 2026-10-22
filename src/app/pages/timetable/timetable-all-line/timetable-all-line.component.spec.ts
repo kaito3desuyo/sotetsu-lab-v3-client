@@ -7,7 +7,7 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { EMPTY, of, ReplaySubject } from 'rxjs';
+import { EMPTY, of, ReplaySubject, Subject } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -154,7 +154,8 @@ describe('TimetableAllLineComponent の URL の向き', () => {
 
 describe('TimetableAllLineComponent の読み込み中', () => {
     let fixture: ComponentFixture<TimetableAllLineComponent>;
-    let tripBlocks$: ReplaySubject<undefined>;
+    let tripBlocks$: Subject<undefined>;
+    let fetchTripBlocksCalls = 0;
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const query = (selector: string) =>
@@ -162,6 +163,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
 
     const setup = async (params: Record<string, string>) => {
         tripBlocks$ = new ReplaySubject<undefined>(1);
+        fetchTripBlocksCalls = 0;
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
@@ -177,7 +179,11 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                     provide: TimetableAllLineService,
                     useValue: {
                         fetchStations: () => of(undefined),
-                        fetchTripBlocks: () => tripBlocks$,
+                        fetchTripBlocks: () => {
+                            fetchTripBlocksCalls++;
+                            return tripBlocks$;
+                        },
+                        deleteTripFromTripBlock: () => of(undefined),
                     },
                 },
                 {
@@ -193,7 +199,10 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                     provide: LoadingService,
                     useValue: { open: () => {}, close: () => {} },
                 },
-                { provide: ConfirmDialogService, useValue: {} },
+                {
+                    provide: ConfirmDialogService,
+                    useValue: { open: () => ({ afterClosed: () => of(true) }) },
+                },
                 { provide: CalendarSelectDialogService, useValue: {} },
             ],
         })
@@ -206,6 +215,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     };
 
     afterEach(() => {
+        jest.restoreAllMocks();
         fixture.destroy();
         TimetableAllLineStore.setCalendarId(null as unknown as string);
         TimetableAllLineStore.setHasFetchedTripBlocks(false);
@@ -275,10 +285,54 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     it('入ったときは前の訪問の「取り終えた」を引き継がない', async () => {
         TimetableAllLineStore.setCalendarId('cal-old');
         TimetableAllLineStore.setHasFetchedTripBlocks(true);
+        // 向きの無い URL は取得せず置き換えるだけ（取得の始めのリセットでは骨組みに戻らない道）
+        jest.spyOn(Router.prototype, 'navigate').mockResolvedValue(true);
 
+        await setup({ calendar_id: 'cal-1' });
+
+        expect(fetchTripBlocksCalls).toBe(0);
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+    });
+
+    it('取得中はプログレスバーがヘッダーの下に出て、スピナーは出さない。取り終えたらバーは消える', async () => {
         await setup({ calendar_id: 'cal-1', trip_direction: '0' });
 
-        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+        const bar = query('mat-progress-bar');
+        expect(bar).not.toBeNull();
+        expect(bar?.getAttribute('color')).toBe('accent');
+        expect(bar?.parentElement?.className).toContain('tw-top-[48px]');
+        expect(bar?.parentElement?.className).toContain('md:tw-top-[64px]');
+        expect(query('app-loading')).toBeNull();
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(query('mat-progress-bar')).toBeNull();
+    });
+
+    it('取り終えた後の編集・削除の取り直し（fetchTripBlocks を直接呼ぶ道）では骨組みに戻らず、表を出したまま差し替える', async () => {
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+        expect(fetchTripBlocksCalls).toBe(1);
+
+        // 取り直しは終わらせない（取り直しの最中に骨組みへ戻らないことを見る）
+        tripBlocks$ = new Subject<undefined>();
+        fixture.componentInstance.onClickedDeleteTripInGroup({
+            base: { tripNumber: '1' } as never,
+            target: { tripId: 't2', tripNumber: '2' } as never,
+        });
+        await flush();
+        fixture.detectChanges();
+
+        expect(fetchTripBlocksCalls).toBe(2);
+        expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+        expect(query('app-timetable-all-line-table')).not.toBeNull();
     });
 
     it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {

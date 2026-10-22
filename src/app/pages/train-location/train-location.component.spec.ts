@@ -484,4 +484,71 @@ describe('TrainLocationComponent の再訪', () => {
         fixture.detectChanges();
         expect(skeleton()).toBeNull();
     });
+
+    it('取り終えた後、時計が進んでも、目撃の取り足しが走っても、骨組みには戻らない', async () => {
+        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00') });
+        try {
+            const missingSightings = jest.fn(() => of(undefined));
+            const service = TestBed.inject(TrainLocationService) as {
+                fetchMissingOperationSightingTimeCrossSections: unknown;
+            };
+            service.fetchMissingOperationSightingTimeCrossSections =
+                missingSightings;
+
+            fixture = TestBed.createComponent(TrainLocationComponent);
+            fixture.detectChanges();
+            await flush();
+            tripBlocks$.next(undefined);
+            tripBlocks$.complete();
+            await flush();
+            fixture.detectChanges();
+            expect(skeleton()).toBeNull();
+
+            // 9:10 に駅 a から駅 b へ走っている今日の列車を在線させる（取り足しの対象になる）
+            TrainLocationStore.setStationAxisStations([
+                { stationId: 'a' },
+                { stationId: 'b' },
+            ] as never);
+            TrainLocationStore.setTripBlocksByDirection({
+                0: [
+                    {
+                        trips: [
+                            {
+                                tripId: 't1',
+                                times: [
+                                    {
+                                        stationId: 'a',
+                                        departureTime: '09:00:00',
+                                        stopSequence: 1,
+                                    },
+                                    {
+                                        stationId: 'b',
+                                        arrivalTime: '09:30:00',
+                                        stopSequence: 2,
+                                    },
+                                ],
+                                tripOperationLists: [
+                                    { operation: { operationNumber: '11' } },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            } as never);
+            fixture.detectChanges();
+            expect(missingSightings).toHaveBeenCalledWith(['11']);
+            expect(skeleton()).toBeNull();
+
+            const before = fixture.componentInstance.at().getTime();
+            jest.advanceTimersByTime(30_000);
+            fixture.detectChanges();
+
+            expect(fixture.componentInstance.at().getTime()).toBeGreaterThan(
+                before,
+            );
+            expect(skeleton()).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
 });

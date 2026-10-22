@@ -107,6 +107,7 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
     });
 
     afterEach(() => {
+        jest.restoreAllMocks();
         fixture.destroy();
         OperationPastTimeStore.setReferenceDate(null);
         OperationPastTimeStore.setDays(null);
@@ -145,8 +146,13 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
 
     it('入ったときは前の訪問の「取り終えた」を引き継がない', () => {
         OperationPastTimeStore.setHasFetchedPastTime(true);
+        // 取得の始めのリセットでは false に戻らない道（取得を空にする）で確かめる
+        const fetchData = jest
+            .spyOn(OperationPastTimeComponent.prototype, 'fetchData')
+            .mockResolvedValue(undefined);
         fixture = TestBed.createComponent(OperationPastTimeComponent);
 
+        expect(fetchData).toHaveBeenCalled();
         expect(hasFetched()).toBe(false);
     });
 
