@@ -41,6 +41,7 @@ OperationRouteDiagramStore.resetLoading();
 })
 export class OperationRouteDiagramComponent {
     readonly #destroyRef = inject(DestroyRef);
+    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #operationRouteDiagramService = inject(
@@ -174,6 +175,7 @@ export class OperationRouteDiagramComponent {
     async fetchData(): Promise<void> {
         if (!OperationRouteDiagramStore.operationId) return;
 
+        const seq = ++this.#fetchSeq;
         OperationRouteDiagramStore.enableLoading();
         OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
 
@@ -197,7 +199,10 @@ export class OperationRouteDiagramComponent {
         // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
         OperationRouteDiagramStore.initializeSelectedRouteIds();
         OperationRouteDiagramStore.disableLoading();
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
+        // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+        if (seq === this.#fetchSeq) {
+            OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
+        }
 
         const failure = results.find(
             (result): result is PromiseRejectedResult =>

@@ -439,6 +439,29 @@ describe('OperationTableComponent の読み込み中', () => {
         expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
     });
 
+    it('取り直しが重なったとき、先に終わった古い取得は骨組みを消さない', async () => {
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        const firstTrips$ = trips$;
+        const secondTrips$ = new Subject<undefined>();
+        trips$ = secondTrips$;
+        fixture.componentInstance.fetchData().catch(() => undefined);
+
+        firstTrips$.next(undefined);
+        firstTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(
+            query('[data-testid="operation-table-skeleton"]'),
+        ).not.toBeNull();
+
+        secondTrips$.next(undefined);
+        secondTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
+    });
+
     it('取り直すときは骨組みに戻す（保存した古いフラグが残っていても）', () => {
         OperationTableStore.setHasFetchedOperationTrips(true);
 

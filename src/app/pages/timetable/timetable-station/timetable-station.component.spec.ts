@@ -202,6 +202,27 @@ describe('TimetableStationComponent の読み込み中', () => {
         expect(query('[data-testid="timetable-station-skeleton"]')).toBeNull();
     });
 
+    it('取り直しが重なったとき、先に終わった古い取得は骨組みを消さない', async () => {
+        const firstCalendar$ = calendar$;
+        const secondCalendar$ = new Subject<undefined>();
+        calendar$ = secondCalendar$;
+        fixture.componentInstance.fetchData().catch(() => undefined);
+
+        firstCalendar$.next(undefined);
+        firstCalendar$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(
+            query('[data-testid="timetable-station-skeleton"]'),
+        ).not.toBeNull();
+
+        secondCalendar$.next(undefined);
+        secondCalendar$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="timetable-station-skeleton"]')).toBeNull();
+    });
+
     it('駅・ダイヤ・方向を変えて取り直すときは骨組みに戻す', async () => {
         await finishFetch();
 

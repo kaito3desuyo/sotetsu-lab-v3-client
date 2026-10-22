@@ -48,6 +48,7 @@ OperationTableStore.resetLoading();
 })
 export class OperationTableComponent {
     readonly #destroyRef = inject(DestroyRef);
+    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -146,6 +147,7 @@ export class OperationTableComponent {
     }
 
     async fetchData(): Promise<void> {
+        const seq = ++this.#fetchSeq;
         OperationTableStore.enableLoading();
         OperationTableStore.setHasFetchedOperationTrips(false);
 
@@ -167,7 +169,10 @@ export class OperationTableComponent {
         // 取れなかった分は前回保存したデータでカードを出す
         await linksPromise;
         OperationTableStore.disableLoading();
-        OperationTableStore.setHasFetchedOperationTrips(true);
+        // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+        if (seq === this.#fetchSeq) {
+            OperationTableStore.setHasFetchedOperationTrips(true);
+        }
 
         const failure = results.find(
             (result): result is PromiseRejectedResult =>

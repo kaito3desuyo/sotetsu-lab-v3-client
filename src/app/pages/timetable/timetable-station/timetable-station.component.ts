@@ -54,6 +54,7 @@ TimetableStationStore.resetLoading();
 })
 export class TimetableStationComponent {
     readonly #destroyRef = inject(DestroyRef);
+    #fetchSeq = 0;
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -213,6 +214,7 @@ export class TimetableStationComponent {
     }
 
     async fetchData(): Promise<void> {
+        const seq = ++this.#fetchSeq;
         TimetableStationStore.enableLoading();
         TimetableStationStore.setHasFetchedTimetable(false);
 
@@ -226,7 +228,10 @@ export class TimetableStationComponent {
                 lastValueFrom(this.#timetableStationService.fetchOperations()),
             ]);
             // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
-            TimetableStationStore.setHasFetchedTimetable(true);
+            // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
+            if (seq === this.#fetchSeq) {
+                TimetableStationStore.setHasFetchedTimetable(true);
+            }
 
             // 充当編成は列車の運用番号とダイヤ（今日かどうか）が揃ってから取る。
             // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
@@ -239,7 +244,9 @@ export class TimetableStationComponent {
             }
         } finally {
             // 途中の reject でローディングバーと骨組みが永久残留しないことを保証する
-            TimetableStationStore.setHasFetchedTimetable(true);
+            if (seq === this.#fetchSeq) {
+                TimetableStationStore.setHasFetchedTimetable(true);
+            }
             TimetableStationStore.disableLoading();
         }
     }

@@ -182,6 +182,26 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
         expect(query('app-empty-state')).not.toBeNull();
     });
 
+    it('取り直しが重なったとき、先に終わった古い取得は骨組みを消さない', async () => {
+        await setup({ operation_id: 'op-1' });
+        const firstTrips$ = trips$;
+        const secondTrips$ = new Subject<undefined>();
+        trips$ = secondTrips$;
+        fixture.componentInstance.fetchData().catch(() => undefined);
+
+        firstTrips$.next(undefined);
+        firstTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="route-diagram-skeleton"]')).not.toBeNull();
+
+        secondTrips$.next(undefined);
+        secondTrips$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="route-diagram-skeleton"]')).toBeNull();
+    });
+
     it('別の運用へ移って取り直すときは骨組みに戻す', async () => {
         await setup({ operation_id: 'op-1' });
         trips$.next(undefined);
