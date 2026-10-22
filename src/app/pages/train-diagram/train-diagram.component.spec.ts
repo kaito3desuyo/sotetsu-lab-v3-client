@@ -1233,4 +1233,37 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         expect(jump?.align).toBe('start');
         expect(jump?.seq).toBeGreaterThan(seqBefore);
     });
+
+    it('ダイヤを替える取得（骨組みに戻る）が終わったら、最新の左端の分へ跳ぶ', async () => {
+        TrainDiagramStore.setTripBlocksByDirection({
+            0: [
+                {
+                    tripBlockId: 'b1',
+                    trips: [{ tripId: 't1' }],
+                } as any,
+            ],
+        });
+        fixture.detectChanges();
+        // 最初の取得（コンストラクタ）が終わるまで待つ
+        for (let i = 0; i < 10; i++) {
+            await Promise.resolve();
+        }
+        fixture.detectChanges();
+        expect(component.hasFetchedTrainDiagram()).toBe(true);
+        expect(component.isEmpty()).toBe(false);
+
+        component.onLeftMinuteChange(300);
+        const seqBefore = component.jumpRequest()?.seq ?? 0;
+
+        // ダイヤを替える取得: 取っている間は骨組み（chart は破棄される）
+        const refetch = component.fetchData({ refetchTripBlocks: true });
+        fixture.detectChanges();
+        await refetch;
+        fixture.detectChanges();
+
+        const jump = component.jumpRequest();
+        expect(jump?.minute).toBe(300);
+        expect(jump?.align).toBe('start');
+        expect(jump?.seq).toBeGreaterThan(seqBefore);
+    });
 });

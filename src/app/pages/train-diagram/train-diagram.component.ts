@@ -858,8 +858,8 @@ export class TrainDiagramComponent {
      * URL に載ったら空に戻す。
      */
     #viewParamOverrides: Record<string, string> = {};
-    /** I3: isEmpty の直前値（true→false の遷移だけを検出するため） */
-    #wasEmpty = false;
+    /** I3: chart が隠れていたかの直前値（隠れた→見えるの立ち上がりだけを検出するため） */
+    #wasChartHidden = false;
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
@@ -871,14 +871,16 @@ export class TrainDiagramComponent {
                 TrainDiagramStore.setRouteStations(routeStations);
             });
 
-        // I3: 表示条件に合う列車が無い（isEmpty）状態から復帰したら、chart は
-        // 再生成されて jumpRequest を読み直す（最後の要求が初期表示時刻のことが多い）ため、
-        // 最新の左端の分へ跳び直して表示位置の喪失を防ぐ。
+        // I3: chart が隠れていた（列車を取る前の骨組み、または表示条件に合う列車が
+        // 無い isEmpty）状態から見える状態に戻ったら、chart は再生成されて jumpRequest を
+        // 読み直す（最後の要求が初期表示時刻のことが多い）ため、最新の左端の分へ
+        // 跳び直して表示位置の喪失を防ぐ。ダイヤを替える取得も骨組みを経由する。
         effect(() => {
-            const empty = this.isEmpty();
-            const wasEmpty = this.#wasEmpty;
-            this.#wasEmpty = empty;
-            if (wasEmpty && !empty) {
+            const chartHidden =
+                !this.hasFetchedTrainDiagram() || this.isEmpty();
+            const wasChartHidden = this.#wasChartHidden;
+            this.#wasChartHidden = chartHidden;
+            if (wasChartHidden && !chartHidden) {
                 this.#requestJump(this.#leftMinute ?? 0, 'start');
             }
         });
