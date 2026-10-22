@@ -88,7 +88,7 @@ export class OperationTableComponent {
     /** 骨組みのカードの数。1440px で 4 面 × 2 段あれば画面 1 枚分を埋める */
     readonly skeletonCards = Array.from({ length: 8 }, (_, i) => i);
     /** 骨組みのカード 1 枚の列車の行の数 */
-    readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
+    readonly skeletonRows = Array.from({ length: 12 }, (_, i) => i);
 
     readonly isEmpty = computed(
         () =>
