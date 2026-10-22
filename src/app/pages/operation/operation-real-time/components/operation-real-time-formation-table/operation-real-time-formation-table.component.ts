@@ -8,6 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeFormationCardComponent } from '../operation-real-time-formation-card/operation-real-time-formation-card.component';
+import { OperationRealTimeSkeletonLedgerComponent } from '../operation-real-time-skeleton-ledger/operation-real-time-skeleton-ledger.component';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { matchesAgencyFilter } from '../../utils/operation-real-time-filter.util';
 import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
@@ -17,7 +18,11 @@ import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
     templateUrl: './operation-real-time-formation-table.component.html',
     styleUrl: './operation-real-time-formation-table.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [EmptyStateComponent, OperationRealTimeFormationCardComponent],
+    imports: [
+        EmptyStateComponent,
+        OperationRealTimeFormationCardComponent,
+        OperationRealTimeSkeletonLedgerComponent,
+    ],
 })
 export class OperationRealTimeFormationTableComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);

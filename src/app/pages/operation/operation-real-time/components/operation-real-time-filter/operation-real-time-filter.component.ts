@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -31,7 +32,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
     selector: 'app-operation-real-time-filter',
     templateUrl: './operation-real-time-filter.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [FilterChipsComponent],
+    imports: [NgTemplateOutlet, FilterChipsComponent],
 })
 export class OperationRealTimeFilterComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
@@ -65,6 +66,25 @@ export class OperationRealTimeFilterComponent {
     readonly formations = toSignal(OperationRealTimeStore.formations$, {
         initialValue: [],
     });
+    readonly hasFetchedOperations = toSignal(
+        OperationRealTimeStore.hasFetchedOperations$,
+        { initialValue: false },
+    );
+    readonly hasFetchedFormations = toSignal(
+        OperationRealTimeStore.hasFetchedFormations$,
+        { initialValue: false },
+    );
+
+    /** 取る前の骨組みのチップの幅（会社名・運用群名の長さをなぞる） */
+    readonly agencySkeletonWidths = ['tw-w-14', 'tw-w-24', 'tw-w-14'];
+    readonly groupSkeletonWidths = [
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-12',
+        'tw-w-14',
+    ];
 
     /**
      * 会社は相鉄と直通を始めた順に並べる（agenciesInThroughServiceOrder）。

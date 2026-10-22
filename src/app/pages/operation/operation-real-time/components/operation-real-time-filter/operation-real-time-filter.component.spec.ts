@@ -18,6 +18,39 @@ const operationOf = (operationNumber: string): OperationDetailsDto =>
         operationNumber,
     }) as OperationDetailsDto;
 
+// ストアはこのファイルの中で共有される。運用・編成をまだ入れていない状態を見るため、先頭に置く
+describe('OperationRealTimeFilterComponent（運用・編成を取る前）', () => {
+    it('チップの 2 行とも、チップの形の骨組みを出す（「休」だけを先に出さない）', async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationRealTimeFilterComponent],
+            providers: [
+                {
+                    provide: AgencyListStateQuery,
+                    useValue: { agencies$: of([]) },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: { routeStations$: of([]) },
+                },
+            ],
+        }).compileComponents();
+        const fixture = TestBed.createComponent(
+            OperationRealTimeFilterComponent,
+        );
+        fixture.detectChanges();
+        const el: HTMLElement = fixture.nativeElement;
+
+        expect(el.querySelectorAll('app-filter-chips')).toHaveLength(0);
+        const skeletons = el.querySelectorAll(
+            '[data-testid="filter-chips-skeleton"]',
+        );
+        expect(skeletons).toHaveLength(2);
+        for (const skeleton of Array.from(skeletons)) {
+            expect(skeleton.className).toContain('tw-h-[42px]');
+        }
+    });
+});
+
 describe('OperationRealTimeFilterComponent', () => {
     let component: OperationRealTimeFilterComponent;
     let fixture: ComponentFixture<OperationRealTimeFilterComponent>;
@@ -59,7 +92,10 @@ describe('OperationRealTimeFilterComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('チップの 2 行は、選択肢が届く前から 1 行分の高さを取っておく', () => {
+    it('チップの 2 行は、選択肢が空でも 1 行分の高さを取っておく', () => {
+        OperationRealTimeStore.setFormations([]);
+        fixture.detectChanges();
+
         const rows: HTMLElement[] = Array.from(
             fixture.nativeElement.querySelectorAll('app-filter-chips'),
         );

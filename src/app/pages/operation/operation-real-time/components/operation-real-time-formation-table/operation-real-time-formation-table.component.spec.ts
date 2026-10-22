@@ -46,7 +46,7 @@ async function createTable(): Promise<
 
 // ストアはこのファイルの中で共有される。編成をまだ入れていない状態を見るため、先頭に置く
 describe('OperationRealTimeFormationTableComponent（編成を取る前）', () => {
-    it('空表示の代わりに、画面からヘッダーを引いた高さを取っておく', async () => {
+    it('空表示の代わりに、画面からヘッダーを引いた高さで骨組みを出す', async () => {
         const el: HTMLElement = (await createTable()).nativeElement;
 
         expect(el.querySelector('app-empty-state')).toBeNull();
@@ -55,6 +55,11 @@ describe('OperationRealTimeFormationTableComponent（編成を取る前）', () 
         );
         expect(placeholder?.className).toContain('tw-h-[calc(100dvh-48px)]');
         expect(placeholder?.className).toContain('md:tw-h-[calc(100dvh-64px)]');
+        expect(
+            placeholder?.querySelector(
+                'app-operation-real-time-skeleton-ledger',
+            ),
+        ).not.toBeNull();
     });
 });
 
