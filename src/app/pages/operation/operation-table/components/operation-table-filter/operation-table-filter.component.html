@@ -30,12 +30,20 @@
             運用群で絞り込み
         </p>
         <!-- リアルタイム運用情報と同じ運用群チップ（横スクロール 1 行・見本色付き） -->
-        <app-filter-chips
-            mode="multiple"
-            [scrollMode]="true"
-            [options]="groupOptions()"
-            [selected]="selectedGroupNames()"
-            (selectedChange)="onGroupChange($event)"
-        ></app-filter-chips>
+        <!-- 運用群は運用から作るので、取る前は「休」だけが出ていた。チップの形の骨組みにする（2026-10-22） -->
+        @if (hasFetchedOperationTrips()) {
+            <app-filter-chips
+                class="tw-min-h-[42px]"
+                mode="multiple"
+                [scrollMode]="true"
+                [options]="groupOptions()"
+                [selected]="selectedGroupNames()"
+                (selectedChange)="onGroupChange($event)"
+            ></app-filter-chips>
+        } @else {
+            <app-skeleton-chips
+                [widths]="groupSkeletonWidths"
+            ></app-skeleton-chips>
+        }
     </div>
 </div>

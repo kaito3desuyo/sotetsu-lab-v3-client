@@ -18,6 +18,7 @@ type StoreProps = {
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     selectedGroupNames: string[];
+    hasFetchedOperationTrips: boolean;
     loadingQueue: boolean[];
 };
 
@@ -31,6 +32,7 @@ const store = createStore(
         stations: [],
         tripClasses: [],
         selectedGroupNames: [],
+        hasFetchedOperationTrips: false,
         loadingQueue: [],
     }),
 );
@@ -65,6 +67,10 @@ export const OperationTableStore = {
     },
     setSelectedGroupNames(groupNames: string[]): void {
         store.update(setProp('selectedGroupNames', () => groupNames));
+    },
+    /** いまの calendar_id の取得が終わったか（失敗しても true）。取る前は一覧の代わりに骨組みを出す */
+    setHasFetchedOperationTrips(value: boolean): void {
+        store.update(setProp('hasFetchedOperationTrips', () => value));
     },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));
@@ -103,6 +109,10 @@ export const OperationTableStore = {
     selectedGroupNames$: store.pipe(
         select((state) => state.selectedGroupNames),
         map(normalizeGroupNames),
+    ),
+    // 保存済みの古い状態には無い項目なので `?? false`
+    hasFetchedOperationTrips$: store.pipe(
+        select((state) => state.hasFetchedOperationTrips ?? false),
     ),
     isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
 

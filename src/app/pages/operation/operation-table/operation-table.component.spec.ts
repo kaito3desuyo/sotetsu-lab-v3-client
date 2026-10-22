@@ -1,7 +1,12 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import {
+    ActivatedRoute,
+    Router,
+    convertToParamMap,
+    provideRouter,
+} from '@angular/router';
+import { Subject, of, throwError } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
@@ -166,13 +171,20 @@ describe('OperationTableComponent', () => {
             OperationTableStore.setCalendar(null);
         });
 
+        afterEach(() => {
+            OperationTableStore.setHasFetchedOperationTrips(false);
+        });
+
         it('取得中は出さない（届く前に「登録されていません」と見せない）', () => {
             OperationTableStore.enableLoading();
+            OperationTableStore.setHasFetchedOperationTrips(false);
 
             expect(component.isEmpty()).toBe(false);
         });
 
         it('取得が終わって 0 件なら出す', () => {
+            OperationTableStore.setHasFetchedOperationTrips(true);
+
             expect(component.isEmpty()).toBe(true);
         });
     });
@@ -311,5 +323,130 @@ describe('OperationTableComponent', () => {
 
         expect(component.isCardVisible('79')).toBe(true);
         expect(component.isCardVisible('11')).toBe(false);
+    });
+});
+
+describe('OperationTableComponent の読み込み中', () => {
+    let fixture: ComponentFixture<OperationTableComponent>;
+    let trips$: Subject<undefined>;
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    const query = (selector: string) =>
+        (fixture.nativeElement as HTMLElement).querySelector(selector);
+
+    beforeEach(async () => {
+        trips$ = new Subject<undefined>();
+        await TestBed.configureTestingModule({
+            imports: [OperationTableComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({ calendar_id: 'cal-1' }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationTableService,
+                    useValue: {
+                        fetchCalendar: () => of(undefined),
+                        fetchOperationTrips: () => trips$,
+                        fetchStations: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: { calendars$: of([]) },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: { todaysCalendarId: 'cal-1' },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+            ],
+        })
+            .overrideComponent(OperationTableComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    });
+
+    afterEach(() => {
+        fixture.destroy();
+        OperationTableStore.setOperationTrips([]);
+        OperationTableStore.setHasFetchedOperationTrips(false);
+        OperationTableStore.resetLoading();
+    });
+
+    const finishFetch = async () => {
+        trips$.next(undefined);
+        trips$.complete();
+        await flush();
+        fixture.detectChanges();
+    };
+
+    it('取り終わるまでは骨組みを出し、空表示もカードも出さない', () => {
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+
+        expect(
+            query('[data-testid="operation-table-skeleton"]'),
+        ).not.toBeNull();
+        expect(query('app-empty-state')).toBeNull();
+        expect(query('app-operation-table-card')).toBeNull();
+    });
+
+    it('取り終えたら骨組みを消す', async () => {
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+
+        await finishFetch();
+
+        expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
+    });
+
+    it('取り終えて 0 件なら空表示を出す', async () => {
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        OperationTableStore.setCalendar({ calendarId: 'cal-1' } as never);
+
+        await finishFetch();
+
+        expect(query('app-empty-state')).not.toBeNull();
+    });
+
+    it('取得に失敗しても骨組みを消す（保存していたカードを出すため）', async () => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // zone.js が未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す
+        const original = OperationTableComponent.prototype.fetchData;
+        const spy = jest
+            .spyOn(OperationTableComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: OperationTableComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+
+        trips$.error(new Error('offline'));
+        await flush();
+        fixture.detectChanges();
+        spy.mockRestore();
+
+        expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
+    });
+
+    it('取り直すときは骨組みに戻す（保存した古いフラグが残っていても）', () => {
+        OperationTableStore.setHasFetchedOperationTrips(true);
+
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+
+        expect(
+            query('[data-testid="operation-table-skeleton"]'),
+        ).not.toBeNull();
     });
 });

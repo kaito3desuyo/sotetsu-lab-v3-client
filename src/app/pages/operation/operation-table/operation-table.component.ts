@@ -16,6 +16,7 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
+import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
 import { OperationTableService } from './services/operation-table.service';
@@ -42,6 +43,7 @@ OperationTableStore.resetLoading();
         OperationTableFilterComponent,
         OperationTableCardComponent,
         OperationSearchCardComponent,
+        SkeletonBarComponent,
     ],
 })
 export class OperationTableComponent {
@@ -78,9 +80,18 @@ export class OperationTableComponent {
         { initialValue: [] },
     );
 
+    readonly hasFetchedOperationTrips = toSignal(
+        OperationTableStore.hasFetchedOperationTrips$,
+        { initialValue: false },
+    );
+    /** 骨組みのカードの数。1440px で 4 面 × 2 段あれば画面 1 枚分を埋める */
+    readonly skeletonCards = Array.from({ length: 8 }, (_, i) => i);
+    /** 骨組みのカード 1 枚の列車の行の数 */
+    readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
+
     readonly isEmpty = computed(
         () =>
-            !this.isLoading() &&
+            this.hasFetchedOperationTrips() &&
             !!this.calendar() &&
             this.operationTrips().length === 0,
     );
@@ -136,6 +147,7 @@ export class OperationTableComponent {
 
     async fetchData(): Promise<void> {
         OperationTableStore.enableLoading();
+        OperationTableStore.setHasFetchedOperationTrips(false);
 
         // 5 つは互いに依存しないので並行に取る。カードは全部そろってから 1 回だけ描く
         // （順に取ると、届くたびに 104 枚・2,500 行余りを描き直していた）
@@ -155,6 +167,7 @@ export class OperationTableComponent {
         // 取れなかった分は前回保存したデータでカードを出す
         await linksPromise;
         OperationTableStore.disableLoading();
+        OperationTableStore.setHasFetchedOperationTrips(true);
 
         const failure = results.find(
             (result): result is PromiseRejectedResult =>

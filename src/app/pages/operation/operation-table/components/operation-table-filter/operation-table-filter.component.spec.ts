@@ -1,4 +1,6 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { OperationTableFilterComponent } from './operation-table-filter.component';
 
@@ -71,5 +73,42 @@ describe('OperationTableFilterComponent', () => {
         component.calendarChange.subscribe(spy);
         component.onCalendarChange('calendar-1');
         expect(spy).not.toHaveBeenCalled();
+    });
+});
+
+describe('OperationTableFilterComponent の読み込み中', () => {
+    let fixture: ComponentFixture<OperationTableFilterComponent>;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationTableFilterComponent],
+        })
+            .overrideComponent(OperationTableFilterComponent, {
+                set: { imports: [DateFnsPipe], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        fixture = TestBed.createComponent(OperationTableFilterComponent);
+        fixture.componentRef.setInput('operationTrips', []);
+        fixture.componentRef.setInput('calendars', []);
+    });
+
+    afterEach(() => OperationTableStore.setHasFetchedOperationTrips(false));
+
+    it('運用を取る前は、運用群のチップの代わりにチップの形の骨組みを出す', () => {
+        OperationTableStore.setHasFetchedOperationTrips(false);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('app-skeleton-chips')).not.toBeNull();
+        expect(el.querySelector('app-filter-chips')).toBeNull();
+    });
+
+    it('運用を取った後は、運用群のチップを出す', () => {
+        OperationTableStore.setHasFetchedOperationTrips(true);
+        fixture.detectChanges();
+        const el = fixture.nativeElement as HTMLElement;
+
+        expect(el.querySelector('app-skeleton-chips')).toBeNull();
+        expect(el.querySelector('app-filter-chips')).not.toBeNull();
     });
 });
