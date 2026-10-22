@@ -11,7 +11,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
-import { OperationSearchCardComponent } from 'src/app/shared/operation-search-card/operation-search-card.component';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
@@ -35,7 +34,6 @@ let fetchSeq = 0;
         OperationPastTimeSearchFormComponent,
         OperationPastTimeFilterComponent,
         OperationPastTimeTableComponent,
-        OperationSearchCardComponent,
     ],
 })
 export class OperationPastTimeComponent {

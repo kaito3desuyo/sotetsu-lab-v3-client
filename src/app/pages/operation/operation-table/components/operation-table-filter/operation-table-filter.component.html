@@ -1,28 +1,40 @@
 <div class="tw-flex tw-flex-col tw-gap-4">
     <!-- ダイヤ select を常設。運用番号へのジャンプは 2026-09-25 に外した
          （本番に無い機能で、運用群チップで十分に絞れるため） -->
-    <div class="tw-flex tw-flex-row tw-items-start tw-gap-3">
-        <mat-form-field subscriptSizing="dynamic" class="tw-min-w-0 tw-flex-1">
-            <mat-label>ダイヤ</mat-label>
-            <mat-select
-                [value]="calendarId()"
-                (selectionChange)="onCalendarChange($event.value)"
+    <!-- ダイヤと「今日」の幅・間隔は時刻表の帯とそろえる（48rem の 2 列の左。2026-10-22） -->
+    <div
+        class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[48rem]"
+    >
+        <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+            <mat-form-field
+                subscriptSizing="dynamic"
+                class="tw-min-w-0 tw-flex-1"
             >
-                @for (calendar of calendars(); track calendar.calendarId) {
-                    <mat-option [value]="calendar.calendarId">
-                        {{
-                            calendar.startDate
-                                | dateFns
-                                    : {
-                                          format: 'yyyy/M/d改正',
-                                          parseFormat: 'yyyy-MM-dd',
-                                      }
-                        }}
-                        {{ calendar.calendarName }}
-                    </mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
+                <mat-label>ダイヤ</mat-label>
+                <mat-select
+                    [value]="calendarId()"
+                    (selectionChange)="onCalendarChange($event.value)"
+                >
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+            <app-today-calendar-button
+                [calendarId]="calendarId()"
+                (selectToday)="onCalendarChange($event)"
+            ></app-today-calendar-button>
+        </div>
     </div>
 
     <div>

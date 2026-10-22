@@ -1,6 +1,8 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { OperationTableFilterComponent } from './operation-table-filter.component';
 
@@ -13,6 +15,15 @@ describe('OperationTableFilterComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [OperationTableFilterComponent],
+            providers: [
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarIds$: of(['today']),
+                        todaysCalendarId$: of('today'),
+                    },
+                },
+            ],
         }).compileComponents();
 
         fixture = TestBed.createComponent(OperationTableFilterComponent);
@@ -73,6 +84,19 @@ describe('OperationTableFilterComponent', () => {
         component.calendarChange.subscribe(spy);
         component.onCalendarChange('calendar-1');
         expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('「今日」を押すと、今日のダイヤを calendarChange で流す', () => {
+        fixture.componentRef.setInput('calendarId', 'old');
+        fixture.detectChanges();
+        const emitted: string[] = [];
+        component.calendarChange.subscribe((id: string) => emitted.push(id));
+
+        const today = (fixture.nativeElement as HTMLElement).querySelector(
+            'app-today-calendar-button button',
+        ) as HTMLButtonElement;
+        today.click();
+        expect(emitted).toEqual(['today']);
     });
 });
 
