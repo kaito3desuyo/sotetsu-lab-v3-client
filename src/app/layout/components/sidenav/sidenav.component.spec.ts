@@ -29,4 +29,17 @@ describe('SidenavComponent', () => {
         component.stationId.setValue('unknown-station');
         expect(component.timetableLinkPrefix()).toBe('駅別時刻表');
     });
+
+    it('「このサイトについて」からプライバシーポリシーと免責事項へつなぐ', () => {
+        fixture.detectChanges();
+        const element = fixture.nativeElement as HTMLElement;
+        expect(
+            element
+                .querySelector('a[href="/privacy-policy"]')
+                ?.textContent?.trim(),
+        ).toBe('プライバシーポリシー');
+        expect(
+            element.querySelector('a[href="/disclaimer"]')?.textContent?.trim(),
+        ).toBe('免責事項');
+    });
 });
