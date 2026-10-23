@@ -222,12 +222,24 @@
 - 証明書（ACM・us-east-1）は今のものを ARN で参照する（api と同じ）
 - ワークフローに AWS の権限で `osls deploy` を足す。権限の渡し方は api のワークフローにそろえる
 
-### 12.2 移し方（計画で決める）
+### 12.2 移し方（2026-10-24 に AWS の実物を読んで決めた）
 
-`v3.sotetsu-lab.com` は 1 つの配信にしか付けられないので、付け替えの間の止まり方が肝になる。計画の最初に一次情報で確かめてから決める。
+AWS で読んだ事実（読むだけ・2026-10-24）:
 
-- 候補 A: osls で新しい配信を作り、別名を旧配信から新配信へ付け替える（`associate-alias` などで止めずに移せるか、DNS の置き場所で何が要るかを確かめる）
-- 候補 B: 今の配信・バケットを CloudFormation のリソースのインポートで osls のスタックに取り込む（osls がインポートを扱えるか、手で変更セットを作る必要があるかを確かめる）
-- どちらでも、移した後に Terraform 側は `terraform state rm` で手を引き、web モジュールと `environments/default` の呼び出しを消す。消す前に `terraform plan` で web 以外が変わらないことを確かめる
+- `v3.sotetsu-lab.com` の Route 53 の A レコード（別名）は、今の配信 `E5C8TB9HLVQF9`（d2o0t3cxrqtg36）ではなく、**2024 年の SSR の配信 `EOE7HW33MVGR6`（d1xqnisz459zf9・別名 `*.sotetsu-lab.com`）を指している**。CloudFront は Host で配信を選ぶので、ちょうど一致する別名を持つ `E5C8TB9HLVQF9` が答えている
+- `EOE7HW33MVGR6` は、2024 年に client の osls で作ったスタック `sotetsu-lab-v3-prod-client-cfstack` の `AppCloudFrontDistribution`。同じスタックに 2024 年の SSR の Lambda（nodejs20.x）・Function URL・Lambda 用の OAC・キャッシュポリシーが残っている。osls の配置用バケット `sotetsu-lab-v3-prod-client-sls-deployment-bucket` も残っている。`serverless.ts` は client の履歴をまとめたときに消えている
+- 証明書 `1c93cef5…` は `sotetsu-lab.com` と `*.sotetsu-lab.com` を含む
+- CI のロール `GitHubActionsRole` は `AdministratorAccess`（`repo:kaito3desuyo/*` から引き受けられる）。osls の deploy に権限は足りる
+- osls には既存のリソースを取り込む機能が無い（CloudFormation の取り込みを手で行うしかない）
+
+決めたこと:
+
+- 新しいスタックは作らず、**2024 年のスタック `sotetsu-lab-v3-prod-client-cfstack` を新しい `serverless.ts` で上書きする**。配信は同じ論理 ID `AppCloudFrontDistribution` のまま、配り元を S3＋BFF・`spa-routing` 付きに変える（今の `E5C8TB9HLVQF9` と同じ形）。2024 年の Lambda 一式はテンプレートから外して消す
+- S3 バケットは新しく作る（`sotetsu-lab-v3-prod-client-web-bucket`）。Terraform のバケットは取り込まない
+- 切り替えは、`E5C8TB9HLVQF9` から別名 `v3.sotetsu-lab.com` を外すだけ。DNS はもともと `EOE7HW33MVGR6` を指しているので、外した瞬間からワイルドカードの別名でそちらが答える。DNS は変えない
+- 切り替えた後に、`EOE7HW33MVGR6` の別名を `*.sotetsu-lab.com` から `v3.sotetsu-lab.com` に変える
+- 切り替えの前に `terraform state rm module.web` で Terraform の手を引かせる（後から `apply` されて別名が戻るのを防ぐ）
+- 古い配信・バケット・OAC・手で作った `spa-routing` 関数・GitHub の secret 2 つは、切り替えから 1 週間たって問題が無ければ消す
 - infrastructure の master には、database 周りの未コミットの変更がある。web モジュールを外すコミットはこれと混ぜない
 - 順番: 先に今の形のまま（SSR 無し）で osls に移して本番を確かめ、その後に SSR の Lambda を足す。移す作業と SSR を同じリリースにしない
+- 計画: `docs/superpowers/plans/2026-10-24-web-delivery-to-osls.md`
