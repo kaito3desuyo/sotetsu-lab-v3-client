@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import {
     OperationPostFormComponent,
     OperationPostInitialValue,
@@ -41,11 +44,23 @@ export const OPERATION_POST_DIALOG_TITLE_ID = 'operation-post-dialog-title';
 })
 export class OperationPostDialogComponent {
     readonly #dialogRef = inject(MatDialogRef<OperationPostDialogComponent>);
+    readonly #router = inject(Router);
     readonly data: OperationPostInitialValue =
         inject<OperationPostInitialValue | null>(MAT_DIALOG_DATA) ?? {};
 
     /** 見出しの id（ダイアログの名前として読み上げる） */
     readonly titleId = OPERATION_POST_DIALOG_TITLE_ID;
+
+    constructor() {
+        // CDK の closeOnNavigation は popstate にしか効かない。ゲストが案内の「ログイン」「新規登録」
+        // （routerLink の pushState）を押したときにも閉じる
+        this.#router.events
+            .pipe(
+                filter((event) => event instanceof NavigationStart),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => this.close());
+    }
 
     /** 送っている間は Esc・背景で閉じない（閉じた後に投稿が終わらないように） */
     onSubmittingChange(submitting: boolean): void {

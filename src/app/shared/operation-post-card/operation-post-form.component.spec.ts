@@ -402,7 +402,7 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         fixture.detectChanges();
 
         const el: HTMLElement = fixture.nativeElement;
-        expect(el.textContent).toContain('目撃の投稿にはログインが必要です');
+        expect(el).toHaveTextContent('目撃の投稿にはログインが必要です');
         expect(el.querySelector('form')).toBeNull();
         const links = Array.from(el.querySelectorAll('a')).map((a) =>
             decodeURIComponent(a.getAttribute('href') ?? ''),

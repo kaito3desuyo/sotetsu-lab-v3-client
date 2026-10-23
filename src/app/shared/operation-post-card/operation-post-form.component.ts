@@ -86,7 +86,6 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
 
-    /** 初めに入れておく値（リアルタイムの行から開いたとき）。2026-10-22 */
     /** ゲストには入力欄の代わりにログインの案内を出す（目撃の投稿は登録者だけ） */
     readonly isLoggedIn = toSignal(inject(UserStateQuery).isLoggedIn$, {
         initialValue: false,
@@ -97,6 +96,7 @@ export class OperationPostFormComponent {
         return safeReturnTo(this.#router.url);
     }
 
+    /** 初めに入れておく値（リアルタイムの行から開いたとき）。2026-10-22 */
     readonly initialValue = input<OperationPostInitialValue>({});
     /** 投稿に成功したときだけ流す（ダイアログを閉じるため） */
     readonly submitted = output<void>();

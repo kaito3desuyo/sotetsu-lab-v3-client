@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
-import { of } from 'rxjs';
+import { NavigationStart, Router } from '@angular/router';
+import { of, Subject } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -18,14 +19,20 @@ describe('OperationPostDialogComponent', () => {
     let fixture: ComponentFixture<OperationPostDialogComponent>;
     const close = jest.fn();
     const dialogRef = { close, disableClose: false };
+    let routerEvents: Subject<NavigationStart>;
 
     beforeEach(async () => {
         close.mockClear();
+        routerEvents = new Subject();
         dialogRef.disableClose = false;
         await TestBed.configureTestingModule({
             imports: [OperationPostDialogComponent],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRef },
+                {
+                    provide: Router,
+                    useValue: { events: routerEvents, url: '/' },
+                },
                 {
                     provide: MAT_DIALOG_DATA,
                     useValue: { operationNumber: '11' },
@@ -103,5 +110,10 @@ describe('OperationPostDialogComponent', () => {
             'h2',
         ) as HTMLElement;
         expect(heading.id).toBe(OPERATION_POST_DIALOG_TITLE_ID);
+    });
+
+    it('画面遷移が始まったら閉じる（ゲストが「ログイン」を押したとき）', () => {
+        routerEvents.next(new NavigationStart(1, '/login'));
+        expect(close).toHaveBeenCalledTimes(1);
     });
 });
