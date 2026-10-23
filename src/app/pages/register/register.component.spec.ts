@@ -122,6 +122,19 @@ describe('RegisterComponent', () => {
         });
     });
 
+    it('登録後の画面移動が失敗しても、送信中を解く', async () => {
+        setup({ returnTo: '/', loggedIn: false });
+        userService.registerUser.mockResolvedValue(undefined);
+        router.navigate.mockRejectedValue(new Error('navigation failed'));
+        fillValid();
+
+        await expect(component.onClickSubmit()).rejects.toThrow(
+            'navigation failed',
+        );
+
+        expect(component.submitting()).toBe(false);
+    });
+
     it('return_to が外の URL なら / を引き継ぐ', async () => {
         setup({ returnTo: '//evil.example', loggedIn: false });
         userService.registerUser.mockResolvedValue(undefined);

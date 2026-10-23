@@ -4,6 +4,7 @@ import {
     inject,
     signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -71,11 +72,13 @@ export class LoginComponent {
     readonly submitting = signal<boolean>(false);
 
     constructor() {
-        this.#userStateQuery.isLoggedIn$.pipe(take(1)).subscribe((loggedIn) => {
-            if (loggedIn) {
-                void this.#router.navigateByUrl(this.#returnTo);
-            }
-        });
+        this.#userStateQuery.isLoggedIn$
+            .pipe(take(1), takeUntilDestroyed())
+            .subscribe((loggedIn) => {
+                if (loggedIn) {
+                    void this.#router.navigateByUrl(this.#returnTo);
+                }
+            });
     }
 
     async onClickSubmit(): Promise<void> {
@@ -102,14 +105,18 @@ export class LoginComponent {
             return;
         }
 
-        await tryCatchAsync(this.#tokenStateStore.fetch());
-        await tryCatchAsync(this.#userStateStore.fetch());
+        try {
+            await tryCatchAsync(this.#tokenStateStore.fetch());
+            await tryCatchAsync(this.#userStateStore.fetch());
 
-        this.#snackBar.open('ログインしました', '閉じる', {
-            duration: 3000,
-        });
+            this.#snackBar.open('ログインしました', '閉じる', {
+                duration: 3000,
+            });
 
-        await this.#router.navigateByUrl(this.#returnTo);
+            await this.#router.navigateByUrl(this.#returnTo);
+        } finally {
+            this.submitting.set(false);
+        }
     }
 
     togglePasswordVisibility(): void {

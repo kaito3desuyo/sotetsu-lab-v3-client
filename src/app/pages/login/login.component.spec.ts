@@ -116,6 +116,19 @@ describe('LoginComponent', () => {
         expect(tokenStateStore.fetch).not.toHaveBeenCalled();
     });
 
+    it('ログイン後の画面移動が失敗しても、送信中を解く', async () => {
+        setup({ returnTo: '/', loggedIn: false });
+        authService.login.mockResolvedValue(undefined);
+        router.navigateByUrl.mockRejectedValue(new Error('navigation failed'));
+        component.form.setValue({ username: 'user_1', password: 'Passw0rd!' });
+
+        await expect(component.onClickSubmit()).rejects.toThrow(
+            'navigation failed',
+        );
+
+        expect(component.submitting()).toBe(false);
+    });
+
     it('ログイン済みで開いたら、すぐ return_to に戻る', () => {
         setup({ returnTo: '/timetable', loggedIn: true });
         expect(router.navigateByUrl).toHaveBeenCalledWith('/timetable');

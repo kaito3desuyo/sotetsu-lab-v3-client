@@ -15,6 +15,7 @@
                         matInput
                         type="text"
                         formControlName="username"
+                        autocomplete="username"
                         placeholder="ユーザー名を入力してください"
                     />
                     @if (form.get('username')?.hasError('required')) {
@@ -33,6 +34,7 @@
                         matInput
                         [type]="passwordVisible() ? 'text' : 'password'"
                         formControlName="password"
+                        autocomplete="current-password"
                         placeholder="パスワードを入力してください"
                     />
                     <button

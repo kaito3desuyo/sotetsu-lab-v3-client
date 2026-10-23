@@ -4,6 +4,7 @@ import {
     inject,
     signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
     ReactiveFormsModule,
@@ -124,11 +125,13 @@ export class RegisterComponent {
     readonly submitting = signal<boolean>(false);
 
     constructor() {
-        this.#userStateQuery.isLoggedIn$.pipe(take(1)).subscribe((loggedIn) => {
-            if (loggedIn) {
-                void this.#router.navigateByUrl(this.#returnTo);
-            }
-        });
+        this.#userStateQuery.isLoggedIn$
+            .pipe(take(1), takeUntilDestroyed())
+            .subscribe((loggedIn) => {
+                if (loggedIn) {
+                    void this.#router.navigateByUrl(this.#returnTo);
+                }
+            });
     }
 
     async onClickSubmit(): Promise<void> {
@@ -169,13 +172,17 @@ export class RegisterComponent {
             return;
         }
 
-        this.#snackBar.open('ユーザー登録が完了しました', '閉じる', {
-            duration: 3000,
-        });
+        try {
+            this.#snackBar.open('ユーザー登録が完了しました', '閉じる', {
+                duration: 3000,
+            });
 
-        await this.#router.navigate(['/login'], {
-            queryParams: { return_to: this.returnToParam },
-        });
+            await this.#router.navigate(['/login'], {
+                queryParams: { return_to: this.returnToParam },
+            });
+        } finally {
+            this.submitting.set(false);
+        }
     }
 
     togglePasswordVisibility(): void {

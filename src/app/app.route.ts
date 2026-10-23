@@ -84,6 +84,10 @@ export const APP_ROUTES: Routes = [
         loadChildren: () =>
             import('./pages/login/login.route').then((mod) => mod.LOGIN_ROUTES),
         canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
     },
     {
         path: 'register',
@@ -92,6 +96,10 @@ export const APP_ROUTES: Routes = [
                 (mod) => mod.REGISTER_ROUTES,
             ),
         canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
     },
     {
         path: 'maintenance',
