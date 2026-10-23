@@ -39,6 +39,11 @@ jobs:
           aws-region: ap-northeast-1
 
       - name: Deploy and create invalidation
+        # 名前にハッシュの付くファイルだけ 1 年置き、index.html・ngsw*.json・assets/ などは毎回確かめさせる。
+        # 全部 1 年にすると、Service Worker の無いブラウザが古い index.html を使い続ける。
         run: |
-          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "max-age=31536000"
+          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*" --include "chunk-*.js" --include "main-*.js" --include "polyfills-*.js" --include "styles-*.css" --include "media/*"
+          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "no-cache" \
+            --exclude "chunk-*.js" --exclude "main-*.js" --exclude "polyfills-*.js" --exclude "styles-*.css" --exclude "media/*"
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'
