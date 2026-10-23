@@ -182,14 +182,11 @@ const serverlessConfiguration: AWS = {
                                 },
                                 Condition: {
                                     StringEquals: {
+                                        // osls の ${aws:accountId} は package の時点で STS を呼ぶので、
+                                        // CloudFormation の擬似パラメーターで解く（手元の package を認証なしで通す）
                                         'AWS:SourceArn': {
-                                            'Fn::Join': [
-                                                '',
-                                                [
-                                                    'arn:aws:cloudfront::${aws:accountId}:distribution/',
-                                                    { Ref: 'AppCloudFrontDistribution' },
-                                                ],
-                                            ],
+                                            'Fn::Sub':
+                                                'arn:aws:cloudfront::${AWS::AccountId}:distribution/${AppCloudFrontDistribution}',
                                         },
                                     },
                                 },
