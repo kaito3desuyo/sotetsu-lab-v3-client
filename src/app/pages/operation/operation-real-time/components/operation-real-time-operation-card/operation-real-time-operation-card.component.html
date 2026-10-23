@@ -22,7 +22,9 @@
     class="tw-box-border tw-grid tw-h-full tw-grid-cols-[auto_1fr_auto_auto] tw-content-start tw-items-start tw-gap-x-3 tw-gap-y-0.5 tw-px-3 tw-py-2"
 >
     <!-- 運用番号チップ -->
-    <div class="tw-col-start-1 tw-row-start-1 tw-self-center">
+    <div
+        class="tw-col-start-1 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
+    >
         <app-operation-number-link
             [text]="operation().operationNumber"
             [bgColor]="operation().operationNumber | operationNumberColor"
@@ -38,7 +40,7 @@
          横 1 行に並べ、入らなければ形式・会社が折り返す（ユーザー判断 2026-09-23）。
          縦 2 段は編成番号が主キーの編成順カードだけ（docs/design.md）。 -->
     <div
-        class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-w-0 tw-flex-col tw-gap-0.5 tw-self-center"
+        class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-h-9 tw-min-w-0 tw-flex-col tw-justify-center tw-gap-0.5 tw-self-start"
     >
         @if (formationVm) {
             <div
@@ -184,7 +186,7 @@
 
     <!-- 上段右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
     <div
-        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-center tw-text-right"
+        class="tw-col-start-3 tw-row-start-1 tw-flex tw-min-h-9 tw-flex-col tw-items-end tw-justify-center tw-gap-0.5 tw-self-start tw-text-right"
     >
         <div
             class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
@@ -259,17 +261,20 @@
     </div>
 
     <!-- この運用を投稿する（2026-10-22）。運用番号を入れた状態でダイアログを開く。
-         グリッドは行 1（上段）と行 2（履歴・現在位置）の最大 2 行。行 2 があるときだけ
-         2 行にまたがせて、カードの縦の中央に来るようにする -->
-    <button
-        mat-icon-button
-        type="button"
-        data-testid="row-post"
-        class="tw-col-start-4 tw-row-start-1 tw-self-center !tw-text-grey-600"
-        [class.tw-row-span-2]="showsHistories || showsPosition"
-        [attr.aria-label]="operation().operationNumber + '運用を投稿する'"
-        (click)="openPost()"
+         上段の 36px の枠に入れ、どのカードでも上段の中央にそろえる（2026-10-23「上下揃えがバラバラ」）。
+         ボタンは 48px あるので上下 6px ずつはみ出させ、上段を押し広げない -->
+    <div
+        class="tw-col-start-4 tw-row-start-1 tw-flex tw-h-9 tw-items-center tw-self-start"
     >
-        <mat-icon>edit_note</mat-icon>
-    </button>
+        <button
+            mat-icon-button
+            type="button"
+            data-testid="row-post"
+            class="tw--my-1.5 !tw-text-grey-600"
+            [attr.aria-label]="operation().operationNumber + '運用を投稿する'"
+            (click)="openPost()"
+        >
+            <mat-icon>edit_note</mat-icon>
+        </button>
+    </div>
 </div>
