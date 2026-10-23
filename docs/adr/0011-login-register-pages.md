@@ -23,6 +23,7 @@
 - socket の合図は `{type}` で読み、`sighting` なら目撃、`timetable` なら時刻表の画面内キャッシュを捨てる。それ以外は無視する。client は投稿に成功しても `sendSighting` を送らない（合図は api が出す）。
 - invalidate / restore の DTO は `userId` を送らない（api が JWT から取る）。real-time は socket の合図 `sighting` と `timetable` の両方で取り直し、それ以外は無視する。
 - 投稿で 403 が返ったら（役割を外されたときなど）、「投稿する権限がありません」と出す。
+- 時刻表の入力（ダッシュボードの「時刻表を投稿する」・`timetable/add`・コピー・更新・全線時刻表の編集・コピー・削除・グループの操作）は編集者・管理者（`editor`・`manager`）だけに出す。api が trip-blocks の書き込みを EDITOR・MANAGER に限ったため（api ADR-0009）。ゲストにはログインと新規登録の案内を、報告者には案内だけを出す。入力ページは `timetableEditGuard` で守り、ゲストは `/login` に `return_to` 付きで送り、権限の無い登録者はトップに戻す。役割の判定は `UserStateQuery.canEditTimetable` の 1 箇所に置く。実装中（2026-10-23）にユーザーが決めた。
 
 実装中に決めたこと。
 
