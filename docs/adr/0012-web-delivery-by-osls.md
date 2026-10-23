@@ -23,7 +23,7 @@
 - client に `serverless.ts` を置き、2024 年のスタック `sotetsu-lab-v3-prod-client-cfstack` を上書きする。service 名・スタック名・配置用バケットは 2024 年と同じ値にする。
 - 配信は論理 ID `AppCloudFrontDistribution` のまま使い回し、配り元を S3＋BFF（`/api/*`）・`spa-routing` 付きに変える。今の本番 `E5C8TB9HLVQF9` と同じ形。論理 ID を変えると配信が作り直され、DNS の向き先が消える。
 - S3 バケットは新しく作る（`sotetsu-lab-v3-prod-client-web-bucket`）。配信とバケットには `DeletionPolicy: Retain` を付ける。
-- `spa-routing` は `cloudfront/spa-routing.js` に写し、`AWS::CloudFront::Function`（`cloudfront-js-2.0`）としてスタックに書く。手で作った関数と名前がぶつからないよう、名前は `sotetsu-lab-v3-prod-client-spa-routing`。
+- `spa-routing` は `cloudfront/spa-routing.js` に写し、`AWS::CloudFront::Function`（`cloudfront-js-2.0`）としてスタックに書く。手で作った関数と名前がぶつからないよう、名前は `sotetsu-lab-v3-prod-client-spa-routing-function`（後ろに種類を付ける。Lambda ではないので `-lambda` にはしない・ユーザー判断）。
 - 2024 年の Lambda・Function URL・Lambda 用の OAC・キャッシュポリシー・層は、テンプレートから外して消す。
 - バケットポリシーの配信の ARN は、osls の `${aws:accountId}` でなく `Fn::Sub` の `${AWS::AccountId}` で組む。osls の変数は package の時点で STS を呼ぶので、手元で認証なしにテンプレートを作れなくなる。
 - 切り替えは、`E5C8TB9HLVQF9` から別名 `v3.sotetsu-lab.com` を外すだけ。DNS はもともと `EOE7HW33MVGR6` を指しているので、ワイルドカードの別名でそちらが答える。DNS は変えない。その後に別名を `v3.sotetsu-lab.com` だけにする。
