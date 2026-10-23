@@ -1,6 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import {
+    ActivatedRoute,
+    convertToParamMap,
+    provideRouter,
+    Router,
+} from '@angular/router';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { UserState } from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
@@ -184,5 +189,31 @@ describe('RegisterComponent', () => {
     it('ログインしていなければ、開いただけでは戻らない', () => {
         setup({ returnTo: '/timetable', loggedIn: false });
         expect(router.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it('登録ボタンの近くに、プライバシーポリシーと免責事項へのリンクを出す', () => {
+        TestBed.configureTestingModule({
+            imports: [RegisterComponent],
+            providers: [
+                provideRouter([]),
+                { provide: UserService, useValue: { registerUser: jest.fn() } },
+                {
+                    provide: UserState,
+                    useValue: { isLoggedIn: () => false },
+                },
+            ],
+        });
+        const fixture = TestBed.createComponent(RegisterComponent);
+        fixture.detectChanges();
+        const element = fixture.nativeElement as HTMLElement;
+
+        expect(
+            element
+                .querySelector('a[href="/privacy-policy"]')
+                ?.textContent?.trim(),
+        ).toBe('プライバシーポリシー');
+        expect(
+            element.querySelector('a[href="/disclaimer"]')?.textContent?.trim(),
+        ).toBe('免責事項');
     });
 });
