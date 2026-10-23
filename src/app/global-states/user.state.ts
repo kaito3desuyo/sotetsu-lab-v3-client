@@ -6,6 +6,11 @@ import { UserService } from '../libs/user/usecase/user.service';
 
 type State = UserDetailsDto;
 
+/** 時刻表（列車情報）を書ける役割。API の trip-blocks 書き込みと同じ（editor / manager） */
+function canEditTimetable(role: string | null): boolean {
+    return role === 'editor' || role === 'manager';
+}
+
 const state = createStore(
     { name: 'User' },
     withProps<State>({
@@ -47,8 +52,16 @@ export class UserStateQuery {
     readonly isLoggedIn$ = state.pipe(select((state) => !!state.userId));
     readonly displayName$ = state.pipe(select((state) => state.displayName));
     readonly role$ = state.pipe(select((state) => state.role));
+    /** 時刻表の入力・編集ができるか。画面側の出し分けはすべてこれで判定する */
+    readonly canEditTimetable$ = state.pipe(
+        select((state) => canEditTimetable(state.role)),
+    );
 
     get userId(): string | null {
         return state.getValue().userId;
+    }
+
+    get canEditTimetable(): boolean {
+        return canEditTimetable(state.getValue().role);
     }
 }

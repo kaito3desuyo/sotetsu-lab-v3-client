@@ -9,11 +9,13 @@ import {
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
+import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { PanelCardComponent } from 'src/app/shared/panel-card/panel-card.component';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
@@ -33,6 +35,7 @@ type Form = FormGroup<{
         ReactiveFormsModule,
         MatSelectModule,
         MatButtonModule,
+        RouterLink,
         DateFnsPipe,
         AppButtonComponent,
         PanelCardComponent,
@@ -66,6 +69,21 @@ export class TimetablePostCardComponent {
     );
 
     readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$);
+
+    /** 時刻表の入力は編集者だけ。足りない人には入力欄の代わりに案内を出す */
+    readonly canEditTimetable = toSignal(
+        inject(UserStateQuery).canEditTimetable$,
+        { initialValue: false },
+    );
+    /** ゲストには、編集者かもしれないのでログインの入口も出す */
+    readonly isLoggedIn = toSignal(inject(UserStateQuery).isLoggedIn$, {
+        initialValue: false,
+    });
+
+    /** 今の画面に戻ってくる先。router.url は signal ではないので、描き直しのたびに読む */
+    returnTo(): string {
+        return safeReturnTo(this.#router.url);
+    }
 
     onTripDirectionChange(value: number): void {
         this.form.get('tripDirection').setValue(value);
