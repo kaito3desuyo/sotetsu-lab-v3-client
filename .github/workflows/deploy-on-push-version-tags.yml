@@ -38,12 +38,24 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           aws-region: ap-northeast-1
 
+      - name: Deploy AWS resources
+        run: npx osls deploy
+
       - name: Deploy and create invalidation
         # 名前にハッシュの付くファイルだけ 1 年置き、index.html・ngsw*.json・assets/ などは毎回確かめさせる。
         # 全部 1 年にすると、Service Worker の無いブラウザが古い index.html を使い続ける。
         run: |
-          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "public, max-age=31536000, immutable" \
-            --exclude "*" --include "chunk-*.js" --include "main-*.js" --include "polyfills-*.js" --include "styles-*.css" --include "media/*"
-          aws s3 sync ./dist/build-by-ci/browser s3://${{ secrets.DEPLOY_BUCKET_NAME }} --delete --cache-control "no-cache" \
-            --exclude "chunk-*.js" --exclude "main-*.js" --exclude "polyfills-*.js" --exclude "styles-*.css" --exclude "media/*"
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths '/*'
+          output() {
+            aws cloudformation describe-stacks --stack-name sotetsu-lab-v3-prod-client-cfstack \
+              --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
+          }
+          deploy() {
+            aws s3 sync ./dist/build-by-ci/browser "s3://$1" --delete --cache-control "public, max-age=31536000, immutable" \
+              --exclude "*" --include "chunk-*.js" --include "main-*.js" --include "polyfills-*.js" --include "styles-*.css" --include "media/*"
+            aws s3 sync ./dist/build-by-ci/browser "s3://$1" --delete --cache-control "no-cache" \
+              --exclude "chunk-*.js" --exclude "main-*.js" --exclude "polyfills-*.js" --exclude "styles-*.css" --exclude "media/*"
+            aws cloudfront create-invalidation --distribution-id "$2" --paths '/*'
+          }
+          # 切り替え（spec 12.2）が済むまで、Terraform の配信（今の本番）にも置く
+          deploy "${{ secrets.DEPLOY_BUCKET_NAME }}" "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
+          deploy "$(output WebBucketName)" "$(output WebDistributionId)"
