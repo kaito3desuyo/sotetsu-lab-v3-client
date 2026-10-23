@@ -1,0 +1,88 @@
+<div
+    class="tw-mx-auto tw-flex tw-max-w-md tw-flex-col tw-gap-4 tw-px-4 tw-py-8"
+>
+    <mat-card>
+        <form
+            class="tw-flex tw-flex-col tw-gap-4 tw-p-6"
+            [formGroup]="form"
+            (ngSubmit)="onClickSubmit()"
+        >
+            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">ログイン</h2>
+            <div class="tw-flex tw-flex-col tw-gap-4">
+                <mat-form-field>
+                    <mat-label>ユーザー名</mat-label>
+                    <input
+                        matInput
+                        type="text"
+                        formControlName="username"
+                        placeholder="ユーザー名を入力してください"
+                    />
+                    @if (form.get('username')?.hasError('required')) {
+                        <mat-error>必須項目です</mat-error>
+                    } @else if (form.get('username')?.hasError('minlength')) {
+                        <mat-error>4文字以上で入力してください</mat-error>
+                    } @else if (form.get('username')?.hasError('maxlength')) {
+                        <mat-error>32文字以下で入力してください</mat-error>
+                    } @else if (form.get('username')?.hasError('pattern')) {
+                        <mat-error>使用文字の要件を満たしていません</mat-error>
+                    }
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>パスワード</mat-label>
+                    <input
+                        matInput
+                        [type]="passwordVisible() ? 'text' : 'password'"
+                        formControlName="password"
+                        placeholder="パスワードを入力してください"
+                    />
+                    <button
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        [attr.aria-label]="
+                            passwordVisible()
+                                ? 'パスワードを隠す'
+                                : 'パスワードを表示する'
+                        "
+                        [attr.aria-pressed]="passwordVisible()"
+                        (click)="togglePasswordVisibility()"
+                    >
+                        <mat-icon>{{
+                            passwordVisible() ? 'visibility' : 'visibility_off'
+                        }}</mat-icon>
+                    </button>
+                    @if (form.get('password')?.hasError('required')) {
+                        <mat-error>必須項目です</mat-error>
+                    } @else if (form.get('password')?.hasError('minlength')) {
+                        <mat-error>8文字以上で入力してください</mat-error>
+                    } @else if (form.get('password')?.hasError('maxlength')) {
+                        <mat-error>128文字以下で入力してください</mat-error>
+                    } @else if (form.get('password')?.hasError('pattern')) {
+                        <mat-error>使用文字の要件を満たしていません</mat-error>
+                    }
+                </mat-form-field>
+            </div>
+            <div class="tw-flex tw-flex-row tw-justify-center">
+                <button
+                    mat-raised-button
+                    color="primary"
+                    type="submit"
+                    [disabled]="form.invalid || submitting()"
+                >
+                    ログイン
+                </button>
+            </div>
+            <div
+                class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-justify-center tw-gap-2 tw-text-sm"
+            >
+                <span>アカウントをお持ちでない方は</span>
+                <a
+                    mat-button
+                    routerLink="/register"
+                    [queryParams]="{ return_to: returnToParam }"
+                    >新規登録</a
+                >
+            </div>
+        </form>
+    </mat-card>
+</div>
