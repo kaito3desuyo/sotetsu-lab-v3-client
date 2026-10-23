@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of, throwError } from 'rxjs';
-import { UserStateQuery } from 'src/app/global-states/user.state';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationSightingInvalidationDialogComponent } from './operation-sighting-invalidation-dialog.component';
 
@@ -29,7 +28,6 @@ describe('OperationSightingInvalidationDialogComponent', () => {
                 },
                 { provide: MatDialogRef, useValue: { close } },
                 { provide: OperationSightingService, useValue: { invalidate } },
-                { provide: UserStateQuery, useValue: { userId: 'u-1' } },
             ],
         })
             .overrideComponent(OperationSightingInvalidationDialogComponent, {
@@ -51,14 +49,13 @@ describe('OperationSightingInvalidationDialogComponent', () => {
         jest.restoreAllMocks();
     });
 
-    it('渡された目撃を、ログイン中のユーザーと理由で無効化し、true で閉じる', async () => {
+    it('渡された目撃を、理由で無効化し、true で閉じる', async () => {
         component.form.setValue({ reason: '誤投稿' });
 
         await component.onClickSubmit();
 
         expect(invalidate).toHaveBeenCalledWith({
             operationSightingId: 's-1',
-            userId: 'u-1',
             reason: '誤投稿',
         });
         expect(snackBarOpen).toHaveBeenCalledWith(
