@@ -4,9 +4,7 @@ import { join } from 'node:path';
 
 const system = 'sotetsu-lab-v3' as const;
 
-// 切り替え（spec 12.2）が済むまでは、DNS が向いているワイルドカードのまま。
-// Terraform の配信から v3.sotetsu-lab.com を外した後に ['v3.sotetsu-lab.com'] に変える。
-const aliases = ['*.sotetsu-lab.com'];
+const aliases = ['v3.sotetsu-lab.com'];
 
 const certificateArn =
     'arn:aws:acm:us-east-1:442730633672:certificate/1c93cef5-5e62-4b35-a5ac-321040f3ff1b';
