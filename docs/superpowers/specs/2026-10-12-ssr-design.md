@@ -1,8 +1,9 @@
 # SSR の導入 設計
 
 - 日付: 2026-10-12
-- 対象: sotetsu-lab-v3-client / sotetsu-lab-v3-infrastructure
+- 対象: sotetsu-lab-v3-client / sotetsu-lab-v3-infrastructure（web モジュールを外すだけ）
 - 状態: 設計合意済み・spec レビュー待ち
+- 改訂: 2026-10-24 画面の配信を Terraform から client の osls に移す（3・8・9・12 章）。index.html のキャッシュは client #275 で先に直す（2.2・6.6・8 章）
 
 ## 1. 目的
 
@@ -26,7 +27,11 @@
 
 - タグを push すると GitHub Actions がビルドし、`aws s3 sync … --cache-control "max-age=31536000"` で S3 に置き、CloudFront を `/*` で失効させる
 - CloudFront（Terraform `modules/web/_cloudfront.tf`）: 既定は S3（`spa-routing` 関数で index.html に寄せる）、`/api/*` は BFF
-- index.html にも 1 年のブラウザキャッシュが付いている（古い index.html をブラウザが持ち続ける恐れ）
+  - Terraform の web モジュールにあるのは、S3 バケット・バケットポリシー・OAC・配信・GitHub Actions の secret 2 つ（`DEPLOY_BUCKET_NAME`・`CLOUDFRONT_DISTRIBUTION_ID`）
+  - `spa-routing` 関数はどの道具でも定義されておらず、ARN の直書きで参照している（手で作ったもの）
+  - 証明書（ACM・us-east-1）は変数で受け取っている
+- API の配信（`api.sotetsu-lab.com`）は Terraform でなく、api の `serverless.ts` の `resources` に CloudFormation で書いてある（Lambda の Function URL・OAC・キャッシュポリシー・CloudFront からの呼び出しの許可）
+- index.html にも 1 年のブラウザキャッシュが付いていた。client #275（2026-10-24）で、名前にハッシュの付くファイルだけ 1 年、それ以外は `no-cache` にする 2 回の `s3 sync` に分けた
 
 ### 2.3 Angular 22 の仕組み（angular.dev）
 
@@ -45,22 +50,25 @@
   - 料金: リクエストは $0.30／100 万（従来は $0.20）。CPU は処理している間だけ課金され、API の応答待ちは課金されない。メモリの単価は従来の約 1/4 だが、実行環境が動いている間ずっと課金される（比較はバージニア北部の数字）
   - 合う点: `server.ts`（Express）をそのまま載せられる。SSR は API の応答待ちが長い。描き直しが重なっても 1 つの環境で受けられ、2024 年の失敗（寝起きの重なり）を弱められる
   - 合わない恐れ: この設計は CDN に長く置き、Lambda まで届くのはまれ。アクセスが少ないなら従来の Lambda のほうが安いと記事も書いている
-  - 計画で確かめること: ① CloudFront の配り元にして OAC で守れるか ② osls か Terraform で定義できるか（記事は `aws lambda-web deploy` だけ）③ 誰も来ない間のメモリの課金の扱いと、相鉄ラボのアクセス量での月額
+  - 計画で確かめること: ① CloudFront の配り元にして OAC で守れるか ② osls（CloudFormation）で定義できるか（記事は `aws lambda-web deploy` だけ）③ 誰も来ない間のメモリの課金の扱いと、相鉄ラボのアクセス量での月額
   - どちらにしても `server.ts` は同じ Express なので、今は決めない
 
 ## 3. 全体の形
 
 ```
-ブラウザ ─→ CloudFront（Terraform）
+ブラウザ ─→ CloudFront（client の osls）
               ├─ /api/*                         ─→ BFF（今のまま）
               ├─ JS・CSS・フォント・画像・assets/* ─→ S3（今のまま・長く置く）
               └─ それ以外（画面の URL）          ─→ SSR の Lambda（Function URL・OAC）
                                                   └─ API（v3）を呼んで描く
 ```
 
-- SSR の Lambda: client に `serverless.ts` を置き、osls で配る。`@angular/ssr` の Node 用の仕組みを Lambda で動かす
-- CloudFront: web モジュールに、Lambda の Function URL を配り元として足す。CloudFront からだけ呼べるように OAC で守る。既定の振り分けから `spa-routing` 関数を外す
-- 配る手順: タグの push で、今の S3 同期・失効に加えて Lambda も配る
+- client に `serverless.ts` を置き、osls で配る。中身は SSR の Lambda と、画面の配信一式（S3 バケット・CloudFront・OAC・キャッシュポリシー・CloudFront からの呼び出しの許可）。書き方は api の `serverless.ts` にそろえる
+- SSR の Lambda: `@angular/ssr` の Node 用の仕組みを Lambda で動かす
+- CloudFront: Lambda の Function URL を配り元にし、CloudFront からだけ呼べるように OAC で守る。既定の振り分けから `spa-routing` 関数を外す
+- Lambda と配信を同じスタックに置くので、配り元の URL と呼び出しの許可（配信の ARN）を `Ref`・`Fn::GetAtt` で互いに参照できる。道具をまたいだ値の受け渡しは要らない
+- 配る手順: タグの push で `osls deploy` → S3 同期 → 失効。バケット名・配信 ID は GitHub の secret でなく、スタックの Outputs から読む
+- Terraform は画面の配信から手を引く（12 章）。network・database・api のモジュールは今のまま Terraform に残す
 
 ## 4. ページごとの描き方
 
@@ -127,7 +135,8 @@
 
 ### 6.6 古い版の JS・CSS を残す
 
-- 古い HTML を返す以上、その HTML が読む古い版の JS・CSS が残っていなければならない。今の `aws s3 sync --delete` をやめ、古いファイルをしばらく残す配り方に変える（残す長さは、stale を返す最大の長さ以上）
+- 古い HTML を返す以上、その HTML が読む古い版の JS・CSS が残っていなければならない。client #275 の 2 回の `aws s3 sync --delete` のうち、ハッシュ付きのファイルの回から `--delete` を外し、古いファイルをしばらく残す配り方に変える（残す長さは、stale を返す最大の長さ以上。消し方は S3 のライフサイクルか配る手順の中で、計画で決める）
+- index.html などハッシュの付かないファイルは SSR では Lambda が返すので、S3 に残す意味は Service Worker の殻と切り戻し（9 章）だけになる
 
 ## 7. PWA（圏外でも見られる）
 
@@ -170,11 +179,11 @@
   - 拡張子（js・css・フォント・画像など）と `assets/*` → S3（今のまま）
   - それ以外 → SSR の Lambda
 - CDN の鍵は「パス（matrix param を含む）＋クエリ」。Cookie・Authorization は鍵にも Lambda にも渡さない
-- HTML は Lambda から来るので、index.html の 1 年キャッシュの問題（2.2）は自然に直る。S3 に残す静的ファイルは名前にハッシュが付くので 1 年のままでよい
+- index.html の 1 年キャッシュの問題（2.2）は client #275 で先に直す。SSR の後は HTML が Lambda から来る。S3 に残す静的ファイルは名前にハッシュが付くので 1 年のままでよい
 
 ## 9. 切り戻し
 
-- 振り分けの既定先を S3＋`spa-routing` に戻せば今の形に戻る。Terraform の変数 1 つで切り替えられるようにする
+- 振り分けの既定先を S3＋`spa-routing` に戻せば今の形に戻る。osls の設定値（stage の param）1 つで切り替えられるようにする
 - Lambda が落ちたら S3 の index.html を出す、CloudFront のオリジングループの自動切り替えを付ける
 
 ## 10. 確かめ方
@@ -195,3 +204,30 @@
 - Prerender
 - Cloudflare Workers への移行
 - 臨時列車・車両の行程表（別 spec: sotetsu-lab-v3-api `docs/superpowers/specs/2026-10-12-special-trips-design.md`）
+
+## 12. 画面の配信を Terraform から osls に移す（2026-10-24 追記）
+
+ユーザー判断: 画面の配信は Terraform をやめて osls に寄せる。範囲は web モジュールだけで、network・database・api のモジュールは Terraform に残す。
+
+### 12.1 移すもの
+
+| 今（Terraform web モジュール） | 移した後（client の `serverless.ts`） |
+|---|---|
+| S3 バケット・公開ブロック・バケットポリシー | 同じものを `resources` に書く |
+| OAC（S3 用） | 同じ。SSR の Lambda 用の OAC も足す |
+| CloudFront の配信（`v3.sotetsu-lab.com`・S3 と BFF の配り元） | 同じ。SSR の Lambda の配り元と振り分けを足す |
+| GitHub Actions の secret（バケット名・配信 ID） | 作らない。デプロイのワークフローがスタックの Outputs から読む |
+| `spa-routing` 関数（手で作ったもの・ARN 直書き） | 切り戻し（9 章）で要るので、`AWS::CloudFront::Function` としてスタックに書く。中身は今のものを写す |
+
+- 証明書（ACM・us-east-1）は今のものを ARN で参照する（api と同じ）
+- ワークフローに AWS の権限で `osls deploy` を足す。権限の渡し方は api のワークフローにそろえる
+
+### 12.2 移し方（計画で決める）
+
+`v3.sotetsu-lab.com` は 1 つの配信にしか付けられないので、付け替えの間の止まり方が肝になる。計画の最初に一次情報で確かめてから決める。
+
+- 候補 A: osls で新しい配信を作り、別名を旧配信から新配信へ付け替える（`associate-alias` などで止めずに移せるか、DNS の置き場所で何が要るかを確かめる）
+- 候補 B: 今の配信・バケットを CloudFormation のリソースのインポートで osls のスタックに取り込む（osls がインポートを扱えるか、手で変更セットを作る必要があるかを確かめる）
+- どちらでも、移した後に Terraform 側は `terraform state rm` で手を引き、web モジュールと `environments/default` の呼び出しを消す。消す前に `terraform plan` で web 以外が変わらないことを確かめる
+- infrastructure の master には、database 周りの未コミットの変更がある。web モジュールを外すコミットはこれと混ぜない
+- 順番: 先に今の形のまま（SSR 無し）で osls に移して本番を確かめ、その後に SSR の Lambda を足す。移す作業と SSR を同じリリースにしない
