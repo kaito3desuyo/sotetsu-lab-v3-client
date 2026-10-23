@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { createStore } from '@ngneat/elf';
+import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import {
     getAllEntities,
     selectEntities,
@@ -7,31 +7,80 @@ import {
     withEntities,
 } from '@ngneat/elf-entities';
 import { flatten, uniqBy } from 'es-toolkit';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { RouteDetailsDto } from '../libs/route/usecase/dtos/route-details.dto';
 import { RouteService } from '../libs/route/usecase/route.service';
+import { ServiceRouteDto } from '../libs/service/usecase/dtos/service-routes.dto';
+import { ServiceService } from '../libs/service/usecase/service.service';
+import { OperatingSystemEnds } from '../shared/inbound-direction.util';
+
+const SERVICE_NAME = '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線';
 
 type State = RouteDetailsDto;
 
 const state = createStore(
     { name: 'RouteStationList' },
     withEntities<State, 'routeId'>({ initialValue: [], idKey: 'routeId' }),
+    withProps<{
+        /** 路線ごとの、系統の中で走る区間の始点駅・終点駅（始点側が上り）。系統に無い路線は入らない */
+        operatingSystemEndsByRouteId: Record<string, OperatingSystemEnds>;
+    }>({ operatingSystemEndsByRouteId: {} }),
 );
+
+/** 系統の始点・終点（route_station_list の ID）を駅の ID に引き直す */
+function buildOperatingSystemEnds(
+    routes: RouteDetailsDto[],
+    serviceRoutes: ServiceRouteDto[],
+): Record<string, OperatingSystemEnds> {
+    const stationIdByRouteStationListId = new Map(
+        routes.flatMap((route) =>
+            (route.routeStationLists ?? []).map(
+                (rsl) => [rsl.routeStationListId, rsl.stationId] as const,
+            ),
+        ),
+    );
+    const ends: Record<string, OperatingSystemEnds> = {};
+    for (const serviceRoute of serviceRoutes) {
+        const startStationId = stationIdByRouteStationListId.get(
+            serviceRoute.startRouteStationListId,
+        );
+        const endStationId = stationIdByRouteStationListId.get(
+            serviceRoute.endRouteStationListId,
+        );
+        if (startStationId && endStationId) {
+            ends[serviceRoute.routeId] = { startStationId, endStationId };
+        }
+    }
+    return ends;
+}
 
 @Injectable({ providedIn: 'root' })
 export class RouteStationListStateStore {
     readonly #routeService = inject(RouteService);
+    readonly #serviceService = inject(ServiceService);
 
     fetch(): Observable<void> {
-        return this.#routeService
-            .findMany({
-                serviceName:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
-            })
-            .pipe(
-            tap((data: RouteDetailsDto[]) => {
+        return forkJoin([
+            this.#routeService.findMany({ serviceName: SERVICE_NAME }),
+            // 系統の路線ごとの始点・終点（前後の駅の左右・列車位置情報の図の向きに使う）
+            this.#serviceService.findMany({ serviceName: SERVICE_NAME }).pipe(
+                switchMap((services) =>
+                    services[0]
+                        ? this.#serviceService
+                              .findOneWithRoutes({
+                                  serviceId: services[0].serviceId,
+                              })
+                              .pipe(map((result) => result.routes ?? []))
+                        : of([] as ServiceRouteDto[]),
+                ),
+            ),
+        ]).pipe(
+            tap(([data, serviceRoutes]) => {
                 state.update(
+                    setProp('operatingSystemEndsByRouteId', () =>
+                        buildOperatingSystemEnds(data, serviceRoutes),
+                    ),
                     setEntities(
                         Array.from(data)
                             .map((o) => ({
@@ -64,6 +113,10 @@ export class RouteStationListStateQuery {
         map((routesMap) =>
             Object.entries(routesMap).map(([_, value]) => value),
         ),
+    );
+    /** 路線ごとの、系統の中で走る区間の始点駅・終点駅（始点側が上り） */
+    readonly operatingSystemEndsByRouteId$ = state.pipe(
+        select((s) => s.operatingSystemEndsByRouteId),
     );
     readonly stations$ = this.routeStations$.pipe(
         map((routes) => {

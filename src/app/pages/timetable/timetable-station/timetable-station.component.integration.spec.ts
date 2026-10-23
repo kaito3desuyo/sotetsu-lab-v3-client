@@ -151,6 +151,7 @@ async function setup(overrides?: {
                         { stationId: YOKOHAMA, stationName: '横浜' },
                     ]),
                     routeStations$: of([]),
+                    operatingSystemEndsByRouteId$: of({}),
                 },
             },
             // ---- libs モック（初回ロードの実解決順序・非同期性をエミュレート） ----
