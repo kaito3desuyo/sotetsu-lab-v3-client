@@ -589,3 +589,53 @@ git commit -m "docs: :memo: ログインと登録をページにした ADR を�
 - ゲストで案内が出る
 - 登録者で投稿すると、別の端末の real-time が更新される（socket の broadcast 経由）
 - 編集者で時刻表を保存すると、別の端末の時刻表が取り直される
+
+---
+
+## 追補: 公開の切り替え（フィーチャーフラグ・2026-10-23）
+
+spec 6 章（全体は api の spec 9 章）。Task 1〜7 の後に足す。api は `GET /v3/feature-flags` → `Record<string, boolean>` を返す（AuthGuard のみ・`no-store`）。
+
+### Task 8: フラグを読み、ゲストへの案内をフラグで切り替える
+
+**Files:**
+- Create: `src/app/libs/feature-flag/`（usecase の service・infrastructure の query。並びは `libs/agency` にそろえる。DTO は `Record<string, boolean>` をそのまま使ってよい）
+- Create: `src/app/global-states/feature-flag.state.ts`（`FeatureFlagStateStore`・`FeatureFlagStateQuery`）と spec
+- Modify: `src/app/core/resolvers/initial-data.resolver.ts`・その spec
+- Modify: `src/app/shared/operation-post-card/operation-post-form.component.ts`・`.html`・spec
+
+**Interfaces:**
+- Produces: `FeatureFlagStateQuery.registeredOnlyPosting$: Observable<boolean>`（キーが無ければ false）
+- Consumes: `UserStateQuery.isLoggedIn$`（既存）
+
+- [ ] **Step 1: テストを書く（失敗する）**
+- state: 取得した `{ registered_only_posting: true }` で `registeredOnlyPosting$` が true。空のオブジェクトなら false。取得が失敗したら false のまま、例外を外に出さない（resolver を止めない）
+- query: `QueryCache` に `maxAgeMs: 60_000` を渡している（2 回目の `fetch` が 60 秒以内なら HTTP を 1 回しか呼ばない）
+- resolver: 2 つ目の `Promise.all` で `FeatureFlagStateStore.fetch()` を呼ぶ
+- 投稿フォーム: フラグ off でゲスト → フォームを出す。フラグ on でゲスト → 案内（既存のゲストのテストはフラグ on の前提に直す）。ログイン済み → どちらでもフォーム。表示中にフラグが on に変わると案内に替わる
+
+- [ ] **Step 2: 落ちることを確かめる**
+
+- [ ] **Step 3: 実装する**
+- state は `maintenance.state.ts` と `agency-list.state.ts` の書き方にそろえる。失敗は `catchError` で飲み、状態を変えない
+- 投稿フォーム: `readonly registeredOnly = toSignal(inject(FeatureFlagStateQuery).registeredOnlyPosting$, { initialValue: false });` と `readonly showGuestPrompt = computed(() => this.registeredOnly() && !this.isLoggedIn());`。テンプレートの `@if (isLoggedIn())` を `@if (!showGuestPrompt())` に替える
+
+- [ ] **Step 4: 通ることを確かめる**
+
+`npx jest --testPathPatterns "feature-flag|initial-data.resolver|shared/operation-post"`
+
+- [ ] **Step 5: コミット**
+
+```bash
+git commit -m "feat: :sparkles: 目撃の投稿のゲスト案内をフィーチャーフラグで切り替える"
+```
+
+### Task 9: ADR-0011 に追記・全体の確認
+
+- ADR-0011 に、ゲストへの案内はフラグ `registered_only_posting` が on のときだけ出すこと、取れなければ off、最大 2 分の遅れを足す
+- `npx jest`（ファイルに出して `Tests:` を見る）・`npm run lint`・`npm run build:prod`（サンドボックスの外）
+- 画面: 手元の api でフラグ off のまま、ゲストにフォームが出ること（on の確認は本番で）
+
+```bash
+git commit -m "docs: :memo: ADR-0011 に登録制の切り替えを書き足す"
+```
