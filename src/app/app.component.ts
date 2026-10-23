@@ -15,12 +15,16 @@ import {
     Router,
 } from '@angular/router';
 import { combineLatest } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { toErrorMessage } from './core/errors/to-error-message';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
+import {
+    readSocketSignal,
+    SocketSignalType,
+} from './core/services/socket-signal';
 import { SocketService } from './core/services/socket.service';
 import { UserStateQuery } from './global-states/user.state';
 import { LayoutComponent } from './layout/layout.component';
@@ -44,14 +48,16 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #userStateQuery = inject(UserStateQuery);
 
     constructor() {
-        // 他人が目撃を投稿したら、どの画面でも目撃の画面内キャッシュを捨てる
-        // （ソケットに流れるのは sendSighting の転送だけ）
+        // api が保存に成功したら、socket が {"type": …} を送ってくる。その種類の画面内キャッシュを捨てる
+        // （古い sendSighting の転送 {action, data} は読み捨てる）
         this.#socketService
             .on()
-            .pipe(takeUntilDestroyed())
-            .subscribe(() =>
-                this.#queryInvalidator.invalidateLocal('sighting'),
-            );
+            .pipe(
+                map(readSocketSignal),
+                filter((type): type is SocketSignalType => type !== null),
+                takeUntilDestroyed(),
+            )
+            .subscribe((type) => this.#queryInvalidator.invalidateLocal(type));
 
         this.#router.events
             .pipe(

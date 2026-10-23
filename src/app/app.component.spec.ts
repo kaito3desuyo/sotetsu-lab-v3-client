@@ -102,16 +102,42 @@ describe('AppComponent', () => {
         expect(app).toBeTruthy();
     });
 
-    it("他人の目撃投稿がソケットで届いたら、このタブで 'sighting' を流す", () => {
-        const tags: QueryInvalidationTag[] = [];
-        TestBed.inject(QueryInvalidator).invalidated$.subscribe((t) =>
-            tags.push(t),
-        );
-        TestBed.createComponent(AppComponent);
+    describe('ソケットの合図', () => {
+        const signal = (data: string) =>
+            socketMessages.next(new MessageEvent('message', { data }));
 
-        socketMessages.next(new MessageEvent('message', { data: '{}' }));
+        const collectTags = () => {
+            const tags: QueryInvalidationTag[] = [];
+            TestBed.inject(QueryInvalidator).invalidated$.subscribe((t) =>
+                tags.push(t),
+            );
+            TestBed.createComponent(AppComponent);
+            return tags;
+        };
 
-        expect(tags).toEqual(['sighting']);
+        it("{type: 'sighting'} が届いたら 'sighting' を流す", () => {
+            const tags = collectTags();
+
+            signal('{"type":"sighting"}');
+
+            expect(tags).toEqual(['sighting']);
+        });
+
+        it("{type: 'timetable'} が届いたら 'timetable' を流す", () => {
+            const tags = collectTags();
+
+            signal('{"type":"timetable"}');
+
+            expect(tags).toEqual(['timetable']);
+        });
+
+        it('古い sendSighting の転送（{action}）では何も流さない', () => {
+            const tags = collectTags();
+
+            signal('{"action":"sendSighting"}');
+
+            expect(tags).toEqual([]);
+        });
     });
 
     it('ログインの状態と役割を GA のユーザープロパティに載せ、変わったら載せ直す', () => {
