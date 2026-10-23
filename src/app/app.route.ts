@@ -80,6 +80,28 @@ export const APP_ROUTES: Routes = [
             ),
     },
     {
+        path: 'login',
+        loadChildren: () =>
+            import('./pages/login/login.route').then((mod) => mod.LOGIN_ROUTES),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
+        path: 'register',
+        loadChildren: () =>
+            import('./pages/register/register.route').then(
+                (mod) => mod.REGISTER_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
         path: 'maintenance',
         loadChildren: () =>
             import('./pages/maintenance/maintenance.route').then(

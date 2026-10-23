@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
 import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
+import { FeatureFlagStateStore } from 'src/app/global-states/feature-flag.state';
 import { InitializeStateStore } from 'src/app/global-states/initialize.state';
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
@@ -42,6 +43,7 @@ describe('initialDataResolver', () => {
     let todaysCalendar: Stub;
     let todaysOperation: Stub;
     let todaysFormation: Stub;
+    let featureFlag: Stub;
     let markInitialized: jest.Mock;
 
     beforeEach(() => {
@@ -55,7 +57,8 @@ describe('initialDataResolver', () => {
             todaysCalendar,
             todaysOperation,
             todaysFormation,
-        ] = Array.from({ length: 9 }, stub);
+            featureFlag,
+        ] = Array.from({ length: 10 }, stub);
         markInitialized = jest.fn();
         TestBed.configureTestingModule({
             providers: [
@@ -77,6 +80,7 @@ describe('initialDataResolver', () => {
                     provide: TodaysFormationListStateStore,
                     useValue: todaysFormation,
                 },
+                { provide: FeatureFlagStateStore, useValue: featureFlag },
                 {
                     provide: InitializeStateStore,
                     useValue: { markInitialized },
@@ -147,10 +151,22 @@ describe('initialDataResolver', () => {
             service,
             todaysCalendar,
             todaysFormation,
+            featureFlag,
         ]) {
             expect(s.fetch).toHaveBeenCalledTimes(1);
         }
         expect(todaysOperation.fetch).not.toHaveBeenCalled();
+    });
+
+    it('フィーチャーフラグは 2 段目で取り、token・profile が終わるまで呼ばれない', async () => {
+        run();
+        done(token);
+        await flush();
+        expect(featureFlag.fetch).not.toHaveBeenCalled();
+
+        done(user);
+        await flush();
+        expect(featureFlag.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('今日の運用は、今日のダイヤが届いたら呼ばれる', async () => {
@@ -176,6 +192,7 @@ describe('initialDataResolver', () => {
             service,
             todaysCalendar,
             todaysFormation,
+            featureFlag,
         ]) {
             done(s);
         }

@@ -45,16 +45,6 @@ export class SocketService {
         this.#logger.log('SocketService: Disconnected to WebSocket server');
     }
 
-    emit(action: string, data: unknown): void {
-        if (!this._conn) return;
-        this._conn.send(
-            JSON.stringify({
-                action,
-                data: JSON.stringify(data),
-            }),
-        );
-    }
-
     on(): Observable<unknown> {
         return this._ev$.asObservable();
     }

@@ -12,8 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { interval, lastValueFrom, map } from 'rxjs';
+import { filter, interval, lastValueFrom, map } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -216,10 +217,14 @@ export class OperationRealTimeComponent {
                 }
             });
 
-        // 他人が運用目撃情報を投稿したとき
+        // 他人が運用目撃情報を投稿した、または時刻表が変わったとき
+        // （合図は {"type": …}。移行中に古い sendSighting の転送が重なっても二重に取り直さない）
         this.#socketService
             .on()
-            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .pipe(
+                filter((ev) => readSocketSignal(ev) !== null),
+                takeUntilDestroyed(this.#destroyRef),
+            )
             .subscribe(async () => {
                 if (!OperationRealTimeStore.isEnableAutoReload) return;
 

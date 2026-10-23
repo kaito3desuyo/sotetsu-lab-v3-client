@@ -139,6 +139,7 @@
         } @else {
             <app-timetable-all-line-table
                 class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col"
+                [canEdit]="canEdit()"
                 [calendar]="calendar()"
                 [tripDirection]="tripDirection()"
                 [stations]="stations()"

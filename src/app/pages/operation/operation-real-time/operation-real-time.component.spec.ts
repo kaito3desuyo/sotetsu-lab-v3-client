@@ -157,13 +157,15 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     let fixture: ComponentFixture<OperationRealTimeComponent>;
     let service: Record<string, jest.Mock>;
     let notification: { open: jest.Mock };
-    let socket$: Subject<void>;
+    let socket$: Subject<unknown>;
     let submit$: Subject<void>;
 
     const isLoading = () => firstValueFrom(OperationRealTimeStore.isLoading$);
     const finalUpdateTime = () =>
         firstValueFrom(OperationRealTimeStore.finalUpdateTime$);
     const fail = () => throwError(() => new Error('offline'));
+    const signal = (data: string) =>
+        socket$.next(new MessageEvent('message', { data }));
 
     beforeEach(async () => {
         jest.useFakeTimers();
@@ -184,7 +186,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             fetchCurrentPositionThatShouldUpdate: ok(),
         };
         notification = { open: jest.fn() };
-        socket$ = new Subject<void>();
+        socket$ = new Subject<unknown>();
         submit$ = new Subject<void>();
 
         await TestBed.configureTestingModule({
@@ -253,7 +255,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     it('他人の投稿後の取り直しが失敗したら、読み込み中が残らず失敗を知らせ、更新できたとは言わない', async () => {
         service['fetchSightingHistories'].mockImplementation(fail);
 
-        socket$.next();
+        signal('{"type":"sighting"}');
         await jest.advanceTimersByTimeAsync(0);
 
         expect(await isLoading()).toBe(false);
@@ -269,7 +271,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     });
 
     it('他人の投稿後の取り直しが成功したら、更新できたと知らせ、最終更新時刻を進める', async () => {
-        socket$.next();
+        signal('{"type":"sighting"}');
         await jest.advanceTimersByTimeAsync(0);
 
         expect(await isLoading()).toBe(false);
@@ -278,5 +280,28 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             'OK',
         );
         expect(await finalUpdateTime()).toBeGreaterThan(0);
+    });
+
+    it('timetable の合図でも目撃を取り直す', async () => {
+        service['fetchOperationSightingTimeCrossSections'].mockClear();
+
+        signal('{"type":"timetable"}');
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(
+            service['fetchOperationSightingTimeCrossSections'],
+        ).toHaveBeenCalledTimes(1);
+    });
+
+    it('古い sendSighting の転送（{action}）では取り直さない', async () => {
+        service['fetchOperationSightingTimeCrossSections'].mockClear();
+
+        signal('{"action":"sendSighting","data":"{}"}');
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(
+            service['fetchOperationSightingTimeCrossSections'],
+        ).not.toHaveBeenCalled();
+        expect(notification.open).not.toHaveBeenCalled();
     });
 });

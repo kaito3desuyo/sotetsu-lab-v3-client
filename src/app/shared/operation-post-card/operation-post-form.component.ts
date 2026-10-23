@@ -19,19 +19,23 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { RouterLink, Router } from '@angular/router';
 import { addDays, getHours, parse, subDays } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
-import { SocketService } from 'src/app/core/services/socket.service';
+import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { safeReturnTo } from 'src/app/core/utils/return-to';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
@@ -67,6 +71,8 @@ export interface OperationPostInitialValue {
         MatInputModule,
         MatSelectModule,
         MatSnackBarModule,
+        MatButtonModule,
+        RouterLink,
         SegmentToggleComponent,
         AppButtonComponent,
     ],
@@ -77,9 +83,27 @@ export class OperationPostFormComponent {
     readonly #snackBar = inject(MatSnackBar);
     readonly #loading = inject(LoadingService);
     readonly #error = inject(ErrorHandlerService);
-    readonly #socket = inject(SocketService);
+    readonly #router = inject(Router);
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
+
+    readonly isLoggedIn = toSignal(inject(UserStateQuery).isLoggedIn$, {
+        initialValue: false,
+    });
+    /** 目撃の投稿を登録者だけにするか（フィーチャーフラグ。off の間はゲストにもフォームを出す） */
+    readonly registeredOnly = toSignal(
+        inject(FeatureFlagStateQuery).registeredOnlyPosting$,
+        { initialValue: false },
+    );
+    /** フラグが on のときだけ、ゲストには入力欄の代わりにログインの案内を出す */
+    readonly showGuestPrompt = computed(
+        () => this.registeredOnly() && !this.isLoggedIn(),
+    );
+
+    /** 今の画面に戻ってくる先。router.url は signal ではないので、描き直しのたびに読む */
+    returnTo(): string {
+        return safeReturnTo(this.#router.url);
+    }
 
     /** 初めに入れておく値（リアルタイムの行から開いたとき）。2026-10-22 */
     readonly initialValue = input<OperationPostInitialValue>({});
@@ -228,9 +252,13 @@ export class OperationPostFormComponent {
                 error_message: result.error.message.slice(0, 100),
             });
             this.#error.handleError(result.error);
-            this.#snackBar.open(result.error.message, 'OK', {
-                duration: 3000,
-            });
+            this.#snackBar.open(
+                result.error.statusCode === 403
+                    ? '投稿する権限がありません'
+                    : result.error.message,
+                'OK',
+                { duration: 3000 },
+            );
             return;
         }
 
@@ -247,8 +275,6 @@ export class OperationPostFormComponent {
                 timeSetting: 'currentTime',
                 sightingTime: '',
             });
-
-            this.#socket.emit('sendSighting', result);
 
             this.#operationPostCardService.emitSubmitEvent();
             this.submitted.emit();

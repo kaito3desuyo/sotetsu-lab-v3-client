@@ -7,11 +7,12 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { EMPTY, of, ReplaySubject, Subject } from 'rxjs';
+import { EMPTY, Observable, of, ReplaySubject, Subject } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
@@ -162,6 +163,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     let fixture: ComponentFixture<TimetableAllLineComponent>;
     let tripBlocks$: Subject<undefined>;
     let fetchTripBlocksCalls = 0;
+    let canEditTimetable$: Observable<boolean>;
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const query = (selector: string) =>
@@ -170,6 +172,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     const setup = async (params: Record<string, string>) => {
         tripBlocks$ = new ReplaySubject<undefined>(1);
         fetchTripBlocksCalls = 0;
+        canEditTimetable$ = of(false);
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
@@ -213,6 +216,14 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                     useValue: { open: () => ({ afterClosed: () => of(true) }) },
                 },
                 { provide: CalendarSelectDialogService, useValue: {} },
+                {
+                    provide: UserStateQuery,
+                    useValue: {
+                        get canEditTimetable$() {
+                            return canEditTimetable$;
+                        },
+                    },
+                },
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
@@ -251,6 +262,29 @@ describe('TimetableAllLineComponent の読み込み中', () => {
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
         expect(query('app-timetable-all-line-table')).not.toBeNull();
     });
+
+    it.each([
+        [false, false],
+        [true, true],
+    ])(
+        '編集の操作を出すかは、役割から決めて表に渡す（編集者か=%s なら canEdit=%s）',
+        async (isEditor, expected) => {
+            await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+            fixture.destroy();
+            canEditTimetable$ = of(isEditor);
+            fixture = TestBed.createComponent(TimetableAllLineComponent);
+            fixture.detectChanges();
+            tripBlocks$.next(undefined);
+            tripBlocks$.complete();
+            await flush();
+            fixture.detectChanges();
+
+            const table = query('app-timetable-all-line-table') as unknown as {
+                canEdit: boolean;
+            };
+            expect(table.canEdit).toBe(expected);
+        },
+    );
 
     it('失敗しても骨組みを消す', async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、ここだけ受け流す

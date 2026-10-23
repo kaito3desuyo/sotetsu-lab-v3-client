@@ -61,6 +61,8 @@ export class TimetableAllLineTableComponent {
     readonly tripDirectionEnum = ETripDirection;
     readonly tripDirectionLabel = tripDirectionLabel;
 
+    /** 編集・コピー・削除・グループの操作を出すか（時刻表を書ける役割だけ。API も 403 を返す） */
+    readonly canEdit = input(false);
     readonly calendar = input<CalendarDetailsDto>();
     readonly tripDirection = input.required<ETripDirection>();
     readonly stations = input.required<StationDetailsDto[]>();

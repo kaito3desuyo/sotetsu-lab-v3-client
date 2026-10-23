@@ -1,10 +1,10 @@
-import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
     inject,
     signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
     ReactiveFormsModule,
@@ -12,22 +12,28 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { omit } from 'es-toolkit';
+import { take } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { safeReturnTo } from 'src/app/core/utils/return-to';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 
 @Component({
-    selector: 'app-register-dialog',
-    templateUrl: './register-dialog.component.html',
-    styleUrl: './register-dialog.component.scss',
+    selector: 'app-register',
+    templateUrl: './register.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
+        RouterLink,
+        MatCardModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
@@ -35,12 +41,15 @@ import { UserService } from 'src/app/libs/user/usecase/user.service';
         MatSnackBarModule,
     ],
 })
-export class RegisterDialogComponent {
-    dialogRef = inject<MatDialogRef<RegisterDialogComponent>>(MatDialogRef);
-
+export class RegisterComponent {
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
+    readonly #router = inject(Router);
     readonly #userService = inject(UserService);
+    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #returnTo = safeReturnTo(
+        inject(ActivatedRoute).snapshot.queryParamMap.get('return_to'),
+    );
     readonly #passwordsNotMatchValidator: ValidatorFn = (formGroup) => {
         const passwordControl = formGroup.get('password');
         const confirmPasswordControl = formGroup.get('confirmPassword');
@@ -110,12 +119,19 @@ export class RegisterDialogComponent {
             validators: [this.#passwordsNotMatchValidator],
         },
     );
+    readonly returnToParam = this.#returnTo;
     readonly passwordVisible = signal<boolean>(false);
     readonly confirmPasswordVisible = signal<boolean>(false);
     readonly submitting = signal<boolean>(false);
 
-    onClickClose(): void {
-        this.dialogRef.close();
+    constructor() {
+        this.#userStateQuery.isLoggedIn$
+            .pipe(take(1), takeUntilDestroyed())
+            .subscribe((loggedIn) => {
+                if (loggedIn) {
+                    void this.#router.navigateByUrl(this.#returnTo);
+                }
+            });
     }
 
     async onClickSubmit(): Promise<void> {
@@ -156,11 +172,17 @@ export class RegisterDialogComponent {
             return;
         }
 
-        this.#snackBar.open('ユーザー登録が完了しました', '閉じる', {
-            duration: 3000,
-        });
+        try {
+            this.#snackBar.open('ユーザー登録が完了しました', '閉じる', {
+                duration: 3000,
+            });
 
-        this.dialogRef.close();
+            await this.#router.navigate(['/login'], {
+                queryParams: { return_to: this.returnToParam },
+            });
+        } finally {
+            this.submitting.set(false);
+        }
     }
 
     togglePasswordVisibility(): void {

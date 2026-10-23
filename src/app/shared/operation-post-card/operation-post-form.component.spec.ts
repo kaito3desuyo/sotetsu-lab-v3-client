@@ -1,12 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroupDirective } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, Subject, throwError } from 'rxjs';
+import { provideRouter, Router } from '@angular/router';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from './operation-post-card.service';
 import { OperationPostFormComponent } from './operation-post-form.component';
@@ -22,8 +25,10 @@ describe('OperationPostFormComponent', () => {
     let handleError: jest.Mock;
     let resetForm: jest.Mock;
     let sendEvent: jest.Mock;
+    let loggedIn$: BehaviorSubject<boolean>;
 
     beforeEach(async () => {
+        loggedIn$ = new BehaviorSubject(true);
         postOperationSighting = jest.fn(() => of(undefined));
         emitSubmitEvent = jest.fn();
         snackBarOpen = jest.fn();
@@ -57,6 +62,11 @@ describe('OperationPostFormComponent', () => {
                 { provide: ErrorHandlerService, useValue: { handleError } },
                 { provide: SocketService, useValue: { emit: socketEmit } },
                 { provide: GoogleAnalyticsService, useValue: { sendEvent } },
+                {
+                    provide: UserStateQuery,
+                    useValue: { isLoggedIn$: loggedIn$ },
+                },
+                provideRouter([]),
             ],
         })
             .overrideComponent(OperationPostFormComponent, {
@@ -178,10 +188,6 @@ describe('OperationPostFormComponent', () => {
         );
         expect(resetForm).toHaveBeenCalledWith(
             expect.objectContaining({ timeSetting: 'currentTime' }),
-        );
-        expect(socketEmit).toHaveBeenCalledWith(
-            'sendSighting',
-            expect.anything(),
         );
         expect(emitSubmitEvent).toHaveBeenCalled();
     });
@@ -316,5 +322,157 @@ describe('OperationPostFormComponent', () => {
         expect(sendEvent).toHaveBeenLastCalledWith('sighting_submit_failure', {
             error_message: 'あ'.repeat(100),
         });
+    });
+
+    it('投稿に成功しても socket に送らない', async () => {
+        fill();
+
+        await submit();
+
+        expect(emitSubmitEvent).toHaveBeenCalled();
+        expect(socketEmit).not.toHaveBeenCalled();
+    });
+
+    it('403 なら「投稿する権限がありません」と出す', async () => {
+        postOperationSighting.mockReturnValue(
+            throwError(() => new FetchError(403, 'Forbidden resource')),
+        );
+        fill();
+
+        await submit();
+
+        expect(snackBarOpen).toHaveBeenCalledWith(
+            '投稿する権限がありません',
+            'OK',
+            { duration: 3000 },
+        );
+        expect(resetForm).not.toHaveBeenCalled();
+    });
+});
+
+describe('OperationPostFormComponent の表示（テンプレートあり）', () => {
+    let fixture: ComponentFixture<OperationPostFormComponent>;
+    let loggedIn$: BehaviorSubject<boolean>;
+    let registeredOnly$: BehaviorSubject<boolean>;
+
+    beforeEach(async () => {
+        loggedIn$ = new BehaviorSubject(true);
+        registeredOnly$ = new BehaviorSubject(true);
+
+        await TestBed.configureTestingModule({
+            imports: [OperationPostFormComponent],
+            providers: [
+                {
+                    provide: OperationPostCardService,
+                    useValue: {
+                        fetchServiceAgencies: () => of(undefined),
+                        postOperationSighting: jest.fn(() => of(undefined)),
+                        emitSubmitEvent: jest.fn(),
+                    },
+                },
+                {
+                    provide: TodaysFormationListStateQuery,
+                    useValue: { todaysFormations$: of([]) },
+                },
+                {
+                    provide: LoadingService,
+                    useValue: { open: jest.fn(), close: jest.fn() },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: jest.fn() },
+                },
+                {
+                    provide: GoogleAnalyticsService,
+                    useValue: { sendEvent: jest.fn() },
+                },
+                {
+                    provide: UserStateQuery,
+                    useValue: { isLoggedIn$: loggedIn$ },
+                },
+                {
+                    provide: FeatureFlagStateQuery,
+                    useValue: { registeredOnlyPosting$: registeredOnly$ },
+                },
+                provideRouter([]),
+            ],
+        }).compileComponents();
+
+        jest.spyOn(TestBed.inject(Router), 'url', 'get').mockReturnValue(
+            '/operation/real-time',
+        );
+        fixture = TestBed.createComponent(OperationPostFormComponent);
+    });
+
+    it('フラグ on のゲストには入力欄の代わりに案内とログイン・新規登録のボタンを出す', () => {
+        loggedIn$.next(false);
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el).toHaveTextContent('目撃の投稿にはログインが必要です');
+        expect(el.querySelector('form')).toBeNull();
+        const links = Array.from(el.querySelectorAll('a')).map((a) =>
+            decodeURIComponent(a.getAttribute('href') ?? ''),
+        );
+        expect(links).toContain('/login?return_to=/operation/real-time');
+        expect(links).toContain('/register?return_to=/operation/real-time');
+    });
+
+    it('フラグ off のゲストにはフォームを出す（案内は出さない）', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(false);
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el.querySelector('form')).not.toBeNull();
+        expect(el).not.toHaveTextContent('目撃の投稿にはログインが必要です');
+    });
+
+    it('ゲストの案内を出しても、ホスト要素が :empty にならない（main > :empty は隠れる）', () => {
+        loggedIn$.next(false);
+        fixture.detectChanges();
+
+        const host: HTMLElement = fixture.nativeElement;
+        expect(host.matches(':empty')).toBe(false);
+        Array.from(host.children).forEach((child) => {
+            expect(child.matches(':empty')).toBe(false);
+        });
+    });
+
+    it('ログイン済みなら、フラグ on でもフォームを出す', () => {
+        loggedIn$.next(true);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
+
+    it('ログイン済みなら、フラグ off でもフォームを出す', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(true);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
+
+    it('表示中にフラグが on に変わると、ゲストには案内に替わる', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(false);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+
+        registeredOnly$.next(true);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('form')).toBeNull();
+        expect(fixture.nativeElement).toHaveTextContent(
+            '目撃の投稿にはログインが必要です',
+        );
+    });
+
+    it('投稿中にログアウトしたら（フラグ on なら）案内に切り替わる', () => {
+        registeredOnly$.next(true);
+        loggedIn$.next(true);
+        fixture.detectChanges();
+        loggedIn$.next(false);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).toBeNull();
     });
 });

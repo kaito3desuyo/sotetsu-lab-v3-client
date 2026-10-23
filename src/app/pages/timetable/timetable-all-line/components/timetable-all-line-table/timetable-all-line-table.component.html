@@ -428,6 +428,7 @@
                                     colspan="2"
                                     [style.bottom.px]="bottomRowOffsets()[1]"
                                     class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-sm tw-text-muted"
+                                    [class.tw-border-b]="!canEdit()"
                                 >
                                     終着駅
                                 </td>
@@ -437,6 +438,7 @@
                                             bottomRowOffsets()[1]
                                         "
                                         class="tw-sticky tw-z-20 tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-py-1 tw-text-center tw-align-top"
+                                        [class.tw-border-b]="!canEdit()"
                                     >
                                         <ng-container
                                             *ngTemplateOutlet="
@@ -452,207 +454,224 @@
                                 }
                             </tr>
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td
-                                    colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
-                                >
-                                    編集
-                                </td>
-
-                                @for (trip of trips(); track trip.tripId) {
+                        @if (canEdit()) {
+                            <tfoot>
+                                <tr>
                                     <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        colspan="2"
+                                        class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
                                     >
-                                        <button
-                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
-                                            mat-icon-button
-                                            matTooltip="編集する"
-                                            [attr.aria-label]="
-                                                '列車 ' +
-                                                trip.tripNumber +
-                                                ' を編集する'
-                                            "
-                                            (click)="clickEditButton.emit(trip)"
-                                        >
-                                            <mat-icon>edit</mat-icon>
-                                        </button>
+                                        編集
                                     </td>
-                                }
-                            </tr>
-                            <tr>
-                                <td
-                                    colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
-                                >
-                                    コピー
-                                </td>
 
-                                @for (trip of trips(); track trip.tripId) {
-                                    <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
-                                    >
-                                        <button
-                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
-                                            mat-icon-button
-                                            matTooltip="コピーして新規作成"
-                                            [attr.aria-label]="
-                                                '列車 ' +
-                                                trip.tripNumber +
-                                                ' をコピーして新規作成'
-                                            "
-                                            (click)="clickCopyButton.emit(trip)"
+                                    @for (trip of trips(); track trip.tripId) {
+                                        <td
+                                            class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-t tw-border-solid tw-border-rule tw-bg-white tw-text-center"
                                         >
-                                            <mat-icon>content_copy</mat-icon>
-                                        </button>
-                                    </td>
-                                }
-                            </tr>
-                            <tr>
-                                <td
-                                    colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
-                                >
-                                    削除
-                                </td>
-
-                                @for (trip of trips(); track trip.tripId) {
-                                    <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
-                                    >
-                                        <button
-                                            class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
-                                            mat-icon-button
-                                            matTooltip="削除する"
-                                            [attr.aria-label]="
-                                                '列車 ' +
-                                                trip.tripNumber +
-                                                ' を削除する'
-                                            "
-                                            [disabled]="isFeatureDate()"
-                                            (click)="
-                                                clickDeleteButton.emit(trip)
-                                            "
-                                        >
-                                            <mat-icon>delete</mat-icon>
-                                        </button>
-                                    </td>
-                                }
-                            </tr>
-                            <tr>
-                                <td
-                                    colspan="2"
-                                    class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
-                                >
-                                    グループ
-                                </td>
-
-                                @for (trip of trips(); track trip.tripId) {
-                                    <td
-                                        class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
-                                    >
-                                        @if (!groupingBaseTrip()) {
                                             <button
                                                 class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                                 mat-icon-button
-                                                matTooltip="この列車を基準として列車をグルーピングする"
+                                                matTooltip="編集する"
                                                 [attr.aria-label]="
                                                     '列車 ' +
                                                     trip.tripNumber +
-                                                    ' を基準にグルーピングする'
+                                                    ' を編集する'
                                                 "
                                                 (click)="
-                                                    groupingBaseTrip.set(trip)
+                                                    clickEditButton.emit(trip)
                                                 "
                                             >
-                                                <mat-icon>link</mat-icon>
+                                                <mat-icon>edit</mat-icon>
                                             </button>
-                                        } @else {
-                                            @if (
-                                                groupingBaseTrip() &&
-                                                trip.tripId ===
-                                                    groupingBaseTrip().tripId
-                                            ) {
+                                        </td>
+                                    }
+                                </tr>
+                                <tr>
+                                    <td
+                                        colspan="2"
+                                        class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    >
+                                        コピー
+                                    </td>
+
+                                    @for (trip of trips(); track trip.tripId) {
+                                        <td
+                                            class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        >
+                                            <button
+                                                class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                mat-icon-button
+                                                matTooltip="コピーして新規作成"
+                                                [attr.aria-label]="
+                                                    '列車 ' +
+                                                    trip.tripNumber +
+                                                    ' をコピーして新規作成'
+                                                "
+                                                (click)="
+                                                    clickCopyButton.emit(trip)
+                                                "
+                                            >
+                                                <mat-icon
+                                                    >content_copy</mat-icon
+                                                >
+                                            </button>
+                                        </td>
+                                    }
+                                </tr>
+                                <tr>
+                                    <td
+                                        colspan="2"
+                                        class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    >
+                                        削除
+                                    </td>
+
+                                    @for (trip of trips(); track trip.tripId) {
+                                        <td
+                                            class="tw-overflow-x-hidden tw-border-0 tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        >
+                                            <button
+                                                class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                mat-icon-button
+                                                matTooltip="削除する"
+                                                [attr.aria-label]="
+                                                    '列車 ' +
+                                                    trip.tripNumber +
+                                                    ' を削除する'
+                                                "
+                                                [disabled]="isFeatureDate()"
+                                                (click)="
+                                                    clickDeleteButton.emit(trip)
+                                                "
+                                            >
+                                                <mat-icon>delete</mat-icon>
+                                            </button>
+                                        </td>
+                                    }
+                                </tr>
+                                <tr>
+                                    <td
+                                        colspan="2"
+                                        class="tw-sticky tw-left-0 tw-z-30 tw-border-0 tw-border-b tw-border-l tw-border-r tw-border-solid tw-border-rule tw-bg-paper-2 !tw-px-2 tw-text-right tw-text-xs tw-text-muted"
+                                    >
+                                        グループ
+                                    </td>
+
+                                    @for (trip of trips(); track trip.tripId) {
+                                        <td
+                                            class="tw-overflow-x-hidden tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-text-center"
+                                        >
+                                            @if (!groupingBaseTrip()) {
                                                 <button
                                                     class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
                                                     mat-icon-button
-                                                    matTooltip="キャンセル"
-                                                    aria-label="グルーピングをキャンセルする"
+                                                    matTooltip="この列車を基準として列車をグルーピングする"
+                                                    [attr.aria-label]="
+                                                        '列車 ' +
+                                                        trip.tripNumber +
+                                                        ' を基準にグルーピングする'
+                                                    "
                                                     (click)="
                                                         groupingBaseTrip.set(
-                                                            undefined
+                                                            trip
                                                         )
                                                     "
                                                 >
-                                                    <mat-icon>clear</mat-icon>
+                                                    <mat-icon>link</mat-icon>
                                                 </button>
-                                            }
+                                            } @else {
+                                                @if (
+                                                    groupingBaseTrip() &&
+                                                    trip.tripId ===
+                                                        groupingBaseTrip()
+                                                            .tripId
+                                                ) {
+                                                    <button
+                                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                        mat-icon-button
+                                                        matTooltip="キャンセル"
+                                                        aria-label="グルーピングをキャンセルする"
+                                                        (click)="
+                                                            groupingBaseTrip.set(
+                                                                undefined
+                                                            )
+                                                        "
+                                                    >
+                                                        <mat-icon
+                                                            >clear</mat-icon
+                                                        >
+                                                    </button>
+                                                }
 
-                                            @if (
-                                                groupingBaseTrip() &&
-                                                trip.tripId !==
-                                                    groupingBaseTrip().tripId &&
-                                                trip.tripBlockId !==
-                                                    groupingBaseTrip()
-                                                        .tripBlockId
-                                            ) {
-                                                <button
-                                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
-                                                    mat-icon-button
-                                                    matTooltip="グループに追加する"
-                                                    [attr.aria-label]="
-                                                        '列車 ' +
-                                                        trip.tripNumber +
-                                                        ' をグループに追加する'
-                                                    "
-                                                    (click)="
-                                                        clickAddTripInGroup.emit(
-                                                            {
-                                                                base: groupingBaseTrip(),
-                                                                target: trip,
-                                                            }
-                                                        )
-                                                    "
-                                                >
-                                                    <mat-icon>add</mat-icon>
-                                                </button>
-                                            }
+                                                @if (
+                                                    groupingBaseTrip() &&
+                                                    trip.tripId !==
+                                                        groupingBaseTrip()
+                                                            .tripId &&
+                                                    trip.tripBlockId !==
+                                                        groupingBaseTrip()
+                                                            .tripBlockId
+                                                ) {
+                                                    <button
+                                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                        mat-icon-button
+                                                        matTooltip="グループに追加する"
+                                                        [attr.aria-label]="
+                                                            '列車 ' +
+                                                            trip.tripNumber +
+                                                            ' をグループに追加する'
+                                                        "
+                                                        (click)="
+                                                            clickAddTripInGroup.emit(
+                                                                {
+                                                                    base: groupingBaseTrip(),
+                                                                    target: trip,
+                                                                }
+                                                            )
+                                                        "
+                                                    >
+                                                        <mat-icon>add</mat-icon>
+                                                    </button>
+                                                }
 
-                                            @if (
-                                                groupingBaseTrip() &&
-                                                trip.tripId !==
-                                                    groupingBaseTrip().tripId &&
-                                                trip.tripBlockId ===
-                                                    groupingBaseTrip()
-                                                        .tripBlockId
-                                            ) {
-                                                <button
-                                                    class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
-                                                    mat-icon-button
-                                                    matTooltip="グループから除外する"
-                                                    [attr.aria-label]="
-                                                        '列車 ' +
-                                                        trip.tripNumber +
-                                                        ' をグループから除外する'
-                                                    "
-                                                    (click)="
-                                                        clickDeleteTripInGroup.emit(
-                                                            {
-                                                                base: groupingBaseTrip(),
-                                                                target: trip,
-                                                            }
-                                                        )
-                                                    "
-                                                >
-                                                    <mat-icon>remove</mat-icon>
-                                                </button>
+                                                @if (
+                                                    groupingBaseTrip() &&
+                                                    trip.tripId !==
+                                                        groupingBaseTrip()
+                                                            .tripId &&
+                                                    trip.tripBlockId ===
+                                                        groupingBaseTrip()
+                                                            .tripBlockId
+                                                ) {
+                                                    <button
+                                                        class="!tw-h-9 !tw-w-9 !tw-p-[6px]"
+                                                        mat-icon-button
+                                                        matTooltip="グループから除外する"
+                                                        [attr.aria-label]="
+                                                            '列車 ' +
+                                                            trip.tripNumber +
+                                                            ' をグループから除外する'
+                                                        "
+                                                        (click)="
+                                                            clickDeleteTripInGroup.emit(
+                                                                {
+                                                                    base: groupingBaseTrip(),
+                                                                    target: trip,
+                                                                }
+                                                            )
+                                                        "
+                                                    >
+                                                        <mat-icon
+                                                            >remove</mat-icon
+                                                        >
+                                                    </button>
+                                                }
                                             }
-                                        }
-                                    </td>
-                                }
-                            </tr>
-                        </tfoot>
+                                        </td>
+                                    }
+                                </tr>
+                            </tfoot>
+                        }
                     </table>
                 </div>
             } @else {

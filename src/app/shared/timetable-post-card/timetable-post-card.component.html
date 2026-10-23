@@ -1,42 +1,67 @@
 <app-panel-card heading="時刻表を投稿する">
-    <!-- 入力欄は他カードと同じ outline、上り/下りは時刻表検索と同じセグメント切替に
-         そろえる（以前は fill の入力欄とラジオボタンで、このカードだけ語彙が違った） -->
-    <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
-        <mat-form-field>
-            <mat-label>ダイヤ</mat-label>
-            <mat-select formControlName="calendarId">
-                @for (calendar of calendars(); track calendar.calendarId) {
-                    <mat-option [value]="calendar.calendarId">
-                        {{
-                            calendar.startDate
-                                | dateFns
-                                    : {
-                                          format: 'yyyy/M/d改正',
-                                          parseFormat: 'yyyy-MM-dd',
-                                      }
-                        }}
-                        {{ calendar.calendarName }}
-                    </mat-option>
+    @if (canEditTimetable()) {
+        <!-- 入力欄は他カードと同じ outline、上り/下りは時刻表検索と同じセグメント切替に
+             そろえる（以前は fill の入力欄とラジオボタンで、このカードだけ語彙が違った） -->
+        <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
+            <mat-form-field>
+                <mat-label>ダイヤ</mat-label>
+                <mat-select formControlName="calendarId">
+                    @for (calendar of calendars(); track calendar.calendarId) {
+                        <mat-option [value]="calendar.calendarId">
+                            {{
+                                calendar.startDate
+                                    | dateFns
+                                        : {
+                                              format: 'yyyy/M/d改正',
+                                              parseFormat: 'yyyy-MM-dd',
+                                          }
+                            }}
+                            {{ calendar.calendarName }}
+                        </mat-option>
+                    }
+                </mat-select>
+                @if (form.get('calendarId').hasError('required')) {
+                    <mat-error> <strong>必須項目</strong>です </mat-error>
                 }
-            </mat-select>
-            @if (form.get('calendarId').hasError('required')) {
-                <mat-error> <strong>必須項目</strong>です </mat-error>
-            }
-        </mat-form-field>
+            </mat-form-field>
 
-        <app-segment-toggle
-            [options]="tripDirectionOptions"
-            [value]="tripDirection()"
-            (valueChange)="onTripDirectionChange($event)"
-        ></app-segment-toggle>
-    </form>
-    <footer class="tw-flex tw-flex-col">
-        <app-button
-            variant="primary"
-            [disabled]="form.invalid"
-            (buttonClick)="submit()"
-        >
-            列車情報入力へ移る
-        </app-button>
-    </footer>
+            <app-segment-toggle
+                [options]="tripDirectionOptions"
+                [value]="tripDirection()"
+                (valueChange)="onTripDirectionChange($event)"
+            ></app-segment-toggle>
+        </form>
+        <footer class="tw-flex tw-flex-col">
+            <app-button
+                variant="primary"
+                [disabled]="form.invalid"
+                (buttonClick)="submit()"
+            >
+                列車情報入力へ移る
+            </app-button>
+        </footer>
+    } @else {
+        <div class="tw-flex tw-flex-col tw-items-center tw-gap-4 tw-py-4">
+            <p class="tw-m-0">時刻表の入力は編集者のみです</p>
+            @if (!isLoggedIn()) {
+                <div class="tw-flex tw-flex-row tw-gap-2">
+                    <a
+                        mat-stroked-button
+                        routerLink="/register"
+                        [queryParams]="{ return_to: returnTo() }"
+                    >
+                        新規登録
+                    </a>
+                    <a
+                        mat-flat-button
+                        color="primary"
+                        routerLink="/login"
+                        [queryParams]="{ return_to: returnTo() }"
+                    >
+                        ログイン
+                    </a>
+                </div>
+            }
+        </div>
+    }
 </app-panel-card>

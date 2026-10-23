@@ -1,29 +1,37 @@
-import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
     inject,
     signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { take } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { TokenStateStore } from 'src/app/global-states/token.state';
-import { UserStateStore } from 'src/app/global-states/user.state';
+import {
+    UserStateQuery,
+    UserStateStore,
+} from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
 
 @Component({
-    selector: 'app-login-dialog',
-    templateUrl: './login-dialog.component.html',
-    styleUrl: './login-dialog.component.scss',
+    selector: 'app-login',
+    templateUrl: './login.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         ReactiveFormsModule,
+        RouterLink,
+        MatCardModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
@@ -31,15 +39,19 @@ import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
         MatSnackBarModule,
     ],
 })
-export class LoginDialogComponent {
-    dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
-
+export class LoginComponent {
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
+    readonly #router = inject(Router);
     readonly #authService = inject(AuthService);
     readonly #tokenStateStore = inject(TokenStateStore);
     readonly #userStateStore = inject(UserStateStore);
+    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #returnTo = safeReturnTo(
+        inject(ActivatedRoute).snapshot.queryParamMap.get('return_to'),
+    );
 
+    readonly returnToParam = this.#returnTo;
     readonly form = this.#fb.group({
         username: this.#fb.control('', [
             Validators.required,
@@ -59,11 +71,17 @@ export class LoginDialogComponent {
     readonly passwordVisible = signal<boolean>(false);
     readonly submitting = signal<boolean>(false);
 
-    onClickClose() {
-        this.dialogRef.close();
+    constructor() {
+        this.#userStateQuery.isLoggedIn$
+            .pipe(take(1), takeUntilDestroyed())
+            .subscribe((loggedIn) => {
+                if (loggedIn) {
+                    void this.#router.navigateByUrl(this.#returnTo);
+                }
+            });
     }
 
-    async onClickSubmit() {
+    async onClickSubmit(): Promise<void> {
         const { username, password } = this.form.value;
 
         this.submitting.set(true);
@@ -87,14 +105,18 @@ export class LoginDialogComponent {
             return;
         }
 
-        await tryCatchAsync(this.#tokenStateStore.fetch());
-        await tryCatchAsync(this.#userStateStore.fetch());
+        try {
+            await tryCatchAsync(this.#tokenStateStore.fetch());
+            await tryCatchAsync(this.#userStateStore.fetch());
 
-        this.#snackBar.open('ログインしました', '閉じる', {
-            duration: 3000,
-        });
+            this.#snackBar.open('ログインしました', '閉じる', {
+                duration: 3000,
+            });
 
-        this.dialogRef.close();
+            await this.#router.navigateByUrl(this.#returnTo);
+        } finally {
+            this.submitting.set(false);
+        }
     }
 
     togglePasswordVisibility(): void {

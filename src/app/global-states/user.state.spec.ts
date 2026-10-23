@@ -65,3 +65,39 @@ describe('UserStateStore.fetch', () => {
         expect(getProfile).toHaveBeenCalledWith({ maxAgeMs: 5000 });
     });
 });
+
+describe('UserStateQuery.canEditTimetable', () => {
+    let store: UserStateStore;
+    let query: UserStateQuery;
+    let getProfile: jest.Mock;
+
+    beforeEach(() => {
+        getProfile = jest.fn();
+        TestBed.configureTestingModule({
+            providers: [{ provide: UserService, useValue: { getProfile } }],
+        });
+        store = TestBed.inject(UserStateStore);
+        query = TestBed.inject(UserStateQuery);
+        store.reset();
+    });
+
+    const load = (role: string | null) => {
+        getProfile.mockReturnValue(of(role ? { ...user, role } : null));
+        store.fetch().subscribe();
+    };
+
+    it.each([
+        ['editor', true],
+        ['manager', true],
+        ['reporter', false],
+        ['admin', false],
+        [null, false],
+    ])('role=%s のとき %s', (role, expected) => {
+        load(role);
+
+        let got: boolean | undefined;
+        query.canEditTimetable$.subscribe((v) => (got = v));
+        expect(got).toBe(expected);
+        expect(query.canEditTimetable).toBe(expected);
+    });
+});

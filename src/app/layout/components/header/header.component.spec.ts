@@ -1,12 +1,14 @@
 import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 import { HeaderComponent } from './header.component';
 
 describe('HeaderComponent', () => {
     let component: HeaderComponent;
     let fixture: ComponentFixture<HeaderComponent>;
+    let router: Router;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -14,6 +16,7 @@ describe('HeaderComponent', () => {
             providers: [provideHttpClient(withXhr())],
         }).compileComponents();
 
+        router = TestBed.inject(Router);
         fixture = TestBed.createComponent(HeaderComponent);
         component = fixture.componentInstance;
     });
@@ -48,5 +51,78 @@ describe('HeaderComponent', () => {
         );
         const iconNames = icons.map((icon) => icon.textContent?.trim());
         expect(iconNames).not.toContain('refresh');
+    });
+
+    it('新規登録は、今のページを return_to にして /register へ移る', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue('/timetable?a=1');
+
+        component.onClickRegister();
+
+        expect(navigate).toHaveBeenCalledWith(['/register'], {
+            queryParams: { return_to: '/timetable?a=1' },
+        });
+    });
+
+    it('ログインは、今のページを return_to にして /login へ移る', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue('/operation');
+
+        component.onClickLogin();
+
+        expect(navigate).toHaveBeenCalledWith(['/login'], {
+            queryParams: { return_to: '/operation' },
+        });
+    });
+
+    it('ログイン・登録のページ自身からは return_to を / にする', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/login?return_to=%2F',
+        );
+
+        component.onClickLogin();
+
+        expect(navigate).toHaveBeenCalledWith(['/login'], {
+            queryParams: { return_to: '/' },
+        });
+    });
+    it('/login にいるときは、その return_to を引き継いで /register へ移る', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/login?return_to=%2Ftimetable%2Fall-line',
+        );
+
+        component.onClickRegister();
+
+        expect(navigate).toHaveBeenCalledWith(['/register'], {
+            queryParams: { return_to: '/timetable/all-line' },
+        });
+    });
+
+    it('/register にいるときは、その return_to を引き継いで /login へ移る', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/register?return_to=%2Foperation',
+        );
+
+        component.onClickLogin();
+
+        expect(navigate).toHaveBeenCalledWith(['/login'], {
+            queryParams: { return_to: '/operation' },
+        });
+    });
+
+    it('引き継ぐ return_to が危ない値なら / にする', () => {
+        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/login?return_to=%2F%2Fevil.example',
+        );
+
+        component.onClickRegister();
+
+        expect(navigate).toHaveBeenCalledWith(['/register'], {
+            queryParams: { return_to: '/' },
+        });
     });
 });

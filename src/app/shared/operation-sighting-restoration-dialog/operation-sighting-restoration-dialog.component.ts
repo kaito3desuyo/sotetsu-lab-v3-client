@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { UserStateQuery } from 'src/app/global-states/user.state';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationSightingRestorationDialogData } from './operation-sighting-restoration-dialog.type';
 
@@ -37,7 +36,6 @@ export class OperationSightingRestorationDialogComponent {
     readonly #fb = inject(FormBuilder);
     readonly #snackBar = inject(MatSnackBar);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #userQuery = inject(UserStateQuery);
 
     readonly form = this.#fb.group({
         reason: this.#fb.control('', [Validators.required]),
@@ -53,7 +51,6 @@ export class OperationSightingRestorationDialogComponent {
         const result = await tryCatchAsync(
             this.#operationSightingService.restore({
                 operationSightingId: this.#data.operationSightingId,
-                userId: this.#userQuery.userId,
                 reason,
             }),
             (e) => e as FetchError,

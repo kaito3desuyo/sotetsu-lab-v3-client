@@ -8,34 +8,27 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { TokenStateStore } from 'src/app/global-states/token.state';
 import {
     UserStateQuery,
     UserStateStore,
 } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
-import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
-import { RegisterDialogComponent } from '../register-dialog/register-dialog.component';
 
 @Component({
     selector: 'app-header',
     templateUrl: './header.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [
-        MatButtonModule,
-        MatIconModule,
-        MatMenuModule,
-        MatDialogModule,
-        MatSnackBarModule,
-    ],
+    imports: [MatButtonModule, MatIconModule, MatMenuModule, MatSnackBarModule],
 })
 export class HeaderComponent {
-    #dialog = inject(MatDialog);
+    #router = inject(Router);
     #snackBar = inject(MatSnackBar);
     readonly #authService = inject(AuthService);
     readonly #tokenStateStore = inject(TokenStateStore);
@@ -53,21 +46,30 @@ export class HeaderComponent {
 
     clickButton = output<void>();
 
+    /**
+     * ログイン・登録のページから別の側へ移るときは、そのページが持つ return_to を引き継ぐ
+     * （今の URL をそのまま渡すと safeReturnTo が '/' に潰してしまう）。
+     */
+    #returnTo(): string {
+        const url = this.#router.url;
+        const path = url.split(/[?#]/)[0];
+        if (path === '/login' || path === '/register') {
+            return safeReturnTo(
+                this.#router.parseUrl(url).queryParams['return_to'],
+            );
+        }
+        return safeReturnTo(url);
+    }
+
     onClickRegister(): void {
-        this.#dialog.open(RegisterDialogComponent, {
-            width: '360px',
-            maxWidth: '100vw',
-            autoFocus: 'dialog',
-            disableClose: true,
+        void this.#router.navigate(['/register'], {
+            queryParams: { return_to: this.#returnTo() },
         });
     }
 
     onClickLogin(): void {
-        this.#dialog.open(LoginDialogComponent, {
-            width: '360px',
-            maxWidth: '100vw',
-            autoFocus: 'dialog',
-            disableClose: true,
+        void this.#router.navigate(['/login'], {
+            queryParams: { return_to: this.#returnTo() },
         });
     }
 

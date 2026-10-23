@@ -4,6 +4,7 @@ import { lastValueFrom } from 'rxjs';
 import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
 import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
+import { FeatureFlagStateStore } from 'src/app/global-states/feature-flag.state';
 import { InitializeStateStore } from 'src/app/global-states/initialize.state';
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
@@ -24,6 +25,7 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const todaysCalendarListStateStore = inject(TodaysCalendarListStateStore);
     const todaysOperationListStateStore = inject(TodaysOperationListStateStore);
     const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
+    const featureFlagStateStore = inject(FeatureFlagStateStore);
     const initializeStateStore = inject(InitializeStateStore);
 
     // router は resolver の後で loadComponent を呼ぶので、ページの chunk を先に取り始めておく
@@ -48,6 +50,8 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
         lastValueFrom(routeStationListStateStore.fetch()),
         lastValueFrom(serviceListStateStore.fetch()),
         lastValueFrom(todaysFormationListStateStore.fetch()),
+        // 失敗しても止まらない（FeatureFlagStateStore が飲む）。60 秒は query が使い回す
+        lastValueFrom(featureFlagStateStore.fetch()),
         (async () => {
             await lastValueFrom(todaysCalendarListStateStore.fetch());
             await lastValueFrom(todaysOperationListStateStore.fetch());
