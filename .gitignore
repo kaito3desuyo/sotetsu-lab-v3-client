@@ -7,6 +7,9 @@
 # Only exists if Bazel was run
 /bazel-out
 
+# osls が package・deploy で作るもの
+/.serverless
+
 # dependencies
 /node_modules
 
