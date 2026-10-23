@@ -24,7 +24,7 @@
          右隣の運用番号チップの左端がカードごとにガタつく（実測）。
          長い形式名は折り返して2行にする — 省略はしない（情報削減禁止）。 -->
     <div
-        class="tw-col-start-1 tw-row-start-1 tw-flex tw-flex-col tw-items-start tw-self-center"
+        class="tw-col-start-1 tw-row-start-1 tw-flex tw-min-h-9 tw-flex-col tw-items-start tw-justify-center tw-self-start"
     >
         <!-- 太字にしない。凡例で「太字＝本日中に目撃された情報」と定義しており、
              常時太字にするとその意味と衝突する（ユーザー指摘 2026-08-22）。
@@ -40,7 +40,9 @@
     </div>
 
     <!-- 上段中央: 運用番号チップ（休車=運用番号100は「休」表示・リンク無効化） -->
-    <div class="tw-col-start-2 tw-row-start-1 tw-self-center">
+    <div
+        class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
+    >
         @if (expectedSightingOperationVm) {
             <app-operation-number-link
                 [text]="
@@ -194,7 +196,7 @@
 
     <!-- 上段右: 目撃時刻・最終更新時刻（mockup-02: ラベル+時刻を1行インライン） -->
     <div
-        class="tw-col-start-3 tw-row-start-1 tw-flex tw-flex-col tw-items-end tw-gap-0.5 tw-self-center tw-text-right"
+        class="tw-col-start-3 tw-row-start-1 tw-flex tw-min-h-9 tw-flex-col tw-items-end tw-justify-center tw-gap-0.5 tw-self-start tw-text-right"
     >
         <div
             class="tw-flex tw-flex-row tw-items-baseline tw-gap-1 tw-whitespace-nowrap"
@@ -269,17 +271,20 @@
     </div>
 
     <!-- この編成を投稿する（2026-10-22）。所属と編成番号を入れた状態でダイアログを開く。
-         グリッドは行 1（上段）と行 2（履歴・現在位置）の最大 2 行。行 2 があるときだけ
-         2 行にまたがせて、カードの縦の中央に来るようにする -->
-    <button
-        mat-icon-button
-        type="button"
-        data-testid="row-post"
-        class="tw-col-start-4 tw-row-start-1 tw-self-center !tw-text-grey-600"
-        [class.tw-row-span-2]="showsHistories || showsPosition"
-        [attr.aria-label]="formation().formationNumber + '編成を投稿する'"
-        (click)="openPost()"
+         上段の 36px の枠に入れ、どのカードでも上段の中央にそろえる（2026-10-23「上下揃えがバラバラ」）。
+         ボタンは 48px あるので上下 6px ずつはみ出させ、上段を押し広げない -->
+    <div
+        class="tw-col-start-4 tw-row-start-1 tw-flex tw-h-9 tw-items-center tw-self-start"
     >
-        <mat-icon>edit_note</mat-icon>
-    </button>
+        <button
+            mat-icon-button
+            type="button"
+            data-testid="row-post"
+            class="tw--my-1.5 !tw-text-grey-600"
+            [attr.aria-label]="formation().formationNumber + '編成を投稿する'"
+            (click)="openPost()"
+        >
+            <mat-icon>edit_note</mat-icon>
+        </button>
+    </div>
 </div>
