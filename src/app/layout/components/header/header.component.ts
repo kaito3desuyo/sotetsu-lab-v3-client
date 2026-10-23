@@ -46,15 +46,30 @@ export class HeaderComponent {
 
     clickButton = output<void>();
 
+    /**
+     * ログイン・登録のページから別の側へ移るときは、そのページが持つ return_to を引き継ぐ
+     * （今の URL をそのまま渡すと safeReturnTo が '/' に潰してしまう）。
+     */
+    #returnTo(): string {
+        const url = this.#router.url;
+        const path = url.split(/[?#]/)[0];
+        if (path === '/login' || path === '/register') {
+            return safeReturnTo(
+                this.#router.parseUrl(url).queryParams['return_to'],
+            );
+        }
+        return safeReturnTo(url);
+    }
+
     onClickRegister(): void {
         void this.#router.navigate(['/register'], {
-            queryParams: { return_to: safeReturnTo(this.#router.url) },
+            queryParams: { return_to: this.#returnTo() },
         });
     }
 
     onClickLogin(): void {
         void this.#router.navigate(['/login'], {
-            queryParams: { return_to: safeReturnTo(this.#router.url) },
+            queryParams: { return_to: this.#returnTo() },
         });
     }
 
