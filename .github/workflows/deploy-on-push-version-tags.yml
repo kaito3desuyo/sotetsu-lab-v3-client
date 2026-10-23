@@ -56,6 +56,4 @@ jobs:
               --exclude "chunk-*.js" --exclude "main-*.js" --exclude "polyfills-*.js" --exclude "styles-*.css" --exclude "media/*"
             aws cloudfront create-invalidation --distribution-id "$2" --paths '/*'
           }
-          # 切り替え（spec 12.2）が済むまで、Terraform の配信（今の本番）にも置く
-          deploy "${{ secrets.DEPLOY_BUCKET_NAME }}" "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
           deploy "$(output WebBucketName)" "$(output WebDistributionId)"
