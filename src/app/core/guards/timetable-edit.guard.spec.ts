@@ -6,10 +6,13 @@ import {
     RouterStateSnapshot,
     UrlTree,
 } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { TokenStateStore } from 'src/app/global-states/token.state';
-import { UserStateStore } from 'src/app/global-states/user.state';
+import {
+    UserStateQuery,
+    UserStateStore,
+} from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { timetableEditGuard } from './timetable-edit.guard';
 
@@ -20,8 +23,11 @@ describe('timetableEditGuard', () => {
     let tokenFetch: jest.Mock;
     let router: Router;
 
-    /** role が null ならゲスト（profile が null） */
-    function run(role: string | null): Promise<boolean | UrlTree> {
+    /** role が null ならゲスト（profile が null）。profileError なら profile の取得が失敗する */
+    function run(
+        role: string | null,
+        profileError = false,
+    ): Promise<boolean | UrlTree> {
         notificationOpen = jest.fn();
         tokenFetch = jest.fn(() => of(undefined));
         TestBed.configureTestingModule({
@@ -36,16 +42,18 @@ describe('timetableEditGuard', () => {
                     provide: UserService,
                     useValue: {
                         getProfile: () =>
-                            of(
-                                role
-                                    ? {
-                                          userId: 'u1',
-                                          username: 'x',
-                                          displayName: 'X',
-                                          role,
-                                      }
-                                    : null,
-                            ),
+                            profileError
+                                ? throwError(() => new Error('offline'))
+                                : of(
+                                      role
+                                          ? {
+                                                userId: 'u1',
+                                                username: 'x',
+                                                displayName: 'X',
+                                                role,
+                                            }
+                                          : null,
+                                  ),
                     },
                 },
             ],
@@ -64,6 +72,16 @@ describe('timetableEditGuard', () => {
     it('ゲストは return_to 付きで /login へ送る', async () => {
         const result = await run(null);
 
+        expect(decodeURIComponent(router.serializeUrl(result as UrlTree))).toBe(
+            '/login?return_to=/timetable/update;calendar_id=c1;trip_block_id=b1',
+        );
+        expect(notificationOpen).not.toHaveBeenCalled();
+    });
+
+    it('取得に失敗したら利用者は空のままで、ゲスト扱いで /login へ送る', async () => {
+        const result = await run('editor', true);
+
+        expect(TestBed.inject(UserStateQuery).userId).toBeNull();
         expect(decodeURIComponent(router.serializeUrl(result as UrlTree))).toBe(
             '/login?return_to=/timetable/update;calendar_id=c1;trip_block_id=b1',
         );
