@@ -35,3 +35,12 @@
 - ログインと登録の入口が URL になり、どの画面からも `return_to` 付きで送れる。ダイアログ 2 つとその spec は無くなる。
 - ゲストでも real-time に投稿の口（FAB）が出るので、押すと案内が出る。ダッシュボードの投稿カードも同様。
 - 出す順は api → client → socket。socket が `sendSighting` を消す前に client を出す（client はもう送らない）。
+
+## 追記: 公開の切り替え（フィーチャーフラグ・2026-10-23）
+
+- 2026-10-23 にユーザーが決めた。コードは先に出しておき、告知した日に DB のフラグ `registered_only_posting` を on にして登録制を始める。
+- フラグで切り替えるのは、ゲストへの案内（`operation-post-form` の「目撃の投稿にはログインが必要です」）だけ。フラグが off ならゲストにも従来どおりフォームを出す。api もフラグが off の間はゲストの投稿を通す。
+- フラグの外（常に有効）: ログイン・登録のページ、socket の合図、403 の文言（「投稿する権限がありません」）、無効化・復元で `userId` を送らないこと、時刻表の入力の出し分け。
+- 取得: `GET /v3/feature-flags`（`{ "registered_only_posting": true }` の形）を `libs/feature-flag` で読み、global state の `FeatureFlagState` に置く。`initialDataResolver` の 2 つ目の `Promise.all` で取り、QueryCache の `maxAgeMs` は 60 秒。
+- 取れなかったとき・キーが無いときは off として扱う。on の後でも api が 403 を返せば「投稿する権限がありません」が出る。
+- 切り替えの反映: api も 60 秒覚えるので、DB で on にしてから画面に効くまで最大 2 分。本番は off のまま出し、切り替えで 2 分以内に案内が替わること、off に戻せることを確かめる。
