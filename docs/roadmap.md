@@ -10,7 +10,7 @@ M0 後始末 → M1 登録制 ② → M2 SSR → M3 臨時列車 → M4 API の�
 
 | # | 名前 | client でやること | 着手前に決める・確かめること |
 |---|---|---|---|
-| M1 | 登録制 ② | ログインページ `/login?return_to=…`、「ログインが必要です」の導線、ゲストからの目撃投稿の扱い | ログインのフォームは 1 つの部品にしてページとダイアログで共用する。ヘッダーの「ログイン」をページに寄せるかダイアログを残すかを決める |
+| M1 | 登録制 ② | ログイン・新規登録をページ（`/login`・`/register`、`return_to` で戻る）にしてダイアログは廃止、ゲストへの「ログインが必要です」の案内（フィーチャーフラグ on のときだけ）、socket の合図を `{type}` で受ける、時刻表の入力を編集者だけに出す | 決定・実装済み（2026-10-23・`docs/superpowers/specs/2026-10-23-registered-only-posting-design.md`・ADR-0011・PR #271） |
 | M2 | SSR | 古くならないページだけを描いて CDN に 1 時間置く | Lambda＋osls か Web Functions かは計画で比べる。spec は `feature/ssr` |
 | M3 | 臨時列車 | 臨時ダイヤの◆表示、運用の割り当て変更の画面 | M2 の後（行程表 → SSR → 臨時ダイヤの順） |
 | M4 | API の外部公開 | 同意ページ（`/oauth/consent?authorization_id=…`）、client_id/secret の発行画面 | M1 の `/login` が要る。ゲストは同意ページから `/login` に送る |
