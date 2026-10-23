@@ -7,6 +7,7 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from '../loading/loading.service';
@@ -352,9 +353,11 @@ describe('OperationPostFormComponent', () => {
 describe('OperationPostFormComponent の表示（テンプレートあり）', () => {
     let fixture: ComponentFixture<OperationPostFormComponent>;
     let loggedIn$: BehaviorSubject<boolean>;
+    let registeredOnly$: BehaviorSubject<boolean>;
 
     beforeEach(async () => {
         loggedIn$ = new BehaviorSubject(true);
+        registeredOnly$ = new BehaviorSubject(true);
 
         await TestBed.configureTestingModule({
             imports: [OperationPostFormComponent],
@@ -387,6 +390,10 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
                     provide: UserStateQuery,
                     useValue: { isLoggedIn$: loggedIn$ },
                 },
+                {
+                    provide: FeatureFlagStateQuery,
+                    useValue: { registeredOnlyPosting$: registeredOnly$ },
+                },
                 provideRouter([]),
             ],
         }).compileComponents();
@@ -397,7 +404,7 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         fixture = TestBed.createComponent(OperationPostFormComponent);
     });
 
-    it('ゲストには入力欄の代わりに案内とログイン・新規登録のボタンを出す', () => {
+    it('フラグ on のゲストには入力欄の代わりに案内とログイン・新規登録のボタンを出す', () => {
         loggedIn$.next(false);
         fixture.detectChanges();
 
@@ -411,6 +418,16 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         expect(links).toContain('/register?return_to=/operation/real-time');
     });
 
+    it('フラグ off のゲストにはフォームを出す（案内は出さない）', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(false);
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el.querySelector('form')).not.toBeNull();
+        expect(el).not.toHaveTextContent('目撃の投稿にはログインが必要です');
+    });
+
     it('ゲストの案内を出しても、ホスト要素が :empty にならない（main > :empty は隠れる）', () => {
         loggedIn$.next(false);
         fixture.detectChanges();
@@ -422,13 +439,36 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         });
     });
 
-    it('ログイン済みならフォームを出す', () => {
+    it('ログイン済みなら、フラグ on でもフォームを出す', () => {
         loggedIn$.next(true);
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
     });
 
-    it('投稿中にログアウトしたら案内に切り替わる', () => {
+    it('ログイン済みなら、フラグ off でもフォームを出す', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(true);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+    });
+
+    it('表示中にフラグが on に変わると、ゲストには案内に替わる', () => {
+        registeredOnly$.next(false);
+        loggedIn$.next(false);
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
+
+        registeredOnly$.next(true);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('form')).toBeNull();
+        expect(fixture.nativeElement).toHaveTextContent(
+            '目撃の投稿にはログインが必要です',
+        );
+    });
+
+    it('投稿中にログアウトしたら（フラグ on なら）案内に切り替わる', () => {
+        registeredOnly$.next(true);
         loggedIn$.next(true);
         fixture.detectChanges();
         loggedIn$.next(false);

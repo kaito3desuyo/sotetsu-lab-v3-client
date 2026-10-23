@@ -31,6 +31,7 @@ import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
+import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
@@ -86,10 +87,18 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
 
-    /** ゲストには入力欄の代わりにログインの案内を出す（目撃の投稿は登録者だけ） */
     readonly isLoggedIn = toSignal(inject(UserStateQuery).isLoggedIn$, {
         initialValue: false,
     });
+    /** 目撃の投稿を登録者だけにするか（フィーチャーフラグ。off の間はゲストにもフォームを出す） */
+    readonly registeredOnly = toSignal(
+        inject(FeatureFlagStateQuery).registeredOnlyPosting$,
+        { initialValue: false },
+    );
+    /** フラグが on のときだけ、ゲストには入力欄の代わりにログインの案内を出す */
+    readonly showGuestPrompt = computed(
+        () => this.registeredOnly() && !this.isLoggedIn(),
+    );
 
     /** 今の画面に戻ってくる先。router.url は signal ではないので、描き直しのたびに読む */
     returnTo(): string {

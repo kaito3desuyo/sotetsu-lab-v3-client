@@ -1,4 +1,4 @@
-@if (isLoggedIn()) {
+@if (!showGuestPrompt()) {
     <form
         class="tw-flex tw-flex-col tw-gap-4"
         [formGroup]="sightingForm"
