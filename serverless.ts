@@ -114,7 +114,7 @@ const serverlessConfiguration: AWS = {
                 Type: 'AWS::CloudFront::Function',
                 Properties: {
                     // 手で作った本番の spa-routing と名前がぶつからないようにする
-                    Name: '${param:prefix}-spa-routing',
+                    Name: '${param:prefix}-spa-routing-function',
                     AutoPublish: true,
                     FunctionConfig: {
                         Comment: '拡張子の無い GET を index.html に寄せる',
