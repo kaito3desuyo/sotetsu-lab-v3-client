@@ -67,4 +67,32 @@ describe('PageMeta', () => {
         );
         expect(meta('name="description"')).toBe('説明');
     });
+
+    it('同じページで set が再び呼ばれても、詳しい題名を残す', () => {
+        pageMeta.set({ title: '運用表' });
+        pageMeta.setTitle('運用表（X）');
+        pageMeta.set({ title: '運用表' });
+
+        expect(TestBed.inject(DOCUMENT).title).toBe(
+            '運用表（X） - Sotetsu Lab. v3',
+        );
+        expect(meta('property="og:title"')).toBe(
+            '運用表（X） - Sotetsu Lab. v3',
+        );
+    });
+
+    it('別のページの set では詳しい題名を捨てる', () => {
+        pageMeta.set({ title: '運用表' });
+        pageMeta.setTitle('運用表（X）');
+        pageMeta.set({ title: '駅別時刻表' });
+
+        expect(TestBed.inject(DOCUMENT).title).toBe(
+            '駅別時刻表 - Sotetsu Lab. v3',
+        );
+
+        pageMeta.set({ title: '運用表' });
+
+        expect(TestBed.inject(DOCUMENT).title).toBe('運用表 - Sotetsu Lab. v3');
+        expect(meta('property="og:title"')).toBe('運用表 - Sotetsu Lab. v3');
+    });
 });

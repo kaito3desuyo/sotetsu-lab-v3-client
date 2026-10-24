@@ -19,9 +19,24 @@ const OG_IMAGE_PATH = '/assets/icons/android-chrome-512x512.png';
 export class PageMeta {
     readonly #title = inject(Title);
     readonly #meta = inject(Meta);
+    /** 最後に set に渡された、ルート定義の題名 */
+    #baseTitle = '';
+    /** #baseTitle のあとに setTitle で入れられた、取ったデータで詳しくした題名 */
+    #detailedTitle: string | null = null;
 
     set(params: { title?: string; description?: string; url?: string }): void {
-        this.setTitle(params.title ?? '');
+        const baseTitle = params.title ?? '';
+        // resolver は同じページの再遷移（パラメータの変更・同じ URL への遷移）でも走る。
+        // そのたびに題名をルート定義の題名へ戻すと、ページ側の effect は題名の元の値が
+        // 変わらない限り再実行されず、詳しい題名が消えたままになる。
+        // 同じページ（題名が同じ）なら、直前に入れた詳しい題名を保つ
+        if (baseTitle === this.#baseTitle && this.#detailedTitle !== null) {
+            this.#applyTitle(this.#detailedTitle);
+        } else {
+            this.#baseTitle = baseTitle;
+            this.#detailedTitle = null;
+            this.#applyTitle(baseTitle);
+        }
         const description = params.description ?? DEFAULT_DESCRIPTION;
         this.#meta.updateTag({ name: 'description', content: description });
         this.#meta.updateTag({
@@ -48,6 +63,11 @@ export class PageMeta {
 
     /** 取ったデータで題名を詳しくするとき。題名と og:title だけ替える */
     setTitle(title: string): void {
+        this.#detailedTitle = title;
+        this.#applyTitle(title);
+    }
+
+    #applyTitle(title: string): void {
         const full = title ? `${title} - ${SITE_NAME}` : SITE_NAME;
         this.#title.setTitle(full);
         this.#meta.updateTag({ property: 'og:title', content: full });
