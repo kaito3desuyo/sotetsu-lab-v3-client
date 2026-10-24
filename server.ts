@@ -41,8 +41,14 @@ app.use((req, res, next) => {
                 next();
                 return;
             }
-            // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない
-            if (response.status >= 300 && response.status < 400) {
+            // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない。
+            // ただし失敗の途中で出たもの（すでに no-store）は short に戻さない
+            if (
+                response.status >= 300 &&
+                response.status < 400 &&
+                response.headers.get('Cache-Control') !==
+                    CACHE_CONTROL['no-store']
+            ) {
                 response.headers.set('Cache-Control', CACHE_CONTROL.short);
             }
             await writeResponseToNodeResponse(response, res);
