@@ -1,7 +1,12 @@
-import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import {
+    mergeApplicationConfig,
+    ApplicationConfig,
+    provideAppInitializer,
+} from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
+import { resetElfStores } from './core/utils/reset-elf-stores';
 
 const serverConfig: ApplicationConfig = {
     providers: [
@@ -11,6 +16,8 @@ const serverConfig: ApplicationConfig = {
             { maxResponseBodySize: 8 * 1024 * 1024 },
             withRoutes(serverRoutes),
         ),
+        // サーバーはリクエストごとにアプリを起動し直す。そのたびに前のリクエストのストアを捨てる
+        provideAppInitializer(() => resetElfStores()),
     ],
 };
 
