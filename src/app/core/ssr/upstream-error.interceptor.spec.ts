@@ -1,6 +1,7 @@
 import {
     HTTP_INTERCEPTORS,
     HttpClient,
+    HttpContext,
     provideHttpClient,
     withInterceptorsFromDi,
 } from '@angular/common/http';
@@ -9,6 +10,7 @@ import {
     provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { AUTH_RETRIED } from 'src/app/core/interceptors/auth-interceptor';
 import { SsrResponse } from './ssr-response';
 import { UpstreamErrorInterceptor } from './upstream-error.interceptor';
 
@@ -60,12 +62,23 @@ describe('UpstreamErrorInterceptor', () => {
         expect(setCachePolicy).toHaveBeenCalledWith('no-store');
     });
 
-    it('401 は数えない（AuthInterceptor がトークンを取り直して送り直す）', () => {
+    it('1 回目の 401 は数えない（AuthInterceptor がトークンを取り直して送り直す）', () => {
         http.get('/x').subscribe({ error: () => undefined });
         controller
             .expectOne('/x')
             .flush(null, { status: 401, statusText: 'Unauthorized' });
 
         expect(setCachePolicy).not.toHaveBeenCalled();
+    });
+
+    it('送り直した後の 401 は CDN に置かない', () => {
+        http.get('/x', {
+            context: new HttpContext().set(AUTH_RETRIED, true),
+        }).subscribe({ error: () => undefined });
+        controller
+            .expectOne('/x')
+            .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+        expect(setCachePolicy).toHaveBeenCalledWith('no-store');
     });
 });

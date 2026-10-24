@@ -7,6 +7,7 @@ import {
 } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { type Observable, tap } from 'rxjs';
+import { AUTH_RETRIED } from 'src/app/core/interceptors/auth-interceptor';
 import { SsrResponse } from './ssr-response';
 
 /**
@@ -24,10 +25,12 @@ export class UpstreamErrorInterceptor implements HttpInterceptor {
         return next.handle(req).pipe(
             tap({
                 error: (error: unknown) => {
-                    // 401 は AuthInterceptor がトークンを取り直して送り直す。送り直しの失敗はもう一度ここを通る
+                    // 1 回目の 401 は AuthInterceptor がトークンを取り直して送り直すので数えない。
+                    // 送り直した後の 401（AUTH_RETRIED の印つき）はもう直らないので、ほかのエラーと同じく数える
                     if (
                         error instanceof HttpErrorResponse &&
-                        error.status === 401
+                        error.status === 401 &&
+                        !req.context.get(AUTH_RETRIED)
                     ) {
                         return;
                     }

@@ -1,4 +1,6 @@
 import {
+    HttpContext,
+    HttpContextToken,
     HttpErrorResponse,
     HttpEvent,
     HttpHandler,
@@ -13,6 +15,12 @@ import {
     TokenStateStore,
 } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
+
+/**
+ * AuthInterceptor がトークンを取り直して送り直した要求の印。
+ * サーバーでは UpstreamErrorInterceptor が、1 回目の 401 は無視し、送り直しの 401 は失敗として扱う。
+ */
+export const AUTH_RETRIED = new HttpContextToken<boolean>(() => false);
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -56,7 +64,7 @@ export class AuthInterceptor implements HttpInterceptor {
                     return throwError(() => error);
                 }
                 return this.#refreshToken().pipe(
-                    mergeMap(() => this.#handleRequest(request, next)),
+                    mergeMap(() => this.#handleRequest(request, next, true)),
                 );
             }),
         );
@@ -75,12 +83,15 @@ export class AuthInterceptor implements HttpInterceptor {
     #handleRequest(
         request: HttpRequest<unknown>,
         next: HttpHandler,
+        retried = false,
     ): Observable<HttpEvent<unknown>> {
         const accessToken = this.#tokenStateQuery.accessToken;
         const tokenType = this.#tokenStateQuery.tokenType;
 
         const req = request.clone({
             url: request.url,
+            // 元の要求の context は書き換えない（再購読した 1 回目に印が残らないよう写して付ける）
+            context: retried ? this.#markRetried(request.context) : undefined,
             headers: accessToken
                 ? request.headers.set(
                       'x-sotetsu-lab-authorization',
@@ -90,5 +101,13 @@ export class AuthInterceptor implements HttpInterceptor {
         });
 
         return next.handle(req);
+    }
+
+    #markRetried(source: HttpContext): HttpContext {
+        const context = new HttpContext();
+        for (const token of source.keys()) {
+            context.set(token, source.get(token));
+        }
+        return context.set(AUTH_RETRIED, true);
     }
 }

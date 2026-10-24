@@ -17,7 +17,7 @@ import {
     TokenStateStore,
 } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
-import { AuthInterceptor } from './auth-interceptor';
+import { AUTH_RETRIED, AuthInterceptor } from './auth-interceptor';
 
 function setup(
     tokenQuery: {
@@ -142,6 +142,23 @@ describe('AuthInterceptor', () => {
             ).toBe('Bearer fresh-token');
             retry.flush({ ok: true });
             expect(body).toEqual({ ok: true });
+            controller.verify();
+        });
+
+        it('やり直す要求にだけ AUTH_RETRIED の印を付ける（1 回目には付けない）', () => {
+            const { tokenQuery, fetchMock } = refreshable();
+            const { http, controller } = setup(tokenQuery, {
+                fetch: fetchMock,
+            });
+
+            http.get(apiUrl).subscribe();
+            const first = controller.expectOne(apiUrl);
+            first.flush(null, unauthorized);
+            const retry = controller.expectOne(apiUrl);
+
+            expect(first.request.context.get(AUTH_RETRIED)).toBe(false);
+            expect(retry.request.context.get(AUTH_RETRIED)).toBe(true);
+            retry.flush({});
             controller.verify();
         });
 
