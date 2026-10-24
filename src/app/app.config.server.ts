@@ -18,7 +18,9 @@ const serverConfig: ApplicationConfig = {
             { maxResponseBodySize: 8 * 1024 * 1024 },
             withRoutes(serverRoutes),
         ),
-        // サーバーはリクエストごとにアプリを起動し直す。そのたびに前のリクエストのストアを捨てる
+        // サーバーはリクエストごとにアプリを起動し直す。そのたびに前のリクエストのストアを捨てる。
+        // ルーターの最初のナビゲーションは app initializer の後に始まる（withEnabledBlockingInitialNavigation）ので、
+        // リゾルバーがストアに書く前に必ずこの戻しが済む。1 プロセスが同時に描くのは 1 件（Lambda）という前提でもある
         provideAppInitializer(() => resetElfStores()),
         // サーバーではエラーを標準エラーに出す（app.config.ts の ErrorHandler をサーバーでだけ差し替える）
         { provide: ErrorHandler, useClass: ServerErrorHandler },
