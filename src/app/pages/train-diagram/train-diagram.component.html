@@ -29,7 +29,7 @@
             [calendarId]="calendarId()"
             [selectedRouteIds]="selectedRouteIds()"
             [directionFilter]="directionFilter()"
-            [showNowButton]="isTodaySelected()"
+            [showNowButton]="showTodayParts()"
             (calendarIdChange)="onCalendarIdChange($event)"
             (routeIdsChange)="onRouteIdsChange($event)"
             (directionFilterChange)="onDirectionFilterChange($event)"
@@ -41,7 +41,7 @@
 
     <app-train-diagram-legend
         [hasDeadhead]="hasDeadhead()"
-        [showCurrentTimeCursor]="isTodaySelected()"
+        [showCurrentTimeCursor]="showTodayParts()"
         [hasDepotOut]="hasDepotOut()"
         [hasDepotIn]="hasDepotIn()"
         [hasTransfer]="hasTransfer()"

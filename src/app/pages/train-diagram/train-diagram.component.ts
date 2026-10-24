@@ -268,6 +268,11 @@ export class TrainDiagramComponent {
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
     );
+    /**
+     * 「今」の表示（今へボタン・現在時刻の線と凡例）を出すか。@if で要素が増える表示だけがこれを使う。
+     * サーバーは今日のダイヤを取らず false で描くので、ブラウザも最初の描画までは false にそろえる（spec 5.3）
+     */
+    readonly showTodayParts = afterFirstRender(this.isTodaySelected, false);
 
     /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
     readonly controlCollapsed = afterFirstRender(
@@ -295,7 +300,7 @@ export class TrainDiagramComponent {
     );
 
     readonly nowMinute = computed(() =>
-        this.isTodaySelected() ? railwayMinuteOfDay(this.#now()) : null,
+        this.showTodayParts() ? railwayMinuteOfDay(this.#now()) : null,
     );
 
     readonly #stationNameById = computed(() =>

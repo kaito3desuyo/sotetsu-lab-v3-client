@@ -1357,4 +1357,24 @@ describe('TrainDiagramComponent のサーバー', () => {
 
         expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
     });
+
+    it('サーバーでは今日のダイヤでも「今」の表示を出さない（ブラウザの最初の描画と形をそろえる）', async () => {
+        await setup(
+            { calendar_id: 'cal-today', route_ids: 'route-1', time: '0700' },
+            [
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
+                },
+            ],
+        );
+
+        const component = TestBed.createComponent(
+            TrainDiagramComponent,
+        ).componentInstance;
+
+        expect(component.isTodaySelected()).toBe(true);
+        expect(component.showTodayParts()).toBe(false);
+        expect(component.nowMinute()).toBeNull();
+    });
 });
