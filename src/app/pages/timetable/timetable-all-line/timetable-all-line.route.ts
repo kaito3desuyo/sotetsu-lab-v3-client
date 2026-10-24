@@ -16,6 +16,8 @@ export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
         },
         data: {
             title: '全線時刻表',
+            description:
+                '相鉄線と直通先の全線時刻表。ダイヤ・方向ごとに、全列車の各駅の時刻を並べます。',
         },
         runGuardsAndResolvers: 'always',
     },

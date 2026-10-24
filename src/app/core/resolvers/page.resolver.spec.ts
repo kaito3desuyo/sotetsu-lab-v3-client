@@ -4,40 +4,46 @@ import type {
     RouterStateSnapshot,
 } from '@angular/router';
 import { BehaviorSubject, isObservable, Observable, Subject } from 'rxjs';
-import { TitleService } from 'src/app/core/services/title.service';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
 import { pageResolver } from './page.resolver';
 
 describe('pageResolver', () => {
     let isInitialized$: BehaviorSubject<boolean>;
-    let setTitle: jest.Mock;
+    let set: jest.Mock;
 
     beforeEach(() => {
         isInitialized$ = new BehaviorSubject(false);
-        setTitle = jest.fn();
+        set = jest.fn();
         TestBed.configureTestingModule({
             providers: [
                 { provide: InitializeStateQuery, useValue: { isInitialized$ } },
-                { provide: TitleService, useValue: { setTitle } },
+                { provide: PageMeta, useValue: { set } },
             ],
         });
     });
 
     function run(resolver: ReturnType<typeof pageResolver>): Observable<void> {
         const route = {
-            data: { title: '運用表' },
+            data: { title: '運用表', description: '説明' },
         } as unknown as ActivatedRouteSnapshot;
         const result = TestBed.runInInjectionContext(() =>
-            resolver(route, {} as RouterStateSnapshot),
+            resolver(route, {
+                url: '/operation/table',
+            } as RouterStateSnapshot),
         );
         if (!isObservable(result)) throw new Error('Observable を返すこと');
         return result as Observable<void>;
     }
 
-    it('route.data.title でタイトルを付ける', () => {
+    it('route.data と URL で題名・説明・OGP を入れる', () => {
         run(pageResolver()).subscribe();
 
-        expect(setTitle).toHaveBeenCalledWith('運用表');
+        expect(set).toHaveBeenCalledWith({
+            title: '運用表',
+            description: '説明',
+            url: '/operation/table',
+        });
     });
 
     it('グローバルの初期化が済むまで解決しない', () => {

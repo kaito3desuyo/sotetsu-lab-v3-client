@@ -3,6 +3,7 @@ import {
     Component,
     computed,
     DestroyRef,
+    effect,
     inject,
     linkedSignal,
 } from '@angular/core';
@@ -19,6 +20,8 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { lastValueFrom, of } from 'rxjs';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -84,6 +87,7 @@ export class OperationRouteDiagramComponent {
     readonly #operationService = inject(OperationService);
     readonly #notification = inject(NotificationService);
     readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
     readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
         initialValue: [],
     });
@@ -310,7 +314,19 @@ export class OperationRouteDiagramComponent {
         );
     }
 
+    /** 題名。運用番号とダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.calendar();
+        return formatPageTitle('運用行路図', [
+            this.operation()?.operationNumber,
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
+
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {

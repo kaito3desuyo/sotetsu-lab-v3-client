@@ -16,6 +16,8 @@ export const TRAIN_DIAGRAM_ROUTES: Route[] = [
         },
         data: {
             title: 'ダイヤグラム',
+            description:
+                '相鉄線と直通先の列車ダイヤグラム。ダイヤごとに全列車の走りを線で描きます。',
         },
         runGuardsAndResolvers: 'always',
     },

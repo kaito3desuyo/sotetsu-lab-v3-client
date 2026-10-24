@@ -6,6 +6,8 @@ export const environment = {
     production: false,
     apiUrl: 'http://localhost:3000',
     backendUrl: '/api',
+    /** 画面の URL の起点（OGP の og:url・og:image） */
+    siteUrl: 'http://localhost:4200',
     socketUrl: 'ws://localhost:3021',
     analytics: {
         id: 'G-CFKSDNMCY3', // IDを設定する、environment.prod.tsにも

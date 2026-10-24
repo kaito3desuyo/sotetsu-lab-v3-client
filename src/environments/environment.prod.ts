@@ -2,6 +2,8 @@ export const environment = {
     production: true,
     apiUrl: 'https://api.sotetsu-lab.com',
     backendUrl: 'https://v3.sotetsu-lab.com/api',
+    /** 画面の URL の起点（OGP の og:url・og:image） */
+    siteUrl: 'https://v3.sotetsu-lab.com',
     socketUrl: 'wss://ws.sotetsu-lab.com',
     analytics: {
         id: 'G-CFKSDNMCY3', // IDを設定する、environment.prod.tsにも

@@ -15,6 +15,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
@@ -141,6 +144,7 @@ export class TrainDiagramComponent {
     readonly #location = inject(Location);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -251,6 +255,15 @@ export class TrainDiagramComponent {
     });
     readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
+    });
+    /** 題名。ダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.#calendars().find(
+            (c) => c.calendarId === this.calendarId(),
+        );
+        return formatPageTitle('ダイヤグラム', [
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
     });
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
@@ -867,6 +880,9 @@ export class TrainDiagramComponent {
     #wasChartHidden = false;
 
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         runIntervalInBrowser(1000, () => this.#now.set(new Date()));
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする

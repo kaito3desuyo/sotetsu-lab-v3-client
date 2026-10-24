@@ -3,6 +3,7 @@ import {
     Component,
     DestroyRef,
     computed,
+    effect,
     inject,
     PLATFORM_ID,
 } from '@angular/core';
@@ -17,12 +18,14 @@ import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -84,6 +87,7 @@ export class TimetableAllLineComponent {
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
     /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
      * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
@@ -162,7 +166,19 @@ export class TimetableAllLineComponent {
         ]);
     });
 
+    /** 題名。方向とダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.calendar();
+        return formatPageTitle('全線時刻表', [
+            tripDirectionLabel.get(this.tripDirection() as ETripDirection),
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
+
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
         TimetableAllLineStore.setHasFetchedTripBlocks(false);
 

@@ -46,6 +46,7 @@ const PATHS = [
         kind: 'server',
         cache: LONG,
         tag: 'sighting-date:2026-10-01',
+        title: '過去の運用情報（2026/10/1 から 3 日間）',
     },
     {
         path: `/operation/past-time;reference_date=${RECENT_START};days=7`,
@@ -58,6 +59,7 @@ const PATHS = [
         kind: 'server',
         cache: LONG,
         tag: `calendar:${CALENDAR}`,
+        title: '運用表（',
     },
     { path: '/operation/table', kind: 'server', cache: LONG },
     {
@@ -65,12 +67,14 @@ const PATHS = [
         kind: 'server',
         cache: LONG,
         tag: `calendar:${CALENDAR}`,
+        title: '運用行路図（01K・',
     },
     {
         path: `/timetable/station;calendar_id=${CALENDAR};station_id=${STATION};trip_direction=0`,
         kind: 'server',
         cache: LONG,
         tag: `calendar:${CALENDAR}`,
+        title: '二俣川駅 時刻表（上り・',
     },
     { path: '/timetable/station', kind: 'server', cache: LONG },
     {
@@ -78,6 +82,7 @@ const PATHS = [
         kind: 'server',
         cache: LONG,
         tag: `calendar:${CALENDAR}`,
+        title: '全線時刻表（',
     },
     { path: '/timetable/all-line', kind: 'server', cache: LONG },
     {
@@ -85,11 +90,17 @@ const PATHS = [
         kind: 'server',
         cache: LONG,
         tag: `calendar:${CALENDAR}`,
+        title: 'ダイヤグラム（',
     },
     { path: '/train-diagram', kind: 'server', cache: LONG },
     { path: `/train-location;route_id=${ROUTE}`, kind: 'server', cache: LONG },
     { path: '/train-location', kind: 'server', cache: LONG },
-    { path: '/library/vehicle', kind: 'server', cache: LONG },
+    {
+        path: '/library/vehicle',
+        kind: 'server',
+        cache: LONG,
+        title: '相鉄の車両 - Sotetsu Lab. v3',
+    },
     { path: '/login', kind: 'client', cache: NO_STORE },
     { path: '/register', kind: 'client', cache: NO_STORE },
     { path: '/maintenance', kind: 'client', cache: NO_STORE },
@@ -98,7 +109,12 @@ const PATHS = [
         kind: 'client',
         cache: NO_STORE,
     },
-    { path: '/no-such-page', kind: 'not-found', cache: SHORT },
+    {
+        path: '/no-such-page',
+        kind: 'not-found',
+        cache: SHORT,
+        title: 'ページが見つかりません',
+    },
     { path: '/operation', kind: 'not-found', cache: SHORT },
 ];
 

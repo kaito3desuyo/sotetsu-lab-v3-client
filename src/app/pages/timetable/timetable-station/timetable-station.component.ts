@@ -3,6 +3,7 @@ import {
     Component,
     DestroyRef,
     computed,
+    effect,
     inject,
     PLATFORM_ID,
 } from '@angular/core';
@@ -17,7 +18,10 @@ import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -85,6 +89,7 @@ export class TimetableStationComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
     readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
@@ -168,6 +173,21 @@ export class TimetableStationComponent {
         ),
     );
 
+    /** 題名。駅名・方向・ダイヤは取ったデータから作る（題名のためだけに API を叩かない） */
+    readonly pageTitle = computed(() => {
+        const stationName = this.stationOptions().find(
+            (station) => station.stationId === this.stationId(),
+        )?.stationName;
+        const calendar = this.selectedCalendar();
+        return formatPageTitle(
+            stationName ? `${stationName}駅 時刻表` : '駅別時刻表',
+            [
+                tripDirectionLabel.get(this.tripDirection()),
+                calendar ? formatCalendarSummaryLabel(calendar) : null,
+            ],
+        );
+    });
+
     readonly isEmpty = computed(
         () => !!this.calendar() && this.timetableData().length === 0,
     );
@@ -195,6 +215,9 @@ export class TimetableStationComponent {
     );
 
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
