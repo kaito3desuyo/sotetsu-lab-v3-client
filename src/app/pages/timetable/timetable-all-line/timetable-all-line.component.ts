@@ -244,10 +244,12 @@ export class TimetableAllLineComponent {
                     )
                 ).map((route) => route.routeId),
             );
-            await lastValueFrom(this.#timetableAllLineService.fetchStations());
-            await lastValueFrom(
-                this.#timetableAllLineService.fetchTripBlocks(),
-            );
+            // 駅一覧と trip-blocks は互いの結果を使わないので、同時に取る
+            // （駅一覧は serviceId、trip-blocks はストアの条件で決まる）
+            await Promise.all([
+                lastValueFrom(this.#timetableAllLineService.fetchStations()),
+                lastValueFrom(this.#timetableAllLineService.fetchTripBlocks()),
+            ]);
             TimetableAllLineStore.initializeSelectedRouteIds();
         } finally {
             TimetableAllLineStore.disableLoading();

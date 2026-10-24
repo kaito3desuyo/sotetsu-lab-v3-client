@@ -7,7 +7,15 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { EMPTY, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import {
+    EMPTY,
+    firstValueFrom,
+    Observable,
+    of,
+    ReplaySubject,
+    Subject,
+    throwError,
+} from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -237,8 +245,13 @@ describe('TimetableAllLineComponent の URL の向き', () => {
 describe('TimetableAllLineComponent の読み込み中', () => {
     let fixture: ComponentFixture<TimetableAllLineComponent>;
     let tripBlocks$: Subject<undefined>;
+    let stations$: Observable<undefined>;
     let fetchTripBlocksCalls = 0;
     let canEditTimetable$: Observable<boolean>;
+
+    beforeEach(() => {
+        stations$ = of(undefined);
+    });
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const query = (selector: string) =>
@@ -262,7 +275,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 {
                     provide: TimetableAllLineService,
                     useValue: {
-                        fetchStations: () => of(undefined),
+                        fetchStations: () => stations$,
                         fetchTripBlocks: () => {
                             fetchTripBlocksCalls++;
                             return tripBlocks$;
@@ -378,6 +391,64 @@ describe('TimetableAllLineComponent の読み込み中', () => {
 
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
     });
+
+    it('駅一覧の応答を待たずに、trip-blocks の取得を始める', async () => {
+        stations$ = new Subject<undefined>();
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+        await flush();
+
+        expect(fetchTripBlocksCalls).toBe(1);
+        // 片方が残っている間は、まだ取り終わらない
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+    });
+
+    it('駅一覧と trip-blocks の両方が終わってから、骨組みを消す', async () => {
+        const stations = new Subject<undefined>();
+        stations$ = stations;
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+
+        stations.next(undefined);
+        stations.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+    });
+
+    it.each([
+        ['駅一覧', true],
+        ['trip-blocks', false],
+    ])(
+        '%s の取得が失敗したら、失敗は fetchData の外へ出て、読み込み中は戻る',
+        async (_, stationsFail) => {
+            const original = TimetableAllLineComponent.prototype.fetchData;
+            let rejected: unknown;
+            jest.spyOn(
+                TimetableAllLineComponent.prototype,
+                'fetchData',
+            ).mockImplementation(function (this: TimetableAllLineComponent) {
+                return original.call(this).catch((e) => {
+                    rejected = e;
+                });
+            });
+            if (stationsFail) {
+                stations$ = throwError(() => new Error('offline'));
+            }
+            await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+            if (!stationsFail) tripBlocks$.error(new Error('offline'));
+            await flush();
+
+            expect(rejected).toBeInstanceOf(Error);
+            expect(await firstValueFrom(TimetableAllLineStore.isLoading$)).toBe(
+                false,
+            );
+        },
+    );
 
     it('ダイヤが無ければ骨組みを出さない（検索カードも置かない）', async () => {
         await setup({});
