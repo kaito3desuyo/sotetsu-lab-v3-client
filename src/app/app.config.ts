@@ -15,7 +15,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
     provideClientHydration,
-    withNoIncrementalHydration,
+    withIncrementalHydration,
 } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
@@ -45,7 +45,9 @@ export const appConfig: ApplicationConfig = {
             // v22 で既定が 'always' に変わった。親ルートの params を子へ流さない従来の挙動を保つ
             withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' }),
         ),
-        provideClientHydration(withNoIncrementalHydration()),
+        // 運用表のカードの @defer に hydrate の条件を付け、サーバーでは中身まで描き、
+        // ブラウザは画面に入ったものから引き継ぐ（hydration 前の操作は再生される）
+        provideClientHydration(withIncrementalHydration()),
         provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
         provideServiceWorker('ngsw-worker.js', {
