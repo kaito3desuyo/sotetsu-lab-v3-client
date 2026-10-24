@@ -15,6 +15,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import {
     provideClientHydration,
+    withHttpTransferCacheOptions,
     withIncrementalHydration,
 } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -34,6 +35,7 @@ import { AuthInterceptor } from './core/interceptors/auth-interceptor';
 import { FetchErrorInterceptor } from './core/interceptors/fetch-error.interceptor';
 import { PayloadHashInterceptor } from './core/interceptors/payload-hash.interceptor';
 import { ErrorHandlerService } from './core/services/error-handler.service';
+import { isTransferableRequest } from './core/ssr/transfer-cache-filter';
 import { WebVitalsReporter } from './core/web-vitals/web-vitals-reporter';
 
 export const appConfig: ApplicationConfig = {
@@ -46,8 +48,16 @@ export const appConfig: ApplicationConfig = {
             withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' }),
         ),
         // 運用表のカードの @defer に hydrate の条件を付け、サーバーでは中身まで描き、
-        // ブラウザは画面に入ったものから引き継ぐ（hydration 前の操作は再生される）
-        provideClientHydration(withIncrementalHydration()),
+        // ブラウザは画面に入ったものから引き継ぐ（hydration 前の操作は再生される）。
+        // サーバーで取った /v3/ の応答は、API の private 指定があっても HTML に積んでブラウザへ渡す
+        // （同じ内容がすでに HTML に描かれており、取り直しを避けるため。対象の絞り込みは transfer-cache-filter）
+        provideClientHydration(
+            withIncrementalHydration(),
+            withHttpTransferCacheOptions({
+                includeNonCacheableRequests: true,
+                filter: isTransferableRequest,
+            }),
+        ),
         provideHttpClient(withFetch(), withInterceptorsFromDi()),
         provideAnimations(),
         provideServiceWorker('ngsw-worker.js', {
