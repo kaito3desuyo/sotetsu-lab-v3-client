@@ -1,5 +1,9 @@
 import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+    ComponentFixture,
+    DeferBlockState,
+    TestBed,
+} from '@angular/core/testing';
 import {
     ActivatedRoute,
     Router,
@@ -420,6 +424,36 @@ describe('OperationTableComponent の読み込み中', () => {
         await finishFetch();
 
         expect(query('app-empty-state')).not.toBeNull();
+    });
+
+    it('描いたカードは、画面の外の描画を省き（content-visibility）、省く間の高さは場所取りと同じにする', async () => {
+        const operationTrip = {
+            operation: { operationNumber: '11', operationId: 'op-1' },
+            trips: [
+                {
+                    trip: {
+                        tripId: 't0',
+                        tripDirection: 0,
+                        depotIn: false,
+                        depotOut: false,
+                    },
+                },
+            ],
+        } as unknown as OperationTripsDto;
+        OperationTableStore.setOperationTrips([operationTrip]);
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        await finishFetch();
+
+        const blocks = await fixture.getDeferBlocks();
+        await blocks[0].render(DeferBlockState.Complete);
+        fixture.detectChanges();
+
+        const card = query('app-operation-table-card') as HTMLElement;
+        expect(card.classList).toContain('[content-visibility:auto]');
+        expect(card.style.getPropertyValue('contain-intrinsic-size')).toBe(
+            `auto ${fixture.componentInstance.placeholderHeight(operationTrip)}px`,
+        );
     });
 
     it('取得に失敗しても骨組みを消す（保存していたカードを出すため）', async () => {
