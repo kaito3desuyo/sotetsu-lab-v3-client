@@ -4,10 +4,12 @@ import {
     ErrorHandler,
     provideAppInitializer,
 } from '@angular/core';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { ServerErrorHandler } from './core/services/server-error-handler';
+import { UpstreamErrorInterceptor } from './core/ssr/upstream-error.interceptor';
 import { resetElfStores } from './core/utils/reset-elf-stores';
 
 const serverConfig: ApplicationConfig = {
@@ -24,6 +26,13 @@ const serverConfig: ApplicationConfig = {
         provideAppInitializer(() => resetElfStores()),
         // サーバーではエラーを標準エラーに出す（app.config.ts の ErrorHandler をサーバーでだけ差し替える）
         { provide: ErrorHandler, useClass: ServerErrorHandler },
+        // サーバーで API の取得に失敗したら、そのページを CDN に置かない。
+        // ブラウザの interceptor の後ろ（API に近い側）に入るので、AuthInterceptor の送り直しもここを通る
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: UpstreamErrorInterceptor,
+            multi: true,
+        },
     ],
 };
 
