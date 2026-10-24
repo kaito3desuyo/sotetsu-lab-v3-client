@@ -11,6 +11,7 @@ import { Subject, of } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
 import {
@@ -398,5 +399,28 @@ describe('TimetableStationComponent のサーバー', () => {
 
         expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
         expect(fetchCalendar).toHaveBeenCalled();
+    });
+
+    it('サーバーでは今日のダイヤでも充当編成を出さない（ブラウザの最初の描画と形をそろえる）', async () => {
+        await setup(
+            { calendar_id: 'cal-1', station_id: 'st-1', trip_direction: '0' },
+            [
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: { todaysCalendarIds$: of(['cal-1']) },
+                },
+            ],
+        );
+
+        const component = TestBed.createComponent(
+            TimetableStationComponent,
+        ).componentInstance;
+
+        expect(component.isTodaysCalendar()).toBe(true);
+        expect(component.showCurrentFormation()).toBe(false);
     });
 });

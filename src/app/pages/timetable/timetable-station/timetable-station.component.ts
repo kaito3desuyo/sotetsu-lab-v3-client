@@ -18,6 +18,7 @@ import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
@@ -165,6 +166,15 @@ export class TimetableStationComponent {
         const calendarId = this.calendarId();
         return !!calendarId && this.todaysCalendarIds().includes(calendarId);
     });
+
+    /**
+     * 各列車の充当編成を出すか。セルの @if で要素が増えるので、サーバーと同じ false で最初の描画をしてから切り替える（spec 5.3）。
+     * 取得するかの判断（isTodaysCalendar）は最初の描画を待たない。
+     */
+    readonly showCurrentFormation = afterFirstRender(
+        this.isTodaysCalendar,
+        false,
+    );
 
     /** ダイヤ select の選択中表示（改正日 + ダイヤ名）に使う。 */
     readonly selectedCalendar = computed(() =>

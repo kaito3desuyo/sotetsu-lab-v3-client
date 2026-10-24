@@ -163,7 +163,7 @@
             ></app-empty-state>
         } @else if (calendar()) {
             <app-timetable-station-table
-                [showCurrentFormation]="isTodaysCalendar()"
+                [showCurrentFormation]="showCurrentFormation()"
             ></app-timetable-station-table>
         }
     </div>
