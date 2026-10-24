@@ -11,9 +11,9 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { interval, lastValueFrom } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -181,9 +181,7 @@ export class TrainDiagramComponent {
     );
 
     /** 1 秒ごとの時計（今日のダイヤのときの現在時刻の線と「今」ボタン用） */
-    readonly #now = toSignal(interval(1000).pipe(map(() => new Date())), {
-        initialValue: new Date(),
-    });
+    readonly #now = signal(new Date());
 
     readonly directionFilter = toSignal(TrainDiagramStore.directionFilter$, {
         initialValue: 'both' as DiagramDirectionFilter,
@@ -862,6 +860,8 @@ export class TrainDiagramComponent {
     #wasChartHidden = false;
 
     constructor() {
+        runIntervalInBrowser(1000, () => this.#now.set(new Date()));
+
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
         TrainDiagramStore.setHasFetchedTrainDiagram(false);
 

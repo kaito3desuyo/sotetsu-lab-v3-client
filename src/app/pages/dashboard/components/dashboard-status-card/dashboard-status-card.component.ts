@@ -1,16 +1,14 @@
 import {
     ChangeDetectionStrategy,
     Component,
-    DestroyRef,
     computed,
-    inject,
     signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { interval } from 'rxjs';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { DashboardStore } from '../../stores/dashboard.store';
 
@@ -27,8 +25,6 @@ import { DashboardStore } from '../../stores/dashboard.store';
     imports: [SkeletonBarComponent],
 })
 export class DashboardStatusCardComponent {
-    readonly #destroyRef = inject(DestroyRef);
-
     readonly isLoading = toSignal(DashboardStore.isLoading$, {
         initialValue: false,
     });
@@ -65,10 +61,8 @@ export class DashboardStatusCardComponent {
     });
 
     constructor() {
-        interval(1000)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(() => {
-                this.#now.set(new Date());
-            });
+        runIntervalInBrowser(1000, () => {
+            this.#now.set(new Date());
+        });
     }
 }

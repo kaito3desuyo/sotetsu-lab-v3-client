@@ -12,10 +12,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { filter, interval, lastValueFrom, map } from 'rxjs';
+import { filter, lastValueFrom, map } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
@@ -185,20 +186,18 @@ export class OperationRealTimeComponent {
     hookEvent(): void {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象がある場合は更新する
         // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
-        interval(1000 * 1)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(async () => {
-                OperationRealTimeStore.enableLoading();
-                try {
-                    await lastValueFrom(
-                        this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
-                    );
-                } catch {
-                    // 毎秒通知しないよう黙って捨て、次の 1 秒で取り直す
-                } finally {
-                    OperationRealTimeStore.disableLoading();
-                }
-            });
+        runIntervalInBrowser(1000, async () => {
+            OperationRealTimeStore.enableLoading();
+            try {
+                await lastValueFrom(
+                    this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
+                );
+            } catch {
+                // 毎秒通知しないよう黙って捨て、次の 1 秒で取り直す
+            } finally {
+                OperationRealTimeStore.disableLoading();
+            }
+        });
         // });
 
         // 自分が運用目撃情報を投稿したとき
