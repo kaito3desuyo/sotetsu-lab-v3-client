@@ -1,6 +1,6 @@
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import {
@@ -303,5 +303,42 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             service['fetchOperationSightingTimeCrossSections'],
         ).not.toHaveBeenCalled();
         expect(notification.open).not.toHaveBeenCalled();
+    });
+});
+
+describe('OperationRealTimeComponent をサーバーで描くとき', () => {
+    it('中身を取らず、引き継がない', async () => {
+        const fetchOperationGroups = jest.fn(() => of(undefined));
+        await TestBed.configureTestingModule({
+            imports: [OperationRealTimeComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: OperationRealTimeService,
+                    useValue: { fetchOperationGroups },
+                },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => new Subject() },
+                },
+                { provide: NotificationService, useValue: { open: jest.fn() } },
+                {
+                    provide: OperationPostCardService,
+                    useValue: { submitEvent$: new Subject<void>() },
+                },
+            ],
+        })
+            .overrideComponent(OperationRealTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        const fixture = TestBed.createComponent(OperationRealTimeComponent);
+
+        expect(fetchOperationGroups).not.toHaveBeenCalled();
+        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
+            true,
+        );
     });
 });

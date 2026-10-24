@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -553,5 +553,59 @@ describe('TrainLocationComponent の再訪', () => {
         } finally {
             jest.useRealTimers();
         }
+    });
+});
+
+describe('TrainLocationComponent をサーバーで描くとき', () => {
+    it('URL を補わず、中身を取らず、引き継がない', async () => {
+        const fetchTripBlocks = jest.fn(() => of(undefined));
+        await TestBed.configureTestingModule({
+            imports: [TrainLocationComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: TrainLocationService,
+                    useValue: {
+                        fetchTripClasses: () => of(undefined),
+                        fetchTripBlocks,
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchStationAxis: () => of(undefined),
+                        fetchMissingOperationSightingTimeCrossSections: () =>
+                            of(undefined),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarId: undefined,
+                        todaysCalendarIds$: of([]),
+                    },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                        operatingSystemEndsByRouteId$: of({}),
+                    },
+                },
+            ],
+        })
+            .overrideComponent(TrainLocationComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        const navigate = jest.spyOn(TestBed.inject(Router), 'navigate');
+        const fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+
+        expect(navigate).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
+            true,
+        );
     });
 });

@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom, of, throwError } from 'rxjs';
@@ -77,5 +77,58 @@ describe('DashboardComponent', () => {
         await expect(component.fetchData()).rejects.toThrow('fetch failed');
 
         expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+    });
+});
+
+describe('DashboardComponent をサーバーで描くとき', () => {
+    it('中身を取らない（枠だけ描く）', async () => {
+        const fetchTodaysCalendar = jest.fn(() => of(undefined));
+        await TestBed.configureTestingModule({
+            imports: [DashboardComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: DashboardService,
+                    useValue: {
+                        fetchTodaysCalendar,
+                        fetchTodaysDayName: () => of(undefined),
+                        fetchRunningTripCount: () => of(undefined),
+                        fetchTodaysSightings: () => of(undefined),
+                        fetchLatestSightingPositions: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
+                    },
+                },
+            ],
+        })
+            .overrideComponent(DashboardComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        TestBed.createComponent(DashboardComponent);
+
+        expect(fetchTodaysCalendar).not.toHaveBeenCalled();
+    });
+
+    it('サーバーの HTML をブラウザで引き継がない（ngSkipHydration）', async () => {
+        await TestBed.configureTestingModule({
+            imports: [DashboardComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                { provide: DashboardService, useValue: {} },
+            ],
+        })
+            .overrideComponent(DashboardComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        const fixture = TestBed.createComponent(DashboardComponent);
+
+        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
+            true,
+        );
     });
 });

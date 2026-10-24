@@ -1,10 +1,12 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { isPlatformServer } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     computed,
     DestroyRef,
     inject,
+    PLATFORM_ID,
     signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -41,6 +43,9 @@ OperationRealTimeStore.resetLoading();
     selector: 'app-operation-real-time',
     templateUrl: './operation-real-time.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    // 枠だけのページ（spec 4 章）。保存した中身・ログイン状態で形が変わるので、
+    // サーバーの HTML（読み込み中の骨組み）を引き継がず、ブラウザで描き直す
+    host: { ngSkipHydration: 'true' },
     imports: [
         MatButtonModule,
         MatIconModule,
@@ -128,6 +133,8 @@ export class OperationRealTimeComponent {
     }
 
     constructor() {
+        // 枠だけのページ。中身は刻々と変わるのでサーバーでは取らない（spec 4 章）
+        if (isPlatformServer(inject(PLATFORM_ID))) return;
         this.fetchData();
         this.hookEvent();
     }

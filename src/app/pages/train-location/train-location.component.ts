@@ -1,7 +1,9 @@
+import { isPlatformServer } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    PLATFORM_ID,
     computed,
     inject,
     signal,
@@ -72,6 +74,9 @@ let fetchSeq = 0;
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    // 枠だけのページ（spec 4 章）。保存した中身・ログイン状態で形が変わるので、
+    // サーバーの HTML（読み込み中の骨組み）を引き継がず、ブラウザで描き直す
+    host: { ngSkipHydration: 'true' },
     imports: [
         MatProgressBarModule,
         ControlBandComponent,
@@ -383,6 +388,9 @@ export class TrainLocationComponent {
         runIntervalInBrowser(CURRENT_TIME_REFRESH_MS, () =>
             this.#now.set(new Date()),
         );
+
+        // 枠だけのページ。中身は刻々と変わるので、サーバーでは URL を補わず取りもしない（spec 4 章）
+        if (isPlatformServer(inject(PLATFORM_ID))) return;
 
         toObservable(this.#activeOperationNumbers)
             .pipe(takeUntilDestroyed(this.#destroyRef))
