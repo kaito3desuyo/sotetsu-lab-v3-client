@@ -29,15 +29,21 @@
   - 今日を含む期間の過去の運用情報は short にする。日の境は 4 時（それより前は前日）。
 - 中身が今だけで決まるページ（ダッシュボード・リアルタイム運用情報・列車位置情報）は、枠と題名だけを描く。ホストに `ngSkipHydration` を付けて引き継がず、サーバーでは取得しない。
 - 中身まで描くページで、ログイン状態や端末の保存で形が変わるところは `afterFirstRender` で包む。サーバーとブラウザの最初の描画では既定値を出し、描き終えてから本当の値にする。
-  - 包んでいるのは、ヘッダーのログイン表示、全線時刻表の編集行と操作帯の畳み、ダイヤグラムの操作帯の畳み、運用表の運用群の絞り込み、行路図の今日のダイヤ。
-  - 属性の値だけ変わるところ（disabled など）は包まない。
+  - 包んでいるのは、ヘッダーのログイン表示、全線時刻表の編集行と操作帯の畳み、ダイヤグラムの操作帯の畳みと「今」の表示（今へボタン・現在時刻の線・凡例）、運用表の運用群の絞り込み、行路図の今日のダイヤ、駅別時刻表の充当編成。
+  - 「今日のダイヤか」で形が変わるところも包む。サーバーは今日のダイヤを取らず false で描くが、ブラウザは今日のダイヤを取り終えてから最初の描画をするので、今日のダイヤを開くと true で描いてしまう。`@if` は合わない dehydrated view を捨てて作り直すので NG05xx にはならないが、hydration 時に要素が現れて跳ねる。
+  - 属性の値だけ変わるところ（disabled など）は包まない。取得するかの判断など、形に関わらない使い先も包まない。
 - サーバーは、引数の足りない URL を今日・今で補わない（補うリダイレクトも取得もしない）。今日・今を CDN に残さないため。補うのはブラウザに任せる。
-- API の取得（401 を除く）やサーバーの描画に失敗したら `no-store` にする。壊れた HTML を CDN に置かない。3xx は short。
+- API の取得やサーバーの描画に失敗したら `no-store` にする。壊れた HTML を CDN に置かない。3xx は short（すでに `no-store` なら触らない）。
+  - 401 は `AuthInterceptor` がトークンを取り直して 1 回送り直すので、1 回目の 401 だけ数えない。送り直した要求には `AUTH_RETRIED`（`HttpContextToken`）の印を付け、印のある要求の 401 は直らない失敗として `no-store` にする。
+  - `setCachePolicy` の始まりはルートの既定（headers の Cache-Control）。ページはそれより長くできない。
 - 運用表のカード（104 枚）は、サーバーでは中身まで描く（検索のため・ユーザー判断）。ブラウザでは incremental hydration（`@defer (on viewport; prefetch on idle; hydrate on viewport)`）で画面に入ったものから引き継ぐ。
 - サーバーで取った API の応答は HttpTransferCache で HTML に積み、ブラウザで取り直さない。
   - Angular 22 は、`Cache-Control` が `private`・`no-store`・`no-cache` の応答を既定で積まない。API の v3 の GET は CloudFront での共有を避けるために `private` を返すので、そのままだと何も積まれない。
   - そこで `withHttpTransferCacheOptions({ includeNonCacheableRequests: true, filter: isTransferableRequest })` を使い、`apiUrl/v3/` の要求だけを積む。同じ中身はもう HTML に描かれているので、新たに漏れるものは無い。
   - BFF（`/api/` の認証・プロフィール・メンテナンス）は積まない。
+  - `cache` が `reload`・`no-store`・`no-cache` の要求も積まない（filter で外す）。`includeNonCacheableRequests: true` にすると Angular はこの指定を見なくなるが、列車情報を書いた後の 1 時間は時刻表系の GET が `cache: 'reload'` になる（ADR-0002 の書いた後の窓）。これを CDN の古い HTML に積まれた応答で答えると、書いた直後の画面が古いままになる。
+- サーバーの描画は 1 本ずつ（`server.ts` の Promise の列。応答を書き終えるまで次を待たせる）。Elf ストアがプロセス全体で 1 つで、描画の始めに空にするので、描画が重なると先の描画の途中でストアが空になり、取得の済んだ一部だけが残った壊れた HTML がエラーも出ずに long で置かれる。
+  - 本番の Lambda は 1 環境 1 リクエストなので、もともと重ならない。この列は、手元の確かめと、並行に受ける実行環境（Web Functions など）のための守り。静的ファイルの配信は並べない。
 - 題名・説明・OGP（og:title・og:description・og:url・og:image・og:type・og:site_name・og:locale・twitter:card）は `PageMeta` で入れる。`TitleService` は無くした。
   - `pageResolver` がルートの題名を入れ、ページは詳しい題名（例: `二俣川駅 時刻表（上り・2026/3/14改正 平日ダイヤ）`）を `setTitle` で上書きする。
   - 同じページで resolver が再び走っても、詳しい題名は消えない。
@@ -51,6 +57,8 @@
 
 ## 影響
 
+- ヘッダーが固まった後に起きたエラー（`@angular/ssr` の `content()` の中、つまり直列化・ng-state の書き出し）は `no-store` にできない。`Response` を作った後なので `setCachePolicy` が効かない。構造上どうにもならないので、ここに残す。
+
 - HTML が大きい（2026-10-24、手元で計測。ng-state を含む）。
   - 運用表: 13.1MB（gzip 684KB）
   - ダイヤグラム: 4.9MB（gzip 567KB）
@@ -61,5 +69,6 @@
 - 新しいページは `app.routes.server.ts` に描き方を足す。足さないと `'**'` の扱い（404・short）になる。
 - 残り
   - Lambda と配信で SSR を有効にする（計画 2c）。
+  - API のタグ失効（api リポの計画 3）は 2c の前提。2c より前か同時に出す。ブラウザの取り直し（`cache: 'reload'`）で古い HTML を直す逃げ道は、引き継ぎがあっても filter で残してあるが、CDN の HTML 自体はタグ失効が届くまで古い（最長 1 週間＋stale-while-revalidate）。
+  - 当たらない URL（dist に無い静的ファイル・ボットの総当たり）も `'**'` で SSR で描き、`initialDataResolver` で API を取るので、2c で拡張子付きのパスは SSR の前に 404 で返す。
   - 圏外の保存と Service Worker（計画 2b）。
-  - 書き込みの後の失効は API から出す（api リポの spec と ADR）。
