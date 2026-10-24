@@ -1,4 +1,5 @@
-import { inject } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
+import { inject, PLATFORM_ID } from '@angular/core';
 import type { ResolveFn } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
@@ -27,6 +28,9 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
     const featureFlagStateStore = inject(FeatureFlagStateStore);
     const initializeStateStore = inject(InitializeStateStore);
+    // サーバーはゲストとして描き、HTML を CDN に置く。プロフィールと「今日」のものは
+    // 人や日で変わるので取らない（spec 5.2・5.3）。ブラウザで起動した後に取る
+    const isServer = isPlatformServer(inject(PLATFORM_ID));
 
     // router は resolver の後で loadComponent を呼ぶので、ページの chunk を先に取り始めておく
     preloadRouteComponents(state.root);
@@ -38,9 +42,15 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
         lastValueFrom(
             tokenStateStore.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS }),
         ),
-        lastValueFrom(
-            userStateStore.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS }),
-        ),
+        ...(isServer
+            ? []
+            : [
+                  lastValueFrom(
+                      userStateStore.fetch({
+                          maxAgeMs: ROUTE_CHECK_MAX_AGE_MS,
+                      }),
+                  ),
+              ]),
     ]);
 
     // 順番待ちが要るのは今日の運用だけ（今日のダイヤの ID で引く）。ほかは同時に投げる
@@ -49,13 +59,19 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
         lastValueFrom(calendarListStateStore.fetch()),
         lastValueFrom(routeStationListStateStore.fetch()),
         lastValueFrom(serviceListStateStore.fetch()),
-        lastValueFrom(todaysFormationListStateStore.fetch()),
         // 失敗しても止まらない（FeatureFlagStateStore が飲む）。60 秒は query が使い回す
         lastValueFrom(featureFlagStateStore.fetch()),
-        (async () => {
-            await lastValueFrom(todaysCalendarListStateStore.fetch());
-            await lastValueFrom(todaysOperationListStateStore.fetch());
-        })(),
+        ...(isServer
+            ? []
+            : [
+                  lastValueFrom(todaysFormationListStateStore.fetch()),
+                  (async () => {
+                      await lastValueFrom(todaysCalendarListStateStore.fetch());
+                      await lastValueFrom(
+                          todaysOperationListStateStore.fetch(),
+                      );
+                  })(),
+              ]),
     ]);
 
     initializeStateStore.markInitialized();

@@ -1,3 +1,4 @@
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type {
     ActivatedRouteSnapshot,
@@ -202,5 +203,32 @@ describe('initialDataResolver', () => {
 
         expect(await result).toBe(true);
         expect(markInitialized).toHaveBeenCalledTimes(1);
+    });
+
+    describe('サーバー', () => {
+        beforeEach(() => {
+            TestBed.configureTestingModule({
+                providers: [{ provide: PLATFORM_ID, useValue: 'server' }],
+            });
+        });
+
+        it('プロフィールと今日のものは取らず、トークンと改正でしか変わらないものは取る', async () => {
+            const result = run();
+
+            await flush();
+            done(token);
+            await flush();
+            [agency, calendar, routeStation, service, featureFlag].forEach(
+                done,
+            );
+
+            expect(await result).toBe(true);
+            expect(user.fetch).not.toHaveBeenCalled();
+            expect(todaysCalendar.fetch).not.toHaveBeenCalled();
+            expect(todaysOperation.fetch).not.toHaveBeenCalled();
+            expect(todaysFormation.fetch).not.toHaveBeenCalled();
+            expect(token.fetch).toHaveBeenCalledTimes(1);
+            expect(markInitialized).toHaveBeenCalledTimes(1);
+        });
     });
 });
