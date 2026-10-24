@@ -4,12 +4,16 @@ import {
     DestroyRef,
     computed,
     inject,
+    PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -62,6 +66,8 @@ export class OperationTableComponent {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
 
     readonly isLoading = toSignal(OperationTableStore.isLoading$);
     readonly calendarId = toSignal(OperationTableStore.calendarId$);
@@ -132,6 +138,9 @@ export class OperationTableComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
+                // サーバーでは今日のダイヤで補わない。今日を取っていないので、取りにも行かず骨組みのまま返す
+                if (this.#isServer && !paramMap.get('calendar_id')) return;
+
                 const calendarId =
                     paramMap.get('calendar_id') ??
                     this.#todaysCalendarListStateQuery.todaysCalendarId;
@@ -148,6 +157,11 @@ export class OperationTableComponent {
                     return;
                 }
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 OperationTableStore.setCalendarId(calendarId ?? null);
 
                 this.fetchData();

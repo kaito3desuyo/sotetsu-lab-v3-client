@@ -1,4 +1,4 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -9,6 +9,7 @@ import {
 import { Subject, of, throwError } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -494,5 +495,83 @@ describe('OperationTableComponent の読み込み中', () => {
 
         await finishFetch();
         expect(query('[data-testid="operation-table-skeleton"]')).toBeNull();
+    });
+});
+
+describe('OperationTableComponent のサーバー', () => {
+    const fetchCalendar = jest.fn(() => of(undefined));
+    const addCacheTags = jest.fn();
+
+    const setup = async (
+        params: Record<string, string>,
+        extraProviders: Provider[] = [],
+    ) => {
+        await TestBed.configureTestingModule({
+            imports: [OperationTableComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: of(convertToParamMap(params)) },
+                },
+                {
+                    provide: OperationTableService,
+                    useValue: {
+                        fetchCalendar,
+                        fetchOperationTrips: () => of(undefined),
+                        fetchStations: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: { calendars$: of([]) },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: { todaysCalendarId: 'todays-calendar-id' },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                ...extraProviders,
+            ],
+        })
+            .overrideComponent(OperationTableComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        OperationTableStore.setCalendarId(null);
+        OperationTableStore.resetLoading();
+    });
+
+    it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
+        await setup({});
+        const navigateSpy = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+
+        TestBed.createComponent(OperationTableComponent);
+
+        expect(navigateSpy).not.toHaveBeenCalled();
+        expect(fetchCalendar).not.toHaveBeenCalled();
+    });
+
+    it('サーバーではダイヤのタグを付ける', async () => {
+        await setup({ calendar_id: 'cal-1' }, [
+            {
+                provide: SsrResponse,
+                useValue: { addCacheTags, setCachePolicy: jest.fn() },
+            },
+        ]);
+
+        TestBed.createComponent(OperationTableComponent);
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+        expect(fetchCalendar).toHaveBeenCalled();
     });
 });

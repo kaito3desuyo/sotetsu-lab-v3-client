@@ -6,8 +6,9 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { BehaviorSubject, EMPTY, of, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, defer, EMPTY, of, Subject, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
@@ -537,5 +538,63 @@ describe('OperationRouteDiagramComponent の帯の配線（本物のテンプレ
             root.querySelector('app-step-nav button') as HTMLButtonElement
         ).click();
         expect(onStep).toHaveBeenCalledWith({ id: 'a1', label: '42G' });
+    });
+});
+
+describe('OperationRouteDiagramComponent のサーバー', () => {
+    it('取った運用のダイヤでタグを付ける（運用の URL にダイヤは無い）', async () => {
+        const addCacheTags = jest.fn();
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({ operation_id: 'op-1' }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        // 運用を取ると、そのダイヤがストアに入る
+                        fetchOperationTrips: () =>
+                            defer(() => {
+                                OperationRouteDiagramStore.setOperationTrips({
+                                    operation: {
+                                        operationId: 'op-1',
+                                        calendarId: 'cal-1',
+                                    },
+                                    trips: [],
+                                } as never);
+                                return of(undefined);
+                            }),
+                        fetchStations: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(OperationRouteDiagramComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+
+        const fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+
+        fixture.destroy();
+        OperationRouteDiagramStore.setOperationTrips(null);
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        OperationRouteDiagramStore.resetLoading();
     });
 });

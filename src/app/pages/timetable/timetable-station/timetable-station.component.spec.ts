@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -10,6 +10,7 @@ import {
 import { Subject, of } from 'rxjs';
 
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
 import {
@@ -323,5 +324,79 @@ describe('TimetableStationComponent の帯の操作', () => {
             'station',
             { calendar_id: 'cal-1', station_id: 'st-2', trip_direction: 1 },
         ]);
+    });
+});
+
+describe('TimetableStationComponent のサーバー', () => {
+    const fetchCalendar = jest.fn(() => of(undefined));
+    const addCacheTags = jest.fn();
+
+    const setup = async (
+        params: Record<string, string>,
+        extraProviders: Provider[] = [],
+    ) => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableStationComponent],
+            providers: [
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: of(convertToParamMap(params)) },
+                },
+                {
+                    provide: TimetableStationService,
+                    useValue: {
+                        fetchCalendar,
+                        fetchTrips: () => of(undefined),
+                        fetchTripClasses: () => of(undefined),
+                        fetchStations: () => of(undefined),
+                        fetchOperations: () => of(undefined),
+                        fetchOperationSightingTimeCrossSections: () =>
+                            of(undefined),
+                    },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                ...extraProviders,
+            ],
+        })
+            .overrideComponent(TimetableStationComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        TimetableStationStore.resetLoading();
+    });
+
+    it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
+        await setup({});
+        const navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+
+        TestBed.createComponent(TimetableStationComponent);
+
+        expect(navigate).not.toHaveBeenCalled();
+        expect(fetchCalendar).not.toHaveBeenCalled();
+    });
+
+    it('サーバーではダイヤのタグを付ける', async () => {
+        await setup(
+            { calendar_id: 'cal-1', station_id: 'st-1', trip_direction: '0' },
+            [
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
+                },
+            ],
+        );
+
+        TestBed.createComponent(TimetableStationComponent);
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+        expect(fetchCalendar).toHaveBeenCalled();
     });
 });

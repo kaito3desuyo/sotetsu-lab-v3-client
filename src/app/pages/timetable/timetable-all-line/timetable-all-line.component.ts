@@ -4,7 +4,9 @@ import {
     DestroyRef,
     computed,
     inject,
+    PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { PageEvent } from '@angular/material/paginator';
@@ -13,7 +15,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -78,6 +82,8 @@ export class TimetableAllLineComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
 
     /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
      * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
@@ -172,6 +178,9 @@ export class TimetableAllLineComponent {
                 // 向きが無い・読めない URL は上りに置き換える（駅別時刻表と同じ）。
                 // 以前は +null で黙って上り、+'abc' で NaN を API に送っていた
                 if (calendarId && tripDirection === null) {
+                    // サーバーでは補わない。骨組みのまま返し、ブラウザで補う（駅別時刻表と同じ）
+                    if (this.#isServer) return;
+
                     this.#router.navigate(
                         [
                             'timetable',
@@ -186,6 +195,11 @@ export class TimetableAllLineComponent {
                     return;
                 }
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 TimetableAllLineStore.setCalendarId(calendarId);
                 TimetableAllLineStore.setTripDirection(tripDirection);
                 TimetableAllLineStore.setTripBlockId(tripBlockId ?? null);

@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -11,6 +11,7 @@ import { EMPTY, Observable, of, ReplaySubject, Subject } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
@@ -118,7 +119,10 @@ describe('TimetableAllLineComponent をサーバーで描くとき', () => {
 });
 
 describe('TimetableAllLineComponent の URL の向き', () => {
-    const setUp = async (params: Record<string, string>) => {
+    const setUp = async (
+        params: Record<string, string>,
+        extraProviders: Provider[] = [],
+    ) => {
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
@@ -155,6 +159,7 @@ describe('TimetableAllLineComponent の URL の向き', () => {
                 },
                 { provide: ConfirmDialogService, useValue: {} },
                 { provide: CalendarSelectDialogService, useValue: {} },
+                ...extraProviders,
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
@@ -169,6 +174,7 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         return {
             navigate,
             service: TestBed.inject(TimetableAllLineService) as unknown as {
+                fetchStations: jest.Mock;
                 fetchTripBlocks: jest.Mock;
             },
         };
@@ -202,6 +208,29 @@ describe('TimetableAllLineComponent の URL の向き', () => {
 
         expect(navigate).not.toHaveBeenCalled();
         expect(TimetableAllLineStore.tripDirection).toBe(1);
+    });
+
+    it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
+        const { navigate, service } = await setUp({ calendar_id: 'cal-1' }, [
+            { provide: PLATFORM_ID, useValue: 'server' },
+        ]);
+
+        expect(navigate).not.toHaveBeenCalled();
+        expect(service.fetchStations).not.toHaveBeenCalled();
+    });
+
+    it('サーバーではダイヤのタグを付ける', async () => {
+        const addCacheTags = jest.fn();
+
+        await setUp({ calendar_id: 'cal-1', trip_direction: '0' }, [
+            { provide: PLATFORM_ID, useValue: 'server' },
+            {
+                provide: SsrResponse,
+                useValue: { addCacheTags, setCachePolicy: jest.fn() },
+            },
+        ]);
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
     });
 });
 

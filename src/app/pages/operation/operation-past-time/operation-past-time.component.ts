@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
@@ -17,6 +18,7 @@ import { OperationPastTimeTableComponent } from './components/operation-past-tim
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
+import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
 
 OperationPastTimeStore.resetLoading();
 
@@ -41,6 +43,7 @@ export class OperationPastTimeComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
+    readonly #ssrResponse = inject(SsrResponse);
 
     readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
 
@@ -92,6 +95,14 @@ export class OperationPastTimeComponent {
                 OperationPastTimeStore.setIncludeInvalidated(
                     includeInvalidated === 'true',
                 );
+
+                // サーバーで描くときの置き方。ブラウザでは何もしない（spec 6.2）
+                const hints = pastTimeCacheHints(
+                    OperationPastTimeStore.dates,
+                    new Date(),
+                );
+                this.#ssrResponse.setCachePolicy(hints.policy);
+                this.#ssrResponse.addCacheTags(hints.tags);
 
                 this.fetchData();
             });

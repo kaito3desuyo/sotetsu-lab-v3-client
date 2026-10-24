@@ -5,14 +5,17 @@ import {
     computed,
     effect,
     inject,
+    PLATFORM_ID,
     signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { Location } from '@angular/common';
+import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -136,6 +139,8 @@ export class TrainDiagramComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #location = inject(Location);
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -914,6 +919,9 @@ export class TrainDiagramComponent {
                     parseTimeParam(timeParam) === undefined ||
                     !!windowParam;
 
+                // サーバーでは今日のダイヤ・今の時刻で補わない。骨組みのまま返し、ブラウザで補う（spec 13.2）
+                if (this.#isServer && missingParams) return;
+
                 if (missingParams && calendarId && resolvedRouteIds.length) {
                     const minute =
                         parseTimeParam(timeParam) ??
@@ -954,6 +962,11 @@ export class TrainDiagramComponent {
                 const calendarChanged =
                     TrainDiagramStore.calendarId !== calendarId;
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 TrainDiagramStore.setCalendarId(calendarId ?? null);
                 TrainDiagramStore.setSelectedRouteIds(resolvedRouteIds);
                 TrainDiagramStore.setDirectionFilter(directionFilter);

@@ -1,4 +1,4 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import {
@@ -8,6 +8,7 @@ import {
     provideRouter,
 } from '@angular/router';
 import { BehaviorSubject, Subject, firstValueFrom, of, throwError } from 'rxjs';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainDiagramComponent } from './train-diagram.component';
@@ -1265,5 +1266,95 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         expect(jump?.minute).toBe(300);
         expect(jump?.align).toBe('start');
         expect(jump?.seq).toBeGreaterThan(seqBefore);
+    });
+});
+
+describe('TrainDiagramComponent のサーバー', () => {
+    const fetchTripClasses = jest.fn(() => of(undefined));
+    const addCacheTags = jest.fn();
+
+    const setup = async (
+        params: Record<string, string>,
+        extraProviders: Provider[] = [],
+    ) => {
+        const router = { navigate: jest.fn() };
+        await TestBed.configureTestingModule({
+            imports: [TrainDiagramComponent],
+            providers: [
+                { provide: PLATFORM_ID, useValue: 'server' },
+                { provide: Router, useValue: router },
+                { provide: Location, useValue: { replaceState: jest.fn() } },
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                        snapshot: { params },
+                    },
+                },
+                {
+                    provide: TrainDiagramService,
+                    useValue: {
+                        fetchTripClasses,
+                        fetchTripBlocks: () => of(undefined),
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchNetworkStations: () => of(undefined),
+                        fetchOperationSightingTimeCrossSection: () =>
+                            of(undefined),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarId: 'cal-today',
+                        todaysCalendarIds$: of(['cal-today']),
+                    },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                    },
+                },
+                ...extraProviders,
+            ],
+        })
+            .overrideComponent(TrainDiagramComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        return router;
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        TrainDiagramStore.setCalendarId(null);
+        TrainDiagramStore.resetLoading();
+    });
+
+    it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
+        const router = await setup({});
+
+        TestBed.createComponent(TrainDiagramComponent);
+
+        expect(router.navigate).not.toHaveBeenCalled();
+        expect(fetchTripClasses).not.toHaveBeenCalled();
+    });
+
+    it('サーバーではダイヤのタグを付ける', async () => {
+        await setup(
+            { calendar_id: 'cal-1', route_ids: 'route-1', time: '0700' },
+            [
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
+                },
+            ],
+        );
+
+        TestBed.createComponent(TrainDiagramComponent);
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
     });
 });

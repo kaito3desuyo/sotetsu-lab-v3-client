@@ -17,7 +17,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { lastValueFrom, of } from 'rxjs';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
@@ -81,6 +83,7 @@ export class OperationRouteDiagramComponent {
     );
     readonly #operationService = inject(OperationService);
     readonly #notification = inject(NotificationService);
+    readonly #ssrResponse = inject(SsrResponse);
     readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
         initialValue: [],
     });
@@ -360,6 +363,12 @@ export class OperationRouteDiagramComponent {
             );
         } catch {
             OperationRouteDiagramStore.setItineraryLinks([]);
+        }
+
+        // 運用の URL にダイヤは無い。取った運用のダイヤでタグを付ける（その時刻表が書き換わったら失効）
+        const calendarId = OperationRouteDiagramStore.calendarId;
+        if (calendarId) {
+            this.#ssrResponse.addCacheTags([calendarCacheTag(calendarId)]);
         }
 
         // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
