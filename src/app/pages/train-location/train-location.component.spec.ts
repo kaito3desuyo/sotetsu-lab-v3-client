@@ -604,8 +604,6 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
 
         expect(navigate).not.toHaveBeenCalled();
         expect(fetchTripBlocks).not.toHaveBeenCalled();
-        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
-            true,
-        );
+        expect(fixture.nativeElement).toHaveAttribute('ngskiphydration');
     });
 });

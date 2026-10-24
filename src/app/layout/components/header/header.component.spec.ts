@@ -152,7 +152,7 @@ describe('HeaderComponent をサーバーで描くとき', () => {
 
         const header: HTMLElement =
             fixture.nativeElement.querySelector('header');
-        expect(header.textContent).toContain('ゲスト さん');
-        expect(header.textContent).not.toContain('相鉄太郎');
+        expect(header).toHaveTextContent(/ゲスト さん/);
+        expect(header).not.toHaveTextContent(/相鉄太郎/);
     });
 });

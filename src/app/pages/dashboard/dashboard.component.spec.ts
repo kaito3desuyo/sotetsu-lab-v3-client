@@ -127,8 +127,6 @@ describe('DashboardComponent をサーバーで描くとき', () => {
 
         const fixture = TestBed.createComponent(DashboardComponent);
 
-        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
-            true,
-        );
+        expect(fixture.nativeElement).toHaveAttribute('ngskiphydration');
     });
 });

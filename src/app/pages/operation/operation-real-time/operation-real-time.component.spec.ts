@@ -337,8 +337,6 @@ describe('OperationRealTimeComponent をサーバーで描くとき', () => {
         const fixture = TestBed.createComponent(OperationRealTimeComponent);
 
         expect(fetchOperationGroups).not.toHaveBeenCalled();
-        expect(fixture.nativeElement.hasAttribute('ngskiphydration')).toBe(
-            true,
-        );
+        expect(fixture.nativeElement).toHaveAttribute('ngskiphydration');
     });
 });
