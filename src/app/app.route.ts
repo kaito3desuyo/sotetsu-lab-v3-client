@@ -109,4 +109,17 @@ export const APP_ROUTES: Routes = [
             ),
         canActivate: [noMaintenanceGuard],
     },
+    {
+        // どのページにも当たらない URL。以前はナビゲーションのエラーの通知だけが出ていた
+        path: '**',
+        loadChildren: () =>
+            import('./pages/not-found/not-found.route').then(
+                (mod) => mod.NOT_FOUND_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
 ];
