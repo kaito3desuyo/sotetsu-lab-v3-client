@@ -16,7 +16,8 @@ export class GoogleAnalyticsService {
      * GAの使用可否をチェック
      */
     private _useGA(): boolean {
-        return typeof gtag !== undefined && !!environment.production;
+        // gtag は index.html のスクリプトが定める。サーバーには無い
+        return typeof gtag !== 'undefined' && !!environment.production;
     }
 
     /**

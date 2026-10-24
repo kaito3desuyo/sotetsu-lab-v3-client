@@ -14,7 +14,8 @@ import {
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
-import { interval, lastValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
+import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -379,9 +380,9 @@ export class TrainLocationComponent {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の路線図が一瞬出ないようにする
         TrainLocationStore.setHasFetchedTrainLocation(false);
 
-        interval(CURRENT_TIME_REFRESH_MS)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(() => this.#now.set(new Date()));
+        runIntervalInBrowser(CURRENT_TIME_REFRESH_MS, () =>
+            this.#now.set(new Date()),
+        );
 
         toObservable(this.#activeOperationNumbers)
             .pipe(takeUntilDestroyed(this.#destroyRef))

@@ -3,6 +3,7 @@ import {
     HttpTestingController,
     provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
     ActivatedRouteSnapshot,
@@ -93,6 +94,24 @@ describe('maintenanceGuard', () => {
         expect(router.serializeUrl(secondResult as UrlTree)).toBe(
             '/maintenance',
         );
+        controller.verify();
+    });
+});
+
+describe('maintenanceGuard（サーバー）', () => {
+    it('サーバーでは maintenance を取らずに通す', async () => {
+        TestBed.configureTestingModule({
+            providers: [
+                provideRouter([]),
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: PLATFORM_ID, useValue: 'server' },
+            ],
+        });
+        const controller = TestBed.inject(HttpTestingController);
+
+        expect(await run()).toBe(true);
+        controller.expectNone(url);
         controller.verify();
     });
 });

@@ -11,6 +11,8 @@
     "e2e": "ng e2e",
     "build:dev": "ng build -c development",
     "build:prod": "ng build -c production",
+    "build:ssr-check": "ng build -c ssr-check",
+    "ssr:check": "node scripts/ssr-check.mjs",
     "bundle-stats": "webpack-bundle-analyzer dist/sotetsu-lab-v3-client/stats-es2015.json",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run"

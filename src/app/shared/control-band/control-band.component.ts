@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
     afterNextRender,
     ChangeDetectionStrategy,
@@ -97,6 +98,8 @@ let nextId = 0;
 export class ControlBandComponent {
     readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
     readonly #destroyRef = inject(DestroyRef);
+    /** サーバーには document が無いので、Angular が渡すものを使う */
+    readonly #document = inject(DOCUMENT);
 
     readonly summary = input('');
     readonly filterActive = input(false);
@@ -193,14 +196,16 @@ export class ControlBandComponent {
     constructor() {
         effect(() => {
             if (this.collapse() !== 'scroll') return;
-            document.documentElement.style.setProperty(
+            this.#document.documentElement.style.setProperty(
                 OFFSET_PROPERTY,
                 BAR_HEIGHT,
             );
         });
         this.#destroyRef.onDestroy(() => {
             if (this.collapse() === 'scroll') {
-                document.documentElement.style.removeProperty(OFFSET_PROPERTY);
+                this.#document.documentElement.style.removeProperty(
+                    OFFSET_PROPERTY,
+                );
             }
         });
         afterNextRender(() => {

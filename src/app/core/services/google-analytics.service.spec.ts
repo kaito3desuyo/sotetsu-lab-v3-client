@@ -54,3 +54,22 @@ describe('GoogleAnalyticsService', () => {
         });
     });
 });
+
+describe('GoogleAnalyticsService（gtag が無い環境）', () => {
+    beforeEach(() => {
+        delete (globalThis as unknown as { gtag?: jest.Mock }).gtag;
+        TestBed.configureTestingModule({
+            providers: [{ provide: NGXLogger, useValue: { log: () => {} } }],
+        });
+    });
+
+    it('本番でも gtag が無ければ何も送らず、投げない', () => {
+        const ga = TestBed.inject(GoogleAnalyticsService);
+
+        expect(() => ga.sendPageView('題名', '/timetable')).not.toThrow();
+        expect(() => ga.sendEvent('x')).not.toThrow();
+        expect(() =>
+            ga.setUserProperties({ loggedIn: false, role: null }),
+        ).not.toThrow();
+    });
+});
