@@ -82,6 +82,9 @@
               "outputMode": "server",
               "ssr": {
                 "entry": "server.ts"
+              },
+              "security": {
+                "allowedHosts": ["localhost"]
               }
             }
           },
