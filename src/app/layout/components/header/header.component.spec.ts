@@ -1,7 +1,10 @@
 import '@testing-library/jest-dom';
+import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
+import { UserStateQuery } from 'src/app/global-states/user.state';
 
 import { HeaderComponent } from './header.component';
 
@@ -124,5 +127,32 @@ describe('HeaderComponent', () => {
         expect(navigate).toHaveBeenCalledWith(['/register'], {
             queryParams: { return_to: '/' },
         });
+    });
+});
+
+describe('HeaderComponent をサーバーで描くとき', () => {
+    it('ログインしていてもゲストの挨拶を出す（CDN で別の人に配られるため）', async () => {
+        await TestBed.configureTestingModule({
+            imports: [HeaderComponent],
+            providers: [
+                provideHttpClient(withXhr()),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: UserStateQuery,
+                    useValue: {
+                        isLoggedIn$: of(true),
+                        displayName$: of('相鉄太郎'),
+                    },
+                },
+            ],
+        }).compileComponents();
+
+        const fixture = TestBed.createComponent(HeaderComponent);
+        fixture.detectChanges();
+
+        const header: HTMLElement =
+            fixture.nativeElement.querySelector('header');
+        expect(header.textContent).toContain('ゲスト さん');
+        expect(header.textContent).not.toContain('相鉄太郎');
     });
 });

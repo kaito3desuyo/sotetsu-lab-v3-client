@@ -12,6 +12,7 @@ import { Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -250,10 +251,11 @@ export class TrainDiagramComponent {
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
     );
 
-    /** 操作帯（manual）の畳み状態。開閉は TrainDiagramStore に保存して覚える。 */
-    readonly controlCollapsed = toSignal(TrainDiagramStore.controlCollapsed$, {
-        initialValue: false,
-    });
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        toSignal(TrainDiagramStore.controlCollapsed$, { initialValue: false }),
+        false,
+    );
 
     /** 細帯の要約に出す路線チップの選択肢（チップと同じ組み立て。ずれると要約の「○○の N 路線」がチップと合わない） */
     readonly #routeOptions = computed<FilterChipOption[]>(() =>

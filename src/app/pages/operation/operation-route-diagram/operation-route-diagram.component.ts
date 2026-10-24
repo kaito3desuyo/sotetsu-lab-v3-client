@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { lastValueFrom, of } from 'rxjs';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
@@ -83,8 +84,10 @@ export class OperationRouteDiagramComponent {
     readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
         initialValue: [],
     });
-    readonly #todaysCalendarId = toSignal(
-        inject(TodaysCalendarListStateQuery).todaysCalendarId$,
+    /** 今日のダイヤ。サーバーは今日を取らないので、最初の描画は無い形（spec 5.2） */
+    readonly #todaysCalendarId = afterFirstRender(
+        toSignal(inject(TodaysCalendarListStateQuery).todaysCalendarId$),
+        undefined,
     );
 
     readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);

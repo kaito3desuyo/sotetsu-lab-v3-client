@@ -1,5 +1,5 @@
-import { DOCUMENT } from '@angular/common';
-import { DestroyRef, inject, Injectable } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { DestroyRef, inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 
 export type QueryInvalidationTag = 'timetable' | 'sighting';
@@ -33,6 +33,9 @@ export class QueryInvalidator {
     readonly #invalidated = new Subject<QueryInvalidationTag>();
     readonly invalidated$: Observable<QueryInvalidationTag> =
         this.#invalidated.asObservable();
+
+    /** サーバーには localStorage が無い。GET のたびに例外を作って握らないよう、先に分ける */
+    readonly #isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
     /** localStorage が使えない環境のための、このタブだけの控え */
     readonly #writtenAt: Partial<Record<QueryInvalidationTag, number>> = {};
@@ -84,11 +87,13 @@ export class QueryInvalidator {
 
     #readWrittenAt(tag: QueryInvalidationTag): number | null {
         let stored: number | null = null;
-        try {
-            const value = localStorage.getItem(WRITTEN_AT_KEYS[tag]);
-            stored = value === null ? null : Number(value);
-        } catch {
-            stored = null;
+        if (this.#isBrowser) {
+            try {
+                const value = localStorage.getItem(WRITTEN_AT_KEYS[tag]);
+                stored = value === null ? null : Number(value);
+            } catch {
+                stored = null;
+            }
         }
         const candidates = [stored, this.#writtenAt[tag] ?? null].filter(
             (v): v is number => v !== null && Number.isFinite(v),

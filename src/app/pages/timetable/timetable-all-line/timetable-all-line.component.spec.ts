@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -68,6 +68,52 @@ describe('TimetableAllLineComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+});
+
+describe('TimetableAllLineComponent をサーバーで描くとき', () => {
+    it('書ける役割でも編集の行を出さない（サーバーはゲストの形で描く）', async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: UserStateQuery,
+                    useValue: { canEditTimetable$: of(true) },
+                },
+                TimetableAllLineService,
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        const component = TestBed.createComponent(
+            TimetableAllLineComponent,
+        ).componentInstance;
+
+        expect(component.canEdit()).toBe(false);
     });
 });
 

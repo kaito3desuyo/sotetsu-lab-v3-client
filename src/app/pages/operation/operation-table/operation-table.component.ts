@@ -9,6 +9,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -30,6 +31,9 @@ import { formatOperationTableSummary } from './utils/operation-table-summary.uti
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 OperationTableStore.resetLoading();
+
+/** 絞り込み無し。fallback を毎回作らないよう 1 つに */
+const NO_GROUP_NAMES: string[] = [];
 
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
@@ -77,9 +81,12 @@ export class OperationTableComponent {
     readonly tripClasses = toSignal(OperationTableStore.tripClasses$, {
         initialValue: [],
     });
-    readonly selectedGroupNames = toSignal(
-        OperationTableStore.selectedGroupNames$,
-        { initialValue: [] },
+    /** 端末に保存した運用群の絞り込み。サーバーは保存を読めないので、最初の描画は絞らない形（spec 13.2） */
+    readonly selectedGroupNames = afterFirstRender(
+        toSignal(OperationTableStore.selectedGroupNames$, {
+            initialValue: [],
+        }),
+        NO_GROUP_NAMES,
     );
 
     readonly hasFetchedOperationTrips = toSignal(

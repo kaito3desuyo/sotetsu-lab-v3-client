@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -78,10 +79,14 @@ export class TimetableAllLineComponent {
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
 
-    /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す */
-    readonly canEdit = toSignal(inject(UserStateQuery).canEditTimetable$, {
-        initialValue: false,
-    });
+    /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
+     * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
+    readonly canEdit = afterFirstRender(
+        toSignal(inject(UserStateQuery).canEditTimetable$, {
+            initialValue: false,
+        }),
+        false,
+    );
     readonly isLoading = toSignal(TimetableAllLineStore.isLoading$);
     readonly calendarId = toSignal(TimetableAllLineStore.calendarId$);
     readonly tripDirection = toSignal(TimetableAllLineStore.tripDirection$);
@@ -108,10 +113,12 @@ export class TimetableAllLineComponent {
         TimetableAllLineStore.isAwaitingTripBlocks$,
         { initialValue: false },
     );
-    /** 操作帯を畳んでいるか（列車ダイヤグラムと同じく、畳んだ状態をページが持つ） */
-    readonly controlCollapsed = toSignal(
-        TimetableAllLineStore.controlCollapsed$,
-        { initialValue: false },
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        toSignal(TimetableAllLineStore.controlCollapsed$, {
+            initialValue: false,
+        }),
+        false,
     );
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
