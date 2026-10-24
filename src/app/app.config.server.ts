@@ -1,11 +1,13 @@
 import {
     mergeApplicationConfig,
     ApplicationConfig,
+    ErrorHandler,
     provideAppInitializer,
 } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
+import { ServerErrorHandler } from './core/services/server-error-handler';
 import { resetElfStores } from './core/utils/reset-elf-stores';
 
 const serverConfig: ApplicationConfig = {
@@ -18,6 +20,8 @@ const serverConfig: ApplicationConfig = {
         ),
         // サーバーはリクエストごとにアプリを起動し直す。そのたびに前のリクエストのストアを捨てる
         provideAppInitializer(() => resetElfStores()),
+        // サーバーではエラーを標準エラーに出す（app.config.ts の ErrorHandler をサーバーでだけ差し替える）
+        { provide: ErrorHandler, useClass: ServerErrorHandler },
     ],
 };
 
