@@ -34,28 +34,31 @@ app.use(
 let renderQueue: Promise<void> = Promise.resolve();
 
 app.use((req, res, next) => {
-    renderQueue = renderQueue.then(async () => {
-        try {
-            const response = await angularApp.handle(req);
-            if (!response) {
-                next();
-                return;
+    renderQueue = renderQueue
+        .then(async () => {
+            try {
+                const response = await angularApp.handle(req);
+                if (!response) {
+                    next();
+                    return;
+                }
+                // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない。
+                // ただし失敗の途中で出たもの（すでに no-store）は short に戻さない
+                if (
+                    response.status >= 300 &&
+                    response.status < 400 &&
+                    response.headers.get('Cache-Control') !==
+                        CACHE_CONTROL['no-store']
+                ) {
+                    response.headers.set('Cache-Control', CACHE_CONTROL.short);
+                }
+                await writeResponseToNodeResponse(response, res);
+            } catch (error) {
+                next(error);
             }
-            // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない。
-            // ただし失敗の途中で出たもの（すでに no-store）は short に戻さない
-            if (
-                response.status >= 300 &&
-                response.status < 400 &&
-                response.headers.get('Cache-Control') !==
-                    CACHE_CONTROL['no-store']
-            ) {
-                response.headers.set('Cache-Control', CACHE_CONTROL.short);
-            }
-            await writeResponseToNodeResponse(response, res);
-        } catch (error) {
-            next(error);
-        }
-    });
+        })
+        // next(error) が投げても列を rejected のまま残さない（残すと以後の描画が全部止まる）
+        .catch(() => undefined);
 });
 
 if (isMainModule(import.meta.url)) {
