@@ -32,4 +32,17 @@ describe('isTransferableRequest', () => {
 
         expect(isTransferableRequest(req)).toBe(false);
     });
+
+    it.each(['reload', 'no-store', 'no-cache'] as const)(
+        '書いた後に取り直す cache: %s の要求は引き継がない',
+        (cache) => {
+            const req = new HttpRequest(
+                'GET',
+                `${environment.apiUrl}/v3/stations`,
+                { cache },
+            );
+
+            expect(isTransferableRequest(req)).toBe(false);
+        },
+    );
 });
