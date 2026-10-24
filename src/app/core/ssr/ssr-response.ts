@@ -20,7 +20,8 @@ const POLICY_RANK: Record<CachePolicy, number> = {
 @Injectable({ providedIn: 'root' })
 export class SsrResponse {
     readonly #init = inject(RESPONSE_INIT, { optional: true });
-    #policy: CachePolicy | null = null;
+    /** 今の長さ。始まりはルートの既定（headers の Cache-Control）。ページはこれより長くできない */
+    #policy: CachePolicy | null = this.#routeDefaultPolicy();
     readonly #tags = new Set<string>();
 
     /** 置く長さを決める。短いほう（no-store が最も短い）を優先し、一度短くしたら長く戻さない */
@@ -45,6 +46,15 @@ export class SsrResponse {
             return;
         }
         this.#headers().set(CACHE_TAG_HEADER, [...this.#tags].join(','));
+    }
+
+    #routeDefaultPolicy(): CachePolicy | null {
+        if (!this.#init?.headers) return null;
+        const value = new Headers(this.#init.headers).get('Cache-Control');
+        const policies = Object.keys(CACHE_CONTROL) as CachePolicy[];
+        return (
+            policies.find((policy) => CACHE_CONTROL[policy] === value) ?? null
+        );
     }
 
     #headers(): Headers {

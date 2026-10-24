@@ -44,6 +44,31 @@ describe('SsrResponse', () => {
         expect((init.headers as Headers).get('Cache-Control')).toBe('no-store');
     });
 
+    it('ルートの既定が short なら、最初の long でも short のまま（既定より長くしない）', () => {
+        const init: ResponseInit = {
+            headers: { 'Cache-Control': CACHE_CONTROL.short },
+        };
+        setup(init).setCachePolicy('long');
+
+        expect(new Headers(init.headers).get('Cache-Control')).toBe(
+            CACHE_CONTROL.short,
+        );
+    });
+
+    it('ルートの既定が no-store なら、short にも long にも上書きしない', () => {
+        const init: ResponseInit = {
+            headers: new Headers({
+                'Cache-Control': CACHE_CONTROL['no-store'],
+            }),
+        };
+        const response = setup(init);
+
+        response.setCachePolicy('short');
+        response.setCachePolicy('long');
+
+        expect((init.headers as Headers).get('Cache-Control')).toBe('no-store');
+    });
+
     it('headers がオブジェクトでも Headers にして書く', () => {
         const init: ResponseInit = { headers: { 'X-Other': '1' } };
         setup(init).setCachePolicy('short');
