@@ -72,4 +72,40 @@ describe('RouteQuery', () => {
         expect(req.request.cache).toBeUndefined();
         req.flush([]);
     });
+
+    it('結合は routeStationLists.station と、使う項目だけの fields を送る', () => {
+        const { query, controller } = setup();
+
+        query.findMany({ serviceName: 'a' }).subscribe();
+        const req = controller.expectOne((r) => r.url === url);
+
+        expect(req.request.params.get('serviceName')).toBe('a');
+        expect(req.request.params.get('include')).toBe(
+            'routeStationLists.station',
+        );
+        expect(req.request.params.get('fields[route]')).toBe(
+            'agencyId,routeNumber,routeName,routeDescription,routeType,routeUrl,routeColor,routeTextColor',
+        );
+        expect(req.request.params.get('fields[routeStationList]')).toBe(
+            'routeId,stationId,stationSequence,stationNumbering',
+        );
+        expect(req.request.params.get('fields[station]')).toBe(
+            'stationName,stationSubname,stationType,stationDescription,stationLatlng,stationUrl,wheelchairBoarding',
+        );
+        req.flush([]);
+    });
+
+    it('serviceName が無いときも、include と fields は送る', () => {
+        const { query, controller } = setup();
+
+        query.findMany().subscribe();
+        const req = controller.expectOne((r) => r.url === url);
+
+        expect(req.request.params.has('serviceName')).toBe(false);
+        expect(req.request.params.get('include')).toBe(
+            'routeStationLists.station',
+        );
+        expect(req.request.params.has('fields[route]')).toBe(true);
+        req.flush([]);
+    });
 });

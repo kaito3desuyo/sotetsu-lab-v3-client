@@ -3,9 +3,11 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
 import { RouteDetailsDto } from '../../usecase/dtos/route-details.dto';
 import { RouteStationsDto } from '../../usecase/dtos/route-stations.dto';
+import { ROUTE_STATION_LIST_FIELDS } from '../../usecase/route-fields';
 import { RouteDtoBuilder } from '../builders/route.dto.builder';
 import { RouteStationsDtoBuilder } from '../builders/route-stations.dto.builder';
 import { RouteStationsModel } from '../models/route-stations.model';
@@ -17,6 +19,7 @@ export class RouteQuery {
     readonly #v3ApiUrl = environment.apiUrl + '/v3/routes';
     readonly #cache = new QueryCache();
 
+    // 時刻印は読まないので返させない（API の include・fields）。
     findMany(params?: {
         serviceName?: string;
         forceReload?: boolean;
@@ -28,9 +31,13 @@ export class RouteQuery {
                 name: 'findMany',
                 params: { serviceName },
                 fetch: () => {
-                    const httpParams = new HttpParams(
-                        serviceName ? { fromObject: { serviceName } } : {},
-                    );
+                    const httpParams = new HttpParams({
+                        fromObject: {
+                            ...(serviceName ? { serviceName } : {}),
+                            include: 'routeStationLists.station',
+                            ...toFieldsParams(ROUTE_STATION_LIST_FIELDS),
+                        },
+                    });
                     return this.#http.get<RouteModel[]>(this.#v3ApiUrl, {
                         params: httpParams,
                         observe: 'response',
