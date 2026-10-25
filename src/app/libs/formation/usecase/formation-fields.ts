@@ -1,5 +1,5 @@
 /**
- * 返す項目の選択（API の `fields[資源]=項目,項目`。sotetsu-lab-v3-api docs/adr/0002-v3-sparse-fieldsets.md）。
+ * 返す項目の選択（API の `include`・`fields[資源]=項目,項目`。sotetsu-lab-v3-api docs/adr/0010-v3-include-and-fields.md）。
  * fields を指定すると値が null の項目は省かれる。
  */
 export type FormationFields = Readonly<Record<string, readonly string[]>>;
