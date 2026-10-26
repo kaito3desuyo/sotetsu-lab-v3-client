@@ -1391,7 +1391,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TrainDiagramComponent>;
     let component: TrainDiagramComponent;
     let tripBlocks$: Observable<undefined>;
-    let itineraryLinks$: Observable<undefined>;
+    // 前後の運用の取得の結果（failed が true なら取得に失敗している）
+    let itineraryLinks$: Observable<{ failed: boolean } | undefined>;
     let networkStations$: Observable<undefined>;
     const fetchTripClasses = jest.fn(() => of(undefined));
     const fetchNetworkStations = jest.fn(() => networkStations$);
@@ -1499,6 +1500,19 @@ describe('TrainDiagramComponent の圏外の保存', () => {
             },
         });
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('前後の運用の取得だけ失敗したら、保存も戻しもしない（図は出す）', async () => {
+        itineraryLinks$ = of({ failed: true });
+
+        await component.fetchData({ refetchTripBlocks: true });
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+        expect(
+            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
+        ).toBe(true);
     });
 
     it('失敗したら保存した中身を、読み込み中を解く前に戻し、失敗は今までどおり投げる', async () => {

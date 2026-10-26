@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -38,6 +39,7 @@ describe('Service: TrainDiagram', () => {
     let service: TrainDiagramService;
     let serviceServiceMock: { findOneWithStations: jest.Mock };
     let tripBlockServiceMock: { findManyByCalendarId: jest.Mock };
+    let operationServiceMock: { findManyItineraryLinks: jest.Mock };
 
     beforeEach(() => {
         serviceServiceMock = {
@@ -56,9 +58,14 @@ describe('Service: TrainDiagram', () => {
                 .mockReturnValue(of({ 0: [representativeTrip], 1: [] })),
         };
 
+        operationServiceMock = {
+            findManyItineraryLinks: jest.fn().mockReturnValue(of([])),
+        };
+
         TestBed.configureTestingModule({
             providers: [
                 TrainDiagramService,
+                { provide: OperationService, useValue: operationServiceMock },
                 { provide: ServiceService, useValue: serviceServiceMock },
                 {
                     provide: ServiceListStateQuery,
@@ -88,6 +95,7 @@ describe('Service: TrainDiagram', () => {
         TrainDiagramStore.setNetworkStations([]);
         TrainDiagramStore.setRouteStations([]);
         TrainDiagramStore.setTripClasses([]);
+        TrainDiagramStore.setItineraryLinks([]);
     });
 
     it('fetchTripBlocks: calendarId 未設定なら空をセットする', (done) => {
@@ -183,5 +191,35 @@ describe('Service: TrainDiagram', () => {
                 done();
             });
         });
+    });
+
+    it('fetchItineraryLinks: 取れたら failed: false を返し、ストアへ設定する', async () => {
+        TrainDiagramStore.setCalendarId('cal-1');
+        const links = [{ operationId: 'op-1' }];
+        operationServiceMock.findManyItineraryLinks.mockReturnValueOnce(
+            of(links),
+        );
+
+        await expect(
+            firstValueFrom(service.fetchItineraryLinks()),
+        ).resolves.toEqual({ failed: false });
+        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
+            links,
+        );
+    });
+
+    it('fetchItineraryLinks: 取れなくても空として扱い、failed: true を返す', async () => {
+        TrainDiagramStore.setCalendarId('cal-1');
+        TrainDiagramStore.setItineraryLinks([{ operationId: 'old' } as any]);
+        operationServiceMock.findManyItineraryLinks.mockReturnValueOnce(
+            throwError(() => new Error('offline')),
+        );
+
+        await expect(
+            firstValueFrom(service.fetchItineraryLinks()),
+        ).resolves.toEqual({ failed: true });
+        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
+            [],
+        );
     });
 });

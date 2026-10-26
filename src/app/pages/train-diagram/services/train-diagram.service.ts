@@ -55,13 +55,14 @@ export class TrainDiagramService {
     /**
      * 車両の前後の運用（運用表・行路図と同じ口）を取る。
      * 入出庫の端を □ で描くためだけに使うので、取れなくても空として扱い（今の △○ のまま）、図は止めない。
+     * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
-    fetchItineraryLinks(): Observable<void> {
+    fetchItineraryLinks(): Observable<{ failed: boolean }> {
         const calendarId = TrainDiagramStore.calendarId;
 
         if (!calendarId) {
             TrainDiagramStore.setItineraryLinks([]);
-            return of(undefined);
+            return of({ failed: false });
         }
 
         return this.#operationService
@@ -70,11 +71,11 @@ export class TrainDiagramService {
                 tap((links) => {
                     TrainDiagramStore.setItineraryLinks(links);
                 }),
+                map(() => ({ failed: false })),
                 catchError(() => {
                     TrainDiagramStore.setItineraryLinks([]);
-                    return of(undefined);
+                    return of({ failed: true });
                 }),
-                map(() => undefined),
             );
     }
 
@@ -99,7 +100,9 @@ export class TrainDiagramService {
      * タップで選択された列車の充当編成（目撃クロスセクション由来）を取得する。
      * 今日有効なダイヤ表示時のみ呼び出し側（コンポーネント）が呼ぶ。
      */
-    fetchOperationSightingTimeCrossSection(operationNumber: string): Observable<void> {
+    fetchOperationSightingTimeCrossSection(
+        operationNumber: string,
+    ): Observable<void> {
         return this.#operationSightingService
             .findOneTimeCrossSectionByOperationNumber({ operationNumber })
             .pipe(

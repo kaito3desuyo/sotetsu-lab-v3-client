@@ -1060,6 +1060,7 @@ export class TrainDiagramComponent {
         try {
             // 運行は種別を貼り付けるので種別の後。路線網の駅はどちらにも依存しないので並行に取る
             const firstLoad = !this.#firstLoadDone();
+            let hasFetchedItineraryLinks = true;
             const fetchTripBlocks = async (): Promise<void> => {
                 if (firstLoad) {
                     await lastValueFrom(
@@ -1084,6 +1085,12 @@ export class TrainDiagramComponent {
                     if (rejected) {
                         throw rejected.reason;
                     }
+                    // 前後の運用が取れなかった中身は、圏外用に保存しない（良い保存を空のつながりで上書きしない）
+                    const linksResult = results[1];
+                    hasFetchedItineraryLinks = !(
+                        linksResult.status === 'fulfilled' &&
+                        linksResult.value?.failed
+                    );
                 }
             };
             const results = await Promise.allSettled([
@@ -1117,7 +1124,11 @@ export class TrainDiagramComponent {
                 throw failure.reason;
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            if (flags.refetchTripBlocks && seq === fetchSeq) {
+            if (
+                flags.refetchTripBlocks &&
+                hasFetchedItineraryLinks &&
+                seq === fetchSeq
+            ) {
                 void this.#offlineSnapshots.save({
                     key: OFFLINE_SNAPSHOT_KEY,
                     conditions,

@@ -446,6 +446,22 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         expect(save).not.toHaveBeenCalled();
     });
 
+    it('前後の運用の取得だけ失敗したら保存しない（戻しも失敗の通知もしない）', async () => {
+        service['fetchItineraryLinks'].mockImplementation(() =>
+            of({ failed: true }),
+        );
+
+        await create();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(notification.open).not.toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+        expect(await isLoading()).toBe(false);
+    });
+
     it('失敗したら保存した中身を戻し、最終更新に保存した時刻を出し、失敗の通知は出さない', async () => {
         service['fetchCalendar'].mockImplementation(failLater);
         restore.mockImplementation(restoreSaved);

@@ -165,7 +165,8 @@ export class OperationRealTimeComponent {
             await lastValueFrom(
                 this.#operationRealTimeService.fetchOperations(),
             );
-            await lastValueFrom(
+            // 前後の運用が取れなくても画面は出す。ただし、その中身は圏外用に保存しない
+            const itineraryLinks = await lastValueFrom(
                 this.#operationRealTimeService.fetchItineraryLinks(),
             );
             await lastValueFrom(
@@ -187,11 +188,13 @@ export class OperationRealTimeComponent {
             );
 
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions: {},
-                data: OperationRealTimeStore.snapshot(),
-            });
+            if (!itineraryLinks?.failed) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions: {},
+                    data: OperationRealTimeStore.snapshot(),
+                });
+            }
 
             if (firstLoading()) {
                 OperationRealTimeStore.setFinalUpdateTime();

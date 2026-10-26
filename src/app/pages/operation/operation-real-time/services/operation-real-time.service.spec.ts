@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, of, throwError } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -16,7 +16,10 @@ import { OperationRealTimeService } from './operation-real-time.service';
 
 describe('OperationRealTimeService（まとめて取る口）', () => {
     let service: OperationRealTimeService;
-    const operationService = { findManyWithCurrentPosition: jest.fn() };
+    const operationService = {
+        findManyWithCurrentPosition: jest.fn(),
+        findManyItineraryLinks: jest.fn(),
+    };
     const serviceService = { findOneWithStations: jest.fn() };
     const operationSightingService = {
         findManyTimeCrossSectionsByOperationNumbers: jest.fn(),
@@ -124,5 +127,35 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
         expect(await firstValueFrom(OperationRealTimeStore.stations$)).toBe(
             stations,
         );
+    });
+
+    it('前後の運用は、取れたら failed: false を返してストアへ入れる', async () => {
+        OperationRealTimeStore.setCalendar({ calendarId: 'cal-1' } as never);
+        const links = [{ operationItineraryLinkId: 'link-1' }];
+        operationService.findManyItineraryLinks.mockReturnValue(of(links));
+
+        const result = await firstValueFrom(service.fetchItineraryLinks());
+
+        expect(result).toEqual({ failed: false });
+        expect(
+            await firstValueFrom(OperationRealTimeStore.itineraryLinks$),
+        ).toBe(links);
+    });
+
+    it('前後の運用が取れなくても空として扱い、failed: true を返す', async () => {
+        OperationRealTimeStore.setCalendar({ calendarId: 'cal-1' } as never);
+        OperationRealTimeStore.setItineraryLinks([
+            { operationItineraryLinkId: 'old' },
+        ] as never);
+        operationService.findManyItineraryLinks.mockReturnValue(
+            throwError(() => new Error('offline')),
+        );
+
+        const result = await firstValueFrom(service.fetchItineraryLinks());
+
+        expect(result).toEqual({ failed: true });
+        expect(
+            await firstValueFrom(OperationRealTimeStore.itineraryLinks$),
+        ).toEqual([]);
     });
 });
