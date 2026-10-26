@@ -3,8 +3,11 @@ import {
     Component,
     DestroyRef,
     computed,
+    effect,
     inject,
+    PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,6 +17,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -79,6 +88,9 @@ export class TimetableStationComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
     readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
@@ -155,12 +167,36 @@ export class TimetableStationComponent {
         return !!calendarId && this.todaysCalendarIds().includes(calendarId);
     });
 
+    /**
+     * 各列車の充当編成を出すか。セルの @if で要素が増えるので、サーバーと同じ false で最初の描画をしてから切り替える（spec 5.3）。
+     * 取得するかの判断（isTodaysCalendar）は最初の描画を待たない。
+     */
+    readonly showCurrentFormation = afterFirstRender(
+        this.isTodaysCalendar,
+        false,
+    );
+
     /** ダイヤ select の選択中表示（改正日 + ダイヤ名）に使う。 */
     readonly selectedCalendar = computed(() =>
         this.calendars().find(
             (calendar) => calendar.calendarId === this.calendarId(),
         ),
     );
+
+    /** 題名。駅名・方向・ダイヤは取ったデータから作る（題名のためだけに API を叩かない） */
+    readonly pageTitle = computed(() => {
+        const stationName = this.stationOptions().find(
+            (station) => station.stationId === this.stationId(),
+        )?.stationName;
+        const calendar = this.selectedCalendar();
+        return formatPageTitle(
+            stationName ? `${stationName}駅 時刻表` : '駅別時刻表',
+            [
+                tripDirectionLabel.get(this.tripDirection()),
+                calendar ? formatCalendarSummaryLabel(calendar) : null,
+            ],
+        );
+    });
 
     readonly isEmpty = computed(
         () => !!this.calendar() && this.timetableData().length === 0,
@@ -189,6 +225,9 @@ export class TimetableStationComponent {
     );
 
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -201,6 +240,10 @@ export class TimetableStationComponent {
 
                 // 既定表示（mockup-01）: パラメータ不足時は 横浜 / 今日のダイヤ / 上り へ補完
                 if (!rawCalendarId || !rawStationId || tripDirection === null) {
+                    // サーバーでは補わない。補う先は今日のダイヤなので、CDN に置く HTML に今日を入れない。
+                    // 骨組みのまま返し、ブラウザで起動した後に補う（spec 13.2）
+                    if (this.#isServer) return;
+
                     const defaultCalendarId =
                         rawCalendarId ??
                         this.#todaysCalendarListStateQuery.todaysCalendarId;
@@ -234,6 +277,11 @@ export class TimetableStationComponent {
                 const calendarId = rawCalendarId;
                 const stationId = rawStationId;
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 TimetableStationStore.setCalendarId(calendarId);
                 TimetableStationStore.setStationId(stationId);
                 TimetableStationStore.setTripDirection(tripDirection);

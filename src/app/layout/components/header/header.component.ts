@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { TokenStateStore } from 'src/app/global-states/token.state';
@@ -35,7 +36,11 @@ export class HeaderComponent {
     readonly #userStateStore = inject(UserStateStore);
     readonly #userStateQuery = inject(UserStateQuery);
 
-    readonly isLoggedIn = toSignal(this.#userStateQuery.isLoggedIn$);
+    /** サーバーと、それを引き継ぐ最初の描画はゲストの形にする（spec 5.3。CDN で別の人に配られるため） */
+    readonly isLoggedIn = afterFirstRender(
+        toSignal(this.#userStateQuery.isLoggedIn$, { initialValue: false }),
+        false,
+    );
     readonly displayName = toSignal(this.#userStateQuery.displayName$);
 
     /**

@@ -3,13 +3,18 @@ import {
     Component,
     computed,
     DestroyRef,
+    effect,
     inject,
 } from '@angular/core';
+import { format, parse } from 'date-fns';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
@@ -17,6 +22,7 @@ import { OperationPastTimeTableComponent } from './components/operation-past-tim
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
+import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
 
 OperationPastTimeStore.resetLoading();
 
@@ -41,6 +47,8 @@ export class OperationPastTimeComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
+    readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
     readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
 
@@ -70,11 +78,25 @@ export class OperationPastTimeComponent {
         }),
     );
 
+    /** 題名。起点の日と日数は取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const referenceDate = this.#referenceDate();
+        const days = this.#days();
+        return formatPageTitle('過去の運用情報', [
+            referenceDate && days
+                ? `${format(parse(referenceDate, 'yyyy-MM-dd', new Date()), 'yyyy/M/d')} から ${days} 日間`
+                : null,
+        ]);
+    });
+
     onClearFilter(): void {
         OperationPastTimeStore.setSelectedAgencyIds([]);
     }
 
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
         OperationPastTimeStore.setHasFetchedPastTime(false);
 
@@ -92,6 +114,14 @@ export class OperationPastTimeComponent {
                 OperationPastTimeStore.setIncludeInvalidated(
                     includeInvalidated === 'true',
                 );
+
+                // サーバーで描くときの置き方。ブラウザでは何もしない（spec 6.2）
+                const hints = pastTimeCacheHints(
+                    OperationPastTimeStore.dates,
+                    new Date(),
+                );
+                this.#ssrResponse.setCachePolicy(hints.policy);
+                this.#ssrResponse.addCacheTags(hints.tags);
 
                 this.fetchData();
             });

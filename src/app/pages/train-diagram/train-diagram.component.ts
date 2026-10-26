@@ -5,13 +5,20 @@ import {
     computed,
     effect,
     inject,
+    PLATFORM_ID,
     signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { Location } from '@angular/common';
+import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -135,6 +142,9 @@ export class TrainDiagramComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #location = inject(Location);
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -246,14 +256,29 @@ export class TrainDiagramComponent {
     readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
         initialValue: [],
     });
+    /** 題名。ダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.#calendars().find(
+            (c) => c.calendarId === this.calendarId(),
+        );
+        return formatPageTitle('ダイヤグラム', [
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
     );
+    /**
+     * 「今」の表示（今へボタン・現在時刻の線と凡例）を出すか。@if で要素が増える表示だけがこれを使う。
+     * サーバーは今日のダイヤを取らず false で描くので、ブラウザも最初の描画までは false にそろえる（spec 5.3）
+     */
+    readonly showTodayParts = afterFirstRender(this.isTodaySelected, false);
 
-    /** 操作帯（manual）の畳み状態。開閉は TrainDiagramStore に保存して覚える。 */
-    readonly controlCollapsed = toSignal(TrainDiagramStore.controlCollapsed$, {
-        initialValue: false,
-    });
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        toSignal(TrainDiagramStore.controlCollapsed$, { initialValue: false }),
+        false,
+    );
 
     /** 細帯の要約に出す路線チップの選択肢（チップと同じ組み立て。ずれると要約の「○○の N 路線」がチップと合わない） */
     readonly #routeOptions = computed<FilterChipOption[]>(() =>
@@ -275,7 +300,7 @@ export class TrainDiagramComponent {
     );
 
     readonly nowMinute = computed(() =>
-        this.isTodaySelected() ? railwayMinuteOfDay(this.#now()) : null,
+        this.showTodayParts() ? railwayMinuteOfDay(this.#now()) : null,
     );
 
     readonly #stationNameById = computed(() =>
@@ -860,6 +885,9 @@ export class TrainDiagramComponent {
     #wasChartHidden = false;
 
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         runIntervalInBrowser(1000, () => this.#now.set(new Date()));
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
@@ -912,6 +940,9 @@ export class TrainDiagramComponent {
                     parseTimeParam(timeParam) === undefined ||
                     !!windowParam;
 
+                // サーバーでは今日のダイヤ・今の時刻で補わない。骨組みのまま返し、ブラウザで補う（spec 13.2）
+                if (this.#isServer && missingParams) return;
+
                 if (missingParams && calendarId && resolvedRouteIds.length) {
                     const minute =
                         parseTimeParam(timeParam) ??
@@ -952,6 +983,11 @@ export class TrainDiagramComponent {
                 const calendarChanged =
                     TrainDiagramStore.calendarId !== calendarId;
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 TrainDiagramStore.setCalendarId(calendarId ?? null);
                 TrainDiagramStore.setSelectedRouteIds(resolvedRouteIds);
                 TrainDiagramStore.setDirectionFilter(directionFilter);

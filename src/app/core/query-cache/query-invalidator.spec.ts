@@ -1,3 +1,4 @@
+import { PLATFORM_ID, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
     QueryInvalidator,
@@ -7,8 +8,8 @@ import {
 } from './query-invalidator';
 
 describe('QueryInvalidator', () => {
-    const setup = () => {
-        TestBed.configureTestingModule({});
+    const setup = (extraProviders: Provider[] = []) => {
+        TestBed.configureTestingModule({ providers: extraProviders });
         const invalidator = TestBed.inject(QueryInvalidator);
         const tags: QueryInvalidationTag[] = [];
         invalidator.invalidated$.subscribe((t) => tags.push(t));
@@ -40,6 +41,17 @@ describe('QueryInvalidator', () => {
         const { invalidator } = setup();
 
         expect(invalidator.requestCache('timetable')).toBe('default');
+    });
+
+    it('サーバーでは localStorage を読まない', () => {
+        localStorage.setItem(WRITTEN_AT_KEYS.timetable, String(Date.now()));
+        const getItem = jest.spyOn(Storage.prototype, 'getItem');
+        const { invalidator } = setup([
+            { provide: PLATFORM_ID, useValue: 'server' },
+        ]);
+
+        expect(invalidator.requestCache('timetable')).toBe('default');
+        expect(getItem).not.toHaveBeenCalled();
     });
 
     it("'timetable' から 1 時間（API の max-age=3600）のあいだは reload、過ぎたら default", () => {

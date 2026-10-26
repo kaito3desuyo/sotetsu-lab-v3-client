@@ -16,6 +16,8 @@ export const OPERATION_TABLE_ROUTES: Route[] = [
         },
         data: {
             title: '運用表',
+            description:
+                '相鉄線の運用表。ダイヤごとに、各運用が受け持つ列車を順に並べます。',
         },
     },
 ];

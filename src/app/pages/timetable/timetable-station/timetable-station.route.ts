@@ -15,6 +15,8 @@ export const TIMETABLE_STATION_ROUTES: Routes = [
         },
         data: {
             title: '駅別時刻表',
+            description:
+                '相鉄線と直通先の駅別時刻表。ダイヤ・方向ごとに、列車の種別・行先・運用番号を載せます。',
         },
     },
 ];

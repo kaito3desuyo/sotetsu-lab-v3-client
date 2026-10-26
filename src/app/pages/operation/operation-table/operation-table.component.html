@@ -95,9 +95,18 @@
             ) {
                 @if (isCardVisible(operationTrip.operation.operationNumber)) {
                     <!-- 画面に入ったカードだけ描く（104 枚・2,500 行余りを一度に描くと約 1 秒かかる）。
-                         場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする -->
-                    @defer (on viewport; prefetch on idle) {
+                         場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする。
+                         サーバーでは中身まで描き（検索のため）、ブラウザは画面に入ったものから引き継ぐ（hydrate on viewport） -->
+                    @defer (on viewport; prefetch on idle; hydrate on viewport) {
+                        <!-- 画面の外のカードは描画を省く（content-visibility）。サーバーが描いた 104 枚を
+                             ブラウザが一度に描かないため。省いている間の高さは、場所取りと同じ高さ -->
                         <app-operation-table-card
+                            class="[content-visibility:auto]"
+                            [style.contain-intrinsic-size]="
+                                'auto ' +
+                                placeholderHeight(operationTrip) +
+                                'px'
+                            "
                             [operationTrip]="operationTrip"
                             [stations]="stations()"
                             [links]="itineraryLinks()"

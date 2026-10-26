@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { CACHE_CONTROL } from './src/app/core/ssr/cache-control';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -20,13 +21,44 @@ app.use(
     }),
 );
 
+/**
+ * 描画を 1 本ずつにする列の最後尾。
+ * Elf のストアはプロセス全体で 1 つで、描画の始めに resetElfStores() が空にする。
+ * 2 つの描画が重なると、先の描画の途中でストアが空になり、取得の済んだ一部（運用表の trips など）だけが残った
+ * 壊れた HTML が、エラーも出さずに long で CDN に置かれる。
+ * 本番の Lambda は 1 環境で 1 リクエストずつ受けるのでもともと重ならない。この列は、手元の確かめと、
+ * 並行にリクエストを受ける実行環境（Web Functions など）で壊れた HTML を返さないための守り。
+ * 静的ファイルの配信は express.static が先に受けるので並べない。
+ * 直列化・ng-state の書き出しは応答を書く間に進むので、応答を書き終えるまで次を待たせる。
+ */
+let renderQueue: Promise<void> = Promise.resolve();
+
 app.use((req, res, next) => {
-    angularApp
-        .handle(req)
-        .then((response) =>
-            response ? writeResponseToNodeResponse(response, res) : next(),
-        )
-        .catch(next);
+    renderQueue = renderQueue
+        .then(async () => {
+            try {
+                const response = await angularApp.handle(req);
+                if (!response) {
+                    next();
+                    return;
+                }
+                // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない。
+                // ただし失敗の途中で出たもの（すでに no-store）は short に戻さない
+                if (
+                    response.status >= 300 &&
+                    response.status < 400 &&
+                    response.headers.get('Cache-Control') !==
+                        CACHE_CONTROL['no-store']
+                ) {
+                    response.headers.set('Cache-Control', CACHE_CONTROL.short);
+                }
+                await writeResponseToNodeResponse(response, res);
+            } catch (error) {
+                next(error);
+            }
+        })
+        // next(error) が投げても列を rejected のまま残さない（残すと以後の描画が全部止まる）
+        .catch(() => undefined);
 });
 
 if (isMainModule(import.meta.url)) {
@@ -35,7 +67,9 @@ if (isMainModule(import.meta.url)) {
         if (error) {
             throw error;
         }
-        console.log(`Node Express server listening on http://localhost:${port}`);
+        console.log(
+            `Node Express server listening on http://localhost:${port}`,
+        );
     });
 }
 

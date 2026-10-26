@@ -3,12 +3,21 @@ import {
     Component,
     DestroyRef,
     computed,
+    effect,
     inject,
+    PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -30,6 +39,9 @@ import { formatOperationTableSummary } from './utils/operation-table-summary.uti
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 OperationTableStore.resetLoading();
+
+/** 絞り込み無し。fallback を毎回作らないよう 1 つに */
+const NO_GROUP_NAMES: string[] = [];
 
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
@@ -58,6 +70,9 @@ export class OperationTableComponent {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
     readonly isLoading = toSignal(OperationTableStore.isLoading$);
     readonly calendarId = toSignal(OperationTableStore.calendarId$);
@@ -77,9 +92,12 @@ export class OperationTableComponent {
     readonly tripClasses = toSignal(OperationTableStore.tripClasses$, {
         initialValue: [],
     });
-    readonly selectedGroupNames = toSignal(
-        OperationTableStore.selectedGroupNames$,
-        { initialValue: [] },
+    /** 端末に保存した運用群の絞り込み。サーバーは保存を読めないので、最初の描画は絞らない形（spec 13.2） */
+    readonly selectedGroupNames = afterFirstRender(
+        toSignal(OperationTableStore.selectedGroupNames$, {
+            initialValue: [],
+        }),
+        NO_GROUP_NAMES,
     );
 
     readonly hasFetchedOperationTrips = toSignal(
@@ -121,10 +139,24 @@ export class OperationTableComponent {
         OperationTableStore.setSelectedGroupNames([]);
     }
 
+    /** 題名。ダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.calendar();
+        return formatPageTitle('運用表', [
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
+
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
+                // サーバーでは今日のダイヤで補わない。今日を取っていないので、取りにも行かず骨組みのまま返す
+                if (this.#isServer && !paramMap.get('calendar_id')) return;
+
                 const calendarId =
                     paramMap.get('calendar_id') ??
                     this.#todaysCalendarListStateQuery.todaysCalendarId;
@@ -141,6 +173,11 @@ export class OperationTableComponent {
                     return;
                 }
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 OperationTableStore.setCalendarId(calendarId ?? null);
 
                 this.fetchData();

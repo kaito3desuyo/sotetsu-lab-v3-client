@@ -15,6 +15,8 @@ export const OPERATION_ROUTE_DIAGRAM_ROUTES: Route[] = [
         },
         data: {
             title: '運用行路図',
+            description:
+                '相鉄線の運用行路図。1 つの運用が 1 日に走る列車を路線図の上に描きます。',
         },
     },
 ];

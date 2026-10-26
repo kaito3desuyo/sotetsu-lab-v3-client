@@ -1,5 +1,8 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { TitleService } from 'src/app/core/services/title.service';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+
+const LIBRARY_VEHICLE_DESCRIPTION =
+    '相鉄の車両の形式ごとの解説。編成・製造・装備の移り変わりを載せています。';
 
 @Component({
     selector: 'app-library-vehicle',
@@ -8,12 +11,12 @@ import { TitleService } from 'src/app/core/services/title.service';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LibraryVehicleComponent {
-    readonly #titleService = inject(TitleService);
-
     constructor() {
-        // 他ページは resolver から TitleService を呼ぶが、本ページは取得データが無く
-        // resolver を持たないため document.title が既定のままだった（audit M10）。
-        // 静的ページなのでここで直接設定する。
-        this.#titleService.setTitle('相鉄の車両');
+        // 取得データが無く resolver を持たないページなので、ここで題名・説明・OGP を入れる（audit M10）
+        inject(PageMeta).set({
+            title: '相鉄の車両',
+            description: LIBRARY_VEHICLE_DESCRIPTION,
+            url: '/library/vehicle',
+        });
     }
 }

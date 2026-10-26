@@ -3,8 +3,11 @@ import {
     Component,
     DestroyRef,
     computed,
+    effect,
     inject,
+    PLATFORM_ID,
 } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { PageEvent } from '@angular/material/paginator';
@@ -13,11 +16,16 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
+import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
@@ -77,11 +85,18 @@ export class TimetableAllLineComponent {
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #agencyListStateQuery = inject(AgencyListStateQuery);
     readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #ssrResponse = inject(SsrResponse);
+    readonly #pageMeta = inject(PageMeta);
 
-    /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す */
-    readonly canEdit = toSignal(inject(UserStateQuery).canEditTimetable$, {
-        initialValue: false,
-    });
+    /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
+     * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
+    readonly canEdit = afterFirstRender(
+        toSignal(inject(UserStateQuery).canEditTimetable$, {
+            initialValue: false,
+        }),
+        false,
+    );
     readonly isLoading = toSignal(TimetableAllLineStore.isLoading$);
     readonly calendarId = toSignal(TimetableAllLineStore.calendarId$);
     readonly tripDirection = toSignal(TimetableAllLineStore.tripDirection$);
@@ -108,10 +123,12 @@ export class TimetableAllLineComponent {
         TimetableAllLineStore.isAwaitingTripBlocks$,
         { initialValue: false },
     );
-    /** 操作帯を畳んでいるか（列車ダイヤグラムと同じく、畳んだ状態をページが持つ） */
-    readonly controlCollapsed = toSignal(
-        TimetableAllLineStore.controlCollapsed$,
-        { initialValue: false },
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        toSignal(TimetableAllLineStore.controlCollapsed$, {
+            initialValue: false,
+        }),
+        false,
     );
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
@@ -149,7 +166,19 @@ export class TimetableAllLineComponent {
         ]);
     });
 
+    /** 題名。方向とダイヤは取ったデータから作る */
+    readonly pageTitle = computed(() => {
+        const calendar = this.calendar();
+        return formatPageTitle('全線時刻表', [
+            tripDirectionLabel.get(this.tripDirection() as ETripDirection),
+            calendar ? formatCalendarSummaryLabel(calendar) : null,
+        ]);
+    });
+
     constructor() {
+        // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
+        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
         TimetableAllLineStore.setHasFetchedTripBlocks(false);
 
@@ -165,6 +194,9 @@ export class TimetableAllLineComponent {
                 // 向きが無い・読めない URL は上りに置き換える（駅別時刻表と同じ）。
                 // 以前は +null で黙って上り、+'abc' で NaN を API に送っていた
                 if (calendarId && tripDirection === null) {
+                    // サーバーでは補わない。骨組みのまま返し、ブラウザで補う（駅別時刻表と同じ）
+                    if (this.#isServer) return;
+
                     this.#router.navigate(
                         [
                             'timetable',
@@ -179,6 +211,11 @@ export class TimetableAllLineComponent {
                     return;
                 }
 
+                if (calendarId) {
+                    this.#ssrResponse.addCacheTags([
+                        calendarCacheTag(calendarId),
+                    ]);
+                }
                 TimetableAllLineStore.setCalendarId(calendarId);
                 TimetableAllLineStore.setTripDirection(tripDirection);
                 TimetableAllLineStore.setTripBlockId(tripBlockId ?? null);
@@ -207,10 +244,12 @@ export class TimetableAllLineComponent {
                     )
                 ).map((route) => route.routeId),
             );
-            await lastValueFrom(this.#timetableAllLineService.fetchStations());
-            await lastValueFrom(
-                this.#timetableAllLineService.fetchTripBlocks(),
-            );
+            // 駅一覧と trip-blocks は互いの結果を使わないので、同時に取る
+            // （駅一覧は serviceId、trip-blocks はストアの条件で決まる）
+            await Promise.all([
+                lastValueFrom(this.#timetableAllLineService.fetchStations()),
+                lastValueFrom(this.#timetableAllLineService.fetchTripBlocks()),
+            ]);
             TimetableAllLineStore.initializeSelectedRouteIds();
         } finally {
             TimetableAllLineStore.disableLoading();

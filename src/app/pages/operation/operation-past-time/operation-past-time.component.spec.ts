@@ -7,6 +7,7 @@ import {
 } from '@angular/router';
 import { of, Subject } from 'rxjs';
 
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { OperationPastTimeComponent } from './operation-past-time.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
@@ -185,5 +186,61 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
         sightings$.complete();
         await flush();
         expect(hasFetched()).toBe(true);
+    });
+});
+
+describe('OperationPastTimeComponent のサーバー', () => {
+    afterEach(() => {
+        OperationPastTimeStore.setReferenceDate(null);
+        OperationPastTimeStore.setDays(null);
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+        OperationPastTimeStore.resetLoading();
+    });
+
+    it('過ぎた日の期間は長く置き、日付ごとのタグを付ける', async () => {
+        const addCacheTags = jest.fn();
+        const setCachePolicy = jest.fn();
+        await TestBed.configureTestingModule({
+            imports: [OperationPastTimeComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                reference_date: '2026-10-01',
+                                days: '2',
+                            }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationPastTimeService,
+                    useValue: {
+                        fetchCalendarByDate: () => of(undefined),
+                        fetchFormations: () => of(undefined),
+                        fetchOperationsV3: () => of(undefined),
+                        fetchOperationSightingsV3: () => of(undefined),
+                    },
+                },
+                {
+                    provide: SsrResponse,
+                    useValue: { addCacheTags, setCachePolicy },
+                },
+            ],
+        })
+            .overrideComponent(OperationPastTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        TestBed.createComponent(OperationPastTimeComponent);
+
+        expect(setCachePolicy).toHaveBeenCalledWith('long');
+        expect(addCacheTags).toHaveBeenCalledWith([
+            'sighting-date:2026-10-01',
+            'sighting-date:2026-10-02',
+        ]);
     });
 });

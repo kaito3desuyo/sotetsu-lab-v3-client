@@ -15,6 +15,8 @@ export const OPERATION_PAST_TIME_ROUTES: Route[] = [
         },
         data: {
             title: '過去の運用情報',
+            description:
+                '相鉄線の過去の運用目撃情報を、日付ごと・編成ごとに一覧にします。',
         },
     },
 ];

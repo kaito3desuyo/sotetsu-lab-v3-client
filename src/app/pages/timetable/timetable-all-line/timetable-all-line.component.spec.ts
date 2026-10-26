@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -7,10 +7,19 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { EMPTY, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import {
+    EMPTY,
+    firstValueFrom,
+    Observable,
+    of,
+    ReplaySubject,
+    Subject,
+    throwError,
+} from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
@@ -71,8 +80,57 @@ describe('TimetableAllLineComponent', () => {
     });
 });
 
+describe('TimetableAllLineComponent をサーバーで描くとき', () => {
+    it('書ける役割でも編集の行を出さない（サーバーはゲストの形で描く）', async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideRouter([]),
+                { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: UserStateQuery,
+                    useValue: { canEditTimetable$: of(true) },
+                },
+                TimetableAllLineService,
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        const component = TestBed.createComponent(
+            TimetableAllLineComponent,
+        ).componentInstance;
+
+        expect(component.canEdit()).toBe(false);
+    });
+});
+
 describe('TimetableAllLineComponent の URL の向き', () => {
-    const setUp = async (params: Record<string, string>) => {
+    const setUp = async (
+        params: Record<string, string>,
+        extraProviders: Provider[] = [],
+    ) => {
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
@@ -109,6 +167,7 @@ describe('TimetableAllLineComponent の URL の向き', () => {
                 },
                 { provide: ConfirmDialogService, useValue: {} },
                 { provide: CalendarSelectDialogService, useValue: {} },
+                ...extraProviders,
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
@@ -123,6 +182,7 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         return {
             navigate,
             service: TestBed.inject(TimetableAllLineService) as unknown as {
+                fetchStations: jest.Mock;
                 fetchTripBlocks: jest.Mock;
             },
         };
@@ -157,13 +217,41 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         expect(navigate).not.toHaveBeenCalled();
         expect(TimetableAllLineStore.tripDirection).toBe(1);
     });
+
+    it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
+        const { navigate, service } = await setUp({ calendar_id: 'cal-1' }, [
+            { provide: PLATFORM_ID, useValue: 'server' },
+        ]);
+
+        expect(navigate).not.toHaveBeenCalled();
+        expect(service.fetchStations).not.toHaveBeenCalled();
+    });
+
+    it('サーバーではダイヤのタグを付ける', async () => {
+        const addCacheTags = jest.fn();
+
+        await setUp({ calendar_id: 'cal-1', trip_direction: '0' }, [
+            { provide: PLATFORM_ID, useValue: 'server' },
+            {
+                provide: SsrResponse,
+                useValue: { addCacheTags, setCachePolicy: jest.fn() },
+            },
+        ]);
+
+        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+    });
 });
 
 describe('TimetableAllLineComponent の読み込み中', () => {
     let fixture: ComponentFixture<TimetableAllLineComponent>;
     let tripBlocks$: Subject<undefined>;
+    let stations$: Observable<undefined>;
     let fetchTripBlocksCalls = 0;
     let canEditTimetable$: Observable<boolean>;
+
+    beforeEach(() => {
+        stations$ = of(undefined);
+    });
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const query = (selector: string) =>
@@ -187,7 +275,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 {
                     provide: TimetableAllLineService,
                     useValue: {
-                        fetchStations: () => of(undefined),
+                        fetchStations: () => stations$,
                         fetchTripBlocks: () => {
                             fetchTripBlocksCalls++;
                             return tripBlocks$;
@@ -303,6 +391,64 @@ describe('TimetableAllLineComponent の読み込み中', () => {
 
         expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
     });
+
+    it('駅一覧の応答を待たずに、trip-blocks の取得を始める', async () => {
+        stations$ = new Subject<undefined>();
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+        await flush();
+
+        expect(fetchTripBlocksCalls).toBe(1);
+        // 片方が残っている間は、まだ取り終わらない
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+    });
+
+    it('駅一覧と trip-blocks の両方が終わってから、骨組みを消す', async () => {
+        const stations = new Subject<undefined>();
+        stations$ = stations;
+        await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+
+        tripBlocks$.next(undefined);
+        tripBlocks$.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
+
+        stations.next(undefined);
+        stations.complete();
+        await flush();
+        fixture.detectChanges();
+        expect(query('[data-testid="all-line-table-skeleton"]')).toBeNull();
+    });
+
+    it.each([
+        ['駅一覧', true],
+        ['trip-blocks', false],
+    ])(
+        '%s の取得が失敗したら、失敗は fetchData の外へ出て、読み込み中は戻る',
+        async (_, stationsFail) => {
+            const original = TimetableAllLineComponent.prototype.fetchData;
+            let rejected: unknown;
+            jest.spyOn(
+                TimetableAllLineComponent.prototype,
+                'fetchData',
+            ).mockImplementation(function (this: TimetableAllLineComponent) {
+                return original.call(this).catch((e) => {
+                    rejected = e;
+                });
+            });
+            if (stationsFail) {
+                stations$ = throwError(() => new Error('offline'));
+            }
+            await setup({ calendar_id: 'cal-1', trip_direction: '0' });
+            if (!stationsFail) tripBlocks$.error(new Error('offline'));
+            await flush();
+
+            expect(rejected).toBeInstanceOf(Error);
+            expect(await firstValueFrom(TimetableAllLineStore.isLoading$)).toBe(
+                false,
+            );
+        },
+    );
 
     it('ダイヤが無ければ骨組みを出さない（検索カードも置かない）', async () => {
         await setup({});
