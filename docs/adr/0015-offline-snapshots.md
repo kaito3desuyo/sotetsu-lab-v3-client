@@ -21,7 +21,7 @@
 
 - **役割の分け方**: ブラウザが自分で取ったもの（起動時の共通データ・画面の移動で取るデータ）は Service Worker が保存する。SSR で HTML に埋めて渡したページの中身は、ページごとの保存で賄う。
 - **Service Worker**（`ngsw-config.json` の `dataGroups`）: データの API を足す。どれも `freshness`。目撃の組を先に書く（先に書いた組が先に当たる）。
-  - 目撃と現在位置（`/v3/operation-sightings/**`・`/v3/operations/current-positions`）: 待ち時間 10 秒。3 秒だと、遅いだけの回線で古い目撃が黙って出てしまう。
+  - 目撃と現在位置（`/v3/operation-sightings/**`・`/v3/operations/current-positions`）: 待ち時間 10 秒・期間 1 日・件数 50。待ち時間は、3 秒だと遅いだけの回線で古い目撃が黙って出てしまうため。期間は、古い目撃を長く持っても役に立たないため 1 日にした。
   - それ以外の `https://api.sotetsu-lab.com/v3/**`: 待ち時間 3 秒・期間 7 日・件数 50。1 件が数 MB になるので 100 にしない。
   - BFF（`/api/**`）は今のまま。
 - **ページの保存は `core/offline/offline-snapshots.ts` の `OfflineSnapshots` で行い、取得に失敗したときだけ戻す**。
