@@ -12,6 +12,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
+import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
@@ -52,6 +53,7 @@ import { TrainDiagramSelectedTripInfo } from './interfaces/train-diagram-selecte
 import { TrainDiagramService } from './services/train-diagram.service';
 import {
     DiagramDirectionFilter,
+    TrainDiagramSightingsSnapshot,
     TrainDiagramSnapshot,
     TrainDiagramStore,
 } from './stores/train-diagram.store';
@@ -100,6 +102,9 @@ let fetchSeq = 0;
 
 /** 圏外のために保存する中身のキー */
 const OFFLINE_SNAPSHOT_KEY = 'TrainDiagram';
+
+/** 圏外のために保存する目撃のキー（目撃は Service Worker に残らないので別に保存する） */
+const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TrainDiagramSightings';
 
 const BODY_TOP_PADDING = 12;
 const BODY_BOTTOM_PADDING = 24;
@@ -1222,11 +1227,45 @@ export class TrainDiagramComponent {
             operationNumber &&
             !this.operationSightingTimeCrossSections()[operationNumber]
         ) {
-            await lastValueFrom(
-                this.#timetableDiagramService.fetchOperationSightingTimeCrossSection(
-                    operationNumber,
-                ),
-            );
+            // 目撃は Service Worker に残らないので、列車の保存とは別に、日付つきで保存する
+            const conditions = {
+                calendarId: TrainDiagramStore.calendarId,
+                routeIds: [...TrainDiagramStore.selectedRouteIds]
+                    .sort()
+                    .join(','),
+                date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            };
+            try {
+                await lastValueFrom(
+                    this.#timetableDiagramService.fetchOperationSightingTimeCrossSection(
+                        operationNumber,
+                    ),
+                );
+            } catch (error) {
+                // 通信できないときは、同じ日に保存した目撃を出す（すでに取れている目撃は残す）。
+                // 戻す処理が壊れていても、取得の失敗をそのまま投げる
+                try {
+                    await this.#offlineSnapshots.restore({
+                        key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                        conditions,
+                        apply: (data: TrainDiagramSightingsSnapshot) =>
+                            TrainDiagramStore.restoreOperationSightingTimeCrossSections(
+                                {
+                                    ...data,
+                                    ...this.operationSightingTimeCrossSections(),
+                                },
+                            ),
+                    });
+                } catch {
+                    // 保存した中身が壊れていても、取得の失敗を優先する
+                }
+                throw error;
+            }
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions,
+                data: TrainDiagramStore.snapshotOperationSightingTimeCrossSections(),
+            });
         }
     }
 

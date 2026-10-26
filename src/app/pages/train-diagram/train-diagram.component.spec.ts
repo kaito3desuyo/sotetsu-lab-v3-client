@@ -15,7 +15,9 @@ import {
     of,
     throwError,
 } from 'rxjs';
+import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -1394,6 +1396,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
     // 前後の運用の取得の結果（failed が true なら取得に失敗している）
     let itineraryLinks$: Observable<{ failed: boolean } | undefined>;
     let networkStations$: Observable<undefined>;
+    // 運用の目撃（列車を選んだときに取る）の取得
+    let sighting$: Observable<undefined>;
     const fetchTripClasses = jest.fn(() => of(undefined));
     const fetchNetworkStations = jest.fn(() => networkStations$);
     const save = jest.fn(() => Promise.resolve());
@@ -1415,6 +1419,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         tripBlocks$ = of(undefined);
         itineraryLinks$ = of(undefined);
         networkStations$ = of(undefined);
+        sighting$ = of(undefined);
         await TestBed.configureTestingModule({
             imports: [TrainDiagramComponent],
             providers: [
@@ -1435,8 +1440,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                         fetchTripBlocks: () => tripBlocks$,
                         fetchItineraryLinks: () => itineraryLinks$,
                         fetchNetworkStations,
-                        fetchOperationSightingTimeCrossSection: () =>
-                            of(undefined),
+                        fetchOperationSightingTimeCrossSection: () => sighting$,
                     },
                 },
                 {
@@ -1478,6 +1482,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         TrainDiagramStore.setRouteStations([]);
         TrainDiagramStore.setHasFetchedTrainDiagram(false);
         TrainDiagramStore.resetLoading();
+        TrainDiagramStore.restoreOperationSightingTimeCrossSections({});
     });
 
     it('成功したら条件と中身を保存する', async () => {
@@ -1678,5 +1683,131 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         await first;
 
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    describe('目撃（列車を選んだときに取る運用の目撃）', () => {
+        const crossSection = {
+            expectedSighting: { sightingTime: 'saved' },
+        } as never;
+        const sightingConditions = () => ({
+            calendarId: 'cal-today',
+            routeIds: 'route-1,route-2',
+            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+        });
+
+        beforeEach(() => {
+            TrainDiagramStore.setCalendarId('cal-today');
+            TrainDiagramStore.setTripBlocksByDirection({
+                0: [
+                    {
+                        trips: [
+                            {
+                                tripId: 't1',
+                                tripOperationLists: [
+                                    { operation: { operationNumber: '51' } },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            } as never);
+        });
+
+        it('目撃が取れたら、日付つきで別の key に保存する', async () => {
+            sighting$ = new Observable<undefined>((subscriber) => {
+                TrainDiagramStore.setOperationSightingTimeCrossSection(
+                    '51',
+                    crossSection,
+                );
+                subscriber.next(undefined);
+                subscriber.complete();
+            });
+
+            await component.onTripSelected('t1');
+
+            expect(save).toHaveBeenCalledWith({
+                key: 'TrainDiagramSightings',
+                conditions: sightingConditions(),
+                data: { '51': crossSection },
+            });
+            expect(restore).not.toHaveBeenCalled();
+        });
+
+        it('目撃が取れなかったら、保存した目撃を戻して失敗は今までどおり投げる', async () => {
+            sighting$ = throwError(() => new Error('offline'));
+            restore.mockImplementation(
+                (params: {
+                    apply: (data: unknown, savedAt: number) => void;
+                }) => {
+                    params.apply({ '51': crossSection }, 0);
+                    return Promise.resolve(null);
+                },
+            );
+
+            await expect(component.onTripSelected('t1')).rejects.toThrow(
+                'offline',
+            );
+
+            expect(save).not.toHaveBeenCalled();
+            expect(restore).toHaveBeenCalledWith({
+                key: 'TrainDiagramSightings',
+                conditions: sightingConditions(),
+                apply: expect.any(Function),
+            });
+            expect(component.operationSightingTimeCrossSections()).toEqual({
+                '51': crossSection,
+            });
+        });
+
+        it('保存が戻らなかったとき（日付が違うなど）は、目撃を足さずに失敗を投げる', async () => {
+            sighting$ = throwError(() => new Error('offline'));
+            restore.mockResolvedValue(null);
+
+            await expect(component.onTripSelected('t1')).rejects.toThrow(
+                'offline',
+            );
+
+            expect(component.operationSightingTimeCrossSections()).toEqual({});
+        });
+
+        it('戻す処理が壊れていても、元の失敗を投げ直す', async () => {
+            sighting$ = throwError(() => new Error('offline'));
+            restore.mockRejectedValue(new Error('restore broken'));
+
+            await expect(component.onTripSelected('t1')).rejects.toThrow(
+                'offline',
+            );
+        });
+
+        it('戻した目撃は、すでに取れていた目撃を上書きしない', async () => {
+            TrainDiagramStore.setOperationSightingTimeCrossSection('52', {
+                expectedSighting: { sightingTime: 'fresh' },
+            } as never);
+            sighting$ = throwError(() => new Error('offline'));
+            restore.mockImplementation(
+                (params: {
+                    apply: (data: unknown, savedAt: number) => void;
+                }) => {
+                    params.apply(
+                        {
+                            '51': crossSection,
+                            '52': { expectedSighting: { sightingTime: 'old' } },
+                        },
+                        0,
+                    );
+                    return Promise.resolve(null);
+                },
+            );
+
+            await expect(component.onTripSelected('t1')).rejects.toThrow(
+                'offline',
+            );
+
+            const sightings = component.operationSightingTimeCrossSections();
+            expect(sightings['51']).toEqual(crossSection);
+            expect(sightings['52']).toEqual({
+                expectedSighting: { sightingTime: 'fresh' },
+            });
+        });
     });
 });

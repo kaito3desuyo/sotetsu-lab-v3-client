@@ -79,6 +79,10 @@ export type TrainDiagramSnapshot = Pick<
     | 'itineraryLinks'
 >;
 
+/** 圏外のために端末に保存する目撃（運用番号ごと。列車の保存とは別に、日付つきで保存する） */
+export type TrainDiagramSightingsSnapshot =
+    StoreProps['operationSightingTimeCrossSections'];
+
 const store = createStore(
     { name: 'TrainDiagramStore' },
     withProps<StoreProps>({
@@ -326,6 +330,16 @@ export const TrainDiagramStore = {
             tripBlocksByDirection: data.tripBlocksByDirection,
             itineraryLinks: data.itineraryLinks,
         }));
+    },
+    /** 圏外のために保存する目撃を取り出す */
+    snapshotOperationSightingTimeCrossSections(): TrainDiagramSightingsSnapshot {
+        return store.getValue().operationSightingTimeCrossSections;
+    },
+    /** 保存した目撃に置き換える */
+    restoreOperationSightingTimeCrossSections(
+        data: TrainDiagramSightingsSnapshot,
+    ): void {
+        store.update(setProp('operationSightingTimeCrossSections', () => data));
     },
 
     persistInitialized$: persist.initialized$,
