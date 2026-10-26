@@ -1,4 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
+import { Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -7,9 +8,12 @@ import {
 } from '@angular/router';
 import { format } from 'date-fns';
 import localForage from 'localforage';
-import { Observable, of } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 
-import { OFFLINE_SNAPSHOT_VERSION } from 'src/app/core/offline/offline-snapshots';
+import {
+    OFFLINE_SNAPSHOT_VERSION,
+    OfflineSnapshots,
+} from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -52,7 +56,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
 
-    const setup = async () => {
+    const setup = async (extraProviders: Provider[] = []) => {
         await TestBed.configureTestingModule({
             imports: [TimetableStationComponent],
             providers: [
@@ -87,6 +91,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                     },
                 },
                 { provide: NotificationService, useValue: { open } },
+                ...extraProviders,
             ],
         })
             .overrideComponent(TimetableStationComponent, {
@@ -178,18 +183,74 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 
-    it('戻す処理が壊れていても読み込みを解く', async () => {
-        sightingsFetched = of(false);
-        getItem.mockImplementation((key: string) =>
-            key === SIGHTINGS_KEY
-                ? Promise.reject(new Error('broken'))
-                : Promise.resolve(null),
-        );
-        await setup();
+    describe('OfflineSnapshots を差し替えたとき', () => {
+        const save = jest.fn(() => Promise.resolve());
+        const restore = jest.fn();
+        const sightingsSavesOf = () =>
+            (save.mock.calls as unknown as [{ key: string }][]).filter(
+                ([params]) => params.key === 'TimetableStationSightings',
+            );
 
-        fixture = TestBed.createComponent(TimetableStationComponent);
-        await flush();
+        beforeEach(() => {
+            save.mockClear();
+            restore.mockReset();
+        });
 
-        expect(fixture.componentInstance.isLoading()).toBe(false);
+        it('戻す処理が壊れていても、読み込みを解いて取得は成功のまま終える', async () => {
+            sightingsFetched = of(false);
+            restore.mockRejectedValue(new Error('restore broken'));
+            await setup([
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ]);
+
+            fixture = TestBed.createComponent(TimetableStationComponent);
+            await flush();
+            expect(restore).toHaveBeenCalledTimes(1);
+
+            await expect(
+                fixture.componentInstance.fetchData(),
+            ).resolves.toBeUndefined();
+            expect(restore).toHaveBeenCalledTimes(2);
+            expect(fixture.componentInstance.isLoading()).toBe(false);
+        });
+
+        it('古い取得の充当編成が取れなくても、保存した充当編成は戻さない', async () => {
+            const stale$ = new Subject<boolean>();
+            sightingsFetched = stale$;
+            await setup([
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ]);
+            fixture = TestBed.createComponent(TimetableStationComponent);
+            await flush();
+
+            // 新しい取得が先に終わってから、古い取得の失敗が届く
+            sightingsFetched = of(true);
+            await fixture.componentInstance.fetchData();
+            expect(sightingsSavesOf()).toHaveLength(1);
+            stale$.next(false);
+            stale$.complete();
+            await flush();
+
+            expect(restore).not.toHaveBeenCalled();
+        });
+
+        it('古い取得の充当編成が取れても、保存しない', async () => {
+            const stale$ = new Subject<boolean>();
+            sightingsFetched = stale$;
+            await setup([
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ]);
+            fixture = TestBed.createComponent(TimetableStationComponent);
+            await flush();
+
+            sightingsFetched = of(false);
+            await fixture.componentInstance.fetchData();
+            expect(restore).toHaveBeenCalledTimes(1);
+            stale$.next(true);
+            stale$.complete();
+            await flush();
+
+            expect(sightingsSavesOf()).toHaveLength(0);
+        });
     });
 });
