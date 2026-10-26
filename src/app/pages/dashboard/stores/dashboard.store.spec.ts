@@ -1,3 +1,6 @@
+// 他の spec とグローバルの名前がぶつからないよう、モジュールとして扱う
+export {};
+
 const mockStorage = {
     getItem: jest.fn(),
     setItem: jest.fn(),
