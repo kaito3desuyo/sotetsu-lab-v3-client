@@ -396,6 +396,8 @@ export class TrainLocationComponent {
      * この組が合っているときだけ圏外用に保存する（前の取得が失敗していると、新旧が混ざった中身になるため）
      */
     #storeInSync = false;
+    /** ストアの前後の運用（つながり）が、取得の失敗で空のまま劣化しているか。取れたら消す */
+    #isLinksDegraded = false;
     /**
      * 目撃を圏外用の保存から戻して知らせた条件（date を含む）。
      * 圏外の間は 10 秒ごとに取得に失敗するので、同じ条件では 1 回しか戻さず知らせない。
@@ -503,7 +505,6 @@ export class TrainLocationComponent {
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
             // 運行は種別を貼り付けるので種別の後。駅軸はどちらにも依存しないので並行に取る
-            let hasFetchedItineraryLinks = true;
             const fetchTripBlocks = async (): Promise<void> => {
                 if (!this.#firstLoadDone()) {
                     await lastValueFrom(
@@ -530,10 +531,16 @@ export class TrainLocationComponent {
                     }
                     // 前後の運用が取れなかった中身は、圏外用に保存しない（良い保存を空のつながりで上書きしない）
                     const linksResult = results[1];
-                    hasFetchedItineraryLinks = !(
+                    const hasLinksFailed =
                         linksResult.status === 'fulfilled' &&
-                        linksResult.value?.failed
-                    );
+                        !!linksResult.value?.failed;
+                    // 取れなかったら、ストアのつながりは劣化したまま（路線だけの取り直しでも保存しない）。
+                    // 古い取得が成功しても、新しい取得の印は消さない
+                    if (hasLinksFailed) {
+                        this.#isLinksDegraded = true;
+                    } else if (seq === fetchSeq) {
+                        this.#isLinksDegraded = false;
+                    }
                 }
             };
             const results = await Promise.allSettled([
@@ -569,12 +576,15 @@ export class TrainLocationComponent {
                 throw failure.reason;
             }
             // ダイヤと路線の両方を取り直したか、前の取得が成功していたときだけ、ストアの中身が条件と組になっている
-            if (flags.refetchTripBlocks && flags.refetchStationAxis) {
+            // 古い取得で終わったときは、新しい取得とのあいだで組がずれているかもしれない
+            if (seq !== fetchSeq) {
+                this.#storeInSync = false;
+            } else if (flags.refetchTripBlocks && flags.refetchStationAxis) {
                 this.#storeInSync = true;
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (
-                hasFetchedItineraryLinks &&
+                !this.#isLinksDegraded &&
                 this.#storeInSync &&
                 seq === fetchSeq
             ) {

@@ -223,6 +223,57 @@ describe('TrainLocationComponent の圏外の保存', () => {
         expect(save).not.toHaveBeenCalled();
     });
 
+    it('前後の運用が取れなかった後の路線だけの取り直しでは保存しない', async () => {
+        itineraryLinks$ = of({ failed: true });
+        await component.fetchData(both);
+        expect(save).not.toHaveBeenCalled();
+
+        await component.fetchData({
+            refetchTripBlocks: false,
+            refetchStationAxis: true,
+        });
+
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('前後の運用が取れたら、また保存する（路線だけの取り直しも）', async () => {
+        itineraryLinks$ = of({ failed: true });
+        await component.fetchData(both);
+        itineraryLinks$ = of({ failed: false });
+        await component.fetchData(both);
+        expect(save).toHaveBeenCalledTimes(1);
+
+        await component.fetchData({
+            refetchTripBlocks: false,
+            refetchStationAxis: true,
+        });
+
+        expect(save).toHaveBeenCalledTimes(2);
+    });
+
+    it('古い両方の取得が後から成功しても、片方だけの取り直しで保存しない', async () => {
+        const slow$ = new Subject<undefined>();
+        tripBlocks$ = slow$;
+        const stale = component.fetchData(both);
+        await flush();
+
+        // 路線だけの取り直しが先に終わり（組がずれているので保存しない）、そのあと古い取得が成功する
+        await component.fetchData({
+            refetchTripBlocks: false,
+            refetchStationAxis: true,
+        });
+        slow$.next(undefined);
+        slow$.complete();
+        await stale;
+
+        await component.fetchData({
+            refetchTripBlocks: false,
+            refetchStationAxis: true,
+        });
+
+        expect(save).not.toHaveBeenCalled();
+    });
+
     it('成功したあとの路線だけの取り直しは、新しい条件で保存する', async () => {
         await component.fetchData(both);
         save.mockClear();
