@@ -396,6 +396,12 @@ export class TrainLocationComponent {
      * この組が合っているときだけ圏外用に保存する（前の取得が失敗していると、新旧が混ざった中身になるため）
      */
     #storeInSync = false;
+    /**
+     * 目撃を圏外用の保存から戻して知らせた条件（date を含む）。
+     * 圏外の間は 10 秒ごとに取得に失敗するので、同じ条件では 1 回しか戻さず知らせない。
+     * 目撃が取れたら消す（次に圏外になったらまた 1 回だけ知らせる）
+     */
+    #sightingsRestoredFor: string | null = null;
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の路線図が一瞬出ないようにする
@@ -609,7 +615,12 @@ export class TrainLocationComponent {
                 ),
             );
         } catch (error) {
-            // すでに取れている目撃は残す
+            // すでに取れている目撃は残す。同じ条件ですでに戻して知らせていたら、失敗だけ投げる
+            const restoredKey = JSON.stringify(conditions);
+            if (this.#sightingsRestoredFor === restoredKey) {
+                throw error;
+            }
+            this.#sightingsRestoredFor = restoredKey;
             try {
                 await this.#offlineSnapshots.restore({
                     key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
@@ -628,6 +639,7 @@ export class TrainLocationComponent {
             throw error;
         }
         if (fetched) {
+            this.#sightingsRestoredFor = null;
             void this.#offlineSnapshots.save({
                 key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
                 conditions,

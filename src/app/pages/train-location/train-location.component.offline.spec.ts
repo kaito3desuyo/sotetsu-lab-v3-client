@@ -370,5 +370,77 @@ describe('TrainLocationComponent の圏外の保存', () => {
                 component.fetchOperationSightings(['51']),
             ).rejects.toThrow('offline');
         });
+
+        it('続けて失敗しても、同じ条件では戻すのも知らせも 1 回だけにする', async () => {
+            sightings$ = throwError(() => new Error('offline'));
+            restore.mockResolvedValue(null);
+
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+
+            expect(restore).toHaveBeenCalledTimes(1);
+        });
+
+        it('日付や条件が変われば、もう一度戻す', async () => {
+            sightings$ = throwError(() => new Error('offline'));
+            restore.mockResolvedValue(null);
+
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+            TrainLocationStore.setSelectedRouteId('route-2');
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+
+            expect(restore).toHaveBeenCalledTimes(2);
+        });
+
+        it('目撃が取れた後にまた圏外になったら、もう 1 回だけ戻して知らせる', async () => {
+            restore.mockResolvedValue(null);
+            sightings$ = throwError(() => new Error('offline'));
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+            expect(restore).toHaveBeenCalledTimes(1);
+
+            sightings$ = of(true);
+            await component.fetchOperationSightings(['51']);
+
+            sightings$ = throwError(() => new Error('offline'));
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+
+            expect(restore).toHaveBeenCalledTimes(2);
+        });
+
+        it('取るものが無かった（通信していない）ときは、戻した印を消さない', async () => {
+            restore.mockResolvedValue(null);
+            sightings$ = throwError(() => new Error('offline'));
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+
+            sightings$ = of(false);
+            await component.fetchOperationSightings(['51']);
+
+            sightings$ = throwError(() => new Error('offline'));
+            await expect(
+                component.fetchOperationSightings(['51']),
+            ).rejects.toThrow('offline');
+
+            expect(restore).toHaveBeenCalledTimes(1);
+        });
     });
 });
