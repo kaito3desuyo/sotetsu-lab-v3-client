@@ -14,7 +14,13 @@ interface DataGroup {
     };
 }
 
+interface AssetGroup {
+    name: string;
+    resources: { files: string[] };
+}
+
 interface NgswConfig {
+    assetGroups: AssetGroup[];
     dataGroups: DataGroup[];
 }
 
@@ -150,4 +156,29 @@ describe('ngsw.json と同じ規則での照合', () => {
             ),
         ).toBe('api');
     });
+});
+
+describe('ngsw.json と同じ規則での assetGroups の照合', () => {
+    // assetGroups の files は全体一致の glob（Generator が dist の一覧に当てて urls を作る）。
+    // 「/assets」だけでは /assets/ 配下のアイコンや字体が保存の対象から外れる。
+    const generateAssetsUrls = async (files: string[]): Promise<string[]> => {
+        const generator = new Generator(
+            { list: async () => files, hash: async () => '' } as never,
+            '/',
+        );
+        const manifest = await generator.process({
+            index: '/index.html',
+            assetGroups: config.assetGroups,
+        } as never);
+        return (
+            manifest as { assetGroups: { name: string; urls: string[] }[] }
+        ).assetGroups.find((group) => group.name === 'assets')!.urls;
+    };
+
+    it.each(['/assets/fonts/x.woff2', '/assets/icons/x.png'])(
+        '/assets/ 配下のファイルは assets の組の urls に入る: %s',
+        async (file) => {
+            expect(await generateAssetsUrls([file])).toContain(file);
+        },
+    );
 });
