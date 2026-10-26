@@ -1,7 +1,7 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { map } from 'rxjs';
+import { filter, map, take } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
@@ -66,8 +66,11 @@ export function pickOperationTableSettings(value: StoreProps): StoreProps {
 // B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー。
 // 保存するのは運用群の選択だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
 // ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
+/** 端末に保存する設定のキー */
+const PERSIST_KEY = 'OperationTableStore';
+
 const persist = persistState(store, {
-    key: 'OperationTableStore',
+    key: PERSIST_KEY,
     storage: localForage,
     preStoreInit: pickOperationTableSettings,
     source: () =>
@@ -75,6 +78,17 @@ const persist = persistState(store, {
             select((state) => state.selectedGroupNames),
             map((selectedGroupNames) => ({ selectedGroupNames })),
         ),
+});
+
+// 以前の丸ごと保存の値（数 MB）は、設定を変えるまで上書きされず、起動のたびに読み込まれて待たせる。
+// 読み込みが済んだら一度だけ、設定だけの形で同じキーに書き戻して小さくする（失敗は握りつぶす。
+// サーバーでは persistState が false を返すので何もしない）
+persist.initialized$.pipe(filter(Boolean), take(1)).subscribe(() => {
+    Promise.resolve(
+        localForage.setItem(PERSIST_KEY, {
+            selectedGroupNames: store.getValue().selectedGroupNames,
+        }),
+    ).catch(() => undefined);
 });
 
 export const OperationTableStore = {

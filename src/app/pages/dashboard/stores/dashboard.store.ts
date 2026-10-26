@@ -1,7 +1,7 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { map } from 'rxjs';
+import { filter, map, take } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
@@ -69,9 +69,12 @@ export function pickDashboardSettings(value: StoreProps): StoreProps {
     };
 }
 
+/** 端末に保存する設定のキー */
+const PERSIST_KEY = 'DashboardStore';
+
 // 保存するのは既訪問フラグだけ。ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
 const persist = persistState(store, {
-    key: 'DashboardStore',
+    key: PERSIST_KEY,
     storage: localForage,
     preStoreInit: pickDashboardSettings,
     source: () =>
@@ -79,6 +82,17 @@ const persist = persistState(store, {
             select((state) => state.hasVisitedBefore),
             map((hasVisitedBefore) => ({ hasVisitedBefore })),
         ),
+});
+
+// 以前の丸ごと保存の値（数 MB）は、設定を変えるまで上書きされず、起動のたびに読み込まれて待たせる。
+// 読み込みが済んだら一度だけ、設定だけの形で同じキーに書き戻して小さくする（失敗は握りつぶす。
+// サーバーでは persistState が false を返すので何もしない）
+persist.initialized$.pipe(filter(Boolean), take(1)).subscribe(() => {
+    Promise.resolve(
+        localForage.setItem(PERSIST_KEY, {
+            hasVisitedBefore: store.getValue().hasVisitedBefore,
+        }),
+    ).catch(() => undefined);
 });
 
 export const DashboardStore = {
