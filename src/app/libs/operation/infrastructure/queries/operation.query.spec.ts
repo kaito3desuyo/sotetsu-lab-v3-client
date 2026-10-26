@@ -61,6 +61,31 @@ describe('OperationQuery', () => {
         TestBed.resetTestingModule();
     });
 
+    it('全運用を列車つきで取るときは、運用表が読む include と fields を送る', () => {
+        const { query, controller } = setup();
+
+        query.findManyWithTrips({ calendarId: 'cal-1' }).subscribe();
+        const req = controller.expectOne(
+            (r) => r.url === `${url}/calendar/cal-1/trips`,
+        );
+        const params = req.request.params;
+
+        expect(params.get('include')).toBe(
+            'trips.trip,trips.startTime,trips.endTime',
+        );
+        expect(params.get('fields[operation]')).toBe('operationNumber');
+        expect(params.get('fields[trip]')).toBe(
+            'tripNumber,tripDirection,tripBlockId,tripClassId,depotIn,depotOut',
+        );
+        expect(params.get('fields[time]')).toBe(
+            'stationId,arrivalTime,departureTime',
+        );
+        // 空で送ると API は id だけを返す
+        expect(params.has('fields[tripOperationList]')).toBe(true);
+        expect(params.get('fields[tripOperationList]')).toBe('');
+        req.flush([]);
+    });
+
     it('2 回目はキャッシュから返す', () => {
         const { query, controller } = setup();
         loadAll(query, controller);
