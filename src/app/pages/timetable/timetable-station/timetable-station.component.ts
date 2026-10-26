@@ -325,12 +325,16 @@ export class TimetableStationComponent {
             if (failure) {
                 // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
                 if (seq === fetchSeq) {
-                    await this.#offlineSnapshots.restore({
-                        key: OFFLINE_SNAPSHOT_KEY,
-                        conditions,
-                        apply: (data: TimetableStationSnapshot) =>
-                            TimetableStationStore.restoreSnapshot(data),
-                    });
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: TimetableStationSnapshot) =>
+                                TimetableStationStore.restoreSnapshot(data),
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                    }
                 }
                 throw failure.reason;
             }

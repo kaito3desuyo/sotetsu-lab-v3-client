@@ -692,6 +692,7 @@ describe('TimetableAllLineComponent の帯の操作', () => {
 describe('TimetableAllLineComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TimetableAllLineComponent>;
     let fetchDataSpy: jest.SpyInstance;
+    let originalFetchData: TimetableAllLineComponent['fetchData'];
     let stations$: Observable<undefined>;
     let tripBlocks$: Observable<undefined>;
     const save = jest.fn(() => Promise.resolve());
@@ -712,7 +713,8 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
     const setup = async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
         // 本物の fetchData の失敗だけ受け流す
-        const original = TimetableAllLineComponent.prototype.fetchData;
+        originalFetchData = TimetableAllLineComponent.prototype.fetchData;
+        const original = originalFetchData;
         fetchDataSpy = jest
             .spyOn(TimetableAllLineComponent.prototype, 'fetchData')
             .mockImplementation(function (this: TimetableAllLineComponent) {
@@ -897,5 +899,26 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
         await flush();
 
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('戻す処理が壊れていても、元の取得の失敗を投げ直す', async () => {
+        stations$ = of(undefined);
+        tripBlocks$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('restore broken'));
+
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        await flush();
+
+        // コンストラクタの取得は失敗を受け流すので、本物の fetchData を直接呼んで確かめる
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline');
+
+        expect(restore).toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(
+            await firstValueFrom(TimetableAllLineStore.hasFetchedTripBlocks$),
+        ).toBe(true);
     });
 });

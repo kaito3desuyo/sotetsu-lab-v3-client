@@ -429,6 +429,7 @@ describe('TimetableStationComponent のサーバー', () => {
 describe('TimetableStationComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TimetableStationComponent>;
     let fetchDataSpy: jest.SpyInstance;
+    let originalFetchData: TimetableStationComponent['fetchData'];
     let trips$: Observable<undefined>;
     let operations$: Observable<undefined> = of(undefined);
     const save = jest.fn(() => Promise.resolve());
@@ -455,7 +456,8 @@ describe('TimetableStationComponent の圏外の保存', () => {
     const setup = async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
         // 本物の fetchData の失敗だけ受け流す
-        const original = TimetableStationComponent.prototype.fetchData;
+        originalFetchData = TimetableStationComponent.prototype.fetchData;
+        const original = originalFetchData;
         fetchDataSpy = jest
             .spyOn(TimetableStationComponent.prototype, 'fetchData')
             .mockImplementation(function (this: TimetableStationComponent) {
@@ -633,6 +635,24 @@ describe('TimetableStationComponent の圏外の保存', () => {
         await flush();
 
         expect(restore).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
+    });
+
+    it('戻す処理が壊れていても、元の取得の失敗を投げ直す', async () => {
+        trips$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('restore broken'));
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        // コンストラクタの取得は失敗を受け流すので、本物の fetchData を直接呼んで確かめる
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline');
+
+        expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
         expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
     });
