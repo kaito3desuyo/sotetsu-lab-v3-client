@@ -430,6 +430,7 @@ describe('TimetableStationComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TimetableStationComponent>;
     let fetchDataSpy: jest.SpyInstance;
     let trips$: Observable<undefined>;
+    let operations$: Observable<undefined> = of(undefined);
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
 
@@ -485,7 +486,7 @@ describe('TimetableStationComponent の圏外の保存', () => {
                         fetchTrips: () => trips$,
                         fetchTripClasses: ok,
                         fetchStations: ok,
-                        fetchOperations: ok,
+                        fetchOperations: () => operations$,
                         fetchOperationSightingTimeCrossSections: ok,
                     },
                 },
@@ -518,6 +519,7 @@ describe('TimetableStationComponent の圏外の保存', () => {
     };
 
     afterEach(() => {
+        operations$ = of(undefined);
         fetchDataSpy.mockRestore();
         fixture.destroy();
         jest.clearAllMocks();
@@ -605,5 +607,33 @@ describe('TimetableStationComponent の圏外の保存', () => {
         await flush();
 
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('片方が先に失敗しても、遅い方が終わるまで保存した中身を戻さない', async () => {
+        trips$ = failLater('offline');
+        // 先に失敗した取得より遅く終わる取得
+        operations$ = timer(50).pipe(switchMap(() => of(undefined)));
+        await setup();
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(restore).not.toHaveBeenCalled();
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('戻す処理が壊れていても読み込みを解く', async () => {
+        trips$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('restore broken'));
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
     });
 });

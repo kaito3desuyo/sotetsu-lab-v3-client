@@ -310,24 +310,19 @@ export class TimetableStationComponent {
                 tripDirection: TimetableStationStore.tripDirection,
             };
 
-            try {
-                // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
-                await Promise.all([
-                    lastValueFrom(
-                        this.#timetableStationService.fetchCalendar(),
-                    ),
-                    lastValueFrom(this.#timetableStationService.fetchTrips()),
-                    lastValueFrom(
-                        this.#timetableStationService.fetchTripClasses(),
-                    ),
-                    lastValueFrom(
-                        this.#timetableStationService.fetchStations(),
-                    ),
-                    lastValueFrom(
-                        this.#timetableStationService.fetchOperations(),
-                    ),
-                ]);
-            } catch (error) {
+            // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
+            // 失敗を決める前に全部の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+            const results = await Promise.allSettled([
+                lastValueFrom(this.#timetableStationService.fetchCalendar()),
+                lastValueFrom(this.#timetableStationService.fetchTrips()),
+                lastValueFrom(this.#timetableStationService.fetchTripClasses()),
+                lastValueFrom(this.#timetableStationService.fetchStations()),
+                lastValueFrom(this.#timetableStationService.fetchOperations()),
+            ]);
+            const failure = results.find(
+                (result) => result.status === 'rejected',
+            );
+            if (failure) {
                 // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
                 if (seq === fetchSeq) {
                     await this.#offlineSnapshots.restore({
@@ -337,7 +332,7 @@ export class TimetableStationComponent {
                             TimetableStationStore.restoreSnapshot(data),
                     });
                 }
-                throw error;
+                throw failure.reason;
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (seq === fetchSeq) {
