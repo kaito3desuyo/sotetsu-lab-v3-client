@@ -148,6 +148,9 @@ export class OperationRealTimeComponent {
     }
 
     async fetchData(): Promise<void> {
+        // この取得を始める前に、すでに取れた中身がある（前の訪問・自動更新の分）なら、
+        // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
+        const hasFetchedBefore = OperationRealTimeStore.hasFetchedOperations;
         OperationRealTimeStore.enableLoading();
         try {
             // 運用群は他フェッチに依存しないため最初に取得する。
@@ -202,8 +205,9 @@ export class OperationRealTimeComponent {
             }
         } catch (error) {
             console.error(error);
-            // 保存した中身で戻せたら、そのページの知らせが出る。戻せなければ今の失敗の文言を出す
-            if (!(await this.#restoreSnapshot())) {
+            // 保存した中身で戻せたら、そのページの知らせが出る。戻せなければ（取れた中身が手元にあって
+            // 戻さなかったときも）今の失敗の文言を出す
+            if (hasFetchedBefore || !(await this.#restoreSnapshot())) {
                 this.#notification.open('データの取得に失敗しました', 'OK');
             }
         } finally {

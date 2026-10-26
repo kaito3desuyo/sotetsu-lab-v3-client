@@ -403,6 +403,8 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             .compileComponents();
 
         OperationRealTimeStore.resetLoading();
+        // 前のテストの取得・復元が「取得済みの中身」として残らないように
+        OperationRealTimeStore.resetHasFetched();
         OperationRealTimeStore.setIsEnableAutoReload(true);
     });
 
@@ -487,6 +489,25 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         );
         expect(await isLoading()).toBe(false);
         expect(save).not.toHaveBeenCalled();
+    });
+
+    it('取得済みの中身があるときは、失敗しても保存した中身に戻さず、今の失敗の文言を出す', async () => {
+        // 前の訪問や自動更新で、今の中身の方が新しい
+        const freshRoutes = [{ routeId: 'fresh-route' }] as never;
+        OperationRealTimeStore.setRoutes(freshRoutes);
+        OperationRealTimeStore.setOperations([]);
+        service['fetchCalendar'].mockImplementation(failLater);
+        restore.mockImplementation(restoreSaved);
+
+        await create();
+
+        expect(restore).not.toHaveBeenCalled();
+        expect(OperationRealTimeStore.routes).toBe(freshRoutes);
+        expect(notification.open).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+        expect(await isLoading()).toBe(false);
     });
 
     it('戻せなかったら、今の失敗の文言を出す', async () => {

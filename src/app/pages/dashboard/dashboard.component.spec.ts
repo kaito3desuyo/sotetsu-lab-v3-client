@@ -171,6 +171,8 @@ describe('DashboardComponent の圏外の保存', () => {
     };
 
     beforeEach(async () => {
+        // 前のテストで戻した中身が「取得済みの中身」として残らないように
+        DashboardStore.setTodaysCalendar(null);
         save.mockClear();
         restore.mockReset();
         const ok = () => jest.fn(() => of(undefined));
@@ -250,6 +252,29 @@ describe('DashboardComponent の圏外の保存', () => {
         expect(restore.mock.calls[0][0].conditions).toEqual({});
         expect(DashboardStore.snapshot()).toEqual(saved);
         expect(save).not.toHaveBeenCalled();
+        expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+    });
+
+    it('取得済みの中身があるときは、失敗しても保存した中身に戻さない', async () => {
+        // 前の訪問や自動更新で、今の中身の方が新しい
+        const fresh = { calendarId: 'fresh-cal' } as never;
+        DashboardStore.setTodaysCalendar(fresh);
+        service['fetchTripClasses'].mockImplementation(() =>
+            failLater('offline'),
+        );
+        restore.mockImplementation(
+            async (params: {
+                apply: (data: DashboardSnapshot, savedAt: number) => void;
+            }) => {
+                params.apply(saved, 1_700_000_000_000);
+                return { data: saved };
+            },
+        );
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(restore).not.toHaveBeenCalled();
+        expect(DashboardStore.snapshot().todaysCalendar).toBe(fresh);
         expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
     });
 

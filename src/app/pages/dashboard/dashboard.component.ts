@@ -49,6 +49,9 @@ export class DashboardComponent {
     }
 
     async fetchData(): Promise<void> {
+        // この取得を始める前に、すでに取れた中身がある（前の訪問の分。今日のダイヤは取れたら入る）なら、
+        // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
+        const hasFetchedBefore = DashboardStore.todaysCalendar !== null;
         DashboardStore.enableLoading();
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
@@ -77,7 +80,9 @@ export class DashboardComponent {
             if (failure) {
                 // 取得がすべて終わってから、保存した中身で戻す
                 // （遅れて届いた成功が戻した中身を上書きしないように）
-                await this.#restoreSnapshot();
+                if (!hasFetchedBefore) {
+                    await this.#restoreSnapshot();
+                }
                 throw failure.reason;
             }
 

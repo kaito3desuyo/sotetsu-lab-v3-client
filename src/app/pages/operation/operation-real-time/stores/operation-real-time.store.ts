@@ -335,6 +335,13 @@ export const OperationRealTimeStore = {
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
     },
+    /** 運用・編成を取得済みとする印を外す（テストで、前のテストの取得を持ち越さないため） */
+    resetHasFetched(): void {
+        store.update(
+            setProp('hasFetchedOperations', () => false),
+            setProp('hasFetchedFormations', () => false),
+        );
+    },
     setIsEnableAutoReload(isEnable: boolean): void {
         store.update(setProp('isEnableAutoReload', () => isEnable));
     },
@@ -418,6 +425,9 @@ export const OperationRealTimeStore = {
         select((state) => state.isVisibleCurrentPosition),
     ),
 
+    get hasFetchedOperations(): boolean {
+        return store.getValue().hasFetchedOperations;
+    },
     get routes(): RouteDetailsDto[] {
         return store.getValue().routes;
     },
