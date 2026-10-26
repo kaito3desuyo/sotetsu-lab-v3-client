@@ -26,6 +26,22 @@ type StoreProps = {
     hasFetchedTrainLocation: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（calendarId・selectedRouteId）と画面の状態
+ * （駅・モード・指定時刻・読み込み中の印）、目撃（別に保存する）は入れない。
+ */
+export type TrainLocationSnapshot = Pick<
+    StoreProps,
+    | 'stationAxisStations'
+    | 'tripClasses'
+    | 'tripBlocksByDirection'
+    | 'itineraryLinks'
+>;
+
+/** 圏外のために端末に保存する目撃（運用番号ごと。列車の保存とは別に、日付つきで保存する） */
+export type TrainLocationSightingsSnapshot =
+    StoreProps['operationSightingTimeCrossSections'];
+
 const store = createStore(
     { name: 'TrainLocationStore' },
     withProps<StoreProps>({
@@ -99,6 +115,41 @@ export const TrainLocationStore = {
     /** いまの路線・ダイヤの取得が終わったか（失敗しても true）。取る前は本文の代わりに骨組みを出す */
     setHasFetchedTrainLocation(value: boolean): void {
         store.update(setProp('hasFetchedTrainLocation', () => value));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): TrainLocationSnapshot {
+        const {
+            stationAxisStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        } = store.getValue();
+        return {
+            stationAxisStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        };
+    },
+    /** 保存した中身を戻す（条件の calendarId・selectedRouteId と画面の状態は今のまま） */
+    restoreSnapshot(data: TrainLocationSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            stationAxisStations: data.stationAxisStations,
+            tripClasses: data.tripClasses,
+            tripBlocksByDirection: data.tripBlocksByDirection,
+            itineraryLinks: data.itineraryLinks,
+        }));
+    },
+    /** 圏外のために保存する目撃を取り出す */
+    snapshotOperationSightingTimeCrossSections(): TrainLocationSightingsSnapshot {
+        return store.getValue().operationSightingTimeCrossSections;
+    },
+    /** 保存した目撃に置き換える */
+    restoreOperationSightingTimeCrossSections(
+        data: TrainLocationSightingsSnapshot,
+    ): void {
+        store.update(setProp('operationSightingTimeCrossSections', () => data));
     },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),

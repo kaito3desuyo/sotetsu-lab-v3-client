@@ -59,13 +59,14 @@ export class TrainLocationService {
     /**
      * 運用の乗り移りを見分けるつながり（運用表・行路図・列車ダイヤグラムと同じ口）を取る。
      * 折返しの判定にだけ使うので、取れなくても空として扱い（従来の判定のまま）、ページは止めない。
+     * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
-    fetchItineraryLinks(): Observable<void> {
+    fetchItineraryLinks(): Observable<{ failed: boolean }> {
         const calendarId = TrainLocationStore.calendarId;
 
         if (!calendarId) {
             TrainLocationStore.setItineraryLinks([]);
-            return of(undefined);
+            return of({ failed: false });
         }
 
         return this.#operationService
@@ -74,11 +75,11 @@ export class TrainLocationService {
                 tap((links) => {
                     TrainLocationStore.setItineraryLinks(links);
                 }),
+                map(() => ({ failed: false })),
                 catchError(() => {
                     TrainLocationStore.setItineraryLinks([]);
-                    return of(undefined);
+                    return of({ failed: true });
                 }),
-                map(() => undefined),
             );
     }
 
@@ -106,17 +107,18 @@ export class TrainLocationService {
     /**
      * まだキャッシュされていない operationNumber のみを対象に、目撃クロスセクション
      * （充当編成番号の根拠）を取得する。今日有効なダイヤ表示時のみ呼び出し側が呼ぶ。
+     * 新しく取れたら true、取るものが無かったら false を返す（呼び出し側が圏外用に保存するか決める）。
      */
     fetchMissingOperationSightingTimeCrossSections(
         operationNumbers: readonly string[],
-    ): Observable<void> {
+    ): Observable<boolean> {
         const cached = TrainLocationStore.operationSightingTimeCrossSections;
         const missing = Array.from(new Set(operationNumbers)).filter(
             (operationNumber) => !cached[operationNumber],
         );
 
         if (!missing.length) {
-            return of(undefined);
+            return of(false);
         }
 
         // 運用ごとに 1 本ずつ取っていたのを、まとめて返す口 1 本にする（api ADR-0003）
@@ -136,7 +138,7 @@ export class TrainLocationService {
                         );
                     }
                 }),
-                map(() => undefined),
+                map(() => true),
             );
     }
 }
