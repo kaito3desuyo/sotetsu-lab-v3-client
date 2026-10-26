@@ -12,6 +12,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -28,7 +29,10 @@ import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.compo
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
 import { OperationTableService } from './services/operation-table.service';
-import { OperationTableStore } from './stores/operation-table.store';
+import {
+    OperationTableSnapshot,
+    OperationTableStore,
+} from './stores/operation-table.store';
 import {
     deriveGroupName,
     matchesGroupFilter,
@@ -46,6 +50,9 @@ const NO_GROUP_NAMES: string[] = [];
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'OperationTable';
 
 @Component({
     selector: 'app-operation-table',
@@ -65,6 +72,7 @@ export class OperationTableComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #operationTableService = inject(OperationTableService);
     readonly #calendarListStateQuery = inject(CalendarListStateQuery);
     readonly #todaysCalendarListStateQuery = inject(
@@ -186,6 +194,7 @@ export class OperationTableComponent {
 
     async fetchData(): Promise<void> {
         const seq = ++fetchSeq;
+        const conditions = { calendarId: OperationTableStore.calendarId };
         OperationTableStore.enableLoading();
         OperationTableStore.setHasFetchedOperationTrips(false);
 
@@ -199,23 +208,49 @@ export class OperationTableComponent {
         ]);
         // 前後の運用が取れなくても運用表は出す（つながりを出さないだけ）。
         // 上の 4 つとは別に取り、失敗しても throw の対象にしない
+        let hasFetchedItineraryLinks = true;
         const linksPromise = lastValueFrom(
             this.#operationTableService.fetchItineraryLinks(),
-        ).catch(() => undefined);
+        ).catch(() => {
+            hasFetchedItineraryLinks = false;
+        });
 
-        // 取得に失敗しても読み込み中を解く。ストアは通信断に備えて全体を保存しており、
-        // 取れなかった分は前回保存したデータでカードを出す
+        const failure = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
+        );
+
+        // 取得に失敗しても読み込み中を解く。取れなかったときは、同じダイヤで保存した中身で
+        // カードを出す（取得がすべて終わってから戻す。遅れて届いた成功が戻した中身を上書きしないように）
         await linksPromise;
+        if (failure) {
+            // 古い取得の失敗では戻さない。戻す処理が壊れていても、読み込み中は必ず解く
+            if (seq === fetchSeq) {
+                try {
+                    await this.#offlineSnapshots.restore({
+                        key: OFFLINE_SNAPSHOT_KEY,
+                        conditions,
+                        apply: (data: OperationTableSnapshot) =>
+                            OperationTableStore.restoreSnapshot(data),
+                    });
+                } catch {
+                    // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                }
+            }
+        } else if (hasFetchedItineraryLinks && seq === fetchSeq) {
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SNAPSHOT_KEY,
+                conditions,
+                data: OperationTableStore.snapshot(),
+            });
+        }
         OperationTableStore.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
         if (seq === fetchSeq) {
             OperationTableStore.setHasFetchedOperationTrips(true);
         }
 
-        const failure = results.find(
-            (result): result is PromiseRejectedResult =>
-                result.status === 'rejected',
-        );
         if (failure) {
             throw failure.reason;
         }

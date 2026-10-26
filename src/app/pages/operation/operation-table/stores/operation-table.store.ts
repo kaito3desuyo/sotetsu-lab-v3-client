@@ -1,7 +1,7 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { debounceTime, map } from 'rxjs';
+import { map } from 'rxjs';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
@@ -22,6 +22,18 @@ type StoreProps = {
     loadingQueue: boolean[];
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（calendarId）と画面の設定（運用群）は入れない。
+ */
+export type OperationTableSnapshot = Pick<
+    StoreProps,
+    | 'calendar'
+    | 'operationTrips'
+    | 'itineraryLinks'
+    | 'stations'
+    | 'tripClasses'
+>;
+
 const store = createStore(
     { name: 'OperationTableStore' },
     withProps<StoreProps>({
@@ -37,11 +49,32 @@ const store = createStore(
     }),
 );
 
-// B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー
+/**
+ * 端末から読み込んだ値のうち、画面の設定（運用群）だけをストアに入れる。
+ * 以前は全体を保存していたため、IndexedDB に残る古い値（数 MB の運用・駅など）を戻さない。
+ * 設定以外は今のストアの値のまま。
+ */
+export function pickOperationTableSettings(value: StoreProps): StoreProps {
+    const current = store.getValue();
+    return {
+        ...current,
+        selectedGroupNames:
+            value.selectedGroupNames ?? current.selectedGroupNames,
+    };
+}
+
+// B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー。
+// 保存するのは運用群の選択だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
+// ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
 const persist = persistState(store, {
     key: 'OperationTableStore',
     storage: localForage,
-    source: () => store.pipe(debounceTime(1000)),
+    preStoreInit: pickOperationTableSettings,
+    source: () =>
+        store.pipe(
+            select((state) => state.selectedGroupNames),
+            map((selectedGroupNames) => ({ selectedGroupNames })),
+        ),
 });
 
 export const OperationTableStore = {
@@ -80,6 +113,34 @@ export const OperationTableStore = {
     },
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): OperationTableSnapshot {
+        const {
+            calendar,
+            operationTrips,
+            itineraryLinks,
+            stations,
+            tripClasses,
+        } = store.getValue();
+        return {
+            calendar,
+            operationTrips,
+            itineraryLinks,
+            stations,
+            tripClasses,
+        };
+    },
+    /** 保存した中身を戻す（条件の calendarId と運用群は今のまま） */
+    restoreSnapshot(data: OperationTableSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            calendar: data.calendar,
+            operationTrips: data.operationTrips,
+            itineraryLinks: data.itineraryLinks,
+            stations: data.stations,
+            tripClasses: data.tripClasses,
+        }));
     },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),
