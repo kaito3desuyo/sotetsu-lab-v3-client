@@ -8,12 +8,16 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { lastValueFrom } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { DashboardCollapsibleCardsComponent } from './components/dashboard-collapsible-cards/dashboard-collapsible-cards.component';
 import { DashboardLatestSightingsComponent } from './components/dashboard-latest-sightings/dashboard-latest-sightings.component';
 import { DashboardQuickTilesComponent } from './components/dashboard-quick-tiles/dashboard-quick-tiles.component';
 import { DashboardStatusCardComponent } from './components/dashboard-status-card/dashboard-status-card.component';
 import { DashboardService } from './services/dashboard.service';
-import { DashboardStore } from './stores/dashboard.store';
+import { DashboardSnapshot, DashboardStore } from './stores/dashboard.store';
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'Dashboard';
 
 @Component({
     selector: 'app-dashboard',
@@ -32,6 +36,7 @@ import { DashboardStore } from './stores/dashboard.store';
 })
 export class DashboardComponent {
     readonly #dashboardService = inject(DashboardService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
 
     readonly isLoading = toSignal(DashboardStore.isLoading$, {
         initialValue: false,
@@ -49,22 +54,67 @@ export class DashboardComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            // 互いに依存しないものは並行に取る（以前は 6 本を 1 本ずつ待っていた）
-            await Promise.all([
+            // 互いに依存しないものは並行に取る（以前は 6 本を 1 本ずつ待っていた）。
+            // 失敗しても、ほかの取得が終わるまで待つ
+            let failure = await this.#firstFailure([
                 lastValueFrom(this.#dashboardService.fetchTodaysCalendar()),
                 lastValueFrom(this.#dashboardService.fetchTodaysDayName()),
                 lastValueFrom(this.#dashboardService.fetchTodaysSightings()),
                 lastValueFrom(this.#dashboardService.fetchTripClasses()),
             ]);
             // 走行中の本数は今日のダイヤ、位置は目撃情報を読むので後に回す
-            await Promise.all([
-                lastValueFrom(this.#dashboardService.fetchRunningTripCount()),
-                lastValueFrom(
-                    this.#dashboardService.fetchLatestSightingPositions(),
-                ),
-            ]);
+            if (!failure) {
+                failure = await this.#firstFailure([
+                    lastValueFrom(
+                        this.#dashboardService.fetchRunningTripCount(),
+                    ),
+                    lastValueFrom(
+                        this.#dashboardService.fetchLatestSightingPositions(),
+                    ),
+                ]);
+            }
+
+            if (failure) {
+                // 取得がすべて終わってから、保存した中身で戻す
+                // （遅れて届いた成功が戻した中身を上書きしないように）
+                await this.#restoreSnapshot();
+                throw failure.reason;
+            }
+
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SNAPSHOT_KEY,
+                conditions: {},
+                data: DashboardStore.snapshot(),
+            });
         } finally {
             DashboardStore.disableLoading();
+        }
+    }
+
+    /** 全部の取得が終わるまで待ち、最初に失敗したものを返す（全部成功なら null） */
+    async #firstFailure(
+        promises: Promise<unknown>[],
+    ): Promise<{ reason: unknown } | null> {
+        const results = await Promise.allSettled(promises);
+        const rejected = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
+        );
+        return rejected ? { reason: rejected.reason } : null;
+    }
+
+    /** 保存した中身を戻す。戻す処理が壊れていても、取得の失敗をそのまま投げられるよう握りつぶす */
+    async #restoreSnapshot(): Promise<void> {
+        try {
+            await this.#offlineSnapshots.restore({
+                key: OFFLINE_SNAPSHOT_KEY,
+                conditions: {},
+                apply: (data: DashboardSnapshot) =>
+                    DashboardStore.restoreSnapshot(data),
+            });
+        } catch {
+            // 保存した中身が壊れていても、取得の失敗をそのまま投げる
         }
     }
 }

@@ -1,7 +1,7 @@
 import { createStore, select, setProp, withProps } from '@ngneat/elf';
 import { persistState } from '@ngneat/elf-persist-state';
 import localForage from 'localforage';
-import { debounceTime, map } from 'rxjs';
+import { map } from 'rxjs';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
@@ -25,6 +25,21 @@ type StoreProps = {
     loadingQueue: boolean[];
 };
 
+/**
+ * 圏外のために端末に保存する中身。画面の設定（hasVisitedBefore）と loadingQueue は入れない。
+ */
+export type DashboardSnapshot = Pick<
+    StoreProps,
+    | 'todaysCalendar'
+    | 'todaysDayName'
+    | 'runningTripCount'
+    | 'sightingCountToday'
+    | 'latestSightings'
+    | 'latestSightingPositions'
+    | 'itineraryLinks'
+    | 'tripClasses'
+>;
+
 const store = createStore(
     { name: 'DashboardStore' },
     withProps<StoreProps>({
@@ -41,15 +56,28 @@ const store = createStore(
     }),
 );
 
+/**
+ * 端末から読み込んだ値のうち、画面の設定（既訪問フラグ）だけをストアに入れる。
+ * 以前は全体を保存していたため、IndexedDB に残る古い中身を戻さない。
+ * 設定以外は今のストアの値のまま（loadingQueue も今のまま）。
+ */
+export function pickDashboardSettings(value: StoreProps): StoreProps {
+    const current = store.getValue();
+    return {
+        ...current,
+        hasVisitedBefore: value.hasVisitedBefore ?? current.hasVisitedBefore,
+    };
+}
+
+// 保存するのは既訪問フラグだけ。ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
 const persist = persistState(store, {
     key: 'DashboardStore',
     storage: localForage,
-    // loadingQueue は永続化しない（ロード中にタブを閉じると非空 queue が保存・
-    // 復元され、次回訪問時に isLoading が true のまま回復不能になるため）
+    preStoreInit: pickDashboardSettings,
     source: () =>
         store.pipe(
-            debounceTime(1000),
-            map(({ loadingQueue: _loadingQueue, ...rest }) => rest),
+            select((state) => state.hasVisitedBefore),
+            map((hasVisitedBefore) => ({ hasVisitedBefore })),
         ),
 });
 
@@ -90,6 +118,43 @@ export const DashboardStore = {
     },
     markVisited(): void {
         store.update(setProp('hasVisitedBefore', () => true));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): DashboardSnapshot {
+        const {
+            todaysCalendar,
+            todaysDayName,
+            runningTripCount,
+            sightingCountToday,
+            latestSightings,
+            latestSightingPositions,
+            itineraryLinks,
+            tripClasses,
+        } = store.getValue();
+        return {
+            todaysCalendar,
+            todaysDayName,
+            runningTripCount,
+            sightingCountToday,
+            latestSightings,
+            latestSightingPositions,
+            itineraryLinks,
+            tripClasses,
+        };
+    },
+    /** 保存した中身を戻す（既訪問フラグと読み込み中は今のまま） */
+    restoreSnapshot(data: DashboardSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            todaysCalendar: data.todaysCalendar,
+            todaysDayName: data.todaysDayName,
+            runningTripCount: data.runningTripCount,
+            sightingCountToday: data.sightingCountToday,
+            latestSightings: data.latestSightings,
+            latestSightingPositions: data.latestSightingPositions,
+            itineraryLinks: data.itineraryLinks,
+            tripClasses: data.tripClasses,
+        }));
     },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));
