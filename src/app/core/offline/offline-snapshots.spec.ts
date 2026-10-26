@@ -133,6 +133,30 @@ describe('OfflineSnapshots', () => {
             expect(open).not.toHaveBeenCalled();
         });
 
+        it.each([
+            ['無い', undefined],
+            ['null', null],
+            ['オブジェクトでない', 'broken'],
+        ])(
+            '保存した条件が壊れていたら戻さない（条件が%s）',
+            async (_name, conditions) => {
+                getItem.mockResolvedValue({ ...snapshot(), conditions });
+                const service = setup();
+                const apply = jest.fn();
+
+                await expect(
+                    service.restore({
+                        key: 'Foo',
+                        conditions: { calendarId: 'c1' },
+                        apply,
+                    }),
+                ).resolves.toBeNull();
+
+                expect(apply).not.toHaveBeenCalled();
+                expect(open).not.toHaveBeenCalled();
+            },
+        );
+
         it('getItem が reject しても null を返す', async () => {
             getItem.mockRejectedValue(new Error('broken'));
             const service = setup();

@@ -88,6 +88,9 @@ export class OfflineSnapshots {
         if (
             !snapshot ||
             snapshot.version !== OFFLINE_SNAPSHOT_VERSION ||
+            // 端末に残った値が壊れていても、例外を投げずに戻さないだけにする
+            typeof snapshot.conditions !== 'object' ||
+            snapshot.conditions === null ||
             !isSameConditions(snapshot.conditions, params.conditions)
         ) {
             return null;
