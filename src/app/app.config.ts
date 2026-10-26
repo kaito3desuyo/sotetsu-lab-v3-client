@@ -33,6 +33,7 @@ import { APP_ROUTES } from './app.route';
 import { CustomPaginator } from './core/classes/custom-paginator';
 import { AuthInterceptor } from './core/interceptors/auth-interceptor';
 import { FetchErrorInterceptor } from './core/interceptors/fetch-error.interceptor';
+import { NgswBypassInterceptor } from './core/interceptors/ngsw-bypass.interceptor';
 import { PayloadHashInterceptor } from './core/interceptors/payload-hash.interceptor';
 import { ErrorHandlerService } from './core/services/error-handler.service';
 import { isTransferableRequest } from './core/ssr/transfer-cache-filter';
@@ -87,6 +88,12 @@ export const appConfig: ApplicationConfig = {
         {
             provide: HTTP_INTERCEPTORS,
             useClass: PayloadHashInterceptor,
+            multi: true,
+        },
+        // 書き込み後の 1 時間（cache: 'reload'）は Service Worker を通さない
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: NgswBypassInterceptor,
             multi: true,
         },
         { provide: MatPaginatorIntl, useClass: CustomPaginator },
