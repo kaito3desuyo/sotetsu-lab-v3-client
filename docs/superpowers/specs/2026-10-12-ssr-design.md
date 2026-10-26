@@ -5,6 +5,7 @@
 - 状態: 設計合意済み・spec レビュー待ち
 - 改訂: 2026-10-24 画面の配信を Terraform から client の osls に移す（3・8・9・12 章）。index.html のキャッシュは client #275 で先に直す（2.2・6.6・8 章）
 - 改訂: 2026-10-24 計画前の下調べ（コードの洗い出し・AWS の文書）と、それを受けたユーザー判断を反映（2.4・4・5・6.2・7.1・13 章）。Function URL に決定・列車番号ページは外す・過去の運用情報も中身まで描く・失効は API が出す
+- 改訂: 2026-10-26 リリース 2c（Lambda と配信で SSR を有効にする）の決めごと（14 章）。Lambda Web Adapter で Express のまま動かす・応答は Lambda で圧縮する・圧縮を受け付けない相手で上限を超えたら S3 の殻へ
 
 ## 1. 目的
 
@@ -303,3 +304,43 @@ AWS で読んだ事実（読むだけ・2026-10-24）:
 2. **SSR を入れる（client）**: `app.routes.server.ts`・サーバーで取らない分け目・題名と OGP・`Cache-Control` とタグ・Lambda と配信（osls）・Service Worker の殻の確かめ（7.4）・圏外の保存（7.3）
 3. **失効（api）**: タグの失効と、まとめ方。api の spec と ADR で
 4. **温めと計測**: 6.4・10 章
+
+## 14. リリース 2c: Lambda と配信で SSR を有効にする（2026-10-26 追記）
+
+リリース 2（13.3）は 2a（アプリ側の描き分け）・2b（圏外の保存と Service Worker）・2c（Lambda と配信）の 3 本に割った。出す順は 2a → 2b → 2c（ユーザー判断。圏外の保存を先に入れ、SSR で初めて開いたページも圏外で出るようにしてから有効にする）。この章は 2c の決めごと。
+
+### 14.1 HTML の大きさ（2026-10-26 実測）
+
+- 2a＋高速化の枝（perf/ssr-quick-wins）＋master の include・fields で描いた HTML: 運用表 10.1MB・列車ダイヤグラム 4.7MB・駅別時刻表 3.8MB・全線時刻表 3.4MB・トップ 418KB
+- Lambda の応答は 6MB まで（同期。ストリームは 200MB で、6MB を超えた分は 2MBps）。base64 にした後で数えるかは文書に無い（推測では 4/3 倍で数える）。運用表は圧縮しないと返せない
+- CloudFront の自動圧縮は `Content-Length` のある 1,000〜10,000,000B の応答だけで、Lambda の上限の手前では役に立たない
+- 圧縮の速さ（運用表 9.2MB の HTML・手元）: brotli 品質 5 で 108KB・31ms、品質 11 で 102KB・2.8 秒、gzip 品質 6 で 248KB・31ms
+
+### 14.2 決めたこと
+
+- **Lambda の入口は Lambda Web Adapter**（ユーザー判断）。今の Express の `server.ts` を Lambda の中で `listen` させ、AWS のアダプター（レイヤー）がイベントを HTTP にして流す。本番も手元（`ssr:check`・`ng serve`）も同じ Express の道を通る
+  - 見送った案: 自前の入口（`AngularAppEngine.handle(Request)` をイベントから直接呼ぶ）は、`server.ts` に入口が 2 つ並び、本番と手元で通る道が分かれてややこしい。serverless-express は README に Function URL の記載が無い
+- **応答は Lambda（Express）で圧縮する**。`compression` の middleware で、`Accept-Encoding` に応じて br（品質 5）・gzip（品質 6）・圧縮なしを返し分け、`Vary: Accept-Encoding` を付ける
+  - CloudFront は配信元が `Content-Encoding` を付けた応答をそのままキャッシュして配り、圧縮し直さない。キャッシュは `Accept-Encoding` を `br,gzip`・`gzip`・`br`・`identity` にそろえた値ごとに分かれ、その値が Lambda にも届く（AWS の文書）。キャッシュポリシーで Gzip・Brotli を有効にする
+- **圧縮を受け付けない相手（`identity`）で 6MB を超えたら、S3 の殻に切り替える**（ユーザー判断）。Lambda は上限を超えた応答を返せずエラーになり、オリジングループ（9 章）が S3 の `index.csr.html` に切り替える。普通のブラウザと Googlebot は圧縮を受け付けるので、ここに来るのは curl や古い bot くらい
+  - 殻: SSR でビルドすると、ブラウザ側の出力は `index.html` でなく `index.csr.html`（`<app-root>` が空の HTML）になる（手元のビルド出力で確認）。これを S3 に上げて切り替え先にし、Service Worker の `index` もこれに合わせる（7.4）
+- 描画を 1 本ずつにする列（2a）は残す。Lambda は 1 環境 1 リクエストなので効かないが、手元で要る
+
+### 14.3 2c の作業の最初に実際に試すこと
+
+文書に書かれていない、または推測が混じるもの。小さな試しのスタックか本番前の段で確かめてから本体に進む。
+
+1. `compression` が brotli を出せるか（出せなければ gzip だけでよい。運用表でも 248KB）
+2. 圧縮しない 6MB 超の応答で Lambda が返すエラーの状態コードと、それでオリジングループが殻に切り替わるか
+3. Lambda の応答のヘッダーでキャッシュタグ（`CacheTagConfig` の `HeaderName`）が効くか（6.2）
+4. Function URL を通して matrix param の `;` が落ちずに Express に届くか
+5. Lambda に届く Host（CloudFront から Function URL へは Function URL の名前になる）と、`allowedHosts` の書き方
+6. Web Adapter の寝起きの長さ（Express が `listen` するまで）
+
+### 14.4 AWS の約束（文書で確かめたこと）
+
+- OAC で Function URL を守るには、Lambda の許可に `lambda:InvokeFunctionUrl` と `lambda:InvokeFunction` の両方が要る（2025-10 以降に作った Function URL）。`AuthType: AWS_IAM`。GET・HEAD だけなので本文の sha256 は要らない
+- オリジングループが切り替えるのは GET・HEAD・OPTIONS で、状態コード 400・403・404・416・429・500・502・503・504。Function URL と S3（OAC）を組にした例は文書に無い（14.3 の 2 で試す）
+- Origin Shield は東京（ap-northeast-1）に置ける
+- `s-maxage`・`stale-while-revalidate`・`stale-if-error` は CloudFront の最大 TTL で頭打ちになる。最小 TTL は 0
+- 出典と引用は作業メモ（git 管理外）`.context/ssr-plan/2c-aws-research.md`
