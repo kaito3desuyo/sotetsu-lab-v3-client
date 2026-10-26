@@ -44,6 +44,16 @@
 
 - 目撃の期間を将来絞るなら、過去の運用の表（operation-past-time-table）が `sighting.invalidation !== null`・`=== null` で比べているのを先に直す。`fields` を付けると null の `invalidation` は応答から省かれ、undefined になる。
 
+### 運行系統の駅一覧（PR D）
+
+- 口は `GET /v3/services/:id/stations`（`ServiceQuery.findOneWithStations`）。全部入りだと 249 駅のそれぞれに路線の中身・停留所・時刻印が付いて 621KB あった。
+- 選んだ組は `include=stations.routeStationLists.route`・`fields[station]=stationName`・`fields[routeStationList]=routeId,stationSequence,stationNumbering`・`fields[route]=routeName,agencyId`（`libs/service/usecase/service-stations-fields.ts`）。実測は 621KB → 94KB。駅の並びと読む項目の値は、全部入りと一致することを本番で確かめた。
+- 呼び出し元は 5 ページ（全線時刻表・時刻表の編集・行路図・real-time・ダイヤグラム）で、読む項目が少しずつ違う。ページごとに組を変えず、5 ページの読む項目の和集合を 1 つの形にした。形が 1 つなので QueryCache のキー（`{ serviceId }`）は変えない。
+- この形では応答に `service` が付かない。どのページも読まないので、`ServiceStationsDto.service` を `ServiceDetailsDto | null` にした（付かないときは null）。
+- 保存するストアの版は上げない。新しい形は古い形の部分集合で、前回の全部入りを読み戻しても読む項目はそろっている。
+- trip-blocks の口は、既に `fields` で絞ってある。残りは時刻（駅の UUID）が大半なので、切り替えない。
+- 注意: 駅の中の `routeStationLists` の順番は、API が並べ替えておらず、取り方（include・fields）で変わりうる。全部入りでも順番の保証は無い。順番に頼って読む所を足すときは、読む側で並べ替える。
+
 ## 影響
 
 - 起動 1 回あたりの取得は約 745KB から約 111KB に、運用表は約 3.4MB から約 1MB に、リアルタイムが更新のたびに取る時刻断面のまとめ 2 本は約 300KB から約 212KB になる。運用表のストアを localForage に書く量も同じだけ減る。
