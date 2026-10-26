@@ -14,13 +14,18 @@ import {
     of,
     ReplaySubject,
     Subject,
+    switchMap,
     throwError,
+    timer,
 } from 'rxjs';
 
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { UserStateQuery } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
@@ -440,7 +445,13 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 stations$ = throwError(() => new Error('offline'));
             }
             await setup({ calendar_id: 'cal-1', trip_direction: '0' });
-            if (!stationsFail) tripBlocks$.error(new Error('offline'));
+            if (stationsFail) {
+                // 失敗を決めるのは両方の取得が終わってから（もう片方は成功で終わらせる）
+                tripBlocks$.next(undefined);
+                tripBlocks$.complete();
+            } else {
+                tripBlocks$.error(new Error('offline'));
+            }
             await flush();
 
             expect(rejected).toBeInstanceOf(Error);
@@ -675,5 +686,216 @@ describe('TimetableAllLineComponent の帯の操作', () => {
             'all-line',
             { calendar_id: 'cal-1', trip_direction: 0 },
         ]);
+    });
+});
+
+describe('TimetableAllLineComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<TimetableAllLineComponent>;
+    let fetchDataSpy: jest.SpyInstance;
+    let stations$: Observable<undefined>;
+    let tripBlocks$: Observable<undefined>;
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+
+    const stations = [{ stationId: 'st-1' }] as never;
+    const agencies = [{ agencyId: 'ag-1' }] as never;
+    const routeOrder = ['route-1'];
+    const tripBlocks = [{ tripBlockId: 'block-1' }] as never;
+    const conditions = { calendarId: 'cal-1', tripDirection: 0 };
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
+    // 「処理されない拒否」と見なされ、ComponentFixture が投げ直してしまう
+    const failLater = (message: string) =>
+        timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
+
+    const setup = async () => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // 本物の fetchData の失敗だけ受け流す
+        const original = TimetableAllLineComponent.prototype.fetchData;
+        fetchDataSpy = jest
+            .spyOn(TimetableAllLineComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: TimetableAllLineComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        const params = { calendar_id: 'cal-1', trip_direction: '0' };
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                        snapshot: { params },
+                    },
+                },
+                {
+                    provide: TimetableAllLineService,
+                    useValue: {
+                        fetchStations: () => stations$,
+                        fetchTripBlocks: () => tripBlocks$,
+                    },
+                },
+                {
+                    provide: AgencyListStateQuery,
+                    useValue: { agencies, agencies$: of(agencies) },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: {
+                        routeStations$: of(
+                            routeOrder.map((routeId) => ({ routeId })),
+                        ),
+                    },
+                },
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: {
+                        selectByCalendarId: () => of(undefined),
+                        calendars$: of([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+                {
+                    provide: UserStateQuery,
+                    useValue: { canEditTimetable$: of(false) },
+                },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    };
+
+    const emptyStore = () => {
+        TimetableAllLineStore.setStations([]);
+        TimetableAllLineStore.setAgencies([]);
+        TimetableAllLineStore.setRouteOrder([]);
+        TimetableAllLineStore.setTripBlocks([]);
+        TimetableAllLineStore.setSelectedRouteIds([]);
+    };
+
+    afterEach(() => {
+        fetchDataSpy.mockRestore();
+        fixture?.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        emptyStore();
+        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TimetableAllLineStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        stations$ = of(undefined);
+        tripBlocks$ = of(undefined);
+        await setup();
+        TimetableAllLineStore.setStations(stations);
+        TimetableAllLineStore.setTripBlocks(tripBlocks);
+
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        await flush();
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'TimetableAllLine',
+            conditions,
+            data: { stations, agencies, routeOrder, tripBlocks },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻し、路線の選択を中身に合わせる', async () => {
+        stations$ = of(undefined);
+        tripBlocks$ = failLater('offline');
+        await setup();
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = fixture.componentInstance.isLoading();
+                params.apply(
+                    {
+                        stations: [
+                            {
+                                stationId: 'st-1',
+                                routeStationLists: [
+                                    { route: { routeId: 'route-9' } },
+                                ],
+                            },
+                        ],
+                        agencies,
+                        routeOrder,
+                        tripBlocks,
+                    },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'TimetableAllLine',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(await firstValueFrom(TimetableAllLineStore.stations$)).toEqual([
+            expect.objectContaining({ stationId: 'st-1' }),
+        ]);
+        // 戻した駅の路線に選択を合わせている（自社の路線が無いので全路線 ON のフォールバック）
+        expect(
+            await firstValueFrom(TimetableAllLineStore.selectedRouteIds$),
+        ).toEqual(['route-9']);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('片方が先に失敗しても、もう片方が終わってから戻す', async () => {
+        const tripBlocksLate = new Subject<undefined>();
+        stations$ = failLater('offline');
+        tripBlocks$ = tripBlocksLate;
+        await setup();
+
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        tripBlocksLate.next(undefined);
+        tripBlocksLate.complete();
+        await flush();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        stations$ = of(undefined);
+        tripBlocks$ = failLater('offline-first');
+        await setup();
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        // 先の取得が trip-blocks を取りに行くまで待つ（取る前に差し替えると先の取得も成功してしまう）
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // 取り直しを始めてから、先の取得の失敗が届く
+        tripBlocks$ = of(undefined);
+        await fixture.componentInstance.fetchData();
+        await flush();
+
+        expect(restore).not.toHaveBeenCalled();
     });
 });
