@@ -7,7 +7,12 @@ import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { TripOperationListDtoBuilder } from 'src/app/libs/trip/infrastructure/builders/trip-operation-list.dto.builder';
+import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
+import {
+    OPERATION_TABLE_FIELDS,
+    OPERATION_TABLE_INCLUDE,
+} from '../../usecase/operation-trips-fields';
 import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
 import { NextSegmentCandidateDto } from '../../usecase/dtos/next-segment-candidate.dto';
@@ -181,7 +186,10 @@ export class OperationQuery {
             );
     }
 
-    /** ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。 */
+    /**
+     * ダイヤ内の全運用を列車つきで 1 回で取る（運用ごとの findOneWithTrips を束ねたもの）。
+     * 運用表が読む項目だけを返させる（種別・ダイヤは結合しない。種別は別に取った一覧から引く）。
+     */
     findManyWithTrips(params: {
         calendarId: string;
         forceReload?: boolean;
@@ -196,6 +204,12 @@ export class OperationQuery {
                     this.#http.get<OperationTripsModel[]>(
                         `${this.#v3ApiUrl}/calendar/${calendarId}/trips`,
                         {
+                            params: new HttpParams({
+                                fromObject: {
+                                    include: OPERATION_TABLE_INCLUDE,
+                                    ...toFieldsParams(OPERATION_TABLE_FIELDS),
+                                },
+                            }),
                             observe: 'response',
                             cache: this.#invalidator.requestCache('timetable'),
                         },
