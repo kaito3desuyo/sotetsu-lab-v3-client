@@ -53,6 +53,10 @@ export type TimetableStationSnapshot = Pick<
     | 'operations'
 >;
 
+/** 圏外のために端末に保存する充当編成（時刻表とは別に、日付つきで保存する） */
+export type TimetableStationSightingsSnapshot =
+    StoreProps['operationSightingTimeCrossSections'];
+
 const store = createStore(
     { name: 'TimetableStationStore' },
     withProps<StoreProps>({
@@ -265,6 +269,17 @@ export const TimetableStationStore = {
             stations: data.stations,
             operations: data.operations,
         }));
+    },
+
+    /** 圏外のために保存する充当編成を取り出す */
+    snapshotOperationSightingTimeCrossSections(): TimetableStationSightingsSnapshot {
+        return store.getValue().operationSightingTimeCrossSections;
+    },
+    /** 保存した充当編成を戻す */
+    restoreOperationSightingTimeCrossSections(
+        data: TimetableStationSightingsSnapshot,
+    ): void {
+        store.update(setProp('operationSightingTimeCrossSections', () => data));
     },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),

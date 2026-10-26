@@ -14,9 +14,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
+import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import {
+    OfflineConditions,
+    OfflineSnapshots,
+} from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
@@ -24,6 +28,7 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -46,6 +51,7 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import {
+    TimetableStationSightingsSnapshot,
     TimetableStationSnapshot,
     TimetableStationStore,
 } from './stores/timetable-station.store';
@@ -60,6 +66,9 @@ let fetchSeq = 0;
 
 /** 圏外のために保存する中身のキー */
 const OFFLINE_SNAPSHOT_KEY = 'TimetableStation';
+
+/** 圏外のために保存する充当編成のキー（目撃は Service Worker に残らないので別に保存する） */
+const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TimetableStationSightings';
 
 /** 駅の選択欄の先頭の「全線（駅を選ばない）」の値。選ぶと全線時刻表へ移る（2026-10-22） */
 export const ALL_LINE_OPTION = '__all-line__';
@@ -355,9 +364,22 @@ export class TimetableStationComponent {
             // 充当編成は列車の運用番号とダイヤ（今日かどうか）が揃ってから取る。
             // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
             if (this.isTodaysCalendar()) {
-                await lastValueFrom(
+                const sightingsFetched = await lastValueFrom(
                     this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
                 );
+                // 目撃は Service Worker に残らないので、時刻表とは別に、日付つきで保存する
+                if (seq === fetchSeq) {
+                    await this.#saveOrRestoreSightings({
+                        conditions: {
+                            ...conditions,
+                            date: format(
+                                getRailwayDate(new Date()),
+                                'yyyy-MM-dd',
+                            ),
+                        },
+                        fetched: sightingsFetched,
+                    });
+                }
             } else {
                 TimetableStationStore.resetOperationSightingTimeCrossSections();
             }
@@ -367,6 +389,33 @@ export class TimetableStationComponent {
                 TimetableStationStore.setHasFetchedTimetable(true);
             }
             TimetableStationStore.disableLoading();
+        }
+    }
+
+    /** 充当編成が取れたら保存し、取れなかったら同じ日の保存を戻す（戻せなければ今のまま） */
+    async #saveOrRestoreSightings(params: {
+        conditions: OfflineConditions;
+        fetched: boolean;
+    }): Promise<void> {
+        if (params.fetched) {
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions: params.conditions,
+                data: TimetableStationStore.snapshotOperationSightingTimeCrossSections(),
+            });
+            return;
+        }
+        try {
+            await this.#offlineSnapshots.restore({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions: params.conditions,
+                apply: (data: TimetableStationSightingsSnapshot) =>
+                    TimetableStationStore.restoreOperationSightingTimeCrossSections(
+                        data,
+                    ),
+            });
+        } catch {
+            // 保存した中身が壊れていても、従来どおり充当編成を出さないだけにする
         }
     }
 

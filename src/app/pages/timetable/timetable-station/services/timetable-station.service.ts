@@ -120,8 +120,11 @@ export class TimetableStationService {
      *
      * G1（充当編成「不明」バグ修正）: operation-real-time-service と同じ
      * requestした operationNumber をキーに使う方式に統一（詳細はストアのコメント参照）。
+     *
+     * 失敗してもエラーにはせず、取れたか（取る運用が無いときも true）を返す。
+     * 呼び出し側が、取れなかったときに圏外用の保存を戻すために使う。
      */
-    fetchOperationSightingTimeCrossSections(): Observable<void> {
+    fetchOperationSightingTimeCrossSections(): Observable<boolean> {
         const operationIds = TimetableStationStore.operationIds;
         const operations = TimetableStationStore.operations.filter((o) =>
             operationIds.includes(o.operationId),
@@ -129,7 +132,7 @@ export class TimetableStationService {
 
         if (operations.length === 0) {
             TimetableStationStore.resetOperationSightingTimeCrossSections();
-            return of(undefined);
+            return of(true);
         }
 
         // 運用ごとに 1 本ずつ取っていたのを、まとめて返す口 1 本にする（api ADR-0003）。
@@ -150,8 +153,8 @@ export class TimetableStationService {
                         );
                     }
                 }),
-                map(() => undefined),
-                catchError(() => of(undefined)),
+                map(() => true),
+                catchError(() => of(false)),
             );
     }
 }
