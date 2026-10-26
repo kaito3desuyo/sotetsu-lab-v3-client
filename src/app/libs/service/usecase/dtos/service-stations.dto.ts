@@ -2,6 +2,6 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { ServiceDetailsDto } from './service-details.dto';
 
 export interface ServiceStationsDto {
-    service: ServiceDetailsDto;
+    service: ServiceDetailsDto | null;
     stations: StationDetailsDto[];
 }

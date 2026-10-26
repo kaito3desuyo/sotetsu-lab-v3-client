@@ -2,6 +2,6 @@ import { StationModel } from 'src/app/libs/station/infrastructure/models/station
 import { ServiceModel } from './service.model';
 
 export interface ServiceStationsModel {
-    service: ServiceModel;
+    service?: ServiceModel | null;
     stations: StationModel[];
 }

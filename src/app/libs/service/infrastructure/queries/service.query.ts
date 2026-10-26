@@ -3,12 +3,17 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { StationDtoBuilder } from 'src/app/libs/station/infrastructure/builders/station.dto.builder';
 import { environment } from 'src/environments/environment';
 import { ServiceAgenciesDto } from '../../usecase/dtos/service-agencies.dto';
 import { ServiceDetailsDto } from '../../usecase/dtos/service-details.dto';
 import { ServiceRoutesDto } from '../../usecase/dtos/service-routes.dto';
 import { ServiceStationsDto } from '../../usecase/dtos/service-stations.dto';
+import {
+    SERVICE_STATIONS_FIELDS,
+    SERVICE_STATIONS_INCLUDE,
+} from '../../usecase/service-stations-fields';
 import { ServiceAgenciesDtoBuilder } from '../builders/service-agencies.dto.builder';
 import { ServiceDtoBuilder } from '../builders/service.dto.builder';
 import { ServiceRoutesDtoBuilder } from '../builders/service-routes.dto.builder';
@@ -51,6 +56,7 @@ export class ServiceQuery {
             );
     }
 
+    // 5 ページの読む項目の和集合だけを返させる（API の include・fields）。service は付かない。
     findOneWithStations(params: {
         serviceId: string;
         forceReload?: boolean;
@@ -61,18 +67,28 @@ export class ServiceQuery {
             .get({
                 name: 'findOneWithStations',
                 params: { serviceId },
-                fetch: () =>
-                    this.#http.get<ServiceStationsModel>(
+                fetch: () => {
+                    const httpParams = new HttpParams({
+                        fromObject: {
+                            include: SERVICE_STATIONS_INCLUDE,
+                            ...toFieldsParams(SERVICE_STATIONS_FIELDS),
+                        },
+                    });
+                    return this.#http.get<ServiceStationsModel>(
                         `${this.#v3ApiUrl}/${serviceId}/stations`,
-                        { observe: 'response' },
-                    ),
+                        { params: httpParams, observe: 'response' },
+                    );
+                },
                 forceReload,
             })
             .pipe(
                 map((res) => ({
                     service:
-                        res.body.service &&
-                        ServiceDtoBuilder.buildFromModel(res.body.service),
+                        (res.body.service &&
+                            ServiceDtoBuilder.buildFromModel(
+                                res.body.service,
+                            )) ??
+                        null,
                     stations: res.body.stations.map((o) =>
                         StationDtoBuilder.buildFromModel(o),
                     ),
