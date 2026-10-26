@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom, of, switchMap, throwError, timer } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardService } from './services/dashboard.service';
 import {
@@ -29,6 +30,7 @@ describe('DashboardComponent', () => {
                         restore: () => Promise.resolve(null),
                     },
                 },
+                { provide: NotificationService, useValue: { open: () => {} } },
                 {
                     // 実 HTTP を発行させない（fetchData の未処理 Promise
                     // reject でワーカーが落ちるのを防ぐ）
@@ -149,6 +151,7 @@ describe('DashboardComponent の圏外の保存', () => {
     let service: Record<string, jest.Mock>;
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
+    const notificationOpen = jest.fn();
 
     const flush = (ms = 10) =>
         new Promise((resolve) => setTimeout(resolve, ms));
@@ -175,6 +178,7 @@ describe('DashboardComponent の圏外の保存', () => {
         DashboardStore.setTodaysCalendar(null);
         save.mockClear();
         restore.mockReset();
+        notificationOpen.mockReset();
         const ok = () => jest.fn(() => of(undefined));
         service = {
             fetchTodaysCalendar: ok(),
@@ -190,6 +194,10 @@ describe('DashboardComponent の圏外の保存', () => {
                 provideRouter([]),
                 { provide: DashboardService, useValue: service },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
+                {
+                    provide: NotificationService,
+                    useValue: { open: notificationOpen },
+                },
             ],
         })
             .overrideComponent(DashboardComponent, {
@@ -276,6 +284,67 @@ describe('DashboardComponent の圏外の保存', () => {
         expect(restore).not.toHaveBeenCalled();
         expect(DashboardStore.snapshot().todaysCalendar).toBe(fresh);
         expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+    });
+
+    it('手元に中身があって取得に失敗したら、戻さずに失敗を知らせる', async () => {
+        DashboardStore.setTodaysCalendar({ calendarId: 'fresh-cal' } as never);
+        service['fetchTripClasses'].mockImplementation(() =>
+            failLater('offline'),
+        );
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(restore).not.toHaveBeenCalled();
+        expect(notificationOpen).toHaveBeenCalledTimes(1);
+        expect(notificationOpen).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+    });
+
+    it('保存した中身が無く戻せなかったときも、失敗を知らせる', async () => {
+        service['fetchTripClasses'].mockImplementation(() =>
+            failLater('offline'),
+        );
+        restore.mockResolvedValue(null);
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(notificationOpen).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+    });
+
+    it('戻す処理が壊れていたときも、失敗を知らせる', async () => {
+        service['fetchTripClasses'].mockImplementation(() =>
+            failLater('offline'),
+        );
+        restore.mockRejectedValue(new Error('broken snapshot'));
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(notificationOpen).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+    });
+
+    it('保存した中身を戻せたときは、戻した知らせだけ（失敗の文言は出さない）', async () => {
+        service['fetchTripClasses'].mockImplementation(() =>
+            failLater('offline'),
+        );
+        restore.mockResolvedValue({ data: saved });
+
+        await expect(component.fetchData()).rejects.toThrow('offline');
+
+        expect(notificationOpen).not.toHaveBeenCalled();
+    });
+
+    it('取得に成功したときは知らせない', async () => {
+        await component.fetchData();
+
+        expect(notificationOpen).not.toHaveBeenCalled();
     });
 
     it('取得がすべて終わってから戻す（遅れて届く成功が戻した中身を上書きしない）', async () => {

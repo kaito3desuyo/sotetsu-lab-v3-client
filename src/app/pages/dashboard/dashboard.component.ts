@@ -9,6 +9,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { lastValueFrom } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { DashboardCollapsibleCardsComponent } from './components/dashboard-collapsible-cards/dashboard-collapsible-cards.component';
 import { DashboardLatestSightingsComponent } from './components/dashboard-latest-sightings/dashboard-latest-sightings.component';
 import { DashboardQuickTilesComponent } from './components/dashboard-quick-tiles/dashboard-quick-tiles.component';
@@ -37,6 +38,7 @@ const OFFLINE_SNAPSHOT_KEY = 'Dashboard';
 export class DashboardComponent {
     readonly #dashboardService = inject(DashboardService);
     readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #notification = inject(NotificationService);
 
     readonly isLoading = toSignal(DashboardStore.isLoading$, {
         initialValue: false,
@@ -79,9 +81,10 @@ export class DashboardComponent {
 
             if (failure) {
                 // 取得がすべて終わってから、保存した中身で戻す
-                // （遅れて届いた成功が戻した中身を上書きしないように）
-                if (!hasFetchedBefore) {
-                    await this.#restoreSnapshot();
+                // （遅れて届いた成功が戻した中身を上書きしないように）。
+                // 戻せたら戻した旨の知らせが出る。戻せなければ（手元に中身があって戻さなかったときも）失敗を知らせる
+                if (hasFetchedBefore || !(await this.#restoreSnapshot())) {
+                    this.#notification.open('データの取得に失敗しました', 'OK');
                 }
                 throw failure.reason;
             }
@@ -109,17 +112,19 @@ export class DashboardComponent {
         return rejected ? { reason: rejected.reason } : null;
     }
 
-    /** 保存した中身を戻す。戻す処理が壊れていても、取得の失敗をそのまま投げられるよう握りつぶす */
-    async #restoreSnapshot(): Promise<void> {
+    /** 保存した中身を戻す。戻せたら true。戻す処理が壊れていても、取得の失敗をそのまま投げられるよう握りつぶす */
+    async #restoreSnapshot(): Promise<boolean> {
         try {
-            await this.#offlineSnapshots.restore({
+            const restored = await this.#offlineSnapshots.restore({
                 key: OFFLINE_SNAPSHOT_KEY,
                 conditions: {},
                 apply: (data: DashboardSnapshot) =>
                     DashboardStore.restoreSnapshot(data),
             });
+            return restored !== null;
         } catch {
             // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+            return false;
         }
     }
 }
