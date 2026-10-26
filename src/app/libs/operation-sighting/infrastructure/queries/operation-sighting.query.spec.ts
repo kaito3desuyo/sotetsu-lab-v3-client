@@ -122,4 +122,46 @@ describe('OperationSightingQuery', () => {
         expect(reqs[1].request.params.has('includeCarriedOver')).toBe(false);
         reqs.forEach((r) => r.flush([]));
     });
+
+    it('運番まとめは運用・編成の項目を絞って取り、include は付けない', () => {
+        const { query, controller } = setup();
+        query
+            .findManyTimeCrossSectionsByOperationNumbers({
+                operationNumbers: ['11', '12'],
+            })
+            .subscribe();
+
+        const [req] = controller.match(() => true);
+
+        expect(req.request.params.get('operationNumbers')).toBe('11,12');
+        expect(req.request.params.get('fields[operation]')).toBe(
+            'operationId,calendarId,operationNumber',
+        );
+        expect(req.request.params.get('fields[formation]')).toBe(
+            'formationId,agencyId,vehicleType,formationNumber,formationDescription,startDate,endDate',
+        );
+        expect(req.request.params.has('include')).toBe(false);
+        req.flush({});
+    });
+
+    it('編成まとめも同じ項目を絞って取り、include は付けない', () => {
+        const { query, controller } = setup();
+        query
+            .findManyTimeCrossSectionsByFormationNumbers({
+                formationNumbers: ['10701', '10702'],
+            })
+            .subscribe();
+
+        const [req] = controller.match(() => true);
+
+        expect(req.request.params.get('formationNumbers')).toBe('10701,10702');
+        expect(req.request.params.get('fields[operation]')).toBe(
+            'operationId,calendarId,operationNumber',
+        );
+        expect(req.request.params.get('fields[formation]')).toBe(
+            'formationId,agencyId,vehicleType,formationNumber,formationDescription,startDate,endDate',
+        );
+        expect(req.request.params.has('include')).toBe(false);
+        req.flush({});
+    });
 });
