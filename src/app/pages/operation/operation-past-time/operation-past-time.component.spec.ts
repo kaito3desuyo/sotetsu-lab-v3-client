@@ -279,7 +279,12 @@ describe('OperationPastTimeComponent の圏外の保存', () => {
     const failLater = (message: string) =>
         timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
 
-    const setup = async () => {
+    const setup = async (
+        params: Record<string, string> = {
+            reference_date: '2026-10-22',
+            days: '7',
+        },
+    ) => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
         // 本物の fetchData の失敗だけ受け流す
         const original = OperationPastTimeComponent.prototype.fetchData;
@@ -295,12 +300,7 @@ describe('OperationPastTimeComponent の圏外の保存', () => {
                 {
                     provide: ActivatedRoute,
                     useValue: {
-                        paramMap: of(
-                            convertToParamMap({
-                                reference_date: '2026-10-22',
-                                days: '7',
-                            }),
-                        ),
+                        paramMap: of(convertToParamMap(params)),
                     },
                 },
                 {
@@ -354,6 +354,19 @@ describe('OperationPastTimeComponent の圏外の保存', () => {
             data: { calendars, operations, formations, operationSightings },
         });
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('日付の無い URL では、成功しても保存しない', async () => {
+        sightings$ = of(undefined);
+        // 起点の日・日数の無い素の URL（取得は何もせず終わる）
+        await setup({});
+
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 
     it('失敗したら保存した中身を、読み込み中を解く前に戻す', async () => {

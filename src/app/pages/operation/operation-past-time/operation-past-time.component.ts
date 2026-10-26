@@ -181,8 +181,9 @@ export class OperationPastTimeComponent {
                 }
                 throw failure.reason;
             }
-            // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            if (seq === fetchSeq) {
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する。
+            // 起点の日・日数の無い URL は、取るものが無く空のままなので保存しない
+            if (seq === fetchSeq && OperationPastTimeStore.dates.length > 0) {
                 void this.#offlineSnapshots.save({
                     key: OFFLINE_SNAPSHOT_KEY,
                     conditions,
