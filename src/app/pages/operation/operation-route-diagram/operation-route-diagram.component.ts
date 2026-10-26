@@ -401,13 +401,18 @@ export class OperationRouteDiagramComponent {
         if (failure) {
             // 通信できないときは、同じ運用で保存した中身を出す（古い取得の失敗では戻さない）。
             // 取得がすべて終わってから戻す（遅れて届いた成功が、戻した中身を上書きしないように）
+            // 戻す処理が壊れていても、読み込み中は必ず解く
             if (seq === fetchSeq) {
-                await this.#offlineSnapshots.restore({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions,
-                    apply: (data: OperationRouteDiagramSnapshot) =>
-                        OperationRouteDiagramStore.restoreSnapshot(data),
-                });
+                try {
+                    await this.#offlineSnapshots.restore({
+                        key: OFFLINE_SNAPSHOT_KEY,
+                        conditions,
+                        apply: (data: OperationRouteDiagramSnapshot) =>
+                            OperationRouteDiagramStore.restoreSnapshot(data),
+                    });
+                } catch {
+                    // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                }
             }
         } else if (hasFetchedItineraryLinks && seq === fetchSeq) {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する

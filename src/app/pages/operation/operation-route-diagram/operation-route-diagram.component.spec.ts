@@ -619,6 +619,9 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
     let links$: Observable<undefined>;
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
+    // spy に差し替わる前の本物の fetchData
+    const originalFetchData =
+        OperationRouteDiagramComponent.prototype.fetchData;
 
     const operationTrips = {
         operation: { operationId: 'op-1', calendarId: 'cal-1' },
@@ -832,5 +835,24 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
         await flush();
 
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('戻す処理が壊れていても、読み込み中を解き、取得の失敗を投げる', async () => {
+        trips$ = of(undefined);
+        stations$ = of(undefined);
+        links$ = of(undefined);
+        await setup();
+        restore.mockRejectedValue(new Error('broken snapshot'));
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        // コンストラクタの取得は受け流す
+        await flush();
+
+        trips$ = failLater('offline-again');
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline-again');
+
+        expect(restore).toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 });
