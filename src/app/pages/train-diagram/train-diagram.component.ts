@@ -13,6 +13,7 @@ import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -51,6 +52,7 @@ import { TrainDiagramSelectedTripInfo } from './interfaces/train-diagram-selecte
 import { TrainDiagramService } from './services/train-diagram.service';
 import {
     DiagramDirectionFilter,
+    TrainDiagramSnapshot,
     TrainDiagramStore,
 } from './stores/train-diagram.store';
 import {
@@ -95,6 +97,9 @@ TrainDiagramStore.resetLoading();
 // 列車を取り直す取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
 // 後から終わって新しい骨組みを消さないよう、インスタンスでなくファイル単位で数える
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'TrainDiagram';
 
 const BODY_TOP_PADDING = 12;
 const BODY_BOTTOM_PADDING = 24;
@@ -145,6 +150,7 @@ export class TrainDiagramComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -1040,6 +1046,10 @@ export class TrainDiagramComponent {
     async fetchData(flags: { refetchTripBlocks: boolean }): Promise<void> {
         // 路線・方向だけの取得は世代を進めず、骨組みにも触らない（図を出したまま）
         const seq = flags.refetchTripBlocks ? ++fetchSeq : fetchSeq;
+        const conditions = {
+            calendarId: TrainDiagramStore.calendarId,
+            routeIds: [...TrainDiagramStore.selectedRouteIds].sort().join(','),
+        };
         TrainDiagramStore.enableLoading();
         if (flags.refetchTripBlocks) {
             TrainDiagramStore.setHasFetchedTrainDiagram(false);
@@ -1057,7 +1067,8 @@ export class TrainDiagramComponent {
                     );
                 }
                 if (flags.refetchTripBlocks) {
-                    await Promise.all([
+                    // 失敗を決める前に両方の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+                    const results = await Promise.allSettled([
                         lastValueFrom(
                             this.#timetableDiagramService.fetchTripBlocks(),
                         ),
@@ -1066,9 +1077,16 @@ export class TrainDiagramComponent {
                             this.#timetableDiagramService.fetchItineraryLinks(),
                         ),
                     ]);
+                    const rejected = results.find(
+                        (result): result is PromiseRejectedResult =>
+                            result.status === 'rejected',
+                    );
+                    if (rejected) {
+                        throw rejected.reason;
+                    }
                 }
             };
-            await Promise.all([
+            const results = await Promise.allSettled([
                 fetchTripBlocks(),
                 firstLoad
                     ? lastValueFrom(
@@ -1076,6 +1094,36 @@ export class TrainDiagramComponent {
                       )
                     : undefined,
             ]);
+            const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failure) {
+                // 通信できないときは、同じ条件で保存した中身を出す。列車を取り直す取得だけが対象で、
+                // 古い取得の失敗では戻さない。戻す処理が壊れていても、取得の失敗をそのまま投げる
+                // （読み込み中は finally で解く）。戻したときは初回扱いのまま（次に通信できたら取り直す）
+                if (flags.refetchTripBlocks && seq === fetchSeq) {
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: TrainDiagramSnapshot) =>
+                                TrainDiagramStore.restoreSnapshot(data),
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗を優先する
+                    }
+                }
+                throw failure.reason;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (flags.refetchTripBlocks && seq === fetchSeq) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: TrainDiagramStore.snapshot(),
+                });
+            }
             this.#firstLoadDone.set(true);
         } finally {
             TrainDiagramStore.disableLoading();

@@ -7,7 +7,15 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { BehaviorSubject, Subject, firstValueFrom, of, throwError } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    firstValueFrom,
+    of,
+    throwError,
+} from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -1376,5 +1384,285 @@ describe('TrainDiagramComponent のサーバー', () => {
         expect(component.isTodaySelected()).toBe(true);
         expect(component.showTodayParts()).toBe(false);
         expect(component.nowMinute()).toBeNull();
+    });
+});
+
+describe('TrainDiagramComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<TrainDiagramComponent>;
+    let component: TrainDiagramComponent;
+    let tripBlocks$: Observable<undefined>;
+    let itineraryLinks$: Observable<undefined>;
+    let networkStations$: Observable<undefined>;
+    const fetchTripClasses = jest.fn(() => of(undefined));
+    const fetchNetworkStations = jest.fn(() => networkStations$);
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+
+    const routeStations = [{ routeId: 'route-1', routeName: '本線' }] as never;
+    const networkStations = [{ stationId: 'st-1' }] as never;
+    const tripClasses = [{ tripClassId: 'tc-1' }] as never;
+    const tripBlocksByDirection = { 0: [{ tripBlockId: 'tb-1' }] } as never;
+    const itineraryLinks = [{ operationId: 'op-1' }] as never;
+    const conditions = { calendarId: 'cal-1', routeIds: 'route-1,route-2' };
+
+    // 実タイマーは使わない（他の describe の Router の失敗が、待っている間に漏れてくるため）
+    const flush = async () => {
+        for (let i = 0; i < 20; i++) await Promise.resolve();
+    };
+
+    beforeEach(async () => {
+        tripBlocks$ = of(undefined);
+        itineraryLinks$ = of(undefined);
+        networkStations$ = of(undefined);
+        await TestBed.configureTestingModule({
+            imports: [TrainDiagramComponent],
+            providers: [
+                // 実際の Router だとコンストラクタの補正の navigate が後から失敗して他のテストへ漏れる
+                { provide: Router, useValue: { navigate: jest.fn() } },
+                { provide: Location, useValue: { replaceState: jest.fn() } },
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap({})),
+                        snapshot: { params: {} },
+                    },
+                },
+                {
+                    provide: TrainDiagramService,
+                    useValue: {
+                        fetchTripClasses,
+                        fetchTripBlocks: () => tripBlocks$,
+                        fetchItineraryLinks: () => itineraryLinks$,
+                        fetchNetworkStations,
+                        fetchOperationSightingTimeCrossSection: () =>
+                            of(undefined),
+                    },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: {
+                        todaysCalendarId: 'cal-today',
+                        todaysCalendarIds$: of(['cal-today']),
+                    },
+                },
+                {
+                    provide: RouteStationListStateQuery,
+                    useValue: { routeStations$: of(routeStations) },
+                },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(TrainDiagramComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        fixture = TestBed.createComponent(TrainDiagramComponent);
+        component = fixture.componentInstance;
+        // 条件（順番の違う路線の選択は同じ条件として並べ替えて保存する）
+        TrainDiagramStore.setCalendarId('cal-1');
+        TrainDiagramStore.setSelectedRouteIds(['route-2', 'route-1']);
+    });
+
+    afterEach(() => {
+        fixture.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        TrainDiagramStore.setCalendarId(null);
+        TrainDiagramStore.setSelectedRouteIds([]);
+        TrainDiagramStore.setNetworkStations([]);
+        TrainDiagramStore.setTripClasses([]);
+        TrainDiagramStore.setTripBlocksByDirection({});
+        TrainDiagramStore.setItineraryLinks([]);
+        TrainDiagramStore.setRouteStations([]);
+        TrainDiagramStore.setHasFetchedTrainDiagram(false);
+        TrainDiagramStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        TrainDiagramStore.setNetworkStations(networkStations);
+        TrainDiagramStore.setTripClasses(tripClasses);
+        TrainDiagramStore.setTripBlocksByDirection(tripBlocksByDirection);
+        TrainDiagramStore.setItineraryLinks(itineraryLinks);
+
+        await component.fetchData({ refetchTripBlocks: true });
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'TrainDiagram',
+            conditions,
+            data: {
+                networkStations,
+                routeStations,
+                tripClasses,
+                tripBlocksByDirection,
+                itineraryLinks,
+            },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻し、失敗は今までどおり投げる', async () => {
+        const failing$ = new Subject<undefined>();
+        tripBlocks$ = failing$;
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = component.isLoading();
+                params.apply(
+                    {
+                        networkStations,
+                        routeStations,
+                        tripClasses,
+                        tripBlocksByDirection,
+                        itineraryLinks,
+                    },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        const fetching = component.fetchData({ refetchTripBlocks: true });
+        await flush();
+        failing$.error(new Error('offline'));
+        await expect(fetching).rejects.toThrow('offline');
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'TrainDiagram',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(
+            await firstValueFrom(TrainDiagramStore.networkStations$),
+        ).toEqual(networkStations);
+        expect(await firstValueFrom(TrainDiagramStore.tripClasses$)).toEqual(
+            tripClasses,
+        );
+        expect(
+            await firstValueFrom(TrainDiagramStore.tripBlocksByDirection$),
+        ).toEqual(tripBlocksByDirection);
+        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
+            itineraryLinks,
+        );
+        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+    });
+
+    it('戻した後も初回扱いのまま（次の取得で最初から取り直す）', async () => {
+        const failing$ = new Subject<undefined>();
+        tripBlocks$ = failing$;
+        restore.mockResolvedValue(null);
+        const failed = component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await flush();
+        failing$.error(new Error('offline'));
+        await failed;
+        expect(fetchTripClasses).toHaveBeenCalledTimes(1);
+
+        tripBlocks$ = of(undefined);
+        await component.fetchData({ refetchTripBlocks: true });
+
+        expect(fetchTripClasses).toHaveBeenCalledTimes(2);
+        expect(fetchNetworkStations).toHaveBeenCalledTimes(2);
+    });
+
+    it('片方が先に失敗しても、駅の取得が終わってから戻す', async () => {
+        const networkStationsLate = new Subject<undefined>();
+        const failing$ = new Subject<undefined>();
+        networkStations$ = networkStationsLate;
+        tripBlocks$ = failing$;
+        restore.mockResolvedValue(null);
+
+        const fetching = component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await flush();
+        failing$.error(new Error('offline'));
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        networkStationsLate.next(undefined);
+        networkStationsLate.complete();
+        await fetching;
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('列車が先に失敗しても、前後の運用の取得が終わってから戻す', async () => {
+        const itineraryLinksLate = new Subject<undefined>();
+        const failing$ = new Subject<undefined>();
+        itineraryLinks$ = itineraryLinksLate;
+        tripBlocks$ = failing$;
+        restore.mockResolvedValue(null);
+
+        const fetching = component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await flush();
+        failing$.error(new Error('offline'));
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        itineraryLinksLate.next(undefined);
+        itineraryLinksLate.complete();
+        await fetching;
+
+        expect(restore).toHaveBeenCalledTimes(1);
+    });
+
+    it('戻す処理が壊れていても、読み込み中は解き、取得の失敗を投げる', async () => {
+        const failing$ = new Subject<undefined>();
+        tripBlocks$ = failing$;
+        restore.mockRejectedValue(new Error('broken snapshot'));
+
+        const fetching = component.fetchData({ refetchTripBlocks: true });
+        await flush();
+        failing$.error(new Error('offline'));
+        await expect(fetching).rejects.toThrow('offline');
+
+        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+    });
+
+    it('列車を取り直さない取得は、成功しても失敗しても保存も復元もしない', async () => {
+        await component.fetchData({ refetchTripBlocks: true });
+        save.mockClear();
+
+        await component.fetchData({ refetchTripBlocks: false });
+        expect(save).not.toHaveBeenCalled();
+
+        // 列車を取り直さない取得の失敗（初回扱いの駅の取得が失敗する形）
+        const another = TestBed.createComponent(TrainDiagramComponent);
+        const failing$ = new Subject<undefined>();
+        networkStations$ = failing$;
+        const fetching = another.componentInstance.fetchData({
+            refetchTripBlocks: false,
+        });
+        await flush();
+        failing$.error(new Error('offline'));
+        await expect(fetching).rejects.toThrow('offline');
+        another.destroy();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        const first$ = new Subject<undefined>();
+        tripBlocks$ = first$;
+        const first = component
+            .fetchData({ refetchTripBlocks: true })
+            .catch(() => undefined);
+        await flush();
+
+        // 取り直しが始まり終わってから、先の取得の失敗が届く
+        tripBlocks$ = of(undefined);
+        await component.fetchData({ refetchTripBlocks: true });
+        first$.error(new Error('offline-first'));
+        await first;
+
+        expect(restore).not.toHaveBeenCalled();
     });
 });

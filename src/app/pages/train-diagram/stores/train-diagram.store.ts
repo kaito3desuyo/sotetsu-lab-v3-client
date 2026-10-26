@@ -66,6 +66,19 @@ type StoreProps = {
     controlCollapsed: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（calendarId・selectedRouteIds）と画面の設定
+ * （縮尺・方向・選択中の列車・操作帯の畳み状態）は入れない。
+ */
+export type TrainDiagramSnapshot = Pick<
+    StoreProps,
+    | 'networkStations'
+    | 'routeStations'
+    | 'tripClasses'
+    | 'tripBlocksByDirection'
+    | 'itineraryLinks'
+>;
+
 const store = createStore(
     { name: 'TrainDiagramStore' },
     withProps<StoreProps>({
@@ -285,6 +298,34 @@ export const TrainDiagramStore = {
     },
     setControlCollapsed(collapsed: boolean): void {
         store.update(setProp('controlCollapsed', () => collapsed));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): TrainDiagramSnapshot {
+        const {
+            networkStations,
+            routeStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        } = store.getValue();
+        return {
+            networkStations,
+            routeStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        };
+    },
+    /** 保存した中身を戻す（条件の calendarId・selectedRouteIds と画面の設定は今のまま） */
+    restoreSnapshot(data: TrainDiagramSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            networkStations: data.networkStations,
+            routeStations: data.routeStations,
+            tripClasses: data.tripClasses,
+            tripBlocksByDirection: data.tripBlocksByDirection,
+            itineraryLinks: data.itineraryLinks,
+        }));
     },
 
     persistInitialized$: persist.initialized$,
