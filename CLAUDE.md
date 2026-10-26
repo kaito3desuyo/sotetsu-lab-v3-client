@@ -74,7 +74,7 @@ pages/<feature>/
 
 ### ストア（`stores/*.store.ts`）
 
-`@Injectable` ではなく `const` オブジェクトとしてエクスポートし、`@ngneat/elf` の `createStore` を直接使う。データと UI フラグの両方をここで管理する（`states/` は作らない）。メソッドと `$` サフィックスの Observable、`get` アクセサをすべて同一オブジェクトにまとめる。永続化が必要な場合は `@ngneat/elf-persist-state` + `localforage` を使う。
+`@Injectable` ではなく `const` オブジェクトとしてエクスポートし、`@ngneat/elf` の `createStore` を直接使う。データと UI フラグの両方をここで管理する（`states/` は作らない）。メソッドと `$` サフィックスの Observable、`get` アクセサをすべて同一オブジェクトにまとめる。画面の設定は `persistState`（`@ngneat/elf-persist-state` + `localforage`）、取ったデータは `core/offline/offline-snapshots.ts`（取得に失敗したときだけ戻す。ADR-0015）。
 
 ```ts
 const store = createStore({ name: 'FooStore' }, withProps<StoreProps>({ ... }));
