@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
@@ -44,7 +45,10 @@ import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-
 import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
-import { TimetableStationStore } from './stores/timetable-station.store';
+import {
+    TimetableStationSnapshot,
+    TimetableStationStore,
+} from './stores/timetable-station.store';
 import { formatTimetableStationSummary } from './utils/timetable-station-summary.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
@@ -53,6 +57,9 @@ TimetableStationStore.resetLoading();
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'TimetableStation';
 
 /** 駅の選択欄の先頭の「全線（駅を選ばない）」の値。選ぶと全線時刻表へ移る（2026-10-22） */
 export const ALL_LINE_OPTION = '__all-line__';
@@ -81,6 +88,7 @@ export class TimetableStationComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #timetableStationService = inject(TimetableStationService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -296,14 +304,49 @@ export class TimetableStationComponent {
         TimetableStationStore.setHasFetchedTimetable(false);
 
         try {
-            // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
-            await Promise.all([
-                lastValueFrom(this.#timetableStationService.fetchCalendar()),
-                lastValueFrom(this.#timetableStationService.fetchTrips()),
-                lastValueFrom(this.#timetableStationService.fetchTripClasses()),
-                lastValueFrom(this.#timetableStationService.fetchStations()),
-                lastValueFrom(this.#timetableStationService.fetchOperations()),
-            ]);
+            const conditions = {
+                calendarId: TimetableStationStore.calendarId,
+                stationId: TimetableStationStore.stationId,
+                tripDirection: TimetableStationStore.tripDirection,
+            };
+
+            try {
+                // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
+                await Promise.all([
+                    lastValueFrom(
+                        this.#timetableStationService.fetchCalendar(),
+                    ),
+                    lastValueFrom(this.#timetableStationService.fetchTrips()),
+                    lastValueFrom(
+                        this.#timetableStationService.fetchTripClasses(),
+                    ),
+                    lastValueFrom(
+                        this.#timetableStationService.fetchStations(),
+                    ),
+                    lastValueFrom(
+                        this.#timetableStationService.fetchOperations(),
+                    ),
+                ]);
+            } catch (error) {
+                // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
+                if (seq === fetchSeq) {
+                    await this.#offlineSnapshots.restore({
+                        key: OFFLINE_SNAPSHOT_KEY,
+                        conditions,
+                        apply: (data: TimetableStationSnapshot) =>
+                            TimetableStationStore.restoreSnapshot(data),
+                    });
+                }
+                throw error;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (seq === fetchSeq) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: TimetableStationStore.snapshot(),
+                });
+            }
             // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
             if (seq === fetchSeq) {
