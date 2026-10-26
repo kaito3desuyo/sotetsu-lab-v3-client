@@ -23,14 +23,14 @@
 - **Service Worker**（`ngsw-config.json` の `dataGroups`）: データの API を足す。`freshness`・待ち時間 3 秒・期間 7 日・件数 50（1 件が数 MB になるので 100 にしない）。BFF（`/api/**`）は今のまま。
   - **目撃と現在位置は Service Worker に保存させない**（`/v3/operation-sightings/**`・`/v3/operations/current-positions`・`/v3/operations/*/current-position`。ユーザー判断 2026-10-27）。`freshness` は、圏外で fetch が失敗すると保存した応答を「成功」としてページに渡す（`ngsw-worker.js` の `handleFetchWithFreshness`）。するとページ側の「失敗したら保存した中身を戻して知らせる」が働かず、real-time の「最終更新」も今の時刻になって、古い目撃が新しく見える。2026-10-27 に実機で確認した。目撃と現在位置は、worker が素通しでネットワークへ送り、圏外では失敗する形にして、ページの保存（`OfflineSnapshots`）に任せる。
   - 除外のしかた: `dataGroups` の `urls` は否定（`!` 始まり）を解釈しない（`@angular/service-worker` の `config.mjs` は `urls` を `urlToRegex` でそのまま正規表現にする。否定を解釈するのは `assetGroups` の `files` と `navigationUrls` だけ）。そこで `api-data` は `https://api.sotetsu-lab.com/v3/**` ではなく、クライアントが使う v3 の資源（`feature-flags`・`calendars`・`operations/calendar` など）を列挙する。パターンは URL の一部に当たればよいので、末尾に `/**` を付けず、問い合わせ付きも当たる。**v3 に新しい資源を足したときは、保存したいなら `api-data` に足す**（足さなければ素通しで、保存されないだけ）。`src/ngsw-config.spec.ts` が、目撃・現在位置の URL がどの組にも当たらないこと、時刻表などが `api-data` に当たることを、ngsw.json の生成関数（`Generator`）と同じ規則で確かめる。
-  - **書き込み後の 1 時間は Service Worker を通さない**: ADR-0002 の `cache: 'reload'`（`QueryInvalidator.requestCache`）を worker は守らず、保存した応答を返しうる。`requestCache` が `'reload'` を返す取得には `ngsw-bypass: true` のヘッダーを付け、worker に素通しさせる（`ngsw-worker.js` は `ngsw-bypass` ヘッダーか問い合わせがあれば何もしない）。query 側は変えず、`NgswBypassInterceptor`（`core/interceptors/ngsw-bypass.interceptor.ts`）が `cache === 'reload'` かつ `/v3/` の要求にまとめて付ける。API の CORS は許可ヘッダーを指定せず、リクエストのヘッダーを反射するので通る。
+  - **書き込み後の 1 時間は Service Worker を通さない**: ADR-0002 の `cache: 'reload'`（`QueryInvalidator.requestCache`）を worker は守らず、保存した応答を返しうる。`requestCache` が `'reload'` を返す取得には `ngsw-bypass: true` のヘッダーを付け、worker に素通しさせる（`ngsw-worker.js` は `ngsw-bypass` ヘッダーか問い合わせがあれば何もしない）。query 側は変えず、`NgswBypassInterceptor`（`core/interceptors/ngsw-bypass.interceptor.ts`）が `cache === 'reload'` かつ `/v3/` の要求にまとめて付ける。API の CORS は許可ヘッダーを指定せず、リクエストのヘッダーを反射するので通る。 ただし、この 1 時間の `ngsw-bypass` の取得は worker の保存を更新しないので、その間に圏外になると書き込み前の応答が出うる（窓の後に通信できる状態で一度開けば、`freshness` が上書きする）。
 - **ページの保存は `core/offline/offline-snapshots.ts` の `OfflineSnapshots` で行い、取得に失敗したときだけ戻す**。
   - 取得に成功したら、そのときの中身（読み込み中の印などを除く）を、取った条件（ダイヤ・駅・向きなど）と時刻を添えて localforage に保存する。保存はページごとに最新の 1 件。キーは `offline-snapshot:<ページ>`。
   - 起動時には戻さない。取得に失敗し、保存した条件が今の条件と合うときだけ、保存した中身をストアに入れる。
   - 保存した形には版（`OFFLINE_SNAPSHOT_VERSION = 1`）を付け、版が違えば捨てる。
   - 保存の失敗は握りつぶし、次の成功でまた保存する。読み込みの失敗も、戻さず（null を返して）何もしない。部品の保存の仕組みは使わない。
   - サーバー（`isPlatformServer`）では保存も読み込みもしない。
-- **知らせ方は全ページ共通**: 戻したら `通信できないため、{時刻}に保存した内容を表示しています`（action は `OK`）を出す。`{時刻}` は、保存した日が今日なら `H時m分`、違えば `M月d日 H時m分`（端末の時刻帯。`format-saved-at.util.ts`）。
+- **知らせ方は全ページ共通**: 戻したら `通信できないため、{時刻}に保存した内容を表示しています`（action は `OK`）を出す。`{時刻}` は、保存した日が今日なら `H時m分`、違えば `M月d日 H時m分`（端末の時刻帯。`format-saved-at.util.ts`）。 ただし時刻表系のページは、圏外でも Service Worker に保存があればそれが成功として出るので、この知らせは出ない（出るのは worker に保存が無い・追い出されたとき）。
 - **画面の設定は今のまま `persistState` で起動時に戻す**: real-time の 5 項目・全線とダイヤグラムの畳み状態・運用表の運用群・ダッシュボードの `hasVisitedBefore`。
 
 ### 実装で決めた、新しいページに守らせる規則
