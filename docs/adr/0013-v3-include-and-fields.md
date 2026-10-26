@@ -3,7 +3,7 @@
 - **日時**: 2026-10-26
 - **Agent**: claude-opus-5-5
 - **ステータス**: 採用済み
-- **ブランチ**: perf/include-fields-initial-data（#283）、perf/include-fields-operation-table
+- **ブランチ**: perf/include-fields-initial-data（#283）、perf/include-fields-operation-table（#284）、perf/include-fields-rest
 - **関連**: API の docs/adr/0010-v3-include-and-fields.md（口の側の決めごと）、ADR-0002（QueryCache）
 
 ---
@@ -26,12 +26,25 @@
 |---|---|---|---|
 | A（#283） | `GET /v3/formations/as/of/:date` | `include=`・編成の 6 項目 | 605KB → 21KB |
 | A（#283） | `GET /v3/routes` | `include=routeStationLists.station`・時刻印を除く全項目 | 140KB → 90KB |
-| B | `GET /v3/operations/calendar/:calendarId/trips` | `include=trips.trip,trips.startTime,trips.endTime`・運番・列車の 6 項目・時刻の 3 項目・区間は id だけ | 3.18MB → 889KB（土休日）、3.67MB → 1.03MB（平日） |
+| B（#284） | `GET /v3/operations/calendar/:calendarId/trips` | `include=trips.trip,trips.startTime,trips.endTime`・運番・列車の 6 項目・時刻の 3 項目・区間は id だけ | 3.18MB → 889KB（土休日）、3.67MB → 1.03MB（平日） |
+| C | `GET /v3/operation-sightings/time-cross-section/operation-numbers`・`formation-numbers` | 運用・編成の時刻印を除く項目（`include` は受けない口） | 132KB → 93KB（93 運番）、168KB → 119KB（126 編成） |
 
 - 運用表では種別（tripClass）とダイヤ（calendar）を結合しない。種別は別に取った一覧から引いている。
-- 残りの口（編成・目撃の期間、時刻断面、駅、種別）は PR C で同じ決めごとに従って切り替える。
+- 時刻断面では、中の運用・編成の時刻印だけを外す。目撃そのものの時刻印は、リアルタイムの「更新」の表示に使うので残す。calendarId・agencyId なども外せば約 45% 減るが、agencyId は会社名を引くのに使い、他の列も読む画面（リアルタイム・駅別時刻表・列車位置情報）が多いので外さない。リアルタイムは自動更新のたびにこの 2 本を取るので、1 回あたり約 88KB 減る。
+- 時刻断面 1 件ずつの口（ダイヤグラムが使う。1.5KB）は切り替えない。
+
+### 切り替えない口（2026-10-26 の本番の実測）
+
+| 口 | 大きさ | 切り替えない理由 |
+|---|---|---|
+| `GET /v3/formations/from/:from/to/:to` | 83KB | 削れるのは時刻印と事業者の一部だけ |
+| `GET /v3/operation-sightings/from/:from/to/:to` | 37KB（1 日）、289KB（7 日＋引き継ぎ） | 時刻印を「更新」の表示に使うので、削れるものがほぼ無い。ダッシュボード・リアルタイム・過去の運用が同じキャッシュを共有する |
+| `GET /v3/stations` | 68KB | 削れるのは時刻印くらい |
+| `GET /v3/trip-classes` | 9.7KB | 削れるのは時刻印くらい |
+
+- 目撃の期間を将来絞るなら、過去の運用の表（operation-past-time-table）が `sighting.invalidation !== null`・`=== null` で比べているのを先に直す。`fields` を付けると null の `invalidation` は応答から省かれ、undefined になる。
 
 ## 影響
 
-- 起動 1 回あたりの取得は約 745KB から約 111KB に、運用表は約 3.4MB から約 1MB になる。運用表のストアを localForage に書く量も同じだけ減る。
+- 起動 1 回あたりの取得は約 745KB から約 111KB に、運用表は約 3.4MB から約 1MB に、リアルタイムが更新のたびに取る時刻断面のまとめ 2 本は約 300KB から約 212KB になる。運用表のストアを localForage に書く量も同じだけ減る。
 - 画面が新しい項目を読むようになったら、その口の `*-fields.ts` に項目を足す必要がある。足し忘れると、その項目は常に undefined になる。各 query の spec で、送る `include`・`fields` を固定している。

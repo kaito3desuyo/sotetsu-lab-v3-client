@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { omitBy } from 'es-toolkit';
@@ -6,7 +6,9 @@ import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
+import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
+import { TIME_CROSS_SECTION_FIELDS } from '../../usecase/operation-sighting-time-cross-section-fields';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationSightingDtoBuilder } from '../builders/operation-sighting.dto.builder';
@@ -100,6 +102,7 @@ export class OperationSightingQuery {
         );
     }
 
+    /** 中の運用・編成の時刻印は読まないので返させない（API の fields）。 */
     #findManyTimeCrossSections(
         path: 'operation-numbers' | 'formation-numbers',
         paramName: 'operationNumbers' | 'formationNumbers',
@@ -114,7 +117,12 @@ export class OperationSightingQuery {
                     this.#http.get<
                         Record<string, OperationSightingTimeCrossSectionModel>
                     >(`${this.#v3ApiUrl}/time-cross-section/${path}`, {
-                        params: { [paramName]: numbers.join(',') },
+                        params: new HttpParams({
+                            fromObject: {
+                                [paramName]: numbers.join(','),
+                                ...toFieldsParams(TIME_CROSS_SECTION_FIELDS),
+                            },
+                        }),
                         observe: 'response',
                         cache: this.#invalidator.requestCache('sighting'),
                     }),
