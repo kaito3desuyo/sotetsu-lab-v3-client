@@ -21,7 +21,7 @@
       "updateMode": "prefetch",
       "resources": {
         "files": [
-          "/assets/**",
+          "/assets",
           "/*.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)"
         ]
       }
@@ -29,21 +29,25 @@
   ],
   "dataGroups": [
     {
-      "name": "api-sightings",
-      "urls": [
-        "https://api.sotetsu-lab.com/v3/operation-sightings/**",
-        "https://api.sotetsu-lab.com/v3/operations/current-positions"
-      ],
-      "cacheConfig": {
-        "strategy": "freshness",
-        "timeout": "10s",
-        "maxAge": "1d",
-        "maxSize": 50
-      }
-    },
-    {
       "name": "api-data",
-      "urls": ["https://api.sotetsu-lab.com/v3/**"],
+      "urls": [
+        "https://api.sotetsu-lab.com/v3/feature-flags",
+        "https://api.sotetsu-lab.com/v3/calendar-dates",
+        "https://api.sotetsu-lab.com/v3/calendars",
+        "https://api.sotetsu-lab.com/v3/formations",
+        "https://api.sotetsu-lab.com/v3/services",
+        "https://api.sotetsu-lab.com/v3/agencies",
+        "https://api.sotetsu-lab.com/v3/routes",
+        "https://api.sotetsu-lab.com/v3/stations",
+        "https://api.sotetsu-lab.com/v3/trip-classes",
+        "https://api.sotetsu-lab.com/v3/trip-blocks",
+        "https://api.sotetsu-lab.com/v3/operations/calendar",
+        "https://api.sotetsu-lab.com/v3/operations/from",
+        "https://api.sotetsu-lab.com/v3/operations/groups",
+        "https://api.sotetsu-lab.com/v3/operations/next-operation-candidates",
+        "https://api.sotetsu-lab.com/v3/operations/itinerary-links",
+        "https://api.sotetsu-lab.com/v3/operations/*/trips"
+      ],
       "cacheConfig": {
         "strategy": "freshness",
         "timeout": "3s",
