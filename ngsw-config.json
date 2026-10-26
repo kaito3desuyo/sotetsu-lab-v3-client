@@ -29,6 +29,29 @@
   ],
   "dataGroups": [
     {
+      "name": "api-sightings",
+      "urls": [
+        "https://api.sotetsu-lab.com/v3/operation-sightings/**",
+        "https://api.sotetsu-lab.com/v3/operations/current-positions"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "timeout": "10s",
+        "maxAge": "1d",
+        "maxSize": 50
+      }
+    },
+    {
+      "name": "api-data",
+      "urls": ["https://api.sotetsu-lab.com/v3/**"],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "timeout": "3s",
+        "maxAge": "7d",
+        "maxSize": 50
+      }
+    },
+    {
       "name": "api",
       "urls": ["/api/**"],
       "cacheConfig": {
