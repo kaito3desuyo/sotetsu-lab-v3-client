@@ -20,10 +20,10 @@
 ## 決定
 
 - **役割の分け方**: ブラウザが自分で取ったもの（起動時の共通データ・画面の移動で取るデータ）は Service Worker が保存する。SSR で HTML に埋めて渡したページの中身は、ページごとの保存で賄う。
-- **Service Worker**（`ngsw-config.json` の `dataGroups`）: データの API を足す。どれも `freshness`。目撃の組を先に書く（先に書いた組が先に当たる）。
-  - 目撃と現在位置（`/v3/operation-sightings/**`・`/v3/operations/current-positions`）: 待ち時間 10 秒・期間 1 日・件数 50。待ち時間は、3 秒だと遅いだけの回線で古い目撃が黙って出てしまうため。期間は、古い目撃を長く持っても役に立たないため 1 日にした。
-  - それ以外の `https://api.sotetsu-lab.com/v3/**`: 待ち時間 3 秒・期間 7 日・件数 50。1 件が数 MB になるので 100 にしない。
-  - BFF（`/api/**`）は今のまま。
+- **Service Worker**（`ngsw-config.json` の `dataGroups`）: データの API を足す。`freshness`・待ち時間 3 秒・期間 7 日・件数 50（1 件が数 MB になるので 100 にしない）。BFF（`/api/**`）は今のまま。
+  - **目撃と現在位置は Service Worker に保存させない**（`/v3/operation-sightings/**`・`/v3/operations/current-positions`・`/v3/operations/*/current-position`。ユーザー判断 2026-10-27）。`freshness` は、圏外で fetch が失敗すると保存した応答を「成功」としてページに渡す（`ngsw-worker.js` の `handleFetchWithFreshness`）。するとページ側の「失敗したら保存した中身を戻して知らせる」が働かず、real-time の「最終更新」も今の時刻になって、古い目撃が新しく見える。2026-10-27 に実機で確認した。目撃と現在位置は、worker が素通しでネットワークへ送り、圏外では失敗する形にして、ページの保存（`OfflineSnapshots`）に任せる。
+  - 除外のしかた: `dataGroups` の `urls` は否定（`!` 始まり）を解釈しない（`@angular/service-worker` の `config.mjs` は `urls` を `urlToRegex` でそのまま正規表現にする。否定を解釈するのは `assetGroups` の `files` と `navigationUrls` だけ）。そこで `api-data` は `https://api.sotetsu-lab.com/v3/**` ではなく、クライアントが使う v3 の資源（`feature-flags`・`calendars`・`operations/calendar` など）を列挙する。パターンは URL の一部に当たればよいので、末尾に `/**` を付けず、問い合わせ付きも当たる。**v3 に新しい資源を足したときは、保存したいなら `api-data` に足す**（足さなければ素通しで、保存されないだけ）。`src/ngsw-config.spec.ts` が、目撃・現在位置の URL がどの組にも当たらないこと、時刻表などが `api-data` に当たることを、ngsw.json の生成関数（`Generator`）と同じ規則で確かめる。
+  - **書き込み後の 1 時間は Service Worker を通さない**: ADR-0002 の `cache: 'reload'`（`QueryInvalidator.requestCache`）を worker は守らず、保存した応答を返しうる。`requestCache` が `'reload'` を返す取得には `ngsw-bypass: true` のヘッダーを付け、worker に素通しさせる（`ngsw-worker.js` は `ngsw-bypass` ヘッダーか問い合わせがあれば何もしない）。query 側は変えず、`NgswBypassInterceptor`（`core/interceptors/ngsw-bypass.interceptor.ts`）が `cache === 'reload'` かつ `/v3/` の要求にまとめて付ける。API の CORS は許可ヘッダーを指定せず、リクエストのヘッダーを反射するので通る。
 - **ページの保存は `core/offline/offline-snapshots.ts` の `OfflineSnapshots` で行い、取得に失敗したときだけ戻す**。
   - 取得に成功したら、そのときの中身（読み込み中の印などを除く）を、取った条件（ダイヤ・駅・向きなど）と時刻を添えて localforage に保存する。保存はページごとに最新の 1 件。キーは `offline-snapshot:<ページ>`。
   - 起動時には戻さない。取得に失敗し、保存した条件が今の条件と合うときだけ、保存した中身をストアに入れる。
@@ -48,11 +48,13 @@
 - **起動時に保存を戻す（運用表・ダッシュボードの従来の形）**: SSR の HTML と古い中身が食い違って hydration がずれる。通信できるときにも古い中身が一瞬出る。
 - **部品（elf-persist-state）の保存の仕組みをページの中身にも使う**: 一度失敗すると止まる。起動直後 1 秒の変更を落とす。版の仕組みが無く、形を変えたときに古い中身を捨てられない。
 - **Service Worker だけで賄う**: SSR で HTML に埋めたページの中身は、ブラウザが取らないので保存されない。
+- **目撃と現在位置も Service Worker に保存する（待ち時間 10 秒・期間 1 日の組。当初の案）**: 圏外で保存した応答が成功として返り、ページの知らせと保存時刻が働かない（上の決定）。
 
 ## 結果
 
 - `OfflineSnapshots` を使うページは次の 8 つ: 駅別時刻表・全線時刻表・運用行路図・運用表・過去の運用情報・列車ダイヤグラム・real-time・ダッシュボード。ページごとに最新の 1 件だけ持つ。
 - 保存と読み込みはサーバーでは何もしないので、SSR を有効にした後もそのまま使える。ページの中身は起動時に戻さないので、hydration への影響も無い。
 - 新しくページを足すときは、取得の成功で `save`、失敗で `restore` を書く。上の規則を守る。保存する形が変わって読めなくなるときは `OFFLINE_SNAPSHOT_VERSION` を上げる（古い保存は捨てられる）。
-- データの API が Service Worker に保存されるので、通信が遅いだけの回線でも 3 秒（目撃は 10 秒）待った後は保存した応答が出る。
+- 時刻表などのデータの API が Service Worker に保存されるので、通信が遅いだけの回線でも 3 秒待った後は保存した応答が出る。目撃と現在位置は保存されず、圏外では取得が失敗してページの保存から出る。
+- real-time だけでなくダッシュボードも、取得に失敗して保存した中身を戻さなかった（手元に中身がある・保存が無い・戻せなかった）ときは `データの取得に失敗しました` を出す。戻せたときは戻した旨の知らせだけを出す。
 - 殻（`index.csr.html`）と `ngsw-config.json` の `index` は SSR のビルドで初めて要るので、計画 2c で行う。
