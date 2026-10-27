@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { TestBed } from '@angular/core/testing';
 import type {
     ActivatedRouteSnapshot,
@@ -9,6 +10,11 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { InitializeState } from 'src/app/global-states/initialize.state';
 import { pageResolver } from './page.resolver';
 
+jest.mock('@angular/core/rxjs-interop', () => {
+    const actual = jest.requireActual('@angular/core/rxjs-interop');
+    return { ...actual, toObservable: jest.fn(actual.toObservable) };
+});
+
 @Injectable({ providedIn: 'root' })
 class SettingsStub {
     readonly settingsReady = signal(false);
@@ -18,6 +24,7 @@ describe('pageResolver', () => {
     let set: jest.Mock;
 
     beforeEach(() => {
+        jest.mocked(toObservable).mockClear();
         set = jest.fn();
         TestBed.configureTestingModule({
             providers: [{ provide: PageMeta, useValue: { set } }],
@@ -98,5 +105,17 @@ describe('pageResolver', () => {
         TestBed.tick();
 
         expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('すでに初期化と設定の復元が済んでいれば、toObservable を作らず同期で解決する', () => {
+        TestBed.inject(InitializeState).markInitialized();
+        TestBed.inject(SettingsStub).settingsReady.set(true);
+        const next = jest.fn();
+
+        run(pageResolver(SettingsStub)).subscribe(next);
+
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(undefined);
+        expect(toObservable).not.toHaveBeenCalled();
     });
 });
