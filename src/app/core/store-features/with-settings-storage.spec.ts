@@ -30,6 +30,102 @@ const TestStore = signalStore(
     }),
 );
 
+interface NoiseState {
+    a: number;
+    noise: number;
+}
+
+const NOISE_KEY = 'NoiseSettings';
+
+const NoiseStore = signalStore(
+    { providedIn: 'root' },
+    withState<NoiseState>({ a: 0, noise: 0 }),
+    withSettingsStorage<NoiseState>({
+        key: NOISE_KEY,
+        fields: ['a'],
+        debounceMs: 1000,
+    }),
+);
+
+describe('withSettingsStorage（保存しない項目が絶えず変わるストア）', () => {
+    const getItem = jest.fn();
+    const setItem = jest.fn();
+
+    const setup = () => {
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: PLATFORM_ID, useValue: 'browser' },
+                { provide: DeviceStorage, useValue: { getItem, setItem } },
+            ],
+        });
+        return TestBed.inject(NoiseStore);
+    };
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        getItem.mockReset();
+        setItem.mockReset();
+        getItem.mockResolvedValue(null);
+        setItem.mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('保存しない項目を 600ms ごとに書き換え続けても、fields の変更は 1000ms 後に書く', async () => {
+        const store = setup();
+        await jest.advanceTimersByTimeAsync(0);
+
+        patchState(unprotected(store), { a: 1 });
+        for (let elapsed = 600; elapsed <= 3000; elapsed += 600) {
+            await jest.advanceTimersByTimeAsync(600);
+            patchState(unprotected(store), { noise: elapsed });
+            if (elapsed === 600) {
+                expect(setItem).not.toHaveBeenCalled();
+            }
+        }
+
+        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledWith({
+            key: NOISE_KEY,
+            value: { a: 1 },
+        });
+    });
+
+    it('書き込みは fields を変えた 1000ms 後に起きる（保存しない項目の変更で遅れない）', async () => {
+        const store = setup();
+        await jest.advanceTimersByTimeAsync(0);
+
+        patchState(unprotected(store), { a: 1 });
+        await jest.advanceTimersByTimeAsync(600);
+        patchState(unprotected(store), { noise: 1 });
+        await jest.advanceTimersByTimeAsync(399);
+        expect(setItem).not.toHaveBeenCalled();
+
+        await jest.advanceTimersByTimeAsync(1);
+        expect(setItem).toHaveBeenCalledTimes(1);
+    });
+
+    it('fields を 500ms 空けて 2 回変えたら、2 回目から 1000ms 後に 1 回だけ書く', async () => {
+        const store = setup();
+        await jest.advanceTimersByTimeAsync(0);
+
+        patchState(unprotected(store), { a: 1 });
+        await jest.advanceTimersByTimeAsync(500);
+        patchState(unprotected(store), { a: 2 });
+        await jest.advanceTimersByTimeAsync(999);
+        expect(setItem).not.toHaveBeenCalled();
+
+        await jest.advanceTimersByTimeAsync(1);
+        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledWith({
+            key: NOISE_KEY,
+            value: { a: 2 },
+        });
+    });
+});
+
 describe('withSettingsStorage', () => {
     const getItem = jest.fn();
     const setItem = jest.fn();

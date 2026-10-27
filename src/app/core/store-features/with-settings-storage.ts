@@ -95,10 +95,22 @@ export function withSettingsStorage<State extends object>(config: {
                 store._settingsReady.set(true);
 
                 // 変更のたびにやるのはタイマーの掛け直しだけ。
-                // 文字列にするのは間引きが明けたときの 1 回にする（入力のたびに重くしない）
+                // 文字列にするのは間引きが明けたときの 1 回にする（入力のたびに重くしない）。
+                // 掛け直すのは fields のどれかが参照で変わったときだけにする
+                // （保存しない項目が絶えず変わるストアで、間引きが明けなくなるのを防ぐ）
+                let previous = fields.map((f) => (getState(store) as State)[f]);
                 watchState(
                     store,
-                    () => {
+                    (state) => {
+                        const current = fields.map((f) => (state as State)[f]);
+                        const changed = current.some(
+                            (value, i) => !Object.is(value, previous[i]),
+                        );
+                        previous = current;
+                        if (!changed) {
+                            return;
+                        }
+
                         clearTimeout(timer);
                         timer = setTimeout(() => {
                             const serialized = JSON.stringify(
