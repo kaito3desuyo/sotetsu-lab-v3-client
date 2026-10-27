@@ -18,7 +18,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { lastValueFrom, of } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -46,26 +45,12 @@ import { OperationRouteDiagramDrawingComponent } from './components/operation-ro
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
-import {
-    OperationRouteDiagramSnapshot,
-    OperationRouteDiagramStore,
-} from './stores/operation-route-diagram.store';
+import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
 import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import {
     reconnectTripOperationLists,
     withOutsideStationColumns,
 } from './utils/operation-route-diagram-reconnect-trip-operation-lists.util';
-
-OperationRouteDiagramStore.resetLoading();
-
-// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
-// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
-let fetchSeq = 0;
-// ダイヤの替えの世代番号（同じ理由でモジュールに置く）
-let calendarChangeSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'OperationRouteDiagram';
 
 @Component({
     selector: 'app-operation-route-diagram',
@@ -93,7 +78,7 @@ export class OperationRouteDiagramComponent {
     );
     readonly #operationService = inject(OperationService);
     readonly #notification = inject(NotificationService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(OperationRouteDiagramStore);
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
     readonly calendars = inject(CalendarListState).calendars;
@@ -103,22 +88,16 @@ export class OperationRouteDiagramComponent {
         undefined,
     );
 
-    readonly isLoading = toSignal(OperationRouteDiagramStore.isLoading$);
-    readonly isAwaitingOperationTrips = toSignal(
-        OperationRouteDiagramStore.isAwaitingOperationTrips$,
-        { initialValue: false },
-    );
+    readonly isLoading = this.#store.isLoading;
+    readonly isAwaitingOperationTrips = this.#store.isAwaitingOperationTrips;
     /** 骨組みの縦書きの駅名の列の数（スマホ幅で横にあふれない数） */
     readonly skeletonStationColumns = Array.from({ length: 8 }, (_, i) => i);
     /** 骨組みの列車の線の数 */
     readonly skeletonTripRows = Array.from({ length: 10 }, (_, i) => i);
-    readonly calendar = toSignal(OperationRouteDiagramStore.calendar$);
-    readonly operation = toSignal(OperationRouteDiagramStore.operation$);
+    readonly calendar = this.#store.calendar;
+    readonly operation = this.#store.operation;
     /** URL の運用。運用番号を外したら選択欄も空にする */
-    readonly searchOperationId = toSignal(
-        OperationRouteDiagramStore.operationId$,
-        { initialValue: null },
-    );
+    readonly searchOperationId = this.#store.operationId;
 
     /**
      * 帯で選んでいるダイヤ（2026-10-22。検索カードから帯へ寄せた）。
@@ -174,15 +153,11 @@ export class OperationRouteDiagramComponent {
         ),
     );
 
-    readonly #rawTripOperationLists = toSignal(
-        OperationRouteDiagramStore.tripOperationLists$,
-    );
+    readonly #rawTripOperationLists = this.#store.tripOperationLists;
     // B5: 路線チップ絞り込み前の全駅順（再接続の基準になる）。
-    readonly #allStations = toSignal(OperationRouteDiagramStore.stations$);
+    readonly #allStations = this.#store.stations;
     // B5: 路線チップの選択状態で絞り込んだ表示駅リスト（縦軸）。
-    readonly #visibleStations = toSignal(
-        OperationRouteDiagramStore.visibleStations$,
-    );
+    readonly #visibleStations = this.#store.visibleStations;
 
     // B5: 路線チップ OFF で縦軸から消えた駅を始発/終着に持つ行路を、表示中の列へ
     // 付け替える。表示中の駅より外の駅は端の「図外」の列、間の駅はその位置の「図外」の列。
@@ -210,10 +185,7 @@ export class OperationRouteDiagramComponent {
         );
     });
 
-    readonly itineraryLinks = toSignal(
-        OperationRouteDiagramStore.itineraryLinks$,
-        { initialValue: [] },
-    );
+    readonly itineraryLinks = this.#store.itineraryLinks;
 
     /** 前後の運用の文言（運用表と同じ）。図の中の点の横に描く */
     readonly linkLabels = computed(() => {
@@ -290,20 +262,20 @@ export class OperationRouteDiagramComponent {
         if (!operationNumber) return;
 
         // 続けて替えたとき、先に選んだダイヤの結果で移らない
-        const seq = ++calendarChangeSeq;
+        const seq = this.#store.nextCalendarChangeSeq();
         let operations: OperationDetailsDto[];
         try {
             operations = await lastValueFrom(
                 this.#operationService.findManyByCalendarId({ calendarId }),
             );
         } catch {
-            if (seq !== calendarChangeSeq) return;
+            if (!this.#store.isLatestCalendarChange(seq)) return;
             // 「その番号が無い」と取り違えないよう、移らずに知らせて選択を戻す
             this.selectedCalendarId.set(previousCalendarId);
             this.#notification.open('運用の一覧を取得できませんでした', 'OK');
             return;
         }
-        if (seq !== calendarChangeSeq) return;
+        if (!this.#store.isLatestCalendarChange(seq)) return;
         const same = operations.find(
             (o) => o.operationNumber === operationNumber,
         );
@@ -338,10 +310,9 @@ export class OperationRouteDiagramComponent {
             .subscribe((paramMap) => {
                 const operationId = paramMap.get('operation_id');
 
-                OperationRouteDiagramStore.setOperationId(operationId);
+                this.#store.setOperationId(operationId);
                 // 運用番号を外したとき（ダイヤを替えて同じ番号が無かった）、前の運用の図を残さない（2026-10-22）
-                if (!operationId)
-                    OperationRouteDiagramStore.setOperationTrips(null);
+                if (!operationId) this.#store.setOperationTrips(null);
                 this.fetchData();
             });
     }
@@ -351,7 +322,7 @@ export class OperationRouteDiagramComponent {
             '/timetable',
             'all-line',
             {
-                calendar_id: OperationRouteDiagramStore.calendarId,
+                calendar_id: this.#store.calendarId(),
                 trip_block_id: ev.tripBlockId,
                 trip_direction: ev.tripDirection,
             },
@@ -364,14 +335,14 @@ export class OperationRouteDiagramComponent {
     }
 
     async fetchData(): Promise<void> {
-        if (!OperationRouteDiagramStore.operationId) return;
+        if (!this.#store.operationId()) return;
 
-        const seq = ++fetchSeq;
+        const seq = this.#store.nextFetchSeq();
         const conditions = {
-            operationId: OperationRouteDiagramStore.operationId,
+            operationId: this.#store.operationId(),
         };
-        OperationRouteDiagramStore.enableLoading();
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        this.#store.enableLoading();
+        this.#store.setHasFetchedOperationTrips(false);
 
         // 列車と駅は互いに依存しないので並行に取る
         const results = await Promise.allSettled([
@@ -389,7 +360,7 @@ export class OperationRouteDiagramComponent {
             );
         } catch {
             hasFetchedItineraryLinks = false;
-            OperationRouteDiagramStore.setItineraryLinks([]);
+            this.#store.setItineraryLinks([]);
         }
 
         const failure = results.find(
@@ -400,39 +371,33 @@ export class OperationRouteDiagramComponent {
             // 通信できないときは、同じ運用で保存した中身を出す（古い取得の失敗では戻さない）。
             // 取得がすべて終わってから戻す（遅れて届いた成功が、戻した中身を上書きしないように）
             // 戻す処理が壊れていても、読み込み中は必ず解く
-            if (seq === fetchSeq) {
+            if (this.#store.isLatestFetch(seq)) {
                 try {
-                    await this.#offlineSnapshots.restore({
-                        key: OFFLINE_SNAPSHOT_KEY,
+                    await this.#store.restoreOfflineSnapshot(
+                        'main',
                         conditions,
-                        apply: (data: OperationRouteDiagramSnapshot) =>
-                            OperationRouteDiagramStore.restoreSnapshot(data),
-                    });
+                    );
                 } catch {
                     // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                 }
             }
-        } else if (hasFetchedItineraryLinks && seq === fetchSeq) {
+        } else if (hasFetchedItineraryLinks && this.#store.isLatestFetch(seq)) {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions,
-                data: OperationRouteDiagramStore.snapshot(),
-            });
+            void this.#store.saveOfflineSnapshot('main', conditions);
         }
 
         // 運用の URL にダイヤは無い。取った運用のダイヤでタグを付ける（その時刻表が書き換わったら失効）
-        const calendarId = OperationRouteDiagramStore.calendarId;
+        const calendarId = this.#store.calendarId();
         if (calendarId) {
             this.#ssrResponse.addCacheTags([calendarCacheTag(calendarId)]);
         }
 
         // 取得に失敗しても読み込み中を解く（進捗バーが出たまま止まらないように）
-        OperationRouteDiagramStore.initializeSelectedRouteIds();
-        OperationRouteDiagramStore.disableLoading();
+        this.#store.initializeSelectedRouteIds();
+        this.#store.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-        if (seq === fetchSeq) {
-            OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
+        if (this.#store.isLatestFetch(seq)) {
+            this.#store.setHasFetchedOperationTrips(true);
         }
 
         if (failure) {

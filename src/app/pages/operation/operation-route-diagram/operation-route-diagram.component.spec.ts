@@ -10,7 +10,6 @@ import {
     BehaviorSubject,
     defer,
     EMPTY,
-    firstValueFrom,
     Observable,
     of,
     Subject,
@@ -83,7 +82,7 @@ describe('OperationRouteDiagramComponent', () => {
     });
 
     it('途中の切り替えが 2 件あっても、列車 id で区別する', () => {
-        OperationRouteDiagramStore.setOperationTrips({
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
             operation: { operationId: 'op-1', calendarId: 'cal-1' },
             trips: [
                 { trip: { tripId: 't1', tripNumber: '1818K' } },
@@ -98,7 +97,7 @@ describe('OperationRouteDiagramComponent', () => {
             stationId: 's',
             rule: 1,
         };
-        OperationRouteDiagramStore.setItineraryLinks([
+        TestBed.inject(OperationRouteDiagramStore).setItineraryLinks([
             {
                 tripOperationListId: 'a',
                 tripId: 't1',
@@ -160,9 +159,6 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
 
     afterEach(() => {
         fixture.destroy();
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
-        OperationRouteDiagramStore.resetLoading();
     });
 
     it('運用番号があって取り終わるまでは、図の骨組みを出し、空表示を出さない', async () => {
@@ -333,7 +329,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('ダイヤを替えたとき、同じ運用番号があればその運用へ移る', async () => {
-        OperationRouteDiagramStore.setOperationTrips({
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
             operation: op('b1', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
@@ -346,7 +342,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('同じ運用番号が無ければ運用番号を外し、選んだダイヤを残す', async () => {
-        OperationRouteDiagramStore.setOperationTrips({
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
             operation: op('b1', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
@@ -364,7 +360,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('運用番号の無い URL に移ったら、前の運用の図を消す', () => {
-        OperationRouteDiagramStore.setOperationTrips({
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
             operation: op('b1', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
@@ -391,7 +387,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
         }) as unknown as OperationTripsDto;
 
     it('同じ番号が無いダイヤに替えた後、「戻る」で元の運用に戻ると、ダイヤの選択欄も元に戻る', async () => {
-        OperationRouteDiagramStore.setOperationTrips(
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
             withCalendar(op('b1', '43G'), 'cal-1'),
         );
         expect(component.selectedCalendarId()).toBe('cal-1');
@@ -401,19 +397,19 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
 
         paramMap$.next(convertToParamMap({ operation_id: 'b1' }));
         expect(component.selectedCalendarId()).toBe('cal-3');
-        OperationRouteDiagramStore.setOperationTrips(
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
             withCalendar(op('b1', '43G'), 'cal-1'),
         );
         expect(component.selectedCalendarId()).toBe('cal-1');
     });
 
     it('運用を開いて取り終える前は、今日のダイヤに補わない', () => {
-        OperationRouteDiagramStore.setOperationTrips(null);
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(null);
         const fresh = TestBed.createComponent(
             OperationRouteDiagramComponent,
         ).componentInstance;
         expect(fresh.selectedCalendarId()).toBeNull();
-        OperationRouteDiagramStore.setOperationTrips(
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
             withCalendar(op('b1', '43G'), 'cal-1'),
         );
         expect(fresh.selectedCalendarId()).toBe('cal-1');
@@ -428,7 +424,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('ダイヤを続けて替えたとき、先に選んだダイヤの結果が後から届いても移らない', async () => {
-        OperationRouteDiagramStore.setOperationTrips(
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
             withCalendar(op('b1', '43G'), 'cal-1'),
         );
         const slow = new Subject<OperationDetailsDto[]>();
@@ -451,7 +447,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('一覧の取得に失敗したら移らず、知らせて選択を戻す', async () => {
-        OperationRouteDiagramStore.setOperationTrips(
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
             withCalendar(op('b1', '43G'), 'cal-1'),
         );
         jest.spyOn(
@@ -562,7 +558,9 @@ describe('OperationRouteDiagramComponent のサーバー', () => {
                         // 運用を取ると、そのダイヤがストアに入る
                         fetchOperationTrips: () =>
                             defer(() => {
-                                OperationRouteDiagramStore.setOperationTrips({
+                                TestBed.inject(
+                                    OperationRouteDiagramStore,
+                                ).setOperationTrips({
                                     operation: {
                                         operationId: 'op-1',
                                         calendarId: 'cal-1',
@@ -592,10 +590,6 @@ describe('OperationRouteDiagramComponent のサーバー', () => {
         expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
 
         fixture.destroy();
-        OperationRouteDiagramStore.setOperationTrips(null);
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
-        OperationRouteDiagramStore.resetLoading();
     });
 });
 
@@ -668,10 +662,16 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
 
     // 取得は成功した形のストア（サービスの差し替えはストアへ書かないので、先に入れておく）
     const fillStore = () => {
-        OperationRouteDiagramStore.setOperationTrips(operationTrips);
-        OperationRouteDiagramStore.setItineraryLinks(itineraryLinks);
-        OperationRouteDiagramStore.setStations(stations);
-        OperationRouteDiagramStore.setStationAliases(stationAliases);
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
+            operationTrips,
+        );
+        TestBed.inject(OperationRouteDiagramStore).setItineraryLinks(
+            itineraryLinks,
+        );
+        TestBed.inject(OperationRouteDiagramStore).setStations(stations);
+        TestBed.inject(OperationRouteDiagramStore).setStationAliases(
+            stationAliases,
+        );
     };
 
     afterEach(() => {
@@ -679,14 +679,6 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
         fixture?.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        OperationRouteDiagramStore.setOperationTrips(null);
-        OperationRouteDiagramStore.setItineraryLinks([]);
-        OperationRouteDiagramStore.setStations([]);
-        OperationRouteDiagramStore.setStationAliases({});
-        OperationRouteDiagramStore.setSelectedRouteIds([]);
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
-        OperationRouteDiagramStore.resetLoading();
     });
 
     it('成功したら条件と中身を保存する', async () => {
@@ -772,15 +764,15 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
+        expect(TestBed.inject(OperationRouteDiagramStore).stations()).toEqual([
+            expect.objectContaining({ stationId: 'st-1' }),
+        ]);
         expect(
-            await firstValueFrom(OperationRouteDiagramStore.stations$),
-        ).toEqual([expect.objectContaining({ stationId: 'st-1' })]);
-        expect(
-            await firstValueFrom(OperationRouteDiagramStore.itineraryLinks$),
+            TestBed.inject(OperationRouteDiagramStore).itineraryLinks(),
         ).toEqual(itineraryLinks);
         // 戻した駅・運用の経由路線に選択を合わせている
         expect(
-            await firstValueFrom(OperationRouteDiagramStore.selectedRouteIds$),
+            TestBed.inject(OperationRouteDiagramStore).selectedRouteIds(),
         ).toEqual(['route-9']);
         expect(fixture.componentInstance.isLoading()).toBe(false);
     });
