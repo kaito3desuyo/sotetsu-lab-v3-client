@@ -5,15 +5,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import {
-    firstValueFrom,
-    Observable,
-    of,
-    Subject,
-    switchMap,
-    throwError,
-    timer,
-} from 'rxjs';
+import { Observable, of, Subject, switchMap, throwError, timer } from 'rxjs';
 
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
@@ -50,14 +42,6 @@ describe('OperationPastTimeComponent', () => {
         component = fixture.componentInstance;
     });
 
-    afterEach(() => {
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setIncludeInvalidated(false);
-        OperationPastTimeStore.setSelectedAgencyIds([]);
-        OperationPastTimeStore.resetLoading();
-    });
-
     it('should create', () => {
         expect(component).toBeTruthy();
     });
@@ -65,7 +49,7 @@ describe('OperationPastTimeComponent', () => {
     it('fetchData: フェッチ完了で loadingQueue が空になる', async () => {
         await component.fetchData();
 
-        expect(OperationPastTimeStore.isLoading$).toBeDefined();
+        expect(TestBed.inject(OperationPastTimeStore).isLoading()).toBe(false);
     });
 });
 
@@ -74,13 +58,8 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
     let sightings$: Subject<undefined>;
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-    const hasFetched = () => {
-        let value: boolean | undefined;
-        OperationPastTimeStore.hasFetchedPastTime$
-            .subscribe((v) => (value = v))
-            .unsubscribe();
-        return value;
-    };
+    const hasFetched = () =>
+        TestBed.inject(OperationPastTimeStore).hasFetchedPastTime();
 
     beforeEach(async () => {
         sightings$ = new Subject<undefined>();
@@ -119,10 +98,6 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         fixture.destroy();
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setHasFetchedPastTime(false);
-        OperationPastTimeStore.resetLoading();
     });
 
     it('取り終わるまでは false、取り終えたら true', async () => {
@@ -155,7 +130,7 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
     });
 
     it('入ったときは前の訪問の「取り終えた」を引き継がない', () => {
-        OperationPastTimeStore.setHasFetchedPastTime(true);
+        TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(true);
         // 取得の始めのリセットでは false に戻らない道（取得を空にする）で確かめる
         const fetchData = jest
             .spyOn(OperationPastTimeComponent.prototype, 'fetchData')
@@ -199,13 +174,6 @@ describe('OperationPastTimeComponent の取得のフラグ', () => {
 });
 
 describe('OperationPastTimeComponent のサーバー', () => {
-    afterEach(() => {
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setHasFetchedPastTime(false);
-        OperationPastTimeStore.resetLoading();
-    });
-
     it('過ぎた日の期間は長く置き、日付ごとのタグを付ける', async () => {
         const addCacheTags = jest.fn();
         const setCachePolicy = jest.fn();
@@ -326,24 +294,17 @@ describe('OperationPastTimeComponent の圏外の保存', () => {
         fixture?.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        OperationPastTimeStore.setCalendars([]);
-        OperationPastTimeStore.setOperations([]);
-        OperationPastTimeStore.setFormations([]);
-        OperationPastTimeStore.setOperationSightings([]);
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setIncludeInvalidated(false);
-        OperationPastTimeStore.setHasFetchedPastTime(false);
-        OperationPastTimeStore.resetLoading();
     });
 
     it('成功したら条件と中身を保存する', async () => {
         sightings$ = of(undefined);
         await setup();
-        OperationPastTimeStore.setCalendars(calendars);
-        OperationPastTimeStore.setOperations(operations);
-        OperationPastTimeStore.setFormations(formations);
-        OperationPastTimeStore.setOperationSightings(operationSightings);
+        TestBed.inject(OperationPastTimeStore).setCalendars(calendars);
+        TestBed.inject(OperationPastTimeStore).setOperations(operations);
+        TestBed.inject(OperationPastTimeStore).setFormations(formations);
+        TestBed.inject(OperationPastTimeStore).setOperationSightings(
+            operationSightings,
+        );
 
         fixture = TestBed.createComponent(OperationPastTimeComponent);
         await flush();
@@ -394,22 +355,13 @@ describe('OperationPastTimeComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(await firstValueFrom(OperationPastTimeStore.calendars$)).toEqual(
-            calendars,
-        );
-        expect(
-            await firstValueFrom(OperationPastTimeStore.operations$),
-        ).toEqual(operations);
-        expect(
-            await firstValueFrom(OperationPastTimeStore.formations$),
-        ).toEqual(formations);
-        expect(
-            await firstValueFrom(OperationPastTimeStore.operationSightings$),
-        ).toEqual(operationSightings);
+        const store = TestBed.inject(OperationPastTimeStore);
+        expect(store.calendars()).toEqual(calendars);
+        expect(store.operations()).toEqual(operations);
+        expect(store.formations()).toEqual(formations);
+        expect(store.operationSightings()).toEqual(operationSightings);
         expect(fixture.componentInstance.isLoading()).toBe(false);
-        expect(
-            await firstValueFrom(OperationPastTimeStore.hasFetchedPastTime$),
-        ).toBe(true);
+        expect(store.hasFetchedPastTime()).toBe(true);
     });
 
     it('戻す処理が壊れていても、読み込み中は解く', async () => {

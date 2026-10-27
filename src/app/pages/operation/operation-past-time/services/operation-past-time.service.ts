@@ -17,6 +17,7 @@ import { OperationPastTimeStore } from '../stores/operation-past-time.store';
 
 @Injectable()
 export class OperationPastTimeService {
+    readonly #store = inject(OperationPastTimeStore);
     readonly #agencyListState = inject(AgencyListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #calendarService = inject(CalendarService);
@@ -25,10 +26,10 @@ export class OperationPastTimeService {
     readonly #operationSightingService = inject(OperationSightingService);
 
     fetchCalendarByDate(): Observable<void> {
-        const dates = OperationPastTimeStore.dates;
+        const dates = this.#store.dates();
 
         if (!dates.length) {
-            OperationPastTimeStore.setCalendars([]);
+            this.#store.setCalendars([]);
             return of(undefined);
         }
 
@@ -40,17 +41,17 @@ export class OperationPastTimeService {
             ),
         ).pipe(
             tap((calendars) => {
-                OperationPastTimeStore.setCalendars(calendars);
+                this.#store.setCalendars(calendars);
             }),
             map(() => undefined),
         );
     }
 
     fetchFormations(): Observable<void> {
-        const dates = OperationPastTimeStore.dates;
+        const dates = this.#store.dates();
 
         if (!dates.length) {
-            OperationPastTimeStore.setFormations([]);
+            this.#store.setFormations([]);
             return of(undefined);
         }
 
@@ -66,7 +67,7 @@ export class OperationPastTimeService {
                         this.#agencyListState.agencies(),
                         this.#routeStationListState.routeStations(),
                     );
-                    OperationPastTimeStore.setFormations(
+                    this.#store.setFormations(
                         [...formations].sort((a, b) => {
                             const agencyDiff =
                                 agencies.findIndex(
@@ -93,7 +94,7 @@ export class OperationPastTimeService {
     }
 
     fetchOperationsV3(): Observable<void> {
-        const dates = OperationPastTimeStore.dates;
+        const dates = this.#store.dates();
 
         if (!dates.length) {
             return of(undefined);
@@ -106,15 +107,15 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((operations: OperationDetailsDto[]) => {
-                    OperationPastTimeStore.setOperations(operations);
+                    this.#store.setOperations(operations);
                 }),
                 map(() => undefined),
             );
     }
 
     fetchOperationSightingsV3(): Observable<void> {
-        const dates = OperationPastTimeStore.dates;
-        const includeInvalidated = OperationPastTimeStore.includeInvalidated;
+        const dates = this.#store.dates();
+        const includeInvalidated = this.#store.includeInvalidated();
 
         if (!dates.length) {
             return of(undefined);
@@ -129,7 +130,7 @@ export class OperationPastTimeService {
             })
             .pipe(
                 tap((sightings: OperationSightingDetailsDto[]) => {
-                    OperationPastTimeStore.setOperationSightings(sightings);
+                    this.#store.setOperationSightings(sightings);
                 }),
                 map(() => undefined),
             );

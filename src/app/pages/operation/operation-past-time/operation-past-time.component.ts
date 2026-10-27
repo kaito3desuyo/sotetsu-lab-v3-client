@@ -7,11 +7,10 @@ import {
     inject,
 } from '@angular/core';
 import { format, parse } from 'date-fns';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
@@ -21,21 +20,9 @@ import { OperationPastTimeFilterComponent } from './components/operation-past-ti
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
-import {
-    OperationPastTimeSnapshot,
-    OperationPastTimeStore,
-} from './stores/operation-past-time.store';
+import { OperationPastTimeStore } from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
 import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
-
-OperationPastTimeStore.resetLoading();
-
-// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
-// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
-let fetchSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'OperationPastTime';
 
 @Component({
     selector: 'app-operation-past-time',
@@ -55,22 +42,15 @@ export class OperationPastTimeComponent {
     readonly #router = inject(Router);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
     readonly #ssrResponse = inject(SsrResponse);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(OperationPastTimeStore);
     readonly #pageMeta = inject(PageMeta);
 
-    readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
+    readonly isLoading = this.#store.isLoading;
 
-    readonly #referenceDate = toSignal(OperationPastTimeStore.referenceDate$, {
-        initialValue: null,
-    });
-    readonly #days = toSignal(OperationPastTimeStore.days$, {
-        initialValue: null,
-    });
+    readonly #referenceDate = this.#store.referenceDate;
+    readonly #days = this.#store.days;
     readonly #agencies = inject(AgencyListState).agencies;
-    readonly #selectedAgencyIds = toSignal(
-        OperationPastTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
+    readonly #selectedAgencyIds = this.#store.selectedAgencyIds;
 
     readonly filterActive = computed(
         () => this.#selectedAgencyIds().length > 0,
@@ -96,7 +76,7 @@ export class OperationPastTimeComponent {
     });
 
     onClearFilter(): void {
-        OperationPastTimeStore.setSelectedAgencyIds([]);
+        this.#store.setSelectedAgencyIds([]);
     }
 
     constructor() {
@@ -104,7 +84,7 @@ export class OperationPastTimeComponent {
         effect(() => this.#pageMeta.setTitle(this.pageTitle()));
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
-        OperationPastTimeStore.setHasFetchedPastTime(false);
+        this.#store.setHasFetchedPastTime(false);
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -115,15 +95,15 @@ export class OperationPastTimeComponent {
                 const includeInvalidated =
                     paramMap.get('include_invalidated') ?? undefined;
 
-                OperationPastTimeStore.setReferenceDate(referenceDate);
-                OperationPastTimeStore.setDays(days && +days);
-                OperationPastTimeStore.setIncludeInvalidated(
+                this.#store.setReferenceDate(referenceDate);
+                this.#store.setDays(days && +days);
+                this.#store.setIncludeInvalidated(
                     includeInvalidated === 'true',
                 );
 
                 // サーバーで描くときの置き方。ブラウザでは何もしない（spec 6.2）
                 const hints = pastTimeCacheHints(
-                    OperationPastTimeStore.dates,
+                    this.#store.dates(),
                     new Date(),
                 );
                 this.#ssrResponse.setCachePolicy(hints.policy);
@@ -134,14 +114,14 @@ export class OperationPastTimeComponent {
     }
 
     async fetchData(): Promise<void> {
-        const seq = ++fetchSeq;
+        const seq = this.#store.nextFetchSeq();
         const conditions = {
-            referenceDate: OperationPastTimeStore.referenceDate ?? null,
-            days: OperationPastTimeStore.days ?? null,
-            includeInvalidated: OperationPastTimeStore.includeInvalidated,
+            referenceDate: this.#store.referenceDate() ?? null,
+            days: this.#store.days() ?? null,
+            includeInvalidated: this.#store.includeInvalidated(),
         };
-        OperationPastTimeStore.enableLoading();
-        OperationPastTimeStore.setHasFetchedPastTime(false);
+        this.#store.enableLoading();
+        this.#store.setHasFetchedPastTime(false);
 
         try {
             // どれも日付の範囲だけで取れるので並行に取る（以前は 1 本ずつ待っていた）
@@ -165,14 +145,12 @@ export class OperationPastTimeComponent {
             if (failure) {
                 // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）。
                 // 戻す処理が壊れていても、取得の失敗をそのまま投げる（読み込み中は finally で解く）
-                if (seq === fetchSeq) {
+                if (this.#store.isLatestFetch(seq)) {
                     try {
-                        await this.#offlineSnapshots.restore({
-                            key: OFFLINE_SNAPSHOT_KEY,
+                        await this.#store.restoreOfflineSnapshot(
+                            'main',
                             conditions,
-                            apply: (data: OperationPastTimeSnapshot) =>
-                                OperationPastTimeStore.restoreSnapshot(data),
-                        });
+                        );
                     } catch {
                         // 保存した中身が壊れていても、取得の失敗を優先する
                     }
@@ -181,19 +159,18 @@ export class OperationPastTimeComponent {
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する。
             // 起点の日・日数の無い URL は、取るものが無く空のままなので保存しない
-            if (seq === fetchSeq && OperationPastTimeStore.dates.length > 0) {
-                void this.#offlineSnapshots.save({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions,
-                    data: OperationPastTimeStore.snapshot(),
-                });
+            if (
+                this.#store.isLatestFetch(seq) &&
+                this.#store.dates().length > 0
+            ) {
+                void this.#store.saveOfflineSnapshot('main', conditions);
             }
         } finally {
             // 途中の reject でローディングバーが残り続けないようにする
-            OperationPastTimeStore.disableLoading();
+            this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === fetchSeq) {
-                OperationPastTimeStore.setHasFetchedPastTime(true);
+            if (this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedPastTime(true);
             }
         }
     }

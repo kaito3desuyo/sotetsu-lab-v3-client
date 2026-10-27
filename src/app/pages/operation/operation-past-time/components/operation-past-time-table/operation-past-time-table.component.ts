@@ -4,7 +4,6 @@ import {
     computed,
     inject,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { format, subDays, subHours } from 'date-fns';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
@@ -38,6 +37,7 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
     ],
 })
 export class OperationPastTimeTableComponent {
+    readonly #store = inject(OperationPastTimeStore);
     readonly #router = inject(Router);
     readonly #userState = inject(UserState);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
@@ -51,29 +51,15 @@ export class OperationPastTimeTableComponent {
     readonly invalidatedBorderColor = INVALIDATED_BORDER_COLOR;
 
     readonly userRole = this.#userState.role;
-    readonly referenceDate = toSignal(OperationPastTimeStore.referenceDate$);
-    readonly days = toSignal(OperationPastTimeStore.days$);
-    readonly calendars = toSignal(OperationPastTimeStore.calendars$, {
-        initialValue: [],
-    });
-    readonly operations = toSignal(OperationPastTimeStore.operations$, {
-        initialValue: [],
-    });
-    readonly formations = toSignal(OperationPastTimeStore.formations$, {
-        initialValue: [],
-    });
-    readonly selectedAgencyIds = toSignal(
-        OperationPastTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
-    readonly operationSightings = toSignal(
-        OperationPastTimeStore.operationSightingsGroupedByDate$,
-        { initialValue: {} },
-    );
-    readonly hasFetchedPastTime = toSignal(
-        OperationPastTimeStore.hasFetchedPastTime$,
-        { initialValue: false },
-    );
+    readonly referenceDate = this.#store.referenceDate;
+    readonly days = this.#store.days;
+    readonly calendars = this.#store.calendars;
+    readonly operations = this.#store.operations;
+    readonly formations = this.#store.formations;
+    readonly selectedAgencyIds = this.#store.selectedAgencyIds;
+    // state の operationSightings（取得した一覧）ではなく、編成と運行日で分けた派生を読む
+    readonly operationSightings = this.#store.operationSightingsGroupedByDate;
+    readonly hasFetchedPastTime = this.#store.hasFetchedPastTime;
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの日付の列の数（7 日分） */
@@ -144,7 +130,7 @@ export class OperationPastTimeTableComponent {
 
     /** G12: 0件空状態の次アクション。会社チップの絞り込み（表示フィルタ）を解除する。 */
     onResetAgencyFilter(): void {
-        OperationPastTimeStore.setSelectedAgencyIds([]);
+        this.#store.setSelectedAgencyIds([]);
     }
 
     /**

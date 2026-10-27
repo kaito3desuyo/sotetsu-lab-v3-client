@@ -5,7 +5,6 @@ import {
     inject,
     Injectable,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
     DateFnsAdapter,
@@ -70,11 +69,11 @@ export class OperationPastTimeSearchFormComponent {
         includeInvalidated: this.#fb.control<boolean>(false),
     });
 
-    readonly referenceDate = toSignal(OperationPastTimeStore.referenceDate$);
-    readonly days = toSignal(OperationPastTimeStore.days$);
-    readonly includeInvalidated = toSignal(
-        OperationPastTimeStore.includeInvalidated$,
-    );
+    readonly #store = inject(OperationPastTimeStore);
+
+    readonly referenceDate = this.#store.referenceDate;
+    readonly days = this.#store.days;
+    readonly includeInvalidated = this.#store.includeInvalidated;
 
     constructor() {
         effect(() => {

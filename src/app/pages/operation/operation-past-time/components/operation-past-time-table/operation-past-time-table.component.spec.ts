@@ -18,20 +18,6 @@ describe('OperationPastTimeTableComponent', () => {
     let fixture: ComponentFixture<OperationPastTimeTableComponent>;
 
     beforeEach(async () => {
-        OperationPastTimeStore.setFormations([
-            {
-                formationId: 'f-1',
-                formationNumber: '8708',
-                agencyId: 'agency-1',
-            },
-            {
-                formationId: 'f-2',
-                formationNumber: '9704',
-                agencyId: 'agency-2',
-            },
-        ] as never);
-        OperationPastTimeStore.setSelectedAgencyIds([]);
-
         await TestBed.configureTestingModule({
             imports: [OperationPastTimeTableComponent],
             providers: [
@@ -61,18 +47,25 @@ describe('OperationPastTimeTableComponent', () => {
             })
             .compileComponents();
 
+        const store = TestBed.inject(OperationPastTimeStore);
+        store.setFormations([
+            {
+                formationId: 'f-1',
+                formationNumber: '8708',
+                agencyId: 'agency-1',
+            },
+            {
+                formationId: 'f-2',
+                formationNumber: '9704',
+                agencyId: 'agency-2',
+            },
+        ] as never);
+        store.setSelectedAgencyIds([]);
+
         patchState(unprotected(TestBed.inject(UserState)), { role: 'viewer' });
         fixture = TestBed.createComponent(OperationPastTimeTableComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationPastTimeStore.setFormations([]);
-        OperationPastTimeStore.setSelectedAgencyIds([]);
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setHasFetchedPastTime(false);
     });
 
     it('should create', () => {
@@ -84,17 +77,17 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('tableDisplayed: 基準日・日数が揃うと true', () => {
-        OperationPastTimeStore.setReferenceDate('2026-07-01');
-        OperationPastTimeStore.setDays(2);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');
+        TestBed.inject(OperationPastTimeStore).setDays(2);
         fixture.detectChanges();
 
         expect(component.tableDisplayed()).toBe(true);
     });
 
     it('基準日と日数があって取る前は、表の骨組みを出し、空表示も表も出さない', () => {
-        OperationPastTimeStore.setReferenceDate('2026-07-01');
-        OperationPastTimeStore.setDays(2);
-        OperationPastTimeStore.setHasFetchedPastTime(false);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');
+        TestBed.inject(OperationPastTimeStore).setDays(2);
+        TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -106,9 +99,9 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('取り終えたら骨組みを消す', () => {
-        OperationPastTimeStore.setReferenceDate('2026-07-01');
-        OperationPastTimeStore.setDays(2);
-        OperationPastTimeStore.setHasFetchedPastTime(true);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');
+        TestBed.inject(OperationPastTimeStore).setDays(2);
+        TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(true);
         fixture.detectChanges();
 
         expect(
@@ -119,10 +112,10 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('取り終えて 0 件なら空表示を出す', () => {
-        OperationPastTimeStore.setFormations([]);
-        OperationPastTimeStore.setReferenceDate('2026-07-01');
-        OperationPastTimeStore.setDays(2);
-        OperationPastTimeStore.setHasFetchedPastTime(true);
+        TestBed.inject(OperationPastTimeStore).setFormations([]);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');
+        TestBed.inject(OperationPastTimeStore).setDays(2);
+        TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(true);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -133,7 +126,7 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('基準日が無ければ骨組みでなく「基準日と日数を設定して検索してください」を出す', () => {
-        OperationPastTimeStore.setHasFetchedPastTime(false);
+        TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -186,7 +179,9 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('visibleFormations: 会社チップ選択で行が絞り込まれる（B9 追加分）', () => {
-        OperationPastTimeStore.setSelectedAgencyIds(['agency-1']);
+        TestBed.inject(OperationPastTimeStore).setSelectedAgencyIds([
+            'agency-1',
+        ]);
         fixture.detectChanges();
 
         expect(component.visibleFormations().map((f) => f.formationId)).toEqual(
@@ -195,9 +190,11 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('visibleFormations: 全解除で全編成表示に戻る', () => {
-        OperationPastTimeStore.setSelectedAgencyIds(['agency-1']);
+        TestBed.inject(OperationPastTimeStore).setSelectedAgencyIds([
+            'agency-1',
+        ]);
         fixture.detectChanges();
-        OperationPastTimeStore.setSelectedAgencyIds([]);
+        TestBed.inject(OperationPastTimeStore).setSelectedAgencyIds([]);
         fixture.detectChanges();
 
         expect(component.visibleFormations().map((f) => f.formationId)).toEqual(
@@ -205,18 +202,50 @@ describe('OperationPastTimeTableComponent', () => {
         );
     });
 
+    it('operationSightings: state の一覧でなく、編成と運行日で分けた派生を読む', () => {
+        const store = TestBed.inject(OperationPastTimeStore);
+        const sighting = {
+            operationSightingId: 's-1',
+            formationId: 'f-1',
+            operationId: 'o-11',
+            // 日本時間で 12 時（4 時前なら前日の運行日になる）
+            sightingTime: '2026-10-12T03:00:00.000Z',
+        } as never;
+        const earlyMorning = {
+            operationSightingId: 's-2',
+            formationId: 'f-1',
+            operationId: 'o-11',
+            // 日本時間で 2026-10-13 の 2 時 → 運行日は 10/12
+            sightingTime: '2026-10-12T17:00:00.000Z',
+        } as never;
+
+        store.setOperationSightings([sighting, earlyMorning]);
+
+        expect(component.operationSightings()).toBe(
+            store.operationSightingsGroupedByDate(),
+        );
+        expect(component.operationSightings()).not.toBe(
+            store.operationSightings(),
+        );
+        expect(component.operationSightings()).toEqual({
+            'f-1': { '2026-10-12': [sighting, earlyMorning] },
+        });
+    });
+
     describe('引き継いだ目撃', () => {
         const setupCell = () => {
-            OperationPastTimeStore.setCalendars([
+            TestBed.inject(OperationPastTimeStore).setCalendars([
                 { date: '2026-10-12', calendar: {} },
             ] as never);
-            OperationPastTimeStore.setReferenceDate('2026-10-12');
-            OperationPastTimeStore.setDays(1);
-            OperationPastTimeStore.setOperations([
+            TestBed.inject(OperationPastTimeStore).setReferenceDate(
+                '2026-10-12',
+            );
+            TestBed.inject(OperationPastTimeStore).setDays(1);
+            TestBed.inject(OperationPastTimeStore).setOperations([
                 { operationId: 'o-11', operationNumber: '11K' },
                 { operationId: 'o-12', operationNumber: '12K' },
             ] as never);
-            OperationPastTimeStore.setOperationSightings([
+            TestBed.inject(OperationPastTimeStore).setOperationSightings([
                 {
                     operationSightingId: 's-1',
                     formationId: 'f-1',
@@ -236,17 +265,11 @@ describe('OperationPastTimeTableComponent', () => {
                     },
                 },
             ] as never);
-            OperationPastTimeStore.setHasFetchedPastTime(true);
+            TestBed.inject(OperationPastTimeStore).setHasFetchedPastTime(true);
             fixture.detectChanges();
             return fixture.nativeElement.querySelector('tbody td:nth-child(2)')
                 .textContent as string;
         };
-
-        afterEach(() => {
-            OperationPastTimeStore.setCalendars([]);
-            OperationPastTimeStore.setOperations([]);
-            OperationPastTimeStore.setOperationSightings([]);
-        });
 
         it('推測した目撃は「?」付きのタグにし、「@11K」は添えない', () => {
             const text = setupCell();
