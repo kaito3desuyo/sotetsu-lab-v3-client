@@ -20,6 +20,7 @@ interface AssetGroup {
 }
 
 interface NgswConfig {
+    index: string;
     assetGroups: AssetGroup[];
     dataGroups: DataGroup[];
 }
@@ -56,6 +57,18 @@ const matchGroup = (groups: ManifestDataGroup[], url: string): string | null =>
     groups.find((group) =>
         group.patterns.some((pattern) => new RegExp(pattern).test(url)),
     )?.name ?? null;
+
+describe('ngsw-config.json の殻（SSR ビルドの出力に合わせる）', () => {
+    it('index は /index.csr.html（SSR ビルドは index.html を出さない）', () => {
+        expect(config.index).toBe('/index.csr.html');
+    });
+
+    it('app の資源の files に /index.csr.html があり、/index.html は無い', () => {
+        const app = config.assetGroups.find((group) => group.name === 'app')!;
+        expect(app.resources.files).toContain('/index.csr.html');
+        expect(app.resources.files).not.toContain('/index.html');
+    });
+});
 
 describe('ngsw-config.json の dataGroups', () => {
     it('dataGroups は api-data と api の 2 組（目撃と現在位置の組は無い）', () => {
