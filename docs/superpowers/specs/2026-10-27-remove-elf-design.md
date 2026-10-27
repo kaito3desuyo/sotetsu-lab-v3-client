@@ -58,6 +58,7 @@ client のストアは全部 Elf（`@ngneat/elf`・`elf-entities`・`elf-persist
 - **全部 `providedIn: 'root'`**。ページを離れても中身が残る今の振る舞いを守るためだ（Ruling 5）。SSR では Angular がリクエストごとにアプリの injector を作り直すので、root のストアもリクエストごとに別になる。
 - **`global-states/` の `*StateStore` と `*StateQuery` の組は、1 つの SignalStore にまとめる**。一覧は `withEntities` で持つ。ファイル名は `*.state.ts` のまま変えない（差分を小さくするため）。名前は `AgencyListState` のように付ける。`initialDataResolver` と、他のストアを読む computed（例：`todaysFormationsSorted` が会社の一覧を読む）は、`withComputed` の中で他のストアを `inject` して組む。
 - **`initialize.state.ts` も DI に入れる**。Elf ではないが、ファイルの中の `signal` は SSR のリクエストの間で共有されてしまう。10 章の 5 を通すには、ここも直す必要がある。
+- **ページのファイル先頭に置いた変わる値もストアへ移す**。対象は、8 ページの `let fetchSeq`、運用行路図の `let calendarChangeSeq`、real-time の `const firstLoading = signal(true)` だ。ページのインスタンスをまたいで残すためにファイルに置いてあるが、サーバーでは同時に描くリクエストの間で共有されてしまう。ストア（root）に置けば、インスタンスをまたいで残り、リクエストの間では分かれる。計算の使い回し（`build-trip-diagram-line.util.ts` の Map など、入力だけで決まる値）と `control-band` の `nextId` は、混ざっても害が無いので残す。
 - **ページのストアの名前は今のまま**にする（`OperationTableStore` など）。中身は `signalStore(...)` のクラスにし、使う側は `inject(OperationTableStore)` で受ける。
 - **ストアを DI の外から触る所**：パイプとユーティリティ（`*.pipe.ts`・`*.util.ts`・`*.utils.ts`）にストアを読む所は無い（2026-10-27 に grep で確認）。DI の外で触っているのは、次の項目のファイル先頭の呼び出しだけだ。他にも見つかったら、`inject` できる呼び手から値を引数で渡す形にする。`runInInjectionContext` は使わない。
 - **ファイルの先頭で呼んでいる `XxxStore.resetLoading()`（9 ページ）は、ストアの `withHooks.onInit` に移す**。今はチャンクを読んだときに 1 回だけ走る。onInit なら、ストアを作ったときに 1 回だけ走る。どちらも「アプリが生きている間に 1 回」なので、振る舞いは変わらない。
