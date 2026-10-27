@@ -51,7 +51,7 @@ layout/         ← シェルレイアウトコンポーネント
 
 ### `global-states/`
 
-アプリ全体の Elf エンティティストア。各ファイルが `*StateStore`（書き込み用 `@Injectable`）と `*StateQuery`（読み取り用 `@Injectable`）ペアをエクスポートする。`initialDataResolver` がルート遷移時に一度だけフェッチする。
+アプリ全体で共有する NgRx SignalStore（`@ngrx/signals`）。1 ファイルが `*State` を 1 つ `signalStore({ providedIn: 'root' }, ...)` でエクスポートし、読み書きの両方をそこに持つ（`*StateStore` と `*StateQuery` の組は無い）。一覧は `withEntities` で持ち、他のストアを読む computed は `withComputed` の中で `inject` して組む。取得は `fetch()`（Observable）で行い、`initialDataResolver` がルート遷移時に一度だけ呼ぶ。`initialize.state.ts`（`InitializeState`）も同じ形で、`pageResolver` が初期化の完了を待つ。
 
 ---
 
@@ -65,7 +65,7 @@ layout/         ← シェルレイアウトコンポーネント
 pages/<feature>/
   <feature>.component.ts      ← ルートコンポーネント（ローディング管理・イベント購読）
   <feature>.route.ts          ← resolve に core/resolvers/page.resolver.ts の pageResolver(...)
-  stores/<feature>.store.ts   ← Elf ストア（plain const object、データ + UI 状態をまとめて保持）
+  stores/<feature>.store.ts   ← SignalStore（データ + UI 状態をまとめて保持）
   services/<feature>.service.ts
   components/
     <feature>-<widget>/       ← 単一コンポーネント（-c/-p への分割は行わない）
@@ -74,25 +74,59 @@ pages/<feature>/
 
 ### ストア（`stores/*.store.ts`）
 
-`@Injectable` ではなく `const` オブジェクトとしてエクスポートし、`@ngneat/elf` の `createStore` を直接使う。データと UI フラグの両方をここで管理する（`states/` は作らない）。メソッドと `$` サフィックスの Observable、`get` アクセサをすべて同一オブジェクトにまとめる。画面の設定は `persistState`（`@ngneat/elf-persist-state` + `localforage`）、取ったデータは `core/offline/offline-snapshots.ts`（取得に失敗したときだけ戻す。ADR-0015）。
+`signalStore({ providedIn: 'root' }, ...)` でクラスとしてエクスポートし、使う側は `inject(FooStore)` で受ける（`@Injectable` を自分で書かない）。データと UI フラグの両方をここで管理する（`states/` は作らない）。`providedIn: 'root'` なので、ページを離れても中身が残り、SSR ではリクエストごとに別のインスタンスになる。ファイルの先頭に変わる値（`let` や `signal`）を置かない。
+
+書き方（共通の手順）:
+
+- **読む**: Observable の `xxx$` や `get xxx` は無い。`store.xxx()` と signal で読む。RxJS の流れの中で要るときだけ `toObservable` を使う。
+- **書く**: 書き込みメソッドは `withMethods` に置き、中は `patchState`。ストアの中身を spec から直接書くときは `@ngrx/signals/testing` の `unprotected` を使う（`protectedState` は既定の true のまま）。
+- **時間で変わる値を `withComputed` に入れない**: computed はメモ化される。取得の世代番号（`fetchSeq`）は `withMethods` の中のクロージャ変数に持ち、`nextFetchSeq()` と `isLatestFetch(seq)` で出す。
+- **読み込み中の印の掃除**: ファイルの先頭で `resetLoading()` を呼ばない。`withHooks({ onInit })` に置く。
+- **画面の設定と下書きの保存**: `withSettingsStorage({ key, fields, debounceMs })`（`core/store-features/`）。起動時に `fields` だけを戻し、変わったときだけ書く。読み込みが済むと `settingsReady` が true になり、保存を持つページの route は `pageResolver(FooStore)` でそれを待つ。
+- **取ったデータの保存（圏外用）**: `withOfflineSnapshots({ main: { key, select, apply } })`（ADR-0015）。ストアに `saveOfflineSnapshot(name, conditions)` と `restoreOfflineSnapshot(name, conditions)` が付く。取得に成功したら save、失敗したら restore を、コンポーネントが呼ぶ。ストアの定義を見れば何を保存しているか分かる。`select`・`apply` が他のメソッドを呼ぶので `withFeature` で包む。
+- **DevTools**: `withAppDevtools('FooStore')`（開発ビルドだけ Redux DevTools に繋がる）。
+- **spec**: `TestBed.inject(FooStore)`。TestBed ごとに別のストアなので、afterEach で中身を戻さない。
 
 ```ts
-const store = createStore({ name: 'FooStore' }, withProps<StoreProps>({ ... }));
-
-export const FooStore = {
-  // 書き込みメソッド
-  setBar(bar: Bar): void { store.update(setProp('bar', () => bar)); },
-  enableLoading(): void { store.update(setProp('loadingQueue', (s) => s.concat(true))); },
-  disableLoading(): void { store.update(setProp('loadingQueue', (s) => s.slice(1))); },
-
-  // Observable（$ サフィックス）
-  bar$: store.pipe(select((s) => s.bar)),
-  isLoading$: store.pipe(select((s) => s.loadingQueue.length > 0)),
-
-  // 同期アクセサ
-  get bar(): Bar { return store.getValue().bar; },
-} as const;
+export const FooStore = signalStore(
+  { providedIn: 'root' },
+  withState<StoreProps>(initialState),
+  withComputed(({ loadingQueue }) => ({
+    isLoading: computed(() => loadingQueue().length > 0),
+  })),
+  withMethods((store) => {
+    let fetchSeq = 0; // 時間で変わる値は computed でなくクロージャに持つ
+    return {
+      nextFetchSeq: (): number => ++fetchSeq,
+      isLatestFetch: (seq: number): boolean => seq === fetchSeq,
+      setBar(bar: Bar): void { patchState(store, { bar }); },
+      enableLoading(): void {
+        patchState(store, (s) => ({ loadingQueue: s.loadingQueue.concat(true) }));
+      },
+      disableLoading(): void {
+        patchState(store, (s) => ({ loadingQueue: s.loadingQueue.slice(1) }));
+      },
+      resetLoading(): void { patchState(store, { loadingQueue: [] }); },
+      snapshot(): FooSnapshot { return { bar: store.bar() }; },
+      restoreSnapshot(data: FooSnapshot): void { patchState(store, { bar: data.bar }); },
+    };
+  }),
+  withSettingsStorage<StoreProps>({ key: 'FooStore', fields: ['selectedIds'] }),
+  withFeature((store) =>
+    withOfflineSnapshots({
+      main: {
+        key: 'Foo',
+        select: () => store.snapshot(),
+        apply: (data: FooSnapshot) => store.restoreSnapshot(data),
+      },
+    }),
+  ),
+  withAppDevtools('FooStore'),
+  withHooks({ onInit: (store) => store.resetLoading() }),
+);
 ```
+
+設定を保存しないページは `withSettingsStorage` を、圏外用の保存をしないページは `withOfflineSnapshots` を省く。localforage に触るのは `core/storage/device-storage.ts`（`DeviceStorage`）と `main.ts` の `localForage.config` だけにする（`storeName: 'elf_state'` は保存済みのデータの置き場なので変えない。ADR-0016）。
 
 ### サービス（`services/*.service.ts`）
 
@@ -103,7 +137,7 @@ export const FooStore = {
 - すべて `ChangeDetectionStrategy.OnPush`
 - すべて `imports: [...]` 形式のスタンドアロンコンポーネント
 - フィールド注入は `inject()` 関数を使い、private には `#` プレフィックスを付ける
-- Observable → Signal 変換は `toSignal()` を使う
+- ストアは `readonly #store = inject(FooStore)` で受け、`this.#store.bar()` と signal で読む。Observable → Signal 変換が要るもの（HTTP の結果など）は `toSignal()` を使う
 - 複数ページに置く `shared/` のカード（検索・投稿）は、表示中の値をページから `input` で受け、ボタンの遷移はカード自身が `Router` で行う（Subject のイベントサービスは作らない。遷移失敗の通知は `core/utils/notify-navigation-failure.ts`）
 
 ### ルートコンポーネントのデータ取得
@@ -112,10 +146,10 @@ export const FooStore = {
 
 ```ts
 async fetchData(): Promise<void> {
-  FooStore.enableLoading();
+  this.#store.enableLoading();
   await lastValueFrom(this.#fooService.fetchA());
   await lastValueFrom(this.#fooService.fetchB());
-  FooStore.disableLoading();
+  this.#store.disableLoading();
 }
 ```
 
