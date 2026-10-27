@@ -87,3 +87,38 @@ describe('TokenState.isExpired', () => {
         expect(store.accessToken()).toBeNull();
     });
 });
+
+describe('TokenState.isExpired（時間の経過）', () => {
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('同じトークンでも、時計が進めば読むたびに false から true に変わる', () => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+        const expiresAt = getUnixTime(new Date('2026-01-01T00:10:00Z'));
+        TestBed.configureTestingModule({
+            providers: [
+                {
+                    provide: AuthService,
+                    useValue: {
+                        getToken: () =>
+                            of({
+                                accessToken: 'token',
+                                tokenType: 'Bearer',
+                                expiresAt,
+                            }),
+                    },
+                },
+            ],
+        });
+        const store = TestBed.inject(TokenState);
+        store.fetch().subscribe();
+
+        expect(store.isExpired()).toBe(false);
+
+        jest.setSystemTime(new Date('2026-01-01T00:09:30Z'));
+
+        expect(store.isExpired()).toBe(true);
+    });
+});

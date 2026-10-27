@@ -1,7 +1,6 @@
 import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { enableElfProdMode } from '@ngneat/elf';
-import { devTools } from '@ngneat/elf-devtools';
 import localForage from 'localforage';
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
@@ -17,8 +16,6 @@ localForage.config({
 if (environment.production) {
     enableProdMode();
     enableElfProdMode();
-} else {
-    devTools();
 }
 
 gtag('js', new Date());

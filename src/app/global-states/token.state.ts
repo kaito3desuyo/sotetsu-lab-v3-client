@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import {
     patchState,
     signalStore,
-    withComputed,
     withMethods,
     withState,
 } from '@ngrx/signals';
@@ -24,16 +23,19 @@ const EMPTY_TOKEN: State = {
 export const TokenState = signalStore(
     { providedIn: 'root' },
     withState<State>(EMPTY_TOKEN),
-    withComputed(({ expiresAt }) => ({
-        isExpired: () => {
-            const at = expiresAt();
-            return !!at && getUnixTime(addMinutes(new Date(), 1)) > at;
-        },
-    })),
     withMethods((store) => {
         const authService = inject(AuthService);
 
         return {
+            /**
+             * 期限が切れる 1 分前から true。現在時刻に依るので computed にせず、呼ぶたびに読み直す
+             * （computed だと expiresAt が変わるまで最初の値が残る）。
+             */
+            isExpired(): boolean {
+                const at = store.expiresAt();
+                return !!at && getUnixTime(addMinutes(new Date(), 1)) > at;
+            },
+
             /**
              * 取れなければ（backend の 503 など）トークン無しにして止めない。起動時に投げると画面ごと出なくなる。
              * API はトークン無しを 401 にするので、interceptor がそこで 1 回取り直す。

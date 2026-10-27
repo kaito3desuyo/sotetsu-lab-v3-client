@@ -13,7 +13,6 @@ describe('FeatureFlagState.fetch', () => {
             providers: [{ provide: FeatureFlagService, useValue: { findAll } }],
         });
         store = TestBed.inject(FeatureFlagState);
-        store.reset();
     });
 
     it('registered_only_posting が true なら registeredOnlyPosting が true', async () => {

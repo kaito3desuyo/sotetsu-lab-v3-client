@@ -22,7 +22,6 @@ describe('UserState.fetch', () => {
             providers: [{ provide: UserService, useValue: { getProfile } }],
         });
         store = TestBed.inject(UserState);
-        store.reset();
     });
 
     it('ユーザーが来たら状態に入れる', () => {
@@ -85,7 +84,6 @@ describe('UserState.canEditTimetable', () => {
             providers: [{ provide: UserService, useValue: { getProfile } }],
         });
         store = TestBed.inject(UserState);
-        store.reset();
     });
 
     const load = (role: string | null) => {
