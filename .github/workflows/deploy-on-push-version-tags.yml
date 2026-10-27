@@ -4,6 +4,21 @@ on:
     tags:
       - v*.*.*
   workflow_dispatch:
+    inputs:
+      stage:
+        description: デプロイ先の stage
+        type: choice
+        options:
+          - prod
+          - stg
+        default: prod
+      ssr:
+        description: SSR の入り切り（on は Lambda で描く・off は CSR のシェルを返す）
+        type: choice
+        options:
+          - 'on'
+          - 'off'
+        default: 'on'
 
 jobs:
   deploy:
@@ -39,18 +54,26 @@ jobs:
           aws-region: ap-northeast-1
 
       - name: Deploy AWS resources
-        run: npx osls deploy
+        # タグの push では inputs が空なので prod・on になる。
+        env:
+          STAGE: ${{ inputs.stage || 'prod' }}
+          SSR: ${{ inputs.ssr || 'on' }}
+        run: npx osls deploy --stage "$STAGE" --param="ssr=$SSR"
 
       - name: Deploy and create invalidation
-        # 名前にハッシュの付くファイルだけ 1 年置き、index.html・ngsw*.json・assets/ などは毎回確かめさせる。
-        # 全部 1 年にすると、Service Worker の無いブラウザが古い index.html を使い続ける。
+        # 名前にハッシュの付くファイルだけ 1 年置き、index.csr.html・ngsw*.json・assets/ などは毎回確かめさせる。
+        # 全部 1 年にすると、Service Worker の無いブラウザが古い index.csr.html を使い続ける。
+        # ハッシュ付きの 1 回目は --delete しない（入れ替え中も、開いたままのタブが古いハッシュのファイルを読めるように）。
+        # 2 回目は除外したファイルを消さないので、古いハッシュのファイルは残る。
+        env:
+          STAGE: ${{ inputs.stage || 'prod' }}
         run: |
           output() {
-            aws cloudformation describe-stacks --stack-name sotetsu-lab-v3-prod-client-cfstack \
+            aws cloudformation describe-stacks --stack-name sotetsu-lab-v3-$STAGE-client-cfstack \
               --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text
           }
           deploy() {
-            aws s3 sync ./dist/build-by-ci/browser "s3://$1" --delete --cache-control "public, max-age=31536000, immutable" \
+            aws s3 sync ./dist/build-by-ci/browser "s3://$1" --cache-control "public, max-age=31536000, immutable" \
               --exclude "*" --include "chunk-*.js" --include "main-*.js" --include "polyfills-*.js" --include "styles-*.css" --include "media/*"
             aws s3 sync ./dist/build-by-ci/browser "s3://$1" --delete --cache-control "no-cache" \
               --exclude "chunk-*.js" --exclude "main-*.js" --exclude "polyfills-*.js" --exclude "styles-*.css" --exclude "media/*"
