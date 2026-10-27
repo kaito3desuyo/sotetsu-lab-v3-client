@@ -10,28 +10,27 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import {
-    Observable,
-    Subject,
-    firstValueFrom,
-    of,
-    switchMap,
-    throwError,
-    timer,
-} from 'rxjs';
+import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
 
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableComponent } from './operation-table.component';
 import { OperationTableService } from './services/operation-table.service';
-import {
-    OperationTableStore,
-    pickOperationTableSettings,
-} from './stores/operation-table.store';
+import { OperationTableStore } from './stores/operation-table.store';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 describe('OperationTableComponent', () => {
     let component: OperationTableComponent;
@@ -43,6 +42,7 @@ describe('OperationTableComponent', () => {
             imports: [OperationTableComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 {
                     provide: OperationTableService,
                     useValue: {
@@ -70,12 +70,6 @@ describe('OperationTableComponent', () => {
         setTodaysCalendars(['todays-calendar-id']);
 
         router = TestBed.inject(Router);
-    });
-
-    afterEach(() => {
-        OperationTableStore.setCalendarId(null);
-        OperationTableStore.setSelectedGroupNames([]);
-        OperationTableStore.resetLoading();
     });
 
     const createComponent = () => {
@@ -161,41 +155,34 @@ describe('OperationTableComponent', () => {
         jest.spyOn(service, 'fetchOperationTrips').mockReturnValue(
             throwError(() => new Error('offline')),
         );
-        const loading: boolean[] = [];
-        const subscription = OperationTableStore.isLoading$.subscribe((v) =>
-            loading.push(v),
-        );
 
         await expect(component.fetchData()).rejects.toThrow('offline');
 
-        expect(loading[loading.length - 1]).toBe(false);
-        subscription.unsubscribe();
+        expect(TestBed.inject(OperationTableStore).isLoading()).toBe(false);
     });
 
     describe('isEmpty: 運用が 0 件のときの案内', () => {
         beforeEach(() => {
             createComponent();
-            OperationTableStore.setCalendar({ calendarId: 'c1' } as never);
-            OperationTableStore.setOperationTrips([]);
-        });
-
-        afterEach(() => {
-            OperationTableStore.setCalendar(null);
-        });
-
-        afterEach(() => {
-            OperationTableStore.setHasFetchedOperationTrips(false);
+            TestBed.inject(OperationTableStore).setCalendar({
+                calendarId: 'c1',
+            } as never);
+            TestBed.inject(OperationTableStore).setOperationTrips([]);
         });
 
         it('取得中は出さない（届く前に「登録されていません」と見せない）', () => {
-            OperationTableStore.enableLoading();
-            OperationTableStore.setHasFetchedOperationTrips(false);
+            TestBed.inject(OperationTableStore).enableLoading();
+            TestBed.inject(OperationTableStore).setHasFetchedOperationTrips(
+                false,
+            );
 
             expect(component.isEmpty()).toBe(false);
         });
 
         it('取得が終わって 0 件なら出す', () => {
-            OperationTableStore.setHasFetchedOperationTrips(true);
+            TestBed.inject(OperationTableStore).setHasFetchedOperationTrips(
+                true,
+            );
 
             expect(component.isEmpty()).toBe(true);
         });
@@ -233,11 +220,7 @@ describe('OperationTableComponent', () => {
 
             await expect(component.fetchData()).resolves.toBeUndefined();
 
-            let loading = true;
-            OperationTableStore.isLoading$
-                .subscribe((v) => (loading = v))
-                .unsubscribe();
-            expect(loading).toBe(false);
+            expect(TestBed.inject(OperationTableStore).isLoading()).toBe(false);
         });
 
         it('種別の取得が失敗したら、これまでどおり fetchData は失敗する', async () => {
@@ -272,12 +255,12 @@ describe('OperationTableComponent', () => {
 
         const heightWith = (links: object[]) => {
             createComponent();
-            OperationTableStore.setItineraryLinks(links as never);
+            TestBed.inject(OperationTableStore).setItineraryLinks(
+                links as never,
+            );
             fixture.detectChanges();
             return component.placeholderHeight(operationTrip);
         };
-
-        afterEach(() => OperationTableStore.setItineraryLinks([]));
 
         it('つながりが無ければ増えない', () => {
             expect(heightWith([])).toBe(base);
@@ -330,7 +313,7 @@ describe('OperationTableComponent', () => {
     });
 
     it('isCardVisible: 選択した群の運用だけを出す', () => {
-        OperationTableStore.setSelectedGroupNames(['7群']);
+        TestBed.inject(OperationTableStore).setSelectedGroupNames(['7群']);
         createComponent();
 
         expect(component.isCardVisible('79')).toBe(true);
@@ -352,6 +335,7 @@ describe('OperationTableComponent の読み込み中', () => {
             imports: [OperationTableComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 {
                     provide: ActivatedRoute,
                     useValue: {
@@ -386,10 +370,6 @@ describe('OperationTableComponent の読み込み中', () => {
 
     afterEach(() => {
         fixture.destroy();
-        OperationTableStore.setOperationTrips([]);
-        OperationTableStore.setCalendar(null as never);
-        OperationTableStore.setHasFetchedOperationTrips(false);
-        OperationTableStore.resetLoading();
     });
 
     const finishFetch = async () => {
@@ -401,7 +381,9 @@ describe('OperationTableComponent の読み込み中', () => {
 
     it('取り終わるまでは骨組みを出し、空表示もカードも出さない', () => {
         fixture = TestBed.createComponent(OperationTableComponent);
-        OperationTableStore.setCalendar({ calendarId: 'cal-1' } as never);
+        TestBed.inject(OperationTableStore).setCalendar({
+            calendarId: 'cal-1',
+        } as never);
         fixture.detectChanges();
 
         expect(
@@ -423,7 +405,9 @@ describe('OperationTableComponent の読み込み中', () => {
     it('取り終えて 0 件なら空表示を出す', async () => {
         fixture = TestBed.createComponent(OperationTableComponent);
         fixture.detectChanges();
-        OperationTableStore.setCalendar({ calendarId: 'cal-1' } as never);
+        TestBed.inject(OperationTableStore).setCalendar({
+            calendarId: 'cal-1',
+        } as never);
 
         await finishFetch();
 
@@ -444,7 +428,7 @@ describe('OperationTableComponent の読み込み中', () => {
                 },
             ],
         } as unknown as OperationTripsDto;
-        OperationTableStore.setOperationTrips([operationTrip]);
+        TestBed.inject(OperationTableStore).setOperationTrips([operationTrip]);
         fixture = TestBed.createComponent(OperationTableComponent);
         fixture.detectChanges();
         await finishFetch();
@@ -504,7 +488,7 @@ describe('OperationTableComponent の読み込み中', () => {
     });
 
     it('取り直すときは骨組みに戻す（保存した古いフラグが残っていても）', () => {
-        OperationTableStore.setHasFetchedOperationTrips(true);
+        TestBed.inject(OperationTableStore).setHasFetchedOperationTrips(true);
 
         fixture = TestBed.createComponent(OperationTableComponent);
         fixture.detectChanges();
@@ -548,6 +532,7 @@ describe('OperationTableComponent のサーバー', () => {
             imports: [OperationTableComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 { provide: PLATFORM_ID, useValue: 'server' },
                 {
                     provide: ActivatedRoute,
@@ -580,8 +565,6 @@ describe('OperationTableComponent のサーバー', () => {
 
     afterEach(() => {
         jest.clearAllMocks();
-        OperationTableStore.setCalendarId(null);
-        OperationTableStore.resetLoading();
     });
 
     it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
@@ -655,6 +638,7 @@ describe('OperationTableComponent の圏外の保存', () => {
             imports: [OperationTableComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 {
                     provide: ActivatedRoute,
                     useValue: {
@@ -698,11 +682,11 @@ describe('OperationTableComponent の圏外の保存', () => {
 
     // 取得は成功した形のストア（サービスの差し替えはストアへ書かないので、先に入れておく）
     const fillStore = () => {
-        OperationTableStore.setCalendar(calendar);
-        OperationTableStore.setOperationTrips(operationTrips);
-        OperationTableStore.setItineraryLinks(itineraryLinks);
-        OperationTableStore.setStations(stations);
-        OperationTableStore.setTripClasses(tripClasses);
+        TestBed.inject(OperationTableStore).setCalendar(calendar);
+        TestBed.inject(OperationTableStore).setOperationTrips(operationTrips);
+        TestBed.inject(OperationTableStore).setItineraryLinks(itineraryLinks);
+        TestBed.inject(OperationTableStore).setStations(stations);
+        TestBed.inject(OperationTableStore).setTripClasses(tripClasses);
     };
 
     afterEach(() => {
@@ -710,15 +694,6 @@ describe('OperationTableComponent の圏外の保存', () => {
         fixture?.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        OperationTableStore.setCalendar(null as never);
-        OperationTableStore.setOperationTrips([]);
-        OperationTableStore.setItineraryLinks([]);
-        OperationTableStore.setStations([]);
-        OperationTableStore.setTripClasses([]);
-        OperationTableStore.setSelectedGroupNames([]);
-        OperationTableStore.setCalendarId(null);
-        OperationTableStore.setHasFetchedOperationTrips(false);
-        OperationTableStore.resetLoading();
     });
 
     it('成功したら条件と中身を保存する', async () => {
@@ -789,19 +764,12 @@ describe('OperationTableComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(await firstValueFrom(OperationTableStore.calendar$)).toEqual(
-            calendar,
-        );
-        expect(OperationTableStore.operations).toEqual(operationTrips);
-        expect(
-            await firstValueFrom(OperationTableStore.itineraryLinks$),
-        ).toEqual(itineraryLinks);
-        expect(await firstValueFrom(OperationTableStore.stations$)).toEqual(
-            stations,
-        );
-        expect(await firstValueFrom(OperationTableStore.tripClasses$)).toEqual(
-            tripClasses,
-        );
+        const store = TestBed.inject(OperationTableStore);
+        expect(store.calendar()).toEqual(calendar);
+        expect(store.operationTrips()).toEqual(operationTrips);
+        expect(store.itineraryLinks()).toEqual(itineraryLinks);
+        expect(store.stations()).toEqual(stations);
+        expect(store.tripClasses()).toEqual(tripClasses);
         expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 
@@ -861,29 +829,5 @@ describe('OperationTableComponent の圏外の保存', () => {
 
         expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
-    });
-});
-
-describe('pickOperationTableSettings', () => {
-    it('丸ごと保存の古い値を読み込んでも、運用群以外はストアに入らない', () => {
-        const picked = pickOperationTableSettings({
-            selectedGroupNames: ['1群'],
-            operationTrips: [{ operation: { operationId: 'old' } }],
-            calendar: { calendarId: 'old' },
-            hasFetchedOperationTrips: true,
-            loadingQueue: [true],
-        } as never);
-
-        expect(picked).toEqual({
-            calendarId: null,
-            calendar: null,
-            operationTrips: [],
-            itineraryLinks: [],
-            stations: [],
-            tripClasses: [],
-            selectedGroupNames: ['1群'],
-            hasFetchedOperationTrips: false,
-            loadingQueue: [],
-        });
     });
 });

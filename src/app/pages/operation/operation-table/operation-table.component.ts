@@ -8,11 +8,10 @@ import {
     PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -29,10 +28,7 @@ import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.compo
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
 import { OperationTableService } from './services/operation-table.service';
-import {
-    OperationTableSnapshot,
-    OperationTableStore,
-} from './stores/operation-table.store';
+import { OperationTableStore } from './stores/operation-table.store';
 import {
     deriveGroupName,
     matchesGroupFilter,
@@ -41,18 +37,8 @@ import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-i
 import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { formatOperationTableSummary } from './utils/operation-table-summary.util';
 
-// チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
-OperationTableStore.resetLoading();
-
 /** 絞り込み無し。fallback を毎回作らないよう 1 つに */
 const NO_GROUP_NAMES: string[] = [];
-
-// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
-// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
-let fetchSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'OperationTable';
 
 @Component({
     selector: 'app-operation-table',
@@ -72,7 +58,7 @@ export class OperationTableComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(OperationTableStore);
     readonly #operationTableService = inject(OperationTableService);
     readonly #calendarListState = inject(CalendarListState);
     readonly #todaysCalendarListState = inject(TodaysCalendarListState);
@@ -80,34 +66,21 @@ export class OperationTableComponent {
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
 
-    readonly isLoading = toSignal(OperationTableStore.isLoading$);
-    readonly calendarId = toSignal(OperationTableStore.calendarId$);
-    readonly calendar = toSignal(OperationTableStore.calendar$);
+    readonly isLoading = this.#store.isLoading;
+    readonly calendarId = this.#store.calendarId;
+    readonly calendar = this.#store.calendar;
     readonly calendars = this.#calendarListState.calendars;
-    readonly operationTrips = toSignal(OperationTableStore.operationTrips$, {
-        initialValue: [],
-    });
-    readonly itineraryLinks = toSignal(OperationTableStore.itineraryLinks$, {
-        initialValue: [],
-    });
-    readonly stations = toSignal(OperationTableStore.stations$, {
-        initialValue: [],
-    });
-    readonly tripClasses = toSignal(OperationTableStore.tripClasses$, {
-        initialValue: [],
-    });
+    readonly operationTrips = this.#store.sortedOperationTrips;
+    readonly itineraryLinks = this.#store.itineraryLinks;
+    readonly stations = this.#store.stations;
+    readonly tripClasses = this.#store.tripClasses;
     /** 端末に保存した運用群の絞り込み。サーバーは保存を読めないので、最初の描画は絞らない形（spec 13.2） */
     readonly selectedGroupNames = afterFirstRender(
-        toSignal(OperationTableStore.selectedGroupNames$, {
-            initialValue: [],
-        }),
+        this.#store.normalizedSelectedGroupNames,
         NO_GROUP_NAMES,
     );
 
-    readonly hasFetchedOperationTrips = toSignal(
-        OperationTableStore.hasFetchedOperationTrips$,
-        { initialValue: false },
-    );
+    readonly hasFetchedOperationTrips = this.#store.hasFetchedOperationTrips;
     /** 骨組みのカードの数。1440px で 4 面 × 2 段あれば画面 1 枚分を埋める */
     readonly skeletonCards = Array.from({ length: 8 }, (_, i) => i);
     /** 骨組みのカード 1 枚の列車の行の数 */
@@ -140,7 +113,7 @@ export class OperationTableComponent {
     });
 
     onClearFilter(): void {
-        OperationTableStore.setSelectedGroupNames([]);
+        this.#store.setSelectedGroupNames([]);
     }
 
     /** 題名。ダイヤは取ったデータから作る */
@@ -182,17 +155,17 @@ export class OperationTableComponent {
                         calendarCacheTag(calendarId),
                     ]);
                 }
-                OperationTableStore.setCalendarId(calendarId ?? null);
+                this.#store.setCalendarId(calendarId ?? null);
 
                 this.fetchData();
             });
     }
 
     async fetchData(): Promise<void> {
-        const seq = ++fetchSeq;
-        const conditions = { calendarId: OperationTableStore.calendarId };
-        OperationTableStore.enableLoading();
-        OperationTableStore.setHasFetchedOperationTrips(false);
+        const seq = this.#store.nextFetchSeq();
+        const conditions = { calendarId: this.#store.calendarId() };
+        this.#store.enableLoading();
+        this.#store.setHasFetchedOperationTrips(false);
 
         // 5 つは互いに依存しないので並行に取る。カードは全部そろってから 1 回だけ描く
         // （順に取ると、届くたびに 104 枚・2,500 行余りを描き直していた）
@@ -221,30 +194,24 @@ export class OperationTableComponent {
         await linksPromise;
         if (failure) {
             // 古い取得の失敗では戻さない。戻す処理が壊れていても、読み込み中は必ず解く
-            if (seq === fetchSeq) {
+            if (this.#store.isLatestFetch(seq)) {
                 try {
-                    await this.#offlineSnapshots.restore({
-                        key: OFFLINE_SNAPSHOT_KEY,
+                    await this.#store.restoreOfflineSnapshot(
+                        'main',
                         conditions,
-                        apply: (data: OperationTableSnapshot) =>
-                            OperationTableStore.restoreSnapshot(data),
-                    });
+                    );
                 } catch {
                     // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                 }
             }
-        } else if (hasFetchedItineraryLinks && seq === fetchSeq) {
+        } else if (hasFetchedItineraryLinks && this.#store.isLatestFetch(seq)) {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions,
-                data: OperationTableStore.snapshot(),
-            });
+            void this.#store.saveOfflineSnapshot('main', conditions);
         }
-        OperationTableStore.disableLoading();
+        this.#store.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-        if (seq === fetchSeq) {
-            OperationTableStore.setHasFetchedOperationTrips(true);
+        if (this.#store.isLatestFetch(seq)) {
+            this.#store.setHasFetchedOperationTrips(true);
         }
 
         if (failure) {

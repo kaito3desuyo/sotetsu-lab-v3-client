@@ -12,13 +12,14 @@ import { OperationTableStore } from '../stores/operation-table.store';
 
 @Injectable()
 export class OperationTableService {
+    readonly #store = inject(OperationTableStore);
     readonly #calendarService = inject(CalendarService);
     readonly #operationService = inject(OperationService);
     readonly #stationService = inject(StationService);
     readonly #tripClassService = inject(TripClassService);
 
     fetchCalendar(): Observable<void> {
-        const calendarId = OperationTableStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         // calendar 未選択（初期状態など）では /v3/calendars/null を叩かない。
         if (!calendarId) {
@@ -27,14 +28,14 @@ export class OperationTableService {
 
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((calendar: CalendarDetailsDto) => {
-                OperationTableStore.setCalendar(calendar);
+                this.#store.setCalendar(calendar);
             }),
             map(() => undefined),
         );
     }
 
     fetchOperationTrips(): Observable<void> {
-        const calendarId = OperationTableStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         // calendar 未選択では /v3/operations/calendar/null/trips を叩かない。
         if (!calendarId) {
@@ -50,14 +51,14 @@ export class OperationTableService {
                 ),
             ),
             tap((operationTrips) => {
-                OperationTableStore.setOperationTrips(operationTrips);
+                this.#store.setOperationTrips(operationTrips);
             }),
             map(() => undefined),
         );
     }
 
     fetchItineraryLinks(): Observable<void> {
-        const calendarId = OperationTableStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
             return of(undefined);
@@ -67,7 +68,7 @@ export class OperationTableService {
             .findManyItineraryLinks({ calendarId })
             .pipe(
                 tap((links) => {
-                    OperationTableStore.setItineraryLinks(links);
+                    this.#store.setItineraryLinks(links);
                 }),
                 map(() => undefined),
             );
@@ -76,7 +77,7 @@ export class OperationTableService {
     fetchStations(): Observable<void> {
         return this.#stationService.findMany({}).pipe(
             tap((stations: StationDetailsDto[]) => {
-                OperationTableStore.setStations(stations);
+                this.#store.setStations(stations);
             }),
             map(() => undefined),
         );
@@ -85,7 +86,7 @@ export class OperationTableService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((tripClasses: TripClassDetailsDto[]) => {
-                OperationTableStore.setTripClasses(tripClasses);
+                this.#store.setTripClasses(tripClasses);
             }),
             map(() => undefined),
         );
