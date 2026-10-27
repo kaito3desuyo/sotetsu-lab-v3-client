@@ -8,13 +8,12 @@ import {
     PLATFORM_ID,
     signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -53,8 +52,6 @@ import { TrainDiagramSelectedTripInfo } from './interfaces/train-diagram-selecte
 import { TrainDiagramService } from './services/train-diagram.service';
 import {
     DiagramDirectionFilter,
-    TrainDiagramSightingsSnapshot,
-    TrainDiagramSnapshot,
     TrainDiagramStore,
 } from './stores/train-diagram.store';
 import {
@@ -92,19 +89,6 @@ import { TurnbackLink } from './utils/layout-turnback-links.util';
 import { mergeSameDirectionContinuations } from './utils/merge-same-direction-continuations.util';
 import { formatTrainDiagramSummary } from './utils/train-diagram-summary.util';
 import { buildRouteOptions } from './utils/build-route-options.util';
-
-// チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
-TrainDiagramStore.resetLoading();
-
-// 列車を取り直す取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
-// 後から終わって新しい骨組みを消さないよう、インスタンスでなくファイル単位で数える
-let fetchSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'TrainDiagram';
-
-/** 圏外のために保存する目撃のキー（目撃は Service Worker に残らないので別に保存する） */
-const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TrainDiagramSightings';
 
 const BODY_TOP_PADDING = 12;
 const BODY_BOTTOM_PADDING = 24;
@@ -155,37 +139,26 @@ export class TrainDiagramComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(TrainDiagramStore);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
     readonly #calendarListState = inject(CalendarListState);
 
-    readonly isLoading = toSignal(TrainDiagramStore.isLoading$);
-    readonly hasFetchedTrainDiagram = toSignal(
-        TrainDiagramStore.hasFetchedTrainDiagram$,
-        { initialValue: false },
-    );
+    readonly isLoading = this.#store.isLoading;
+    readonly hasFetchedTrainDiagram = this.#store.hasFetchedTrainDiagram;
     /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
     readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
-    readonly calendarId = toSignal(TrainDiagramStore.calendarId$, {
-        initialValue: null,
-    });
-    readonly selectedRouteIds = toSignal(TrainDiagramStore.selectedRouteIds$, {
-        initialValue: [],
-    });
-    readonly pxPerMinute = toSignal(TrainDiagramStore.pxPerMinute$, {
-        initialValue: DEFAULT_PX_PER_MINUTE,
-    });
+    readonly calendarId = this.#store.calendarId;
+    readonly selectedRouteIds = this.#store.selectedRouteIds;
+    readonly pxPerMinute = this.#store.pxPerMinute;
     /**
      * Task 13 フィックス: 縦の縮尺の手動値（Ctrl+ホイール・ピンチで明示的に入れた値）。
      * null = 自動。実際に使う縮尺は #effectiveAxisPxPerMinute（自動時は観測のある
      * 駅間の最小所要分から決める）。
      */
-    readonly axisPxPerMinute = toSignal(TrainDiagramStore.axisPxPerMinute$, {
-        initialValue: null,
-    });
+    readonly axisPxPerMinute = this.#store.axisPxPerMinute;
     readonly jumpRequest = signal<DiagramJumpRequest | null>(null);
     #jumpSeq = 0;
 
@@ -202,16 +175,9 @@ export class TrainDiagramComponent {
     /** 1 秒ごとの時計（今日のダイヤのときの現在時刻の線と「今」ボタン用） */
     readonly #now = signal(new Date());
 
-    readonly directionFilter = toSignal(TrainDiagramStore.directionFilter$, {
-        initialValue: 'both' as DiagramDirectionFilter,
-    });
-    readonly stationAxis = toSignal(TrainDiagramStore.stationAxis$, {
-        initialValue: null,
-    });
-    readonly tripBlocksByDirection = toSignal(
-        TrainDiagramStore.tripBlocksByDirection$,
-        { initialValue: {} },
-    );
+    readonly directionFilter = this.#store.directionFilter;
+    readonly stationAxis = this.#store.stationAxis;
+    readonly tripBlocksByDirection = this.#store.tripBlocksByDirection;
     /**
      * 方向フィルタ（上り/下り/両方）で絞り込んだ tripBlocksByDirection。chart には
      * この絞り込み済み Record を渡すことで chart 側を変更せずに描画列車を絞る。
@@ -222,9 +188,7 @@ export class TrainDiagramComponent {
             this.directionFilter(),
         ),
     );
-    readonly selectedTripId = toSignal(TrainDiagramStore.selectedTripId$, {
-        initialValue: null,
-    });
+    readonly selectedTripId = this.#store.selectedTripId;
     /**
      * 選んだ列車が属するつながり（種別変更・列番変更で継走する列車）の全 tripId。
      * chart はこの集合の線をまとめて強調する。情報カードは selectedTripId（押した列車）のまま。
@@ -246,10 +210,8 @@ export class TrainDiagramComponent {
             .flat()
             .some((block) => (block.trips?.length ?? 0) > 0);
     });
-    readonly operationSightingTimeCrossSections = toSignal(
-        TrainDiagramStore.operationSightingTimeCrossSections$,
-        { initialValue: {} },
-    );
+    readonly operationSightingTimeCrossSections =
+        this.#store.operationSightingTimeCrossSections;
 
     readonly todaysCalendarIds =
         this.#todaysCalendarListState.todaysCalendarIds;
@@ -276,7 +238,7 @@ export class TrainDiagramComponent {
 
     /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
     readonly controlCollapsed = afterFirstRender(
-        toSignal(TrainDiagramStore.controlCollapsed$, { initialValue: false }),
+        this.#store.controlCollapsed,
         false,
     );
 
@@ -693,9 +655,7 @@ export class TrainDiagramComponent {
      * この線の y を新しい行の y へ移し替えるだけで DP は再計算しない
      * （#turnbackClearance 参照）。外部へは公開せず、必ず #turnbackClearance 経由で使う。
      */
-    readonly #itineraryLinks = toSignal(TrainDiagramStore.itineraryLinks$, {
-        initialValue: [],
-    });
+    readonly #itineraryLinks = this.#store.itineraryLinks;
 
     readonly #rawDiagramLines = computed<TripDiagramLine[]>(() => {
         const axis = this.#pixelAxis();
@@ -891,14 +851,14 @@ export class TrainDiagramComponent {
         runIntervalInBrowser(1000, () => this.#now.set(new Date()));
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
-        TrainDiagramStore.setHasFetchedTrainDiagram(false);
+        this.#store.setHasFetchedTrainDiagram(false);
 
         // 今の値をその場で入れ、取り直されたとき（effect）に入れ直す
-        TrainDiagramStore.setRouteStations(
+        this.#store.setRouteStations(
             this.#routeStationListState.routeStations(),
         );
         effect(() => {
-            TrainDiagramStore.setRouteStations(
+            this.#store.setRouteStations(
                 this.#routeStationListState.routeStations(),
             );
         });
@@ -984,18 +944,17 @@ export class TrainDiagramComponent {
                 }
                 this.#lastParamsKey = paramsKey;
 
-                const calendarChanged =
-                    TrainDiagramStore.calendarId !== calendarId;
+                const calendarChanged = this.#store.calendarId() !== calendarId;
 
                 if (calendarId) {
                     this.#ssrResponse.addCacheTags([
                         calendarCacheTag(calendarId),
                     ]);
                 }
-                TrainDiagramStore.setCalendarId(calendarId ?? null);
-                TrainDiagramStore.setSelectedRouteIds(resolvedRouteIds);
-                TrainDiagramStore.setDirectionFilter(directionFilter);
-                TrainDiagramStore.setSelectedTripId(null);
+                this.#store.setCalendarId(calendarId ?? null);
+                this.#store.setSelectedRouteIds(resolvedRouteIds);
+                this.#store.setDirectionFilter(directionFilter);
+                this.#store.setSelectedTripId(null);
 
                 if (!this.#firstLoadDone()) {
                     // M2: 正規化を素通りした（=parseTimeParam が有効値を返す）はずの経路だが、
@@ -1043,14 +1002,16 @@ export class TrainDiagramComponent {
 
     async fetchData(flags: { refetchTripBlocks: boolean }): Promise<void> {
         // 路線・方向だけの取得は世代を進めず、骨組みにも触らない（図を出したまま）
-        const seq = flags.refetchTripBlocks ? ++fetchSeq : fetchSeq;
+        const seq = flags.refetchTripBlocks
+            ? this.#store.nextFetchSeq()
+            : this.#store.currentFetchSeq();
         const conditions = {
-            calendarId: TrainDiagramStore.calendarId,
-            routeIds: [...TrainDiagramStore.selectedRouteIds].sort().join(','),
+            calendarId: this.#store.calendarId(),
+            routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
         };
-        TrainDiagramStore.enableLoading();
+        this.#store.enableLoading();
         if (flags.refetchTripBlocks) {
-            TrainDiagramStore.setHasFetchedTrainDiagram(false);
+            this.#store.setHasFetchedTrainDiagram(false);
         }
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
@@ -1107,14 +1068,12 @@ export class TrainDiagramComponent {
                 // 通信できないときは、同じ条件で保存した中身を出す。列車を取り直す取得だけが対象で、
                 // 古い取得の失敗では戻さない。戻す処理が壊れていても、取得の失敗をそのまま投げる
                 // （読み込み中は finally で解く）。戻したときは初回扱いのまま（次に通信できたら取り直す）
-                if (flags.refetchTripBlocks && seq === fetchSeq) {
+                if (flags.refetchTripBlocks && this.#store.isLatestFetch(seq)) {
                     try {
-                        await this.#offlineSnapshots.restore({
-                            key: OFFLINE_SNAPSHOT_KEY,
+                        await this.#store.restoreOfflineSnapshot(
+                            'main',
                             conditions,
-                            apply: (data: TrainDiagramSnapshot) =>
-                                TrainDiagramStore.restoreSnapshot(data),
-                        });
+                        );
                     } catch {
                         // 保存した中身が壊れていても、取得の失敗を優先する
                     }
@@ -1125,20 +1084,16 @@ export class TrainDiagramComponent {
             if (
                 flags.refetchTripBlocks &&
                 hasFetchedItineraryLinks &&
-                seq === fetchSeq
+                this.#store.isLatestFetch(seq)
             ) {
-                void this.#offlineSnapshots.save({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions,
-                    data: TrainDiagramStore.snapshot(),
-                });
+                void this.#store.saveOfflineSnapshot('main', conditions);
             }
             this.#firstLoadDone.set(true);
         } finally {
-            TrainDiagramStore.disableLoading();
+            this.#store.disableLoading();
             // 列車を取り直した取得のうち、いちばん新しいものだけが骨組みを消す
-            if (flags.refetchTripBlocks && seq === fetchSeq) {
-                TrainDiagramStore.setHasFetchedTrainDiagram(true);
+            if (flags.refetchTripBlocks && this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedTrainDiagram(true);
             }
         }
     }
@@ -1156,7 +1111,7 @@ export class TrainDiagramComponent {
     }
 
     onControlCollapsedChange(collapsed: boolean): void {
-        TrainDiagramStore.setControlCollapsed(collapsed);
+        this.#store.setControlCollapsed(collapsed);
     }
 
     /**
@@ -1171,11 +1126,11 @@ export class TrainDiagramComponent {
     }
 
     onPxPerMinuteChange(value: number): void {
-        TrainDiagramStore.setPxPerMinute(value);
+        this.#store.setPxPerMinute(value);
     }
 
     onAxisPxPerMinuteChange(value: number): void {
-        TrainDiagramStore.setAxisPxPerMinute(value);
+        this.#store.setAxisPxPerMinute(value);
     }
 
     onJumpToHour(hour: number): void {
@@ -1187,9 +1142,7 @@ export class TrainDiagramComponent {
     }
 
     onZoomStep(direction: 1 | -1): void {
-        TrainDiagramStore.setPxPerMinute(
-            nextZoomStep(this.pxPerMinute(), direction),
-        );
+        this.#store.setPxPerMinute(nextZoomStep(this.pxPerMinute(), direction));
     }
 
     /** G12: 空状態の次アクション。方向フィルタ「両方」+ 既定路線に戻して再表示する。 */
@@ -1201,7 +1154,7 @@ export class TrainDiagramComponent {
     }
 
     async onTripSelected(tripId: string | null): Promise<void> {
-        TrainDiagramStore.setSelectedTripId(tripId);
+        this.#store.setSelectedTripId(tripId);
 
         if (!tripId) {
             // 背景クリック等でカードが閉じるときも高さを 0 に戻す（onInfoPanelClosed と同様）。
@@ -1222,10 +1175,8 @@ export class TrainDiagramComponent {
         ) {
             // 目撃は Service Worker に残らないので、列車の保存とは別に、日付つきで保存する
             const conditions = {
-                calendarId: TrainDiagramStore.calendarId,
-                routeIds: [...TrainDiagramStore.selectedRouteIds]
-                    .sort()
-                    .join(','),
+                calendarId: this.#store.calendarId(),
+                routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
                 date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
             };
             try {
@@ -1238,27 +1189,16 @@ export class TrainDiagramComponent {
                 // 通信できないときは、同じ日に保存した目撃を出す（すでに取れている目撃は残す）。
                 // 戻す処理が壊れていても、取得の失敗をそのまま投げる
                 try {
-                    await this.#offlineSnapshots.restore({
-                        key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                    await this.#store.restoreOfflineSnapshot(
+                        'sightings',
                         conditions,
-                        apply: (data: TrainDiagramSightingsSnapshot) =>
-                            TrainDiagramStore.restoreOperationSightingTimeCrossSections(
-                                {
-                                    ...data,
-                                    ...this.operationSightingTimeCrossSections(),
-                                },
-                            ),
-                    });
+                    );
                 } catch {
                     // 保存した中身が壊れていても、取得の失敗を優先する
                 }
                 throw error;
             }
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
-                conditions,
-                data: TrainDiagramStore.snapshotOperationSightingTimeCrossSections(),
-            });
+            void this.#store.saveOfflineSnapshot('sightings', conditions);
         }
     }
 
@@ -1279,7 +1219,7 @@ export class TrainDiagramComponent {
     }
 
     onInfoPanelClosed(): void {
-        TrainDiagramStore.setSelectedTripId(null);
+        this.#store.setSelectedTripId(null);
         this.infoPanelHeight.set(0);
     }
 
@@ -1339,14 +1279,12 @@ export class TrainDiagramComponent {
             params['direction'] ?? null,
         );
         // 同じ路線でも新しい配列を入れると駅軸から下を全部作り直すため、変わったときだけ入れる。
-        if (
-            TrainDiagramStore.selectedRouteIds.join(',') !== routeIds.join(',')
-        ) {
-            TrainDiagramStore.setSelectedRouteIds(routeIds);
+        if (this.#store.selectedRouteIds().join(',') !== routeIds.join(',')) {
+            this.#store.setSelectedRouteIds(routeIds);
         }
-        TrainDiagramStore.setDirectionFilter(directionFilter);
-        TrainDiagramStore.setSelectedTripId(null);
-        this.#lastParamsKey = `${TrainDiagramStore.calendarId}|${routeIds.join(',')}|${directionFilter}`;
+        this.#store.setDirectionFilter(directionFilter);
+        this.#store.setSelectedTripId(null);
+        this.#lastParamsKey = `${this.#store.calendarId()}|${routeIds.join(',')}|${directionFilter}`;
         this.#replaceUrl(params);
     }
 }

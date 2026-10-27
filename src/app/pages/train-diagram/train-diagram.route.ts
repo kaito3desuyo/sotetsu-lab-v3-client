@@ -12,7 +12,7 @@ export const TRAIN_DIAGRAM_ROUTES: Route[] = [
             ),
         providers: [TrainDiagramService],
         resolve: {
-            from: pageResolver(TrainDiagramStore.persistInitialized$),
+            from: pageResolver(TrainDiagramStore),
         },
         data: {
             title: 'ダイヤグラム',
