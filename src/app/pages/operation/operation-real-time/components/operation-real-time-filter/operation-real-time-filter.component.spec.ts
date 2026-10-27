@@ -1,5 +1,6 @@
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
@@ -7,6 +8,15 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { OperationRealTimeFilterComponent } from './operation-real-time-filter.component';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 /**
  * 群チップは API の群定義ではなく**実在する運用番号**から導出されるので、
@@ -18,12 +28,12 @@ const operationOf = (operationNumber: string): OperationDetailsDto =>
         operationNumber,
     }) as OperationDetailsDto;
 
-// ストアはこのファイルの中で共有される。運用・編成をまだ入れていない状態を見るため、先頭に置く
 describe('OperationRealTimeFilterComponent（運用・編成を取る前）', () => {
     it('チップの 2 行とも、チップの形の骨組みを出す（「休」だけを先に出さない）', async () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFilterComponent],
             providers: [
+                deviceStorageStub,
                 {
                     provide: AgencyListState,
                     useValue: { agencies: signal([]) },
@@ -55,19 +65,15 @@ describe('OperationRealTimeFilterComponent', () => {
     let component: OperationRealTimeFilterComponent;
     let fixture: ComponentFixture<OperationRealTimeFilterComponent>;
     let agencies: WritableSignal<AgencyDetailsDto[]>;
+    let store: InstanceType<typeof OperationRealTimeStore>;
 
     beforeEach(async () => {
-        OperationRealTimeStore.setOperations(
-            ['11', '12', '91G', '92G'].map(operationOf),
-        );
-        OperationRealTimeStore.setSelectedAgencyIds([]);
-        OperationRealTimeStore.setSelectedGroupNames([]);
-
         agencies = signal<AgencyDetailsDto[]>([]);
 
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFilterComponent],
             providers: [
+                deviceStorageStub,
                 { provide: AgencyListState, useValue: { agencies } },
                 {
                     provide: RouteStationListState,
@@ -76,16 +82,14 @@ describe('OperationRealTimeFilterComponent', () => {
             ],
         }).compileComponents();
 
+        store = TestBed.inject(OperationRealTimeStore);
+        store.setOperations(['11', '12', '91G', '92G'].map(operationOf));
+        store.setSelectedAgencyIds([]);
+        store.setSelectedGroupNames([]);
+
         fixture = TestBed.createComponent(OperationRealTimeFilterComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationRealTimeStore.setOperations([]);
-        OperationRealTimeStore.setFormations([]);
-        OperationRealTimeStore.setSelectedAgencyIds([]);
-        OperationRealTimeStore.setSelectedGroupNames([]);
     });
 
     it('should create', () => {
@@ -93,7 +97,7 @@ describe('OperationRealTimeFilterComponent', () => {
     });
 
     it('チップの 2 行は、選択肢が空でも 1 行分の高さを取っておく', () => {
-        OperationRealTimeStore.setFormations([]);
+        store.setFormations([]);
         fixture.detectChanges();
 
         const rows: HTMLElement[] = Array.from(
@@ -118,9 +122,7 @@ describe('OperationRealTimeFilterComponent', () => {
     it('群チップは実在する運用番号から導出される（API の群定義に依存しない）', () => {
         // API が群を1つも返さなくても、運用番号があればチップが出る。
         // 旧実装では API の群定義に無い運用は絞り込めなかった（74〜79 / K系 / 8群 等）。
-        OperationRealTimeStore.setOperations(
-            ['79', '86', '01K', '31G', '51K'].map(operationOf),
-        );
+        store.setOperations(['79', '86', '01K', '31G', '51K'].map(operationOf));
         fixture.detectChanges();
 
         // 並びは 記号なし → G → K → 休（docs/design.md 参照）。
@@ -135,7 +137,7 @@ describe('OperationRealTimeFilterComponent', () => {
     });
 
     it('休（100）が運用一覧に居ても「1群」に混入しない', () => {
-        OperationRealTimeStore.setOperations(['11', '100'].map(operationOf));
+        store.setOperations(['11', '100'].map(operationOf));
         fixture.detectChanges();
 
         expect(component.groupOptions().map((o) => o.value)).toEqual([
@@ -146,8 +148,7 @@ describe('OperationRealTimeFilterComponent', () => {
 
     it('onAgencyChange で選択会社をストアへ書き込む', () => {
         component.onAgencyChange(['agency-1']);
-        expect(OperationRealTimeStore.selectedAgencyIds$).toBeDefined();
-        component.selectedAgencyIds();
+        expect(store.selectedAgencyIds()).toEqual(['agency-1']);
         fixture.detectChanges();
         expect(component.selectedAgencyIds()).toEqual(['agency-1']);
     });
@@ -161,6 +162,9 @@ describe('OperationRealTimeFilterComponent', () => {
     it('会社と運用群は別々の app-filter-chips（段を分ける）', () => {
         // 以前は 1 行に混在させ、選択値を onChipsChange で振り分けていた
         // （ユーザー指示 2026-08-22 で段分けに変更）。
+        // 運用・編成を取り終えた後（取る前は骨組みを出す）
+        store.setFormations([]);
+        fixture.detectChanges();
         const rows: HTMLElement[] = Array.from(
             fixture.nativeElement.querySelectorAll('app-filter-chips'),
         );
@@ -181,11 +185,11 @@ describe('OperationRealTimeFilterComponent', () => {
             { agencyId: 'a-tokyu', agencyName: '東急' },
             { agencyId: 'a-seibu', agencyName: '西武' },
         ] as AgencyDetailsDto[]);
-        OperationRealTimeStore.setFormations([
+        store.setFormations([
             { formationId: 'f-1', agencyId: 'a-sotetsu' },
             { formationId: 'f-2', agencyId: 'a-tokyu' },
         ] as FormationDetailsDto[]);
-        OperationRealTimeStore.setSelectedAgencyIds(['a-seibu']);
+        store.setSelectedAgencyIds(['a-seibu']);
         fixture.detectChanges();
 
         expect(component.agencyOptions().map((o) => o.label)).toEqual([

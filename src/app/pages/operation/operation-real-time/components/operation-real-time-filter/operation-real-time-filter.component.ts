@@ -4,7 +4,6 @@ import {
     computed,
     inject,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
@@ -26,7 +25,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
  *
  * 表示フィルタ（非破壊）: 選択状態は OperationRealTimeStore に書き込むのみで
  * データ取得・WebSocket 購読には一切影響しない。永続化は同ストアの
- * elf-persist-state（localforage, key: 'OperationRealTimeStore'）に委譲する。
+ * ストアの withSettingsStorage（localforage, key: 'OperationRealTimeStore'）に委譲する。
  */
 @Component({
     selector: 'app-operation-real-time-filter',
@@ -35,6 +34,7 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
     imports: [FilterChipsComponent, SkeletonChipsComponent],
 })
 export class OperationRealTimeFilterComponent {
+    readonly #store = inject(OperationRealTimeStore);
     readonly #agencyListState = inject(AgencyListState);
     readonly #routeStationListState = inject(RouteStationListState);
 
@@ -46,29 +46,13 @@ export class OperationRealTimeFilterComponent {
      * 実データ 93 運用番号のうち 60 件がどのチップでも絞り込めなかった
      * （2026-08-22 実測）。群名は運用番号から規則で導出する。
      */
-    readonly operations = toSignal(OperationRealTimeStore.operations$, {
-        initialValue: [],
-    });
-    readonly selectedAgencyIds = toSignal(
-        OperationRealTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
-    readonly selectedGroupNames = toSignal(
-        OperationRealTimeStore.selectedGroupNames$,
-        { initialValue: [] },
-    );
+    readonly operations = this.#store.sortedOperations;
+    readonly selectedAgencyIds = this.#store.selectedAgencyIds;
+    readonly selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 
-    readonly formations = toSignal(OperationRealTimeStore.formations$, {
-        initialValue: [],
-    });
-    readonly hasFetchedOperations = toSignal(
-        OperationRealTimeStore.hasFetchedOperations$,
-        { initialValue: false },
-    );
-    readonly hasFetchedFormations = toSignal(
-        OperationRealTimeStore.hasFetchedFormations$,
-        { initialValue: false },
-    );
+    readonly formations = this.#store.sortedFormations;
+    readonly hasFetchedOperations = this.#store.hasFetchedOperations;
+    readonly hasFetchedFormations = this.#store.hasFetchedFormations;
 
     /** 取る前の骨組みのチップの幅（会社名・運用群名の長さをなぞる） */
     readonly agencySkeletonWidths = ['tw-w-14', 'tw-w-24', 'tw-w-14'];
@@ -113,10 +97,10 @@ export class OperationRealTimeFilterComponent {
     );
 
     onAgencyChange(values: FilterChipValue[]): void {
-        OperationRealTimeStore.setSelectedAgencyIds(values as string[]);
+        this.#store.setSelectedAgencyIds(values as string[]);
     }
 
     onGroupChange(values: FilterChipValue[]): void {
-        OperationRealTimeStore.setSelectedGroupNames(values as string[]);
+        this.#store.setSelectedGroupNames(values as string[]);
     }
 }

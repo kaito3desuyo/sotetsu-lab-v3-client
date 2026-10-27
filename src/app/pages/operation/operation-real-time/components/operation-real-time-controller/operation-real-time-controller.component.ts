@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -24,36 +23,30 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 export class OperationRealTimeControllerComponent {
     readonly #operationRealTimeService = inject(OperationRealTimeService);
     readonly #notification = inject(NotificationService);
+    readonly #store = inject(OperationRealTimeStore);
 
     /** 再読み込みボタンの真横に出す最終更新時刻（ユーザー指示 2026-08-22）。 */
-    readonly finalUpdateTime = toSignal(
-        OperationRealTimeStore.finalUpdateTime$,
-    );
+    readonly finalUpdateTime = this.#store.finalUpdateTime;
 
-    readonly isEnableAutoReload = toSignal(
-        OperationRealTimeStore.isEnableAutoReload$,
-    );
-    readonly isVisibleSightingHistories = toSignal(
-        OperationRealTimeStore.isVisibleSightingHistories$,
-    );
-    readonly isVisibleCurrentPosition = toSignal(
-        OperationRealTimeStore.isVisibleCurrentPosition$,
-    );
+    readonly isEnableAutoReload = this.#store.isEnableAutoReload;
+    readonly isVisibleSightingHistories =
+        this.#store.isVisibleSightingHistories;
+    readonly isVisibleCurrentPosition = this.#store.isVisibleCurrentPosition;
 
     toggleAutoReload(isEnable: boolean): void {
-        OperationRealTimeStore.setIsEnableAutoReload(isEnable);
+        this.#store.setIsEnableAutoReload(isEnable);
     }
 
     toggleVisibleSightingHistories(isVisible: boolean): void {
-        OperationRealTimeStore.setIsVisibleSightingHistories(isVisible);
+        this.#store.setIsVisibleSightingHistories(isVisible);
     }
 
     toggleVisibleCurrentPosition(isVisible: boolean): void {
-        OperationRealTimeStore.setIsVisibleCurrentPosition(isVisible);
+        this.#store.setIsVisibleCurrentPosition(isVisible);
     }
 
     async reload(): Promise<void> {
-        OperationRealTimeStore.enableLoading();
+        this.#store.enableLoading();
         try {
             await lastValueFrom(
                 this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
@@ -74,12 +67,12 @@ export class OperationRealTimeControllerComponent {
                     forceReload: true,
                 }),
             );
-            OperationRealTimeStore.setFinalUpdateTime();
+            this.#store.setFinalUpdateTime();
         } catch (error) {
             console.error(error);
             this.#notification.open('データの取得に失敗しました', 'OK');
         } finally {
-            OperationRealTimeStore.disableLoading();
+            this.#store.disableLoading();
         }
     }
 }

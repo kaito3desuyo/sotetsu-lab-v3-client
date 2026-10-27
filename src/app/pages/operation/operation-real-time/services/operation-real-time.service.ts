@@ -29,6 +29,7 @@ const SERVICE_ID = '8d9d2a20-48ad-438b-83a4-ba8727b4708c';
 
 @Injectable()
 export class OperationRealTimeService {
+    readonly #store = inject(OperationRealTimeStore);
     readonly #serviceService = inject(ServiceService);
     readonly #tripClassService = inject(TripClassService);
     readonly #calendarService = inject(CalendarService);
@@ -45,8 +46,8 @@ export class OperationRealTimeService {
             })
             .pipe(
                 tap((data) => {
-                    OperationRealTimeStore.setRoutes(data.routes);
-                    OperationRealTimeStore.setAgencyOrder(
+                    this.#store.setRoutes(data.routes);
+                    this.#store.setAgencyOrder(
                         agenciesInThroughServiceOrder(
                             this.#agencyListState.agencies(),
                             this.#routeStationListState.routeStations(),
@@ -66,7 +67,7 @@ export class OperationRealTimeService {
             .findOneWithStations({ serviceId: SERVICE_ID })
             .pipe(
                 tap((data) => {
-                    OperationRealTimeStore.setStations(data.stations);
+                    this.#store.setStations(data.stations);
                 }),
                 map(() => undefined),
             );
@@ -75,7 +76,7 @@ export class OperationRealTimeService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((data) => {
-                OperationRealTimeStore.setTripClasses(data);
+                this.#store.setTripClasses(data);
             }),
             map(() => undefined),
         );
@@ -99,14 +100,14 @@ export class OperationRealTimeService {
             })
             .pipe(
                 tap((data) => {
-                    OperationRealTimeStore.setCalendar(data);
+                    this.#store.setCalendar(data);
                 }),
                 map(() => undefined),
             );
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = OperationRealTimeStore.calendar.calendarId;
+        const calendarId = this.#store.calendar().calendarId;
 
         return this.#operationService
             .findManyByCalendarId({
@@ -114,7 +115,7 @@ export class OperationRealTimeService {
             })
             .pipe(
                 tap((data) => {
-                    OperationRealTimeStore.setOperations(data);
+                    this.#store.setOperations(data);
                 }),
                 map(() => undefined),
             );
@@ -126,20 +127,20 @@ export class OperationRealTimeService {
      * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
     fetchItineraryLinks(): Observable<{ failed: boolean }> {
-        const calendarId = OperationRealTimeStore.calendar?.calendarId;
+        const calendarId = this.#store.calendar()?.calendarId;
         if (!calendarId) {
-            OperationRealTimeStore.setItineraryLinks([]);
+            this.#store.setItineraryLinks([]);
             return of({ failed: false });
         }
         return this.#operationService
             .findManyItineraryLinks({ calendarId })
             .pipe(
                 tap((links) => {
-                    OperationRealTimeStore.setItineraryLinks(links);
+                    this.#store.setItineraryLinks(links);
                 }),
                 map(() => ({ failed: false })),
                 catchError(() => {
-                    OperationRealTimeStore.setItineraryLinks([]);
+                    this.#store.setItineraryLinks([]);
                     return of({ failed: true });
                 }),
             );
@@ -148,7 +149,7 @@ export class OperationRealTimeService {
     fetchOperationGroups(params?: { forceReload?: boolean }): Observable<void> {
         return this.#operationService.findManyGroups(params).pipe(
             tap((data) => {
-                OperationRealTimeStore.setOperationGroups(data);
+                this.#store.setOperationGroups(data);
             }),
             map(() => undefined),
         );
@@ -173,7 +174,7 @@ export class OperationRealTimeService {
             })
             .pipe(
                 tap((data) => {
-                    OperationRealTimeStore.setFormations(data);
+                    this.#store.setFormations(data);
                 }),
                 map(() => undefined),
             );
@@ -183,7 +184,8 @@ export class OperationRealTimeService {
     fetchOperationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const operationNumbers = OperationRealTimeStore.operations
+        const operationNumbers = this.#store
+            .sortedOperations()
             .map((o) => o.operationNumber)
             .filter((o) => o !== '100');
 
@@ -202,7 +204,7 @@ export class OperationRealTimeService {
                         operationNumber,
                         crossSection,
                     ] of Object.entries(data)) {
-                        OperationRealTimeStore.setOperationSightingTimeCrossSection(
+                        this.#store.setOperationSightingTimeCrossSection(
                             operationNumber,
                             crossSection,
                         );
@@ -216,9 +218,9 @@ export class OperationRealTimeService {
     fetchFormationSightingTimeCrossSections(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const formationNumbers = OperationRealTimeStore.formations.map(
-            (o) => o.formationNumber,
-        );
+        const formationNumbers = this.#store
+            .sortedFormations()
+            .map((o) => o.formationNumber);
 
         if (!formationNumbers.length) {
             return of(undefined);
@@ -235,7 +237,7 @@ export class OperationRealTimeService {
                         formationNumber,
                         crossSection,
                     ] of Object.entries(data)) {
-                        OperationRealTimeStore.setFormationSightingTimeCrossSection(
+                        this.#store.setFormationSightingTimeCrossSection(
                             formationNumber,
                             crossSection,
                         );
@@ -248,8 +250,8 @@ export class OperationRealTimeService {
     fetchSightingHistories(params?: {
         forceReload?: boolean;
     }): Observable<void> {
-        const operations = OperationRealTimeStore.operations;
-        const formations = OperationRealTimeStore.formations;
+        const operations = this.#store.sortedOperations();
+        const formations = this.#store.sortedFormations();
 
         const generateBaseDate: (unixtime: number) => string = flow(
             (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
@@ -276,7 +278,7 @@ export class OperationRealTimeService {
                         const filtered = data.filter(
                             (o) => o.operationId === operation.operationId,
                         );
-                        OperationRealTimeStore.setOperationSightingHistory(
+                        this.#store.setOperationSightingHistory(
                             operation.operationNumber,
                             filtered,
                         );
@@ -286,7 +288,7 @@ export class OperationRealTimeService {
                         const filtered = data.filter(
                             (o) => o.formationId === formation.formationId,
                         );
-                        OperationRealTimeStore.setFormationSightingHistory(
+                        this.#store.setFormationSightingHistory(
                             formation.formationNumber,
                             filtered,
                         );
@@ -301,16 +303,16 @@ export class OperationRealTimeService {
         forceReload?: boolean;
     }): Observable<void> {
         return this.#fetchCurrentPositionsOf(
-            OperationRealTimeStore.operations,
+            this.#store.sortedOperations(),
             params?.forceReload,
         );
     }
 
     fetchCurrentPositionThatShouldUpdate(): Observable<void> {
         return this.#fetchCurrentPositionsOf(
-            OperationRealTimeStore.currentPositionsThatShouldUpdate.map(
-                ({ operation }) => operation,
-            ),
+            this.#store
+                .currentPositionsThatShouldUpdate()
+                .map(({ operation }) => operation),
             true,
         );
     }
@@ -342,7 +344,7 @@ export class OperationRealTimeService {
                             currentPosition.operation?.operationId,
                         );
                         if (operationNumber !== undefined) {
-                            OperationRealTimeStore.setCurrentPosition(
+                            this.#store.setCurrentPosition(
                                 operationNumber,
                                 currentPosition,
                             );

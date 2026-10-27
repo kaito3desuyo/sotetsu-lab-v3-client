@@ -4,7 +4,6 @@ import {
     computed,
     inject,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
@@ -24,6 +23,7 @@ import { filterRealTimeOperations } from '../../utils/operation-real-time-filter
     ],
 })
 export class OperationRealTimeOperationTableComponent {
+    readonly #store = inject(OperationRealTimeStore);
     readonly #agencyListState = inject(AgencyListState);
 
     readonly agencies = this.#agencyListState.agencies;
@@ -31,42 +31,22 @@ export class OperationRealTimeOperationTableComponent {
      * 目撃データの取得中フラグ。カードへ渡して、未到着と「目撃が無い」を
      * 区別させる（audit M4）。ページ上部の進捗バーと同じ出所。
      */
-    readonly isLoading = toSignal(OperationRealTimeStore.isLoading$, {
-        initialValue: false,
-    });
-    readonly stations = toSignal(OperationRealTimeStore.stations$);
-    readonly tripClasses = toSignal(OperationRealTimeStore.tripClasses$);
-    readonly calendar = toSignal(OperationRealTimeStore.calendar$);
-    readonly itineraryLinks = toSignal(OperationRealTimeStore.itineraryLinks$);
-    readonly operations = toSignal(OperationRealTimeStore.operations$);
-    readonly hasFetchedOperations = toSignal(
-        OperationRealTimeStore.hasFetchedOperations$,
-        { initialValue: false },
-    );
-    readonly formations = toSignal(OperationRealTimeStore.formations$);
-    readonly timeCrossSections = toSignal(
-        OperationRealTimeStore.operationSightingTimeCrossSections$,
-    );
-    readonly histories = toSignal(
-        OperationRealTimeStore.operationSightingHistories$,
-    );
-    readonly currentPositions = toSignal(
-        OperationRealTimeStore.currentPositions$,
-    );
-    readonly isVisibleCurrentPosition = toSignal(
-        OperationRealTimeStore.isVisibleCurrentPosition$,
-    );
-    readonly isVisibleSightingHistories = toSignal(
-        OperationRealTimeStore.isVisibleSightingHistories$,
-    );
-    readonly selectedAgencyIds = toSignal(
-        OperationRealTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
-    readonly selectedGroupNames = toSignal(
-        OperationRealTimeStore.selectedGroupNames$,
-        { initialValue: [] },
-    );
+    readonly isLoading = this.#store.isLoading;
+    readonly stations = this.#store.stations;
+    readonly tripClasses = this.#store.tripClasses;
+    readonly calendar = this.#store.calendar;
+    readonly itineraryLinks = this.#store.itineraryLinks;
+    readonly operations = this.#store.sortedOperations;
+    readonly hasFetchedOperations = this.#store.hasFetchedOperations;
+    readonly formations = this.#store.sortedFormations;
+    readonly timeCrossSections = this.#store.operationSightingTimeCrossSections;
+    readonly histories = this.#store.operationSightingHistories;
+    readonly currentPositions = this.#store.currentPositions;
+    readonly isVisibleCurrentPosition = this.#store.isVisibleCurrentPosition;
+    readonly isVisibleSightingHistories =
+        this.#store.isVisibleSightingHistories;
+    readonly selectedAgencyIds = this.#store.selectedAgencyIds;
+    readonly selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 
     readonly filteredOperations = computed(() =>
         filterRealTimeOperations(

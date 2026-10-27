@@ -12,7 +12,7 @@ export const OPERATION_REAL_TIME_ROUTES: Route[] = [
             ),
         providers: [OperationRealTimeService],
         resolve: {
-            from: pageResolver(OperationRealTimeStore.persistInitialized$),
+            from: pageResolver(OperationRealTimeStore),
         },
         data: {
             title: 'リアルタイム運用情報',

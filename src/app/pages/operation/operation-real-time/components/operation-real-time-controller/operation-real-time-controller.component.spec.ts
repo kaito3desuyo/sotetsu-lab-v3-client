@@ -1,10 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { OperationRealTimeService } from '../../services/operation-real-time.service';
 import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
 import { OperationRealTimeControllerComponent } from './operation-real-time-controller.component';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 describe('OperationRealTimeControllerComponent', () => {
     let component: OperationRealTimeControllerComponent;
@@ -12,6 +22,7 @@ describe('OperationRealTimeControllerComponent', () => {
     let calls: string[];
     let notification: { open: jest.Mock };
     let service: Record<string, jest.Mock>;
+    let store: InstanceType<typeof OperationRealTimeStore>;
 
     beforeEach(async () => {
         calls = [];
@@ -32,13 +43,15 @@ describe('OperationRealTimeControllerComponent', () => {
             imports: [OperationRealTimeControllerComponent],
             providers: [
                 provideNoopAnimations(),
+                deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
                 { provide: NotificationService, useValue: notification },
             ],
         }).compileComponents();
 
-        OperationRealTimeStore.resetLoading();
-        OperationRealTimeStore.setFinalUpdateTime(0);
+        store = TestBed.inject(OperationRealTimeStore);
+        store.resetLoading();
+        store.setFinalUpdateTime(0);
         fixture = TestBed.createComponent(OperationRealTimeControllerComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -54,9 +67,7 @@ describe('OperationRealTimeControllerComponent', () => {
             'formation:true',
             'histories:true',
         ]);
-        expect(await firstValueFrom(OperationRealTimeStore.isLoading$)).toBe(
-            false,
-        );
+        expect(store.isLoading()).toBe(false);
         expect(component.finalUpdateTime()).toBeGreaterThanOrEqual(before);
     });
 
@@ -77,9 +88,7 @@ describe('OperationRealTimeControllerComponent', () => {
 
         await component.reload();
 
-        expect(await firstValueFrom(OperationRealTimeStore.isLoading$)).toBe(
-            false,
-        );
+        expect(store.isLoading()).toBe(false);
         expect(notification.open).toHaveBeenCalledWith(
             'データの取得に失敗しました',
             'OK',

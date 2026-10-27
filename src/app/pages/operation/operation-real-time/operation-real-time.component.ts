@@ -7,7 +7,6 @@ import {
     DestroyRef,
     inject,
     PLATFORM_ID,
-    signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +14,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter, lastValueFrom, map } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -30,21 +28,12 @@ import { OperationRealTimeFormationTableComponent } from './components/operation
 import { OperationRealTimeLegendComponent } from './components/operation-real-time-legend/operation-real-time-legend.component';
 import { OperationRealTimeOperationTableComponent } from './components/operation-real-time-operation-table/operation-real-time-operation-table.component';
 import { OperationRealTimeService } from './services/operation-real-time.service';
-import {
-    OperationRealTimeSnapshot,
-    OperationRealTimeStore,
-} from './stores/operation-real-time.store';
+import { OperationRealTimeStore } from './stores/operation-real-time.store';
 import { filterRealTimeOperations } from './utils/operation-real-time-filter.util';
 import { formatRealTimeSummary } from './utils/operation-real-time-summary.util';
 
 /** Tailwind の md。これ以上は運用順・編成順を横並び、未満はタブ */
 const DESKTOP_QUERY = '(min-width: 768px)';
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'OperationRealTime';
-
-const firstLoading = signal(true);
-OperationRealTimeStore.resetLoading();
 
 @Component({
     selector: 'app-operation-real-time',
@@ -70,7 +59,7 @@ export class OperationRealTimeComponent {
     readonly #destroyRef = inject(DestroyRef);
     readonly #socketService = inject(SocketService);
     readonly #notification = inject(NotificationService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(OperationRealTimeStore);
     readonly #operationRealTimeService = inject(OperationRealTimeService);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #breakpointObserver = inject(BreakpointObserver);
@@ -84,27 +73,15 @@ export class OperationRealTimeComponent {
         { initialValue: this.#breakpointObserver.isMatched(DESKTOP_QUERY) },
     );
 
-    readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
+    readonly isLoading = this.#store.isLoading;
 
     readonly #agencies = inject(AgencyListState).agencies;
-    readonly #operations = toSignal(OperationRealTimeStore.operations$, {
-        initialValue: [],
-    });
-    readonly #formations = toSignal(OperationRealTimeStore.formations$, {
-        initialValue: [],
-    });
-    readonly #timeCrossSections = toSignal(
-        OperationRealTimeStore.operationSightingTimeCrossSections$,
-        { initialValue: {} },
-    );
-    readonly #selectedAgencyIds = toSignal(
-        OperationRealTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
-    readonly #selectedGroupNames = toSignal(
-        OperationRealTimeStore.selectedGroupNames$,
-        { initialValue: [] },
-    );
+    readonly #operations = this.#store.sortedOperations;
+    readonly #formations = this.#store.sortedFormations;
+    readonly #timeCrossSections =
+        this.#store.operationSightingTimeCrossSections;
+    readonly #selectedAgencyIds = this.#store.selectedAgencyIds;
+    readonly #selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 
     readonly filterActive = computed(
         () =>
@@ -112,13 +89,13 @@ export class OperationRealTimeComponent {
             this.#selectedGroupNames().length > 0,
     );
     readonly bandSummary = computed(() => {
-        const operations = this.#operations() ?? [];
+        const operations = this.#operations();
         const shown = filterRealTimeOperations(
             operations,
             this.#selectedAgencyIds(),
             this.#selectedGroupNames(),
-            this.#timeCrossSections() ?? {},
-            this.#formations() ?? [],
+            this.#timeCrossSections(),
+            this.#formations(),
         ).length;
         return formatRealTimeSummary({
             agencies: this.#agencies(),
@@ -130,8 +107,8 @@ export class OperationRealTimeComponent {
     });
 
     onClearFilter(): void {
-        OperationRealTimeStore.setSelectedAgencyIds([]);
-        OperationRealTimeStore.setSelectedGroupNames([]);
+        this.#store.setSelectedAgencyIds([]);
+        this.#store.setSelectedGroupNames([]);
     }
 
     openPost(): void {
@@ -148,8 +125,8 @@ export class OperationRealTimeComponent {
     async fetchData(): Promise<void> {
         // この取得を始める前に、すでに取れた中身がある（前の訪問・自動更新の分）なら、
         // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
-        const hasFetchedBefore = OperationRealTimeStore.hasFetchedOperations;
-        OperationRealTimeStore.enableLoading();
+        const hasFetchedBefore = this.#store.hasFetchedOperations();
+        this.#store.enableLoading();
         try {
             // 運用群は他フェッチに依存しないため最初に取得する。
             // 旧実装は目撃・在線の大量リクエストの後（チェーン末尾）だったため、
@@ -190,16 +167,12 @@ export class OperationRealTimeComponent {
 
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (!itineraryLinks?.failed) {
-                void this.#offlineSnapshots.save({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions: {},
-                    data: OperationRealTimeStore.snapshot(),
-                });
+                void this.#store.saveOfflineSnapshot('main', {});
             }
 
-            if (firstLoading()) {
-                OperationRealTimeStore.setFinalUpdateTime();
-                firstLoading.set(false);
+            if (this.#store.firstLoading()) {
+                this.#store.setFinalUpdateTime();
+                this.#store.setFirstLoading(false);
             }
         } catch (error) {
             console.error(error);
@@ -209,7 +182,7 @@ export class OperationRealTimeComponent {
                 this.#notification.open('データの取得に失敗しました', 'OK');
             }
         } finally {
-            OperationRealTimeStore.disableLoading();
+            this.#store.disableLoading();
         }
     }
 
@@ -219,12 +192,10 @@ export class OperationRealTimeComponent {
      */
     async #restoreSnapshot(): Promise<boolean> {
         try {
-            const restored = await this.#offlineSnapshots.restore({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions: {},
-                apply: (data: OperationRealTimeSnapshot, savedAt: number) =>
-                    OperationRealTimeStore.restoreSnapshot(data, savedAt),
-            });
+            const restored = await this.#store.restoreOfflineSnapshot(
+                'main',
+                {},
+            );
             return restored !== null;
         } catch {
             return false;
@@ -235,7 +206,7 @@ export class OperationRealTimeComponent {
         // 1秒ごとに現在位置の更新必要性を判定し、更新対象がある場合は更新する
         // this.#appRef.isStable.pipe(first((bool) => !!bool)).subscribe(() => {
         runIntervalInBrowser(1000, async () => {
-            OperationRealTimeStore.enableLoading();
+            this.#store.enableLoading();
             try {
                 await lastValueFrom(
                     this.#operationRealTimeService.fetchCurrentPositionThatShouldUpdate(),
@@ -243,7 +214,7 @@ export class OperationRealTimeComponent {
             } catch {
                 // 毎秒通知しないよう黙って捨て、次の 1 秒で取り直す
             } finally {
-                OperationRealTimeStore.disableLoading();
+                this.#store.disableLoading();
             }
         });
         // });
@@ -252,15 +223,15 @@ export class OperationRealTimeComponent {
         this.#operationPostCardService.submitEvent$
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe(async () => {
-                OperationRealTimeStore.enableLoading();
+                this.#store.enableLoading();
                 try {
                     await this.#reloadSightings();
-                    OperationRealTimeStore.setFinalUpdateTime();
+                    this.#store.setFinalUpdateTime();
                 } catch (error) {
                     console.error(error);
                     this.#notification.open('データの取得に失敗しました', 'OK');
                 } finally {
-                    OperationRealTimeStore.disableLoading();
+                    this.#store.disableLoading();
                 }
             });
 
@@ -273,19 +244,19 @@ export class OperationRealTimeComponent {
                 takeUntilDestroyed(this.#destroyRef),
             )
             .subscribe(async () => {
-                if (!OperationRealTimeStore.isEnableAutoReload) return;
+                if (!this.#store.isEnableAutoReload()) return;
 
                 this.#notification.open('更新中...', 'OK');
-                OperationRealTimeStore.enableLoading();
+                this.#store.enableLoading();
                 try {
                     await this.#reloadSightings();
-                    OperationRealTimeStore.setFinalUpdateTime();
+                    this.#store.setFinalUpdateTime();
                     this.#notification.open('データが更新されました', 'OK');
                 } catch (error) {
                     console.error(error);
                     this.#notification.open('データの取得に失敗しました', 'OK');
                 } finally {
-                    OperationRealTimeStore.disableLoading();
+                    this.#store.disableLoading();
                 }
             });
     }
