@@ -1,7 +1,15 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
-import localForage from 'localforage';
-import { filter, map, take } from 'rxjs';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
+import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
@@ -40,165 +48,111 @@ export type DashboardSnapshot = Pick<
     | 'tripClasses'
 >;
 
-const store = createStore(
-    { name: 'DashboardStore' },
-    withProps<StoreProps>({
-        todaysCalendar: null,
-        todaysDayName: null,
-        runningTripCount: 0,
-        sightingCountToday: 0,
-        latestSightings: [],
-        latestSightingPositions: {},
-        itineraryLinks: [],
-        tripClasses: [],
-        hasVisitedBefore: false,
-        loadingQueue: [],
+const initialState: StoreProps = {
+    todaysCalendar: null,
+    todaysDayName: null,
+    runningTripCount: 0,
+    sightingCountToday: 0,
+    latestSightings: [],
+    latestSightingPositions: {},
+    itineraryLinks: [],
+    tripClasses: [],
+    hasVisitedBefore: false,
+    loadingQueue: [],
+};
+
+export const DashboardStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(({ loadingQueue }) => ({
+        isLoading: computed(() => loadingQueue().length > 0),
+    })),
+    withMethods((store) => ({
+        setTodaysCalendar(calendar: CalendarDetailsDto | null): void {
+            patchState(store, { todaysCalendar: calendar });
+        },
+        setTodaysDayName(name: string | null): void {
+            patchState(store, { todaysDayName: name });
+        },
+        setRunningTripCount(count: number): void {
+            patchState(store, { runningTripCount: count });
+        },
+        setSightingCountToday(count: number): void {
+            patchState(store, { sightingCountToday: count });
+        },
+        setLatestSightings(sightings: OperationSightingDetailsDto[]): void {
+            patchState(store, { latestSightings: sightings });
+        },
+        setLatestSightingPosition(
+            operationSightingId: string,
+            position: OperationCurrentPositionDto,
+        ): void {
+            patchState(store, (state) => ({
+                latestSightingPositions: {
+                    ...state.latestSightingPositions,
+                    [operationSightingId]: position,
+                },
+            }));
+        },
+        setItineraryLinks(links: OperationItineraryLinkDto[]): void {
+            patchState(store, { itineraryLinks: links });
+        },
+        setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+            patchState(store, { tripClasses });
+        },
+        markVisited(): void {
+            patchState(store, { hasVisitedBefore: true });
+        },
+        /** 圏外のために保存する中身を取り出す */
+        snapshot(): DashboardSnapshot {
+            return {
+                todaysCalendar: store.todaysCalendar(),
+                todaysDayName: store.todaysDayName(),
+                runningTripCount: store.runningTripCount(),
+                sightingCountToday: store.sightingCountToday(),
+                latestSightings: store.latestSightings(),
+                latestSightingPositions: store.latestSightingPositions(),
+                itineraryLinks: store.itineraryLinks(),
+                tripClasses: store.tripClasses(),
+            };
+        },
+        /** 保存した中身を戻す（既訪問フラグと読み込み中は今のまま） */
+        restoreSnapshot(data: DashboardSnapshot): void {
+            patchState(store, {
+                todaysCalendar: data.todaysCalendar,
+                todaysDayName: data.todaysDayName,
+                runningTripCount: data.runningTripCount,
+                sightingCountToday: data.sightingCountToday,
+                latestSightings: data.latestSightings,
+                latestSightingPositions: data.latestSightingPositions,
+                itineraryLinks: data.itineraryLinks,
+                tripClasses: data.tripClasses,
+            });
+        },
+        enableLoading(): void {
+            patchState(store, (state) => ({
+                loadingQueue: state.loadingQueue.concat(true),
+            }));
+        },
+        disableLoading(): void {
+            patchState(store, (state) => ({
+                loadingQueue: state.loadingQueue.slice(1),
+            }));
+        },
+    })),
+    // 保存するのは既訪問フラグだけ。ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
+    withSettingsStorage<StoreProps>({
+        key: 'DashboardStore',
+        fields: ['hasVisitedBefore'],
     }),
-);
-
-/**
- * 端末から読み込んだ値のうち、画面の設定（既訪問フラグ）だけをストアに入れる。
- * 以前は全体を保存していたため、IndexedDB に残る古い中身を戻さない。
- * 設定以外は今のストアの値のまま（loadingQueue も今のまま）。
- */
-export function pickDashboardSettings(value: StoreProps): StoreProps {
-    const current = store.getValue();
-    return {
-        ...current,
-        hasVisitedBefore: value.hasVisitedBefore ?? current.hasVisitedBefore,
-    };
-}
-
-/** 端末に保存する設定のキー */
-const PERSIST_KEY = 'DashboardStore';
-
-// 保存するのは既訪問フラグだけ。ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
-const persist = persistState(store, {
-    key: PERSIST_KEY,
-    storage: localForage,
-    preStoreInit: pickDashboardSettings,
-    source: () =>
-        store.pipe(
-            select((state) => state.hasVisitedBefore),
-            map((hasVisitedBefore) => ({ hasVisitedBefore })),
-        ),
-});
-
-// 以前の丸ごと保存の値（数 MB）は、設定を変えるまで上書きされず、起動のたびに読み込まれて待たせる。
-// 読み込みが済んだら一度だけ、設定だけの形で同じキーに書き戻して小さくする（失敗は握りつぶす。
-// サーバーでは persistState が false を返すので何もしない）
-persist.initialized$.pipe(filter(Boolean), take(1)).subscribe(() => {
-    Promise.resolve(
-        localForage.setItem(PERSIST_KEY, {
-            hasVisitedBefore: store.getValue().hasVisitedBefore,
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'Dashboard',
+                select: () => store.snapshot(),
+                apply: (data: DashboardSnapshot) => store.restoreSnapshot(data),
+            },
         }),
-    ).catch(() => undefined);
-});
-
-export const DashboardStore = {
-    persistInitialized$: persist.initialized$,
-
-    setTodaysCalendar(calendar: CalendarDetailsDto | null): void {
-        store.update(setProp('todaysCalendar', () => calendar));
-    },
-    setTodaysDayName(name: string | null): void {
-        store.update(setProp('todaysDayName', () => name));
-    },
-    setRunningTripCount(count: number): void {
-        store.update(setProp('runningTripCount', () => count));
-    },
-    setSightingCountToday(count: number): void {
-        store.update(setProp('sightingCountToday', () => count));
-    },
-    setLatestSightings(sightings: OperationSightingDetailsDto[]): void {
-        store.update(setProp('latestSightings', () => sightings));
-    },
-    setLatestSightingPosition(
-        operationSightingId: string,
-        position: OperationCurrentPositionDto,
-    ): void {
-        store.update(
-            setProp('latestSightingPositions', (state) => ({
-                ...state,
-                [operationSightingId]: position,
-            })),
-        );
-    },
-    setItineraryLinks(links: OperationItineraryLinkDto[]): void {
-        store.update(setProp('itineraryLinks', () => links));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    markVisited(): void {
-        store.update(setProp('hasVisitedBefore', () => true));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): DashboardSnapshot {
-        const {
-            todaysCalendar,
-            todaysDayName,
-            runningTripCount,
-            sightingCountToday,
-            latestSightings,
-            latestSightingPositions,
-            itineraryLinks,
-            tripClasses,
-        } = store.getValue();
-        return {
-            todaysCalendar,
-            todaysDayName,
-            runningTripCount,
-            sightingCountToday,
-            latestSightings,
-            latestSightingPositions,
-            itineraryLinks,
-            tripClasses,
-        };
-    },
-    /** 保存した中身を戻す（既訪問フラグと読み込み中は今のまま） */
-    restoreSnapshot(data: DashboardSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            todaysCalendar: data.todaysCalendar,
-            todaysDayName: data.todaysDayName,
-            runningTripCount: data.runningTripCount,
-            sightingCountToday: data.sightingCountToday,
-            latestSightings: data.latestSightings,
-            latestSightingPositions: data.latestSightingPositions,
-            itineraryLinks: data.itineraryLinks,
-            tripClasses: data.tripClasses,
-        }));
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-
-    todaysCalendar$: store.pipe(select((state) => state.todaysCalendar)),
-    todaysDayName$: store.pipe(select((state) => state.todaysDayName)),
-    runningTripCount$: store.pipe(select((state) => state.runningTripCount)),
-    sightingCountToday$: store.pipe(
-        select((state) => state.sightingCountToday),
     ),
-    latestSightings$: store.pipe(select((state) => state.latestSightings)),
-    latestSightingPositions$: store.pipe(
-        select((state) => state.latestSightingPositions),
-    ),
-    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
-    tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    hasVisitedBefore$: store.pipe(select((state) => state.hasVisitedBefore)),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
-
-    get latestSightings(): OperationSightingDetailsDto[] {
-        return store.getValue().latestSightings;
-    },
-    get todaysCalendar(): CalendarDetailsDto | null {
-        return store.getValue().todaysCalendar;
-    },
-    get hasVisitedBefore(): boolean {
-        return store.getValue().hasVisitedBefore;
-    },
-} as const;
+    withAppDevtools('DashboardStore'),
+);

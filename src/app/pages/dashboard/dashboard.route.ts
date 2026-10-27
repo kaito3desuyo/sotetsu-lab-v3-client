@@ -12,7 +12,7 @@ export const DASHBOARD_ROUTES: Route[] = [
             ),
         providers: [DashboardService],
         resolve: {
-            from: pageResolver(DashboardStore.persistInitialized$),
+            from: pageResolver(DashboardStore),
         },
         runGuardsAndResolvers: 'always',
     },

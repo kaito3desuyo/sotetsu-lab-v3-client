@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { TestBed, inject } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
@@ -16,6 +17,14 @@ describe('Service: Dashboard', () => {
         TestBed.configureTestingModule({
             providers: [
                 provideHttpClient(withXhr()),
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: () => Promise.resolve(null),
+                        setItem: () => Promise.resolve(),
+                        removeItem: () => Promise.resolve(),
+                    },
+                },
                 DashboardService,
                 {
                     provide: OperationService,
@@ -33,10 +42,11 @@ describe('Service: Dashboard', () => {
                 },
             ],
         });
-        DashboardStore.setTodaysCalendar({
+        const store = TestBed.inject(DashboardStore);
+        store.setTodaysCalendar({
             calendarId: 'cal-1',
         } as never);
-        DashboardStore.setItineraryLinks([]);
+        store.setItineraryLinks([]);
     });
 
     it('should ...', inject([DashboardService], (service: DashboardService) => {
@@ -53,9 +63,7 @@ describe('Service: Dashboard', () => {
         expect(findManyItineraryLinks).toHaveBeenCalledWith({
             calendarId: 'cal-1',
         });
-        await expect(
-            firstValueFrom(DashboardStore.itineraryLinks$),
-        ).resolves.toEqual(links);
+        expect(TestBed.inject(DashboardStore).itineraryLinks()).toEqual(links);
     });
 
     it('つながりが取れなくても本数は出す', async () => {

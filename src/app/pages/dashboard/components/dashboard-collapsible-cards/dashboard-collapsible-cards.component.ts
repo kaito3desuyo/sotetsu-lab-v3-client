@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    inject,
+    signal,
+} from '@angular/core';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { LibraryListCardComponent } from 'src/app/shared/library-list-card/library-list-card.component';
 import { OperationPostCardComponent } from 'src/app/shared/operation-post-card/operation-post-card.component';
@@ -33,13 +38,15 @@ import { DashboardStore } from '../../stores/dashboard.store';
     providers: [providePanelCardEmbedded()],
 })
 export class DashboardCollapsibleCardsComponent {
+    readonly #store = inject(DashboardStore);
+
     readonly isSiteDescriptionExpanded = signal(
-        !DashboardStore.hasVisitedBefore,
+        !this.#store.hasVisitedBefore(),
     );
 
     constructor() {
-        if (!DashboardStore.hasVisitedBefore) {
-            DashboardStore.markVisited();
+        if (!this.#store.hasVisitedBefore()) {
+            this.#store.markVisited();
         }
     }
 }

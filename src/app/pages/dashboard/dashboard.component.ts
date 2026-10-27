@@ -5,20 +5,15 @@ import {
     inject,
     PLATFORM_ID,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { lastValueFrom } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { DashboardCollapsibleCardsComponent } from './components/dashboard-collapsible-cards/dashboard-collapsible-cards.component';
 import { DashboardLatestSightingsComponent } from './components/dashboard-latest-sightings/dashboard-latest-sightings.component';
 import { DashboardQuickTilesComponent } from './components/dashboard-quick-tiles/dashboard-quick-tiles.component';
 import { DashboardStatusCardComponent } from './components/dashboard-status-card/dashboard-status-card.component';
 import { DashboardService } from './services/dashboard.service';
-import { DashboardSnapshot, DashboardStore } from './stores/dashboard.store';
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'Dashboard';
+import { DashboardStore } from './stores/dashboard.store';
 
 @Component({
     selector: 'app-dashboard',
@@ -37,12 +32,10 @@ const OFFLINE_SNAPSHOT_KEY = 'Dashboard';
 })
 export class DashboardComponent {
     readonly #dashboardService = inject(DashboardService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(DashboardStore);
     readonly #notification = inject(NotificationService);
 
-    readonly isLoading = toSignal(DashboardStore.isLoading$, {
-        initialValue: false,
-    });
+    readonly isLoading = this.#store.isLoading;
 
     constructor() {
         // 枠だけのページ。中身は刻々と変わるのでサーバーでは取らない（spec 4 章）
@@ -53,8 +46,8 @@ export class DashboardComponent {
     async fetchData(): Promise<void> {
         // この取得を始める前に、すでに取れた中身がある（前の訪問の分。今日のダイヤは取れたら入る）なら、
         // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
-        const hasFetchedBefore = DashboardStore.todaysCalendar !== null;
-        DashboardStore.enableLoading();
+        const hasFetchedBefore = this.#store.todaysCalendar() !== null;
+        this.#store.enableLoading();
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -90,13 +83,9 @@ export class DashboardComponent {
             }
 
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions: {},
-                data: DashboardStore.snapshot(),
-            });
+            void this.#store.saveOfflineSnapshot('main', {});
         } finally {
-            DashboardStore.disableLoading();
+            this.#store.disableLoading();
         }
     }
 
@@ -115,12 +104,10 @@ export class DashboardComponent {
     /** 保存した中身を戻す。戻せたら true。戻す処理が壊れていても、取得の失敗をそのまま投げられるよう握りつぶす */
     async #restoreSnapshot(): Promise<boolean> {
         try {
-            const restored = await this.#offlineSnapshots.restore({
-                key: OFFLINE_SNAPSHOT_KEY,
-                conditions: {},
-                apply: (data: DashboardSnapshot) =>
-                    DashboardStore.restoreSnapshot(data),
-            });
+            const restored = await this.#store.restoreOfflineSnapshot(
+                'main',
+                {},
+            );
             return restored !== null;
         } catch {
             // 保存した中身が壊れていても、取得の失敗をそのまま投げる

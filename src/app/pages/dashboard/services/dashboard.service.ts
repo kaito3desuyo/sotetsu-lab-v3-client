@@ -28,18 +28,19 @@ export class DashboardService {
     readonly #operationService = inject(OperationService);
     readonly #tripClassService = inject(TripClassService);
     readonly #calendarDateService = inject(CalendarDateService);
+    readonly #store = inject(DashboardStore);
 
     /** 今日有効なダイヤ（todaysCalendarList 由来）を取得する。 */
     fetchTodaysCalendar(): Observable<void> {
         const calendarId = this.#todaysCalendarListState.todaysCalendarId();
 
         if (!calendarId) {
-            DashboardStore.setTodaysCalendar(null);
+            this.#store.setTodaysCalendar(null);
             return of(undefined);
         }
 
         return defer(() => {
-            DashboardStore.setTodaysCalendar(
+            this.#store.setTodaysCalendar(
                 this.#calendarListState.entityMap()[calendarId] ?? null,
             );
             return of(undefined);
@@ -57,10 +58,10 @@ export class DashboardService {
             .findMany({ from: date, to: date })
             .pipe(
                 tap((calendarDates) => {
-                    DashboardStore.setTodaysDayName(pickDayName(calendarDates));
+                    this.#store.setTodaysDayName(pickDayName(calendarDates));
                 }),
                 catchError(() => {
-                    DashboardStore.setTodaysDayName(null);
+                    this.#store.setTodaysDayName(null);
                     return of(undefined);
                 }),
                 map(() => undefined),
@@ -72,10 +73,10 @@ export class DashboardService {
      * 路線を絞り込まず、対象サービス範囲の全路線を統合した駅軸で今この瞬間の在線数を数える。
      */
     fetchRunningTripCount(): Observable<void> {
-        const calendar = DashboardStore.todaysCalendar;
+        const calendar = this.#store.todaysCalendar();
 
         if (!calendar) {
-            DashboardStore.setRunningTripCount(0);
+            this.#store.setRunningTripCount(0);
             return of(undefined);
         }
 
@@ -95,7 +96,7 @@ export class DashboardService {
                 .pipe(catchError(() => of([] as OperationItineraryLinkDto[]))),
         }).pipe(
             tap(({ tripBlocksByDirection, routes, links }) => {
-                DashboardStore.setItineraryLinks(links);
+                this.#store.setItineraryLinks(links);
                 const tripBlocks = Object.values(tripBlocksByDirection).flat();
                 const stationAxis = buildNetworkStationAxis(routes);
                 const positions = estimatePositions(
@@ -104,7 +105,7 @@ export class DashboardService {
                     new Date(),
                     links,
                 );
-                DashboardStore.setRunningTripCount(positions.length);
+                this.#store.setRunningTripCount(positions.length);
             }),
             map(() => undefined),
         );
@@ -123,8 +124,8 @@ export class DashboardService {
                             new Date(b.sightingTime ?? 0).getTime() -
                             new Date(a.sightingTime ?? 0).getTime(),
                     );
-                    DashboardStore.setSightingCountToday(sightings.length);
-                    DashboardStore.setLatestSightings(sorted.slice(0, 3));
+                    this.#store.setSightingCountToday(sightings.length);
+                    this.#store.setLatestSightings(sorted.slice(0, 3));
                 }),
                 map(() => undefined),
             );
@@ -135,7 +136,7 @@ export class DashboardService {
      * 取得できない（404 等）場合は非表示にするため、失敗しても全体は継続する。
      */
     fetchLatestSightingPositions(): Observable<void> {
-        const sightings = DashboardStore.latestSightings;
+        const sightings = this.#store.latestSightings();
 
         if (sightings.length === 0) {
             return of(undefined);
@@ -151,7 +152,7 @@ export class DashboardService {
                           })
                           .pipe(
                               tap((position) => {
-                                  DashboardStore.setLatestSightingPosition(
+                                  this.#store.setLatestSightingPosition(
                                       sighting.operationSightingId,
                                       position,
                                   );
@@ -167,7 +168,7 @@ export class DashboardService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((tripClasses) => {
-                DashboardStore.setTripClasses(tripClasses);
+                this.#store.setTripClasses(tripClasses);
             }),
             map(() => undefined),
         );

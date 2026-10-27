@@ -4,7 +4,6 @@ import {
     computed,
     inject,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
@@ -46,28 +45,17 @@ export class DashboardLatestSightingsComponent {
     readonly #agencyListState = inject(AgencyListState);
     readonly #todaysOperationListState = inject(TodaysOperationListState);
     readonly #todaysFormationListState = inject(TodaysFormationListState);
+    readonly #store = inject(DashboardStore);
 
     readonly skeletonRows = [0, 1, 2];
 
-    readonly isLoading = toSignal(DashboardStore.isLoading$, {
-        initialValue: true,
-    });
-    readonly #sightings = toSignal(DashboardStore.latestSightings$, {
-        initialValue: [],
-    });
-    readonly #positions = toSignal(DashboardStore.latestSightingPositions$, {
-        initialValue: {},
-    });
+    readonly isLoading = this.#store.isLoading;
+    readonly #sightings = this.#store.latestSightings;
+    readonly #positions = this.#store.latestSightingPositions;
     readonly stations = this.#routeStationListState.stations;
-    readonly itineraryLinks = toSignal(DashboardStore.itineraryLinks$, {
-        initialValue: [],
-    });
-    readonly tripClasses = toSignal(DashboardStore.tripClasses$, {
-        initialValue: [],
-    });
-    readonly #todaysCalendar = toSignal(DashboardStore.todaysCalendar$, {
-        initialValue: null,
-    });
+    readonly itineraryLinks = this.#store.itineraryLinks;
+    readonly tripClasses = this.#store.tripClasses;
+    readonly #todaysCalendar = this.#store.todaysCalendar;
     readonly calendarId = computed(() => this.#todaysCalendar()?.calendarId);
     readonly #operations = this.#todaysOperationListState.todaysOperations;
     readonly #formations = this.#todaysFormationListState.todaysFormations;
