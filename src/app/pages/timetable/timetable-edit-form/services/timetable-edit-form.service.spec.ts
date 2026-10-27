@@ -1,7 +1,8 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of } from 'rxjs';
 
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -45,8 +46,8 @@ describe('TimetableEditFormService', () => {
                 { provide: TripClassService, useValue: tripClassService },
                 { provide: TripBlockService, useValue: tripBlockService },
                 {
-                    provide: ServiceListStateQuery,
-                    useValue: { serviceId: 'service-1' },
+                    provide: ServiceListState,
+                    useValue: { serviceId: signal('service-1') },
                 },
             ],
         });

@@ -14,8 +14,8 @@ import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { mergeMap, switchMap } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
@@ -29,9 +29,9 @@ import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-s
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
@@ -90,9 +90,9 @@ export class TimetableAllLineComponent {
     readonly #confirmDialogService = inject(ConfirmDialogService);
     readonly #calendarSelectDialogService = inject(CalendarSelectDialogService);
     readonly #timetableAllLineService = inject(TimetableAllLineService);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
@@ -140,24 +140,14 @@ export class TimetableAllLineComponent {
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
     readonly skeletonColumns = Array.from({ length: 30 }, (_, i) => i);
-    readonly calendar = toSignal(
-        TimetableAllLineStore.calendarId$.pipe(
-            mergeMap((id) =>
-                this.#calendarListStateQuery.selectByCalendarId(id),
-            ),
-        ),
+    readonly #calendarId = toSignal(TimetableAllLineStore.calendarId$);
+    readonly calendar = computed(
+        () => this.#calendarListState.entityMap()[this.#calendarId()],
     );
 
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
     /** 駅別時刻表へ移る選択欄の選択肢（駅別時刻表と同じ）。 */
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),
@@ -244,15 +234,11 @@ export class TimetableAllLineComponent {
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            TimetableAllLineStore.setAgencies(
-                this.#agencyListStateQuery.agencies,
-            );
+            TimetableAllLineStore.setAgencies(this.#agencyListState.agencies());
             TimetableAllLineStore.setRouteOrder(
-                (
-                    await firstValueFrom(
-                        this.#routeStationListStateQuery.routeStations$,
-                    )
-                ).map((route) => route.routeId),
+                this.#routeStationListState
+                    .routeStations()
+                    .map((route) => route.routeId),
             );
             // 駅一覧と trip-blocks は互いの結果を使わないので、同時に取る
             // （駅一覧は serviceId、trip-blocks はストアの条件で決まる）

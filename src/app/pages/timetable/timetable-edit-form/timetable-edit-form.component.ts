@@ -16,7 +16,7 @@ import { map } from 'rxjs/operators';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
@@ -58,7 +58,7 @@ export class TimetableEditFormComponent {
     readonly #loading = inject(LoadingService);
     readonly #error = inject(ErrorHandlerService);
     readonly #notification = inject(NotificationService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
     readonly #timetableEditFormService = inject(TimetableEditFormService);
 
     readonly isLoading = toSignal(TimetableEditFormStore.isLoading$);
@@ -70,7 +70,7 @@ export class TimetableEditFormComponent {
     readonly EMode = ETimetableEditFormMode;
     /** 骨組みの格子の行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonGridRows = Array.from({ length: 14 }, (_, i) => i);
-    readonly serviceId = toSignal(this.#serviceListStateQuery.serviceId$);
+    readonly serviceId = this.#serviceListState.serviceId;
     readonly calendarId = toSignal(TimetableEditFormStore.calendarId$);
     readonly tripDirection = toSignal(TimetableEditFormStore.tripDirection$);
     readonly calendar = toSignal(TimetableEditFormStore.calendar$, {

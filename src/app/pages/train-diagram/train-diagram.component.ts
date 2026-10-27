@@ -23,9 +23,9 @@ import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
@@ -160,9 +160,9 @@ export class TrainDiagramComponent {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #calendarListState = inject(CalendarListState);
 
     readonly isLoading = toSignal(TrainDiagramStore.isLoading$);
     readonly hasFetchedTrainDiagram = toSignal(
@@ -257,16 +257,9 @@ export class TrainDiagramComponent {
         this.#todaysCalendarListStateQuery.todaysCalendarIds$,
         { initialValue: [] },
     );
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
-    readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
+    readonly #calendars = this.#calendarListState.calendars;
     /** 題名。ダイヤは取ったデータから作る */
     readonly pageTitle = computed(() => {
         const calendar = this.#calendars().find(
@@ -904,11 +897,15 @@ export class TrainDiagramComponent {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
         TrainDiagramStore.setHasFetchedTrainDiagram(false);
 
-        this.#routeStationListStateQuery.routeStations$
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((routeStations) => {
-                TrainDiagramStore.setRouteStations(routeStations);
-            });
+        // 今の値をその場で入れ、取り直されたとき（effect）に入れ直す
+        TrainDiagramStore.setRouteStations(
+            this.#routeStationListState.routeStations(),
+        );
+        effect(() => {
+            TrainDiagramStore.setRouteStations(
+                this.#routeStationListState.routeStations(),
+            );
+        });
 
         // I3: chart が隠れていた（列車を取る前の骨組み、または表示条件に合う列車が
         // 無い isEmpty）状態から見える状態に戻ったら、chart は再生成されて jumpRequest を

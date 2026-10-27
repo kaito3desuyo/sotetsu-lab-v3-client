@@ -127,7 +127,7 @@ function extractRoutes(
 /**
  * 路線チップの選択肢。会社ごとにまとめ（`group` = 会社名）、会社は会社チップと同じ
  * 「相鉄と直通を始めた順」、会社の中の路線はハンバーガーメニューの駅名選択と同じ系統順
- * （RouteStationListStateStore の整列順）にする（ユーザー指示 2026-09-24。列車位置情報・
+ * （RouteStationListState の整列順）にする（ユーザー指示 2026-09-24。列車位置情報・
  * 列車ダイヤグラムも同じ）。並び順に無い路線は、駅の並び順のまま後ろに付ける。
  */
 function extractRouteOptions(

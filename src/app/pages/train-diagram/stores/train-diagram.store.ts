@@ -46,7 +46,7 @@ type StoreProps = {
     /** ServiceService.findOneWithStations 由来の網羅駅（全線時刻表と同一の並び順）。 */
     networkStations: StationDetailsDto[];
     /**
-     * 全路線（RouteStationListStateQuery.routeStations$ 由来）。駅軸上で隣接しない
+     * 全路線（RouteStationListState.routeStations$ 由来）。駅軸上で隣接しない
      * 接続駅（分岐駅）を複製挿入する判定（buildStationAxis の routesOrderedStationIds）に使う。
      */
     routeStations: RouteDetailsDto[];

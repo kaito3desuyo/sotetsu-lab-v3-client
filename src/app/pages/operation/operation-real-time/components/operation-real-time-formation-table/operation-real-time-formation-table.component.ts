@@ -5,7 +5,7 @@ import {
     inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeFormationCardComponent } from '../operation-real-time-formation-card/operation-real-time-formation-card.component';
 import { OperationRealTimeSkeletonLedgerComponent } from '../operation-real-time-skeleton-ledger/operation-real-time-skeleton-ledger.component';
@@ -25,11 +25,9 @@ import { matchesGroupFilter } from 'src/app/shared/operation-group.util';
     ],
 })
 export class OperationRealTimeFormationTableComponent {
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #agencyListState = inject(AgencyListState);
 
-    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly agencies = this.#agencyListState.agencies;
     /**
      * 目撃データの取得中フラグ。カードへ渡して、未到着と「目撃が無い」を
      * 区別させる（audit M4）。ページ上部の進捗バーと同じ出所。

@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -5,7 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
 import { of } from 'rxjs';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetablePostCardComponent } from './timetable-post-card.component';
@@ -21,8 +22,8 @@ describe('TimetablePostCardComponent', () => {
                 provideRouter([]),
                 provideNoopAnimations(),
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
             ],
         }).compileComponents();

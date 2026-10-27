@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockFields } from 'src/app/libs/trip-block/usecase/trip-block-fields';
@@ -39,10 +39,10 @@ const TIMETABLE_ALL_LINE_FIELDS: TripBlockFields = {
 export class TimetableAllLineService {
     readonly #serviceService = inject(ServiceService);
     readonly #tripBlockService = inject(TripBlockService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
 
     fetchStations(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
                 TimetableAllLineStore.setStations(data.stations);

@@ -5,8 +5,8 @@ import {
     inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
@@ -42,8 +42,8 @@ import { DashboardStore } from '../../stores/dashboard.store';
     ],
 })
 export class DashboardLatestSightingsComponent {
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
     readonly #todaysOperationListStateQuery = inject(
         TodaysOperationListStateQuery,
     );
@@ -62,9 +62,7 @@ export class DashboardLatestSightingsComponent {
     readonly #positions = toSignal(DashboardStore.latestSightingPositions$, {
         initialValue: {},
     });
-    readonly stations = toSignal(this.#routeStationListStateQuery.stations$, {
-        initialValue: [],
-    });
+    readonly stations = this.#routeStationListState.stations;
     readonly itineraryLinks = toSignal(DashboardStore.itineraryLinks$, {
         initialValue: [],
     });
@@ -83,9 +81,7 @@ export class DashboardLatestSightingsComponent {
         this.#todaysFormationListStateQuery.todaysFormations$,
         { initialValue: [] },
     );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly #agencies = this.#agencyListState.agencies;
 
     readonly #operationNumberById = computed(
         () =>

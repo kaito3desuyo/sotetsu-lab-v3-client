@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -14,7 +14,7 @@ import { TrainDiagramStore } from '../stores/train-diagram.store';
 @Injectable()
 export class TrainDiagramService {
     readonly #serviceService = inject(ServiceService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #operationService = inject(OperationService);
@@ -86,7 +86,7 @@ export class TrainDiagramService {
      * 駅軸（stationAxis）自体は store 側で選択路線・取得済み tripBlocks から導出される。
      */
     fetchNetworkStations(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {

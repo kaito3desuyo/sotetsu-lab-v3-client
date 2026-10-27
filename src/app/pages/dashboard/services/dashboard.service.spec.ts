@@ -1,7 +1,8 @@
+import { signal } from '@angular/core';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { TestBed, inject } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { DashboardStore } from '../stores/dashboard.store';
@@ -27,8 +28,8 @@ describe('Service: Dashboard', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
                 },
             ],
         });

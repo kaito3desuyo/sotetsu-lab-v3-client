@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
@@ -40,8 +40,8 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
                 { provide: TripClassService, useValue: {} },
                 { provide: CalendarService, useValue: {} },
                 { provide: FormationService, useValue: {} },
-                { provide: AgencyListStateQuery, useValue: {} },
-                { provide: RouteStationListStateQuery, useValue: {} },
+                { provide: AgencyListState, useValue: {} },
+                { provide: RouteStationListState, useValue: {} },
             ],
         });
         service = TestBed.inject(OperationRealTimeService);

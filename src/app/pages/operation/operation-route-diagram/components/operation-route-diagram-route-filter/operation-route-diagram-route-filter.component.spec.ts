@@ -1,9 +1,9 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 import { OperationRouteDiagramRouteFilterComponent } from './operation-route-diagram-route-filter.component';
@@ -51,18 +51,20 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
             providers: [
                 {
                     // 系統順はいずみ野線が本線より前（並びが入れ替わることを確かめるため）
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'いずみ野線', agencyId: 'so' },
                             { routeId: '本線', agencyId: 'so' },
                         ]),
                     },
                 },
                 {
-                    provide: AgencyListStateQuery,
+                    provide: AgencyListState,
                     useValue: {
-                        agencies$: of([{ agencyId: 'so', agencyName: '相鉄' }]),
+                        agencies: signal([
+                            { agencyId: 'so', agencyName: '相鉄' },
+                        ]),
                     },
                 },
             ],
@@ -160,12 +162,12 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
             imports: [OperationRouteDiagramRouteFilterComponent],
             providers: [
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
                 },
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
                 },
             ],
         }).compileComponents();

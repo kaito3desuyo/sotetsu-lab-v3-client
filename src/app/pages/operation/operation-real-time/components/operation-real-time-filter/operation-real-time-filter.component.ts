@@ -5,8 +5,8 @@ import {
     inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
@@ -35,16 +35,11 @@ import { OperationRealTimeStore } from '../../stores/operation-real-time.store';
     imports: [FilterChipsComponent, SkeletonChipsComponent],
 })
 export class OperationRealTimeFilterComponent {
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
 
-    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
-    readonly routes = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
+    readonly agencies = this.#agencyListState.agencies;
+    readonly routes = this.#routeStationListState.routeStations;
     /**
      * 群チップの出所は API の群定義ではなく**実在する運用番号**。
      * API `/v3/operations/groups` は本来 15 群あるべきところ 5 群しか返しておらず、

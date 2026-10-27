@@ -1,4 +1,4 @@
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import {
@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
@@ -76,9 +76,9 @@ describe('TrainDiagramComponent', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             {
                                 routeId: 'route-1',
                                 routeName: '本線',
@@ -1055,9 +1055,9 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
                     },
@@ -1320,9 +1320,9 @@ describe('TrainDiagramComponent のサーバー', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
                     },
@@ -1451,8 +1451,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of(routeStations) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal(routeStations) },
                 },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
             ],

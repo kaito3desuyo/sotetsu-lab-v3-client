@@ -1,7 +1,8 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 
 import { CalendarSelectDialogComponent } from './calendar-select-dialog.component';
 
@@ -17,8 +18,8 @@ describe('CalendarSelectDialogComponent', () => {
             providers: [
                 { provide: MatDialogRef, useValue: dialogRef },
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
             ],
         }).compileComponents();

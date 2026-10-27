@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -8,7 +8,7 @@ import {
     provideRouter,
 } from '@angular/router';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainLocationComponent } from './train-location.component';
 import { TrainLocationService } from './services/train-location.service';
@@ -42,12 +42,12 @@ describe('TrainLocationComponent', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
-                        operatingSystemEndsByRouteId$: of({}),
+                        operatingSystemEndsByRouteId: signal({}),
                     },
                 },
             ],
@@ -291,12 +291,12 @@ describe('TrainLocationComponent', () => {
                         },
                     },
                     {
-                        provide: RouteStationListStateQuery,
+                        provide: RouteStationListState,
                         useValue: {
-                            routeStations$: of([
+                            routeStations: signal([
                                 { routeId: 'route-1', routeName: '本線' },
                             ]),
-                            operatingSystemEndsByRouteId$: of({}),
+                            operatingSystemEndsByRouteId: signal({}),
                         },
                     },
                 ],
@@ -437,12 +437,12 @@ describe('TrainLocationComponent の再訪', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
-                        operatingSystemEndsByRouteId$: of({}),
+                        operatingSystemEndsByRouteId: signal({}),
                     },
                 },
             ],
@@ -583,12 +583,12 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
-                        operatingSystemEndsByRouteId$: of({}),
+                        operatingSystemEndsByRouteId: signal({}),
                     },
                 },
             ],

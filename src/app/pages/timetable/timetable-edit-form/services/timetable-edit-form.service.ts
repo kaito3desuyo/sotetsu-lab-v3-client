@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, of, Subject, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -42,8 +42,8 @@ export class TimetableEditFormService {
     readonly #operationService = inject(OperationService);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
+    readonly #agencyListState = inject(AgencyListState);
 
     #submittedEvent$ = new Subject<void>();
 
@@ -64,7 +64,7 @@ export class TimetableEditFormService {
     }
 
     fetchStations(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
@@ -80,17 +80,14 @@ export class TimetableEditFormService {
      * 折り畳みパネル内でユーザーが選択可能（情報削減はしない）。
      */
     fetchRoutes(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
 
         return this.#serviceService.findOneWithRoutes({ serviceId }).pipe(
             tap((data) => {
                 const routes = data.routes as RouteDetailsDto[];
                 TimetableEditFormStore.setRoutes(routes);
                 TimetableEditFormStore.setSelectedRouteIds(
-                    ownAgencyRouteIds(
-                        routes,
-                        this.#agencyListStateQuery.agencies,
-                    ),
+                    ownAgencyRouteIds(routes, this.#agencyListState.agencies()),
                 );
             }),
             map(() => undefined),

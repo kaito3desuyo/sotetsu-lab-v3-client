@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -14,7 +14,7 @@ import {
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
 import { TimetableEditFormService } from './services/timetable-edit-form.service';
@@ -74,8 +74,8 @@ describe('TimetableEditFormComponent', () => {
                     useValue: timetableEditFormService,
                 },
                 {
-                    provide: ServiceListStateQuery,
-                    useValue: { serviceId$: of('service-1') },
+                    provide: ServiceListState,
+                    useValue: { serviceId: signal('service-1') },
                 },
                 {
                     provide: ErrorHandlerService,

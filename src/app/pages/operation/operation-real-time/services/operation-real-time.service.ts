@@ -12,8 +12,8 @@ import { toZonedTime } from 'date-fns-tz';
 import { flow } from 'es-toolkit';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -35,8 +35,8 @@ export class OperationRealTimeService {
     readonly #operationService = inject(OperationService);
     readonly #formationService = inject(FormationService);
     readonly #operationSightingService = inject(OperationSightingService);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
 
     fetchRoutes(): Observable<void> {
         return this.#serviceService
@@ -48,8 +48,8 @@ export class OperationRealTimeService {
                     OperationRealTimeStore.setRoutes(data.routes);
                     OperationRealTimeStore.setAgencyOrder(
                         agenciesInThroughServiceOrder(
-                            this.#agencyListStateQuery.agencies,
-                            this.#routeStationListStateQuery.routeStations,
+                            this.#agencyListState.agencies(),
+                            this.#routeStationListState.routeStations(),
                         ).map((agency) => agency.agencyId),
                     );
                 }),

@@ -1,10 +1,10 @@
 import { APP_INITIALIZER, Provider } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
-import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { InitializeState } from 'src/app/global-states/initialize.state';
-import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
-import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
 import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
@@ -15,10 +15,10 @@ export const AppInitializerProvider: Provider = {
     useFactory:
         (
             tokenState: TokenState,
-            agencyListStateStore: AgencyListStateStore,
-            calendarListStateStore: CalendarListStateStore,
-            routeStationListStateStore: RouteStationListStateStore,
-            serviceListStateStore: ServiceListStateStore,
+            agencyListStateStore: AgencyListState,
+            calendarListStateStore: CalendarListState,
+            routeStationListStateStore: RouteStationListState,
+            serviceListStateStore: ServiceListState,
             todaysCalendarListStateStore: TodaysCalendarListStateStore,
             todaysOperationListStateStore: TodaysOperationListStateStore,
             todaysFormationListStateStore: TodaysFormationListStateStore,
@@ -45,10 +45,10 @@ export const AppInitializerProvider: Provider = {
         },
     deps: [
         TokenState,
-        AgencyListStateStore,
-        CalendarListStateStore,
-        RouteStationListStateStore,
-        ServiceListStateStore,
+        AgencyListState,
+        CalendarListState,
+        RouteStationListState,
+        ServiceListState,
         TodaysCalendarListStateStore,
         TodaysOperationListStateStore,
         TodaysFormationListStateStore,

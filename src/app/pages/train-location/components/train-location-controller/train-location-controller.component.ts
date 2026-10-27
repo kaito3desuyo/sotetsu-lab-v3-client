@@ -6,16 +6,15 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
@@ -53,9 +52,9 @@ export class TrainLocationControllerComponent {
             { value: 'specified', label: '時刻指定' },
         ];
 
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
 
     readonly calendarId = input<string | null>(null);
     readonly selectedRouteId = input<string | null>(null);
@@ -68,16 +67,9 @@ export class TrainLocationControllerComponent {
     readonly modeChange = output<TrainLocationMode>();
     readonly timeInputValueChange = output<string>();
 
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
-    readonly routes = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
+    readonly routes = this.#routeStationListState.routeStations;
+    readonly agencies = this.#agencyListState.agencies;
 
     readonly #agencyNameById = computed(
         () =>

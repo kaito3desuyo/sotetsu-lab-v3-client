@@ -1,11 +1,11 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { format } from 'date-fns';
 import { Observable, Subject, firstValueFrom, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
@@ -78,12 +78,12 @@ describe('TrainLocationComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
-                        operatingSystemEndsByRouteId$: of({}),
+                        operatingSystemEndsByRouteId: signal({}),
                     },
                 },
                 { provide: OfflineSnapshots, useValue: { save, restore } },

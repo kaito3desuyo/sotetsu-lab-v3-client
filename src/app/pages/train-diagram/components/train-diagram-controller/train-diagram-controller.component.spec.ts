@@ -1,10 +1,11 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { TrainDiagramControllerComponent } from './train-diagram-controller.component';
 
@@ -18,9 +19,9 @@ describe('TrainDiagramControllerComponent', () => {
             providers: [
                 provideNoopAnimations(),
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        calendars$: of([
+                        calendars: signal([
                             {
                                 calendarId: 'calendar-1',
                                 calendarName: '土休日',
@@ -30,9 +31,9 @@ describe('TrainDiagramControllerComponent', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             {
                                 routeId: 'route-1',
                                 routeName: '本線',
@@ -47,9 +48,9 @@ describe('TrainDiagramControllerComponent', () => {
                     },
                 },
                 {
-                    provide: AgencyListStateQuery,
+                    provide: AgencyListState,
                     useValue: {
-                        agencies$: of([
+                        agencies: signal([
                             { agencyId: 'agency-1', agencyName: '相鉄' },
                         ]),
                     },

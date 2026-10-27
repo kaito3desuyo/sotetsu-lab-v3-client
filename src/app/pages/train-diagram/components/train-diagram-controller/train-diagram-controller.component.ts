@@ -6,7 +6,6 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,9 +13,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import type { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import {
     FilterChipOption,
@@ -60,9 +59,9 @@ import {
     ],
 })
 export class TrainDiagramControllerComponent {
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
 
     readonly calendarId = input<string | null>(null);
     readonly selectedRouteIds = input<string[]>([]);
@@ -78,16 +77,9 @@ export class TrainDiagramControllerComponent {
 
     readonly jumpHours = DIAGRAM_JUMP_HOURS;
 
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
-    readonly routes = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
+    readonly routes = this.#routeStationListState.routeStations;
+    readonly agencies = this.#agencyListState.agencies;
 
     readonly routeOptions = computed<FilterChipOption[]>(() =>
         buildRouteOptions(this.routes(), this.agencies()),

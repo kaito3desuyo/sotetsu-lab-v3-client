@@ -1,7 +1,7 @@
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject, of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -25,12 +25,12 @@ describe('OperationRealTimeFilterComponent（運用・編成を取る前）', ()
             imports: [OperationRealTimeFilterComponent],
             providers: [
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
                 },
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
                 },
             ],
         }).compileComponents();
@@ -54,7 +54,7 @@ describe('OperationRealTimeFilterComponent（運用・編成を取る前）', ()
 describe('OperationRealTimeFilterComponent', () => {
     let component: OperationRealTimeFilterComponent;
     let fixture: ComponentFixture<OperationRealTimeFilterComponent>;
-    let agencies$: BehaviorSubject<AgencyDetailsDto[]>;
+    let agencies: WritableSignal<AgencyDetailsDto[]>;
 
     beforeEach(async () => {
         OperationRealTimeStore.setOperations(
@@ -63,15 +63,15 @@ describe('OperationRealTimeFilterComponent', () => {
         OperationRealTimeStore.setSelectedAgencyIds([]);
         OperationRealTimeStore.setSelectedGroupNames([]);
 
-        agencies$ = new BehaviorSubject<AgencyDetailsDto[]>([]);
+        agencies = signal<AgencyDetailsDto[]>([]);
 
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFilterComponent],
             providers: [
-                { provide: AgencyListStateQuery, useValue: { agencies$ } },
+                { provide: AgencyListState, useValue: { agencies } },
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
                 },
             ],
         }).compileComponents();
@@ -175,7 +175,7 @@ describe('OperationRealTimeFilterComponent', () => {
     });
 
     it('会社チップは、編成を持つ会社だけを出す（選んだままの会社は外せるよう残す）', () => {
-        agencies$.next([
+        agencies.set([
             { agencyId: 'a-sotetsu', agencyName: '相鉄' },
             { agencyId: 'a-jr', agencyName: 'JR東日本' },
             { agencyId: 'a-tokyu', agencyName: '東急' },

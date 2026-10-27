@@ -13,8 +13,8 @@ import { map, tap } from 'rxjs/operators';
 import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from '../libs/formation/usecase/formation.service';
 import { agenciesInThroughServiceOrder } from '../shared/agencies-in-through-service-order.util';
-import { AgencyListStateQuery } from './agency-list.state';
-import { RouteStationListStateQuery } from './route-station-list.state';
+import { AgencyListState } from './agency-list.state';
+import { RouteStationListState } from './route-station-list.state';
 
 type State = FormationDetailsDto;
 
@@ -46,8 +46,8 @@ export class TodaysFormationListStateStore {
 
 @Injectable({ providedIn: 'root' })
 export class TodaysFormationListStateQuery {
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
 
     readonly todaysFormations$ = state.pipe(
         selectEntities(),
@@ -60,8 +60,8 @@ export class TodaysFormationListStateQuery {
             [...formations].sort((a, b) => {
                 // 会社の順は相鉄と直通を始めた順（会社チップと同じ。agenciesInThroughServiceOrder）
                 const agencies = agenciesInThroughServiceOrder(
-                    this.#agencyListStateQuery.agencies,
-                    this.#routeStationListStateQuery.routeStations,
+                    this.#agencyListState.agencies(),
+                    this.#routeStationListState.routeStations(),
                 );
                 const getIndex = (agencyId: string) =>
                     agencies.findIndex((v) => v.agencyId === agencyId);

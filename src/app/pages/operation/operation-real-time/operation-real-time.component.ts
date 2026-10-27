@@ -20,7 +20,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -86,9 +86,7 @@ export class OperationRealTimeComponent {
 
     readonly isLoading = toSignal(OperationRealTimeStore.isLoading$);
 
-    readonly #agencies = toSignal(inject(AgencyListStateQuery).agencies$, {
-        initialValue: [],
-    });
+    readonly #agencies = inject(AgencyListState).agencies;
     readonly #operations = toSignal(OperationRealTimeStore.operations$, {
         initialValue: [],
     });

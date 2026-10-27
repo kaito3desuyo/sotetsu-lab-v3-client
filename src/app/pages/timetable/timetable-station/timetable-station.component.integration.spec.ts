@@ -1,4 +1,9 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import {
+    Component,
+    ChangeDetectionStrategy,
+    input,
+    signal,
+} from '@angular/core';
 import {
     ComponentFixture,
     ComponentFixtureAutoDetect,
@@ -16,8 +21,8 @@ import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -141,17 +146,17 @@ async function setup(overrides?: {
                 },
             },
             {
-                provide: CalendarListStateQuery,
-                useValue: { calendars$: of([calendarDto]) },
+                provide: CalendarListState,
+                useValue: { calendars: signal([calendarDto]) },
             },
             {
-                provide: RouteStationListStateQuery,
+                provide: RouteStationListState,
                 useValue: {
-                    stations$: of([
+                    stations: signal([
                         { stationId: YOKOHAMA, stationName: '横浜' },
                     ]),
-                    routeStations$: of([]),
-                    operatingSystemEndsByRouteId$: of({}),
+                    routeStations: signal([]),
+                    operatingSystemEndsByRouteId: signal({}),
                 },
             },
             // ---- libs モック（初回ロードの実解決順序・非同期性をエミュレート） ----

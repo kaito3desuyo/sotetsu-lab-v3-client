@@ -20,9 +20,9 @@ import { lastValueFrom } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -107,9 +107,9 @@ export class TrainLocationComponent {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #calendarListState = inject(CalendarListState);
 
     readonly isLoading = toSignal(TrainLocationStore.isLoading$);
     readonly hasFetchedTrainLocation = toSignal(
@@ -150,20 +150,11 @@ export class TrainLocationComponent {
         this.#todaysCalendarListStateQuery.todaysCalendarIds$,
         { initialValue: [] },
     );
-    readonly #operatingSystemEndsByRouteId = toSignal(
-        this.#routeStationListStateQuery.operatingSystemEndsByRouteId$,
-        { initialValue: {} },
-    );
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
-    readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
+    readonly #operatingSystemEndsByRouteId =
+        this.#routeStationListState.operatingSystemEndsByRouteId;
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
+    readonly #calendars = this.#calendarListState.calendars;
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
     );

@@ -1,14 +1,21 @@
-import { inject, Injectable } from '@angular/core';
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { inject } from '@angular/core';
 import {
-    getAllEntities,
-    selectEntities,
-    setEntities,
+    patchState,
+    signalStore,
+    type,
+    withComputed,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import {
+    entityConfig,
+    setAllEntities,
     withEntities,
-} from '@ngneat/elf-entities';
+} from '@ngrx/signals/entities';
 import { flatten, uniqBy } from 'es-toolkit';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { RouteDetailsDto } from '../libs/route/usecase/dtos/route-details.dto';
 import { RouteService } from '../libs/route/usecase/route.service';
 import { ServiceRouteDto } from '../libs/service/usecase/dtos/service-routes.dto';
@@ -17,16 +24,10 @@ import { OperatingSystemEnds } from '../shared/inbound-direction.util';
 
 const SERVICE_NAME = '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線';
 
-type State = RouteDetailsDto;
-
-const state = createStore(
-    { name: 'RouteStationList' },
-    withEntities<State, 'routeId'>({ initialValue: [], idKey: 'routeId' }),
-    withProps<{
-        /** 路線ごとの、系統の中で走る区間の始点駅・終点駅（始点側が上り）。系統に無い路線は入らない */
-        operatingSystemEndsByRouteId: Record<string, OperatingSystemEnds>;
-    }>({ operatingSystemEndsByRouteId: {} }),
-);
+const routeConfig = entityConfig({
+    entity: type<RouteDetailsDto>(),
+    selectId: (route) => route.routeId,
+});
 
 /** 系統の始点・終点（route_station_list の ID）を駅の ID に引き直す */
 function buildOperatingSystemEnds(
@@ -55,34 +56,50 @@ function buildOperatingSystemEnds(
     return ends;
 }
 
-@Injectable({ providedIn: 'root' })
-export class RouteStationListStateStore {
-    readonly #routeService = inject(RouteService);
-    readonly #serviceService = inject(ServiceService);
-
-    fetch(): Observable<void> {
-        return forkJoin([
-            this.#routeService.findMany({ serviceName: SERVICE_NAME }),
-            // 系統の路線ごとの始点・終点（前後の駅の左右・列車位置情報の図の向きに使う）
-            this.#serviceService.findMany({ serviceName: SERVICE_NAME }).pipe(
-                switchMap((services) =>
-                    services[0]
-                        ? this.#serviceService
-                              .findOneWithRoutes({
-                                  serviceId: services[0].serviceId,
-                              })
-                              .pipe(map((result) => result.routes ?? []))
-                        : of([] as ServiceRouteDto[]),
+export const RouteStationListState = signalStore(
+    { providedIn: 'root' },
+    withEntities(routeConfig),
+    withState<{
+        /** 路線ごとの、系統の中で走る区間の始点駅・終点駅（始点側が上り）。系統に無い路線は入らない */
+        operatingSystemEndsByRouteId: Record<string, OperatingSystemEnds>;
+    }>({ operatingSystemEndsByRouteId: {} }),
+    withComputed(({ entities }) => ({
+        /** 整列済みの路線（直通の系統順） */
+        routeStations: entities,
+        stations: () => {
+            const stations = flatten(
+                entities().map((route) =>
+                    route.routeStationLists.map((rsl) => rsl.station),
                 ),
-            ),
-        ]).pipe(
-            tap(([data, serviceRoutes]) => {
-                state.update(
-                    setProp('operatingSystemEndsByRouteId', () =>
-                        buildOperatingSystemEnds(data, serviceRoutes),
+            );
+            return uniqBy(stations, (o) => o.stationId);
+        },
+    })),
+    withMethods((store) => {
+        const routeService = inject(RouteService);
+        const serviceService = inject(ServiceService);
+
+        return {
+            fetch(): Observable<void> {
+                return forkJoin([
+                    routeService.findMany({ serviceName: SERVICE_NAME }),
+                    // 系統の路線ごとの始点・終点（前後の駅の左右・列車位置情報の図の向きに使う）
+                    serviceService.findMany({ serviceName: SERVICE_NAME }).pipe(
+                        switchMap((services) =>
+                            services[0]
+                                ? serviceService
+                                      .findOneWithRoutes({
+                                          serviceId: services[0].serviceId,
+                                      })
+                                      .pipe(
+                                          map((result) => result.routes ?? []),
+                                      )
+                                : of([] as ServiceRouteDto[]),
+                        ),
                     ),
-                    setEntities(
-                        Array.from(data)
+                ]).pipe(
+                    tap(([data, serviceRoutes]) => {
+                        const routes: RouteDetailsDto[] = Array.from(data)
                             .map((o) => ({
                                 ...o,
                                 routeStationLists: Array.from(
@@ -97,43 +114,26 @@ export class RouteStationListStateStore {
                                 (a, b) =>
                                     sort.findIndex((rn) => a.routeName === rn) -
                                     sort.findIndex((rn) => b.routeName === rn),
-                            ),
-                    ),
+                            );
+                        patchState(
+                            store,
+                            {
+                                operatingSystemEndsByRouteId:
+                                    buildOperatingSystemEnds(
+                                        data,
+                                        serviceRoutes,
+                                    ),
+                            },
+                            setAllEntities(routes, routeConfig),
+                        );
+                    }),
+                    map(() => undefined),
                 );
-            }),
-            map(() => undefined),
-        );
-    }
-}
-
-@Injectable({ providedIn: 'root' })
-export class RouteStationListStateQuery {
-    readonly routeStations$ = state.pipe(
-        selectEntities(),
-        map((routesMap) =>
-            Object.entries(routesMap).map(([_, value]) => value),
-        ),
-    );
-    /** 路線ごとの、系統の中で走る区間の始点駅・終点駅（始点側が上り） */
-    readonly operatingSystemEndsByRouteId$ = state.pipe(
-        select((s) => s.operatingSystemEndsByRouteId),
-    );
-    readonly stations$ = this.routeStations$.pipe(
-        map((routes) => {
-            const stations = flatten(
-                routes.map((route) =>
-                    route.routeStationLists.map((rsl) => rsl.station),
-                ),
-            );
-            return uniqBy(stations, (o) => o.stationId);
-        }),
-    );
-
-    /** 整列済みの路線（直通の系統順）。同期で読む必要がある並べ替え（会社の順など）に使う。 */
-    get routeStations(): RouteDetailsDto[] {
-        return state.query(getAllEntities());
-    }
-}
+            },
+        };
+    }),
+    withAppDevtools('RouteStationListState'),
+);
 
 const sort = [
     '本線',

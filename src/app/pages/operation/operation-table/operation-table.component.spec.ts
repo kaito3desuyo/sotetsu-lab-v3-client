@@ -1,4 +1,4 @@
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider, signal } from '@angular/core';
 import {
     ComponentFixture,
     DeferBlockState,
@@ -23,7 +23,7 @@ import {
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTableComponent } from './operation-table.component';
@@ -56,8 +56,8 @@ describe('OperationTableComponent', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
                     provide: TodaysCalendarListStateQuery,
@@ -376,8 +376,8 @@ describe('OperationTableComponent の読み込み中', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
                     provide: TodaysCalendarListStateQuery,
@@ -572,8 +572,8 @@ describe('OperationTableComponent のサーバー', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
                     provide: TodaysCalendarListStateQuery,
@@ -685,8 +685,8 @@ describe('OperationTableComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
                     provide: TodaysCalendarListStateQuery,

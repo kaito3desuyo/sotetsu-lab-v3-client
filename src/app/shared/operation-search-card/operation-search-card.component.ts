@@ -16,7 +16,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -54,9 +54,7 @@ export class OperationSearchCardComponent {
         null,
     );
 
-    readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
-        initialValue: [],
-    });
+    readonly calendars = inject(CalendarListState).calendars;
     readonly #todaysCalendarId = toSignal(
         inject(TodaysCalendarListStateQuery).todaysCalendarId$,
     );

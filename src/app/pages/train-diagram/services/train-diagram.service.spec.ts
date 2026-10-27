@@ -1,6 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -68,8 +69,8 @@ describe('Service: TrainDiagram', () => {
                 { provide: OperationService, useValue: operationServiceMock },
                 { provide: ServiceService, useValue: serviceServiceMock },
                 {
-                    provide: ServiceListStateQuery,
-                    useValue: { serviceId: 'service-1' },
+                    provide: ServiceListState,
+                    useValue: { serviceId: signal('service-1') },
                 },
                 {
                     provide: TripClassService,
@@ -162,7 +163,7 @@ describe('Service: TrainDiagram', () => {
             0: [representativeTrip as any],
             1: [],
         });
-        // 本来は train-diagram.component.ts が RouteStationListStateQuery.routeStations$ から
+        // 本来は train-diagram.component.ts が RouteStationListState.routeStations から
         // 別途設定する（選択路線フィルタと buildStationAxis の接続駅複製判定に必要）。
         TrainDiagramStore.setRouteStations([
             {

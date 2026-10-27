@@ -21,7 +21,7 @@ export interface StationGroup {
  * 駅別時刻表のページ上部と「時刻表を検索する」カードが使う。会社名は
  * 形式・会社の表示（formatFormationAnnotation）と同じ略称（agencyName）。
  * 路線は会社ごとにまとめ、会社は会社チップと同じ「相鉄と直通を始めた順」、会社の中は
- * routes の順（RouteStationListStateStore が整列済みの系統順）にする（ユーザー指示 2026-09-24。
+ * routes の順（RouteStationListState が整列済みの系統順）にする（ユーザー指示 2026-09-24。
  * 路線チップと同じ並び）。駅の並びは路線の中の順をそのまま保つ。
  * 路線をまたぐ駅（横浜・二俣川など）は各路線に重ねて出す。
  */

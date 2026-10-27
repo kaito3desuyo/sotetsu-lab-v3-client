@@ -28,7 +28,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -96,9 +96,7 @@ export class OperationRouteDiagramComponent {
     readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
-    readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
-        initialValue: [],
-    });
+    readonly calendars = inject(CalendarListState).calendars;
     /** 今日のダイヤ。サーバーは今日を取らないので、最初の描画は無い形（spec 5.2） */
     readonly #todaysCalendarId = afterFirstRender(
         toSignal(inject(TodaysCalendarListStateQuery).todaysCalendarId$),

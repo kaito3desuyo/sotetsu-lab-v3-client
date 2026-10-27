@@ -6,12 +6,12 @@ import type {
 } from '@angular/router';
 import { Subject } from 'rxjs';
 import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
-import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
 import { InitializeState } from 'src/app/global-states/initialize.state';
-import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
-import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
 import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
@@ -65,10 +65,10 @@ describe('initialDataResolver', () => {
             providers: [
                 { provide: TokenState, useValue: token },
                 { provide: UserState, useValue: user },
-                { provide: AgencyListStateStore, useValue: agency },
-                { provide: CalendarListStateStore, useValue: calendar },
-                { provide: RouteStationListStateStore, useValue: routeStation },
-                { provide: ServiceListStateStore, useValue: service },
+                { provide: AgencyListState, useValue: agency },
+                { provide: CalendarListState, useValue: calendar },
+                { provide: RouteStationListState, useValue: routeStation },
+                { provide: ServiceListState, useValue: service },
                 {
                     provide: TodaysCalendarListStateStore,
                     useValue: todaysCalendar,

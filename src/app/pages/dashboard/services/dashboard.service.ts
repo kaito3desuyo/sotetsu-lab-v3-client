@@ -1,10 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { format } from 'date-fns';
-import { forkJoin, Observable, of } from 'rxjs';
-import { catchError, first, map, tap } from 'rxjs/operators';
+import { defer, forkJoin, Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -23,8 +23,8 @@ export class DashboardService {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #routeStationListState = inject(RouteStationListState);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #operationService = inject(OperationService);
@@ -40,13 +40,12 @@ export class DashboardService {
             return of(undefined);
         }
 
-        return this.#calendarListStateQuery.selectByCalendarId(calendarId).pipe(
-            first(),
-            tap((calendar) => {
-                DashboardStore.setTodaysCalendar(calendar ?? null);
-            }),
-            map(() => undefined),
-        );
+        return defer(() => {
+            DashboardStore.setTodaysCalendar(
+                this.#calendarListState.entityMap()[calendarId] ?? null,
+            );
+            return of(undefined);
+        });
     }
 
     /**
@@ -89,8 +88,8 @@ export class DashboardService {
                 // 列車位置情報と同じ組にして、取得結果のキャッシュを共有する
                 fields: TRIP_BLOCK_TIMELINE_FIELDS,
             }),
-            routes: this.#routeStationListStateQuery.routeStations$.pipe(
-                first(),
+            routes: defer(() =>
+                of(this.#routeStationListState.routeStations()),
             ),
             // 乗り移り（折り返しではない）の端を数えないため。取れなくても本数は出す
             links: this.#operationService

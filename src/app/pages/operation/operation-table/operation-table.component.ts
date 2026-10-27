@@ -20,7 +20,7 @@ import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-s
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -74,7 +74,7 @@ export class OperationTableComponent {
     readonly #notificationService = inject(NotificationService);
     readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #operationTableService = inject(OperationTableService);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
@@ -85,9 +85,7 @@ export class OperationTableComponent {
     readonly isLoading = toSignal(OperationTableStore.isLoading$);
     readonly calendarId = toSignal(OperationTableStore.calendarId$);
     readonly calendar = toSignal(OperationTableStore.calendar$);
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
     readonly operationTrips = toSignal(OperationTableStore.operationTrips$, {
         initialValue: [],
     });

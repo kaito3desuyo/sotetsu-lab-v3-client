@@ -1,7 +1,7 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -27,8 +27,8 @@ async function createTable(): Promise<
         imports: [OperationRealTimeOperationTableComponent],
         providers: [
             {
-                provide: AgencyListStateQuery,
-                useValue: { agencies$: of([]) },
+                provide: AgencyListState,
+                useValue: { agencies: signal([]) },
             },
         ],
     })
@@ -85,8 +85,8 @@ describe('OperationRealTimeOperationTableComponent', () => {
             imports: [OperationRealTimeOperationTableComponent],
             providers: [
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
                 },
             ],
         })

@@ -1,8 +1,9 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -35,8 +36,8 @@ describe('OperationSearchCardComponent', () => {
                 provideRouter([]),
                 provideNoopAnimations(),
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
                     provide: TodaysCalendarListStateQuery,

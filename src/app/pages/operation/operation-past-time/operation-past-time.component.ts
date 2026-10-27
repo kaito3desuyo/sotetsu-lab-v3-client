@@ -12,7 +12,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
@@ -66,9 +66,7 @@ export class OperationPastTimeComponent {
     readonly #days = toSignal(OperationPastTimeStore.days$, {
         initialValue: null,
     });
-    readonly #agencies = toSignal(inject(AgencyListStateQuery).agencies$, {
-        initialValue: [],
-    });
+    readonly #agencies = inject(AgencyListState).agencies;
     readonly #selectedAgencyIds = toSignal(
         OperationPastTimeStore.selectedAgencyIds$,
         { initialValue: [] },

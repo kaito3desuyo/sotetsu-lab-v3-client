@@ -29,9 +29,9 @@ import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
@@ -102,27 +102,17 @@ export class TimetableStationComponent {
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
 
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
-    readonly stationOptions = toSignal(
-        this.#routeStationListStateQuery.stations$,
-        { initialValue: [] },
-    );
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
+    readonly stationOptions = this.#routeStationListState.stations;
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
 
     /** 駅 select の選択肢（「会社名 路線名」でまとめる。検索カードと共通）。 */
     readonly stationGroups = computed(() =>
@@ -131,10 +121,8 @@ export class TimetableStationComponent {
 
     readonly allLineOption = ALL_LINE_OPTION;
 
-    readonly #operatingSystemEndsByRouteId = toSignal(
-        this.#routeStationListStateQuery.operatingSystemEndsByRouteId$,
-        { initialValue: {} },
-    );
+    readonly #operatingSystemEndsByRouteId =
+        this.#routeStationListState.operatingSystemEndsByRouteId;
 
     /**
      * 前後の駅（分岐駅は隣を全部）。右が上り側・左が下り側（2026-10-23）。docs/design.md「前後へ送る」

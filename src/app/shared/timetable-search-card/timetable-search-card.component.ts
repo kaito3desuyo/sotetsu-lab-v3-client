@@ -24,9 +24,9 @@ import { Router } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -93,14 +93,9 @@ export class TimetableSearchCardComponent {
         { initialValue: this.form.get('tripDirection').value },
     );
 
-    readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$);
-    readonly #routeStations = toSignal(
-        inject(RouteStationListStateQuery).routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(inject(AgencyListStateQuery).agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = inject(CalendarListState).calendars;
+    readonly #routeStations = inject(RouteStationListState).routeStations;
+    readonly #agencies = inject(AgencyListState).agencies;
     /** 駅 select の選択肢を「会社名 路線名」でまとめる（ユーザー指示 2026-09-23）。 */
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),

@@ -1,5 +1,5 @@
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
     ActivatedRoute,
@@ -23,9 +23,9 @@ import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
@@ -46,10 +46,10 @@ describe('TimetableAllLineComponent', () => {
                 provideRouter([]),
                 TimetableAllLineService,
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -99,10 +99,10 @@ describe('TimetableAllLineComponent をサーバーで描くとき', () => {
                 },
                 TimetableAllLineService,
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -155,10 +155,10 @@ describe('TimetableAllLineComponent の URL の向き', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -289,10 +289,10 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -584,10 +584,10 @@ describe('TimetableAllLineComponent の帯の操作', () => {
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -736,22 +736,22 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies, agencies$: of(agencies) },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal(agencies) },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of(
+                        routeStations: signal(
                             routeOrder.map((routeId) => ({ routeId })),
                         ),
                     },
                 },
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        selectByCalendarId: () => of(undefined),
-                        calendars$: of([]),
+                        entityMap: signal({}),
+                        calendars: signal([]),
                     },
                 },
                 {
@@ -883,7 +883,11 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
 
     it('古い取得が失敗しても、保存した中身は戻さない', async () => {
         stations$ = of(undefined);
-        tripBlocks$ = failLater('offline-first');
+        // 取り直しが先に始まるよう、失敗は次のタスクよりさらに後に届ける
+        // （fetchData の途中の await の数に、タスクの順が左右されないようにする）
+        tripBlocks$ = timer(5).pipe(
+            switchMap(() => throwError(() => new Error('offline-first'))),
+        );
         await setup();
         fixture = TestBed.createComponent(TimetableAllLineComponent);
         // 先の取得が trip-blocks を取りに行くまで待つ（取る前に差し替えると先の取得も成功してしまう）

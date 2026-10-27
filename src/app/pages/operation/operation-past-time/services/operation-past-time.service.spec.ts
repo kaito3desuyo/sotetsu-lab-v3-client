@@ -1,5 +1,6 @@
+import { signal } from '@angular/core';
 import { TestBed, inject } from '@angular/core/testing';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
@@ -11,7 +12,10 @@ describe('Service: OperationPastTime', () => {
         TestBed.configureTestingModule({
             providers: [
                 OperationPastTimeService,
-                { provide: AgencyListStateQuery, useValue: { agencies: [] } },
+                {
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
+                },
                 { provide: CalendarService, useValue: {} },
                 { provide: FormationService, useValue: {} },
                 { provide: OperationSightingService, useValue: {} },

@@ -14,7 +14,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { PanelCardComponent } from 'src/app/shared/panel-card/panel-card.component';
@@ -68,7 +68,7 @@ export class TimetablePostCardComponent {
         { initialValue: this.form.get('tripDirection').value },
     );
 
-    readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$);
+    readonly calendars = inject(CalendarListState).calendars;
 
     /** 時刻表の入力は編集者だけ。足りない人には入力欄の代わりに案内を出す */
     readonly canEditTimetable = inject(UserState).canEditTimetable;
