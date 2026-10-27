@@ -26,28 +26,22 @@ describe('TimetableAllLineRouteFilterComponent', () => {
     let fixture: ComponentFixture<TimetableAllLineRouteFilterComponent>;
 
     beforeEach(async () => {
-        // 選択肢 r1(本線)/r2(厚木線)（group なし・agencyId を付けないので会社名が付かない）、選択 ['r1']。
-        TimetableAllLineStore.setStations([
-            makeRouteStation('st-r1', 'r1', '本線'),
-            makeRouteStation('st-r2', 'r2', '厚木線'),
-        ]);
-        TimetableAllLineStore.setAgencies([]);
-        TimetableAllLineStore.setRouteOrder([]);
-        TimetableAllLineStore.setSelectedRouteIds(['r1']);
-
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineRouteFilterComponent],
         }).compileComponents();
 
+        // 選択肢 r1(本線)/r2(厚木線)（group なし・agencyId を付けないので会社名が付かない）、選択 ['r1']。
+        const store = TestBed.inject(TimetableAllLineStore);
+        store.setStations([
+            makeRouteStation('st-r1', 'r1', '本線'),
+            makeRouteStation('st-r2', 'r2', '厚木線'),
+        ]);
+        store.setAgencies([]);
+        store.setRouteOrder([]);
+        store.setSelectedRouteIds(['r1']);
+
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        TimetableAllLineStore.setStations([]);
-        TimetableAllLineStore.setAgencies([]);
-        TimetableAllLineStore.setRouteOrder([]);
-        TimetableAllLineStore.setSelectedRouteIds([]);
     });
 
     it('should create', () => {
@@ -98,15 +92,9 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
             .compileComponents();
     });
 
-    afterEach(() => {
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
-        TimetableAllLineStore.setStations([]);
-    });
-
     it('ダイヤがあって取る前は、操作帯にチップの形の骨組みを出し、要約は空にする', () => {
-        TimetableAllLineStore.setCalendarId('cal-1');
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TestBed.inject(TimetableAllLineStore).setCalendarId('cal-1');
+        TestBed.inject(TimetableAllLineStore).setHasFetchedTripBlocks(false);
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
@@ -118,18 +106,18 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
     });
 
     it('取り終えたら骨組みを本物のチップに替える（帯は作り直さない）', () => {
-        TimetableAllLineStore.setStations([
+        TestBed.inject(TimetableAllLineStore).setStations([
             makeRouteStation('st-r1', 'r1', '本線'),
         ]);
-        TimetableAllLineStore.setCalendarId('cal-1');
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TestBed.inject(TimetableAllLineStore).setCalendarId('cal-1');
+        TestBed.inject(TimetableAllLineStore).setHasFetchedTripBlocks(false);
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.detectChanges();
         const band = (fixture.nativeElement as HTMLElement).querySelector(
             'app-control-band',
         );
 
-        TimetableAllLineStore.setHasFetchedTripBlocks(true);
+        TestBed.inject(TimetableAllLineStore).setHasFetchedTripBlocks(true);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -139,7 +127,9 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
     });
 
     it('ダイヤが無く選択肢も無ければ、操作帯ごと出さない（今のまま）', () => {
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        TestBed.inject(TimetableAllLineStore).setCalendarId(
+            null as unknown as string,
+        );
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.detectChanges();
 
@@ -151,7 +141,9 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
     });
 
     it('alwaysVisible なら、選択肢が無くても帯を出す', () => {
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
+        TestBed.inject(TimetableAllLineStore).setCalendarId(
+            null as unknown as string,
+        );
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.componentRef.setInput('alwaysVisible', true);
         fixture.detectChanges();
@@ -164,8 +156,8 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
     });
 
     it('summaryLead は路線の要約の前に付き、取る前は頭だけになる', () => {
-        TimetableAllLineStore.setCalendarId('cal-1');
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        TestBed.inject(TimetableAllLineStore).setCalendarId('cal-1');
+        TestBed.inject(TimetableAllLineStore).setHasFetchedTripBlocks(false);
         fixture = TestBed.createComponent(TimetableAllLineRouteFilterComponent);
         fixture.componentRef.setInput(
             'summaryLead',
@@ -176,7 +168,7 @@ describe('TimetableAllLineRouteFilterComponent の読み込み中', () => {
             '2026/3/14改正 平日ダイヤ 下り',
         );
 
-        TimetableAllLineStore.setHasFetchedTripBlocks(true);
+        TestBed.inject(TimetableAllLineStore).setHasFetchedTripBlocks(true);
         fixture.detectChanges();
         expect(fixture.componentInstance.bandSummaryOrEmpty()).toBe(
             '2026/3/14改正 平日ダイヤ 下り 全路線',

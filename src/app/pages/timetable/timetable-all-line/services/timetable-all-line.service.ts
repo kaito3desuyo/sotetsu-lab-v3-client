@@ -40,21 +40,22 @@ export class TimetableAllLineService {
     readonly #serviceService = inject(ServiceService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #serviceListState = inject(ServiceListState);
+    readonly #store = inject(TimetableAllLineStore);
 
     fetchStations(): Observable<void> {
         const serviceId = this.#serviceListState.serviceId();
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
-                TimetableAllLineStore.setStations(data.stations);
+                this.#store.setStations(data.stations);
             }),
             map(() => undefined),
         );
     }
 
     fetchTripBlocks(): Observable<void> {
-        const calendarId = TimetableAllLineStore.calendarId;
-        const tripDirection = TimetableAllLineStore.tripDirection;
-        const tripBlockId = TimetableAllLineStore.tripBlockId;
+        const calendarId = this.#store.calendarId();
+        const tripDirection = this.#store.tripDirection();
+        const tripBlockId = this.#store.tripBlockId();
 
         const tripBlocks$ = tripBlockId
             ? this.#tripBlockService
@@ -68,7 +69,7 @@ export class TimetableAllLineService {
 
         return tripBlocks$.pipe(
             tap((data: TripBlockDetailsDto[]) => {
-                TimetableAllLineStore.setTripBlocks(data);
+                this.#store.setTripBlocks(data);
             }),
             map(() => undefined),
         );

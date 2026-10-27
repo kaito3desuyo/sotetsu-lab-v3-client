@@ -220,7 +220,7 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         });
 
         expect(navigate).not.toHaveBeenCalled();
-        expect(TimetableAllLineStore.tripDirection).toBe(1);
+        expect(TestBed.inject(TimetableAllLineStore).tripDirection()).toBe(1);
     });
 
     it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
@@ -262,7 +262,12 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     const query = (selector: string) =>
         (fixture.nativeElement as HTMLElement).querySelector(selector);
 
-    const setup = async (params: Record<string, string>) => {
+    const setup = async (
+        params: Record<string, string>,
+        beforeCreate?: (
+            store: InstanceType<typeof TimetableAllLineStore>,
+        ) => void,
+    ) => {
         tripBlocks$ = new ReplaySubject<undefined>(1);
         fetchTripBlocksCalls = 0;
         canEditTimetable = false;
@@ -319,6 +324,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        beforeCreate?.(TestBed.inject(TimetableAllLineStore));
         fixture = TestBed.createComponent(TimetableAllLineComponent);
         fixture.detectChanges();
     };
@@ -326,9 +332,6 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     afterEach(() => {
         jest.restoreAllMocks();
         fixture.destroy();
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
-        TimetableAllLineStore.resetLoading();
     });
 
     it('ダイヤがあって取り終わるまでは、表の骨組みを出し、本物の表は出さない', async () => {
@@ -451,7 +454,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
             await flush();
 
             expect(rejected).toBeInstanceOf(Error);
-            expect(await firstValueFrom(TimetableAllLineStore.isLoading$)).toBe(
+            expect(TestBed.inject(TimetableAllLineStore).isLoading()).toBe(
                 false,
             );
         },
@@ -479,12 +482,13 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     });
 
     it('入ったときは前の訪問の「取り終えた」を引き継がない', async () => {
-        TimetableAllLineStore.setCalendarId('cal-old');
-        TimetableAllLineStore.setHasFetchedTripBlocks(true);
         // 向きの無い URL は取得せず置き換えるだけ（取得の始めのリセットでは骨組みに戻らない道）
         jest.spyOn(Router.prototype, 'navigate').mockResolvedValue(true);
 
-        await setup({ calendar_id: 'cal-1' });
+        await setup({ calendar_id: 'cal-1' }, (store) => {
+            store.setCalendarId('cal-old');
+            store.setHasFetchedTripBlocks(true);
+        });
 
         expect(fetchTripBlocksCalls).toBe(0);
         expect(query('[data-testid="all-line-table-skeleton"]')).not.toBeNull();
@@ -618,10 +622,6 @@ describe('TimetableAllLineComponent の帯の操作', () => {
 
     afterEach(() => {
         jest.restoreAllMocks();
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
-        TimetableAllLineStore.resetLoading();
-        TimetableAllLineStore.setControlCollapsed(false);
         delete params['trip_block_id'];
     });
 
@@ -651,14 +651,14 @@ describe('TimetableAllLineComponent の帯の操作', () => {
     });
 
     it('同じダイヤを選んでも移らない', () => {
-        TimetableAllLineStore.setCalendarId('cal-1');
+        TestBed.inject(TimetableAllLineStore).setCalendarId('cal-1');
         component.onCalendarChange('cal-1');
         expect(navigate).not.toHaveBeenCalled();
     });
 
     it('駅を選ぶと、同じダイヤ・方向で駅別時刻表へ移る', () => {
-        TimetableAllLineStore.setCalendarId('cal-1');
-        TimetableAllLineStore.setTripDirection(1);
+        TestBed.inject(TimetableAllLineStore).setCalendarId('cal-1');
+        TestBed.inject(TimetableAllLineStore).setTripDirection(1);
         component.onStationSelect('st-9');
         expect(navigate).toHaveBeenCalledWith([
             'timetable',
@@ -778,31 +778,19 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
             .compileComponents();
     };
 
-    const emptyStore = () => {
-        TimetableAllLineStore.setStations([]);
-        TimetableAllLineStore.setAgencies([]);
-        TimetableAllLineStore.setRouteOrder([]);
-        TimetableAllLineStore.setTripBlocks([]);
-        TimetableAllLineStore.setSelectedRouteIds([]);
-    };
-
     afterEach(() => {
         fetchDataSpy.mockRestore();
         fixture?.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        emptyStore();
-        TimetableAllLineStore.setCalendarId(null as unknown as string);
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
-        TimetableAllLineStore.resetLoading();
     });
 
     it('成功したら条件と中身を保存する', async () => {
         stations$ = of(undefined);
         tripBlocks$ = of(undefined);
         await setup();
-        TimetableAllLineStore.setStations(stations);
-        TimetableAllLineStore.setTripBlocks(tripBlocks);
+        TestBed.inject(TimetableAllLineStore).setStations(stations);
+        TestBed.inject(TimetableAllLineStore).setTripBlocks(tripBlocks);
 
         fixture = TestBed.createComponent(TimetableAllLineComponent);
         await flush();
@@ -853,12 +841,12 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(await firstValueFrom(TimetableAllLineStore.stations$)).toEqual([
-            expect.objectContaining({ stationId: 'st-1' }),
-        ]);
+        expect(TestBed.inject(TimetableAllLineStore).visibleStations()).toEqual(
+            [expect.objectContaining({ stationId: 'st-1' })],
+        );
         // 戻した駅の路線に選択を合わせている（自社の路線が無いので全路線 ON のフォールバック）
         expect(
-            await firstValueFrom(TimetableAllLineStore.selectedRouteIds$),
+            TestBed.inject(TimetableAllLineStore).selectedRouteIds(),
         ).toEqual(['route-9']);
         expect(fixture.componentInstance.isLoading()).toBe(false);
     });
@@ -918,7 +906,121 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
         expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
         expect(
-            await firstValueFrom(TimetableAllLineStore.hasFetchedTripBlocks$),
+            TestBed.inject(TimetableAllLineStore).hasFetchedTripBlocks(),
         ).toBe(true);
+    });
+});
+
+describe('TimetableAllLineComponent がストアから読む名前', () => {
+    const route = (routeId: string) => ({
+        routeStationListId: routeId,
+        route: { routeId, routeName: routeId },
+    });
+    const rawStations = [
+        {
+            stationId: 'st-1',
+            stationName: 'A',
+            routeStationLists: [route('r1')],
+        },
+        {
+            stationId: 'st-2',
+            stationName: 'B',
+            routeStationLists: [route('r2')],
+        },
+    ] as never;
+    const tripBlocks = [
+        {
+            tripBlockId: 'tb-1',
+            trips: [
+                {
+                    tripId: 't-1',
+                    tripBlockId: 'tb-1',
+                    times: [
+                        {
+                            stationId: 'st-1',
+                            stopSequence: 1,
+                            arrivalTime: null,
+                            departureTime: '05:00:00',
+                        },
+                    ],
+                },
+            ],
+        },
+    ] as never;
+
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap({})),
+                        snapshot: { params: {} },
+                    },
+                },
+                {
+                    provide: TimetableAllLineService,
+                    useValue: {
+                        fetchStations: () => of(undefined),
+                        fetchTripBlocks: () => of(undefined),
+                    },
+                },
+                {
+                    provide: CalendarListState,
+                    useValue: {
+                        entityMap: signal({}),
+                        calendars: signal([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    });
+
+    it('stations は取得したままの駅でなく、路線で絞った表示駅を読む', () => {
+        const store = TestBed.inject(TimetableAllLineStore);
+        const component = TestBed.createComponent(
+            TimetableAllLineComponent,
+        ).componentInstance;
+        store.setStations(rawStations);
+        store.setSelectedRouteIds(['r1']);
+
+        expect(store.stations().length).toBe(2);
+        expect(component.stations().map((s) => s.stationId)).toEqual(['st-1']);
+    });
+
+    it('pageSettings は件数（length）を列に出す列車の本数にしたものを読む', () => {
+        const store = TestBed.inject(TimetableAllLineStore);
+        const component = TestBed.createComponent(
+            TimetableAllLineComponent,
+        ).componentInstance;
+        store.setStations(rawStations);
+        store.setTripBlocks(tripBlocks);
+        store.setSelectedRouteIds(['r1']);
+        store.setPageSettings({ pageIndex: 0, pageSize: 10, length: 0 });
+
+        expect(store.pageSettings().length).toBe(0);
+        expect(component.pageSettings()).toEqual({
+            pageIndex: 0,
+            pageSize: 10,
+            length: 1,
+        });
+        expect(component.trips().map((t) => t.tripId)).toEqual(['t-1']);
     });
 });

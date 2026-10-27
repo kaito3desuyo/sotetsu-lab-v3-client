@@ -12,7 +12,7 @@ export const TIMETABLE_ALL_LINE_ROUTES: Routes = [
             ),
         providers: [TimetableAllLineService],
         resolve: {
-            from: pageResolver(TimetableAllLineStore.persistInitialized$),
+            from: pageResolver(TimetableAllLineStore),
         },
         data: {
             title: '全線時刻表',
