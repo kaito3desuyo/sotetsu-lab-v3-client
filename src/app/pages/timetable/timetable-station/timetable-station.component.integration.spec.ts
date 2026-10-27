@@ -35,7 +35,6 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
-import { TimetableStationStore } from './stores/timetable-station.store';
 import { TimetableStationComponent } from './timetable-station.component';
 
 /**
@@ -233,11 +232,6 @@ async function setup(overrides?: {
 }
 
 describe('TimetableStationComponent 統合（初回ロードの表示モデル再構築）', () => {
-    beforeEach(() => {
-        // ストアはモジュールシングルトンのため、前テストのクロスセクションを持ち越さない
-        TimetableStationStore.resetOperationSightingTimeCrossSections();
-    });
-
     it('初回フェッチ解決後、追加操作なしで全セルに充当編成が描画される', async () => {
         const fixture = await setup();
 

@@ -169,9 +169,9 @@ describe('TimetableStationComponent の読み込み中', () => {
     afterEach(() => {
         fetchDataSpy.mockRestore();
         fixture.destroy();
-        TimetableStationStore.setTrips([]);
-        TimetableStationStore.setHasFetchedTimetable(false);
-        TimetableStationStore.resetLoading();
+        TestBed.inject(TimetableStationStore).setTrips([]);
+        TestBed.inject(TimetableStationStore).setHasFetchedTimetable(false);
+        TestBed.inject(TimetableStationStore).resetLoading();
     });
 
     const finishFetch = async () => {
@@ -182,7 +182,9 @@ describe('TimetableStationComponent の読み込み中', () => {
     };
 
     it('取り終わるまでは時刻表の骨組みを出し、「この条件の列車情報はありません」を出さない', () => {
-        TimetableStationStore.setCalendar({ calendarId: 'cal-1' } as never);
+        TestBed.inject(TimetableStationStore).setCalendar({
+            calendarId: 'cal-1',
+        } as never);
         fixture.detectChanges();
 
         expect(
@@ -192,7 +194,9 @@ describe('TimetableStationComponent の読み込み中', () => {
     });
 
     it('取り終えて 0 件なら空表示を出す', async () => {
-        TimetableStationStore.setCalendar({ calendarId: 'cal-1' } as never);
+        TestBed.inject(TimetableStationStore).setCalendar({
+            calendarId: 'cal-1',
+        } as never);
 
         await finishFetch();
 
@@ -370,7 +374,7 @@ describe('TimetableStationComponent のサーバー', () => {
 
     afterEach(() => {
         jest.clearAllMocks();
-        TimetableStationStore.resetLoading();
+        TestBed.inject(TimetableStationStore).resetLoading();
     });
 
     it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
@@ -500,21 +504,23 @@ describe('TimetableStationComponent の圏外の保存', () => {
     };
 
     const fillStore = () => {
-        TimetableStationStore.setCalendar(calendar);
-        TimetableStationStore.setTrips(trips);
-        TimetableStationStore.setTripBlocks(tripBlocks);
-        TimetableStationStore.setTripClasses(tripClasses);
-        TimetableStationStore.setStations(stations);
-        TimetableStationStore.setOperations(operations);
+        const store = TestBed.inject(TimetableStationStore);
+        store.setCalendar(calendar);
+        store.setTrips(trips);
+        store.setTripBlocks(tripBlocks);
+        store.setTripClasses(tripClasses);
+        store.setStations(stations);
+        store.setOperations(operations);
     };
 
     const emptyStore = () => {
-        TimetableStationStore.setCalendar(null as never);
-        TimetableStationStore.setTrips([]);
-        TimetableStationStore.setTripBlocks([]);
-        TimetableStationStore.setTripClasses([]);
-        TimetableStationStore.setStations([]);
-        TimetableStationStore.setOperations([]);
+        const store = TestBed.inject(TimetableStationStore);
+        store.setCalendar(null as never);
+        store.setTrips([]);
+        store.setTripBlocks([]);
+        store.setTripClasses([]);
+        store.setStations([]);
+        store.setOperations([]);
     };
 
     afterEach(() => {
@@ -524,8 +530,8 @@ describe('TimetableStationComponent の圏外の保存', () => {
         jest.clearAllMocks();
         restore.mockReset();
         emptyStore();
-        TimetableStationStore.setHasFetchedTimetable(false);
-        TimetableStationStore.resetLoading();
+        TestBed.inject(TimetableStationStore).setHasFetchedTimetable(false);
+        TestBed.inject(TimetableStationStore).resetLoading();
     });
 
     it('成功したら条件と中身を保存する', async () => {
@@ -583,7 +589,7 @@ describe('TimetableStationComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(TimetableStationStore.snapshot()).toEqual({
+        expect(TestBed.inject(TimetableStationStore).snapshot()).toEqual({
             calendar,
             trips,
             tripBlocks,

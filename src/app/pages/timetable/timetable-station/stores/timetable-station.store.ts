@@ -1,8 +1,17 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
 import { format, parse } from 'date-fns';
 import { minBy } from 'es-toolkit/compat';
-import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -57,23 +66,20 @@ export type TimetableStationSnapshot = Pick<
 export type TimetableStationSightingsSnapshot =
     StoreProps['operationSightingTimeCrossSections'];
 
-const store = createStore(
-    { name: 'TimetableStationStore' },
-    withProps<StoreProps>({
-        calendarId: null,
-        stationId: null,
-        tripDirection: null,
-        calendar: null,
-        trips: [],
-        tripBlocks: [],
-        tripClasses: [],
-        stations: [],
-        operations: [],
-        operationSightingTimeCrossSections: {},
-        hasFetchedTimetable: false,
-        loadingQueue: [],
-    }),
-);
+const initialState: StoreProps = {
+    calendarId: null,
+    stationId: null,
+    tripDirection: null,
+    calendar: null,
+    trips: [],
+    tripBlocks: [],
+    tripClasses: [],
+    stations: [],
+    operations: [],
+    operationSightingTimeCrossSections: {},
+    hasFetchedTimetable: false,
+    loadingQueue: [],
+};
 
 function sortTrips(
     trips: TripDetailsDto[],
@@ -112,13 +118,21 @@ function sortTrips(
             const aStationTime = a.times.find((t) => t.stationId === stationId);
             const bStationTime = b.times.find((t) => t.stationId === stationId);
             const aDay =
-                aStationTime?.departureDays ?? aStationTime?.arrivalDays ?? null;
+                aStationTime?.departureDays ??
+                aStationTime?.arrivalDays ??
+                null;
             const aTime =
-                aStationTime?.departureTime ?? aStationTime?.arrivalTime ?? null;
+                aStationTime?.departureTime ??
+                aStationTime?.arrivalTime ??
+                null;
             const bDay =
-                bStationTime?.departureDays ?? bStationTime?.arrivalDays ?? null;
+                bStationTime?.departureDays ??
+                bStationTime?.arrivalDays ??
+                null;
             const bTime =
-                bStationTime?.departureTime ?? bStationTime?.arrivalTime ?? null;
+                bStationTime?.departureTime ??
+                bStationTime?.arrivalTime ??
+                null;
 
             return (
                 toServiceSeconds(aDay, aTime) - toServiceSeconds(bDay, bTime)
@@ -182,159 +196,146 @@ function generateTableData(
     return data;
 }
 
-export const TimetableStationStore = {
-    setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
-        store.update(setProp('calendarId', () => calendarId));
-    },
-    setStationId(stationId: StationDetailsDto['stationId']): void {
-        store.update(setProp('stationId', () => stationId));
-    },
-    setTripDirection(tripDirection: ETripDirection): void {
-        store.update(setProp('tripDirection', () => tripDirection));
-    },
-    setCalendar(calendar: CalendarDetailsDto): void {
-        store.update(setProp('calendar', () => calendar));
-    },
-    setTrips(trips: TripDetailsDto[]): void {
-        store.update(setProp('trips', () => trips));
-    },
-    setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
-        store.update(setProp('tripBlocks', () => tripBlocks));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setStations(stations: StationDetailsDto[]): void {
-        store.update(setProp('stations', () => stations));
-    },
-    setOperations(operations: OperationDetailsDto[]): void {
-        store.update(setProp('operations', () => operations));
-    },
-    setOperationSightingTimeCrossSection(
-        operationNumber: string,
-        timeCrossSection: OperationSightingTimeCrossSectionDto,
-    ): void {
-        store.update(
-            setProp('operationSightingTimeCrossSections', (state) => ({
-                ...state,
-                [operationNumber]: timeCrossSection,
-            })),
-        );
-    },
-    resetOperationSightingTimeCrossSections(): void {
-        store.update(
-            setProp('operationSightingTimeCrossSections', () => ({})),
-        );
-    },
-    /** いまの駅・ダイヤ・方向の取得が終わったか（失敗しても true）。取る前は時刻表の代わりに骨組みを出す */
-    setHasFetchedTimetable(value: boolean): void {
-        store.update(setProp('hasFetchedTimetable', () => value));
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): TimetableStationSnapshot {
-        const {
-            calendar,
-            trips,
-            tripBlocks,
-            tripClasses,
-            stations,
-            operations,
-        } = store.getValue();
+export const TimetableStationStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(({ trips, tripBlocks, stationId, loadingQueue }) => ({
+        isLoading: computed(() => loadingQueue().length > 0),
+        operationIds: computed(() => extractOperationIds(trips())),
+        timetableData: computed(() =>
+            generateTableData(
+                sortTrips(trips(), tripBlocks(), stationId()),
+                stationId(),
+            ),
+        ),
+    })),
+    withMethods((store) => {
+        // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+        // 後から終わって新しい骨組みを消さないよう、コンポーネントでなくストアで数える
+        let fetchSeq = 0;
+
         return {
-            calendar,
-            trips,
-            tripBlocks,
-            tripClasses,
-            stations,
-            operations,
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
+            setCalendarId(calendarId: CalendarDetailsDto['calendarId']): void {
+                patchState(store, { calendarId });
+            },
+            setStationId(stationId: StationDetailsDto['stationId']): void {
+                patchState(store, { stationId });
+            },
+            setTripDirection(tripDirection: ETripDirection): void {
+                patchState(store, { tripDirection });
+            },
+            setCalendar(calendar: CalendarDetailsDto): void {
+                patchState(store, { calendar });
+            },
+            setTrips(trips: TripDetailsDto[]): void {
+                patchState(store, { trips });
+            },
+            setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
+                patchState(store, { tripBlocks });
+            },
+            setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+                patchState(store, { tripClasses });
+            },
+            setStations(stations: StationDetailsDto[]): void {
+                patchState(store, { stations });
+            },
+            setOperations(operations: OperationDetailsDto[]): void {
+                patchState(store, { operations });
+            },
+            setOperationSightingTimeCrossSection(
+                operationNumber: string,
+                timeCrossSection: OperationSightingTimeCrossSectionDto,
+            ): void {
+                patchState(store, (state) => ({
+                    operationSightingTimeCrossSections: {
+                        ...state.operationSightingTimeCrossSections,
+                        [operationNumber]: timeCrossSection,
+                    },
+                }));
+            },
+            resetOperationSightingTimeCrossSections(): void {
+                patchState(store, { operationSightingTimeCrossSections: {} });
+            },
+            /** いまの駅・ダイヤ・方向の取得が終わったか（失敗しても true）。取る前は時刻表の代わりに骨組みを出す */
+            setHasFetchedTimetable(value: boolean): void {
+                patchState(store, { hasFetchedTimetable: value });
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+            /** 圏外のために保存する中身を取り出す */
+            snapshot(): TimetableStationSnapshot {
+                return {
+                    calendar: store.calendar(),
+                    trips: store.trips(),
+                    tripBlocks: store.tripBlocks(),
+                    tripClasses: store.tripClasses(),
+                    stations: store.stations(),
+                    operations: store.operations(),
+                };
+            },
+            /** 保存した中身を戻す（条件の calendarId・stationId・tripDirection は今のまま） */
+            restoreSnapshot(data: TimetableStationSnapshot): void {
+                patchState(store, {
+                    calendar: data.calendar,
+                    trips: data.trips,
+                    tripBlocks: data.tripBlocks,
+                    tripClasses: data.tripClasses,
+                    stations: data.stations,
+                    operations: data.operations,
+                });
+            },
+
+            /** 圏外のために保存する充当編成を取り出す */
+            snapshotOperationSightingTimeCrossSections(): TimetableStationSightingsSnapshot {
+                return store.operationSightingTimeCrossSections();
+            },
+            /** 保存した充当編成を戻す */
+            restoreOperationSightingTimeCrossSections(
+                data: TimetableStationSightingsSnapshot,
+            ): void {
+                patchState(store, { operationSightingTimeCrossSections: data });
+            },
         };
-    },
-    /** 保存した中身を戻す（条件の calendarId・stationId・tripDirection は今のまま） */
-    restoreSnapshot(data: TimetableStationSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            calendar: data.calendar,
-            trips: data.trips,
-            tripBlocks: data.tripBlocks,
-            tripClasses: data.tripClasses,
-            stations: data.stations,
-            operations: data.operations,
-        }));
-    },
-
-    /** 圏外のために保存する充当編成を取り出す */
-    snapshotOperationSightingTimeCrossSections(): TimetableStationSightingsSnapshot {
-        return store.getValue().operationSightingTimeCrossSections;
-    },
-    /** 保存した充当編成を戻す */
-    restoreOperationSightingTimeCrossSections(
-        data: TimetableStationSightingsSnapshot,
-    ): void {
-        store.update(setProp('operationSightingTimeCrossSections', () => data));
-    },
-
-    calendarId$: store.pipe(select((state) => state.calendarId)),
-    stationId$: store.pipe(select((state) => state.stationId)),
-    tripDirection$: store.pipe(select((state) => state.tripDirection)),
-    calendar$: store.pipe(select((state) => state.calendar)),
-    trips$: store.pipe(select((state) => state.trips)),
-    tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    stations$: store.pipe(select((state) => state.stations)),
-    operations$: store.pipe(select((state) => state.operations)),
-    operationSightingTimeCrossSections$: store.pipe(
-        select((state) => state.operationSightingTimeCrossSections),
+    }),
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'TimetableStation',
+                select: () => store.snapshot(),
+                apply: (data: TimetableStationSnapshot) =>
+                    store.restoreSnapshot(data),
+            },
+            sightings: {
+                key: 'TimetableStationSightings',
+                select: () =>
+                    store.snapshotOperationSightingTimeCrossSections(),
+                apply: (data: TimetableStationSightingsSnapshot) =>
+                    store.restoreOperationSightingTimeCrossSections(data),
+            },
+        }),
     ),
-    hasFetchedTimetable$: store.pipe(
-        select((state) => state.hasFetchedTimetable),
-    ),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
-
-    timetableData$: combineLatest([
-        store.pipe(select((state) => state.trips)),
-        store.pipe(select((state) => state.tripBlocks)),
-        store.pipe(select((state) => state.stationId)),
-    ]).pipe(
-        map(([trips, tripBlocks, stationId]) => ({
-            trips: sortTrips(trips, tripBlocks, stationId),
-            stationId,
-        })),
-        map(({ trips, stationId }) => generateTableData(trips, stationId)),
-    ),
-
-    get calendarId(): CalendarDetailsDto['calendarId'] | null {
-        return store.getValue().calendarId;
-    },
-    get stationId(): StationDetailsDto['stationId'] | null {
-        return store.getValue().stationId;
-    },
-    get tripDirection(): ETripDirection | null {
-        return store.getValue().tripDirection;
-    },
-    get trips(): TripDetailsDto[] {
-        return store.getValue().trips;
-    },
-    get tripBlocks(): TripBlockDetailsDto[] {
-        return store.getValue().tripBlocks;
-    },
-    get operationIds(): string[] {
-        return extractOperationIds(store.getValue().trips);
-    },
-    get operations(): OperationDetailsDto[] {
-        return store.getValue().operations;
-    },
-    get operationSightingTimeCrossSections(): Record<
-        string,
-        OperationSightingTimeCrossSectionDto
-    > {
-        return store.getValue().operationSightingTimeCrossSections;
-    },
-} as const;
+    withAppDevtools('TimetableStationStore'),
+    withHooks({
+        onInit(store) {
+            // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ
+            store.resetLoading();
+        },
+    }),
+);

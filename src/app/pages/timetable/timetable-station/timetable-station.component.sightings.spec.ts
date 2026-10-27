@@ -108,17 +108,18 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
 
     afterEach(() => {
         fixture.destroy();
-        TimetableStationStore.resetOperationSightingTimeCrossSections();
-        TimetableStationStore.setHasFetchedTimetable(false);
-        TimetableStationStore.resetLoading();
+        TestBed.inject(
+            TimetableStationStore,
+        ).resetOperationSightingTimeCrossSections();
+        TestBed.inject(TimetableStationStore).setHasFetchedTimetable(false);
+        TestBed.inject(TimetableStationStore).resetLoading();
     });
 
     it('充当編成が取れたら保存する', async () => {
         sightingsFetched = new Observable<boolean>((subscriber) => {
-            TimetableStationStore.setOperationSightingTimeCrossSection(
-                '51',
-                crossSection,
-            );
+            TestBed.inject(
+                TimetableStationStore,
+            ).setOperationSightingTimeCrossSection('51', crossSection);
             subscriber.next(true);
             subscriber.complete();
         });
@@ -150,7 +151,9 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         await flush();
 
         expect(
-            TimetableStationStore.operationSightingTimeCrossSections,
+            TestBed.inject(
+                TimetableStationStore,
+            ).operationSightingTimeCrossSections(),
         ).toEqual({ '51': crossSection });
         expect(open).toHaveBeenCalledTimes(1);
         expect(open).toHaveBeenCalledWith(
@@ -174,7 +177,9 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         await flush();
 
         expect(
-            TimetableStationStore.operationSightingTimeCrossSections,
+            TestBed.inject(
+                TimetableStationStore,
+            ).operationSightingTimeCrossSections(),
         ).toEqual({});
         expect(open).not.toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);

@@ -1,4 +1,4 @@
-import { firstValueFrom } from 'rxjs';
+import { TestBed } from '@angular/core/testing';
 import { TimetableStationStore } from './timetable-station.store';
 
 const trip6436 = {
@@ -37,14 +37,13 @@ const tripBlock1 = {
 } as never;
 
 describe('TimetableStationStore', () => {
-    it('timetableData$ の trip に tripBlock（他列車込み）が付与される', async () => {
-        TimetableStationStore.setStationId('yokohama');
-        TimetableStationStore.setTrips([trip6436]);
-        TimetableStationStore.setTripBlocks([tripBlock1]);
+    it('timetableData の trip に tripBlock（他列車込み）が付与される', () => {
+        const store = TestBed.inject(TimetableStationStore);
+        store.setStationId('yokohama');
+        store.setTrips([trip6436]);
+        store.setTripBlocks([tripBlock1]);
 
-        const data = await firstValueFrom(
-            TimetableStationStore.timetableData$,
-        );
+        const data = store.timetableData();
 
         expect(data).toHaveLength(1);
         expect(data[0].hour).toBe('6');
@@ -55,5 +54,57 @@ describe('TimetableStationStore', () => {
         const tripNumbers = trip.tripBlock.trips.map((o) => o.tripNumber);
 
         expect(tripNumbers).toEqual(['9436', '6436']);
+    });
+
+    it('取得の世代番号は新しい取得だけが最新になる', () => {
+        const store = TestBed.inject(TimetableStationStore);
+
+        const first = store.nextFetchSeq();
+        expect(store.isLatestFetch(first)).toBe(true);
+
+        const second = store.nextFetchSeq();
+        expect(store.isLatestFetch(first)).toBe(false);
+        expect(store.isLatestFetch(second)).toBe(true);
+    });
+
+    it('読み込み中は enable/disable/reset で切り替わる', () => {
+        const store = TestBed.inject(TimetableStationStore);
+        expect(store.isLoading()).toBe(false);
+
+        store.enableLoading();
+        store.enableLoading();
+        store.disableLoading();
+        expect(store.isLoading()).toBe(true);
+
+        store.resetLoading();
+        expect(store.isLoading()).toBe(false);
+    });
+
+    it('operationIds は列車の運用 ID を重複なく返す', () => {
+        const store = TestBed.inject(TimetableStationStore);
+        store.setTrips([
+            { tripOperationLists: [{ operationId: 'op-1' }] },
+            { tripOperationLists: [{ operationId: 'op-1' }] },
+            { tripOperationLists: [{ operationId: 'op-2' }] },
+            { tripOperationLists: [] },
+        ] as never);
+
+        expect(store.operationIds()).toEqual(['op-1', 'op-2']);
+    });
+
+    it('snapshot で取り出した中身を restoreSnapshot で戻せる（条件は今のまま）', () => {
+        const store = TestBed.inject(TimetableStationStore);
+        store.setCalendarId('cal-1');
+        store.setCalendar({ calendarId: 'cal-1' } as never);
+        store.setTrips([trip6436]);
+        const snapshot = store.snapshot();
+
+        store.setCalendarId('cal-2');
+        store.setCalendar(null as never);
+        store.setTrips([]);
+        store.restoreSnapshot(snapshot);
+
+        expect(store.calendarId()).toBe('cal-2');
+        expect(store.snapshot()).toEqual(snapshot);
     });
 });
