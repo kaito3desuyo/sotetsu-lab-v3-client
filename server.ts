@@ -4,14 +4,35 @@ import {
     isMainModule,
     writeResponseToNodeResponse,
 } from '@angular/ssr/node';
+import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
+import zlib from 'node:zlib';
 import { CACHE_CONTROL } from './src/app/core/ssr/cache-control';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+// AWS Lambda Web Adapter の受け口。Angular に渡す前に答える。
+// /healthz は LWA の起動確認（AWS_LWA_READINESS_CHECK_PATH）。キャッシュさせない。
+app.get('/healthz', (_req, res) => {
+    res.set('Cache-Control', CACHE_CONTROL['no-store']).status(200).send('ok');
+});
+// HTTP でないイベント（warmup など）を LWA が送る先（AWS_LWA_PASS_THROUGH_PATH の既定）。
+app.post('/events', (_req, res) => {
+    res.status(204).end();
+});
+
+// 描いた HTML を br（品質 5）か gzip（品質 6）にする。1KB 未満は圧縮しない。
+app.use(
+    compression({
+        threshold: 1024,
+        level: 6,
+        brotli: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } },
+    }),
+);
 
 app.use(
     express.static(browserDistFolder, {

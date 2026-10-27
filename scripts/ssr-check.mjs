@@ -1,6 +1,7 @@
 // 手元で SSR を起動し、主なページをサーバーで描けるか確かめる。
 // 先に `npm run build:ssr-check`。サーバーは本番の API を読む（読むだけ）。
-// 見ること: 状態コード・サーバーで描いたか（ng-server-context）・CDN に置く長さ・キャッシュタグ・題名・サーバーのエラー
+// 見ること: 状態コード・サーバーで描いたか（ng-server-context）・CDN に置く長さ・キャッシュタグ・題名・圧縮・サーバーのエラー
+// と、Lambda Web Adapter が叩く /healthz と POST /events
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -144,6 +145,18 @@ async function waitReady() {
 
 function judge(entry, res, html) {
     const problems = [];
+    if (entry.kind === 'server') {
+        if (res.headers.get('content-encoding') !== 'br') {
+            problems.push(
+                `content-encoding: ${res.headers.get('content-encoding')} (expected br)`,
+            );
+        }
+        if (!/accept-encoding/i.test(res.headers.get('vary') ?? '')) {
+            problems.push(
+                `vary lacks Accept-Encoding: ${res.headers.get('vary')}`,
+            );
+        }
+    }
     const rendered = html.includes('ng-server-context');
     if (entry.kind === 'server' && !(res.status === 200 && rendered)) {
         problems.push(
@@ -186,6 +199,8 @@ async function check(entry) {
     const logStart = log.length;
     const started = performance.now();
     const res = await fetch(BASE + entry.path, {
+        headers:
+            entry.kind === 'server' ? { 'accept-encoding': 'br, gzip' } : {},
         redirect: 'manual',
         signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -205,6 +220,86 @@ async function check(entry) {
     return ok;
 }
 
+// 圧縮の選び方（br が無ければ gzip・どちらも無ければ素のまま）と、Lambda Web Adapter の受け口
+async function checkTransport() {
+    const table = `${BASE}/operation/table;calendar_id=${CALENDAR}`;
+    const cases = [
+        {
+            name: 'gzip only',
+            run: async () => {
+                const res = await fetch(table, {
+                    headers: { 'accept-encoding': 'gzip' },
+                    signal: AbortSignal.timeout(TIMEOUT_MS),
+                });
+                await res.text();
+                const encoding = res.headers.get('content-encoding');
+                return encoding === 'gzip'
+                    ? []
+                    : [`content-encoding: ${encoding} (expected gzip)`];
+            },
+        },
+        {
+            name: 'identity',
+            run: async () => {
+                const res = await fetch(table, {
+                    headers: { 'accept-encoding': 'identity' },
+                    signal: AbortSignal.timeout(TIMEOUT_MS),
+                });
+                await res.text();
+                const encoding = res.headers.get('content-encoding');
+                return encoding === null
+                    ? []
+                    : [`content-encoding: ${encoding} (expected none)`];
+            },
+        },
+        {
+            name: 'GET /healthz',
+            run: async () => {
+                const res = await fetch(`${BASE}/healthz`, {
+                    signal: AbortSignal.timeout(TIMEOUT_MS),
+                });
+                const body = await res.text();
+                const problems = [];
+                if (res.status !== 200) problems.push(`status ${res.status}`);
+                if (body !== 'ok') problems.push(`body: ${body.slice(0, 40)}`);
+                if (res.headers.get('cache-control') !== NO_STORE) {
+                    problems.push(
+                        `cache-control: ${res.headers.get('cache-control')}`,
+                    );
+                }
+                return problems;
+            },
+        },
+        {
+            name: 'POST /events',
+            run: async () => {
+                const res = await fetch(`${BASE}/events`, {
+                    method: 'POST',
+                    body: '{}',
+                    signal: AbortSignal.timeout(TIMEOUT_MS),
+                });
+                await res.text();
+                return res.status === 204 ? [] : [`status ${res.status}`];
+            },
+        },
+    ];
+    let bad = 0;
+    for (const { name, run } of cases) {
+        let problems;
+        try {
+            problems = await run();
+        } catch (error) {
+            problems = [error.message];
+        }
+        console.log(`${problems.length === 0 ? 'OK  ' : 'FAIL'} ${name}`);
+        for (const problem of problems) {
+            console.log(`     ${problem}`);
+        }
+        if (problems.length > 0) bad++;
+    }
+    return bad;
+}
+
 let failed = 0;
 try {
     await waitReady();
@@ -221,6 +316,8 @@ try {
                 console.log(`FAIL ---       ${entry.path} ${error.message}`);
             }
         }
+        console.log(`--- transport (round ${round})`);
+        failed += await checkTransport();
     }
 } finally {
     server.kill();
