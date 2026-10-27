@@ -55,6 +55,7 @@ client のストアは全部 Elf（`@ngneat/elf`・`elf-entities`・`elf-persist
 - **`global-states/` の `*StateStore` と `*StateQuery` の組は、1 つの SignalStore にまとめる**。一覧は `withEntities` で持つ。ファイル名は `*.state.ts` のまま変えない（差分を小さくするため）。名前は `AgencyListState` のように付ける。`initialDataResolver` と、他のストアを読む computed（例：`todaysFormationsSorted` が会社の一覧を読む）は、`withComputed` の中で他のストアを `inject` して組む。
 - **`initialize.state.ts` も DI に入れる**。Elf ではないが、ファイルの中の `signal` は SSR のリクエストの間で共有されてしまう。9 章の 5 を通すには、ここも直す必要がある。
 - **ページのストアの名前は今のまま**にする（`OperationTableStore` など）。中身は `signalStore(...)` のクラスにし、使う側は `inject(OperationTableStore)` で受ける。
+- **ストアを DI の外から触る所**：パイプとユーティリティ（`*.pipe.ts`・`*.util.ts`・`*.utils.ts`）にストアを読む所は無い（2026-10-27 に grep で確認）。DI の外で触っているのは、次の項目のファイル先頭の呼び出しだけだ。他にも見つかったら、`inject` できる呼び手から値を引数で渡す形にする。`runInInjectionContext` は使わない。
 - **ファイルの先頭で呼んでいる `XxxStore.resetLoading()`（9 ページ）は、ストアの `withHooks.onInit` に移す**。今はチャンクを読んだときに 1 回だけ走る。onInit なら、ストアを作ったときに 1 回だけ走る。どちらも「アプリが生きている間に 1 回」なので、振る舞いは変わらない。
 - **読む側の API**：Observable の `xxx$` と `get xxx` をやめ、signal（`store.xxx()`）にそろえる。コンポーネントの `toSignal(Store.x$)` は `store.x` を直接読む形に置き換える。RxJS の流れの中で要る所だけ `toObservable` を使う。
 - **書く側**：今の書き込みメソッドの名前（`setCalendarId`、`enableLoading` など）を `withMethods` にそのまま移し、中は `patchState` にする。名前を保てば、サービスの差分は呼び方（`inject` するかどうか）だけで済む。
@@ -121,15 +122,18 @@ export const OperationTableStore = signalStore(
 - `parse` で、6.1 の表にある項目だけを拾う。今の `pickOperationTableSettings` などがやっている「古い丸ごと保存からデータを戻さない」守りを、新しい形でも続けるためだ。
 - サーバーでは保存に触れない。`pageResolver` はサーバーでは `whenSynced()` を待たずに進む。待つと 6.2 のとおり永遠に止まる。
 
+- 組み方は `withStorageSync({ key, select, parse, autoSync: false }, withIndexedDB())` だ。toolkit が出す `readFromStorage`・`writeToStorage`・`whenSynced` を、自前の `withHooks.onInit` から呼ぶ。`autoSync: false` なら toolkit の onInit は何も読まない。そのため、6.4 の写しを読み込みの前に挟める。同期の状態は、`readFromStorage` か `writeToStorage` を 1 回呼んだ時点で `synced` になる。だから onInit でどちらかを必ず呼べば、`whenSynced()` は resolve する（6.2 と同じファイルの `createAsyncStorageSync` で確認）。IndexedDB を直接叩く自前の実装は作らない。
+- 下書き（`draft.trips`）は、保存の形が構造化複製から JSON に変わる。中身はフォームの値（`onFormValueChange` が受ける `unknown[]`）だ。spec で JSON の往復を確かめる。`Date` などで崩れるなら `stringify` と `parse` を足す。
+
 ### 6.4 古い保存からの写し（案イ）
 
-ブラウザでストアを作ったとき、キーごとに次の順で 1 回だけ行う。
+ブラウザでストアを作ったとき、キーごとに次の順で行う。
 
-1. localforage（今の DB）に同じキーがあるか見る。
-2. ある場合：6.1 の項目だけを拾ってストアに入れ、新しい保存に書き、localforage のキーを消す。
-3. ない場合：新しい保存から `readFromStorage` する。
+1. localforage（今の DB）に `settings-migrated:<キー>` の印があるか見る。
+2. 印がない場合：localforage に古いキーがあれば、6.1 の項目だけを拾ってストアに入れ、`writeToStorage` で新しい保存に書く。古いキーが無ければ `readFromStorage` だけをする。どちらの場合も、最後に印を書いて古いキーを消す。
+3. 印がある場合：古いキーが残っていても読まずに消し、`readFromStorage` する。前の版を開いたままのタブが古いキーに書き戻しても、新しい保存は上書きされない。
 
-古いキーは写した直後に消すので、両方にあるのは 2 の途中で止まったときだけになる。そのときは古い方をもう一度写す。写しの失敗（読めない・書けない）は握りつぶし、既定値のまま進む。今の persistState と同じ扱いだ。
+写しの失敗（読めない・書けない）は握りつぶし、既定値のまま進む。今の persistState と同じ扱いだ。前の版へ戻すと、設定は既定値に戻る。その後でこの版に戻ると、戻す前に新しい保存へ書いた値が出る。どちらも受け入れる（私の判断）。
 
 ## 7. Redux DevTools
 
