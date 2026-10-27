@@ -1,36 +1,29 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
-import localForage from 'localforage';
-import { debounceTime, map } from 'rxjs';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { ServiceAgenciesDto } from 'src/app/libs/service/usecase/dtos/service-agencies.dto';
 
 type StoreProps = {
     serviceAgencies: ServiceAgenciesDto;
 };
 
-const store = createStore(
-    { name: 'OperationPostCardStore' },
-    withProps<StoreProps>({
-        serviceAgencies: null,
-    }),
-);
+const initialState: StoreProps = {
+    serviceAgencies: null,
+};
 
-const persist = persistState(store, {
-    key: 'OperationPostCardStore',
-    storage: localForage,
-    source: () => store.pipe(debounceTime(100)),
-});
-
-export const OperationPostCardStore = {
-    persistInitialized$: persist.initialized$,
-
-    setServiceAgencies(serviceAgencies: ServiceAgenciesDto): void {
-        store.update(setProp('serviceAgencies', () => serviceAgencies));
-    },
-
-    agencies$: store.pipe(
-        select((state) => state.serviceAgencies?.agencies ?? []),
-        map((agencies) => {
+export const OperationPostCardStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(({ serviceAgencies }) => ({
+        agencies: computed(() => {
+            const agencies = serviceAgencies()?.agencies ?? [];
             const index: Record<string, number> = {
                 相鉄: 0,
                 JR東日本: 1,
@@ -58,8 +51,19 @@ export const OperationPostCardStore = {
                 return a.agencyName.localeCompare(b.agencyName, 'ja');
             });
         }),
-    ),
-} as const;
+    })),
+    withMethods((store) => ({
+        setServiceAgencies(serviceAgencies: ServiceAgenciesDto): void {
+            patchState(store, { serviceAgencies });
+        },
+    })),
+    withSettingsStorage<StoreProps>({
+        key: 'OperationPostCardStore',
+        fields: ['serviceAgencies'],
+        debounceMs: 100,
+    }),
+    withAppDevtools('OperationPostCardStore'),
+);
 
 /**
  * 所属の選択肢を、今日の編成を持つ会社だけに絞る（2026-10-06）。投稿は編成番号を

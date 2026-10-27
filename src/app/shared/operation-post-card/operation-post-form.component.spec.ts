@@ -1,3 +1,4 @@
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroupDirective } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -42,6 +43,13 @@ describe('OperationPostFormComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationPostFormComponent],
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 {
                     provide: OperationPostCardService,
                     useValue: {
@@ -360,6 +368,13 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         await TestBed.configureTestingModule({
             imports: [OperationPostFormComponent],
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 {
                     provide: OperationPostCardService,
                     useValue: {

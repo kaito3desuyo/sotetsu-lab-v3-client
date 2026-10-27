@@ -3,14 +3,7 @@ import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import {
-    EMPTY,
-    firstValueFrom,
-    Observable,
-    of,
-    Subject,
-    throwError,
-} from 'rxjs';
+import { EMPTY, Observable, of, Subject, throwError } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -29,6 +22,7 @@ describe('TimetableEditFormComponent', () => {
     let component: TimetableEditFormComponent;
     let fixture: ComponentFixture<TimetableEditFormComponent>;
     let timetableEditFormService: Record<string, jest.Mock>;
+    let store: InstanceType<typeof TimetableEditFormStore>;
 
     beforeEach(async () => {
         timetableEditFormService = {
@@ -96,12 +90,9 @@ describe('TimetableEditFormComponent', () => {
             })
             .compileComponents();
 
+        store = TestBed.inject(TimetableEditFormStore);
         fixture = TestBed.createComponent(TimetableEditFormComponent);
         component = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-        TimetableEditFormStore.setHasFetchedEditForm(false);
     });
 
     it('should create', () => {
@@ -125,7 +116,7 @@ describe('TimetableEditFormComponent', () => {
     });
 
     it('COPY モードは、コピー元を ID で取ってから（向きが決まってから）候補を取る', async () => {
-        TimetableEditFormStore.setMode(ETimetableEditFormMode.COPY);
+        store.setMode(ETimetableEditFormMode.COPY);
         jest.clearAllMocks();
 
         await component.fetchData();
@@ -163,19 +154,17 @@ describe('TimetableEditFormComponent', () => {
     });
 
     it('取得に失敗しても読み込み中を解く', async () => {
-        TimetableEditFormStore.resetLoading();
+        store.resetLoading();
         timetableEditFormService.fetchStations.mockReturnValue(
             throwError(() => new Error('network')),
         );
 
         await expect(component.fetchData()).rejects.toThrow('network');
-        expect(await firstValueFrom(TimetableEditFormStore.isLoading$)).toBe(
-            false,
-        );
+        expect(store.isLoading()).toBe(false);
     });
 
     it('取り終わるまではフォームの代わりに骨組みを出す', () => {
-        TimetableEditFormStore.setHasFetchedEditForm(false);
+        store.setHasFetchedEditForm(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -199,20 +188,18 @@ describe('TimetableEditFormComponent', () => {
     });
 
     it('取得が失敗しても骨組みを消す', async () => {
-        TimetableEditFormStore.resetLoading();
+        store.resetLoading();
         timetableEditFormService.fetchStations.mockReturnValue(
             throwError(() => new Error('network')),
         );
 
         await expect(component.fetchData()).rejects.toThrow('network');
-        expect(
-            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
-        ).toBe(true);
+        expect(store.hasFetchedEditForm()).toBe(true);
     });
 
     it('更新のときは初期値の取り込みと列車個別保存の行の骨組みを出さない', () => {
-        TimetableEditFormStore.setMode(ETimetableEditFormMode.UPDATE);
-        TimetableEditFormStore.setHasFetchedEditForm(false);
+        store.setMode(ETimetableEditFormMode.UPDATE);
+        store.setHasFetchedEditForm(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -227,8 +214,8 @@ describe('TimetableEditFormComponent', () => {
     });
 
     it('登録のときは初期値の取り込みの骨組みを出す', () => {
-        TimetableEditFormStore.setMode(ETimetableEditFormMode.ADD);
-        TimetableEditFormStore.setHasFetchedEditForm(false);
+        store.setMode(ETimetableEditFormMode.ADD);
+        store.setHasFetchedEditForm(false);
         fixture.detectChanges();
 
         expect(
@@ -265,14 +252,10 @@ describe('TimetableEditFormComponent', () => {
         expect(stations).toHaveLength(2);
 
         await finish(stations[0]);
-        expect(
-            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
-        ).toBe(false);
+        expect(store.hasFetchedEditForm()).toBe(false);
 
         await finish(stations[1]);
-        expect(
-            await firstValueFrom(TimetableEditFormStore.hasFetchedEditForm$),
-        ).toBe(true);
+        expect(store.hasFetchedEditForm()).toBe(true);
     });
 
     describe('下書きの復元の案内', () => {
@@ -353,7 +336,7 @@ describe('TimetableEditFormComponent', () => {
 
     describe('G9: 保存 API の呼び出し形が add/copy/update 各モードで従前と一致する（契約非破壊の証拠）', () => {
         it('ADD モードでは createTripBlocks（CreateTripDto[]）を呼ぶ', async () => {
-            TimetableEditFormStore.setMode(ETimetableEditFormMode.ADD);
+            store.setMode(ETimetableEditFormMode.ADD);
             const trips = [{ tripNumber: '2301' }] as any;
 
             await component.onReceiveClickSubmit(trips);
@@ -367,7 +350,7 @@ describe('TimetableEditFormComponent', () => {
         });
 
         it('COPY モードでは createTripBlocks（CreateTripDto[]）を呼ぶ', async () => {
-            TimetableEditFormStore.setMode(ETimetableEditFormMode.COPY);
+            store.setMode(ETimetableEditFormMode.COPY);
             const trips = [{ tripNumber: '2301' }] as any;
 
             await component.onReceiveClickSubmit(trips);
@@ -381,7 +364,7 @@ describe('TimetableEditFormComponent', () => {
         });
 
         it('UPDATE モードでは replaceTripBlock（ReplaceTripDto[]）を呼ぶ', async () => {
-            TimetableEditFormStore.setMode(ETimetableEditFormMode.UPDATE);
+            store.setMode(ETimetableEditFormMode.UPDATE);
             const trips = [{ tripId: 'trip-1', tripNumber: '2301' }] as any;
 
             await component.onReceiveClickSubmit(trips);

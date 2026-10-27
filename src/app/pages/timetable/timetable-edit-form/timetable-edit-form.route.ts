@@ -20,9 +20,7 @@ function buildRoutes(mode: ETimetableEditFormMode, title: string): Routes {
                 ),
             providers: [TimetableEditFormService],
             resolve: {
-                from: pageResolver(
-                    TimetableEditFormDraftStore.persistInitialized$,
-                ),
+                from: pageResolver(TimetableEditFormDraftStore),
             },
             data: {
                 title,

@@ -1,7 +1,6 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
-import localForage from 'localforage';
-import { debounceTime } from 'rxjs';
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { ETimetableEditFormMode } from '../enums/timetable-edit-form.enum';
 
@@ -21,19 +20,10 @@ type StoreProps = {
     draft: TimetableEditFormDraft | null;
 };
 
-const store = createStore(
-    { name: 'TimetableEditFormDraftStore' },
-    withProps<StoreProps>({ draft: null }),
-);
-
-const persist = persistState(store, {
-    key: 'TimetableEditFormDraftStore',
-    storage: localForage,
-    source: () => store.pipe(debounceTime(800)),
-});
+const initialState: StoreProps = { draft: null };
 
 /**
- * D-11: 独自 localStorage 直叩きはせず elf-persist-state（localForage）で永続化する。
+ * D-11: 独自 localStorage 直叩きはせず withSettingsStorage（localForage）で永続化する。
  * 下書きは「直近の 1 件」のみ保持する（B8 要件は下書き 1 本の再訪復元提案）。
  */
 export function draftMatchesContext(
@@ -50,26 +40,27 @@ export function draftMatchesContext(
     );
 }
 
-export const TimetableEditFormDraftStore = {
-    persistInitialized$: persist.initialized$,
+export const TimetableEditFormDraftStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withMethods((store) => ({
+        saveDraft(
+            context: TimetableEditFormDraftContext,
+            trips: unknown[],
+        ): void {
+            patchState(store, {
+                draft: { ...context, trips, savedAt: Date.now() },
+            });
+        },
 
-    saveDraft(context: TimetableEditFormDraftContext, trips: unknown[]): void {
-        store.update(
-            setProp('draft', () => ({
-                ...context,
-                trips,
-                savedAt: Date.now(),
-            })),
-        );
-    },
-
-    clearDraft(): void {
-        store.update(setProp('draft', () => null));
-    },
-
-    draft$: store.pipe(select((s) => s.draft)),
-
-    get draft(): TimetableEditFormDraft | null {
-        return store.getValue().draft;
-    },
-} as const;
+        clearDraft(): void {
+            patchState(store, { draft: null });
+        },
+    })),
+    withSettingsStorage<StoreProps>({
+        key: 'TimetableEditFormDraftStore',
+        fields: ['draft'],
+        debounceMs: 800,
+    }),
+    withAppDevtools('TimetableEditFormDraftStore'),
+);

@@ -1,7 +1,14 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
 import { minBy } from 'es-toolkit/compat';
-import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -53,11 +60,6 @@ const initialProps: StoreProps = {
     submittedAt: null,
 };
 
-const store = createStore(
-    { name: 'TimetableEditFormStore' },
-    withProps<StoreProps>(initialProps),
-);
-
 function sortTripsByFirstTime(trips: TripDetailsDto[]): TripDetailsDto[] {
     return [...trips].sort((a, b) => {
         const aTime = minBy(a.times ?? [], (o) => o.stopSequence);
@@ -78,170 +80,148 @@ function sortTripsByFirstTime(trips: TripDetailsDto[]): TripDetailsDto[] {
     });
 }
 
-export const TimetableEditFormStore = {
-    /**
-     * ページ再入（add→copy 等の遷移含む）ごとに、前回セッションの選択状態を
-     * 引きずらないようにする。ストアはモジュールスコープの singleton であり、
-     * add/copy/update は同一ルートコンポーネントを共有するため、ここで
-     * リセットしないとコピー元選択や路線絞り込みが別モードへ漏れる。
-     */
-    resetForNewSession(): void {
-        store.update(
-            setProp('tripDirection', () => initialProps.tripDirection),
-            setProp('tripBlockId', () => initialProps.tripBlockId),
-            setProp('selectedRouteIds', () => initialProps.selectedRouteIds),
-            setProp(
-                'copySourceCandidates',
-                () => initialProps.copySourceCandidates,
-            ),
-            setProp('targetTripBlock', () => initialProps.targetTripBlock),
-            setProp(
-                'isSaveTripsIndividually',
-                () => initialProps.isSaveTripsIndividually,
-            ),
-            setProp('submittedAt', () => initialProps.submittedAt),
-        );
-    },
+export const TimetableEditFormStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialProps),
+    withComputed(
+        ({
+            stations,
+            tripDirection,
+            selectedRouteIds,
+            targetTripBlock,
+            loadingQueue,
+        }) => {
+            /** 方向反映済みの全駅リスト（フォームの times FormArray 構築に使う。情報は削減しない） */
+            const sortedStations = computed(() =>
+                tripDirection() === ETripDirection.INBOUND
+                    ? [...stations()].reverse()
+                    : stations(),
+            );
 
-    setMode(mode: ETimetableEditFormMode): void {
-        store.update(setProp('mode', () => mode));
-    },
-    setCalendarId(calendarId: string): void {
-        store.update(setProp('calendarId', () => calendarId));
-    },
-    setTripDirection(tripDirection: ETripDirection): void {
-        store.update(setProp('tripDirection', () => tripDirection));
-    },
-    setTripBlockId(tripBlockId: string | null): void {
-        store.update(setProp('tripBlockId', () => tripBlockId));
-    },
-    setCalendar(calendar: CalendarDetailsDto): void {
-        store.update(setProp('calendar', () => calendar));
-    },
-    setRoutes(routes: RouteDetailsDto[]): void {
-        store.update(setProp('routes', () => routes));
-    },
-    setSelectedRouteIds(routeIds: string[]): void {
-        store.update(setProp('selectedRouteIds', () => routeIds));
-    },
-    /** 選択中の路線に足す（外さない）。読み込んだ列車の通る路線を見せるため */
-    addSelectedRouteIds(routeIds: Iterable<string>): void {
-        store.update(
-            setProp('selectedRouteIds', (current) => [
-                ...new Set([...current, ...routeIds]),
-            ]),
-        );
-    },
-    setStations(stations: StationDetailsDto[]): void {
-        store.update(setProp('stations', () => stations));
-    },
-    setOperations(operations: OperationDetailsDto[]): void {
-        store.update(setProp('operations', () => operations));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setCopySourceCandidates(tripBlocks: TripBlockDetailsDto[]): void {
-        store.update(setProp('copySourceCandidates', () => tripBlocks));
-    },
-    setTargetTripBlock(tripBlock: TripBlockDetailsDto | null): void {
-        store.update(setProp('targetTripBlock', () => tripBlock));
-    },
-    setIsSaveTripsIndividually(bool: boolean): void {
-        store.update(setProp('isSaveTripsIndividually', () => bool));
-    },
-    setSubmittedAt(time: number): void {
-        store.update(setProp('submittedAt', () => time));
-    },
-    /** 駅・路線・ダイヤ・（更新とコピーは）元の列車を取り終えたか（失敗しても true）。取る前はフォームの代わりに骨組みを出す */
-    setHasFetchedEditForm(value: boolean): void {
-        store.update(setProp('hasFetchedEditForm', () => value));
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (s) => s.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (s) => s.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-
-    mode$: store.pipe(select((s) => s.mode)),
-    calendarId$: store.pipe(select((s) => s.calendarId)),
-    tripDirection$: store.pipe(select((s) => s.tripDirection)),
-    tripBlockId$: store.pipe(select((s) => s.tripBlockId)),
-    calendar$: store.pipe(select((s) => s.calendar)),
-    routes$: store.pipe(select((s) => s.routes)),
-    selectedRouteIds$: store.pipe(select((s) => s.selectedRouteIds)),
-    stations$: store.pipe(select((s) => s.stations)),
-    operations$: store.pipe(select((s) => s.operations)),
-    tripClasses$: store.pipe(select((s) => s.tripClasses)),
-    copySourceCandidates$: store.pipe(select((s) => s.copySourceCandidates)),
-    targetTripBlock$: store.pipe(select((s) => s.targetTripBlock)),
-    isSaveTripsIndividually$: store.pipe(
-        select((s) => s.isSaveTripsIndividually),
+            return {
+                isLoading: computed(() => loadingQueue().length > 0),
+                sortedStations,
+                /** B8-1: 路線チップの選択状態で絞り込んだ、方向反映済みの表示対象駅リスト（行の表示/非表示にのみ使う） */
+                sortedVisibleStations: computed(() =>
+                    visibleStations(sortedStations(), selectedRouteIds()),
+                ),
+                /** ADD 以外のモードでプリフィル対象となる trips（trip-block 単位） */
+                trips: computed(() =>
+                    sortTripsByFirstTime(targetTripBlock()?.trips ?? []),
+                ),
+            };
+        },
     ),
-    isLoading$: store.pipe(select((s) => s.loadingQueue.length > 0)),
-    hasFetchedEditForm$: store.pipe(select((s) => s.hasFetchedEditForm)),
-    submittedAt$: store.pipe(select((s) => s.submittedAt)),
+    withMethods((store) => {
+        // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+        // 後から終わって新しい骨組みを消さないよう、コンポーネントでなくストアで数える
+        let fetchSeq = 0;
 
-    /** 方向反映済みの全駅リスト（フォームの times FormArray 構築に使う。情報は削減しない） */
-    sortedStations$: combineLatest([
-        store.pipe(select((s) => s.stations)),
-        store.pipe(select((s) => s.tripDirection)),
-    ]).pipe(
-        map(([stations, tripDirection]) =>
-            tripDirection === ETripDirection.INBOUND
-                ? [...stations].reverse()
-                : stations,
-        ),
-    ),
+        return {
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
 
-    /** B8-1: 路線チップの選択状態で絞り込んだ、方向反映済みの表示対象駅リスト（行の表示/非表示にのみ使う） */
-    sortedVisibleStations$: combineLatest([
-        store.pipe(select((s) => s.stations)),
-        store.pipe(select((s) => s.tripDirection)),
-        store.pipe(select((s) => s.selectedRouteIds)),
-    ]).pipe(
-        map(([stations, tripDirection, selectedRouteIds]) => {
-            const sorted =
-                tripDirection === ETripDirection.INBOUND
-                    ? [...stations].reverse()
-                    : stations;
+            /**
+             * ページ再入（add→copy 等の遷移含む）ごとに、前回セッションの選択状態を
+             * 引きずらないようにする。ストアは singleton であり、
+             * add/copy/update は同一ルートコンポーネントを共有するため、ここで
+             * リセットしないとコピー元選択や路線絞り込みが別モードへ漏れる。
+             */
+            resetForNewSession(): void {
+                patchState(store, {
+                    tripDirection: initialProps.tripDirection,
+                    tripBlockId: initialProps.tripBlockId,
+                    selectedRouteIds: initialProps.selectedRouteIds,
+                    copySourceCandidates: initialProps.copySourceCandidates,
+                    targetTripBlock: initialProps.targetTripBlock,
+                    isSaveTripsIndividually:
+                        initialProps.isSaveTripsIndividually,
+                    submittedAt: initialProps.submittedAt,
+                });
+            },
 
-            return visibleStations(sorted, selectedRouteIds);
-        }),
-    ),
-
-    /** ADD 以外のモードでプリフィル対象となる trips（trip-block 単位） */
-    trips$: store.pipe(
-        select((s) => s.targetTripBlock),
-        map((tripBlock) => sortTripsByFirstTime(tripBlock?.trips ?? [])),
-    ),
-
-    get mode(): ETimetableEditFormMode | null {
-        return store.getValue().mode;
-    },
-    get calendarId(): string | null {
-        return store.getValue().calendarId;
-    },
-    get tripDirection(): ETripDirection | null {
-        return store.getValue().tripDirection;
-    },
-    get tripBlockId(): string | null {
-        return store.getValue().tripBlockId;
-    },
-    get selectedRouteIds(): string[] {
-        return store.getValue().selectedRouteIds;
-    },
-    get stations(): StationDetailsDto[] {
-        return store.getValue().stations;
-    },
-    get routes(): RouteDetailsDto[] {
-        return store.getValue().routes;
-    },
-    get isSaveTripsIndividually(): boolean {
-        return store.getValue().isSaveTripsIndividually;
-    },
-} as const;
+            setMode(mode: ETimetableEditFormMode): void {
+                patchState(store, { mode });
+            },
+            setCalendarId(calendarId: string): void {
+                patchState(store, { calendarId });
+            },
+            setTripDirection(tripDirection: ETripDirection): void {
+                patchState(store, { tripDirection });
+            },
+            setTripBlockId(tripBlockId: string | null): void {
+                patchState(store, { tripBlockId });
+            },
+            setCalendar(calendar: CalendarDetailsDto): void {
+                patchState(store, { calendar });
+            },
+            setRoutes(routes: RouteDetailsDto[]): void {
+                patchState(store, { routes });
+            },
+            setSelectedRouteIds(selectedRouteIds: string[]): void {
+                patchState(store, { selectedRouteIds });
+            },
+            /** 選択中の路線に足す（外さない）。読み込んだ列車の通る路線を見せるため */
+            addSelectedRouteIds(routeIds: Iterable<string>): void {
+                patchState(store, (state) => ({
+                    selectedRouteIds: [
+                        ...new Set([...state.selectedRouteIds, ...routeIds]),
+                    ],
+                }));
+            },
+            setStations(stations: StationDetailsDto[]): void {
+                patchState(store, { stations });
+            },
+            setOperations(operations: OperationDetailsDto[]): void {
+                patchState(store, { operations });
+            },
+            setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+                patchState(store, { tripClasses });
+            },
+            setCopySourceCandidates(
+                copySourceCandidates: TripBlockDetailsDto[],
+            ): void {
+                patchState(store, { copySourceCandidates });
+            },
+            setTargetTripBlock(
+                targetTripBlock: TripBlockDetailsDto | null,
+            ): void {
+                patchState(store, { targetTripBlock });
+            },
+            setIsSaveTripsIndividually(isSaveTripsIndividually: boolean): void {
+                patchState(store, { isSaveTripsIndividually });
+            },
+            setSubmittedAt(submittedAt: number): void {
+                patchState(store, { submittedAt });
+            },
+            /** 駅・路線・ダイヤ・（更新とコピーは）元の列車を取り終えたか（失敗しても true）。取る前はフォームの代わりに骨組みを出す */
+            setHasFetchedEditForm(hasFetchedEditForm: boolean): void {
+                patchState(store, { hasFetchedEditForm });
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+        };
+    }),
+    withAppDevtools('TimetableEditFormStore'),
+    withHooks({
+        onInit(store) {
+            // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
+            store.resetLoading();
+        },
+    }),
+);

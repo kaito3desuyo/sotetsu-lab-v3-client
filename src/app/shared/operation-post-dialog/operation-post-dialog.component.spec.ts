@@ -1,3 +1,4 @@
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
@@ -27,6 +28,13 @@ describe('OperationPostDialogComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationPostDialogComponent],
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 { provide: MatDialogRef, useValue: dialogRef },
                 {
                     provide: Router,

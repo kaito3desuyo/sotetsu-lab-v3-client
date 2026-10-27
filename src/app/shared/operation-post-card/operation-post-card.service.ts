@@ -10,6 +10,7 @@ import { OperationPostCardStore } from './operation-post-card.store';
 export class OperationPostCardService {
     readonly #serviceService = inject(ServiceService);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #postCardStore = inject(OperationPostCardStore);
 
     readonly #submitEvent = new Subject<void>();
     readonly submitEvent$ = this.#submitEvent.asObservable();
@@ -21,7 +22,7 @@ export class OperationPostCardService {
             })
             .pipe(
                 tap((serviceAgencies) => {
-                    OperationPostCardStore.setServiceAgencies(serviceAgencies);
+                    this.#postCardStore.setServiceAgencies(serviceAgencies);
                 }),
                 map(() => undefined),
             );

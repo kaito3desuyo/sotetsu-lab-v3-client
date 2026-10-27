@@ -44,11 +44,13 @@ export class TimetableEditFormService {
     readonly #tripBlockService = inject(TripBlockService);
     readonly #serviceListState = inject(ServiceListState);
     readonly #agencyListState = inject(AgencyListState);
+    readonly #store = inject(TimetableEditFormStore);
+    readonly #draftStore = inject(TimetableEditFormDraftStore);
 
     #submittedEvent$ = new Subject<void>();
 
     fetchCalendar(): Observable<void> {
-        const calendarId = TimetableEditFormStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         // calendar 未指定では /v3/calendars/null を叩かない。
         if (!calendarId) {
@@ -57,7 +59,7 @@ export class TimetableEditFormService {
 
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((data: CalendarDetailsDto) => {
-                TimetableEditFormStore.setCalendar(data);
+                this.#store.setCalendar(data);
             }),
             map(() => undefined),
         );
@@ -68,7 +70,7 @@ export class TimetableEditFormService {
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
-                TimetableEditFormStore.setStations(data.stations);
+                this.#store.setStations(data.stations);
             }),
             map(() => undefined),
         );
@@ -85,8 +87,8 @@ export class TimetableEditFormService {
         return this.#serviceService.findOneWithRoutes({ serviceId }).pipe(
             tap((data) => {
                 const routes = data.routes as RouteDetailsDto[];
-                TimetableEditFormStore.setRoutes(routes);
-                TimetableEditFormStore.setSelectedRouteIds(
+                this.#store.setRoutes(routes);
+                this.#store.setSelectedRouteIds(
                     ownAgencyRouteIds(routes, this.#agencyListState.agencies()),
                 );
             }),
@@ -95,7 +97,7 @@ export class TimetableEditFormService {
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = TimetableEditFormStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
             map((operations) =>
@@ -113,7 +115,7 @@ export class TimetableEditFormService {
                     ),
             ),
             tap((operations: OperationDetailsDto[]) => {
-                TimetableEditFormStore.setOperations(operations);
+                this.#store.setOperations(operations);
             }),
             map(() => undefined),
         );
@@ -130,7 +132,7 @@ export class TimetableEditFormService {
                 ),
             ),
             tap((tripClasses: TripClassDetailsDto[]) => {
-                TimetableEditFormStore.setTripClasses(tripClasses);
+                this.#store.setTripClasses(tripClasses);
             }),
             map(() => undefined),
         );
@@ -138,10 +140,10 @@ export class TimetableEditFormService {
 
     /** UPDATE モード: 編集対象の trip-block を固定 ID で取得する。 */
     fetchTargetTripBlock(): Observable<void> {
-        const tripBlockId = TimetableEditFormStore.tripBlockId;
+        const tripBlockId = this.#store.tripBlockId();
 
         if (!tripBlockId) {
-            TimetableEditFormStore.setTargetTripBlock(null);
+            this.#store.setTargetTripBlock(null);
             return of(undefined);
         }
 
@@ -149,11 +151,11 @@ export class TimetableEditFormService {
             tap((tripBlock: TripBlockDetailsDto) => {
                 const firstTrip = tripBlock.trips?.[0];
                 if (firstTrip?.tripDirection !== undefined) {
-                    TimetableEditFormStore.setTripDirection(
+                    this.#store.setTripDirection(
                         firstTrip.tripDirection as ETripDirection,
                     );
                 }
-                TimetableEditFormStore.setTargetTripBlock(tripBlock);
+                this.#store.setTargetTripBlock(tripBlock);
                 this.#selectRoutesOf(tripBlock);
             }),
             map(() => undefined),
@@ -162,12 +164,12 @@ export class TimetableEditFormService {
 
     /** COPY モード: D-5 trip-block 単位のコピー元候補一覧（同一ダイヤ・同一方向）。 */
     fetchCopySourceCandidates(): Observable<void> {
-        const calendarId = TimetableEditFormStore.calendarId;
-        const tripDirection = TimetableEditFormStore.tripDirection;
+        const calendarId = this.#store.calendarId();
+        const tripDirection = this.#store.tripDirection();
 
         // 向きが無いまま取りに行くと tripDirection=null で 422 になる
         if (!calendarId || tripDirection === null) {
-            TimetableEditFormStore.setCopySourceCandidates([]);
+            this.#store.setCopySourceCandidates([]);
             return of(undefined);
         }
 
@@ -182,7 +184,7 @@ export class TimetableEditFormService {
             })
             .pipe(
                 tap((tripBlocks: TripBlockDetailsDto[]) => {
-                    TimetableEditFormStore.setCopySourceCandidates(tripBlocks);
+                    this.#store.setCopySourceCandidates(tripBlocks);
                 }),
                 map(() => undefined),
             );
@@ -190,16 +192,16 @@ export class TimetableEditFormService {
 
     /** COPY モード: コピー元 trip-block をユーザーが選び直したとき */
     selectCopySource(tripBlockId: string | null): Observable<void> {
-        TimetableEditFormStore.setTripBlockId(tripBlockId);
+        this.#store.setTripBlockId(tripBlockId);
 
         if (!tripBlockId) {
-            TimetableEditFormStore.setTargetTripBlock(null);
+            this.#store.setTargetTripBlock(null);
             return of(undefined);
         }
 
         return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
             tap((tripBlock: TripBlockDetailsDto) => {
-                TimetableEditFormStore.setTargetTripBlock(tripBlock);
+                this.#store.setTargetTripBlock(tripBlock);
                 this.#selectRoutesOf(tripBlock);
             }),
             map(() => undefined),
@@ -211,11 +213,8 @@ export class TimetableEditFormService {
      * 絞り込みの外の駅は格子に出ないので、読み込んだ列車の時刻が見えなくなるのを防ぐ。
      */
     selectRoutesTraversedBy(stationIdsPerTrip: string[][]): void {
-        TimetableEditFormStore.addSelectedRouteIds(
-            routeIdsTraversedBy(
-                stationIdsPerTrip,
-                TimetableEditFormStore.stations,
-            ),
+        this.#store.addSelectedRouteIds(
+            routeIdsTraversedBy(stationIdsPerTrip, this.#store.stations()),
         );
     }
 
@@ -228,8 +227,7 @@ export class TimetableEditFormService {
     }
 
     createTripBlocks(trips: CreateTripDto[]): Observable<void> {
-        const isSaveTripsIndividually =
-            TimetableEditFormStore.isSaveTripsIndividually;
+        const isSaveTripsIndividually = this.#store.isSaveTripsIndividually();
 
         const tripBlocks: CreateTripBlockDto[] = isSaveTripsIndividually
             ? trips.map((trip) => ({ trips: [trip] }))
@@ -241,7 +239,7 @@ export class TimetableEditFormService {
     }
 
     replaceTripBlock(trips: ReplaceTripDto[]): Observable<void> {
-        const tripBlockId = TimetableEditFormStore.tripBlockId;
+        const tripBlockId = this.#store.tripBlockId();
 
         // URL に trip_block_id が無いまま保存すると PUT /trip-blocks/null になる
         if (!tripBlockId) {
@@ -268,31 +266,31 @@ export class TimetableEditFormService {
         this.#submittedEvent$.next();
     }
 
-    /** D-11: 下書きは独自 localStorage 直叩きをせず elf-persist-state 経由で保存する。 */
+    /** D-11: 下書きは独自 localStorage 直叩きをせず withSettingsStorage 経由で保存する。 */
     saveDraft(trips: unknown[]): void {
-        TimetableEditFormDraftStore.saveDraft(
+        this.#draftStore.saveDraft(
             {
-                mode: TimetableEditFormStore.mode,
-                calendarId: TimetableEditFormStore.calendarId,
-                tripDirection: TimetableEditFormStore.tripDirection,
-                tripBlockId: TimetableEditFormStore.tripBlockId,
+                mode: this.#store.mode(),
+                calendarId: this.#store.calendarId(),
+                tripDirection: this.#store.tripDirection(),
+                tripBlockId: this.#store.tripBlockId(),
             },
             trips,
         );
     }
 
     clearDraft(): void {
-        TimetableEditFormDraftStore.clearDraft();
+        this.#draftStore.clearDraft();
     }
 
     /** 現在の閲覧コンテキストに一致する下書きがあれば返す（再訪時の復元提案に使う） */
     getMatchingDraft(): TimetableEditFormDraft | null {
-        const draft = TimetableEditFormDraftStore.draft;
+        const draft = this.#draftStore.draft();
         const context = {
-            mode: TimetableEditFormStore.mode,
-            calendarId: TimetableEditFormStore.calendarId,
-            tripDirection: TimetableEditFormStore.tripDirection,
-            tripBlockId: TimetableEditFormStore.tripBlockId,
+            mode: this.#store.mode(),
+            calendarId: this.#store.calendarId(),
+            tripDirection: this.#store.tripDirection(),
+            tripBlockId: this.#store.tripBlockId(),
         };
 
         return draftMatchesContext(draft, context) ? draft : null;

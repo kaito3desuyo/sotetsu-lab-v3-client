@@ -121,9 +121,7 @@ export class OperationPostFormComponent {
         ]),
     });
 
-    readonly #agencies = toSignal(OperationPostCardStore.agencies$, {
-        initialValue: [],
-    });
+    readonly #agencies = inject(OperationPostCardStore).agencies;
     readonly #todaysFormations = inject(TodaysFormationListState)
         .todaysFormations;
     /** 所属は今日の編成を持つ会社だけ（相鉄・JR東日本・東急。2026-10-06） */

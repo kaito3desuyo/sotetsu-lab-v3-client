@@ -2,6 +2,7 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     DestroyRef,
     inject,
     signal,
@@ -33,13 +34,6 @@ import {
 } from './enums/timetable-edit-form.enum';
 import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
 
-// チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
-TimetableEditFormStore.resetLoading();
-
-// 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
-// 後から終わって新しい骨組みを消さないよう、インスタンスでなくファイル単位で数える
-let fetchSeq = 0;
-
 @Component({
     selector: 'app-timetable-edit-form',
     templateUrl: './timetable-edit-form.component.html',
@@ -60,57 +54,30 @@ export class TimetableEditFormComponent {
     readonly #notification = inject(NotificationService);
     readonly #serviceListState = inject(ServiceListState);
     readonly #timetableEditFormService = inject(TimetableEditFormService);
+    readonly #store = inject(TimetableEditFormStore);
 
-    readonly isLoading = toSignal(TimetableEditFormStore.isLoading$);
-    readonly hasFetchedEditForm = toSignal(
-        TimetableEditFormStore.hasFetchedEditForm$,
-        { initialValue: false },
-    );
-    readonly mode = toSignal(TimetableEditFormStore.mode$);
+    readonly isLoading = this.#store.isLoading;
+    readonly hasFetchedEditForm = this.#store.hasFetchedEditForm;
+    readonly mode = this.#store.mode;
     readonly EMode = ETimetableEditFormMode;
     /** 骨組みの格子の行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonGridRows = Array.from({ length: 14 }, (_, i) => i);
     readonly serviceId = this.#serviceListState.serviceId;
-    readonly calendarId = toSignal(TimetableEditFormStore.calendarId$);
-    readonly tripDirection = toSignal(TimetableEditFormStore.tripDirection$);
-    readonly calendar = toSignal(TimetableEditFormStore.calendar$, {
-        initialValue: null,
-    });
-    readonly routes = toSignal(TimetableEditFormStore.routes$, {
-        initialValue: [],
-    });
-    readonly selectedRouteIds = toSignal(
-        TimetableEditFormStore.selectedRouteIds$,
-        { initialValue: [] },
+    readonly calendarId = this.#store.calendarId;
+    readonly tripDirection = this.#store.tripDirection;
+    readonly calendar = this.#store.calendar;
+    readonly routes = this.#store.routes;
+    readonly selectedRouteIds = this.#store.selectedRouteIds;
+    readonly stations = this.#store.sortedStations;
+    readonly visibleStationIds = computed(() =>
+        this.#store.sortedVisibleStations().map((s) => s.stationId),
     );
-    readonly stations = toSignal(TimetableEditFormStore.sortedStations$, {
-        initialValue: [],
-    });
-    readonly visibleStationIds = toSignal(
-        TimetableEditFormStore.sortedVisibleStations$.pipe(
-            map((stations) => stations.map((s) => s.stationId)),
-        ),
-        { initialValue: [] },
-    );
-    readonly operations = toSignal(TimetableEditFormStore.operations$, {
-        initialValue: [],
-    });
-    readonly tripClasses = toSignal(TimetableEditFormStore.tripClasses$, {
-        initialValue: [],
-    });
-    readonly trips = toSignal(TimetableEditFormStore.trips$, {
-        initialValue: [],
-    });
-    readonly copySourceCandidates = toSignal(
-        TimetableEditFormStore.copySourceCandidates$,
-        { initialValue: [] },
-    );
-    readonly selectedTripBlockId = toSignal(
-        TimetableEditFormStore.tripBlockId$,
-    );
-    readonly isSaveTripsIndividually = toSignal(
-        TimetableEditFormStore.isSaveTripsIndividually$,
-    );
+    readonly operations = this.#store.operations;
+    readonly tripClasses = this.#store.tripClasses;
+    readonly trips = this.#store.trips;
+    readonly copySourceCandidates = this.#store.copySourceCandidates;
+    readonly selectedTripBlockId = this.#store.tripBlockId;
+    readonly isSaveTripsIndividually = this.#store.isSaveTripsIndividually;
     readonly lastSubmittedAt = toSignal(
         this.#timetableEditFormService
             .receiveSubmittedEvent()
@@ -121,7 +88,7 @@ export class TimetableEditFormComponent {
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前のフォームが一瞬出ないようにする
-        TimetableEditFormStore.setHasFetchedEditForm(false);
+        this.#store.setHasFetchedEditForm(false);
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -134,14 +101,14 @@ export class TimetableEditFormComponent {
                 );
                 const tripBlockId = paramMap.get('trip_block_id');
 
-                TimetableEditFormStore.resetForNewSession();
-                TimetableEditFormStore.setMode(mode);
-                TimetableEditFormStore.setCalendarId(calendarId);
+                this.#store.resetForNewSession();
+                this.#store.setMode(mode);
+                this.#store.setCalendarId(calendarId);
                 if (tripDirection !== null) {
-                    TimetableEditFormStore.setTripDirection(tripDirection);
+                    this.#store.setTripDirection(tripDirection);
                 }
                 if (tripBlockId) {
-                    TimetableEditFormStore.setTripBlockId(tripBlockId);
+                    this.#store.setTripBlockId(tripBlockId);
                 }
 
                 this.fetchData();
@@ -149,9 +116,9 @@ export class TimetableEditFormComponent {
     }
 
     async fetchData(): Promise<void> {
-        const seq = ++fetchSeq;
-        TimetableEditFormStore.enableLoading();
-        TimetableEditFormStore.setHasFetchedEditForm(false);
+        const seq = this.#store.nextFetchSeq();
+        this.#store.enableLoading();
+        this.#store.setHasFetchedEditForm(false);
 
         try {
             // 5 本は互いに依存しないので同時に投げる
@@ -184,10 +151,10 @@ export class TimetableEditFormComponent {
                 );
             }
         } finally {
-            TimetableEditFormStore.disableLoading();
+            this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === fetchSeq) {
-                TimetableEditFormStore.setHasFetchedEditForm(true);
+            if (this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedEditForm(true);
             }
         }
 
@@ -201,11 +168,11 @@ export class TimetableEditFormComponent {
     }
 
     onRouteFilterChange(values: FilterChipValue[]): void {
-        TimetableEditFormStore.setSelectedRouteIds(values as string[]);
+        this.#store.setSelectedRouteIds(values as string[]);
     }
 
     onToggleIsSaveTripsIndividually(ev: MatSlideToggleChange): void {
-        TimetableEditFormStore.setIsSaveTripsIndividually(ev.checked);
+        this.#store.setIsSaveTripsIndividually(ev.checked);
     }
 
     onFormValueChange(trips: unknown[]): void {
