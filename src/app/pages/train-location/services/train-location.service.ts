@@ -12,6 +12,7 @@ import { attachTripClasses } from 'src/app/shared/attach-trip-classes.util';
 
 @Injectable()
 export class TrainLocationService {
+    readonly #store = inject(TrainLocationStore);
     readonly #routeService = inject(RouteService);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
@@ -21,7 +22,7 @@ export class TrainLocationService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((data) => {
-                TrainLocationStore.setTripClasses(data);
+                this.#store.setTripClasses(data);
             }),
             map(() => undefined),
         );
@@ -34,10 +35,10 @@ export class TrainLocationService {
      * 再取得しない（35-architecture-new-pages.md §1.2）。
      */
     fetchTripBlocks(): Observable<void> {
-        const calendarId = TrainLocationStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
-            TrainLocationStore.setTripBlocksByDirection({});
+            this.#store.setTripBlocksByDirection({});
             return of(undefined);
         }
 
@@ -48,8 +49,8 @@ export class TrainLocationService {
             })
             .pipe(
                 tap((data) => {
-                    TrainLocationStore.setTripBlocksByDirection(
-                        attachTripClasses(data, TrainLocationStore.tripClasses),
+                    this.#store.setTripBlocksByDirection(
+                        attachTripClasses(data, this.#store.tripClasses()),
                     );
                 }),
                 map(() => undefined),
@@ -62,10 +63,10 @@ export class TrainLocationService {
      * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
     fetchItineraryLinks(): Observable<{ failed: boolean }> {
-        const calendarId = TrainLocationStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
-            TrainLocationStore.setItineraryLinks([]);
+            this.#store.setItineraryLinks([]);
             return of({ failed: false });
         }
 
@@ -73,11 +74,11 @@ export class TrainLocationService {
             .findManyItineraryLinks({ calendarId })
             .pipe(
                 tap((links) => {
-                    TrainLocationStore.setItineraryLinks(links);
+                    this.#store.setItineraryLinks(links);
                 }),
                 map(() => ({ failed: false })),
                 catchError(() => {
-                    TrainLocationStore.setItineraryLinks([]);
+                    this.#store.setItineraryLinks([]);
                     return of({ failed: true });
                 }),
             );
@@ -85,10 +86,10 @@ export class TrainLocationService {
 
     /** 選択路線の駅軸（stationSequence 昇順）を取得する。 */
     fetchStationAxis(): Observable<void> {
-        const routeId = TrainLocationStore.selectedRouteId;
+        const routeId = this.#store.selectedRouteId();
 
         if (!routeId) {
-            TrainLocationStore.setStationAxisStations([]);
+            this.#store.setStationAxisStations([]);
             return of(undefined);
         }
 
@@ -98,7 +99,7 @@ export class TrainLocationService {
                     (a, b) =>
                         (a.stationSequence ?? 0) - (b.stationSequence ?? 0),
                 );
-                TrainLocationStore.setStationAxisStations(ordered);
+                this.#store.setStationAxisStations(ordered);
             }),
             map(() => undefined),
         );
@@ -112,7 +113,7 @@ export class TrainLocationService {
     fetchMissingOperationSightingTimeCrossSections(
         operationNumbers: readonly string[],
     ): Observable<boolean> {
-        const cached = TrainLocationStore.operationSightingTimeCrossSections;
+        const cached = this.#store.operationSightingTimeCrossSections();
         const missing = Array.from(new Set(operationNumbers)).filter(
             (operationNumber) => !cached[operationNumber],
         );
@@ -132,7 +133,7 @@ export class TrainLocationService {
                         operationNumber,
                         crossSection,
                     ] of Object.entries(data)) {
-                        TrainLocationStore.setOperationSightingTimeCrossSection(
+                        this.#store.setOperationSightingTimeCrossSection(
                             operationNumber,
                             crossSection,
                         );

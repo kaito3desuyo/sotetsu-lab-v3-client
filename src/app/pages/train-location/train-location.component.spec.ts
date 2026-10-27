@@ -7,7 +7,7 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { firstValueFrom, of, Subject, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationComponent } from './train-location.component';
@@ -17,6 +17,7 @@ import { TrainLocationStore } from './stores/train-location.store';
 describe('TrainLocationComponent', () => {
     let component: TrainLocationComponent;
     let fixture: ComponentFixture<TrainLocationComponent>;
+    let store: InstanceType<typeof TrainLocationStore>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -51,20 +52,9 @@ describe('TrainLocationComponent', () => {
             .compileComponents();
         setTodaysCalendars(['cal-today']);
 
+        store = TestBed.inject(TrainLocationStore);
         fixture = TestBed.createComponent(TrainLocationComponent);
         component = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-        TrainLocationStore.setCalendarId(null);
-        TrainLocationStore.setSelectedRouteId(null);
-        TrainLocationStore.setSelectedStationId(null);
-        TrainLocationStore.setMode('now');
-        TrainLocationStore.setSpecifiedTime(null);
-        TrainLocationStore.setStationAxisStations([]);
-        TrainLocationStore.setTripBlocksByDirection({});
-        TrainLocationStore.resetLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(false);
     });
 
     it('should create', () => {
@@ -87,7 +77,7 @@ describe('TrainLocationComponent', () => {
     });
 
     it('onCalendarIdChange: mode="now" のときは無視される（no-op）', () => {
-        TrainLocationStore.setMode('now');
+        store.setMode('now');
         expect(() => component.onCalendarIdChange('cal-2')).not.toThrow();
     });
 
@@ -98,8 +88,8 @@ describe('TrainLocationComponent', () => {
     });
 
     it('at(): mode="specified" かつ specifiedTime があればその時刻を反映する', () => {
-        TrainLocationStore.setMode('specified');
-        TrainLocationStore.setSpecifiedTime('0730');
+        store.setMode('specified');
+        store.setSpecifiedTime('0730');
         fixture.detectChanges();
 
         const at = component.at();
@@ -121,15 +111,15 @@ describe('TrainLocationComponent', () => {
         expect(footer).toHaveTextContent(/リアルタイム運用情報/);
 
         // ロード中も消えない（常設）
-        TrainLocationStore.enableLoading();
+        store.enableLoading();
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('footer')).toBeTruthy();
-        TrainLocationStore.disableLoading();
+        store.disableLoading();
     });
 
     it('取る前は骨組みを出し、本文は出さない。取得中のプログレスバーはヘッダーの下', () => {
-        TrainLocationStore.enableLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(false);
+        store.enableLoading();
+        store.setHasFetchedTrainLocation(false);
         fixture.detectChanges();
 
         const el = fixture.nativeElement as HTMLElement;
@@ -145,8 +135,8 @@ describe('TrainLocationComponent', () => {
         expect(bar?.parentElement?.className).toContain('tw-top-[48px]');
         expect(bar?.parentElement?.className).toContain('md:tw-top-[64px]');
 
-        TrainLocationStore.disableLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(true);
+        store.disableLoading();
+        store.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
         expect(
@@ -158,8 +148,8 @@ describe('TrainLocationComponent', () => {
 
     it('G12: 在線列車が0本のとき、駅ラインを残したまま空文脈メッセージを重ねて表示する', () => {
         // ロード完了・在線列車なし（tripBlocks 空 = positions 0）の状態。
-        TrainLocationStore.disableLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(true);
+        store.disableLoading();
+        store.setHasFetchedTrainLocation(true);
         fixture.detectChanges();
 
         expect(component.hasNoTrainsInService()).toBe(true);
@@ -187,11 +177,9 @@ describe('TrainLocationComponent', () => {
             }),
         ).rejects.toThrow('fetch failed');
 
-        expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
+        expect(store.isLoading()).toBe(false);
         // 失敗しても骨組みを消す
-        expect(
-            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
-        ).toBe(true);
+        expect(store.hasFetchedTrainLocation()).toBe(true);
     });
 
     it('免責文はページ下端の 1 か所だけ', () => {
@@ -218,7 +206,7 @@ describe('TrainLocationComponent', () => {
     it('onStationSelect: 駅を URL に載せ、路線ごとに覚える', () => {
         const router = TestBed.inject(Router);
         const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
-        TrainLocationStore.setSelectedRouteId('r1');
+        store.setSelectedRouteId('r1');
 
         component.onStationSelect('s1');
 
@@ -241,10 +229,10 @@ describe('TrainLocationComponent', () => {
     });
 
     it('selectedStationId(): 駅軸に無い id のときは null を返す（路線を変えた直後など）', () => {
-        TrainLocationStore.setStationAxisStations([
+        store.setStationAxisStations([
             { stationId: 'a', stationName: '駅A' } as never,
         ]);
-        TrainLocationStore.setSelectedStationId('zzz');
+        store.setSelectedStationId('zzz');
         fixture.detectChanges();
 
         expect(component.selectedStationId()).toBeNull();
@@ -341,7 +329,7 @@ describe('TrainLocationComponent', () => {
     });
 
     it('入ったときは前の訪問の「取り終えた」を引き継がない', () => {
-        TrainLocationStore.setHasFetchedTrainLocation(true);
+        store.setHasFetchedTrainLocation(true);
         fixture = TestBed.createComponent(TrainLocationComponent);
         fixture.detectChanges();
 
@@ -379,6 +367,7 @@ describe('TrainLocationComponent', () => {
 describe('TrainLocationComponent の再訪', () => {
     let fixture: ComponentFixture<TrainLocationComponent>;
     let tripBlocks$: Subject<undefined>;
+    let store: InstanceType<typeof TrainLocationStore>;
 
     // 先のテストが残す未処理の遷移の失敗を、これらのテストの待ちで表に出さないよう、マクロタスクは挟まず
     // マイクロタスクだけを回す
@@ -433,17 +422,11 @@ describe('TrainLocationComponent の再訪', () => {
             })
             .compileComponents();
         setTodaysCalendars(['cal-today']);
+        store = TestBed.inject(TrainLocationStore);
     });
 
     afterEach(() => {
         fixture.destroy();
-        TrainLocationStore.setCalendarId(null);
-        TrainLocationStore.setSelectedRouteId(null);
-        TrainLocationStore.setSelectedStationId(null);
-        TrainLocationStore.setMode('now');
-        TrainLocationStore.setSpecifiedTime(null);
-        TrainLocationStore.resetLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(false);
     });
 
     it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
@@ -490,11 +473,11 @@ describe('TrainLocationComponent の再訪', () => {
             expect(skeleton()).toBeNull();
 
             // 9:10 に駅 a から駅 b へ走っている今日の列車を在線させる（取り足しの対象になる）
-            TrainLocationStore.setStationAxisStations([
+            store.setStationAxisStations([
                 { stationId: 'a' },
                 { stationId: 'b' },
             ] as never);
-            TrainLocationStore.setTripBlocksByDirection({
+            store.setTripBlocksByDirection({
                 0: [
                     {
                         trips: [
