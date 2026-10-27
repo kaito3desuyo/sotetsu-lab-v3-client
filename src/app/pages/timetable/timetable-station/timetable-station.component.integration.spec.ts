@@ -23,7 +23,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -139,13 +139,6 @@ async function setup(overrides?: {
             },
             { provide: NotificationService, useValue: { open: () => {} } },
             {
-                provide: TodaysCalendarListStateQuery,
-                useValue: {
-                    todaysCalendarIds$: of([CAL]),
-                    todaysCalendarId: CAL,
-                },
-            },
-            {
                 provide: CalendarListState,
                 useValue: { calendars: signal([calendarDto]) },
             },
@@ -234,6 +227,7 @@ async function setup(overrides?: {
             },
         })
         .compileComponents();
+    setTodaysCalendars([CAL]);
 
     return TestBed.createComponent(TimetableStationComponent);
 }

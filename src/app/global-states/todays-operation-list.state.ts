@@ -1,72 +1,66 @@
-import { inject, Injectable } from '@angular/core';
-import { createStore } from '@ngneat/elf';
+import { inject } from '@angular/core';
 import {
-    getAllEntities,
-    selectEntities,
-    setEntities,
+    patchState,
+    signalStore,
+    type,
+    withComputed,
+    withMethods,
+} from '@ngrx/signals';
+import {
+    entityConfig,
+    setAllEntities,
     withEntities,
-} from '@ngneat/elf-entities';
+} from '@ngrx/signals/entities';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { generateOperationSortNumber } from '../core/utils/generate-operation-sort-number';
+import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { OperationDetailsDto } from '../libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from '../libs/operation/usecase/operation.service';
-import { TodaysCalendarListStateQuery } from './todays-calendar-list.state';
+import { TodaysCalendarListState } from './todays-calendar-list.state';
 
-type State = OperationDetailsDto;
+const operationConfig = entityConfig({
+    entity: type<OperationDetailsDto>(),
+    selectId: (operation) => operation.operationId,
+});
 
-const state = createStore(
-    { name: 'TodaysOperationList' },
-    withEntities<State, 'operationId'>({
-        initialValue: [],
-        idKey: 'operationId',
-    }),
-);
-
-@Injectable({ providedIn: 'root' })
-export class TodaysOperationListStateStore {
-    readonly #operationService = inject(OperationService);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
-
-    fetch(): Observable<void> {
-        return this.#operationService
-            .findManyByCalendarId({
-                calendarId:
-                    this.#todaysCalendarListStateQuery.todaysCalendarId,
-            })
-            .pipe(
-                map((data) =>
-                    data.filter((o) => o.operationNumber !== '100'),
-                ),
-                tap((data: OperationDetailsDto[]) => {
-                    state.update(setEntities(data));
-                }),
-                map(() => undefined),
-            );
-    }
-}
-
-@Injectable({ providedIn: 'root' })
-export class TodaysOperationListStateQuery {
-    readonly todaysOperations$ = state.pipe(
-        selectEntities(),
-        map((operationsMap) =>
-            Object.entries(operationsMap).map(([_, value]) => value),
-        ),
-    );
-    readonly todaysOperationsSorted$ = this.todaysOperations$.pipe(
-        map((operations) =>
-            [...operations].sort(
+export const TodaysOperationListState = signalStore(
+    { providedIn: 'root' },
+    withEntities(operationConfig),
+    withComputed(({ entities }) => ({
+        /** 取得した順の今日の運用 */
+        todaysOperations: entities,
+        todaysOperationsSorted: () =>
+            [...entities()].sort(
                 (a, b) =>
                     Number(generateOperationSortNumber(a.operationNumber)) -
                     Number(generateOperationSortNumber(b.operationNumber)),
             ),
-        ),
-    );
+    })),
+    withMethods((store) => {
+        const operationService = inject(OperationService);
+        const todaysCalendarListState = inject(TodaysCalendarListState);
 
-    get todaysOperations(): OperationDetailsDto[] {
-        return state.query(getAllEntities());
-    }
-}
+        return {
+            fetch(): Observable<void> {
+                return operationService
+                    .findManyByCalendarId({
+                        calendarId: todaysCalendarListState.todaysCalendarId(),
+                    })
+                    .pipe(
+                        map((data) =>
+                            data.filter((o) => o.operationNumber !== '100'),
+                        ),
+                        tap((data: OperationDetailsDto[]) => {
+                            patchState(
+                                store,
+                                setAllEntities(data, operationConfig),
+                            );
+                        }),
+                        map(() => undefined),
+                    );
+            },
+        };
+    }),
+    withAppDevtools('TodaysOperationListState'),
+);

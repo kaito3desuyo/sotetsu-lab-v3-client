@@ -1,8 +1,7 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { OperationTableFilterComponent } from './operation-table-filter.component';
 
@@ -15,16 +14,8 @@ describe('OperationTableFilterComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [OperationTableFilterComponent],
-            providers: [
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarIds$: of(['today']),
-                        todaysCalendarId$: of('today'),
-                    },
-                },
-            ],
         }).compileComponents();
+        setTodaysCalendars(['today']);
 
         fixture = TestBed.createComponent(OperationTableFilterComponent);
         component = fixture.componentInstance;

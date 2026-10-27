@@ -12,7 +12,7 @@ import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
 import {
@@ -410,12 +410,9 @@ describe('TimetableStationComponent のサーバー', () => {
                     provide: SsrResponse,
                     useValue: { addCacheTags, setCachePolicy: jest.fn() },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarIds$: of(['cal-1']) },
-                },
             ],
         );
+        setTodaysCalendars(['cal-1']);
 
         const component = TestBed.createComponent(
             TimetableStationComponent,

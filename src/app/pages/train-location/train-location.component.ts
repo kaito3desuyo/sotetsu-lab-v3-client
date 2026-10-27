@@ -23,7 +23,7 @@ import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -104,9 +104,7 @@ export class TrainLocationComponent {
     readonly #router = inject(Router);
     readonly #trainLocationService = inject(TrainLocationService);
     readonly #offlineSnapshots = inject(OfflineSnapshots);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
     readonly #calendarListState = inject(CalendarListState);
@@ -146,10 +144,8 @@ export class TrainLocationComponent {
         { initialValue: {} },
     );
 
-    readonly todaysCalendarIds = toSignal(
-        this.#todaysCalendarListStateQuery.todaysCalendarIds$,
-        { initialValue: [] },
-    );
+    readonly todaysCalendarIds =
+        this.#todaysCalendarListState.todaysCalendarIds;
     readonly #operatingSystemEndsByRouteId =
         this.#routeStationListState.operatingSystemEndsByRouteId;
     readonly #routeStations = this.#routeStationListState.routeStations;
@@ -447,7 +443,7 @@ export class TrainLocationComponent {
                 const timeParam = paramMap.get('time');
                 const mode: TrainLocationMode = timeParam ? 'specified' : 'now';
                 const todaysCalendarId =
-                    this.#todaysCalendarListStateQuery.todaysCalendarId;
+                    this.#todaysCalendarListState.todaysCalendarId();
                 const calendarId =
                     mode === 'specified'
                         ? (paramMap.get('calendar_id') ?? todaysCalendarId)
@@ -689,7 +685,7 @@ export class TrainLocationComponent {
                 time: timeValue,
                 calendar_id:
                     this.calendarId() ??
-                    this.#todaysCalendarListStateQuery.todaysCalendarId ??
+                    this.#todaysCalendarListState.todaysCalendarId() ??
                     '',
             });
             return;
@@ -706,7 +702,7 @@ export class TrainLocationComponent {
             time: formatTimeParam(parsed),
             calendar_id:
                 this.calendarId() ??
-                this.#todaysCalendarListStateQuery.todaysCalendarId ??
+                this.#todaysCalendarListState.todaysCalendarId() ??
                 '',
         });
     }

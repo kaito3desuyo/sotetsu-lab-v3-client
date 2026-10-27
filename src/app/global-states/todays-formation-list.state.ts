@@ -1,86 +1,87 @@
-import { inject, Injectable } from '@angular/core';
-import { createStore } from '@ngneat/elf';
+import { inject } from '@angular/core';
 import {
-    getAllEntities,
-    selectEntities,
-    setEntities,
+    patchState,
+    signalStore,
+    type,
+    withComputed,
+    withMethods,
+} from '@ngrx/signals';
+import {
+    entityConfig,
+    setAllEntities,
     withEntities,
-} from '@ngneat/elf-entities';
+} from '@ngrx/signals/entities';
 import { format } from 'date-fns';
 import { Observable } from 'rxjs';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { map, tap } from 'rxjs/operators';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from '../libs/formation/usecase/formation.service';
 import { agenciesInThroughServiceOrder } from '../shared/agencies-in-through-service-order.util';
 import { AgencyListState } from './agency-list.state';
 import { RouteStationListState } from './route-station-list.state';
 
-type State = FormationDetailsDto;
+const formationConfig = entityConfig({
+    entity: type<FormationDetailsDto>(),
+    selectId: (formation) => formation.formationId,
+});
 
-const state = createStore(
-    { name: 'TodaysFormationList' },
-    withEntities<State, 'formationId'>({
-        initialValue: [],
-        idKey: 'formationId',
-    }),
-);
+export const TodaysFormationListState = signalStore(
+    { providedIn: 'root' },
+    withEntities(formationConfig),
+    withComputed(({ entities }) => {
+        const agencyListState = inject(AgencyListState);
+        const routeStationListState = inject(RouteStationListState);
 
-@Injectable({ providedIn: 'root' })
-export class TodaysFormationListStateStore {
-    readonly #formationService = inject(FormationService);
-
-    fetch(): Observable<void> {
-        return this.#formationService
-            .findManyBySpecificDate({
-                date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
-            })
-            .pipe(
-                tap((data: FormationDetailsDto[]) => {
-                    state.update(setEntities(data));
-                }),
-                map(() => undefined),
-            );
-    }
-}
-
-@Injectable({ providedIn: 'root' })
-export class TodaysFormationListStateQuery {
-    readonly #agencyListState = inject(AgencyListState);
-    readonly #routeStationListState = inject(RouteStationListState);
-
-    readonly todaysFormations$ = state.pipe(
-        selectEntities(),
-        map((formationsMap) =>
-            Object.entries(formationsMap).map(([_, value]) => value),
-        ),
-    );
-    readonly todaysFormationsSorted$ = this.todaysFormations$.pipe(
-        map((formations) =>
-            [...formations].sort((a, b) => {
+        return {
+            /** 取得した順の今日の編成 */
+            todaysFormations: entities,
+            todaysFormationsSorted: () => {
                 // 会社の順は相鉄と直通を始めた順（会社チップと同じ。agenciesInThroughServiceOrder）
                 const agencies = agenciesInThroughServiceOrder(
-                    this.#agencyListState.agencies(),
-                    this.#routeStationListState.routeStations(),
+                    agencyListState.agencies(),
+                    routeStationListState.routeStations(),
                 );
                 const getIndex = (agencyId: string) =>
                     agencies.findIndex((v) => v.agencyId === agencyId);
-                const agencyDiff = getIndex(a.agencyId) - getIndex(b.agencyId);
-                if (agencyDiff !== 0) {
-                    return agencyDiff;
-                }
-                // 会社内は編成番号の数値順（API 返却順のままだと東急・相鉄の
-                // 一部で番号が前後するため）。
-                return (a.formationNumber ?? '').localeCompare(
-                    b.formationNumber ?? '',
-                    undefined,
-                    { numeric: true },
-                );
-            }),
-        ),
-    );
+                return [...entities()].sort((a, b) => {
+                    const agencyDiff =
+                        getIndex(a.agencyId) - getIndex(b.agencyId);
+                    if (agencyDiff !== 0) {
+                        return agencyDiff;
+                    }
+                    // 会社内は編成番号の数値順（API 返却順のままだと東急・相鉄の
+                    // 一部で番号が前後するため）。
+                    return (a.formationNumber ?? '').localeCompare(
+                        b.formationNumber ?? '',
+                        undefined,
+                        { numeric: true },
+                    );
+                });
+            },
+        };
+    }),
+    withMethods((store) => {
+        const formationService = inject(FormationService);
 
-    get todaysFormations() {
-        return state.query(getAllEntities());
-    }
-}
+        return {
+            fetch(): Observable<void> {
+                return formationService
+                    .findManyBySpecificDate({
+                        date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+                    })
+                    .pipe(
+                        tap((data: FormationDetailsDto[]) => {
+                            patchState(
+                                store,
+                                setAllEntities(data, formationConfig),
+                            );
+                        }),
+                        map(() => undefined),
+                    );
+            },
+        };
+    }),
+    withAppDevtools('TodaysFormationListState'),
+);

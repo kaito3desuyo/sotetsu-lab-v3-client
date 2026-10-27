@@ -9,7 +9,7 @@ import {
 } from '@angular/router';
 import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationComponent } from './train-location.component';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
@@ -35,13 +35,6 @@ describe('TrainLocationComponent', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -56,6 +49,7 @@ describe('TrainLocationComponent', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         fixture = TestBed.createComponent(TrainLocationComponent);
         component = fixture.componentInstance;
@@ -284,13 +278,6 @@ describe('TrainLocationComponent', () => {
                         },
                     },
                     {
-                        provide: TodaysCalendarListStateQuery,
-                        useValue: {
-                            todaysCalendarId: 'cal-today',
-                            todaysCalendarIds$: of(['cal-today']),
-                        },
-                    },
-                    {
                         provide: RouteStationListState,
                         useValue: {
                             routeStations: signal([
@@ -305,6 +292,7 @@ describe('TrainLocationComponent', () => {
                     set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
                 })
                 .compileComponents();
+            setTodaysCalendars(['cal-today']);
 
             const router = TestBed.inject(Router);
             return { router };
@@ -430,13 +418,6 @@ describe('TrainLocationComponent の再訪', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -451,6 +432,7 @@ describe('TrainLocationComponent の再訪', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
     });
 
     afterEach(() => {
@@ -576,13 +558,6 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: undefined,
-                        todaysCalendarIds$: of([]),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -597,6 +572,7 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars([]);
 
         const navigate = jest.spyOn(TestBed.inject(Router), 'navigate');
         const fixture = TestBed.createComponent(TrainLocationComponent);

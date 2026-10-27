@@ -20,7 +20,7 @@ import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
 import { TrainDiagramStore } from './stores/train-diagram.store';
@@ -69,13 +69,6 @@ describe('TrainDiagramComponent', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -106,6 +99,7 @@ describe('TrainDiagramComponent', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;
@@ -1048,13 +1042,6 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -1068,6 +1055,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;
@@ -1313,13 +1301,6 @@ describe('TrainDiagramComponent のサーバー', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -1334,6 +1315,7 @@ describe('TrainDiagramComponent のサーバー', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
         return router;
     };
 
@@ -1444,13 +1426,6 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: { routeStations: signal(routeStations) },
                 },
@@ -1461,6 +1436,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;

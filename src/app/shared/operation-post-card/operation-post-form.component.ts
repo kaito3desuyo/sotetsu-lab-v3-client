@@ -32,7 +32,7 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { UserState } from 'src/app/global-states/user.state';
@@ -124,10 +124,8 @@ export class OperationPostFormComponent {
     readonly #agencies = toSignal(OperationPostCardStore.agencies$, {
         initialValue: [],
     });
-    readonly #todaysFormations = toSignal(
-        inject(TodaysFormationListStateQuery).todaysFormations$,
-        { initialValue: [] },
-    );
+    readonly #todaysFormations = inject(TodaysFormationListState)
+        .todaysFormations;
     /** 所属は今日の編成を持つ会社だけ（相鉄・JR東日本・東急。2026-10-06） */
     readonly agencies = computed(() =>
         filterAgenciesWithFormations(

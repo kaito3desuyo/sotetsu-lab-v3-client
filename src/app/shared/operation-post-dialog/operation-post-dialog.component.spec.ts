@@ -6,7 +6,6 @@ import { of, Subject } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from '../operation-post-card/operation-post-card.service';
 import { OperationPostFormComponent } from '../operation-post-card/operation-post-form.component';
@@ -44,10 +43,6 @@ describe('OperationPostDialogComponent', () => {
                         postOperationSighting: jest.fn(() => of(undefined)),
                         emitSubmitEvent: jest.fn(),
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,

@@ -21,7 +21,7 @@ import {
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -305,13 +305,6 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
                     },
                 },
                 { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarIds$: of(['cal-today']),
-                        todaysCalendarId$: of('cal-today'),
-                    },
-                },
                 { provide: NotificationService, useValue: { open: jest.fn() } },
             ],
         })
@@ -319,6 +312,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
                 set: { template: '', imports: [] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         navigate = jest
             .spyOn(TestBed.inject(Router), 'navigate')
@@ -515,15 +509,9 @@ describe('OperationRouteDiagramComponent の帯の配線（本物のテンプレ
                         paramMap: of(convertToParamMap({ operation_id: 'b1' })),
                     },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarIds$: of(['cal-today']),
-                        todaysCalendarId$: of('cal-today'),
-                    },
-                },
             ],
         }).compileComponents();
+        setTodaysCalendars(['cal-today']);
         jest.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
         const fixture = TestBed.createComponent(OperationRouteDiagramComponent);

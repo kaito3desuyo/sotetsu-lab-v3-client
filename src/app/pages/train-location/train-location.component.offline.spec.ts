@@ -6,7 +6,7 @@ import { Observable, Subject, firstValueFrom, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
 import { TrainLocationComponent } from './train-location.component';
@@ -71,13 +71,6 @@ describe('TrainLocationComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
@@ -93,6 +86,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
         fixture = TestBed.createComponent(TrainLocationComponent);
         component = fixture.componentInstance;

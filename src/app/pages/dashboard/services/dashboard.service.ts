@@ -5,7 +5,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDateService } from 'src/app/libs/calendar/usecase/calendar-date.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
@@ -20,9 +20,7 @@ import { DashboardStore } from '../stores/dashboard.store';
 
 @Injectable()
 export class DashboardService {
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #calendarListState = inject(CalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #tripBlockService = inject(TripBlockService);
@@ -33,7 +31,7 @@ export class DashboardService {
 
     /** 今日有効なダイヤ（todaysCalendarList 由来）を取得する。 */
     fetchTodaysCalendar(): Observable<void> {
-        const calendarId = this.#todaysCalendarListStateQuery.todaysCalendarId;
+        const calendarId = this.#todaysCalendarListState.todaysCalendarId();
 
         if (!calendarId) {
             DashboardStore.setTodaysCalendar(null);

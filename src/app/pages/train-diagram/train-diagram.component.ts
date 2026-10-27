@@ -26,7 +26,7 @@ import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { formatRouteFilterSummary } from 'src/app/shared/control-band/control-band-summary.util';
@@ -157,9 +157,7 @@ export class TrainDiagramComponent {
     readonly #pageMeta = inject(PageMeta);
     readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #timetableDiagramService = inject(TrainDiagramService);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
     readonly #calendarListState = inject(CalendarListState);
@@ -253,10 +251,8 @@ export class TrainDiagramComponent {
         { initialValue: {} },
     );
 
-    readonly todaysCalendarIds = toSignal(
-        this.#todaysCalendarListStateQuery.todaysCalendarIds$,
-        { initialValue: [] },
-    );
+    readonly todaysCalendarIds =
+        this.#todaysCalendarListState.todaysCalendarIds;
     readonly #routeStations = this.#routeStationListState.routeStations;
     readonly #agencies = this.#agencyListState.agencies;
     readonly #calendars = this.#calendarListState.calendars;
@@ -928,7 +924,7 @@ export class TrainDiagramComponent {
                 this.#viewParamOverrides = {};
                 const calendarId =
                     paramMap.get('calendar_id') ??
-                    this.#todaysCalendarListStateQuery.todaysCalendarId;
+                    this.#todaysCalendarListState.todaysCalendarId();
 
                 const routeIdsParam = paramMap.get('route_ids');
                 const resolvedRouteIds = routeIdsParam

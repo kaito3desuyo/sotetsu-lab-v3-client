@@ -4,7 +4,7 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSearchCardComponent } from './operation-search-card.component';
@@ -40,15 +40,12 @@ describe('OperationSearchCardComponent', () => {
                     useValue: { calendars: signal([]) },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId$: of('today') },
-                },
-                {
                     provide: OperationService,
                     useValue: { findManyByCalendarId },
                 },
             ],
         }).compileComponents();
+        setTodaysCalendars(['today']);
 
         fixture = TestBed.createComponent(OperationSearchCardComponent);
         component = fixture.componentInstance;

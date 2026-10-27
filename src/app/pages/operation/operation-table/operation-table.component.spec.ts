@@ -25,7 +25,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableComponent } from './operation-table.component';
 import { OperationTableService } from './services/operation-table.service';
 import {
@@ -37,8 +37,6 @@ describe('OperationTableComponent', () => {
     let component: OperationTableComponent;
     let fixture: ComponentFixture<OperationTableComponent>;
     let router: Router;
-
-    const todaysCalendarQueryMock = { todaysCalendarId: 'todays-calendar-id' };
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -60,10 +58,6 @@ describe('OperationTableComponent', () => {
                     useValue: { calendars: signal([]) },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: todaysCalendarQueryMock,
-                },
-                {
                     provide: NotificationService,
                     useValue: { open: () => {} },
                 },
@@ -73,6 +67,7 @@ describe('OperationTableComponent', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['todays-calendar-id']);
 
         router = TestBed.inject(Router);
     });
@@ -379,10 +374,6 @@ describe('OperationTableComponent の読み込み中', () => {
                     provide: CalendarListState,
                     useValue: { calendars: signal([]) },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId: 'cal-1' },
-                },
                 { provide: NotificationService, useValue: { open: () => {} } },
             ],
         })
@@ -390,6 +381,7 @@ describe('OperationTableComponent の読み込み中', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-1']);
     });
 
     afterEach(() => {
@@ -575,10 +567,6 @@ describe('OperationTableComponent のサーバー', () => {
                     provide: CalendarListState,
                     useValue: { calendars: signal([]) },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId: 'todays-calendar-id' },
-                },
                 { provide: NotificationService, useValue: { open: () => {} } },
                 ...extraProviders,
             ],
@@ -587,6 +575,7 @@ describe('OperationTableComponent のサーバー', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['todays-calendar-id']);
     };
 
     afterEach(() => {
@@ -688,10 +677,6 @@ describe('OperationTableComponent の圏外の保存', () => {
                     provide: CalendarListState,
                     useValue: { calendars: signal([]) },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId: 'cal-1' },
-                },
                 { provide: NotificationService, useValue: { open: () => {} } },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
             ],
@@ -700,6 +685,7 @@ describe('OperationTableComponent の圏外の保存', () => {
                 set: { template: '', imports: [] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-1']);
     };
 
     const succeedAll = () => {

@@ -6,10 +6,9 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 
 /**
  * ダイヤの選択欄の右に置く「今日」（docs/design.md「今日のダイヤ」）。
@@ -33,14 +32,13 @@ import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calen
     host: { class: 'tw-shrink-0' },
 })
 export class TodayCalendarButtonComponent {
-    readonly #query = inject(TodaysCalendarListStateQuery);
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly calendarId = input<string | null | undefined>();
     readonly selectToday = output<string>();
 
-    readonly #todaysCalendarIds = toSignal(this.#query.todaysCalendarIds$, {
-        initialValue: [] as string[],
-    });
-    readonly #todaysCalendarId = toSignal(this.#query.todaysCalendarId$);
+    readonly #todaysCalendarIds =
+        this.#todaysCalendarListState.todaysCalendarIds;
+    readonly #todaysCalendarId = this.#todaysCalendarListState.todaysCalendarId;
 
     readonly disabled = computed(() => {
         const calendarId = this.calendarId();

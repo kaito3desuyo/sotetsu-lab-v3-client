@@ -7,8 +7,8 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
-import { TodaysOperationListStateQuery } from 'src/app/global-states/todays-operation-list.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
@@ -44,12 +44,8 @@ import { DashboardStore } from '../../stores/dashboard.store';
 export class DashboardLatestSightingsComponent {
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
-    readonly #todaysOperationListStateQuery = inject(
-        TodaysOperationListStateQuery,
-    );
-    readonly #todaysFormationListStateQuery = inject(
-        TodaysFormationListStateQuery,
-    );
+    readonly #todaysOperationListState = inject(TodaysOperationListState);
+    readonly #todaysFormationListState = inject(TodaysFormationListState);
 
     readonly skeletonRows = [0, 1, 2];
 
@@ -73,14 +69,8 @@ export class DashboardLatestSightingsComponent {
         initialValue: null,
     });
     readonly calendarId = computed(() => this.#todaysCalendar()?.calendarId);
-    readonly #operations = toSignal(
-        this.#todaysOperationListStateQuery.todaysOperations$,
-        { initialValue: [] },
-    );
-    readonly #formations = toSignal(
-        this.#todaysFormationListStateQuery.todaysFormations$,
-        { initialValue: [] },
-    );
+    readonly #operations = this.#todaysOperationListState.todaysOperations;
+    readonly #formations = this.#todaysFormationListState.todaysFormations;
     readonly #agencies = this.#agencyListState.agencies;
 
     readonly #operationNumberById = computed(

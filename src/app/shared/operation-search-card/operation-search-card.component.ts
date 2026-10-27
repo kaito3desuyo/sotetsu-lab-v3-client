@@ -17,7 +17,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -55,9 +55,8 @@ export class OperationSearchCardComponent {
     );
 
     readonly calendars = inject(CalendarListState).calendars;
-    readonly #todaysCalendarId = toSignal(
-        inject(TodaysCalendarListStateQuery).todaysCalendarId$,
-    );
+    readonly #todaysCalendarId = inject(TodaysCalendarListState)
+        .todaysCalendarId;
 
     readonly selectedCalendarId = linkedSignal(
         () => this.calendarId() || (this.#todaysCalendarId() ?? null),

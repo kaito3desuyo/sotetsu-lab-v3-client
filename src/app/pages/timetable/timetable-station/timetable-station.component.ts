@@ -32,7 +32,7 @@ import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
@@ -99,9 +99,7 @@ export class TimetableStationComponent {
     readonly #notificationService = inject(NotificationService);
     readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #timetableStationService = inject(TimetableStationService);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #calendarListState = inject(CalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
@@ -158,10 +156,8 @@ export class TimetableStationComponent {
     readonly timetableData = toSignal(TimetableStationStore.timetableData$, {
         initialValue: [],
     });
-    readonly todaysCalendarIds = toSignal(
-        this.#todaysCalendarListStateQuery.todaysCalendarIds$,
-        { initialValue: [] as string[] },
-    );
+    readonly todaysCalendarIds =
+        this.#todaysCalendarListState.todaysCalendarIds;
 
     /**
      * B7: 表示中 calendar が「今日有効なダイヤ集合」に含まれるか。
@@ -251,7 +247,7 @@ export class TimetableStationComponent {
 
                     const defaultCalendarId =
                         rawCalendarId ??
-                        this.#todaysCalendarListStateQuery.todaysCalendarId;
+                        this.#todaysCalendarListState.todaysCalendarId();
                     const defaultStationId =
                         rawStationId ??
                         this.stationOptions().find(

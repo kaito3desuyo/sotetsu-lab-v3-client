@@ -10,7 +10,6 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from './operation-post-card.service';
@@ -50,10 +49,6 @@ describe('OperationPostFormComponent', () => {
                         postOperationSighting,
                         emitSubmitEvent,
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,
@@ -372,10 +367,6 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
                         postOperationSighting: jest.fn(() => of(undefined)),
                         emitSubmitEvent: jest.fn(),
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,

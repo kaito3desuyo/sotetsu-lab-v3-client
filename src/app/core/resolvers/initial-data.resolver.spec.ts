@@ -12,9 +12,9 @@ import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
 import { InitializeState } from 'src/app/global-states/initialize.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
-import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
-import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
-import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { TokenState } from 'src/app/global-states/token.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { initialDataResolver } from './initial-data.resolver';
@@ -70,15 +70,15 @@ describe('initialDataResolver', () => {
                 { provide: RouteStationListState, useValue: routeStation },
                 { provide: ServiceListState, useValue: service },
                 {
-                    provide: TodaysCalendarListStateStore,
+                    provide: TodaysCalendarListState,
                     useValue: todaysCalendar,
                 },
                 {
-                    provide: TodaysOperationListStateStore,
+                    provide: TodaysOperationListState,
                     useValue: todaysOperation,
                 },
                 {
-                    provide: TodaysFormationListStateStore,
+                    provide: TodaysFormationListState,
                     useValue: todaysFormation,
                 },
                 { provide: FeatureFlagState, useValue: featureFlag },

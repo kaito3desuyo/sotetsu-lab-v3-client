@@ -9,9 +9,9 @@ import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
 import { InitializeState } from 'src/app/global-states/initialize.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
-import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
-import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
-import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { TokenState } from 'src/app/global-states/token.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { preloadRouteComponents } from './preload-route-components';
@@ -19,13 +19,13 @@ import { preloadRouteComponents } from './preload-route-components';
 export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const tokenState = inject(TokenState);
     const userState = inject(UserState);
-    const agencyListStateStore = inject(AgencyListState);
-    const calendarListStateStore = inject(CalendarListState);
-    const routeStationListStateStore = inject(RouteStationListState);
-    const serviceListStateStore = inject(ServiceListState);
-    const todaysCalendarListStateStore = inject(TodaysCalendarListStateStore);
-    const todaysOperationListStateStore = inject(TodaysOperationListStateStore);
-    const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
+    const agencyListState = inject(AgencyListState);
+    const calendarListState = inject(CalendarListState);
+    const routeStationListState = inject(RouteStationListState);
+    const serviceListState = inject(ServiceListState);
+    const todaysCalendarListState = inject(TodaysCalendarListState);
+    const todaysOperationListState = inject(TodaysOperationListState);
+    const todaysFormationListState = inject(TodaysFormationListState);
     const featureFlagState = inject(FeatureFlagState);
     const initializeState = inject(InitializeState);
     // サーバーはゲストとして描き、HTML を CDN に置く。プロフィールと「今日」のものは
@@ -39,9 +39,7 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     // 開いた直後の replaceUrl で二度走らないよう、ROUTE_CHECK_MAX_AGE_MS の間は使い回す。
     // トークンは保存されないので、API の要求より先に取る（認証ヘッダーのため）
     await Promise.all([
-        lastValueFrom(
-            tokenState.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS }),
-        ),
+        lastValueFrom(tokenState.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS })),
         ...(isServer
             ? []
             : [
@@ -55,21 +53,19 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
 
     // 順番待ちが要るのは今日の運用だけ（今日のダイヤの ID で引く）。ほかは同時に投げる
     await Promise.all([
-        lastValueFrom(agencyListStateStore.fetch()),
-        lastValueFrom(calendarListStateStore.fetch()),
-        lastValueFrom(routeStationListStateStore.fetch()),
-        lastValueFrom(serviceListStateStore.fetch()),
+        lastValueFrom(agencyListState.fetch()),
+        lastValueFrom(calendarListState.fetch()),
+        lastValueFrom(routeStationListState.fetch()),
+        lastValueFrom(serviceListState.fetch()),
         // 失敗しても止まらない（FeatureFlagState が飲む）。60 秒は query が使い回す
         lastValueFrom(featureFlagState.fetch()),
         ...(isServer
             ? []
             : [
-                  lastValueFrom(todaysFormationListStateStore.fetch()),
+                  lastValueFrom(todaysFormationListState.fetch()),
                   (async () => {
-                      await lastValueFrom(todaysCalendarListStateStore.fetch());
-                      await lastValueFrom(
-                          todaysOperationListStateStore.fetch(),
-                      );
+                      await lastValueFrom(todaysCalendarListState.fetch());
+                      await lastValueFrom(todaysOperationListState.fetch());
                   })(),
               ]),
     ]);

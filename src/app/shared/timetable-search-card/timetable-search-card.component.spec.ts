@@ -2,11 +2,10 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetableSearchCardComponent } from './timetable-search-card.component';
 
@@ -32,12 +31,9 @@ describe('TimetableSearchCardComponent', () => {
                     provide: AgencyListState,
                     useValue: { agencies: signal([]) },
                 },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId$: of('today') },
-                },
             ],
         }).compileComponents();
+        setTodaysCalendars(['today']);
 
         fixture = TestBed.createComponent(TimetableSearchCardComponent);
         component = fixture.componentInstance;

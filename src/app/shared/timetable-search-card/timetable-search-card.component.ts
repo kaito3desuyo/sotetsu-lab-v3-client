@@ -27,7 +27,7 @@ import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-fa
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
@@ -100,9 +100,8 @@ export class TimetableSearchCardComponent {
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),
     );
-    readonly #todaysCalendarId = toSignal(
-        inject(TodaysCalendarListStateQuery).todaysCalendarId$,
-    );
+    readonly #todaysCalendarId = inject(TodaysCalendarListState)
+        .todaysCalendarId;
 
     readonly #initialState = computed(() => ({
         calendarId: this.calendarId() || (this.#todaysCalendarId() ?? ''),

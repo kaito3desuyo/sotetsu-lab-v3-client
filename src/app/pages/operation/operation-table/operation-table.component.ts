@@ -21,7 +21,7 @@ import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -75,9 +75,7 @@ export class OperationTableComponent {
     readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #operationTableService = inject(OperationTableService);
     readonly #calendarListState = inject(CalendarListState);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
@@ -165,7 +163,7 @@ export class OperationTableComponent {
 
                 const calendarId =
                     paramMap.get('calendar_id') ??
-                    this.#todaysCalendarListStateQuery.todaysCalendarId;
+                    this.#todaysCalendarListState.todaysCalendarId();
 
                 // モック 03: 無パラメータ時は今日の calendar_id へフォールバックし、
                 // 初回からカードを表示する（train-diagram と同一の replaceUrl 方式）
