@@ -2,15 +2,17 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of, Subject } from 'rxjs';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
+import { of, Subject } from 'rxjs';
 
 import { FetchError } from './core/classes/custom-error';
 import { AppUpdateService } from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
-import { TokenStateQuery, TokenStateStore } from './global-states/token.state';
-import { UserStateQuery } from './global-states/user.state';
+import { TokenState } from './global-states/token.state';
+import { UserState } from './global-states/user.state';
 import {
     QueryInvalidationTag,
     QueryInvalidator,
@@ -19,8 +21,6 @@ import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
     let socketMessages: Subject<unknown>;
-    let isLoggedIn$: BehaviorSubject<boolean>;
-    let role$: BehaviorSubject<string | null>;
     let setUserProperties: jest.Mock;
     let sendEvent: jest.Mock;
     let tokenFetch: jest.Mock;
@@ -28,8 +28,6 @@ describe('AppComponent', () => {
     beforeEach(async () => {
         tokenFetch = jest.fn(() => of(undefined));
         socketMessages = new Subject<unknown>();
-        isLoggedIn$ = new BehaviorSubject<boolean>(false);
-        role$ = new BehaviorSubject<string | null>(null);
         setUserProperties = jest.fn();
         sendEvent = jest.fn();
         await TestBed.configureTestingModule({
@@ -62,10 +60,9 @@ describe('AppComponent', () => {
                     },
                 ]),
                 { provide: AppUpdateService, useValue: {} },
-                { provide: TokenStateStore, useValue: { fetch: tokenFetch } },
                 {
-                    provide: TokenStateQuery,
-                    useValue: { isExpired: true },
+                    provide: TokenState,
+                    useValue: { fetch: tokenFetch, isExpired: () => true },
                 },
                 {
                     provide: GoogleAnalyticsService,
@@ -76,10 +73,6 @@ describe('AppComponent', () => {
                     },
                 },
                 { provide: NotificationService, useValue: { open: () => {} } },
-                {
-                    provide: UserStateQuery,
-                    useValue: { isLoggedIn$, role$ },
-                },
                 {
                     provide: SocketService,
                     useValue: {
@@ -141,6 +134,7 @@ describe('AppComponent', () => {
     });
 
     it('ログインの状態と役割を GA のユーザープロパティに載せ、変わったら載せ直す', () => {
+        const userState = TestBed.inject(UserState);
         TestBed.createComponent(AppComponent);
 
         expect(setUserProperties).toHaveBeenLastCalledWith({
@@ -148,8 +142,7 @@ describe('AppComponent', () => {
             role: null,
         });
 
-        isLoggedIn$.next(true);
-        role$.next('editor');
+        patchState(unprotected(userState), { userId: 'u1', role: 'editor' });
 
         expect(setUserProperties).toHaveBeenLastCalledWith({
             loggedIn: true,

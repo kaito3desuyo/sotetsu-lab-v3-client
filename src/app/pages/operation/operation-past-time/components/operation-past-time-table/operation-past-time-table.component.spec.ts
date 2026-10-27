@@ -2,8 +2,10 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
+import { of } from 'rxjs';
+import { UserState } from 'src/app/global-states/user.state';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
 import { OperationPastTimeService } from '../../services/operation-past-time.service';
@@ -14,10 +16,8 @@ import { OperationPastTimeTableComponent } from './operation-past-time-table.com
 describe('OperationPastTimeTableComponent', () => {
     let component: OperationPastTimeTableComponent;
     let fixture: ComponentFixture<OperationPastTimeTableComponent>;
-    let role$: BehaviorSubject<string>;
 
     beforeEach(async () => {
-        role$ = new BehaviorSubject<string>('viewer');
         OperationPastTimeStore.setFormations([
             {
                 formationId: 'f-1',
@@ -36,10 +36,6 @@ describe('OperationPastTimeTableComponent', () => {
             imports: [OperationPastTimeTableComponent],
             providers: [
                 provideRouter([]),
-                {
-                    provide: UserStateQuery,
-                    useValue: { role$ },
-                },
                 {
                     provide: OperationPastTimeService,
                     useValue: {
@@ -65,6 +61,7 @@ describe('OperationPastTimeTableComponent', () => {
             })
             .compileComponents();
 
+        patchState(unprotected(TestBed.inject(UserState)), { role: 'viewer' });
         fixture = TestBed.createComponent(OperationPastTimeTableComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -264,7 +261,9 @@ describe('OperationPastTimeTableComponent', () => {
         });
 
         it('引き継いだ目撃は無効化・復元できず、直接の目撃はできる', () => {
-            role$.next('manager');
+            patchState(unprotected(TestBed.inject(UserState)), {
+                role: 'manager',
+            });
             setupCell();
 
             const menus = fixture.debugElement

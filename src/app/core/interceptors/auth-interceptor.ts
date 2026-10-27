@@ -10,10 +10,7 @@ import {
 import { inject, Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, finalize, mergeMap, shareReplay } from 'rxjs/operators';
-import {
-    TokenStateQuery,
-    TokenStateStore,
-} from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
 
 /**
@@ -24,8 +21,7 @@ export const AUTH_RETRIED = new HttpContextToken<boolean>(() => false);
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    readonly #tokenStateStore = inject(TokenStateStore);
-    readonly #tokenStateQuery = inject(TokenStateQuery);
+    readonly #tokenState = inject(TokenState);
     /** 取り直しの最中なら、その取り直し。同時に 401 になった要求はこれを待つ */
     #refreshing$: Observable<void> | null = null;
 
@@ -33,9 +29,9 @@ export class AuthInterceptor implements HttpInterceptor {
         request: HttpRequest<any>,
         next: HttpHandler,
     ): Observable<HttpEvent<any>> {
-        if (this.#tokenStateQuery.isExpired) {
+        if (this.#tokenState.isExpired()) {
             return of(undefined).pipe(
-                mergeMap(() => this.#tokenStateStore.fetch()),
+                mergeMap(() => this.#tokenState.fetch()),
                 mergeMap(() => this.#handleRequestWithRetry(request, next)),
             );
         }
@@ -71,7 +67,7 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     #refreshToken(): Observable<void> {
-        this.#refreshing$ ??= this.#tokenStateStore
+        this.#refreshing$ ??= this.#tokenState
             .fetch({ bypassHttpCache: true })
             .pipe(
                 finalize(() => (this.#refreshing$ = null)),
@@ -85,8 +81,8 @@ export class AuthInterceptor implements HttpInterceptor {
         next: HttpHandler,
         retried = false,
     ): Observable<HttpEvent<unknown>> {
-        const accessToken = this.#tokenStateQuery.accessToken;
-        const tokenType = this.#tokenStateQuery.tokenType;
+        const accessToken = this.#tokenState.accessToken();
+        const tokenType = this.#tokenState.tokenType();
 
         const req = request.clone({
             url: request.url,

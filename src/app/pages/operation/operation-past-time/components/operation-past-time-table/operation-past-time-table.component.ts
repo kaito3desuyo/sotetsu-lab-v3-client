@@ -10,7 +10,7 @@ import { format, subDays, subHours } from 'date-fns';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
@@ -39,7 +39,7 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
 })
 export class OperationPastTimeTableComponent {
     readonly #router = inject(Router);
-    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #userState = inject(UserState);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
     readonly #operationSightingInvalidationDialogService = inject(
         OperationSightingInvalidationDialogService,
@@ -50,7 +50,7 @@ export class OperationPastTimeTableComponent {
 
     readonly invalidatedBorderColor = INVALIDATED_BORDER_COLOR;
 
-    readonly userRole = toSignal(this.#userStateQuery.role$);
+    readonly userRole = this.#userState.role;
     readonly referenceDate = toSignal(OperationPastTimeStore.referenceDate$);
     readonly days = toSignal(OperationPastTimeStore.days$);
     readonly calendars = toSignal(OperationPastTimeStore.calendars$, {

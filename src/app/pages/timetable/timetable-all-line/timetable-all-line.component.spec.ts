@@ -26,7 +26,7 @@ import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
@@ -94,8 +94,8 @@ describe('TimetableAllLineComponent をサーバーで描くとき', () => {
                 provideRouter([]),
                 { provide: PLATFORM_ID, useValue: 'server' },
                 {
-                    provide: UserStateQuery,
-                    useValue: { canEditTimetable$: of(true) },
+                    provide: UserState,
+                    useValue: { canEditTimetable: () => true },
                 },
                 TimetableAllLineService,
                 {
@@ -252,7 +252,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     let tripBlocks$: Subject<undefined>;
     let stations$: Observable<undefined>;
     let fetchTripBlocksCalls = 0;
-    let canEditTimetable$: Observable<boolean>;
+    let canEditTimetable: boolean;
 
     beforeEach(() => {
         stations$ = of(undefined);
@@ -265,7 +265,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
     const setup = async (params: Record<string, string>) => {
         tripBlocks$ = new ReplaySubject<undefined>(1);
         fetchTripBlocksCalls = 0;
-        canEditTimetable$ = of(false);
+        canEditTimetable = false;
         await TestBed.configureTestingModule({
             imports: [TimetableAllLineComponent],
             providers: [
@@ -310,12 +310,8 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                 },
                 { provide: CalendarSelectDialogService, useValue: {} },
                 {
-                    provide: UserStateQuery,
-                    useValue: {
-                        get canEditTimetable$() {
-                            return canEditTimetable$;
-                        },
-                    },
+                    provide: UserState,
+                    useValue: { canEditTimetable: () => canEditTimetable },
                 },
             ],
         })
@@ -364,7 +360,7 @@ describe('TimetableAllLineComponent の読み込み中', () => {
         async (isEditor, expected) => {
             await setup({ calendar_id: 'cal-1', trip_direction: '0' });
             fixture.destroy();
-            canEditTimetable$ = of(isEditor);
+            canEditTimetable = isEditor;
             fixture = TestBed.createComponent(TimetableAllLineComponent);
             fixture.detectChanges();
             tripBlocks$.next(undefined);
@@ -770,8 +766,8 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
                 { provide: ConfirmDialogService, useValue: {} },
                 { provide: CalendarSelectDialogService, useValue: {} },
                 {
-                    provide: UserStateQuery,
-                    useValue: { canEditTimetable$: of(false) },
+                    provide: UserState,
+                    useValue: { canEditTimetable: () => false },
                 },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
             ],

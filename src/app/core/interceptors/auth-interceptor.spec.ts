@@ -12,10 +12,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { of, Subject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
-import {
-    TokenStateQuery,
-    TokenStateStore,
-} from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
 import { AUTH_RETRIED, AuthInterceptor } from './auth-interceptor';
 
@@ -37,10 +34,14 @@ function setup(
                 useExisting: AuthInterceptor,
                 multi: true,
             },
-            { provide: TokenStateQuery, useValue: tokenQuery },
             {
-                provide: TokenStateStore,
-                useValue: tokenStore ?? { fetch: () => of(undefined) },
+                provide: TokenState,
+                useValue: {
+                    isExpired: () => tokenQuery.isExpired,
+                    accessToken: () => tokenQuery.accessToken,
+                    tokenType: () => tokenQuery.tokenType,
+                    fetch: tokenStore?.fetch ?? (() => of(undefined)),
+                },
             },
         ],
     });

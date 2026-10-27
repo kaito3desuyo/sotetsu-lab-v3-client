@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { UserService } from '../libs/user/usecase/user.service';
-import { UserStateQuery, UserStateStore } from './user.state';
+import { UserState } from './user.state';
 
 const user = {
     userId: 'u1',
@@ -12,18 +12,16 @@ const user = {
     updatedAt: '2026-01-01T00:00:00Z',
 };
 
-describe('UserStateStore.fetch', () => {
+describe('UserState.fetch', () => {
     let getProfile: jest.Mock;
-    let store: UserStateStore;
-    let query: UserStateQuery;
+    let store: InstanceType<typeof UserState>;
 
     beforeEach(() => {
         getProfile = jest.fn();
         TestBed.configureTestingModule({
             providers: [{ provide: UserService, useValue: { getProfile } }],
         });
-        store = TestBed.inject(UserStateStore);
-        query = TestBed.inject(UserStateQuery);
+        store = TestBed.inject(UserState);
         store.reset();
     });
 
@@ -32,7 +30,7 @@ describe('UserStateStore.fetch', () => {
 
         store.fetch().subscribe();
 
-        expect(query.userId).toBe('u1');
+        expect(store.userId()).toBe('u1');
     });
 
     it('null（ゲスト）が来たら状態を空に戻す', () => {
@@ -42,7 +40,7 @@ describe('UserStateStore.fetch', () => {
 
         store.fetch().subscribe();
 
-        expect(query.userId).toBeNull();
+        expect(store.userId()).toBeNull();
     });
 
     it('失敗しても状態を空に戻し、エラーにしない', () => {
@@ -53,8 +51,19 @@ describe('UserStateStore.fetch', () => {
 
         store.fetch().subscribe({ error: () => (failed = true) });
 
-        expect(query.userId).toBeNull();
+        expect(store.userId()).toBeNull();
         expect(failed).toBe(false);
+    });
+
+    it('reset で状態を空に戻す', () => {
+        getProfile.mockReturnValue(of(user));
+        store.fetch().subscribe();
+
+        store.reset();
+
+        expect(store.userId()).toBeNull();
+        expect(store.isLoggedIn()).toBe(false);
+        expect(store.role()).toBeNull();
     });
 
     it('maxAgeMs をそのまま渡す', () => {
@@ -66,9 +75,8 @@ describe('UserStateStore.fetch', () => {
     });
 });
 
-describe('UserStateQuery.canEditTimetable', () => {
-    let store: UserStateStore;
-    let query: UserStateQuery;
+describe('UserState.canEditTimetable', () => {
+    let store: InstanceType<typeof UserState>;
     let getProfile: jest.Mock;
 
     beforeEach(() => {
@@ -76,8 +84,7 @@ describe('UserStateQuery.canEditTimetable', () => {
         TestBed.configureTestingModule({
             providers: [{ provide: UserService, useValue: { getProfile } }],
         });
-        store = TestBed.inject(UserStateStore);
-        query = TestBed.inject(UserStateQuery);
+        store = TestBed.inject(UserState);
         store.reset();
     });
 
@@ -95,9 +102,6 @@ describe('UserStateQuery.canEditTimetable', () => {
     ])('role=%s のとき %s', (role, expected) => {
         load(role);
 
-        let got: boolean | undefined;
-        query.canEditTimetable$.subscribe((v) => (got = v));
-        expect(got).toBe(expected);
-        expect(query.canEditTimetable).toBe(expected);
+        expect(store.canEditTimetable()).toBe(expected);
     });
 });

@@ -32,7 +32,7 @@ import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-fa
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
@@ -100,9 +100,7 @@ export class TimetableAllLineComponent {
     /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
      * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
     readonly canEdit = afterFirstRender(
-        toSignal(inject(UserStateQuery).canEditTimetable$, {
-            initialValue: false,
-        }),
+        inject(UserState).canEditTimetable,
         false,
     );
     readonly isLoading = toSignal(TimetableAllLineStore.isLoading$);

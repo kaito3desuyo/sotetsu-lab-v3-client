@@ -8,13 +8,13 @@ import { ServiceListStateStore } from 'src/app/global-states/service-list.state'
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
 import { TodaysFormationListStateStore } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListStateStore } from 'src/app/global-states/todays-operation-list.state';
-import { TokenStateStore } from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 
 export const AppInitializerProvider: Provider = {
     provide: APP_INITIALIZER,
     useFactory:
         (
-            tokenStateStore: TokenStateStore,
+            tokenState: TokenState,
             agencyListStateStore: AgencyListStateStore,
             calendarListStateStore: CalendarListStateStore,
             routeStationListStateStore: RouteStationListStateStore,
@@ -25,7 +25,7 @@ export const AppInitializerProvider: Provider = {
             initializeState: InitializeState,
         ) =>
         async () => {
-            await lastValueFrom(tokenStateStore.fetch());
+            await lastValueFrom(tokenState.fetch());
 
             await Promise.all([
                 lastValueFrom(agencyListStateStore.fetch()),
@@ -44,7 +44,7 @@ export const AppInitializerProvider: Provider = {
             initializeState.markInitialized();
         },
     deps: [
-        TokenStateStore,
+        TokenState,
         AgencyListStateStore,
         CalendarListStateStore,
         RouteStationListStateStore,

@@ -4,7 +4,6 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
     ReactiveFormsModule,
@@ -19,11 +18,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { omit } from 'es-toolkit';
-import { take } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 
 @Component({
@@ -46,7 +44,7 @@ export class RegisterComponent {
     readonly #snackBar = inject(MatSnackBar);
     readonly #router = inject(Router);
     readonly #userService = inject(UserService);
-    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #userState = inject(UserState);
     readonly #returnTo = safeReturnTo(
         inject(ActivatedRoute).snapshot.queryParamMap.get('return_to'),
     );
@@ -125,13 +123,9 @@ export class RegisterComponent {
     readonly submitting = signal<boolean>(false);
 
     constructor() {
-        this.#userStateQuery.isLoggedIn$
-            .pipe(take(1), takeUntilDestroyed())
-            .subscribe((loggedIn) => {
-                if (loggedIn) {
-                    void this.#router.navigateByUrl(this.#returnTo);
-                }
-            });
+        if (this.#userState.isLoggedIn()) {
+            void this.#router.navigateByUrl(this.#returnTo);
+        }
     }
 
     async onClickSubmit(): Promise<void> {

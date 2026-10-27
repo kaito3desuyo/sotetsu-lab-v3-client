@@ -6,7 +6,6 @@ import {
     input,
     output,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -15,11 +14,8 @@ import { Router } from '@angular/router';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
-import { TokenStateStore } from 'src/app/global-states/token.state';
-import {
-    UserStateQuery,
-    UserStateStore,
-} from 'src/app/global-states/user.state';
+import { TokenState } from 'src/app/global-states/token.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
 
 @Component({
@@ -32,16 +28,12 @@ export class HeaderComponent {
     #router = inject(Router);
     #snackBar = inject(MatSnackBar);
     readonly #authService = inject(AuthService);
-    readonly #tokenStateStore = inject(TokenStateStore);
-    readonly #userStateStore = inject(UserStateStore);
-    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #tokenState = inject(TokenState);
+    readonly #userState = inject(UserState);
 
     /** サーバーと、それを引き継ぐ最初の描画はゲストの形にする（spec 5.3。CDN で別の人に配られるため） */
-    readonly isLoggedIn = afterFirstRender(
-        toSignal(this.#userStateQuery.isLoggedIn$, { initialValue: false }),
-        false,
-    );
-    readonly displayName = toSignal(this.#userStateQuery.displayName$);
+    readonly isLoggedIn = afterFirstRender(this.#userState.isLoggedIn, false);
+    readonly displayName = this.#userState.displayName;
 
     /**
      * 現在ページ名。指定時はツールバーにページ名を表示する（モック全ページの
@@ -94,8 +86,8 @@ export class HeaderComponent {
             return;
         }
 
-        await tryCatchAsync(this.#tokenStateStore.fetch());
-        await tryCatchAsync(this.#userStateStore.fetch());
+        await tryCatchAsync(this.#tokenState.fetch());
+        await tryCatchAsync(this.#userState.fetch());
 
         this.#snackBar.open('ログアウトしました', '閉じる', {
             duration: 3000,

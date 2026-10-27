@@ -12,10 +12,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import {
-    TokenStateQuery,
-    TokenStateStore,
-} from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
 import { FetchError } from '../classes/custom-error';
 import { AuthInterceptor } from './auth-interceptor';
@@ -44,8 +41,15 @@ function setup() {
                 multi: true,
             },
             { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-            { provide: TokenStateQuery, useValue: tokenQuery },
-            { provide: TokenStateStore, useValue: { fetch: fetchMock } },
+            {
+                provide: TokenState,
+                useValue: {
+                    isExpired: () => tokenQuery.isExpired,
+                    accessToken: () => tokenQuery.accessToken,
+                    tokenType: () => tokenQuery.tokenType,
+                    fetch: fetchMock,
+                },
+            },
         ],
     });
     return {
