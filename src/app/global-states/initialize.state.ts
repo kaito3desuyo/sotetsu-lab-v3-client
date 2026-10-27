@@ -1,16 +1,11 @@
-import { Injectable, signal } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 
-const state = signal<boolean>(false);
-
-@Injectable({ providedIn: 'root' })
-export class InitializeStateStore {
-    markInitialized(): void {
-        state.set(true);
-    }
-}
-
-@Injectable({ providedIn: 'root' })
-export class InitializeStateQuery {
-    readonly isInitialized$ = toObservable(state);
-}
+export const InitializeState = signalStore(
+    { providedIn: 'root' },
+    withState({ isInitialized: false }),
+    withMethods((store) => ({
+        markInitialized(): void {
+            patchState(store, { isInitialized: true });
+        },
+    })),
+);

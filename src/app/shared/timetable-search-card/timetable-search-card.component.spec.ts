@@ -1,11 +1,11 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetableSearchCardComponent } from './timetable-search-card.component';
 
@@ -20,23 +20,20 @@ describe('TimetableSearchCardComponent', () => {
                 provideRouter([]),
                 provideNoopAnimations(),
                 {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
                 {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
                 },
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
-                },
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarId$: of('today') },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
                 },
             ],
         }).compileComponents();
+        setTodaysCalendars(['today']);
 
         fixture = TestBed.createComponent(TimetableSearchCardComponent);
         component = fixture.componentInstance;

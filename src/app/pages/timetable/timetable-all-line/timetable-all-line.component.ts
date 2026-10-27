@@ -8,15 +8,14 @@ import {
     PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { firstValueFrom, lastValueFrom } from 'rxjs';
-import { mergeMap, switchMap } from 'rxjs/operators';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { lastValueFrom } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -29,10 +28,10 @@ import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-s
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
@@ -47,20 +46,7 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
-import {
-    TimetableAllLineSnapshot,
-    TimetableAllLineStore,
-} from './stores/timetable-all-line.store';
-
-// チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
-TimetableAllLineStore.resetLoading();
-
-// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
-// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
-let fetchSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'TimetableAllLine';
+import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 
 @Component({
     selector: 'app-timetable-all-line',
@@ -86,13 +72,13 @@ export class TimetableAllLineComponent {
     readonly #loading = inject(LoadingService);
     readonly #error = inject(ErrorHandlerService);
     readonly #notification = inject(NotificationService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
+    readonly #store = inject(TimetableAllLineStore);
     readonly #confirmDialogService = inject(ConfirmDialogService);
     readonly #calendarSelectDialogService = inject(CalendarSelectDialogService);
     readonly #timetableAllLineService = inject(TimetableAllLineService);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #calendarListState = inject(CalendarListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
@@ -100,66 +86,36 @@ export class TimetableAllLineComponent {
     /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
      * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
     readonly canEdit = afterFirstRender(
-        toSignal(inject(UserStateQuery).canEditTimetable$, {
-            initialValue: false,
-        }),
+        inject(UserState).canEditTimetable,
         false,
     );
-    readonly isLoading = toSignal(TimetableAllLineStore.isLoading$);
-    readonly calendarId = toSignal(TimetableAllLineStore.calendarId$);
-    readonly tripDirection = toSignal(TimetableAllLineStore.tripDirection$);
-    readonly stations = toSignal(TimetableAllLineStore.stations$, {
-        initialValue: [],
-    });
-    readonly trips = toSignal(TimetableAllLineStore.trips$, {
-        initialValue: [],
-    });
-    readonly pageSettings = toSignal(TimetableAllLineStore.pageSettings$);
-    readonly viewModes = toSignal(TimetableAllLineStore.viewModes$, {
-        initialValue: new Map(),
-    });
-    readonly bordersAfter = toSignal(TimetableAllLineStore.bordersAfter$, {
-        initialValue: new Map(),
-    });
-    readonly endpoints = toSignal(TimetableAllLineStore.endpoints$, {
-        initialValue: new Map(),
-    });
-    readonly previousTrips = toSignal(TimetableAllLineStore.previousTrips$, {
-        initialValue: new Map(),
-    });
-    readonly isAwaitingTripBlocks = toSignal(
-        TimetableAllLineStore.isAwaitingTripBlocks$,
-        { initialValue: false },
-    );
+    readonly isLoading = this.#store.isLoading;
+    readonly calendarId = this.#store.calendarId;
+    readonly tripDirection = this.#store.tripDirection;
+    readonly stations = this.#store.visibleStations;
+    readonly trips = this.#store.trips;
+    readonly pageSettings = this.#store.pagination;
+    readonly viewModes = this.#store.viewModes;
+    readonly bordersAfter = this.#store.bordersAfter;
+    readonly endpoints = this.#store.endpoints;
+    readonly previousTrips = this.#store.previousTrips;
+    readonly isAwaitingTripBlocks = this.#store.isAwaitingTripBlocks;
     /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
     readonly controlCollapsed = afterFirstRender(
-        toSignal(TimetableAllLineStore.controlCollapsed$, {
-            initialValue: false,
-        }),
+        this.#store.controlCollapsed,
         false,
     );
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
     readonly skeletonColumns = Array.from({ length: 30 }, (_, i) => i);
-    readonly calendar = toSignal(
-        TimetableAllLineStore.calendarId$.pipe(
-            mergeMap((id) =>
-                this.#calendarListStateQuery.selectByCalendarId(id),
-            ),
-        ),
+    readonly calendar = computed(
+        () => this.#calendarListState.entityMap()[this.calendarId()],
     );
 
-    readonly calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly calendars = this.#calendarListState.calendars;
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
     /** 駅別時刻表へ移る選択欄の選択肢（駅別時刻表と同じ）。 */
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),
@@ -188,7 +144,7 @@ export class TimetableAllLineComponent {
         effect(() => this.#pageMeta.setTitle(this.pageTitle()));
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        this.#store.setHasFetchedTripBlocks(false);
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -224,37 +180,33 @@ export class TimetableAllLineComponent {
                         calendarCacheTag(calendarId),
                     ]);
                 }
-                TimetableAllLineStore.setCalendarId(calendarId);
-                TimetableAllLineStore.setTripDirection(tripDirection);
-                TimetableAllLineStore.setTripBlockId(tripBlockId ?? null);
+                this.#store.setCalendarId(calendarId);
+                this.#store.setTripDirection(tripDirection);
+                this.#store.setTripBlockId(tripBlockId ?? null);
 
                 this.fetchData();
             });
     }
 
     async fetchData(): Promise<void> {
-        if (!TimetableAllLineStore.calendarId) return;
+        if (!this.#store.calendarId()) return;
 
-        const seq = ++fetchSeq;
-        TimetableAllLineStore.enableLoading();
-        TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        const seq = this.#store.nextFetchSeq();
+        this.#store.enableLoading();
+        this.#store.setHasFetchedTripBlocks(false);
         const conditions = {
-            calendarId: TimetableAllLineStore.calendarId,
-            tripDirection: TimetableAllLineStore.tripDirection,
+            calendarId: this.#store.calendarId(),
+            tripDirection: this.#store.tripDirection(),
         };
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
         try {
-            TimetableAllLineStore.setAgencies(
-                this.#agencyListStateQuery.agencies,
-            );
-            TimetableAllLineStore.setRouteOrder(
-                (
-                    await firstValueFrom(
-                        this.#routeStationListStateQuery.routeStations$,
-                    )
-                ).map((route) => route.routeId),
+            this.#store.setAgencies(this.#agencyListState.agencies());
+            this.#store.setRouteOrder(
+                this.#routeStationListState
+                    .routeStations()
+                    .map((route) => route.routeId),
             );
             // 駅一覧と trip-blocks は互いの結果を使わないので、同時に取る
             // （駅一覧は serviceId、trip-blocks はストアの条件で決まる）
@@ -268,16 +220,12 @@ export class TimetableAllLineComponent {
             );
             if (failure) {
                 // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
-                if (seq === fetchSeq) {
+                if (this.#store.isLatestFetch(seq)) {
                     try {
-                        await this.#offlineSnapshots.restore({
-                            key: OFFLINE_SNAPSHOT_KEY,
+                        await this.#store.restoreOfflineSnapshot(
+                            'main',
                             conditions,
-                            apply: (data: TimetableAllLineSnapshot) => {
-                                TimetableAllLineStore.restoreSnapshot(data);
-                                TimetableAllLineStore.initializeSelectedRouteIds();
-                            },
-                        });
+                        );
                     } catch {
                         // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                     }
@@ -285,19 +233,15 @@ export class TimetableAllLineComponent {
                 throw failure.reason;
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            if (seq === fetchSeq) {
-                void this.#offlineSnapshots.save({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions,
-                    data: TimetableAllLineStore.snapshot(),
-                });
+            if (this.#store.isLatestFetch(seq)) {
+                void this.#store.saveOfflineSnapshot('main', conditions);
             }
-            TimetableAllLineStore.initializeSelectedRouteIds();
+            this.#store.initializeSelectedRouteIds();
         } finally {
-            TimetableAllLineStore.disableLoading();
+            this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === fetchSeq) {
-                TimetableAllLineStore.setHasFetchedTripBlocks(true);
+            if (this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedTripBlocks(true);
             }
         }
     }
@@ -354,11 +298,11 @@ export class TimetableAllLineComponent {
     }
 
     onControlCollapsedChange(collapsed: boolean): void {
-        TimetableAllLineStore.setControlCollapsed(collapsed);
+        this.#store.setControlCollapsed(collapsed);
     }
 
     onPaged(pageSettings: PageEvent): void {
-        TimetableAllLineStore.setPageSettings(pageSettings);
+        this.#store.setPageSettings(pageSettings);
     }
 
     /** G12: 空状態の次アクション（反対方向へ切り替え。現在の calendar/route_ids 等は維持）。 */

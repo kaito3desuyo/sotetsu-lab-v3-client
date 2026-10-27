@@ -8,11 +8,8 @@ import {
 } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { TokenStateStore } from 'src/app/global-states/token.state';
-import {
-    UserStateQuery,
-    UserStateStore,
-} from 'src/app/global-states/user.state';
+import { TokenState } from 'src/app/global-states/token.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { timetableEditGuard } from './timetable-edit.guard';
 
@@ -37,7 +34,7 @@ describe('timetableEditGuard', () => {
                     provide: NotificationService,
                     useValue: { open: notificationOpen },
                 },
-                { provide: TokenStateStore, useValue: { fetch: tokenFetch } },
+                { provide: TokenState, useValue: { fetch: tokenFetch } },
                 {
                     provide: UserService,
                     useValue: {
@@ -59,8 +56,6 @@ describe('timetableEditGuard', () => {
             ],
         });
         router = TestBed.inject(Router);
-        // 直接開いた直後を想定して、前のテストの状態を空にしておく
-        TestBed.inject(UserStateStore).reset();
         return TestBed.runInInjectionContext(() =>
             timetableEditGuard(
                 {} as ActivatedRouteSnapshot,
@@ -81,7 +76,7 @@ describe('timetableEditGuard', () => {
     it('取得に失敗したら利用者は空のままで、ゲスト扱いで /login へ送る', async () => {
         const result = await run('editor', true);
 
-        expect(TestBed.inject(UserStateQuery).userId).toBeNull();
+        expect(TestBed.inject(UserState).userId()).toBeNull();
         expect(decodeURIComponent(router.serializeUrl(result as UrlTree))).toBe(
             '/login?return_to=/timetable/update;calendar_id=c1;trip_block_id=b1',
         );

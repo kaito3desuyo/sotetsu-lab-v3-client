@@ -1,4 +1,13 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
 import {
     addDays,
     format,
@@ -13,7 +22,8 @@ import {
 } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { flow, groupBy, isString } from 'es-toolkit';
-import { map } from 'rxjs/operators';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -47,21 +57,18 @@ export type OperationPastTimeSnapshot = Pick<
     'calendars' | 'operations' | 'formations' | 'operationSightings'
 >;
 
-const store = createStore(
-    { name: 'OperationPastTimeStore' },
-    withProps<StoreProps>({
-        referenceDate: null,
-        days: null,
-        includeInvalidated: false,
-        calendars: [],
-        operations: [],
-        formations: [],
-        operationSightings: [],
-        selectedAgencyIds: [],
-        loadingQueue: [],
-        hasFetchedPastTime: false,
-    }),
-);
+const initialState: StoreProps = {
+    referenceDate: null,
+    days: null,
+    includeInvalidated: false,
+    calendars: [],
+    operations: [],
+    formations: [],
+    operationSightings: [],
+    selectedAgencyIds: [],
+    loadingQueue: [],
+    hasFetchedPastTime: false,
+};
 
 /** 基準日**から**先へ N 日間を返す（v2 以来の仕様。ユーザー確認 2026-09-24）。 */
 export function generateDates(referenceDate: string, days: number): string[] {
@@ -114,97 +121,111 @@ function groupSightingsByFormationAndDate(
     )(sightings);
 }
 
-export const OperationPastTimeStore = {
-    setReferenceDate(referenceDate: string): void {
-        store.update(setProp('referenceDate', () => referenceDate));
-    },
-    setDays(days: number): void {
-        store.update(setProp('days', () => days));
-    },
-    setIncludeInvalidated(includeInvalidated: boolean): void {
-        store.update(setProp('includeInvalidated', () => includeInvalidated));
-    },
-    setCalendars(
-        calendars: { date: string; calendar: CalendarDetailsDto }[],
-    ): void {
-        store.update(setProp('calendars', () => calendars));
-    },
-    setOperations(operations: OperationDetailsDto[]): void {
-        store.update(setProp('operations', () => operations));
-    },
-    setFormations(formations: FormationDetailsDto[]): void {
-        store.update(setProp('formations', () => formations));
-    },
-    setOperationSightings(
-        operationSightings: OperationSightingDetailsDto[],
-    ): void {
-        store.update(setProp('operationSightings', () => operationSightings));
-    },
-    setSelectedAgencyIds(agencyIds: string[]): void {
-        store.update(setProp('selectedAgencyIds', () => agencyIds));
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-    /** いまの条件の取得が終わったか（失敗しても true）。取る前は表の代わりに骨組みを出す */
-    setHasFetchedPastTime(value: boolean): void {
-        store.update(setProp('hasFetchedPastTime', () => value));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): OperationPastTimeSnapshot {
-        const { calendars, operations, formations, operationSightings } =
-            store.getValue();
-        return { calendars, operations, formations, operationSightings };
-    },
-    /** 保存した中身を戻す（条件の referenceDate・days・includeInvalidated は今のまま） */
-    restoreSnapshot(data: OperationPastTimeSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            calendars: data.calendars,
-            operations: data.operations,
-            formations: data.formations,
-            operationSightings: data.operationSightings,
-        }));
-    },
+export const OperationPastTimeStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(
+        ({ referenceDate, days, operationSightings, loadingQueue }) => ({
+            isLoading: computed(() => loadingQueue().length > 0),
+            /** 目撃を編成と運行日で分けたもの（state の operationSightings は取得した一覧のまま） */
+            operationSightingsGroupedByDate: computed(() =>
+                groupSightingsByFormationAndDate(operationSightings()),
+            ),
+            dates: computed(() => generateDates(referenceDate(), days())),
+        }),
+    ),
+    withMethods((store) => {
+        // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+        // 後から終わって新しい骨組みを消さないよう、コンポーネントでなくストアで数える
+        let fetchSeq = 0;
 
-    referenceDate$: store.pipe(select((state) => state.referenceDate)),
-    days$: store.pipe(select((state) => state.days)),
-    includeInvalidated$: store.pipe(
-        select((state) => state.includeInvalidated),
+        return {
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
+            setReferenceDate(referenceDate: string): void {
+                patchState(store, { referenceDate });
+            },
+            setDays(days: number): void {
+                patchState(store, { days });
+            },
+            setIncludeInvalidated(includeInvalidated: boolean): void {
+                patchState(store, { includeInvalidated });
+            },
+            setCalendars(
+                calendars: { date: string; calendar: CalendarDetailsDto }[],
+            ): void {
+                patchState(store, { calendars });
+            },
+            setOperations(operations: OperationDetailsDto[]): void {
+                patchState(store, { operations });
+            },
+            setFormations(formations: FormationDetailsDto[]): void {
+                patchState(store, { formations });
+            },
+            setOperationSightings(
+                operationSightings: OperationSightingDetailsDto[],
+            ): void {
+                patchState(store, { operationSightings });
+            },
+            setSelectedAgencyIds(agencyIds: string[]): void {
+                patchState(store, { selectedAgencyIds: agencyIds });
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+            /** いまの条件の取得が終わったか（失敗しても true）。取る前は表の代わりに骨組みを出す */
+            setHasFetchedPastTime(value: boolean): void {
+                patchState(store, { hasFetchedPastTime: value });
+            },
+            /** 圏外のために保存する中身を取り出す */
+            snapshot(): OperationPastTimeSnapshot {
+                return {
+                    calendars: store.calendars(),
+                    operations: store.operations(),
+                    formations: store.formations(),
+                    operationSightings: store.operationSightings(),
+                };
+            },
+            /** 保存した中身を戻す（条件の referenceDate・days・includeInvalidated は今のまま） */
+            restoreSnapshot(data: OperationPastTimeSnapshot): void {
+                patchState(store, {
+                    calendars: data.calendars,
+                    operations: data.operations,
+                    formations: data.formations,
+                    operationSightings: data.operationSightings,
+                });
+            },
+        };
+    }),
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'OperationPastTime',
+                select: () => store.snapshot(),
+                apply: (data: OperationPastTimeSnapshot) =>
+                    store.restoreSnapshot(data),
+            },
+        }),
     ),
-    calendars$: store.pipe(select((state) => state.calendars)),
-    operations$: store.pipe(select((state) => state.operations)),
-    formations$: store.pipe(select((state) => state.formations)),
-    operationSightings$: store.pipe(
-        select((state) => state.operationSightings),
-    ),
-    selectedAgencyIds$: store.pipe(select((state) => state.selectedAgencyIds)),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
-    hasFetchedPastTime$: store.pipe(
-        select((state) => state.hasFetchedPastTime),
-    ),
-    operationSightingsGroupedByDate$: store.pipe(
-        select((state) => state.operationSightings),
-        map(groupSightingsByFormationAndDate),
-    ),
-
-    get referenceDate(): string {
-        return store.getValue().referenceDate;
-    },
-    get days(): number {
-        return store.getValue().days;
-    },
-    get includeInvalidated(): boolean {
-        return store.getValue().includeInvalidated;
-    },
-    get dates(): string[] {
-        const { referenceDate, days } = store.getValue();
-        return generateDates(referenceDate, days);
-    },
-} as const;
+    withAppDevtools('OperationPastTimeStore'),
+    withHooks({
+        onInit(store) {
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
+            store.resetLoading();
+        },
+    }),
+);

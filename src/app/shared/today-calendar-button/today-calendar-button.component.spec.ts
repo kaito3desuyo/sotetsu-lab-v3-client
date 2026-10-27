@@ -1,30 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TodayCalendarButtonComponent } from './today-calendar-button.component';
 
 describe('TodayCalendarButtonComponent', () => {
     let fixture: ComponentFixture<TodayCalendarButtonComponent>;
-    let ids$: BehaviorSubject<string[]>;
-    let first$: BehaviorSubject<string | undefined>;
     const button = () =>
         (fixture.nativeElement as HTMLElement).querySelector('button')!;
 
     beforeEach(async () => {
-        ids$ = new BehaviorSubject<string[]>(['special', 'base']);
-        first$ = new BehaviorSubject<string | undefined>('special');
         await TestBed.configureTestingModule({
             imports: [TodayCalendarButtonComponent],
-            providers: [
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarIds$: ids$,
-                        todaysCalendarId$: first$,
-                    },
-                },
-            ],
         }).compileComponents();
+        setTodaysCalendars(['special', 'base']);
         fixture = TestBed.createComponent(TodayCalendarButtonComponent);
     });
 
@@ -51,8 +38,7 @@ describe('TodayCalendarButtonComponent', () => {
     });
 
     it('今日のダイヤがまだ無い間は、別のダイヤを見ていても押せない', () => {
-        ids$.next([]);
-        first$.next(undefined);
+        setTodaysCalendars([]);
         fixture.componentRef.setInput('calendarId', 'old');
         fixture.detectChanges();
         expect(button().disabled).toBe(true);

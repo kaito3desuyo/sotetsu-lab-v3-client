@@ -20,9 +20,9 @@ describe('OperationPastTimeSearchFormComponent', () => {
             })
             .compileComponents();
 
-        OperationPastTimeStore.setReferenceDate('2026-10-08');
-        OperationPastTimeStore.setDays(7);
-        OperationPastTimeStore.setIncludeInvalidated(false);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-10-08');
+        TestBed.inject(OperationPastTimeStore).setDays(7);
+        TestBed.inject(OperationPastTimeStore).setIncludeInvalidated(false);
 
         fixture = TestBed.createComponent(OperationPastTimeSearchFormComponent);
         component = fixture.componentInstance;
@@ -36,9 +36,9 @@ describe('OperationPastTimeSearchFormComponent', () => {
             includeInvalidated: false,
         });
 
-        OperationPastTimeStore.setReferenceDate(null);
-        OperationPastTimeStore.setDays(null);
-        OperationPastTimeStore.setIncludeInvalidated(true);
+        TestBed.inject(OperationPastTimeStore).setReferenceDate(null);
+        TestBed.inject(OperationPastTimeStore).setDays(null);
+        TestBed.inject(OperationPastTimeStore).setIncludeInvalidated(true);
         fixture.detectChanges();
 
         expect(component.form.getRawValue()).toEqual({

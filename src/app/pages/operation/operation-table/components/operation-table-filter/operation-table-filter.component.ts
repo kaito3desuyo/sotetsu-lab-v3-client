@@ -2,10 +2,10 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    inject,
     input,
     output,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
@@ -27,7 +27,7 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
  * 2026-09-25 に外した（本番に無い機能で、運用群チップで十分に絞れるため）。
  *
  * チップ選択はカード単位の表示/非表示のみに使う（データ再取得しない）。
- * 永続化は OperationTableStore の elf-persist-state（key: 'OperationTableStore'）に
+ * 永続化は OperationTableStore の withSettingsStorage（key: 'OperationTableStore'）に
  * 委譲する。リアルタイム運用情報ページ（OperationRealTimeStore）とは独立したキー。
  */
 @Component({
@@ -45,21 +45,17 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
     ],
 })
 export class OperationTableFilterComponent {
+    readonly #store = inject(OperationTableStore);
+
     readonly operationTrips = input.required<OperationTripsDto[]>();
     readonly calendars = input.required<CalendarDetailsDto[]>();
     readonly calendarId = input<string | null>(null);
 
     readonly calendarChange = output<string>();
 
-    readonly selectedGroupNames = toSignal(
-        OperationTableStore.selectedGroupNames$,
-        { initialValue: [] },
-    );
+    readonly selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 
-    readonly hasFetchedOperationTrips = toSignal(
-        OperationTableStore.hasFetchedOperationTrips$,
-        { initialValue: false },
-    );
+    readonly hasFetchedOperationTrips = this.#store.hasFetchedOperationTrips;
     /** 運用群のチップの骨組みの幅（リアルタイムの運用群の行と同じ） */
     readonly groupSkeletonWidths = [
         'tw-w-12',
@@ -83,7 +79,7 @@ export class OperationTableFilterComponent {
     );
 
     onGroupChange(values: FilterChipValue[]): void {
-        OperationTableStore.setSelectedGroupNames(values as string[]);
+        this.#store.setSelectedGroupNames(values as string[]);
     }
 
     onCalendarChange(calendarId: string): void {

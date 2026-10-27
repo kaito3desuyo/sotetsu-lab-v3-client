@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 
 import { HeaderComponent } from './header.component';
 
@@ -137,15 +138,12 @@ describe('HeaderComponent をサーバーで描くとき', () => {
             providers: [
                 provideHttpClient(withXhr()),
                 { provide: PLATFORM_ID, useValue: 'server' },
-                {
-                    provide: UserStateQuery,
-                    useValue: {
-                        isLoggedIn$: of(true),
-                        displayName$: of('相鉄太郎'),
-                    },
-                },
             ],
         }).compileComponents();
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: 'u1',
+            displayName: '相鉄太郎',
+        });
 
         const fixture = TestBed.createComponent(HeaderComponent);
         fixture.detectChanges();

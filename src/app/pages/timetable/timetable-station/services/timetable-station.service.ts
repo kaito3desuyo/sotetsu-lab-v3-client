@@ -35,9 +35,10 @@ export class TimetableStationService {
     readonly #tripClassService = inject(TripClassService);
     readonly #operationService = inject(OperationService);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #store = inject(TimetableStationStore);
 
     fetchCalendar(): Observable<void> {
-        const calendarId = TimetableStationStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         // calendar 未選択（初期状態など）では /v3/calendars/null を叩かない。
         if (!calendarId) {
@@ -46,7 +47,7 @@ export class TimetableStationService {
 
         return this.#calendarService.findOne({ calendarId }).pipe(
             tap((data: CalendarDetailsDto) => {
-                TimetableStationStore.setCalendar(data);
+                this.#store.setCalendar(data);
             }),
             map(() => undefined),
         );
@@ -58,9 +59,9 @@ export class TimetableStationService {
      * キャッシュされるので、駅を切り替えても取り直さない（行の条件と順は `stationTrips`）。
      */
     fetchTrips(): Observable<void> {
-        const stationId = TimetableStationStore.stationId;
-        const calendarId = TimetableStationStore.calendarId;
-        const tripDirection = TimetableStationStore.tripDirection;
+        const stationId = this.#store.stationId();
+        const calendarId = this.#store.calendarId();
+        const tripDirection = this.#store.tripDirection();
 
         // 駅・ダイヤ未選択（初期状態）では取りに行かない。
         if (!stationId || !calendarId || tripDirection === null) {
@@ -75,8 +76,8 @@ export class TimetableStationService {
             })
             .pipe(
                 tap((tripBlocks) => {
-                    TimetableStationStore.setTripBlocks(tripBlocks);
-                    TimetableStationStore.setTrips(
+                    this.#store.setTripBlocks(tripBlocks);
+                    this.#store.setTrips(
                         stationTrips(tripBlocks, stationId, tripDirection),
                     );
                 }),
@@ -87,7 +88,7 @@ export class TimetableStationService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((data: TripClassDetailsDto[]) => {
-                TimetableStationStore.setTripClasses(data);
+                this.#store.setTripClasses(data);
             }),
             map(() => undefined),
         );
@@ -96,19 +97,19 @@ export class TimetableStationService {
     fetchStations(): Observable<void> {
         return this.#stationService.findMany({}).pipe(
             tap((data: StationDetailsDto[]) => {
-                TimetableStationStore.setStations(data);
+                this.#store.setStations(data);
             }),
             map(() => undefined),
         );
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = TimetableStationStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         return this.#operationService.findManyByCalendarId({ calendarId }).pipe(
             map((data) => data.filter((o) => o.operationNumber !== '100')),
             tap((data: OperationDetailsDto[]) => {
-                TimetableStationStore.setOperations(data);
+                this.#store.setOperations(data);
             }),
             map(() => undefined),
         );
@@ -125,13 +126,13 @@ export class TimetableStationService {
      * 呼び出し側が、取れなかったときに圏外用の保存を戻すために使う。
      */
     fetchOperationSightingTimeCrossSections(): Observable<boolean> {
-        const operationIds = TimetableStationStore.operationIds;
-        const operations = TimetableStationStore.operations.filter((o) =>
-            operationIds.includes(o.operationId),
-        );
+        const operationIds = this.#store.operationIds();
+        const operations = this.#store
+            .operations()
+            .filter((o) => operationIds.includes(o.operationId));
 
         if (operations.length === 0) {
-            TimetableStationStore.resetOperationSightingTimeCrossSections();
+            this.#store.resetOperationSightingTimeCrossSections();
             return of(true);
         }
 
@@ -147,7 +148,7 @@ export class TimetableStationService {
                         operationNumber,
                         crossSection,
                     ] of Object.entries(data)) {
-                        TimetableStationStore.setOperationSightingTimeCrossSection(
+                        this.#store.setOperationSightingTimeCrossSection(
                             operationNumber,
                             crossSection,
                         );

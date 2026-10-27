@@ -1,7 +1,8 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -20,15 +21,25 @@ const expecting = (operationNumber: string) =>
         expectedSighting: { operation: { operationNumber } },
     }) as OperationSightingTimeCrossSectionDto;
 
-async function createTable(): Promise<
-    ComponentFixture<OperationRealTimeFormationTableComponent>
-> {
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
+
+async function createTable(
+    setup?: (store: InstanceType<typeof OperationRealTimeStore>) => void,
+): Promise<ComponentFixture<OperationRealTimeFormationTableComponent>> {
     await TestBed.configureTestingModule({
         imports: [OperationRealTimeFormationTableComponent],
         providers: [
+            deviceStorageStub,
             {
-                provide: AgencyListStateQuery,
-                useValue: { agencies$: of([]) },
+                provide: AgencyListState,
+                useValue: { agencies: signal([]) },
             },
         ],
     })
@@ -37,6 +48,7 @@ async function createTable(): Promise<
         })
         .compileComponents();
 
+    setup?.(TestBed.inject(OperationRealTimeStore));
     const fixture = TestBed.createComponent(
         OperationRealTimeFormationTableComponent,
     );
@@ -44,7 +56,6 @@ async function createTable(): Promise<
     return fixture;
 }
 
-// ストアはこのファイルの中で共有される。編成をまだ入れていない状態を見るため、先頭に置く
 describe('OperationRealTimeFormationTableComponent（編成を取る前）', () => {
     it('空表示の代わりに、画面からヘッダーを引いた高さで骨組みを出す', async () => {
         const el: HTMLElement = (await createTable()).nativeElement;
@@ -65,9 +76,9 @@ describe('OperationRealTimeFormationTableComponent（編成を取る前）', () 
 
 describe('OperationRealTimeFormationTableComponent（編成が 0 件）', () => {
     it('取った結果が 0 件なら、空表示を出す', async () => {
-        OperationRealTimeStore.setFormations([]);
-
-        const el: HTMLElement = (await createTable()).nativeElement;
+        const el: HTMLElement = (
+            await createTable((store) => store.setFormations([]))
+        ).nativeElement;
 
         expect(el.querySelector('app-empty-state')).not.toBeNull();
         expect(
@@ -79,14 +90,16 @@ describe('OperationRealTimeFormationTableComponent（編成が 0 件）', () => 
 describe('OperationRealTimeFormationTableComponent', () => {
     let component: OperationRealTimeFormationTableComponent;
     let fixture: ComponentFixture<OperationRealTimeFormationTableComponent>;
+    let store: InstanceType<typeof OperationRealTimeStore>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFormationTableComponent],
             providers: [
+                deviceStorageStub,
                 {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
                 },
             ],
         })
@@ -95,22 +108,17 @@ describe('OperationRealTimeFormationTableComponent', () => {
             })
             .compileComponents();
 
-        OperationRealTimeStore.setAgencyOrder([]);
-        OperationRealTimeStore.setFormations([
+        store = TestBed.inject(OperationRealTimeStore);
+        store.setAgencyOrder([]);
+        store.setFormations([
             formation('10701', 'sotetsu'),
             formation('10702', 'sotetsu'),
             formation('5101', 'tokyu'),
         ]);
-        OperationRealTimeStore.setFormationSightingTimeCrossSection(
-            '10701',
-            expecting('12'),
-        );
-        OperationRealTimeStore.setFormationSightingTimeCrossSection(
-            '5101',
-            expecting('31K'),
-        );
-        OperationRealTimeStore.setSelectedAgencyIds([]);
-        OperationRealTimeStore.setSelectedGroupNames([]);
+        store.setFormationSightingTimeCrossSection('10701', expecting('12'));
+        store.setFormationSightingTimeCrossSection('5101', expecting('31K'));
+        store.setSelectedAgencyIds([]);
+        store.setSelectedGroupNames([]);
 
         fixture = TestBed.createComponent(
             OperationRealTimeFormationTableComponent,
@@ -127,20 +135,20 @@ describe('OperationRealTimeFormationTableComponent', () => {
     });
 
     it('会社で絞り込む', () => {
-        OperationRealTimeStore.setSelectedAgencyIds(['sotetsu']);
+        store.setSelectedAgencyIds(['sotetsu']);
 
         expect(numbers()).toEqual(['10701', '10702']);
     });
 
     it('運用群は、その編成が今入っていると予想される運用の番号で見る', () => {
-        OperationRealTimeStore.setSelectedGroupNames(['1群']);
+        store.setSelectedGroupNames(['1群']);
 
         expect(numbers()).toEqual(['10701']);
     });
 
     it('現在位置は、予想される運用の現在位置を引く', () => {
         const position = {} as OperationCurrentPositionDto;
-        OperationRealTimeStore.setCurrentPosition('12', position);
+        store.setCurrentPosition('12', position);
 
         expect(component.queryCurrentPositionByFormationNumber('10701')()).toBe(
             position,

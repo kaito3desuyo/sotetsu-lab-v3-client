@@ -1,8 +1,16 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
-import localForage from 'localforage';
-import { combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
+import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
@@ -46,7 +54,7 @@ type StoreProps = {
     /** ServiceService.findOneWithStations 由来の網羅駅（全線時刻表と同一の並び順）。 */
     networkStations: StationDetailsDto[];
     /**
-     * 全路線（RouteStationListStateQuery.routeStations$ 由来）。駅軸上で隣接しない
+     * 全路線（routeStations() 由来）。駅軸上で隣接しない
      * 接続駅（分岐駅）を複製挿入する判定（buildStationAxis の routesOrderedStationIds）に使う。
      */
     routeStations: RouteDetailsDto[];
@@ -62,7 +70,7 @@ type StoreProps = {
     hasFetchedTrainDiagram: boolean;
     /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
-    /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
+    /** 操作帯を畳んでいるか。これだけを withSettingsStorage で保存する（docs/design.md 列車ダイヤグラム）。 */
     controlCollapsed: boolean;
 };
 
@@ -83,38 +91,23 @@ export type TrainDiagramSnapshot = Pick<
 export type TrainDiagramSightingsSnapshot =
     StoreProps['operationSightingTimeCrossSections'];
 
-const store = createStore(
-    { name: 'TrainDiagramStore' },
-    withProps<StoreProps>({
-        calendarId: null,
-        selectedRouteIds: [],
-        pxPerMinute: DEFAULT_PX_PER_MINUTE,
-        axisPxPerMinute: null,
-        directionFilter: 'both',
-        networkStations: [],
-        routeStations: [],
-        tripClasses: [],
-        tripBlocksByDirection: {},
-        selectedTripId: null,
-        operationSightingTimeCrossSections: {},
-        itineraryLinks: [],
-        loadingQueue: [],
-        hasFetchedTrainDiagram: false,
-        controlCollapsed: false,
-    }),
-);
-
-// 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
-// 開いたときに前のダイヤ・路線へ戻ってしまう
-const persist = persistState(store, {
-    key: 'TrainDiagramStore',
-    storage: localForage,
-    source: (s) =>
-        s.pipe(
-            select((state) => state.controlCollapsed),
-            map((controlCollapsed) => ({ controlCollapsed })),
-        ),
-});
+const initialState: StoreProps = {
+    calendarId: null,
+    selectedRouteIds: [],
+    pxPerMinute: DEFAULT_PX_PER_MINUTE,
+    axisPxPerMinute: null,
+    directionFilter: 'both',
+    networkStations: [],
+    routeStations: [],
+    tripClasses: [],
+    tripBlocksByDirection: {},
+    selectedTripId: null,
+    operationSightingTimeCrossSections: {},
+    itineraryLinks: [],
+    loadingQueue: [],
+    hasFetchedTrainDiagram: false,
+    controlCollapsed: false,
+};
 
 /**
  * networkStations（ServiceService.findOneWithStations 由来 = operating_systems
@@ -150,16 +143,6 @@ function toStationAxisStations(
     );
 }
 
-const stationAxisStations$ = combineLatest([
-    store.pipe(select((state) => state.networkStations)),
-    store.pipe(select((state) => state.routeStations)),
-    store.pipe(select((state) => state.selectedRouteIds)),
-]).pipe(
-    map(([networkStations, routeStations, selectedRouteIds]) =>
-        toStationAxisStations(networkStations, routeStations, selectedRouteIds),
-    ),
-);
-
 /**
  * 選択路線（未選択=全路線）ごとの順序付き stationId 列。
  * buildStationAxis が「路線内で連続するが軸上で隣接しない接続駅（分岐駅）」を
@@ -189,214 +172,231 @@ function toRoutesOrderedStationIds(
  * 本線のみ等、単一路線の列車が分岐区間（他路線専用駅）を跨ぐ場合は、接続駅（分岐駅）を
  * 接続先の直前にも複製挿入し、経由区間の情報欠落を防ぐ（routesOrderedStationIds）。
  */
-const stationAxis$ = combineLatest([
-    stationAxisStations$,
-    store.pipe(select((state) => state.tripBlocksByDirection)),
-    store.pipe(select((state) => state.routeStations)),
-    store.pipe(select((state) => state.selectedRouteIds)),
-]).pipe(
-    map(
-        ([
-            stations,
-            tripBlocksByDirection,
+function toStationAxis(
+    stations: StationDetailsDto[],
+    tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>,
+    routeStations: RouteDetailsDto[],
+    selectedRouteIds: string[],
+): StationAxis | null {
+    if (stations.length === 0) {
+        return null;
+    }
+    const tripsTimes = Object.values(tripBlocksByDirection)
+        .flat()
+        .flatMap((block) => block.trips ?? [])
+        .map((trip) => trip.times ?? []);
+    const segmentMinutes = buildSegmentMinutesMap(tripsTimes);
+    const routesOrderedStationIds = toRoutesOrderedStationIds(
+        routeStations,
+        selectedRouteIds,
+    );
+    return buildStationAxis(stations, segmentMinutes, routesOrderedStationIds);
+}
+
+export const TrainDiagramStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(
+        ({
+            networkStations,
             routeStations,
             selectedRouteIds,
-        ]): StationAxis | null => {
-            if (stations.length === 0) {
-                return null;
-            }
-            const tripsTimes = Object.values(tripBlocksByDirection)
-                .flat()
-                .flatMap((block) => block.trips ?? [])
-                .map((trip) => trip.times ?? []);
-            const segmentMinutes = buildSegmentMinutesMap(tripsTimes);
-            const routesOrderedStationIds = toRoutesOrderedStationIds(
-                routeStations,
-                selectedRouteIds,
+            tripBlocksByDirection,
+            loadingQueue,
+        }) => {
+            /**
+             * 表示駅軸（駅リスト）。networkStations（全線時刻表順）の順序をそのまま維持し、
+             * 選択路線がある場合のみ該当駅にフィルタする（toStationAxisStations 参照）。
+             */
+            const stationAxisStations = computed(() =>
+                toStationAxisStations(
+                    networkStations(),
+                    routeStations(),
+                    selectedRouteIds(),
+                ),
             );
-            return buildStationAxis(
-                stations,
-                segmentMinutes,
-                routesOrderedStationIds,
-            );
+
+            return {
+                isLoading: computed(() => loadingQueue().length > 0),
+                stationAxisStations,
+                /** 表示駅軸の stationId → y 座標マップ。 */
+                stationAxis: computed(() =>
+                    toStationAxis(
+                        stationAxisStations(),
+                        tripBlocksByDirection(),
+                        routeStations(),
+                        selectedRouteIds(),
+                    ),
+                ),
+            };
         },
     ),
-);
+    withMethods((store) => {
+        // 列車を取り直す取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+        // 後から終わって新しい骨組みを消さないよう、インスタンスでなくストアで数える
+        let fetchSeq = 0;
 
-export const TrainDiagramStore = {
-    setCalendarId(calendarId: string | null): void {
-        store.update(setProp('calendarId', () => calendarId));
-    },
-    setSelectedRouteIds(routeIds: string[]): void {
-        store.update(setProp('selectedRouteIds', () => routeIds));
-    },
-    setPxPerMinute(value: number): void {
-        store.update(
-            setProp('pxPerMinute', () =>
-                clamp(value, PX_PER_MINUTE_MIN, PX_PER_MINUTE_MAX),
-            ),
-        );
-    },
-    /** null を渡すと自動（観測のある駅間の最小所要分から root 側で決める）に戻す。 */
-    setAxisPxPerMinute(value: number | null): void {
-        store.update(
-            setProp('axisPxPerMinute', () =>
-                value === null
-                    ? null
-                    : clamp(
-                          value,
-                          AXIS_PX_PER_MINUTE_MIN,
-                          AXIS_PX_PER_MINUTE_MAX,
-                      ),
-            ),
-        );
-    },
-    setDirectionFilter(directionFilter: DiagramDirectionFilter): void {
-        store.update(setProp('directionFilter', () => directionFilter));
-    },
-    setNetworkStations(stations: StationDetailsDto[]): void {
-        store.update(setProp('networkStations', () => stations));
-    },
-    setRouteStations(routeStations: RouteDetailsDto[]): void {
-        store.update(setProp('routeStations', () => routeStations));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setTripBlocksByDirection(
-        tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>,
-    ): void {
-        store.update(
-            setProp('tripBlocksByDirection', () => tripBlocksByDirection),
-        );
-    },
-    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
-        store.update(setProp('itineraryLinks', () => itineraryLinks));
-    },
-    setSelectedTripId(tripId: string | null): void {
-        store.update(setProp('selectedTripId', () => tripId));
-    },
-    setOperationSightingTimeCrossSection(
-        operationNumber: string,
-        dto: OperationSightingTimeCrossSectionDto,
-    ): void {
-        store.update(
-            setProp('operationSightingTimeCrossSections', (state) => ({
-                ...state,
-                [operationNumber]: dto,
-            })),
-        );
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-    /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す */
-    setHasFetchedTrainDiagram(value: boolean): void {
-        store.update(setProp('hasFetchedTrainDiagram', () => value));
-    },
-    setControlCollapsed(collapsed: boolean): void {
-        store.update(setProp('controlCollapsed', () => collapsed));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): TrainDiagramSnapshot {
-        const {
-            networkStations,
-            routeStations,
-            tripClasses,
-            tripBlocksByDirection,
-            itineraryLinks,
-        } = store.getValue();
         return {
-            networkStations,
-            routeStations,
-            tripClasses,
-            tripBlocksByDirection,
-            itineraryLinks,
+            /** 列車を取り直す取得を始めるときに世代を進めて、その番号を返す */
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            /** 世代を進めずに、いまの番号を返す（路線・方向だけの取得が使う） */
+            currentFetchSeq(): number {
+                return fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
+            setCalendarId(calendarId: string | null): void {
+                patchState(store, { calendarId });
+            },
+            setSelectedRouteIds(routeIds: string[]): void {
+                patchState(store, { selectedRouteIds: routeIds });
+            },
+            setPxPerMinute(value: number): void {
+                patchState(store, {
+                    pxPerMinute: clamp(
+                        value,
+                        PX_PER_MINUTE_MIN,
+                        PX_PER_MINUTE_MAX,
+                    ),
+                });
+            },
+            /** null を渡すと自動（観測のある駅間の最小所要分から root 側で決める）に戻す。 */
+            setAxisPxPerMinute(value: number | null): void {
+                patchState(store, {
+                    axisPxPerMinute:
+                        value === null
+                            ? null
+                            : clamp(
+                                  value,
+                                  AXIS_PX_PER_MINUTE_MIN,
+                                  AXIS_PX_PER_MINUTE_MAX,
+                              ),
+                });
+            },
+            setDirectionFilter(directionFilter: DiagramDirectionFilter): void {
+                patchState(store, { directionFilter });
+            },
+            setNetworkStations(stations: StationDetailsDto[]): void {
+                patchState(store, { networkStations: stations });
+            },
+            setRouteStations(routeStations: RouteDetailsDto[]): void {
+                patchState(store, { routeStations });
+            },
+            setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+                patchState(store, { tripClasses });
+            },
+            setTripBlocksByDirection(
+                tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>,
+            ): void {
+                patchState(store, { tripBlocksByDirection });
+            },
+            setItineraryLinks(
+                itineraryLinks: OperationItineraryLinkDto[],
+            ): void {
+                patchState(store, { itineraryLinks });
+            },
+            setSelectedTripId(tripId: string | null): void {
+                patchState(store, { selectedTripId: tripId });
+            },
+            setOperationSightingTimeCrossSection(
+                operationNumber: string,
+                dto: OperationSightingTimeCrossSectionDto,
+            ): void {
+                patchState(store, (state) => ({
+                    operationSightingTimeCrossSections: {
+                        ...state.operationSightingTimeCrossSections,
+                        [operationNumber]: dto,
+                    },
+                }));
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+            /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す */
+            setHasFetchedTrainDiagram(value: boolean): void {
+                patchState(store, { hasFetchedTrainDiagram: value });
+            },
+            setControlCollapsed(collapsed: boolean): void {
+                patchState(store, { controlCollapsed: collapsed });
+            },
+            /** 圏外のために保存する中身を取り出す */
+            snapshot(): TrainDiagramSnapshot {
+                return {
+                    networkStations: store.networkStations(),
+                    routeStations: store.routeStations(),
+                    tripClasses: store.tripClasses(),
+                    tripBlocksByDirection: store.tripBlocksByDirection(),
+                    itineraryLinks: store.itineraryLinks(),
+                };
+            },
+            /** 保存した中身を戻す（条件の calendarId・selectedRouteIds と画面の設定は今のまま） */
+            restoreSnapshot(data: TrainDiagramSnapshot): void {
+                patchState(store, {
+                    networkStations: data.networkStations,
+                    routeStations: data.routeStations,
+                    tripClasses: data.tripClasses,
+                    tripBlocksByDirection: data.tripBlocksByDirection,
+                    itineraryLinks: data.itineraryLinks,
+                });
+            },
+            /** 圏外のために保存する目撃を取り出す */
+            snapshotOperationSightingTimeCrossSections(): TrainDiagramSightingsSnapshot {
+                return store.operationSightingTimeCrossSections();
+            },
+            /** 保存した目撃に置き換える */
+            restoreOperationSightingTimeCrossSections(
+                data: TrainDiagramSightingsSnapshot,
+            ): void {
+                patchState(store, { operationSightingTimeCrossSections: data });
+            },
         };
-    },
-    /** 保存した中身を戻す（条件の calendarId・selectedRouteIds と画面の設定は今のまま） */
-    restoreSnapshot(data: TrainDiagramSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            networkStations: data.networkStations,
-            routeStations: data.routeStations,
-            tripClasses: data.tripClasses,
-            tripBlocksByDirection: data.tripBlocksByDirection,
-            itineraryLinks: data.itineraryLinks,
-        }));
-    },
-    /** 圏外のために保存する目撃を取り出す */
-    snapshotOperationSightingTimeCrossSections(): TrainDiagramSightingsSnapshot {
-        return store.getValue().operationSightingTimeCrossSections;
-    },
-    /** 保存した目撃に置き換える */
-    restoreOperationSightingTimeCrossSections(
-        data: TrainDiagramSightingsSnapshot,
-    ): void {
-        store.update(setProp('operationSightingTimeCrossSections', () => data));
-    },
-
-    persistInitialized$: persist.initialized$,
-    calendarId$: store.pipe(select((state) => state.calendarId)),
-    selectedRouteIds$: store.pipe(select((state) => state.selectedRouteIds)),
-    pxPerMinute$: store.pipe(select((state) => state.pxPerMinute)),
-    axisPxPerMinute$: store.pipe(select((state) => state.axisPxPerMinute)),
-    directionFilter$: store.pipe(select((state) => state.directionFilter)),
-    networkStations$: store.pipe(select((state) => state.networkStations)),
-    tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    tripBlocksByDirection$: store.pipe(
-        select((state) => state.tripBlocksByDirection),
+    }),
+    // 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
+    // 開いたときに前のダイヤ・路線へ戻ってしまう
+    withSettingsStorage<StoreProps>({
+        key: 'TrainDiagramStore',
+        fields: ['controlCollapsed'],
+    }),
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'TrainDiagram',
+                select: () => store.snapshot(),
+                apply: (data: TrainDiagramSnapshot) =>
+                    store.restoreSnapshot(data),
+            },
+            // 目撃は Service Worker に残らないので、列車の保存とは別に日付つきで保存する。
+            // 戻した目撃は、すでに取れている目撃を上書きしない
+            sightings: {
+                key: 'TrainDiagramSightings',
+                select: () =>
+                    store.snapshotOperationSightingTimeCrossSections(),
+                apply: (data: TrainDiagramSightingsSnapshot) =>
+                    store.restoreOperationSightingTimeCrossSections({
+                        ...data,
+                        ...store.operationSightingTimeCrossSections(),
+                    }),
+            },
+        }),
     ),
-    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
-    selectedTripId$: store.pipe(select((state) => state.selectedTripId)),
-    operationSightingTimeCrossSections$: store.pipe(
-        select((state) => state.operationSightingTimeCrossSections),
-    ),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
-    hasFetchedTrainDiagram$: store.pipe(
-        select((state) => state.hasFetchedTrainDiagram),
-    ),
-    controlCollapsed$: store.pipe(select((state) => state.controlCollapsed)),
-
-    /**
-     * 表示駅軸（駅リスト）。networkStations（全線時刻表順）の順序をそのまま維持し、
-     * 選択路線がある場合のみ該当駅にフィルタする（toStationAxisStations 参照）。
-     */
-    stationAxisStations$,
-    /** 表示駅軸の stationId → y 座標マップ。 */
-    stationAxis$,
-
-    get calendarId(): string | null {
-        return store.getValue().calendarId;
-    },
-    get selectedRouteIds(): string[] {
-        return store.getValue().selectedRouteIds;
-    },
-    get pxPerMinute(): number {
-        return store.getValue().pxPerMinute;
-    },
-    get axisPxPerMinute(): number | null {
-        return store.getValue().axisPxPerMinute;
-    },
-    get directionFilter(): DiagramDirectionFilter {
-        return store.getValue().directionFilter;
-    },
-    get tripBlocksByDirection(): Record<number, TripBlockDetailsDto[]> {
-        return store.getValue().tripBlocksByDirection;
-    },
-    get selectedTripId(): string | null {
-        return store.getValue().selectedTripId;
-    },
-    get networkStations(): StationDetailsDto[] {
-        return store.getValue().networkStations;
-    },
-    get tripClasses(): TripClassDetailsDto[] {
-        return store.getValue().tripClasses;
-    },
-} as const;
+    withAppDevtools('TrainDiagramStore'),
+    withHooks({
+        onInit(store) {
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
+            store.resetLoading();
+        },
+    }),
+);

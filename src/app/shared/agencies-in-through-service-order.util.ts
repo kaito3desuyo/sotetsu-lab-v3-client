@@ -30,7 +30,7 @@ export const THROUGH_SERVICE_AGENCY_ORDER = [
  * 路線の一覧（直通の系統順）で最初に出てくる順、それも無ければ元の順のままにする。
  *
  * 会社チップ（リアルタイム運用情報・過去の運用情報）と、編成を会社ごとに並べる所
- * （リアルタイム運用情報の編成順カード・過去の運用情報の表の行・todaysFormationsSorted$）が使う。
+ * （リアルタイム運用情報の編成順カード・過去の運用情報の表の行・todaysFormationsSorted）が使う。
  * 以前のチップは API の返す順のままで、会社を DB に登録した日時の順（ORDER BY なし）だった。
  */
 export function agenciesInThroughServiceOrder(

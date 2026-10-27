@@ -1,8 +1,9 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, Injector, PLATFORM_ID, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, Subject, filter, take } from 'rxjs';
-import { TokenStateQuery } from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -12,7 +13,8 @@ export class SocketService {
     readonly #logger = inject(NGXLogger);
 
     readonly #platformId = inject(PLATFORM_ID);
-    readonly #tokenStateQuery = inject(TokenStateQuery);
+    readonly #injector = inject(Injector);
+    readonly #tokenState = inject(TokenState);
     private readonly _url = environment.socketUrl;
     private readonly _ev$ = new Subject<unknown>();
     private _conn: WebSocket;
@@ -20,10 +22,16 @@ export class SocketService {
     /**
      * socket もトークンを求める（ゲストは backend が作る匿名セッションのトークン）。
      * まだ取れていなければ（backend の 503 など）、取れたときにつなぐ。
+     * 取れているときはその場でつなぎ、待つ側（toObservable）は取れていないときだけ使う。
      */
     connect(): void {
         if (!isPlatformBrowser(this.#platformId)) return;
-        this.#tokenStateQuery.accessToken$
+        const current = this.#tokenState.accessToken();
+        if (current) {
+            this.#open(current);
+            return;
+        }
+        toObservable(this.#tokenState.accessToken, { injector: this.#injector })
             .pipe(
                 filter((token): token is string => !!token),
                 take(1),

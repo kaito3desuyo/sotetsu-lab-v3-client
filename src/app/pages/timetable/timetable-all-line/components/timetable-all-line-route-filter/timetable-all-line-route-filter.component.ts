@@ -2,10 +2,10 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    inject,
     input,
     model,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import {
@@ -42,13 +42,10 @@ export class TimetableAllLineRouteFilterComponent {
     /** 操作帯を畳んでいるか。畳んだ状態はページが持つ（列車ダイヤグラムと同じ manual の帯） */
     readonly collapsed = model(false);
 
-    readonly routeOptions = toSignal(TimetableAllLineStore.routeOptions$, {
-        initialValue: [],
-    });
-    readonly selectedRouteIds = toSignal(
-        TimetableAllLineStore.selectedRouteIds$,
-        { initialValue: [] },
-    );
+    readonly #store = inject(TimetableAllLineStore);
+
+    readonly routeOptions = this.#store.routeOptions;
+    readonly selectedRouteIds = this.#store.selectedRouteIds;
 
     readonly filterActive = computed(() =>
         isRouteFilterActive(this.routeOptions(), this.selectedRouteIds()),
@@ -60,10 +57,7 @@ export class TimetableAllLineRouteFilterComponent {
         );
         return routes === '全路線' ? routes : `路線：${routes}`;
     });
-    readonly isAwaitingTripBlocks = toSignal(
-        TimetableAllLineStore.isAwaitingTripBlocks$,
-        { initialValue: false },
-    );
+    readonly isAwaitingTripBlocks = this.#store.isAwaitingTripBlocks;
     /** 取る前は要約を出さない（「全路線」と出してから「路線：…」に変わらないように） */
     readonly bandSummaryOrEmpty = computed(() =>
         joinSummaryParts([
@@ -84,6 +78,6 @@ export class TimetableAllLineRouteFilterComponent {
     ];
 
     onChange(values: FilterChipValue[]): void {
-        TimetableAllLineStore.setSelectedRouteIds(values);
+        this.#store.setSelectedRouteIds(values);
     }
 }

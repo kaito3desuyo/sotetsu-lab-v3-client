@@ -1,15 +1,17 @@
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroupDirective } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
+import { of, Subject, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from './operation-post-card.service';
 import { OperationPostFormComponent } from './operation-post-form.component';
@@ -25,10 +27,8 @@ describe('OperationPostFormComponent', () => {
     let handleError: jest.Mock;
     let resetForm: jest.Mock;
     let sendEvent: jest.Mock;
-    let loggedIn$: BehaviorSubject<boolean>;
 
     beforeEach(async () => {
-        loggedIn$ = new BehaviorSubject(true);
         postOperationSighting = jest.fn(() => of(undefined));
         emitSubmitEvent = jest.fn();
         snackBarOpen = jest.fn();
@@ -44,6 +44,13 @@ describe('OperationPostFormComponent', () => {
             imports: [OperationPostFormComponent],
             providers: [
                 {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
+                {
                     provide: OperationPostCardService,
                     useValue: {
                         fetchServiceAgencies: () => of(undefined),
@@ -52,20 +59,12 @@ describe('OperationPostFormComponent', () => {
                     },
                 },
                 {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
-                },
-                {
                     provide: LoadingService,
                     useValue: { open: jest.fn(), close: jest.fn() },
                 },
                 { provide: ErrorHandlerService, useValue: { handleError } },
                 { provide: SocketService, useValue: { emit: socketEmit } },
                 { provide: GoogleAnalyticsService, useValue: { sendEvent } },
-                {
-                    provide: UserStateQuery,
-                    useValue: { isLoggedIn$: loggedIn$ },
-                },
                 provideRouter([]),
             ],
         })
@@ -77,6 +76,7 @@ describe('OperationPostFormComponent', () => {
             })
             .compileComponents();
 
+        patchState(unprotected(TestBed.inject(UserState)), { userId: 'u1' });
         fixture = TestBed.createComponent(OperationPostFormComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -352,16 +352,29 @@ describe('OperationPostFormComponent', () => {
 
 describe('OperationPostFormComponent の表示（テンプレートあり）', () => {
     let fixture: ComponentFixture<OperationPostFormComponent>;
-    let loggedIn$: BehaviorSubject<boolean>;
-    let registeredOnly$: BehaviorSubject<boolean>;
+
+    const setLoggedIn = (loggedIn: boolean): void => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: loggedIn ? 'u1' : null,
+        });
+    };
+    const setRegisteredOnly = (on: boolean): void => {
+        patchState(unprotected(TestBed.inject(FeatureFlagState)), {
+            flags: { registered_only_posting: on },
+        });
+    };
 
     beforeEach(async () => {
-        loggedIn$ = new BehaviorSubject(true);
-        registeredOnly$ = new BehaviorSubject(true);
-
         await TestBed.configureTestingModule({
             imports: [OperationPostFormComponent],
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 {
                     provide: OperationPostCardService,
                     useValue: {
@@ -369,10 +382,6 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
                         postOperationSighting: jest.fn(() => of(undefined)),
                         emitSubmitEvent: jest.fn(),
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,
@@ -386,18 +395,12 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
                     provide: GoogleAnalyticsService,
                     useValue: { sendEvent: jest.fn() },
                 },
-                {
-                    provide: UserStateQuery,
-                    useValue: { isLoggedIn$: loggedIn$ },
-                },
-                {
-                    provide: FeatureFlagStateQuery,
-                    useValue: { registeredOnlyPosting$: registeredOnly$ },
-                },
                 provideRouter([]),
             ],
         }).compileComponents();
 
+        setLoggedIn(true);
+        setRegisteredOnly(true);
         jest.spyOn(TestBed.inject(Router), 'url', 'get').mockReturnValue(
             '/operation/real-time',
         );
@@ -405,7 +408,7 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
     });
 
     it('フラグ on のゲストには入力欄の代わりに案内とログイン・新規登録のボタンを出す', () => {
-        loggedIn$.next(false);
+        setLoggedIn(false);
         fixture.detectChanges();
 
         const el: HTMLElement = fixture.nativeElement;
@@ -419,8 +422,8 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
     });
 
     it('フラグ off のゲストにはフォームを出す（案内は出さない）', () => {
-        registeredOnly$.next(false);
-        loggedIn$.next(false);
+        setRegisteredOnly(false);
+        setLoggedIn(false);
         fixture.detectChanges();
 
         const el: HTMLElement = fixture.nativeElement;
@@ -429,7 +432,7 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
     });
 
     it('ゲストの案内を出しても、ホスト要素が :empty にならない（main > :empty は隠れる）', () => {
-        loggedIn$.next(false);
+        setLoggedIn(false);
         fixture.detectChanges();
 
         const host: HTMLElement = fixture.nativeElement;
@@ -440,25 +443,25 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
     });
 
     it('ログイン済みなら、フラグ on でもフォームを出す', () => {
-        loggedIn$.next(true);
+        setLoggedIn(true);
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
     });
 
     it('ログイン済みなら、フラグ off でもフォームを出す', () => {
-        registeredOnly$.next(false);
-        loggedIn$.next(true);
+        setRegisteredOnly(false);
+        setLoggedIn(true);
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
     });
 
     it('表示中にフラグが on に変わると、ゲストには案内に替わる', () => {
-        registeredOnly$.next(false);
-        loggedIn$.next(false);
+        setRegisteredOnly(false);
+        setLoggedIn(false);
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('form')).not.toBeNull();
 
-        registeredOnly$.next(true);
+        setRegisteredOnly(true);
         fixture.detectChanges();
 
         expect(fixture.nativeElement.querySelector('form')).toBeNull();
@@ -468,10 +471,10 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
     });
 
     it('投稿中にログアウトしたら（フラグ on なら）案内に切り替わる', () => {
-        registeredOnly$.next(true);
-        loggedIn$.next(true);
+        setRegisteredOnly(true);
+        setLoggedIn(true);
         fixture.detectChanges();
-        loggedIn$.next(false);
+        setLoggedIn(false);
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('form')).toBeNull();
     });

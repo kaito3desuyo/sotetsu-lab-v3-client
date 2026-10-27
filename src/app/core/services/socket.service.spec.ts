@@ -2,7 +2,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { NGXLogger } from 'ngx-logger';
 import { lastValueFrom, of } from 'rxjs';
-import { TokenStateStore } from 'src/app/global-states/token.state';
+import { TokenState } from 'src/app/global-states/token.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
 import { SocketService } from './socket.service';
 
@@ -36,7 +36,7 @@ describe('SocketService.connect', () => {
                 expiresAt: accessToken ? 9999999999 : null,
             }),
         );
-        return lastValueFrom(TestBed.inject(TokenStateStore).fetch());
+        return lastValueFrom(TestBed.inject(TokenState).fetch());
     };
 
     it('トークンがあれば、そのトークンでつなぐ', async () => {
@@ -52,10 +52,13 @@ describe('SocketService.connect', () => {
         expect(webSocket).not.toHaveBeenCalled();
 
         await setToken('t-2');
+        // toObservable は effect の後に出すので、反映させる
+        TestBed.tick();
         expect(webSocket).toHaveBeenCalledTimes(1);
         expect(webSocket.mock.calls[0][0]).toMatch(/\?token=t-2$/);
 
         await setToken('t-3');
+        TestBed.tick();
         expect(webSocket).toHaveBeenCalledTimes(1);
     });
 });

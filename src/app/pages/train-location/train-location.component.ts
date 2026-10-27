@@ -8,22 +8,17 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import {
-    takeUntilDestroyed,
-    toObservable,
-    toSignal,
-} from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
-import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -38,8 +33,6 @@ import { TrainLocationLineComponent } from './components/train-location-line/tra
 import { TrainLocationService } from './services/train-location.service';
 import {
     TrainLocationMode,
-    TrainLocationSightingsSnapshot,
-    TrainLocationSnapshot,
     TrainLocationStore,
 } from './stores/train-location.store';
 import { applyContinuationsToCards } from './utils/apply-continuations-to-cards.util';
@@ -67,19 +60,6 @@ import { formatTrainLocationSummary } from './utils/train-location-summary.util'
 
 const CURRENT_TIME_REFRESH_MS = 10_000;
 
-// チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（train-diagram と同一パターン）
-TrainLocationStore.resetLoading();
-
-// 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
-// （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
-let fetchSeq = 0;
-
-/** 圏外のために保存する中身のキー */
-const OFFLINE_SNAPSHOT_KEY = 'TrainLocation';
-
-/** 圏外のために保存する目撃のキー（目撃は Service Worker に残らないので別に保存する） */
-const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TrainLocationSightings';
-
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
@@ -103,67 +83,33 @@ export class TrainLocationComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #trainLocationService = inject(TrainLocationService);
-    readonly #offlineSnapshots = inject(OfflineSnapshots);
-    readonly #todaysCalendarListStateQuery = inject(
-        TodaysCalendarListStateQuery,
-    );
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #calendarListStateQuery = inject(CalendarListStateQuery);
+    readonly #store = inject(TrainLocationStore);
+    readonly #todaysCalendarListState = inject(TodaysCalendarListState);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #calendarListState = inject(CalendarListState);
 
-    readonly isLoading = toSignal(TrainLocationStore.isLoading$);
-    readonly hasFetchedTrainLocation = toSignal(
-        TrainLocationStore.hasFetchedTrainLocation$,
-        { initialValue: false },
-    );
+    readonly isLoading = this.#store.isLoading;
+    readonly hasFetchedTrainLocation = this.#store.hasFetchedTrainLocation;
     /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
     readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
-    readonly calendarId = toSignal(TrainLocationStore.calendarId$, {
-        initialValue: null,
-    });
-    readonly selectedRouteId = toSignal(TrainLocationStore.selectedRouteId$, {
-        initialValue: null,
-    });
-    readonly mode = toSignal(TrainLocationStore.mode$, {
-        initialValue: 'now' as TrainLocationMode,
-    });
-    readonly specifiedTime = toSignal(TrainLocationStore.specifiedTime$, {
-        initialValue: null,
-    });
-    readonly stationAxisStations = toSignal(
-        TrainLocationStore.stationAxisStations$,
-        { initialValue: [] },
-    );
-    readonly tripBlocksByDirection = toSignal(
-        TrainLocationStore.tripBlocksByDirection$,
-        { initialValue: {} },
-    );
-    readonly #itineraryLinks = toSignal(TrainLocationStore.itineraryLinks$, {
-        initialValue: [],
-    });
-    readonly operationSightingTimeCrossSections = toSignal(
-        TrainLocationStore.operationSightingTimeCrossSections$,
-        { initialValue: {} },
-    );
+    readonly calendarId = this.#store.calendarId;
+    readonly selectedRouteId = this.#store.selectedRouteId;
+    readonly mode = this.#store.mode;
+    readonly specifiedTime = this.#store.specifiedTime;
+    readonly stationAxisStations = this.#store.stationAxisStations;
+    readonly tripBlocksByDirection = this.#store.tripBlocksByDirection;
+    readonly #itineraryLinks = this.#store.itineraryLinks;
+    readonly operationSightingTimeCrossSections =
+        this.#store.operationSightingTimeCrossSections;
 
-    readonly todaysCalendarIds = toSignal(
-        this.#todaysCalendarListStateQuery.todaysCalendarIds$,
-        { initialValue: [] },
-    );
-    readonly #operatingSystemEndsByRouteId = toSignal(
-        this.#routeStationListStateQuery.operatingSystemEndsByRouteId$,
-        { initialValue: {} },
-    );
-    readonly #routeStations = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
-    readonly #calendars = toSignal(this.#calendarListStateQuery.calendars$, {
-        initialValue: [],
-    });
+    readonly todaysCalendarIds =
+        this.#todaysCalendarListState.todaysCalendarIds;
+    readonly #operatingSystemEndsByRouteId =
+        this.#routeStationListState.operatingSystemEndsByRouteId;
+    readonly #routeStations = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
+    readonly #calendars = this.#calendarListState.calendars;
     readonly isTodaySelected = computed(() =>
         this.todaysCalendarIds().includes(this.calendarId() ?? ''),
     );
@@ -331,10 +277,7 @@ export class TrainLocationComponent {
         }),
     );
 
-    readonly #selectedStationIdParam = toSignal(
-        TrainLocationStore.selectedStationId$,
-        { initialValue: null },
-    );
+    readonly #selectedStationIdParam = this.#store.selectedStationId;
 
     /** 駅軸に無い駅（路線を変えた直後など）は未選択として扱う */
     readonly selectedStationId = computed(() => {
@@ -407,7 +350,7 @@ export class TrainLocationComponent {
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の路線図が一瞬出ないようにする
-        TrainLocationStore.setHasFetchedTrainLocation(false);
+        this.#store.setHasFetchedTrainLocation(false);
 
         runIntervalInBrowser(CURRENT_TIME_REFRESH_MS, () =>
             this.#now.set(new Date()),
@@ -456,22 +399,22 @@ export class TrainLocationComponent {
                 const timeParam = paramMap.get('time');
                 const mode: TrainLocationMode = timeParam ? 'specified' : 'now';
                 const todaysCalendarId =
-                    this.#todaysCalendarListStateQuery.todaysCalendarId;
+                    this.#todaysCalendarListState.todaysCalendarId();
                 const calendarId =
                     mode === 'specified'
                         ? (paramMap.get('calendar_id') ?? todaysCalendarId)
                         : todaysCalendarId;
 
                 const routeChanged =
-                    TrainLocationStore.selectedRouteId !== (routeId ?? null);
+                    this.#store.selectedRouteId() !== (routeId ?? null);
                 const calendarChanged =
-                    TrainLocationStore.calendarId !== (calendarId ?? null);
+                    this.#store.calendarId() !== (calendarId ?? null);
 
-                TrainLocationStore.setSelectedRouteId(routeId ?? null);
-                TrainLocationStore.setSelectedStationId(stationIdParam);
-                TrainLocationStore.setCalendarId(calendarId ?? null);
-                TrainLocationStore.setMode(mode);
-                TrainLocationStore.setSpecifiedTime(
+                this.#store.setSelectedRouteId(routeId ?? null);
+                this.#store.setSelectedStationId(stationIdParam);
+                this.#store.setCalendarId(calendarId ?? null);
+                this.#store.setMode(mode);
+                this.#store.setSpecifiedTime(
                     mode === 'specified' ? (timeParam ?? null) : null,
                 );
 
@@ -493,13 +436,13 @@ export class TrainLocationComponent {
         refetchTripBlocks: boolean;
         refetchStationAxis: boolean;
     }): Promise<void> {
-        const seq = ++fetchSeq;
+        const seq = this.#store.nextFetchSeq();
         const conditions = {
-            calendarId: TrainLocationStore.calendarId,
-            routeId: TrainLocationStore.selectedRouteId,
+            calendarId: this.#store.calendarId(),
+            routeId: this.#store.selectedRouteId(),
         };
-        TrainLocationStore.enableLoading();
-        TrainLocationStore.setHasFetchedTrainLocation(false);
+        this.#store.enableLoading();
+        this.#store.setHasFetchedTrainLocation(false);
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -538,7 +481,7 @@ export class TrainLocationComponent {
                     // 古い取得が成功しても、新しい取得の印は消さない
                     if (hasLinksFailed) {
                         this.#isLinksDegraded = true;
-                    } else if (seq === fetchSeq) {
+                    } else if (this.#store.isLatestFetch(seq)) {
                         this.#isLinksDegraded = false;
                     }
                 }
@@ -561,14 +504,12 @@ export class TrainLocationComponent {
                 // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）。
                 // 戻す処理が壊れていても、取得の失敗をそのまま投げる（読み込み中は finally で解く）。
                 // 戻したときは初回扱いのまま（次に通信できたら取り直す）
-                if (seq === fetchSeq) {
+                if (this.#store.isLatestFetch(seq)) {
                     try {
-                        await this.#offlineSnapshots.restore({
-                            key: OFFLINE_SNAPSHOT_KEY,
+                        await this.#store.restoreOfflineSnapshot(
+                            'main',
                             conditions,
-                            apply: (data: TrainLocationSnapshot) =>
-                                TrainLocationStore.restoreSnapshot(data),
-                        });
+                        );
                     } catch {
                         // 保存した中身が壊れていても、取得の失敗を優先する
                     }
@@ -577,7 +518,7 @@ export class TrainLocationComponent {
             }
             // ダイヤと路線の両方を取り直したか、前の取得が成功していたときだけ、ストアの中身が条件と組になっている
             // 古い取得で終わったときは、新しい取得とのあいだで組がずれているかもしれない
-            if (seq !== fetchSeq) {
+            if (!this.#store.isLatestFetch(seq)) {
                 this.#storeInSync = false;
             } else if (flags.refetchTripBlocks && flags.refetchStationAxis) {
                 this.#storeInSync = true;
@@ -586,20 +527,16 @@ export class TrainLocationComponent {
             if (
                 !this.#isLinksDegraded &&
                 this.#storeInSync &&
-                seq === fetchSeq
+                this.#store.isLatestFetch(seq)
             ) {
-                void this.#offlineSnapshots.save({
-                    key: OFFLINE_SNAPSHOT_KEY,
-                    conditions,
-                    data: TrainLocationStore.snapshot(),
-                });
+                void this.#store.saveOfflineSnapshot('main', conditions);
             }
             this.#firstLoadDone.set(true);
         } finally {
-            TrainLocationStore.disableLoading();
+            this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
-            if (seq === fetchSeq) {
-                TrainLocationStore.setHasFetchedTrainLocation(true);
+            if (this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedTrainLocation(true);
             }
         }
     }
@@ -613,8 +550,8 @@ export class TrainLocationComponent {
         operationNumbers: readonly string[],
     ): Promise<void> {
         const conditions = {
-            calendarId: TrainLocationStore.calendarId,
-            routeId: TrainLocationStore.selectedRouteId,
+            calendarId: this.#store.calendarId(),
+            routeId: this.#store.selectedRouteId(),
             date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
         };
         let fetched: boolean;
@@ -632,17 +569,10 @@ export class TrainLocationComponent {
             }
             this.#sightingsRestoredFor = restoredKey;
             try {
-                await this.#offlineSnapshots.restore({
-                    key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                await this.#store.restoreOfflineSnapshot(
+                    'sightings',
                     conditions,
-                    apply: (data: TrainLocationSightingsSnapshot) =>
-                        TrainLocationStore.restoreOperationSightingTimeCrossSections(
-                            {
-                                ...data,
-                                ...TrainLocationStore.operationSightingTimeCrossSections,
-                            },
-                        ),
-                });
+                );
             } catch {
                 // 保存した中身が壊れていても、取得の失敗を優先する
             }
@@ -650,11 +580,7 @@ export class TrainLocationComponent {
         }
         if (fetched) {
             this.#sightingsRestoredFor = null;
-            void this.#offlineSnapshots.save({
-                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
-                conditions,
-                data: TrainLocationStore.snapshotOperationSightingTimeCrossSections(),
-            });
+            void this.#store.saveOfflineSnapshot('sightings', conditions);
         }
     }
 
@@ -698,7 +624,7 @@ export class TrainLocationComponent {
                 time: timeValue,
                 calendar_id:
                     this.calendarId() ??
-                    this.#todaysCalendarListStateQuery.todaysCalendarId ??
+                    this.#todaysCalendarListState.todaysCalendarId() ??
                     '',
             });
             return;
@@ -715,7 +641,7 @@ export class TrainLocationComponent {
             time: formatTimeParam(parsed),
             calendar_id:
                 this.calendarId() ??
-                this.#todaysCalendarListStateQuery.todaysCalendarId ??
+                this.#todaysCalendarListState.todaysCalendarId() ??
                 '',
         });
     }

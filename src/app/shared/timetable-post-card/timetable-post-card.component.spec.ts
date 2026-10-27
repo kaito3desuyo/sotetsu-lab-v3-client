@@ -1,41 +1,37 @@
+import { signal } from '@angular/core';
 import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, Router } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { patchState } from '@ngrx/signals';
+import { unprotected } from '@ngrx/signals/testing';
+import { of } from 'rxjs';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetablePostCardComponent } from './timetable-post-card.component';
 
 describe('TimetablePostCardComponent', () => {
     let component: TimetablePostCardComponent;
     let fixture: ComponentFixture<TimetablePostCardComponent>;
-    let loggedIn$: BehaviorSubject<boolean>;
-    let canEdit$: BehaviorSubject<boolean>;
 
     beforeEach(async () => {
-        loggedIn$ = new BehaviorSubject(true);
-        canEdit$ = new BehaviorSubject(true);
         await TestBed.configureTestingModule({
             imports: [TimetablePostCardComponent],
             providers: [
                 provideRouter([]),
                 provideNoopAnimations(),
                 {
-                    provide: UserStateQuery,
-                    useValue: {
-                        isLoggedIn$: loggedIn$,
-                        canEditTimetable$: canEdit$,
-                    },
-                },
-                {
-                    provide: CalendarListStateQuery,
-                    useValue: { calendars$: of([]) },
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
                 },
             ],
         }).compileComponents();
 
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: 'u1',
+            role: 'editor',
+        });
         fixture = TestBed.createComponent(TimetablePostCardComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -72,8 +68,10 @@ describe('TimetablePostCardComponent', () => {
         });
 
         it('ゲストにはフォームの代わりに案内とログイン・新規登録のボタンを出す', () => {
-            loggedIn$.next(false);
-            canEdit$.next(false);
+            patchState(unprotected(TestBed.inject(UserState)), {
+                userId: null,
+                role: null,
+            });
             fixture.detectChanges();
 
             expect(el().querySelector('form')).toBeNull();
@@ -86,8 +84,10 @@ describe('TimetablePostCardComponent', () => {
         });
 
         it('役割の足りない登録者には案内だけを出す（ボタンは出さない）', () => {
-            loggedIn$.next(true);
-            canEdit$.next(false);
+            patchState(unprotected(TestBed.inject(UserState)), {
+                userId: 'u1',
+                role: 'reporter',
+            });
             fixture.detectChanges();
 
             expect(el().querySelector('form')).toBeNull();

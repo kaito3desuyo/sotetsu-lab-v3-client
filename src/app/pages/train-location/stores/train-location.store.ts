@@ -1,4 +1,15 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
@@ -42,159 +53,156 @@ export type TrainLocationSnapshot = Pick<
 export type TrainLocationSightingsSnapshot =
     StoreProps['operationSightingTimeCrossSections'];
 
-const store = createStore(
-    { name: 'TrainLocationStore' },
-    withProps<StoreProps>({
-        calendarId: null,
-        selectedRouteId: null,
-        selectedStationId: null,
-        mode: 'now',
-        specifiedTime: null,
-        stationAxisStations: [],
-        tripClasses: [],
-        tripBlocksByDirection: {},
-        itineraryLinks: [],
-        operationSightingTimeCrossSections: {},
-        loadingQueue: [],
-        hasFetchedTrainLocation: false,
+const initialState: StoreProps = {
+    calendarId: null,
+    selectedRouteId: null,
+    selectedStationId: null,
+    mode: 'now',
+    specifiedTime: null,
+    stationAxisStations: [],
+    tripClasses: [],
+    tripBlocksByDirection: {},
+    itineraryLinks: [],
+    operationSightingTimeCrossSections: {},
+    loadingQueue: [],
+    hasFetchedTrainLocation: false,
+};
+
+export const TrainLocationStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(({ loadingQueue }) => ({
+        isLoading: computed(() => loadingQueue().length > 0),
+    })),
+    withMethods((store) => {
+        // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得の終わりが
+        // 新しい骨組みを消さないよう、インスタンスでなくストアで数える
+        let fetchSeq = 0;
+
+        return {
+            /** 取得を始めるときに世代を進めて、その番号を返す */
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
+            setCalendarId(calendarId: string | null): void {
+                patchState(store, { calendarId });
+            },
+            setSelectedRouteId(routeId: string | null): void {
+                patchState(store, { selectedRouteId: routeId });
+            },
+            setSelectedStationId(stationId: string | null): void {
+                patchState(store, { selectedStationId: stationId });
+            },
+            setMode(mode: TrainLocationMode): void {
+                patchState(store, { mode });
+            },
+            setSpecifiedTime(time: string | null): void {
+                patchState(store, { specifiedTime: time });
+            },
+            setStationAxisStations(stations: RouteStationDto[]): void {
+                patchState(store, { stationAxisStations: stations });
+            },
+            setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+                patchState(store, { tripClasses });
+            },
+            setTripBlocksByDirection(
+                tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>,
+            ): void {
+                patchState(store, { tripBlocksByDirection });
+            },
+            setItineraryLinks(
+                itineraryLinks: OperationItineraryLinkDto[],
+            ): void {
+                patchState(store, { itineraryLinks });
+            },
+            setOperationSightingTimeCrossSection(
+                operationNumber: string,
+                dto: OperationSightingTimeCrossSectionDto,
+            ): void {
+                patchState(store, (state) => ({
+                    operationSightingTimeCrossSections: {
+                        ...state.operationSightingTimeCrossSections,
+                        [operationNumber]: dto,
+                    },
+                }));
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+            /** いまの路線・ダイヤの取得が終わったか（失敗しても true）。取る前は本文の代わりに骨組みを出す */
+            setHasFetchedTrainLocation(value: boolean): void {
+                patchState(store, { hasFetchedTrainLocation: value });
+            },
+            /** 圏外のために保存する中身を取り出す */
+            snapshot(): TrainLocationSnapshot {
+                return {
+                    stationAxisStations: store.stationAxisStations(),
+                    tripClasses: store.tripClasses(),
+                    tripBlocksByDirection: store.tripBlocksByDirection(),
+                    itineraryLinks: store.itineraryLinks(),
+                };
+            },
+            /** 保存した中身を戻す（条件の calendarId・selectedRouteId と画面の状態は今のまま） */
+            restoreSnapshot(data: TrainLocationSnapshot): void {
+                patchState(store, {
+                    stationAxisStations: data.stationAxisStations,
+                    tripClasses: data.tripClasses,
+                    tripBlocksByDirection: data.tripBlocksByDirection,
+                    itineraryLinks: data.itineraryLinks,
+                });
+            },
+            /** 圏外のために保存する目撃を取り出す */
+            snapshotOperationSightingTimeCrossSections(): TrainLocationSightingsSnapshot {
+                return store.operationSightingTimeCrossSections();
+            },
+            /** 保存した目撃に置き換える */
+            restoreOperationSightingTimeCrossSections(
+                data: TrainLocationSightingsSnapshot,
+            ): void {
+                patchState(store, { operationSightingTimeCrossSections: data });
+            },
+        };
+    }),
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'TrainLocation',
+                select: () => store.snapshot(),
+                apply: (data: TrainLocationSnapshot) =>
+                    store.restoreSnapshot(data),
+            },
+            // 目撃は Service Worker に残らないので、列車の保存とは別に日付つきで保存する。
+            // 戻した目撃は、すでに取れている目撃を上書きしない
+            sightings: {
+                key: 'TrainLocationSightings',
+                select: () =>
+                    store.snapshotOperationSightingTimeCrossSections(),
+                apply: (data: TrainLocationSightingsSnapshot) =>
+                    store.restoreOperationSightingTimeCrossSections({
+                        ...data,
+                        ...store.operationSightingTimeCrossSections(),
+                    }),
+            },
+        }),
+    ),
+    withAppDevtools('TrainLocationStore'),
+    withHooks({
+        onInit(store) {
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
+            store.resetLoading();
+        },
     }),
 );
-
-export const TrainLocationStore = {
-    setCalendarId(calendarId: string | null): void {
-        store.update(setProp('calendarId', () => calendarId));
-    },
-    setSelectedRouteId(routeId: string | null): void {
-        store.update(setProp('selectedRouteId', () => routeId));
-    },
-    setSelectedStationId(stationId: string | null): void {
-        store.update(setProp('selectedStationId', () => stationId));
-    },
-    setMode(mode: TrainLocationMode): void {
-        store.update(setProp('mode', () => mode));
-    },
-    setSpecifiedTime(time: string | null): void {
-        store.update(setProp('specifiedTime', () => time));
-    },
-    setStationAxisStations(stations: RouteStationDto[]): void {
-        store.update(setProp('stationAxisStations', () => stations));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setTripBlocksByDirection(
-        tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>,
-    ): void {
-        store.update(
-            setProp('tripBlocksByDirection', () => tripBlocksByDirection),
-        );
-    },
-    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
-        store.update(setProp('itineraryLinks', () => itineraryLinks));
-    },
-    setOperationSightingTimeCrossSection(
-        operationNumber: string,
-        dto: OperationSightingTimeCrossSectionDto,
-    ): void {
-        store.update(
-            setProp('operationSightingTimeCrossSections', (state) => ({
-                ...state,
-                [operationNumber]: dto,
-            })),
-        );
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-    /** いまの路線・ダイヤの取得が終わったか（失敗しても true）。取る前は本文の代わりに骨組みを出す */
-    setHasFetchedTrainLocation(value: boolean): void {
-        store.update(setProp('hasFetchedTrainLocation', () => value));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): TrainLocationSnapshot {
-        const {
-            stationAxisStations,
-            tripClasses,
-            tripBlocksByDirection,
-            itineraryLinks,
-        } = store.getValue();
-        return {
-            stationAxisStations,
-            tripClasses,
-            tripBlocksByDirection,
-            itineraryLinks,
-        };
-    },
-    /** 保存した中身を戻す（条件の calendarId・selectedRouteId と画面の状態は今のまま） */
-    restoreSnapshot(data: TrainLocationSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            stationAxisStations: data.stationAxisStations,
-            tripClasses: data.tripClasses,
-            tripBlocksByDirection: data.tripBlocksByDirection,
-            itineraryLinks: data.itineraryLinks,
-        }));
-    },
-    /** 圏外のために保存する目撃を取り出す */
-    snapshotOperationSightingTimeCrossSections(): TrainLocationSightingsSnapshot {
-        return store.getValue().operationSightingTimeCrossSections;
-    },
-    /** 保存した目撃に置き換える */
-    restoreOperationSightingTimeCrossSections(
-        data: TrainLocationSightingsSnapshot,
-    ): void {
-        store.update(setProp('operationSightingTimeCrossSections', () => data));
-    },
-
-    calendarId$: store.pipe(select((state) => state.calendarId)),
-    selectedRouteId$: store.pipe(select((state) => state.selectedRouteId)),
-    selectedStationId$: store.pipe(select((state) => state.selectedStationId)),
-    mode$: store.pipe(select((state) => state.mode)),
-    specifiedTime$: store.pipe(select((state) => state.specifiedTime)),
-    stationAxisStations$: store.pipe(
-        select((state) => state.stationAxisStations),
-    ),
-    tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    tripBlocksByDirection$: store.pipe(
-        select((state) => state.tripBlocksByDirection),
-    ),
-    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks)),
-    operationSightingTimeCrossSections$: store.pipe(
-        select((state) => state.operationSightingTimeCrossSections),
-    ),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
-    hasFetchedTrainLocation$: store.pipe(
-        select((state) => state.hasFetchedTrainLocation),
-    ),
-
-    get calendarId(): string | null {
-        return store.getValue().calendarId;
-    },
-    get selectedRouteId(): string | null {
-        return store.getValue().selectedRouteId;
-    },
-    get selectedStationId(): string | null {
-        return store.getValue().selectedStationId;
-    },
-    get mode(): TrainLocationMode {
-        return store.getValue().mode;
-    },
-    get tripClasses(): TripClassDetailsDto[] {
-        return store.getValue().tripClasses;
-    },
-    get tripBlocksByDirection(): Record<number, TripBlockDetailsDto[]> {
-        return store.getValue().tripBlocksByDirection;
-    },
-    get operationSightingTimeCrossSections(): Record<
-        string,
-        OperationSightingTimeCrossSectionDto
-    > {
-        return store.getValue().operationSightingTimeCrossSections;
-    },
-} as const;

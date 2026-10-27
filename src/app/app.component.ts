@@ -14,7 +14,7 @@ import {
     NavigationStart,
     Router,
 } from '@angular/router';
-import { combineLatest } from 'rxjs';
+import { watchState } from '@ngrx/signals';
 import { filter, map } from 'rxjs/operators';
 import { toErrorMessage } from './core/errors/to-error-message';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
@@ -26,7 +26,7 @@ import {
     SocketSignalType,
 } from './core/services/socket-signal';
 import { SocketService } from './core/services/socket.service';
-import { UserStateQuery } from './global-states/user.state';
+import { UserState } from './global-states/user.state';
 import { LayoutComponent } from './layout/layout.component';
 import { LoadingService } from './shared/loading/loading.service';
 
@@ -45,7 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #gaService = inject(GoogleAnalyticsService);
     readonly #loadingService = inject(LoadingService);
     readonly #notificationService = inject(NotificationService);
-    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #userState = inject(UserState);
 
     constructor() {
         // api が保存に成功したら、socket が {"type": …} を送ってくる。その種類の画面内キャッシュを捨てる
@@ -82,14 +82,16 @@ export class AppComponent implements OnInit, OnDestroy {
             });
 
         // 編集する人と見るだけの人を分けて集計できるよう、ログインの状態を GA に載せる
-        combineLatest([
-            this.#userStateQuery.isLoggedIn$,
-            this.#userStateQuery.role$,
-        ])
-            .pipe(takeUntilDestroyed())
-            .subscribe(([loggedIn, role]) => {
-                this.#gaService.setUserProperties({ loggedIn, role });
-            });
+        // 値が変わったその場で載せたいので、effect（描画の後に走る）でなく watchState で見る。
+        // 最初の page_view より前に載っている必要がある
+        let sent: { loggedIn: boolean; role: string | null } | undefined;
+        watchState(this.#userState, () => {
+            const loggedIn = this.#userState.isLoggedIn();
+            const role = this.#userState.role();
+            if (sent?.loggedIn === loggedIn && sent.role === role) return;
+            sent = { loggedIn, role };
+            this.#gaService.setUserProperties({ loggedIn, role });
+        });
 
         this.#router.events
             .pipe(

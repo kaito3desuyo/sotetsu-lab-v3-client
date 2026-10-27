@@ -5,9 +5,8 @@ import {
     inject,
     input,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { sortByThroughServiceAgency } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
@@ -42,20 +41,13 @@ import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram
     host: { class: 'tw-contents' },
 })
 export class OperationRouteDiagramRouteFilterComponent {
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
+    readonly #routeStationListState = inject(RouteStationListState);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #store = inject(OperationRouteDiagramStore);
 
-    readonly #storeRouteOptions = toSignal(
-        OperationRouteDiagramStore.routeOptions$,
-        { initialValue: [] },
-    );
-    readonly #routes = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly #agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
+    readonly #storeRouteOptions = this.#store.routeOptions;
+    readonly #routes = this.#routeStationListState.routeStations;
+    readonly #agencies = this.#agencyListState.agencies;
 
     /** 運用番号が無くてもチップが無くても帯を出す（帯に選択欄を差し込むページ用） */
     readonly alwaysVisible = input(false);
@@ -97,16 +89,10 @@ export class OperationRouteDiagramRouteFilterComponent {
                 };
             });
     });
-    readonly isAwaitingOperationTrips = toSignal(
-        OperationRouteDiagramStore.isAwaitingOperationTrips$,
-        { initialValue: false },
-    );
+    readonly isAwaitingOperationTrips = this.#store.isAwaitingOperationTrips;
     /** 路線のチップの骨組みの幅（本線・いずみ野線・厚木線・新横浜線の幅に近い値） */
     readonly routeSkeletonWidths = ['tw-w-16', 'tw-w-24', 'tw-w-20', 'tw-w-24'];
-    readonly selectedRouteIds = toSignal(
-        OperationRouteDiagramStore.selectedRouteIds$,
-        { initialValue: [] },
-    );
+    readonly selectedRouteIds = this.#store.selectedRouteIds;
 
     readonly filterActive = computed(() =>
         isRouteFilterActive(this.routeOptions(), this.selectedRouteIds()),
@@ -129,6 +115,6 @@ export class OperationRouteDiagramRouteFilterComponent {
     );
 
     onChange(values: FilterChipValue[]): void {
-        OperationRouteDiagramStore.setSelectedRouteIds(values);
+        this.#store.setSelectedRouteIds(values);
     }
 }

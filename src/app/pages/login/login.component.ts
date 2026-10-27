@@ -4,7 +4,6 @@ import {
     inject,
     signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -13,15 +12,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { take } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
-import { TokenStateStore } from 'src/app/global-states/token.state';
-import {
-    UserStateQuery,
-    UserStateStore,
-} from 'src/app/global-states/user.state';
+import { TokenState } from 'src/app/global-states/token.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
 
 @Component({
@@ -44,9 +39,8 @@ export class LoginComponent {
     readonly #snackBar = inject(MatSnackBar);
     readonly #router = inject(Router);
     readonly #authService = inject(AuthService);
-    readonly #tokenStateStore = inject(TokenStateStore);
-    readonly #userStateStore = inject(UserStateStore);
-    readonly #userStateQuery = inject(UserStateQuery);
+    readonly #tokenState = inject(TokenState);
+    readonly #userState = inject(UserState);
     readonly #returnTo = safeReturnTo(
         inject(ActivatedRoute).snapshot.queryParamMap.get('return_to'),
     );
@@ -72,13 +66,9 @@ export class LoginComponent {
     readonly submitting = signal<boolean>(false);
 
     constructor() {
-        this.#userStateQuery.isLoggedIn$
-            .pipe(take(1), takeUntilDestroyed())
-            .subscribe((loggedIn) => {
-                if (loggedIn) {
-                    void this.#router.navigateByUrl(this.#returnTo);
-                }
-            });
+        if (this.#userState.isLoggedIn()) {
+            void this.#router.navigateByUrl(this.#returnTo);
+        }
     }
 
     async onClickSubmit(): Promise<void> {
@@ -106,8 +96,8 @@ export class LoginComponent {
         }
 
         try {
-            await tryCatchAsync(this.#tokenStateStore.fetch());
-            await tryCatchAsync(this.#userStateStore.fetch());
+            await tryCatchAsync(this.#tokenState.fetch());
+            await tryCatchAsync(this.#userState.fetch());
 
             this.#snackBar.open('ログインしました', '閉じる', {
                 duration: 3000,

@@ -2,9 +2,9 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    inject,
     signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
@@ -25,22 +25,13 @@ import { DashboardStore } from '../../stores/dashboard.store';
     imports: [SkeletonBarComponent],
 })
 export class DashboardStatusCardComponent {
-    readonly isLoading = toSignal(DashboardStore.isLoading$, {
-        initialValue: false,
-    });
-    readonly todaysCalendar = toSignal(DashboardStore.todaysCalendar$, {
-        initialValue: null,
-    });
-    readonly todaysDayName = toSignal(DashboardStore.todaysDayName$, {
-        initialValue: null,
-    });
-    readonly runningTripCount = toSignal(DashboardStore.runningTripCount$, {
-        initialValue: 0,
-    });
-    readonly sightingCountToday = toSignal(
-        DashboardStore.sightingCountToday$,
-        { initialValue: 0 },
-    );
+    readonly #store = inject(DashboardStore);
+
+    readonly isLoading = this.#store.isLoading;
+    readonly todaysCalendar = this.#store.todaysCalendar;
+    readonly todaysDayName = this.#store.todaysDayName;
+    readonly runningTripCount = this.#store.runningTripCount;
+    readonly sightingCountToday = this.#store.sightingCountToday;
 
     readonly #now = signal(new Date());
 

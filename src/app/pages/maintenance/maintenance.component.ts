@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { MaintenanceStateQuery } from 'src/app/global-states/maintenance.state';
+import { MaintenanceState } from 'src/app/global-states/maintenance.state';
 
 @Component({
     selector: 'app-maintenance',
@@ -11,8 +10,8 @@ import { MaintenanceStateQuery } from 'src/app/global-states/maintenance.state';
     imports: [DateFnsPipe]
 })
 export class MaintenanceComponent {
-    readonly #maintenanceStateQuery = inject(MaintenanceStateQuery);
+    readonly #maintenanceState = inject(MaintenanceState);
 
-    readonly startAt = toSignal(this.#maintenanceStateQuery.startAt$);
-    readonly endAt = toSignal(this.#maintenanceStateQuery.endAt$);
+    readonly startAt = this.#maintenanceState.startAt;
+    readonly endAt = this.#maintenanceState.endAt;
 }

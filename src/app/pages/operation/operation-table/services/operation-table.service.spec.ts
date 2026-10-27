@@ -1,5 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 import { lastValueFrom, of } from 'rxjs';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
@@ -20,17 +21,20 @@ describe('Service: OperationTable', () => {
         TestBed.configureTestingModule({
             providers: [
                 OperationTableService,
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: () => Promise.resolve(null),
+                        setItem: () => Promise.resolve(),
+                        removeItem: () => Promise.resolve(),
+                    },
+                },
                 { provide: CalendarService, useValue: {} },
                 { provide: OperationService, useValue: operationService },
                 { provide: StationService, useValue: {} },
                 { provide: TripClassService, useValue: {} },
             ],
         });
-    });
-
-    afterEach(() => {
-        OperationTableStore.setCalendarId(null);
-        OperationTableStore.setOperationTrips([]);
     });
 
     it('should ...', inject(
@@ -53,7 +57,7 @@ describe('Service: OperationTable', () => {
             operationService.findManyWithTrips.mockReturnValue(
                 of(operationTrips),
             );
-            OperationTableStore.setCalendarId('cal-1');
+            TestBed.inject(OperationTableStore).setCalendarId('cal-1');
 
             await lastValueFrom(service.fetchOperationTrips());
 
@@ -63,9 +67,9 @@ describe('Service: OperationTable', () => {
             // 運用ごとの取得（旧方式の N+1）はしない
             expect(operationService.findOneWithTrips).not.toHaveBeenCalled();
             expect(
-                OperationTableStore.operations.map(
-                    ({ operation }) => operation.operationNumber,
-                ),
+                TestBed.inject(OperationTableStore)
+                    .operationTrips()
+                    .map(({ operation }) => operation.operationNumber),
             ).toEqual(['11', '91G']);
         },
     ));
@@ -73,7 +77,7 @@ describe('Service: OperationTable', () => {
     it('ダイヤ未選択では取りにいかない', inject(
         [OperationTableService],
         async (service: OperationTableService) => {
-            OperationTableStore.setCalendarId(null);
+            TestBed.inject(OperationTableStore).setCalendarId(null);
 
             await lastValueFrom(service.fetchOperationTrips(), {
                 defaultValue: undefined,

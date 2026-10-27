@@ -1,4 +1,9 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import {
+    Component,
+    ChangeDetectionStrategy,
+    input,
+    signal,
+} from '@angular/core';
 import {
     ComponentFixture,
     ComponentFixtureAutoDetect,
@@ -16,9 +21,9 @@ import { of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -30,7 +35,6 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
-import { TimetableStationStore } from './stores/timetable-station.store';
 import { TimetableStationComponent } from './timetable-station.component';
 
 /**
@@ -134,24 +138,17 @@ async function setup(overrides?: {
             },
             { provide: NotificationService, useValue: { open: () => {} } },
             {
-                provide: TodaysCalendarListStateQuery,
-                useValue: {
-                    todaysCalendarIds$: of([CAL]),
-                    todaysCalendarId: CAL,
-                },
+                provide: CalendarListState,
+                useValue: { calendars: signal([calendarDto]) },
             },
             {
-                provide: CalendarListStateQuery,
-                useValue: { calendars$: of([calendarDto]) },
-            },
-            {
-                provide: RouteStationListStateQuery,
+                provide: RouteStationListState,
                 useValue: {
-                    stations$: of([
+                    stations: signal([
                         { stationId: YOKOHAMA, stationName: '横浜' },
                     ]),
-                    routeStations$: of([]),
-                    operatingSystemEndsByRouteId$: of({}),
+                    routeStations: signal([]),
+                    operatingSystemEndsByRouteId: signal({}),
                 },
             },
             // ---- libs モック（初回ロードの実解決順序・非同期性をエミュレート） ----
@@ -229,16 +226,12 @@ async function setup(overrides?: {
             },
         })
         .compileComponents();
+    setTodaysCalendars([CAL]);
 
     return TestBed.createComponent(TimetableStationComponent);
 }
 
 describe('TimetableStationComponent 統合（初回ロードの表示モデル再構築）', () => {
-    beforeEach(() => {
-        // ストアはモジュールシングルトンのため、前テストのクロスセクションを持ち越さない
-        TimetableStationStore.resetOperationSightingTimeCrossSections();
-    });
-
     it('初回フェッチ解決後、追加操作なしで全セルに充当編成が描画される', async () => {
         const fixture = await setup();
 

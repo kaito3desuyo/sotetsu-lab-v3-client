@@ -16,7 +16,7 @@ import {
 } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationStore } from './stores/timetable-station.store';
@@ -75,10 +75,6 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: { todaysCalendarIds$: of(['cal-1']) },
-                },
-                {
                     provide: TimetableStationService,
                     useValue: {
                         fetchCalendar: () => of(undefined),
@@ -98,6 +94,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                 set: { template: '', imports: [] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-1']);
     };
 
     const sightingsSaves = () =>
@@ -111,17 +108,18 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
 
     afterEach(() => {
         fixture.destroy();
-        TimetableStationStore.resetOperationSightingTimeCrossSections();
-        TimetableStationStore.setHasFetchedTimetable(false);
-        TimetableStationStore.resetLoading();
+        TestBed.inject(
+            TimetableStationStore,
+        ).resetOperationSightingTimeCrossSections();
+        TestBed.inject(TimetableStationStore).setHasFetchedTimetable(false);
+        TestBed.inject(TimetableStationStore).resetLoading();
     });
 
     it('充当編成が取れたら保存する', async () => {
         sightingsFetched = new Observable<boolean>((subscriber) => {
-            TimetableStationStore.setOperationSightingTimeCrossSection(
-                '51',
-                crossSection,
-            );
+            TestBed.inject(
+                TimetableStationStore,
+            ).setOperationSightingTimeCrossSection('51', crossSection);
             subscriber.next(true);
             subscriber.complete();
         });
@@ -153,7 +151,9 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         await flush();
 
         expect(
-            TimetableStationStore.operationSightingTimeCrossSections,
+            TestBed.inject(
+                TimetableStationStore,
+            ).operationSightingTimeCrossSections(),
         ).toEqual({ '51': crossSection });
         expect(open).toHaveBeenCalledTimes(1);
         expect(open).toHaveBeenCalledWith(
@@ -177,7 +177,9 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         await flush();
 
         expect(
-            TimetableStationStore.operationSightingTimeCrossSections,
+            TestBed.inject(
+                TimetableStationStore,
+            ).operationSightingTimeCrossSections(),
         ).toEqual({});
         expect(open).not.toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);

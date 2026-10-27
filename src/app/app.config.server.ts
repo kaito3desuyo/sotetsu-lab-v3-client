@@ -2,7 +2,6 @@ import {
     mergeApplicationConfig,
     ApplicationConfig,
     ErrorHandler,
-    provideAppInitializer,
 } from '@angular/core';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
@@ -10,7 +9,6 @@ import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { ServerErrorHandler } from './core/services/server-error-handler';
 import { UpstreamErrorInterceptor } from './core/ssr/upstream-error.interceptor';
-import { resetElfStores } from './core/utils/reset-elf-stores';
 
 const serverConfig: ApplicationConfig = {
     providers: [
@@ -20,10 +18,6 @@ const serverConfig: ApplicationConfig = {
             { maxResponseBodySize: 8 * 1024 * 1024 },
             withRoutes(serverRoutes),
         ),
-        // サーバーはリクエストごとにアプリを起動し直す。そのたびに前のリクエストのストアを捨てる。
-        // ルーターの最初のナビゲーションは app initializer の後に始まる（withEnabledBlockingInitialNavigation）ので、
-        // リゾルバーがストアに書く前に必ずこの戻しが済む。1 プロセスが同時に描くのは 1 件（Lambda）という前提でもある
-        provideAppInitializer(() => resetElfStores()),
         // サーバーではエラーを標準エラーに出す（app.config.ts の ErrorHandler をサーバーでだけ差し替える）
         { provide: ErrorHandler, useClass: ServerErrorHandler },
         // サーバーで API の取得に失敗したら、そのページを CDN に置かない。

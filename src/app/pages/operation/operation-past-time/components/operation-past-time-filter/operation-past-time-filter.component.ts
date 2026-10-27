@@ -1,7 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { agenciesInThroughServiceOrder } from 'src/app/shared/agencies-in-through-service-order.util';
 import {
     FilterChipOption,
@@ -24,20 +28,13 @@ import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
     imports: [FilterChipsComponent],
 })
 export class OperationPastTimeFilterComponent {
-    readonly #agencyListStateQuery = inject(AgencyListStateQuery);
-    readonly #routeStationListStateQuery = inject(RouteStationListStateQuery);
+    readonly #store = inject(OperationPastTimeStore);
+    readonly #agencyListState = inject(AgencyListState);
+    readonly #routeStationListState = inject(RouteStationListState);
 
-    readonly agencies = toSignal(this.#agencyListStateQuery.agencies$, {
-        initialValue: [],
-    });
-    readonly routes = toSignal(
-        this.#routeStationListStateQuery.routeStations$,
-        { initialValue: [] },
-    );
-    readonly selectedAgencyIds = toSignal(
-        OperationPastTimeStore.selectedAgencyIds$,
-        { initialValue: [] },
-    );
+    readonly agencies = this.#agencyListState.agencies;
+    readonly routes = this.#routeStationListState.routeStations;
+    readonly selectedAgencyIds = this.#store.selectedAgencyIds;
 
     /** 会社は相鉄と直通を始めた順に並べる（agenciesInThroughServiceOrder）。 */
     readonly agencyOptions = computed<FilterChipOption[]>(() =>
@@ -50,6 +47,6 @@ export class OperationPastTimeFilterComponent {
     );
 
     onAgencyChange(values: FilterChipValue[]): void {
-        OperationPastTimeStore.setSelectedAgencyIds(values as string[]);
+        this.#store.setSelectedAgencyIds(values as string[]);
     }
 }

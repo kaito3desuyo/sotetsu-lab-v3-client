@@ -2,16 +2,22 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { firstValueFrom, of, switchMap, throwError, timer } from 'rxjs';
+import { of, switchMap, throwError, timer } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardService } from './services/dashboard.service';
-import {
-    DashboardSnapshot,
-    DashboardStore,
-    pickDashboardSettings,
-} from './stores/dashboard.store';
+import { DashboardSnapshot, DashboardStore } from './stores/dashboard.store';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 describe('DashboardComponent', () => {
     let component: DashboardComponent;
@@ -23,6 +29,7 @@ describe('DashboardComponent', () => {
             providers: [
                 provideHttpClient(withXhr()),
                 provideRouter([]),
+                deviceStorageStub,
                 {
                     provide: OfflineSnapshots,
                     useValue: {
@@ -90,7 +97,7 @@ describe('DashboardComponent', () => {
 
         await expect(component.fetchData()).rejects.toThrow('fetch failed');
 
-        expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+        expect(TestBed.inject(DashboardStore).isLoading()).toBe(false);
     });
 });
 
@@ -148,6 +155,7 @@ describe('DashboardComponent をサーバーで描くとき', () => {
 describe('DashboardComponent の圏外の保存', () => {
     let fixture: ComponentFixture<DashboardComponent>;
     let component: DashboardComponent;
+    let store: InstanceType<typeof DashboardStore>;
     let service: Record<string, jest.Mock>;
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
@@ -174,8 +182,6 @@ describe('DashboardComponent の圏外の保存', () => {
     };
 
     beforeEach(async () => {
-        // 前のテストで戻した中身が「取得済みの中身」として残らないように
-        DashboardStore.setTodaysCalendar(null);
         save.mockClear();
         restore.mockReset();
         notificationOpen.mockReset();
@@ -192,6 +198,7 @@ describe('DashboardComponent の圏外の保存', () => {
             imports: [DashboardComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 { provide: DashboardService, useValue: service },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
                 {
@@ -207,14 +214,15 @@ describe('DashboardComponent の圏外の保存', () => {
 
         fixture = TestBed.createComponent(DashboardComponent);
         component = fixture.componentInstance;
+        store = TestBed.inject(DashboardStore);
         // コンストラクタの初回取得（成功）を終わらせてから確かめる
         await flush();
         save.mockClear();
     });
 
     it('成功したら条件と中身を保存する', async () => {
-        DashboardStore.setTodaysDayName('保存する日');
-        DashboardStore.setRunningTripCount(7);
+        store.setTodaysDayName('保存する日');
+        store.setRunningTripCount(7);
 
         await component.fetchData();
 
@@ -258,15 +266,15 @@ describe('DashboardComponent の圏外の保存', () => {
         expect(restore).toHaveBeenCalledTimes(1);
         expect(restore.mock.calls[0][0].key).toBe('Dashboard');
         expect(restore.mock.calls[0][0].conditions).toEqual({});
-        expect(DashboardStore.snapshot()).toEqual(saved);
+        expect(store.snapshot()).toEqual(saved);
         expect(save).not.toHaveBeenCalled();
-        expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+        expect(store.isLoading()).toBe(false);
     });
 
     it('取得済みの中身があるときは、失敗しても保存した中身に戻さない', async () => {
         // 前の訪問や自動更新で、今の中身の方が新しい
         const fresh = { calendarId: 'fresh-cal' } as never;
-        DashboardStore.setTodaysCalendar(fresh);
+        store.setTodaysCalendar(fresh);
         service['fetchTripClasses'].mockImplementation(() =>
             failLater('offline'),
         );
@@ -282,12 +290,12 @@ describe('DashboardComponent の圏外の保存', () => {
         await expect(component.fetchData()).rejects.toThrow('offline');
 
         expect(restore).not.toHaveBeenCalled();
-        expect(DashboardStore.snapshot().todaysCalendar).toBe(fresh);
-        expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
+        expect(store.snapshot().todaysCalendar).toBe(fresh);
+        expect(store.isLoading()).toBe(false);
     });
 
     it('手元に中身があって取得に失敗したら、戻さずに失敗を知らせる', async () => {
-        DashboardStore.setTodaysCalendar({ calendarId: 'fresh-cal' } as never);
+        store.setTodaysCalendar({ calendarId: 'fresh-cal' } as never);
         service['fetchTripClasses'].mockImplementation(() =>
             failLater('offline'),
         );
@@ -383,26 +391,6 @@ describe('DashboardComponent の圏外の保存', () => {
 
         await expect(component.fetchData()).rejects.toThrow('offline');
 
-        expect(await firstValueFrom(DashboardStore.isLoading$)).toBe(false);
-    });
-});
-
-describe('pickDashboardSettings', () => {
-    it('丸ごと保存の古い値を読み込んでも、既訪問フラグ以外はストアに入らない', () => {
-        DashboardStore.setRunningTripCount(5);
-
-        const picked = pickDashboardSettings({
-            hasVisitedBefore: true,
-            runningTripCount: 999,
-            latestSightings: [{ operationSightingId: 'old' }],
-            loadingQueue: [true],
-        } as never);
-
-        expect(picked.hasVisitedBefore).toBe(true);
-        expect(picked.runningTripCount).toBe(5);
-        expect(picked.latestSightings).toEqual(
-            DashboardStore.snapshot().latestSightings,
-        );
-        expect(picked.loadingQueue).toEqual([]);
+        expect(store.isLoading()).toBe(false);
     });
 });

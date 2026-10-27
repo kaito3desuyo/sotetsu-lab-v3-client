@@ -1,7 +1,6 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { OperationPastTimeFilterComponent } from './operation-past-time-filter.component';
 
 describe('OperationPastTimeFilterComponent', () => {
@@ -9,15 +8,13 @@ describe('OperationPastTimeFilterComponent', () => {
     let fixture: ComponentFixture<OperationPastTimeFilterComponent>;
 
     beforeEach(async () => {
-        OperationPastTimeStore.setSelectedAgencyIds([]);
-
         await TestBed.configureTestingModule({
             imports: [OperationPastTimeFilterComponent],
             providers: [
                 {
-                    provide: AgencyListStateQuery,
+                    provide: AgencyListState,
                     useValue: {
-                        agencies$: of([
+                        agencies: signal([
                             { agencyId: 'agency-1', agencyName: '相鉄' },
                             { agencyId: 'agency-2', agencyName: 'JR東日本' },
                         ]),
@@ -29,10 +26,6 @@ describe('OperationPastTimeFilterComponent', () => {
         fixture = TestBed.createComponent(OperationPastTimeFilterComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationPastTimeStore.setSelectedAgencyIds([]);
     });
 
     it('should create', () => {

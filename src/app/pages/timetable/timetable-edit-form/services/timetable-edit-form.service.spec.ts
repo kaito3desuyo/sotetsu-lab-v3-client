@@ -1,7 +1,9 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { of } from 'rxjs';
 
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -15,6 +17,7 @@ import { TimetableEditFormService } from './timetable-edit-form.service';
 
 describe('TimetableEditFormService', () => {
     let service: TimetableEditFormService;
+    let store: InstanceType<typeof TimetableEditFormStore>;
     let tripBlockService: {
         findOneById: jest.Mock;
         findManyByFilter: jest.Mock;
@@ -39,24 +42,32 @@ describe('TimetableEditFormService', () => {
         TestBed.configureTestingModule({
             providers: [
                 TimetableEditFormService,
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 { provide: ServiceService, useValue: {} },
                 { provide: CalendarService, useValue: {} },
                 { provide: OperationService, useValue: operationService },
                 { provide: TripClassService, useValue: tripClassService },
                 { provide: TripBlockService, useValue: tripBlockService },
                 {
-                    provide: ServiceListStateQuery,
-                    useValue: { serviceId: 'service-1' },
+                    provide: ServiceListState,
+                    useValue: { serviceId: signal('service-1') },
                 },
             ],
         });
         service = TestBed.inject(TimetableEditFormService);
+        store = TestBed.inject(TimetableEditFormStore);
 
-        TimetableEditFormStore.setMode(ETimetableEditFormMode.COPY);
-        TimetableEditFormStore.setCalendarId('calendar-1');
-        TimetableEditFormStore.setTripDirection(ETripDirection.OUTBOUND);
-        TimetableEditFormStore.setTripBlockId(null);
-        TimetableEditFormStore.setTargetTripBlock(null);
+        store.setMode(ETimetableEditFormMode.COPY);
+        store.setCalendarId('calendar-1');
+        store.setTripDirection(ETripDirection.OUTBOUND);
+        store.setTripBlockId(null);
+        store.setTargetTripBlock(null);
     });
 
     it('should be created', () => {
@@ -68,7 +79,7 @@ describe('TimetableEditFormService', () => {
             expect(tripBlockService.findOneById).toHaveBeenCalledWith({
                 id: 'block-1',
             });
-            expect(TimetableEditFormStore.tripBlockId).toBe('block-1');
+            expect(store.tripBlockId()).toBe('block-1');
             done();
         });
     });
@@ -92,30 +103,30 @@ describe('TimetableEditFormService', () => {
         };
 
         beforeEach(() => {
-            TimetableEditFormStore.setStations([
+            store.setStations([
                 station('湘南台', ['izumino']),
                 station('二俣川', ['main', 'izumino']),
                 station('横浜', ['main']),
                 station('厚木', ['atsugi']),
             ] as any);
-            TimetableEditFormStore.setSelectedRouteIds(['shinyoko']);
+            store.setSelectedRouteIds(['shinyoko']);
             tripBlockService.findOneById.mockReturnValue(of(block));
         });
 
         it('コピー元を選んだら、選択中の路線は外さずに足す', (done) => {
             service.selectCopySource('block-1').subscribe(() => {
                 expect(
-                    [...TimetableEditFormStore.selectedRouteIds].sort(),
+                    [...store.selectedRouteIds()].sort(),
                 ).toEqual(['izumino', 'main', 'shinyoko']);
                 done();
             });
         });
 
         it('更新する列車を読み込んだときも足す', (done) => {
-            TimetableEditFormStore.setTripBlockId('block-1');
+            store.setTripBlockId('block-1');
             service.fetchTargetTripBlock().subscribe(() => {
                 expect(
-                    [...TimetableEditFormStore.selectedRouteIds].sort(),
+                    [...store.selectedRouteIds()].sort(),
                 ).toEqual(['izumino', 'main', 'shinyoko']);
                 done();
             });
@@ -125,16 +136,14 @@ describe('TimetableEditFormService', () => {
 
     it('候補は一覧に使う項目だけなので、ID で読んだコピー元を候補で上書きしない', (done) => {
         const target = { tripBlockId: 'block-1', trips: [{ times: [] }] };
-        TimetableEditFormStore.setTripBlockId('block-1');
-        TimetableEditFormStore.setTargetTripBlock(target as any);
+        store.setTripBlockId('block-1');
+        store.setTargetTripBlock(target as any);
         tripBlockService.findManyByFilter.mockReturnValue(
             of([{ tripBlockId: 'block-1', trips: [] }]),
         );
 
-        service.fetchCopySourceCandidates().subscribe(async () => {
-            expect(
-                await firstValueFrom(TimetableEditFormStore.targetTripBlock$),
-            ).toBe(target);
+        service.fetchCopySourceCandidates().subscribe(() => {
+            expect(store.targetTripBlock()).toBe(target);
             done();
         });
     });
@@ -142,7 +151,7 @@ describe('TimetableEditFormService', () => {
     it('selectCopySource(null) はコピー元選択を解除する', (done) => {
         service.selectCopySource(null).subscribe(() => {
             expect(tripBlockService.findOneById).not.toHaveBeenCalled();
-            expect(TimetableEditFormStore.tripBlockId).toBeNull();
+            expect(store.tripBlockId()).toBeNull();
             done();
         });
     });
@@ -167,7 +176,7 @@ describe('TimetableEditFormService', () => {
     });
 
     it('編集する列車の ID が無ければ、PUT /trip-blocks/null を送らずに失敗させる', (done) => {
-        TimetableEditFormStore.setTripBlockId(null);
+        store.setTripBlockId(null);
 
         service.replaceTripBlock([]).subscribe({
             error: (e: Error) => {
@@ -179,19 +188,15 @@ describe('TimetableEditFormService', () => {
     });
 
     it('向きが決まっていなければ、候補を取りに行かず空にする（tripDirection=null で 422 になるため）', (done) => {
-        TimetableEditFormStore.resetForNewSession();
-        TimetableEditFormStore.setCalendarId('calendar-1');
-        TimetableEditFormStore.setCopySourceCandidates([
+        store.resetForNewSession();
+        store.setCalendarId('calendar-1');
+        store.setCopySourceCandidates([
             { tripBlockId: 'stale' },
         ] as TripBlockDetailsDto[]);
 
-        service.fetchCopySourceCandidates().subscribe(async () => {
+        service.fetchCopySourceCandidates().subscribe(() => {
             expect(tripBlockService.findManyByFilter).not.toHaveBeenCalled();
-            expect(
-                await firstValueFrom(
-                    TimetableEditFormStore.copySourceCandidates$,
-                ),
-            ).toEqual([]);
+            expect(store.copySourceCandidates()).toEqual([]);
             done();
         });
     });
@@ -204,15 +209,14 @@ describe('TimetableEditFormService', () => {
                 ),
             ),
         );
-        const setOperations = jest.spyOn(
-            TimetableEditFormStore,
-            'setOperations',
-        );
         service.fetchOperations().subscribe(() => {
-            expect(
-                setOperations.mock.calls[0][0].map((o) => o.operationNumber),
-            ).toEqual(['9', '10', '51', '10G', '10K']);
-            setOperations.mockRestore();
+            expect(store.operations().map((o) => o.operationNumber)).toEqual([
+                '9',
+                '10',
+                '51',
+                '10G',
+                '10K',
+            ]);
             done();
         });
     });
@@ -226,15 +230,13 @@ describe('TimetableEditFormService', () => {
                 { tripClassName: '快速', sequence: 2 },
             ]),
         );
-        const setTripClasses = jest.spyOn(
-            TimetableEditFormStore,
-            'setTripClasses',
-        );
         service.fetchTripClasses().subscribe(() => {
-            expect(
-                setTripClasses.mock.calls[0][0].map((c) => c.tripClassName),
-            ).toEqual(['特急', '快速', '各停', '回送']);
-            setTripClasses.mockRestore();
+            expect(store.tripClasses().map((c) => c.tripClassName)).toEqual([
+                '特急',
+                '快速',
+                '各停',
+                '回送',
+            ]);
             done();
         });
     });

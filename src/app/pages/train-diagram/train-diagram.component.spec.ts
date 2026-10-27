@@ -1,4 +1,4 @@
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import {
@@ -7,20 +7,13 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import {
-    BehaviorSubject,
-    Observable,
-    Subject,
-    firstValueFrom,
-    of,
-    throwError,
-} from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
 import { TrainDiagramStore } from './stores/train-diagram.store';
@@ -30,7 +23,8 @@ import { TrainDiagramStore } from './stores/train-diagram.store';
  * これで駅軸と分岐駅の判定に使う路線をそろえる。
  */
 function selectRoutesThrough(...routes: string[][]): void {
-    TrainDiagramStore.setRouteStations(
+    const store = TestBed.inject(TrainDiagramStore);
+    store.setRouteStations(
         routes.map(
             (stationIds, index) =>
                 ({
@@ -43,13 +37,14 @@ function selectRoutesThrough(...routes: string[][]): void {
                 }) as any,
         ),
     );
-    TrainDiagramStore.setSelectedRouteIds(
+    store.setSelectedRouteIds(
         routes.map((_, index) => `fixture-route-${index}`),
     );
 }
 
 describe('TrainDiagramComponent', () => {
     let component: TrainDiagramComponent;
+    let store: InstanceType<typeof TrainDiagramStore>;
     let fixture: ComponentFixture<TrainDiagramComponent>;
 
     beforeEach(async () => {
@@ -69,16 +64,9 @@ describe('TrainDiagramComponent', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             {
                                 routeId: 'route-1',
                                 routeName: '本線',
@@ -106,42 +94,45 @@ describe('TrainDiagramComponent', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
+        store = TestBed.inject(TrainDiagramStore);
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;
-    });
-
-    afterEach(() => {
-        TrainDiagramStore.setCalendarId(null);
-        TrainDiagramStore.setSelectedRouteIds([]);
-        TrainDiagramStore.setSelectedTripId(null);
-        TrainDiagramStore.setTripBlocksByDirection({});
-        TrainDiagramStore.setDirectionFilter('both');
-        TrainDiagramStore.setPxPerMinute(10);
-        TrainDiagramStore.setAxisPxPerMinute(null);
-        TrainDiagramStore.setNetworkStations([]);
-        TrainDiagramStore.setHasFetchedTrainDiagram(false);
-        TrainDiagramStore.resetLoading();
     });
 
     it('should create', () => {
         expect(component).toBeTruthy();
     });
 
+    it('stationAxis はストアの駅軸（選んだ路線の駅だけ）を読む', () => {
+        store.setNetworkStations(
+            ['s1', 's2', 's3'].map(
+                (stationId) => ({ stationId, stationName: stationId }) as any,
+            ),
+        );
+        selectRoutesThrough(['s1', 's2']);
+
+        const axis = component.stationAxis();
+
+        expect(axis?.map((entry) => entry.stationId)).toEqual(['s1', 's2']);
+        expect(component.stationAxis()).toBe(store.stationAxis());
+    });
+
     it('onInfoPanelClosed: 選択列車をクリアする', () => {
-        TrainDiagramStore.setSelectedTripId('t1');
+        store.setSelectedTripId('t1');
         component.onInfoPanelClosed();
-        expect(TrainDiagramStore.selectedTripId).toBeNull();
+        expect(store.selectedTripId()).toBeNull();
     });
 
     it('onZoomStep: 横の縮尺を次の段へ移す', () => {
-        TrainDiagramStore.setPxPerMinute(10);
+        store.setPxPerMinute(10);
         component.onZoomStep(1);
-        expect(TrainDiagramStore.pxPerMinute).toBe(16);
+        expect(store.pxPerMinute()).toBe(16);
 
-        TrainDiagramStore.setPxPerMinute(10);
+        store.setPxPerMinute(10);
         component.onZoomStep(-1);
-        expect(TrainDiagramStore.pxPerMinute).toBe(6);
+        expect(store.pxPerMinute()).toBe(6);
     });
 
     it('onTripActivated: 対象 trip が無くても例外を投げない', () => {
@@ -149,7 +140,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('ロード中はプログレスバーだけを出し、スピナーは出さない', () => {
-        TrainDiagramStore.enableLoading();
+        store.enableLoading();
         fixture.detectChanges();
 
         expect(
@@ -157,7 +148,7 @@ describe('TrainDiagramComponent', () => {
         ).toBeTruthy();
         expect(fixture.nativeElement.querySelector('app-loading')).toBeNull();
 
-        TrainDiagramStore.disableLoading();
+        store.disableLoading();
         fixture.detectChanges();
 
         expect(
@@ -177,11 +168,11 @@ describe('TrainDiagramComponent', () => {
             component.fetchData({ refetchTripBlocks: true }),
         ).rejects.toThrow('fetch failed');
 
-        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+        expect(store.isLoading()).toBe(false);
     });
 
     it('列車を取り終わるまでは図の代わりに骨組みを出し、空表示も出さない', () => {
-        TrainDiagramStore.setHasFetchedTrainDiagram(false);
+        store.setHasFetchedTrainDiagram(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -193,7 +184,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('取り終えたら骨組みを消して図を出す', () => {
-        TrainDiagramStore.setHasFetchedTrainDiagram(true);
+        store.setHasFetchedTrainDiagram(true);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -213,9 +204,7 @@ describe('TrainDiagramComponent', () => {
             .fetchData({ refetchTripBlocks: true })
             .catch(() => undefined);
 
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(true);
+        expect(store.hasFetchedTrainDiagram()).toBe(true);
     });
 
     it('路線・方向だけを変えた取得では骨組みに戻さない', async () => {
@@ -228,9 +217,7 @@ describe('TrainDiagramComponent', () => {
 
         void component.fetchData({ refetchTripBlocks: false });
 
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(true);
+        expect(store.hasFetchedTrainDiagram()).toBe(true);
     });
 
     it('ダイヤを変えた取得の途中で路線だけの取得が先に終わっても、骨組みのまま', async () => {
@@ -246,9 +233,7 @@ describe('TrainDiagramComponent', () => {
             .catch(() => undefined);
         await component.fetchData({ refetchTripBlocks: false });
 
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(false);
+        expect(store.hasFetchedTrainDiagram()).toBe(false);
     });
 
     it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
@@ -287,20 +272,16 @@ describe('TrainDiagramComponent', () => {
         previousTripBlocks$.next(undefined);
         previousTripBlocks$.complete();
         await flush();
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(false);
+        expect(store.hasFetchedTrainDiagram()).toBe(false);
 
         tripBlocks$.next(undefined);
         tripBlocks$.complete();
         await flush();
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(true);
+        expect(store.hasFetchedTrainDiagram()).toBe(true);
     });
 
     it('highlightedTripIds: 続きのある2本を持つ block で片方を選ぶと、つながりの両方の tripId が入る', () => {
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -383,29 +364,29 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('filteredTripBlocksByDirection: directionFilter に応じて chart へ渡す列車を絞る', () => {
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [{ tripBlockId: 'b-up', trips: [] } as any],
             1: [{ tripBlockId: 'b-down', trips: [] } as any],
         });
 
-        TrainDiagramStore.setDirectionFilter('both');
+        store.setDirectionFilter('both');
         expect(
             Object.keys(component.filteredTripBlocksByDirection()).sort(),
         ).toEqual(['0', '1']);
 
-        TrainDiagramStore.setDirectionFilter('up');
+        store.setDirectionFilter('up');
         expect(Object.keys(component.filteredTripBlocksByDirection())).toEqual([
             '0',
         ]);
 
-        TrainDiagramStore.setDirectionFilter('down');
+        store.setDirectionFilter('down');
         expect(Object.keys(component.filteredTripBlocksByDirection())).toEqual([
             '1',
         ]);
     });
 
     it('Task 14: selectedTripInfo.destinationName は種別変更・列番変更を含む最終の行先になる', () => {
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -463,7 +444,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('Task 14: 続きの無い列車の destinationName は今どおりその列車自身の終着', () => {
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b-solo',
@@ -499,7 +480,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('Task 14（追加指示）: hasDepotOut/hasDepotIn は描かれた線の depotMarks から決まる', () => {
-        TrainDiagramStore.setNetworkStations(
+        store.setNetworkStations(
             ['s1', 's2'].map(
                 (stationId, index) =>
                     ({
@@ -510,7 +491,7 @@ describe('TrainDiagramComponent', () => {
             ),
         );
         selectRoutesThrough(['s1', 's2']);
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b-depot',
@@ -546,7 +527,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('fix round 1: 同じ運用・同じ方向で trip block をまたぐ列車は1つのつながりにまとまり、折り返しにしない', () => {
-        TrainDiagramStore.setNetworkStations(
+        store.setNetworkStations(
             ['s1', 's2', 's3'].map(
                 (stationId, index) =>
                     ({
@@ -557,7 +538,7 @@ describe('TrainDiagramComponent', () => {
             ),
         );
         selectRoutesThrough(['s1', 's2', 's3']);
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -635,7 +616,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('fix round 1: 同じ運用でも向きが変われば折り返しのコの字リンクを作る', () => {
-        TrainDiagramStore.setNetworkStations(
+        store.setNetworkStations(
             ['s1', 's2', 's3'].map(
                 (stationId, index) =>
                     ({
@@ -646,7 +627,7 @@ describe('TrainDiagramComponent', () => {
             ),
         );
         selectRoutesThrough(['s1', 's2', 's3']);
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -733,7 +714,7 @@ describe('TrainDiagramComponent', () => {
      * 最小の区間）、C-D は観測なしで λ の引き寄せ値がそのまま使われる旧実装の再現条件。
      */
     function setupScaleFixture(): void {
-        TrainDiagramStore.setNetworkStations(
+        store.setNetworkStations(
             ['A', 'B', 'C', 'D'].map(
                 (stationId, index) =>
                     ({
@@ -744,7 +725,7 @@ describe('TrainDiagramComponent', () => {
             ),
         );
         selectRoutesThrough(['A', 'B', 'C', 'D']);
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b-local',
@@ -817,7 +798,7 @@ describe('TrainDiagramComponent', () => {
     }
 
     it('Task 13 フィックス（縦の縮尺・自動）: 観測のある駅間はどれも最小行高16px以上で比例', () => {
-        TrainDiagramStore.setAxisPxPerMinute(null); // 自動（既定）
+        store.setAxisPxPerMinute(null); // 自動（既定）
         setupScaleFixture();
 
         const rows = component.stationRows();
@@ -845,7 +826,7 @@ describe('TrainDiagramComponent', () => {
     });
 
     it('Task 13 フィックス（縦の縮尺・手動）: 明示的な値でも観測区間の比例は保たれる', () => {
-        TrainDiagramStore.setAxisPxPerMinute(null);
+        store.setAxisPxPerMinute(null);
         setupScaleFixture();
 
         const autoRows = component.stationRows();
@@ -873,7 +854,7 @@ describe('TrainDiagramComponent', () => {
      * 観測ゼロでも 16px に圧縮し、複製の前後でない D-E（観測ゼロ）は圧縮しない。
      */
     function setupDuplicatedJunctionFixture(): void {
-        TrainDiagramStore.setNetworkStations(
+        store.setNetworkStations(
             ['A', 'B', 'C', 'B', 'D', 'E'].map(
                 (stationId, index) =>
                     ({
@@ -884,7 +865,7 @@ describe('TrainDiagramComponent', () => {
             ),
         );
         selectRoutesThrough(['A', 'B', 'C'], ['B', 'D', 'E']);
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b-local',
@@ -957,7 +938,7 @@ describe('TrainDiagramComponent', () => {
     }
 
     it('Task 14: 複製した駅の行の前後（観測ゼロ）は16pxに圧縮し、複製の前後でない観測ゼロの駅間は最小二乗の値のまま', () => {
-        TrainDiagramStore.setAxisPxPerMinute(null);
+        store.setAxisPxPerMinute(null);
         setupDuplicatedJunctionFixture();
 
         const rows = component.stationRows();
@@ -994,6 +975,7 @@ describe('TrainDiagramComponent', () => {
 
 describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     let fixture: ComponentFixture<TrainDiagramComponent>;
+    let store: InstanceType<typeof TrainDiagramStore>;
     let component: TrainDiagramComponent;
     let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
     let router: {
@@ -1048,16 +1030,9 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
                     },
@@ -1068,25 +1043,15 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
+        store = TestBed.inject(TrainDiagramStore);
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;
     });
 
-    afterEach(() => {
-        TrainDiagramStore.setCalendarId(null);
-        TrainDiagramStore.setSelectedRouteIds([]);
-        TrainDiagramStore.setSelectedTripId(null);
-        TrainDiagramStore.setTripBlocksByDirection({});
-        TrainDiagramStore.setDirectionFilter('both');
-        TrainDiagramStore.setPxPerMinute(10);
-        TrainDiagramStore.setAxisPxPerMinute(null);
-        TrainDiagramStore.setNetworkStations([]);
-        TrainDiagramStore.resetLoading();
-    });
-
     it('time だけが変わった URL では選択を解かない', () => {
-        TrainDiagramStore.setSelectedTripId('t1');
+        store.setSelectedTripId('t1');
 
         paramMap$.next(
             convertToParamMap({
@@ -1096,7 +1061,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
             }),
         );
 
-        expect(TrainDiagramStore.selectedTripId).toBe('t1');
+        expect(store.selectedTripId()).toBe('t1');
     });
 
     it('window 付きの古い URL は time に置き換えて replaceUrl する', () => {
@@ -1187,18 +1152,15 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     it('方向・路線の切り替えは Router を通さず、ストアへ反映して URL だけ書き換える。後続の遷移にも載る', () => {
         router.navigate.mockClear();
         location.replaceState.mockClear();
-        TrainDiagramStore.setSelectedTripId('t1');
+        store.setSelectedTripId('t1');
 
         component.onDirectionFilterChange('up');
         component.onRouteIdsChange(['route-1', 'route-2']);
 
         expect(router.navigate).not.toHaveBeenCalled();
-        expect(TrainDiagramStore.directionFilter).toBe('up');
-        expect(TrainDiagramStore.selectedRouteIds).toEqual([
-            'route-1',
-            'route-2',
-        ]);
-        expect(TrainDiagramStore.selectedTripId).toBeNull();
+        expect(store.directionFilter()).toBe('up');
+        expect(store.selectedRouteIds()).toEqual(['route-1', 'route-2']);
+        expect(store.selectedTripId()).toBeNull();
         const url = location.replaceState.mock.calls[1][0];
         expect(url).toContain('direction=up');
         expect(url).toContain('route_ids=route-1,route-2');
@@ -1218,17 +1180,17 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     it('I3: 該当列車が無い（isEmpty）状態から復帰したら、最新の左端の分（onLeftMinuteChange）へ跳ぶ', () => {
         // fetchData（fire-and-forget）の enableLoading が効いたままだと isLoading()===true で
         // isEmpty() が常に false になるため、ロード完了相当の状態にしておく。
-        TrainDiagramStore.resetLoading();
+        store.resetLoading();
 
         component.onLeftMinuteChange(300);
 
-        TrainDiagramStore.setTripBlocksByDirection({});
+        store.setTripBlocksByDirection({});
         fixture.detectChanges();
         expect(component.isEmpty()).toBe(true);
 
         const seqBefore = component.jumpRequest()?.seq ?? 0;
 
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -1246,7 +1208,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     });
 
     it('ダイヤを替える取得（骨組みに戻る）が終わったら、最新の左端の分へ跳ぶ', async () => {
-        TrainDiagramStore.setTripBlocksByDirection({
+        store.setTripBlocksByDirection({
             0: [
                 {
                     tripBlockId: 'b1',
@@ -1313,16 +1275,9 @@ describe('TrainDiagramComponent のサーバー', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
                     },
@@ -1334,13 +1289,12 @@ describe('TrainDiagramComponent のサーバー', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
         return router;
     };
 
     afterEach(() => {
         jest.clearAllMocks();
-        TrainDiagramStore.setCalendarId(null);
-        TrainDiagramStore.resetLoading();
     });
 
     it('サーバーではパラメータの足りない URL を補わず、取りにも行かない', async () => {
@@ -1391,6 +1345,7 @@ describe('TrainDiagramComponent のサーバー', () => {
 
 describe('TrainDiagramComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TrainDiagramComponent>;
+    let store: InstanceType<typeof TrainDiagramStore>;
     let component: TrainDiagramComponent;
     let tripBlocks$: Observable<undefined>;
     // 前後の運用の取得の結果（failed が true なら取得に失敗している）
@@ -1444,15 +1399,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of(routeStations) },
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal(routeStations) },
                 },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
             ],
@@ -1461,35 +1409,27 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
+        store = TestBed.inject(TrainDiagramStore);
         fixture = TestBed.createComponent(TrainDiagramComponent);
         component = fixture.componentInstance;
         // 条件（順番の違う路線の選択は同じ条件として並べ替えて保存する）
-        TrainDiagramStore.setCalendarId('cal-1');
-        TrainDiagramStore.setSelectedRouteIds(['route-2', 'route-1']);
+        store.setCalendarId('cal-1');
+        store.setSelectedRouteIds(['route-2', 'route-1']);
     });
 
     afterEach(() => {
         fixture.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        TrainDiagramStore.setCalendarId(null);
-        TrainDiagramStore.setSelectedRouteIds([]);
-        TrainDiagramStore.setNetworkStations([]);
-        TrainDiagramStore.setTripClasses([]);
-        TrainDiagramStore.setTripBlocksByDirection({});
-        TrainDiagramStore.setItineraryLinks([]);
-        TrainDiagramStore.setRouteStations([]);
-        TrainDiagramStore.setHasFetchedTrainDiagram(false);
-        TrainDiagramStore.resetLoading();
-        TrainDiagramStore.restoreOperationSightingTimeCrossSections({});
     });
 
     it('成功したら条件と中身を保存する', async () => {
-        TrainDiagramStore.setNetworkStations(networkStations);
-        TrainDiagramStore.setTripClasses(tripClasses);
-        TrainDiagramStore.setTripBlocksByDirection(tripBlocksByDirection);
-        TrainDiagramStore.setItineraryLinks(itineraryLinks);
+        store.setNetworkStations(networkStations);
+        store.setTripClasses(tripClasses);
+        store.setTripBlocksByDirection(tripBlocksByDirection);
+        store.setItineraryLinks(itineraryLinks);
 
         await component.fetchData({ refetchTripBlocks: true });
 
@@ -1514,10 +1454,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
 
         expect(save).not.toHaveBeenCalled();
         expect(restore).not.toHaveBeenCalled();
-        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
-        expect(
-            await firstValueFrom(TrainDiagramStore.hasFetchedTrainDiagram$),
-        ).toBe(true);
+        expect(store.isLoading()).toBe(false);
+        expect(store.hasFetchedTrainDiagram()).toBe(true);
     });
 
     it('失敗したら保存した中身を、読み込み中を解く前に戻し、失敗は今までどおり投げる', async () => {
@@ -1553,19 +1491,11 @@ describe('TrainDiagramComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(
-            await firstValueFrom(TrainDiagramStore.networkStations$),
-        ).toEqual(networkStations);
-        expect(await firstValueFrom(TrainDiagramStore.tripClasses$)).toEqual(
-            tripClasses,
-        );
-        expect(
-            await firstValueFrom(TrainDiagramStore.tripBlocksByDirection$),
-        ).toEqual(tripBlocksByDirection);
-        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
-            itineraryLinks,
-        );
-        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+        expect(store.networkStations()).toEqual(networkStations);
+        expect(store.tripClasses()).toEqual(tripClasses);
+        expect(store.tripBlocksByDirection()).toEqual(tripBlocksByDirection);
+        expect(store.itineraryLinks()).toEqual(itineraryLinks);
+        expect(store.isLoading()).toBe(false);
     });
 
     it('戻した後も初回扱いのまま（次の取得で最初から取り直す）', async () => {
@@ -1642,7 +1572,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         failing$.error(new Error('offline'));
         await expect(fetching).rejects.toThrow('offline');
 
-        expect(await firstValueFrom(TrainDiagramStore.isLoading$)).toBe(false);
+        expect(store.isLoading()).toBe(false);
     });
 
     it('列車を取り直さない取得は、成功しても失敗しても保存も復元もしない', async () => {
@@ -1696,8 +1626,8 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         });
 
         beforeEach(() => {
-            TrainDiagramStore.setCalendarId('cal-today');
-            TrainDiagramStore.setTripBlocksByDirection({
+            store.setCalendarId('cal-today');
+            store.setTripBlocksByDirection({
                 0: [
                     {
                         trips: [
@@ -1715,10 +1645,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
 
         it('目撃が取れたら、日付つきで別の key に保存する', async () => {
             sighting$ = new Observable<undefined>((subscriber) => {
-                TrainDiagramStore.setOperationSightingTimeCrossSection(
-                    '51',
-                    crossSection,
-                );
+                store.setOperationSightingTimeCrossSection('51', crossSection);
                 subscriber.next(undefined);
                 subscriber.complete();
             });
@@ -1780,7 +1707,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         });
 
         it('戻した目撃は、すでに取れていた目撃を上書きしない', async () => {
-            TrainDiagramStore.setOperationSightingTimeCrossSection('52', {
+            store.setOperationSightingTimeCrossSection('52', {
                 expectedSighting: { sightingTime: 'fresh' },
             } as never);
             sighting$ = throwError(() => new Error('offline'));

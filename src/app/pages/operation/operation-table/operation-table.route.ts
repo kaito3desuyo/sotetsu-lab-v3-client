@@ -12,7 +12,7 @@ export const OPERATION_TABLE_ROUTES: Route[] = [
             ),
         providers: [OperationTableService],
         resolve: {
-            from: pageResolver(OperationTableStore.persistInitialized$),
+            from: pageResolver(OperationTableStore),
         },
         data: {
             title: '運用表',

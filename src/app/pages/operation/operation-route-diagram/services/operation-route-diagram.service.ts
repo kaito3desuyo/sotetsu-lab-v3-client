@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { OperationRouteDiagramStore } from '../stores/operation-route-diagram.store';
@@ -11,14 +11,15 @@ import { curateRouteDiagramStationsWithAliases } from '../utils/operation-route-
 export class OperationRouteDiagramService {
     readonly #serviceService = inject(ServiceService);
     readonly #operationService = inject(OperationService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
+    readonly #store = inject(OperationRouteDiagramStore);
 
     fetchOperationTrips(): Observable<void> {
-        const operationId = OperationRouteDiagramStore.operationId;
+        const operationId = this.#store.operationId();
 
         return this.#operationService.findOneWithTrips({ operationId }).pipe(
             tap((operationTrips) => {
-                OperationRouteDiagramStore.setOperationTrips(operationTrips);
+                this.#store.setOperationTrips(operationTrips);
             }),
             map(() => undefined),
         );
@@ -26,7 +27,7 @@ export class OperationRouteDiagramService {
 
     /** 運用のダイヤが分かってから呼ぶ（fetchOperationTrips のあと）。取れなければ前後の運用を出さないだけ */
     fetchItineraryLinks(): Observable<void> {
-        const calendarId = OperationRouteDiagramStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
             return of(undefined);
@@ -36,21 +37,21 @@ export class OperationRouteDiagramService {
             .findManyItineraryLinks({ calendarId })
             .pipe(
                 tap((links) => {
-                    OperationRouteDiagramStore.setItineraryLinks(links);
+                    this.#store.setItineraryLinks(links);
                 }),
                 map(() => undefined),
             );
     }
 
     fetchStations(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
                 const { stations, aliases } =
                     curateRouteDiagramStationsWithAliases(data.stations);
-                OperationRouteDiagramStore.setStations(stations);
-                OperationRouteDiagramStore.setStationAliases(aliases);
+                this.#store.setStations(stations);
+                this.#store.setStationAliases(aliases);
             }),
             map(() => undefined),
         );

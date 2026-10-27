@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -13,8 +13,9 @@ import { TrainDiagramStore } from '../stores/train-diagram.store';
 
 @Injectable()
 export class TrainDiagramService {
+    readonly #store = inject(TrainDiagramStore);
     readonly #serviceService = inject(ServiceService);
-    readonly #serviceListStateQuery = inject(ServiceListStateQuery);
+    readonly #serviceListState = inject(ServiceListState);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #operationService = inject(OperationService);
@@ -23,17 +24,17 @@ export class TrainDiagramService {
     fetchTripClasses(): Observable<void> {
         return this.#tripClassService.findMany({}).pipe(
             tap((data) => {
-                TrainDiagramStore.setTripClasses(data);
+                this.#store.setTripClasses(data);
             }),
             map(() => undefined),
         );
     }
 
     fetchTripBlocks(): Observable<void> {
-        const calendarId = TrainDiagramStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
-            TrainDiagramStore.setTripBlocksByDirection({});
+            this.#store.setTripBlocksByDirection({});
             return of(undefined);
         }
 
@@ -44,8 +45,8 @@ export class TrainDiagramService {
             })
             .pipe(
                 tap((data) => {
-                    TrainDiagramStore.setTripBlocksByDirection(
-                        attachTripClasses(data, TrainDiagramStore.tripClasses),
+                    this.#store.setTripBlocksByDirection(
+                        attachTripClasses(data, this.#store.tripClasses()),
                     );
                 }),
                 map(() => undefined),
@@ -58,10 +59,10 @@ export class TrainDiagramService {
      * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
     fetchItineraryLinks(): Observable<{ failed: boolean }> {
-        const calendarId = TrainDiagramStore.calendarId;
+        const calendarId = this.#store.calendarId();
 
         if (!calendarId) {
-            TrainDiagramStore.setItineraryLinks([]);
+            this.#store.setItineraryLinks([]);
             return of({ failed: false });
         }
 
@@ -69,11 +70,11 @@ export class TrainDiagramService {
             .findManyItineraryLinks({ calendarId })
             .pipe(
                 tap((links) => {
-                    TrainDiagramStore.setItineraryLinks(links);
+                    this.#store.setItineraryLinks(links);
                 }),
                 map(() => ({ failed: false })),
                 catchError(() => {
-                    TrainDiagramStore.setItineraryLinks([]);
+                    this.#store.setItineraryLinks([]);
                     return of({ failed: true });
                 }),
             );
@@ -86,11 +87,11 @@ export class TrainDiagramService {
      * 駅軸（stationAxis）自体は store 側で選択路線・取得済み tripBlocks から導出される。
      */
     fetchNetworkStations(): Observable<void> {
-        const serviceId = this.#serviceListStateQuery.serviceId;
+        const serviceId = this.#serviceListState.serviceId();
 
         return this.#serviceService.findOneWithStations({ serviceId }).pipe(
             tap((data) => {
-                TrainDiagramStore.setNetworkStations(data.stations);
+                this.#store.setNetworkStations(data.stations);
             }),
             map(() => undefined),
         );
@@ -107,7 +108,7 @@ export class TrainDiagramService {
             .findOneTimeCrossSectionByOperationNumber({ operationNumber })
             .pipe(
                 tap((data) => {
-                    TrainDiagramStore.setOperationSightingTimeCrossSection(
+                    this.#store.setOperationSightingTimeCrossSection(
                         operationNumber,
                         data,
                     );

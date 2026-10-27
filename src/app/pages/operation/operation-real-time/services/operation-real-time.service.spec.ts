@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
@@ -16,6 +17,7 @@ import { OperationRealTimeService } from './operation-real-time.service';
 
 describe('OperationRealTimeService（まとめて取る口）', () => {
     let service: OperationRealTimeService;
+    let store: InstanceType<typeof OperationRealTimeStore>;
     const operationService = {
         findManyWithCurrentPosition: jest.fn(),
         findManyItineraryLinks: jest.fn(),
@@ -30,6 +32,14 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
         jest.clearAllMocks();
         TestBed.configureTestingModule({
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: () => Promise.resolve(null),
+                        setItem: () => Promise.resolve(),
+                        removeItem: () => Promise.resolve(),
+                    },
+                },
                 OperationRealTimeService,
                 { provide: OperationService, useValue: operationService },
                 {
@@ -40,17 +50,18 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
                 { provide: TripClassService, useValue: {} },
                 { provide: CalendarService, useValue: {} },
                 { provide: FormationService, useValue: {} },
-                { provide: AgencyListStateQuery, useValue: {} },
-                { provide: RouteStationListStateQuery, useValue: {} },
+                { provide: AgencyListState, useValue: {} },
+                { provide: RouteStationListState, useValue: {} },
             ],
         });
         service = TestBed.inject(OperationRealTimeService);
-        OperationRealTimeStore.setOperations([
+        store = TestBed.inject(OperationRealTimeStore);
+        store.setOperations([
             { operationId: 'op-11', operationNumber: '11' },
             { operationId: 'op-100', operationNumber: '100' },
             { operationId: 'op-12', operationNumber: '12' },
         ] as OperationDetailsDto[]);
-        OperationRealTimeStore.setFormations([
+        store.setFormations([
             { formationNumber: '10701' },
         ] as FormationDetailsDto[]);
     });
@@ -77,9 +88,7 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
             operationIds: ['op-11', 'op-12'],
             forceReload: true,
         });
-        const positions = await firstValueFrom(
-            OperationRealTimeStore.currentPositions$,
-        );
+        const positions = store.currentPositions();
         expect(positions['11']).toBe(position11);
     });
 
@@ -97,9 +106,7 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
             operationNumbers: ['11', '12'],
             forceReload: undefined,
         });
-        const stored = await firstValueFrom(
-            OperationRealTimeStore.operationSightingTimeCrossSections$,
-        );
+        const stored = store.operationSightingTimeCrossSections();
         expect(stored['11']).toBe(crossSection);
     });
 
@@ -111,9 +118,7 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
 
         await firstValueFrom(service.fetchFormationSightingTimeCrossSections());
 
-        const stored = await firstValueFrom(
-            OperationRealTimeStore.formationSightingTimeCrossSections$,
-        );
+        const stored = store.formationSightingTimeCrossSections();
         expect(stored['10701']).toBe(crossSection);
     });
 
@@ -124,29 +129,23 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
         await firstValueFrom(service.fetchStations());
 
         expect(serviceService.findOneWithStations).toHaveBeenCalledTimes(1);
-        expect(await firstValueFrom(OperationRealTimeStore.stations$)).toBe(
-            stations,
-        );
+        expect(store.stations()).toBe(stations);
     });
 
     it('前後の運用は、取れたら failed: false を返してストアへ入れる', async () => {
-        OperationRealTimeStore.setCalendar({ calendarId: 'cal-1' } as never);
+        store.setCalendar({ calendarId: 'cal-1' } as never);
         const links = [{ operationItineraryLinkId: 'link-1' }];
         operationService.findManyItineraryLinks.mockReturnValue(of(links));
 
         const result = await firstValueFrom(service.fetchItineraryLinks());
 
         expect(result).toEqual({ failed: false });
-        expect(
-            await firstValueFrom(OperationRealTimeStore.itineraryLinks$),
-        ).toBe(links);
+        expect(store.itineraryLinks()).toBe(links);
     });
 
     it('前後の運用が取れなくても空として扱い、failed: true を返す', async () => {
-        OperationRealTimeStore.setCalendar({ calendarId: 'cal-1' } as never);
-        OperationRealTimeStore.setItineraryLinks([
-            { operationItineraryLinkId: 'old' },
-        ] as never);
+        store.setCalendar({ calendarId: 'cal-1' } as never);
+        store.setItineraryLinks([{ operationItineraryLinkId: 'old' }] as never);
         operationService.findManyItineraryLinks.mockReturnValue(
             throwError(() => new Error('offline')),
         );
@@ -154,8 +153,6 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
         const result = await firstValueFrom(service.fetchItineraryLinks());
 
         expect(result).toEqual({ failed: true });
-        expect(
-            await firstValueFrom(OperationRealTimeStore.itineraryLinks$),
-        ).toEqual([]);
+        expect(store.itineraryLinks()).toEqual([]);
     });
 });

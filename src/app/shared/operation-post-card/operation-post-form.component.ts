@@ -31,11 +31,11 @@ import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
-import { FeatureFlagStateQuery } from 'src/app/global-states/feature-flag.state';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
+import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
@@ -87,14 +87,9 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
 
-    readonly isLoggedIn = toSignal(inject(UserStateQuery).isLoggedIn$, {
-        initialValue: false,
-    });
+    readonly isLoggedIn = inject(UserState).isLoggedIn;
     /** 目撃の投稿を登録者だけにするか（フィーチャーフラグ。off の間はゲストにもフォームを出す） */
-    readonly registeredOnly = toSignal(
-        inject(FeatureFlagStateQuery).registeredOnlyPosting$,
-        { initialValue: false },
-    );
+    readonly registeredOnly = inject(FeatureFlagState).registeredOnlyPosting;
     /** フラグが on のときだけ、ゲストには入力欄の代わりにログインの案内を出す */
     readonly showGuestPrompt = computed(
         () => this.registeredOnly() && !this.isLoggedIn(),
@@ -126,13 +121,9 @@ export class OperationPostFormComponent {
         ]),
     });
 
-    readonly #agencies = toSignal(OperationPostCardStore.agencies$, {
-        initialValue: [],
-    });
-    readonly #todaysFormations = toSignal(
-        inject(TodaysFormationListStateQuery).todaysFormations$,
-        { initialValue: [] },
-    );
+    readonly #agencies = inject(OperationPostCardStore).agencies;
+    readonly #todaysFormations = inject(TodaysFormationListState)
+        .todaysFormations;
     /** 所属は今日の編成を持つ会社だけ（相鉄・JR東日本・東急。2026-10-06） */
     readonly agencies = computed(() =>
         filterAgenciesWithFormations(

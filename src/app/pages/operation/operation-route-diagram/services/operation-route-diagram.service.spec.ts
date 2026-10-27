@@ -1,6 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
 import { OperationRouteDiagramService } from './operation-route-diagram.service';
@@ -12,7 +12,7 @@ describe('Service: OperationRouteDiagram', () => {
                 OperationRouteDiagramService,
                 { provide: ServiceService, useValue: {} },
                 { provide: OperationService, useValue: {} },
-                { provide: ServiceListStateQuery, useValue: {} },
+                { provide: ServiceListState, useValue: {} },
             ],
         });
     });

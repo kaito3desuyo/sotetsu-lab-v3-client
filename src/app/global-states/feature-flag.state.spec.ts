@@ -1,32 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { FeatureFlagService } from '../libs/feature-flag/usecase/feature-flag.service';
-import {
-    FeatureFlagStateQuery,
-    FeatureFlagStateStore,
-} from './feature-flag.state';
+import { FeatureFlagState } from './feature-flag.state';
 
-describe('FeatureFlagStateStore.fetch', () => {
+describe('FeatureFlagState.fetch', () => {
     let findAll: jest.Mock;
-    let store: FeatureFlagStateStore;
-    let query: FeatureFlagStateQuery;
+    let store: InstanceType<typeof FeatureFlagState>;
 
     beforeEach(() => {
         findAll = jest.fn();
         TestBed.configureTestingModule({
             providers: [{ provide: FeatureFlagService, useValue: { findAll } }],
         });
-        store = TestBed.inject(FeatureFlagStateStore);
-        query = TestBed.inject(FeatureFlagStateQuery);
-        store.reset();
+        store = TestBed.inject(FeatureFlagState);
     });
 
-    it('registered_only_posting が true なら registeredOnlyPosting$ が true', async () => {
+    it('registered_only_posting が true なら registeredOnlyPosting が true', async () => {
         findAll.mockReturnValue(of({ registered_only_posting: true }));
 
         await firstValueFrom(store.fetch());
 
-        expect(await firstValueFrom(query.registeredOnlyPosting$)).toBe(true);
+        expect(store.registeredOnlyPosting()).toBe(true);
     });
 
     it('空のオブジェクト（キーが無い）なら false', async () => {
@@ -34,7 +28,7 @@ describe('FeatureFlagStateStore.fetch', () => {
 
         await firstValueFrom(store.fetch());
 
-        expect(await firstValueFrom(query.registeredOnlyPosting$)).toBe(false);
+        expect(store.registeredOnlyPosting()).toBe(false);
     });
 
     it('取得が失敗したら false のまま、例外を出さない', async () => {
@@ -42,7 +36,7 @@ describe('FeatureFlagStateStore.fetch', () => {
 
         await expect(firstValueFrom(store.fetch())).resolves.toBeUndefined();
 
-        expect(await firstValueFrom(query.registeredOnlyPosting$)).toBe(false);
+        expect(store.registeredOnlyPosting()).toBe(false);
     });
 
     it('取得が失敗したら、前の値を残す', async () => {
@@ -52,6 +46,15 @@ describe('FeatureFlagStateStore.fetch', () => {
 
         await firstValueFrom(store.fetch());
 
-        expect(await firstValueFrom(query.registeredOnlyPosting$)).toBe(true);
+        expect(store.registeredOnlyPosting()).toBe(true);
+    });
+
+    it('reset で全部 off に戻す', async () => {
+        findAll.mockReturnValue(of({ registered_only_posting: true }));
+        await firstValueFrom(store.fetch());
+
+        store.reset();
+
+        expect(store.registeredOnlyPosting()).toBe(false);
     });
 });

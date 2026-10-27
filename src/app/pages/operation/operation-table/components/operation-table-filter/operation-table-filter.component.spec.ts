@@ -1,30 +1,30 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { OperationTableFilterComponent } from './operation-table-filter.component';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 describe('OperationTableFilterComponent', () => {
     let component: OperationTableFilterComponent;
     let fixture: ComponentFixture<OperationTableFilterComponent>;
 
     beforeEach(async () => {
-        OperationTableStore.setSelectedGroupNames([]);
-
         await TestBed.configureTestingModule({
             imports: [OperationTableFilterComponent],
-            providers: [
-                {
-                    provide: TodaysCalendarListStateQuery,
-                    useValue: {
-                        todaysCalendarIds$: of(['today']),
-                        todaysCalendarId$: of('today'),
-                    },
-                },
-            ],
+            providers: [deviceStorageStub],
         }).compileComponents();
+        setTodaysCalendars(['today']);
 
         fixture = TestBed.createComponent(OperationTableFilterComponent);
         component = fixture.componentInstance;
@@ -38,10 +38,6 @@ describe('OperationTableFilterComponent', () => {
         fixture.componentRef.setInput('calendars', []);
         fixture.componentRef.setInput('calendarId', null);
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationTableStore.setSelectedGroupNames([]);
     });
 
     it('should create', () => {
@@ -106,6 +102,7 @@ describe('OperationTableFilterComponent の読み込み中', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [OperationTableFilterComponent],
+            providers: [deviceStorageStub],
         })
             .overrideComponent(OperationTableFilterComponent, {
                 set: { imports: [DateFnsPipe], schemas: [NO_ERRORS_SCHEMA] },
@@ -116,10 +113,8 @@ describe('OperationTableFilterComponent の読み込み中', () => {
         fixture.componentRef.setInput('calendars', []);
     });
 
-    afterEach(() => OperationTableStore.setHasFetchedOperationTrips(false));
-
     it('運用を取る前は、運用群のチップの代わりにチップの形の骨組みを出す', () => {
-        OperationTableStore.setHasFetchedOperationTrips(false);
+        TestBed.inject(OperationTableStore).setHasFetchedOperationTrips(false);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 
@@ -128,7 +123,7 @@ describe('OperationTableFilterComponent の読み込み中', () => {
     });
 
     it('運用を取った後は、運用群のチップを出す', () => {
-        OperationTableStore.setHasFetchedOperationTrips(true);
+        TestBed.inject(OperationTableStore).setHasFetchedOperationTrips(true);
         fixture.detectChanges();
         const el = fixture.nativeElement as HTMLElement;
 

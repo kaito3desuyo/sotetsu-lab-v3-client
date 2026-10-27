@@ -6,7 +6,6 @@ import { provideRouter } from '@angular/router';
 import {
     BehaviorSubject,
     EMPTY,
-    firstValueFrom,
     of,
     Subject,
     switchMap,
@@ -15,6 +14,7 @@ import {
 } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -24,6 +24,15 @@ import {
     OperationRealTimeSnapshot,
     OperationRealTimeStore,
 } from './stores/operation-real-time.store';
+
+const deviceStorageStub = {
+    provide: DeviceStorage,
+    useValue: {
+        getItem: () => Promise.resolve(null),
+        setItem: () => Promise.resolve(),
+        removeItem: () => Promise.resolve(),
+    },
+};
 
 describe('OperationRealTimeComponent', () => {
     let component: OperationRealTimeComponent;
@@ -36,6 +45,7 @@ describe('OperationRealTimeComponent', () => {
             providers: [
                 provideHttpClient(withXhr()),
                 provideRouter([]),
+                deviceStorageStub,
                 OperationRealTimeService,
                 {
                     provide: SocketService,
@@ -99,6 +109,7 @@ describe('OperationRealTimeComponent の配置', () => {
             providers: [
                 provideHttpClient(withXhr()),
                 provideRouter([]),
+                deviceStorageStub,
                 OperationRealTimeService,
                 { provide: SocketService, useValue: { on: () => EMPTY } },
                 { provide: NotificationService, useValue: { open: () => {} } },
@@ -166,9 +177,9 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     let socket$: Subject<unknown>;
     let submit$: Subject<void>;
 
-    const isLoading = () => firstValueFrom(OperationRealTimeStore.isLoading$);
-    const finalUpdateTime = () =>
-        firstValueFrom(OperationRealTimeStore.finalUpdateTime$);
+    let store: InstanceType<typeof OperationRealTimeStore>;
+    const isLoading = () => store.isLoading();
+    const finalUpdateTime = () => store.finalUpdateTime();
     const fail = () => throwError(() => new Error('offline'));
     const signal = (data: string) =>
         socket$.next(new MessageEvent('message', { data }));
@@ -199,6 +210,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             imports: [OperationRealTimeComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
                 { provide: SocketService, useValue: { on: () => socket$ } },
                 { provide: NotificationService, useValue: notification },
@@ -213,13 +225,14 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             })
             .compileComponents();
 
-        OperationRealTimeStore.resetLoading();
-        OperationRealTimeStore.setIsEnableAutoReload(true);
+        store = TestBed.inject(OperationRealTimeStore);
+        store.resetLoading();
+        store.setIsEnableAutoReload(true);
         fixture = TestBed.createComponent(OperationRealTimeComponent);
         fixture.detectChanges();
         // 開いたときの fetchData() を終わらせる
         await jest.advanceTimersByTimeAsync(0);
-        OperationRealTimeStore.setFinalUpdateTime(0);
+        store.setFinalUpdateTime(0);
         notification.open.mockClear();
     });
 
@@ -238,7 +251,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         expect(
             service['fetchCurrentPositionThatShouldUpdate'],
         ).toHaveBeenCalledTimes(3);
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
         expect(notification.open).not.toHaveBeenCalled();
     });
 
@@ -250,12 +263,12 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         submit$.next();
         await jest.advanceTimersByTimeAsync(0);
 
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
         expect(notification.open).toHaveBeenCalledWith(
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await finalUpdateTime()).toBe(0);
+        expect(finalUpdateTime()).toBe(0);
     });
 
     it('他人の投稿後の取り直しが失敗したら、読み込み中が残らず失敗を知らせ、更新できたとは言わない', async () => {
@@ -264,7 +277,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         signal('{"type":"sighting"}');
         await jest.advanceTimersByTimeAsync(0);
 
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
         expect(notification.open).toHaveBeenCalledWith(
             'データの取得に失敗しました',
             'OK',
@@ -273,19 +286,19 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             'データが更新されました',
             'OK',
         );
-        expect(await finalUpdateTime()).toBe(0);
+        expect(finalUpdateTime()).toBe(0);
     });
 
     it('他人の投稿後の取り直しが成功したら、更新できたと知らせ、最終更新時刻を進める', async () => {
         signal('{"type":"sighting"}');
         await jest.advanceTimersByTimeAsync(0);
 
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
         expect(notification.open).toHaveBeenCalledWith(
             'データが更新されました',
             'OK',
         );
-        expect(await finalUpdateTime()).toBeGreaterThan(0);
+        expect(finalUpdateTime()).toBeGreaterThan(0);
     });
 
     it('timetable の合図でも目撃を取り直す', async () => {
@@ -320,9 +333,9 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
 
-    const isLoading = () => firstValueFrom(OperationRealTimeStore.isLoading$);
-    const finalUpdateTime = () =>
-        firstValueFrom(OperationRealTimeStore.finalUpdateTime$);
+    let store: InstanceType<typeof OperationRealTimeStore>;
+    const isLoading = () => store.isLoading();
+    const finalUpdateTime = () => store.finalUpdateTime();
     // 次のタスクで失敗する取得。すぐ失敗させると「処理されない拒否」と見なされ、
     // ComponentFixture が投げ直してしまう
     const failLater = () =>
@@ -387,6 +400,7 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             imports: [OperationRealTimeComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
                 { provide: SocketService, useValue: { on: () => EMPTY } },
                 { provide: NotificationService, useValue: notification },
@@ -402,10 +416,11 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             })
             .compileComponents();
 
-        OperationRealTimeStore.resetLoading();
+        store = TestBed.inject(OperationRealTimeStore);
+        store.resetLoading();
         // 前のテストの取得・復元が「取得済みの中身」として残らないように
-        OperationRealTimeStore.resetHasFetched();
-        OperationRealTimeStore.setIsEnableAutoReload(true);
+        store.resetHasFetched();
+        store.setIsEnableAutoReload(true);
     });
 
     afterEach(() => {
@@ -414,8 +429,8 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
     });
 
     it('成功したら条件と中身を保存する', async () => {
-        OperationRealTimeStore.setRoutes(saved.routes);
-        OperationRealTimeStore.setCurrentPosition('5', {
+        store.setRoutes(saved.routes);
+        store.setCurrentPosition('5', {
             prev: null,
         } as never);
 
@@ -461,7 +476,7 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
     });
 
     it('失敗したら保存した中身を戻し、最終更新に保存した時刻を出し、失敗の通知は出さない', async () => {
@@ -473,41 +488,37 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         expect(restore).toHaveBeenCalledTimes(1);
         expect(restore.mock.calls[0][0].key).toBe('OperationRealTime');
         expect(restore.mock.calls[0][0].conditions).toEqual({});
-        expect(OperationRealTimeStore.routes).toEqual(saved.routes);
-        expect(OperationRealTimeStore.calendar).toEqual(saved.calendar);
-        expect(OperationRealTimeStore.formations).toEqual(saved.formations);
-        expect(await finalUpdateTime()).toBe(Math.floor(savedAt / 1000));
-        expect(
-            await firstValueFrom(OperationRealTimeStore.hasFetchedOperations$),
-        ).toBe(true);
-        expect(
-            await firstValueFrom(OperationRealTimeStore.hasFetchedFormations$),
-        ).toBe(true);
+        expect(store.routes()).toEqual(saved.routes);
+        expect(store.calendar()).toEqual(saved.calendar);
+        expect(store.formations()).toEqual(saved.formations);
+        expect(finalUpdateTime()).toBe(Math.floor(savedAt / 1000));
+        expect(store.hasFetchedOperations()).toBe(true);
+        expect(store.hasFetchedFormations()).toBe(true);
         expect(notification.open).not.toHaveBeenCalledWith(
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
         expect(save).not.toHaveBeenCalled();
     });
 
     it('取得済みの中身があるときは、失敗しても保存した中身に戻さず、今の失敗の文言を出す', async () => {
         // 前の訪問や自動更新で、今の中身の方が新しい
         const freshRoutes = [{ routeId: 'fresh-route' }] as never;
-        OperationRealTimeStore.setRoutes(freshRoutes);
-        OperationRealTimeStore.setOperations([]);
+        store.setRoutes(freshRoutes);
+        store.setOperations([]);
         service['fetchCalendar'].mockImplementation(failLater);
         restore.mockImplementation(restoreSaved);
 
         await create();
 
         expect(restore).not.toHaveBeenCalled();
-        expect(OperationRealTimeStore.routes).toBe(freshRoutes);
+        expect(store.routes()).toBe(freshRoutes);
         expect(notification.open).toHaveBeenCalledWith(
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
     });
 
     it('戻せなかったら、今の失敗の文言を出す', async () => {
@@ -520,7 +531,7 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
     });
 
     it('戻す処理が壊れていても、読み込み中を解いて今の失敗の文言を出す', async () => {
@@ -533,7 +544,7 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
             'データの取得に失敗しました',
             'OK',
         );
-        expect(await isLoading()).toBe(false);
+        expect(isLoading()).toBe(false);
     });
 
     it('自動更新の取得が失敗しても戻さず知らせない', async () => {
@@ -573,6 +584,88 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
     });
 });
 
+describe('OperationRealTimeComponent の操作帯の要約（ストアの並べ替え・旧い群名の読み替え）', () => {
+    let fixture: ComponentFixture<OperationRealTimeComponent>;
+    let store: InstanceType<typeof OperationRealTimeStore>;
+
+    beforeEach(async () => {
+        const ok = () => jest.fn(() => of(undefined));
+        await TestBed.configureTestingModule({
+            imports: [OperationRealTimeComponent],
+            providers: [
+                provideRouter([]),
+                deviceStorageStub,
+                {
+                    provide: OperationRealTimeService,
+                    useValue: {
+                        fetchOperationGroups: ok(),
+                        fetchRoutes: ok(),
+                        fetchStations: ok(),
+                        fetchTripClasses: ok(),
+                        fetchCalendar: ok(),
+                        fetchOperations: ok(),
+                        fetchItineraryLinks: ok(),
+                        fetchFormations: ok(),
+                        fetchCurrentPositions: ok(),
+                        fetchOperationSightingTimeCrossSections: ok(),
+                        fetchFormationSightingTimeCrossSections: ok(),
+                        fetchSightingHistories: ok(),
+                        fetchCurrentPositionThatShouldUpdate: ok(),
+                    },
+                },
+                { provide: SocketService, useValue: { on: () => EMPTY } },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: OperationPostCardService,
+                    useValue: { submitEvent$: EMPTY },
+                },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save: jest.fn(), restore: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(OperationRealTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        store = TestBed.inject(OperationRealTimeStore);
+        fixture = TestBed.createComponent(OperationRealTimeComponent);
+        fixture.detectChanges();
+    });
+
+    afterEach(() => fixture.destroy());
+
+    it('何も選んでいなければ、絞り込み中にならない', () => {
+        expect(fixture.componentInstance.filterActive()).toBe(false);
+    });
+
+    it('総数は、休車の 100 を除いた運用の数', () => {
+        store.setOperations([
+            { operationId: 'op-12', operationNumber: '12' },
+            { operationId: 'op-100', operationNumber: '100' },
+            { operationId: 'op-51', operationNumber: '51' },
+        ] as never);
+        store.setSelectedGroupNames(['1群']);
+
+        expect(fixture.componentInstance.bandSummary()).toContain('1/2 運用');
+    });
+
+    it('2026-10-06 より前に保存した群名は、今の名前にして要約に出す', () => {
+        store.setOperations([
+            { operationId: 'op-12', operationNumber: '12' },
+        ] as never);
+        store.setSelectedGroupNames(['3G群']);
+
+        expect(fixture.componentInstance.filterActive()).toBe(true);
+        expect(fixture.componentInstance.bandSummary()).toContain(
+            'G群（目黒線）',
+        );
+        expect(fixture.componentInstance.bandSummary()).not.toContain('3G群');
+    });
+});
+
 describe('OperationRealTimeComponent をサーバーで描くとき', () => {
     it('中身を取らず、引き継がない', async () => {
         const fetchOperationGroups = jest.fn(() => of(undefined));
@@ -580,6 +673,7 @@ describe('OperationRealTimeComponent をサーバーで描くとき', () => {
             imports: [OperationRealTimeComponent],
             providers: [
                 provideRouter([]),
+                deviceStorageStub,
                 { provide: PLATFORM_ID, useValue: 'server' },
                 {
                     provide: OperationRealTimeService,

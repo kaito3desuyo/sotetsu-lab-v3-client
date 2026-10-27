@@ -1,10 +1,11 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.component';
 import { TrainLocationControllerComponent } from './train-location-controller.component';
 
@@ -19,9 +20,9 @@ describe('TrainLocationControllerComponent', () => {
                 provideRouter([]),
                 provideNoopAnimations(),
                 {
-                    provide: CalendarListStateQuery,
+                    provide: CalendarListState,
                     useValue: {
-                        calendars$: of([
+                        calendars: signal([
                             {
                                 calendarId: 'calendar-1',
                                 calendarName: '土休日',
@@ -31,9 +32,9 @@ describe('TrainLocationControllerComponent', () => {
                     },
                 },
                 {
-                    provide: RouteStationListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             {
                                 routeId: 'route-1',
                                 routeName: '本線',

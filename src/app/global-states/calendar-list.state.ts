@@ -1,55 +1,55 @@
-import { inject, Injectable } from '@angular/core';
-import { createStore } from '@ngneat/elf';
+import { inject } from '@angular/core';
 import {
-    getAllEntities,
-    selectAllEntities,
-    selectEntity,
-    setEntities,
+    patchState,
+    signalStore,
+    type,
+    withComputed,
+    withMethods,
+} from '@ngrx/signals';
+import {
+    entityConfig,
+    setAllEntities,
     withEntities,
-} from '@ngneat/elf-entities';
+} from '@ngrx/signals/entities';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
+import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
 
-type State = CalendarDetailsDto;
+const calendarConfig = entityConfig({
+    entity: type<CalendarDetailsDto>(),
+    selectId: (calendar) => calendar.calendarId,
+});
 
-const state = createStore(
-    { name: 'CalendarList' },
-    withEntities<State, 'calendarId'>({
-        initialValue: [],
-        idKey: 'calendarId',
+export const CalendarListState = signalStore(
+    { providedIn: 'root' },
+    withEntities(calendarConfig),
+    withComputed(({ entities }) => ({
+        /** 取得した順のカレンダー */
+        calendars: entities,
+    })),
+    withMethods((store) => {
+        const calendarService = inject(CalendarService);
+
+        return {
+            fetch(): Observable<void> {
+                return calendarService
+                    .findMany({
+                        serviceName:
+                            '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
+                    })
+                    .pipe(
+                        tap((data: CalendarDetailsDto[]) => {
+                            patchState(
+                                store,
+                                setAllEntities(data, calendarConfig),
+                            );
+                        }),
+                        map(() => undefined),
+                    );
+            },
+        };
     }),
+    withAppDevtools('CalendarListState'),
 );
-
-@Injectable({ providedIn: 'root' })
-export class CalendarListStateStore {
-    readonly #calendarService = inject(CalendarService);
-
-    fetch(): Observable<void> {
-        return this.#calendarService
-            .findMany({
-                serviceName:
-                    '相鉄本線・いずみ野線・厚木線・新横浜線／JR埼京線・川越線',
-            })
-            .pipe(
-                tap((data: CalendarDetailsDto[]) => {
-                    state.update(setEntities(data));
-                }),
-                map(() => undefined),
-            );
-    }
-}
-
-@Injectable({ providedIn: 'root' })
-export class CalendarListStateQuery {
-    readonly calendars$ = state.pipe(selectAllEntities());
-
-    get calendars(): CalendarDetailsDto[] {
-        return state.query(getAllEntities());
-    }
-
-    selectByCalendarId(calendarId: string): Observable<CalendarDetailsDto> {
-        return state.pipe(selectEntity(calendarId));
-    }
-}

@@ -11,6 +11,7 @@ import { TrainLocationService } from './train-location.service';
 describe('TrainLocationService（時刻断面をまとめて取る）', () => {
     const findMany = jest.fn();
     let service: TrainLocationService;
+    let store: InstanceType<typeof TrainLocationStore>;
 
     beforeEach(() => {
         findMany.mockReset();
@@ -29,11 +30,12 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
             ],
         });
         service = TestBed.inject(TrainLocationService);
+        store = TestBed.inject(TrainLocationStore);
     });
 
     it('まだ持っていない運用番号だけを 1 回で取り、番号ごとに store へ入れる', async () => {
         const cached = { latestSighting: null } as never;
-        TrainLocationStore.setOperationSightingTimeCrossSection('11', cached);
+        store.setOperationSightingTimeCrossSection('11', cached);
         const crossSection = {
             latestSighting: null,
         } as unknown as OperationSightingTimeCrossSectionDto;
@@ -51,16 +53,14 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
 
         expect(findMany).toHaveBeenCalledTimes(1);
         expect(findMany).toHaveBeenCalledWith({ operationNumbers: ['12'] });
-        expect(
-            TrainLocationStore.operationSightingTimeCrossSections['12'],
-        ).toBe(crossSection);
-        expect(
-            TrainLocationStore.operationSightingTimeCrossSections['11'],
-        ).toBe(cached);
+        expect(store.operationSightingTimeCrossSections()['12']).toBe(
+            crossSection,
+        );
+        expect(store.operationSightingTimeCrossSections()['11']).toBe(cached);
     });
 
     it('全部持っていれば取りに行かない', async () => {
-        TrainLocationStore.setOperationSightingTimeCrossSection('13', {
+        store.setOperationSightingTimeCrossSection('13', {
             latestSighting: null,
         } as never);
 

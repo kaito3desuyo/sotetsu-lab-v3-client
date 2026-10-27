@@ -1,3 +1,4 @@
+import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
@@ -6,7 +7,6 @@ import { of, Subject } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from '../operation-post-card/operation-post-card.service';
 import { OperationPostFormComponent } from '../operation-post-card/operation-post-form.component';
@@ -28,6 +28,13 @@ describe('OperationPostDialogComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationPostDialogComponent],
             providers: [
+                {
+                    provide: DeviceStorage,
+                    useValue: {
+                        getItem: jest.fn().mockResolvedValue(null),
+                        setItem: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
                 { provide: MatDialogRef, useValue: dialogRef },
                 {
                     provide: Router,
@@ -44,10 +51,6 @@ describe('OperationPostDialogComponent', () => {
                         postOperationSighting: jest.fn(() => of(undefined)),
                         emitSubmitEvent: jest.fn(),
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,

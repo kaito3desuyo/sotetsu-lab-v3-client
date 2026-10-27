@@ -4,7 +4,6 @@ import { of } from 'rxjs';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { TodaysFormationListStateQuery } from 'src/app/global-states/todays-formation-list.state';
 import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardComponent } from './operation-post-card.component';
 import { OperationPostCardService } from './operation-post-card.service';
@@ -22,10 +21,6 @@ describe('OperationPostCardComponent', () => {
                     useValue: {
                         fetchServiceAgencies: () => of(undefined),
                     },
-                },
-                {
-                    provide: TodaysFormationListStateQuery,
-                    useValue: { todaysFormations$: of([]) },
                 },
                 {
                     provide: LoadingService,

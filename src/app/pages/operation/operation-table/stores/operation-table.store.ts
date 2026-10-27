@@ -1,7 +1,16 @@
-import { createStore, select, setProp, withProps } from '@ngneat/elf';
-import { persistState } from '@ngneat/elf-persist-state';
-import localForage from 'localforage';
-import { filter, map, take } from 'rxjs';
+import { computed } from '@angular/core';
+import {
+    patchState,
+    signalStore,
+    withComputed,
+    withFeature,
+    withHooks,
+    withMethods,
+    withState,
+} from '@ngrx/signals';
+import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
+import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
+import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
@@ -34,134 +43,25 @@ export type OperationTableSnapshot = Pick<
     | 'tripClasses'
 >;
 
-const store = createStore(
-    { name: 'OperationTableStore' },
-    withProps<StoreProps>({
-        calendarId: null,
-        calendar: null,
-        operationTrips: [],
-        itineraryLinks: [],
-        stations: [],
-        tripClasses: [],
-        selectedGroupNames: [],
-        hasFetchedOperationTrips: false,
-        loadingQueue: [],
-    }),
-);
+const initialState: StoreProps = {
+    calendarId: null,
+    calendar: null,
+    operationTrips: [],
+    itineraryLinks: [],
+    stations: [],
+    tripClasses: [],
+    selectedGroupNames: [],
+    hasFetchedOperationTrips: false,
+    loadingQueue: [],
+};
 
-/**
- * 端末から読み込んだ値のうち、画面の設定（運用群）だけをストアに入れる。
- * 以前は全体を保存していたため、IndexedDB に残る古い値（数 MB の運用・駅など）を戻さない。
- * 設定以外は今のストアの値のまま。
- */
-export function pickOperationTableSettings(value: StoreProps): StoreProps {
-    const current = store.getValue();
-    return {
-        ...current,
-        selectedGroupNames:
-            value.selectedGroupNames ?? current.selectedGroupNames,
-    };
-}
-
-// B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー。
-// 保存するのは運用群の選択だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
-// ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
-/** 端末に保存する設定のキー */
-const PERSIST_KEY = 'OperationTableStore';
-
-const persist = persistState(store, {
-    key: PERSIST_KEY,
-    storage: localForage,
-    preStoreInit: pickOperationTableSettings,
-    source: () =>
-        store.pipe(
-            select((state) => state.selectedGroupNames),
-            map((selectedGroupNames) => ({ selectedGroupNames })),
-        ),
-});
-
-// 以前の丸ごと保存の値（数 MB）は、設定を変えるまで上書きされず、起動のたびに読み込まれて待たせる。
-// 読み込みが済んだら一度だけ、設定だけの形で同じキーに書き戻して小さくする（失敗は握りつぶす。
-// サーバーでは persistState が false を返すので何もしない）
-persist.initialized$.pipe(filter(Boolean), take(1)).subscribe(() => {
-    Promise.resolve(
-        localForage.setItem(PERSIST_KEY, {
-            selectedGroupNames: store.getValue().selectedGroupNames,
-        }),
-    ).catch(() => undefined);
-});
-
-export const OperationTableStore = {
-    persistInitialized$: persist.initialized$,
-
-    setCalendarId(calendarId: string): void {
-        store.update(setProp('calendarId', () => calendarId));
-    },
-    setCalendar(calendar: CalendarDetailsDto): void {
-        store.update(setProp('calendar', () => calendar));
-    },
-    setOperationTrips(operationTrips: OperationTripsDto[]): void {
-        store.update(setProp('operationTrips', () => operationTrips));
-    },
-    setItineraryLinks(itineraryLinks: OperationItineraryLinkDto[]): void {
-        store.update(setProp('itineraryLinks', () => itineraryLinks));
-    },
-    setStations(stations: StationDetailsDto[]): void {
-        store.update(setProp('stations', () => stations));
-    },
-    setTripClasses(tripClasses: TripClassDetailsDto[]): void {
-        store.update(setProp('tripClasses', () => tripClasses));
-    },
-    setSelectedGroupNames(groupNames: string[]): void {
-        store.update(setProp('selectedGroupNames', () => groupNames));
-    },
-    /** いまの calendar_id の取得が終わったか（失敗しても true）。取る前は一覧の代わりに骨組みを出す */
-    setHasFetchedOperationTrips(value: boolean): void {
-        store.update(setProp('hasFetchedOperationTrips', () => value));
-    },
-    enableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.concat(true)));
-    },
-    disableLoading(): void {
-        store.update(setProp('loadingQueue', (state) => state.slice(1)));
-    },
-    resetLoading(): void {
-        store.update(setProp('loadingQueue', () => []));
-    },
-    /** 圏外のために保存する中身を取り出す */
-    snapshot(): OperationTableSnapshot {
-        const {
-            calendar,
-            operationTrips,
-            itineraryLinks,
-            stations,
-            tripClasses,
-        } = store.getValue();
-        return {
-            calendar,
-            operationTrips,
-            itineraryLinks,
-            stations,
-            tripClasses,
-        };
-    },
-    /** 保存した中身を戻す（条件の calendarId と運用群は今のまま） */
-    restoreSnapshot(data: OperationTableSnapshot): void {
-        store.update((state) => ({
-            ...state,
-            calendar: data.calendar,
-            operationTrips: data.operationTrips,
-            itineraryLinks: data.itineraryLinks,
-            stations: data.stations,
-            tripClasses: data.tripClasses,
-        }));
-    },
-
-    calendarId$: store.pipe(select((state) => state.calendarId)),
-    calendar$: store.pipe(select((state) => state.calendar)),
-    operationTrips$: store.pipe(
-        select((state) =>
-            [...state.operationTrips].sort(
+export const OperationTableStore = signalStore(
+    { providedIn: 'root' },
+    withState<StoreProps>(initialState),
+    withComputed(({ operationTrips, selectedGroupNames, loadingQueue }) => ({
+        /** 運用番号の順に並べた運用（state の operationTrips は取得した順のまま） */
+        sortedOperationTrips: computed(() =>
+            [...operationTrips()].sort(
                 (a, b) =>
                     Number(
                         generateOperationSortNumber(
@@ -175,26 +75,109 @@ export const OperationTableStore = {
                     ),
             ),
         ),
-    ),
-    // 保存済みの古い状態には無い項目なので、無ければ空にする
-    itineraryLinks$: store.pipe(select((state) => state.itineraryLinks ?? [])),
-    stations$: store.pipe(select((state) => state.stations)),
-    tripClasses$: store.pipe(select((state) => state.tripClasses)),
-    // 2026-10-06 より前に保存した群名（「3G群」など）は今の名前に置き換える
-    selectedGroupNames$: store.pipe(
-        select((state) => state.selectedGroupNames),
-        map(normalizeGroupNames),
-    ),
-    // 保存済みの古い状態には無い項目なので `?? false`
-    hasFetchedOperationTrips$: store.pipe(
-        select((state) => state.hasFetchedOperationTrips ?? false),
-    ),
-    isLoading$: store.pipe(select((state) => state.loadingQueue.length > 0)),
+        // 2026-10-06 より前に保存した群名（「3G群」など）は今の名前に置き換える
+        normalizedSelectedGroupNames: computed(() =>
+            normalizeGroupNames(selectedGroupNames()),
+        ),
+        isLoading: computed(() => loadingQueue().length > 0),
+    })),
+    withMethods((store) => {
+        // 取得の世代番号。ページを離れてすぐ戻ったとき、前のインスタンスの取得が
+        // 後から終わって新しい骨組みを消さないよう、コンポーネントでなくストアで数える
+        let fetchSeq = 0;
 
-    get calendarId(): string | null {
-        return store.getValue().calendarId;
-    },
-    get operations(): OperationTripsDto[] {
-        return store.getValue().operationTrips;
-    },
-} as const;
+        return {
+            nextFetchSeq(): number {
+                return ++fetchSeq;
+            },
+            isLatestFetch(seq: number): boolean {
+                return seq === fetchSeq;
+            },
+            setCalendarId(calendarId: string): void {
+                patchState(store, { calendarId });
+            },
+            setCalendar(calendar: CalendarDetailsDto): void {
+                patchState(store, { calendar });
+            },
+            setOperationTrips(operationTrips: OperationTripsDto[]): void {
+                patchState(store, { operationTrips });
+            },
+            setItineraryLinks(
+                itineraryLinks: OperationItineraryLinkDto[],
+            ): void {
+                patchState(store, { itineraryLinks });
+            },
+            setStations(stations: StationDetailsDto[]): void {
+                patchState(store, { stations });
+            },
+            setTripClasses(tripClasses: TripClassDetailsDto[]): void {
+                patchState(store, { tripClasses });
+            },
+            setSelectedGroupNames(groupNames: string[]): void {
+                patchState(store, { selectedGroupNames: groupNames });
+            },
+            /** いまの calendar_id の取得が終わったか（失敗しても true）。取る前は一覧の代わりに骨組みを出す */
+            setHasFetchedOperationTrips(value: boolean): void {
+                patchState(store, { hasFetchedOperationTrips: value });
+            },
+            enableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.concat(true),
+                }));
+            },
+            disableLoading(): void {
+                patchState(store, (state) => ({
+                    loadingQueue: state.loadingQueue.slice(1),
+                }));
+            },
+            resetLoading(): void {
+                patchState(store, { loadingQueue: [] });
+            },
+            /** 圏外のために保存する中身を取り出す */
+            snapshot(): OperationTableSnapshot {
+                return {
+                    calendar: store.calendar(),
+                    operationTrips: store.operationTrips(),
+                    itineraryLinks: store.itineraryLinks(),
+                    stations: store.stations(),
+                    tripClasses: store.tripClasses(),
+                };
+            },
+            /** 保存した中身を戻す（条件の calendarId と運用群は今のまま） */
+            restoreSnapshot(data: OperationTableSnapshot): void {
+                patchState(store, {
+                    calendar: data.calendar,
+                    operationTrips: data.operationTrips,
+                    // つながりを持たない古い保存でも空にして戻す
+                    itineraryLinks: data.itineraryLinks ?? [],
+                    stations: data.stations,
+                    tripClasses: data.tripClasses,
+                });
+            },
+        };
+    }),
+    // B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー。
+    // 保存するのは運用群の選択だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
+    // ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
+    withSettingsStorage<StoreProps>({
+        key: 'OperationTableStore',
+        fields: ['selectedGroupNames'],
+    }),
+    withFeature((store) =>
+        withOfflineSnapshots({
+            main: {
+                key: 'OperationTable',
+                select: () => store.snapshot(),
+                apply: (data: OperationTableSnapshot) =>
+                    store.restoreSnapshot(data),
+            },
+        }),
+    ),
+    withAppDevtools('OperationTableStore'),
+    withHooks({
+        onInit(store) {
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
+            store.resetLoading();
+        },
+    }),
+);

@@ -1,8 +1,8 @@
 import { isPlatformServer } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
-import localForage from 'localforage';
 
 import { NotificationService } from '../services/notification.service';
+import { DeviceStorage } from '../storage/device-storage';
 import { formatSavedAt } from './format-saved-at.util';
 
 export const OFFLINE_SNAPSHOT_VERSION = 1;
@@ -42,6 +42,7 @@ const isSameConditions = (
 @Injectable({ providedIn: 'root' })
 export class OfflineSnapshots {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #storage = inject(DeviceStorage);
     readonly #notification = inject(NotificationService);
 
     async save<T>(params: {
@@ -60,11 +61,11 @@ export class OfflineSnapshots {
             data: params.data,
         };
 
-        try {
-            await localForage.setItem(`${KEY_PREFIX}${params.key}`, snapshot);
-        } catch {
-            // 保存できなくても画面は動くので握りつぶす
-        }
+        // 保存できなくても画面は動くので、失敗は DeviceStorage が握りつぶす
+        await this.#storage.setItem({
+            key: `${KEY_PREFIX}${params.key}`,
+            value: snapshot,
+        });
     }
 
     async restore<T>(params: {
@@ -76,14 +77,9 @@ export class OfflineSnapshots {
             return null;
         }
 
-        let snapshot: OfflineSnapshot<T> | null;
-        try {
-            snapshot = await localForage.getItem<OfflineSnapshot<T>>(
-                `${KEY_PREFIX}${params.key}`,
-            );
-        } catch {
-            return null;
-        }
+        const snapshot = await this.#storage.getItem<OfflineSnapshot<T>>(
+            `${KEY_PREFIX}${params.key}`,
+        );
 
         if (
             !snapshot ||

@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { of } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
-import { UserStateQuery } from 'src/app/global-states/user.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { RegisterComponent } from './register.component';
 
@@ -26,8 +25,8 @@ describe('RegisterComponent', () => {
             providers: [
                 { provide: UserService, useValue: userService },
                 {
-                    provide: UserStateQuery,
-                    useValue: { isLoggedIn$: of(options.loggedIn) },
+                    provide: UserState,
+                    useValue: { isLoggedIn: () => options.loggedIn },
                 },
                 { provide: Router, useValue: router },
                 {

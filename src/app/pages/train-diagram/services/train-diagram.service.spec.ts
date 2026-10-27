@@ -1,6 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
-import { ServiceListStateQuery } from 'src/app/global-states/service-list.state';
+import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -37,6 +38,7 @@ const representativeTrip = {
 
 describe('Service: TrainDiagram', () => {
     let service: TrainDiagramService;
+    let store: InstanceType<typeof TrainDiagramStore>;
     let serviceServiceMock: { findOneWithStations: jest.Mock };
     let tripBlockServiceMock: { findManyByCalendarId: jest.Mock };
     let operationServiceMock: { findManyItineraryLinks: jest.Mock };
@@ -68,8 +70,8 @@ describe('Service: TrainDiagram', () => {
                 { provide: OperationService, useValue: operationServiceMock },
                 { provide: ServiceService, useValue: serviceServiceMock },
                 {
-                    provide: ServiceListStateQuery,
-                    useValue: { serviceId: 'service-1' },
+                    provide: ServiceListState,
+                    useValue: { serviceId: signal('service-1') },
                 },
                 {
                     provide: TripClassService,
@@ -85,31 +87,22 @@ describe('Service: TrainDiagram', () => {
             ],
         });
 
+        store = TestBed.inject(TrainDiagramStore);
         service = TestBed.inject(TrainDiagramService);
     });
 
-    afterEach(() => {
-        TrainDiagramStore.setCalendarId(null);
-        TrainDiagramStore.setSelectedRouteIds([]);
-        TrainDiagramStore.setTripBlocksByDirection({});
-        TrainDiagramStore.setNetworkStations([]);
-        TrainDiagramStore.setRouteStations([]);
-        TrainDiagramStore.setTripClasses([]);
-        TrainDiagramStore.setItineraryLinks([]);
-    });
-
     it('fetchTripBlocks: calendarId 未設定なら空をセットする', (done) => {
-        TrainDiagramStore.setCalendarId(null);
+        store.setCalendarId(null);
 
         service.fetchTripBlocks().subscribe(() => {
-            expect(TrainDiagramStore.tripBlocksByDirection).toEqual({});
+            expect(store.tripBlocksByDirection()).toEqual({});
             done();
         });
     });
 
     it('fetchTripBlocks: 項目を絞って取り、種別の一覧から種別を補ってストアへ設定する', (done) => {
-        TrainDiagramStore.setCalendarId('cal-1');
-        TrainDiagramStore.setTripClasses([
+        store.setCalendarId('cal-1');
+        store.setTripClasses([
             {
                 tripClassId: 'tc-1',
                 tripClassName: '快速',
@@ -136,8 +129,8 @@ describe('Service: TrainDiagram', () => {
                 fields: TRIP_BLOCK_TIMELINE_FIELDS,
             });
             expect(
-                TrainDiagramStore.tripBlocksByDirection[0][0].trips?.[0]
-                    .tripClass?.tripClassName,
+                store.tripBlocksByDirection()[0][0].trips?.[0].tripClass
+                    ?.tripClassName,
             ).toBe('快速');
             done();
         });
@@ -150,21 +143,22 @@ describe('Service: TrainDiagram', () => {
                     serviceId: 'service-1',
                 },
             );
-            expect(
-                TrainDiagramStore.networkStations.map((s) => s.stationId),
-            ).toEqual(['s1', 's2']);
+            expect(store.networkStations().map((s) => s.stationId)).toEqual([
+                's1',
+                's2',
+            ]);
             done();
         });
     });
 
-    it('fetchNetworkStations 後、駅軸（stationAxis$）は取得済み tripBlocks から比例配分で算出される', (done) => {
-        TrainDiagramStore.setTripBlocksByDirection({
+    it('fetchNetworkStations 後、駅軸（stationAxis）は取得済み tripBlocks から比例配分で算出される', (done) => {
+        store.setTripBlocksByDirection({
             0: [representativeTrip as any],
             1: [],
         });
-        // 本来は train-diagram.component.ts が RouteStationListStateQuery.routeStations$ から
+        // 本来は train-diagram.component.ts が RouteStationListState.routeStations から
         // 別途設定する（選択路線フィルタと buildStationAxis の接続駅複製判定に必要）。
-        TrainDiagramStore.setRouteStations([
+        store.setRouteStations([
             {
                 routeId: 'r1',
                 routeStationLists: [
@@ -181,20 +175,19 @@ describe('Service: TrainDiagram', () => {
                 ],
             } as any,
         ]);
-        TrainDiagramStore.setSelectedRouteIds(['r1']);
+        store.setSelectedRouteIds(['r1']);
 
         service.fetchNetworkStations().subscribe(() => {
-            TrainDiagramStore.stationAxis$.subscribe((axis) => {
-                // 代表各停 1 本の times から駅間 10 分が導出され、駅軸に反映される
-                expect(axis && stationToY('s1', axis)).toBe(0);
-                expect(axis && stationToY('s2', axis)).toBe(10);
-                done();
-            });
+            const axis = store.stationAxis();
+            // 代表各停 1 本の times から駅間 10 分が導出され、駅軸に反映される
+            expect(axis && stationToY('s1', axis)).toBe(0);
+            expect(axis && stationToY('s2', axis)).toBe(10);
+            done();
         });
     });
 
     it('fetchItineraryLinks: 取れたら failed: false を返し、ストアへ設定する', async () => {
-        TrainDiagramStore.setCalendarId('cal-1');
+        store.setCalendarId('cal-1');
         const links = [{ operationId: 'op-1' }];
         operationServiceMock.findManyItineraryLinks.mockReturnValueOnce(
             of(links),
@@ -203,14 +196,12 @@ describe('Service: TrainDiagram', () => {
         await expect(
             firstValueFrom(service.fetchItineraryLinks()),
         ).resolves.toEqual({ failed: false });
-        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
-            links,
-        );
+        expect(store.itineraryLinks()).toEqual(links);
     });
 
     it('fetchItineraryLinks: 取れなくても空として扱い、failed: true を返す', async () => {
-        TrainDiagramStore.setCalendarId('cal-1');
-        TrainDiagramStore.setItineraryLinks([{ operationId: 'old' } as any]);
+        store.setCalendarId('cal-1');
+        store.setItineraryLinks([{ operationId: 'old' } as any]);
         operationServiceMock.findManyItineraryLinks.mockReturnValueOnce(
             throwError(() => new Error('offline')),
         );
@@ -218,8 +209,6 @@ describe('Service: TrainDiagram', () => {
         await expect(
             firstValueFrom(service.fetchItineraryLinks()),
         ).resolves.toEqual({ failed: true });
-        expect(await firstValueFrom(TrainDiagramStore.itineraryLinks$)).toEqual(
-            [],
-        );
+        expect(store.itineraryLinks()).toEqual([]);
     });
 });

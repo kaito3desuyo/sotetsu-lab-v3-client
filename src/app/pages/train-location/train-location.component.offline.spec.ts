@@ -1,12 +1,12 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { format } from 'date-fns';
-import { Observable, Subject, firstValueFrom, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
-import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
 import { TrainLocationComponent } from './train-location.component';
@@ -14,6 +14,7 @@ import { TrainLocationComponent } from './train-location.component';
 describe('TrainLocationComponent の圏外の保存', () => {
     let fixture: ComponentFixture<TrainLocationComponent>;
     let component: TrainLocationComponent;
+    let store: InstanceType<typeof TrainLocationStore>;
     let tripBlocks$: Observable<undefined>;
     let stationAxis$: Observable<undefined>;
     // 前後の運用の取得の結果（failed が true なら取得に失敗している）
@@ -36,10 +37,10 @@ describe('TrainLocationComponent の圏外の保存', () => {
     };
 
     const fillStore = () => {
-        TrainLocationStore.setStationAxisStations(stationAxisStations);
-        TrainLocationStore.setTripClasses(tripClasses);
-        TrainLocationStore.setTripBlocksByDirection(tripBlocksByDirection);
-        TrainLocationStore.setItineraryLinks(itineraryLinks);
+        store.setStationAxisStations(stationAxisStations);
+        store.setTripClasses(tripClasses);
+        store.setTripBlocksByDirection(tripBlocksByDirection);
+        store.setItineraryLinks(itineraryLinks);
     };
 
     beforeEach(async () => {
@@ -71,19 +72,12 @@ describe('TrainLocationComponent の圏外の保存', () => {
                     },
                 },
                 {
-                    provide: TodaysCalendarListStateQuery,
+                    provide: RouteStationListState,
                     useValue: {
-                        todaysCalendarId: 'cal-today',
-                        todaysCalendarIds$: of(['cal-today']),
-                    },
-                },
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: {
-                        routeStations$: of([
+                        routeStations: signal([
                             { routeId: 'route-1', routeName: '本線' },
                         ]),
-                        operatingSystemEndsByRouteId$: of({}),
+                        operatingSystemEndsByRouteId: signal({}),
                     },
                 },
                 { provide: OfflineSnapshots, useValue: { save, restore } },
@@ -93,27 +87,20 @@ describe('TrainLocationComponent の圏外の保存', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
+        setTodaysCalendars(['cal-today']);
 
+        store = TestBed.inject(TrainLocationStore);
         fixture = TestBed.createComponent(TrainLocationComponent);
         component = fixture.componentInstance;
         // 条件
-        TrainLocationStore.setCalendarId('cal-1');
-        TrainLocationStore.setSelectedRouteId('route-1');
+        store.setCalendarId('cal-1');
+        store.setSelectedRouteId('route-1');
     });
 
     afterEach(() => {
         fixture.destroy();
         jest.clearAllMocks();
         restore.mockReset();
-        TrainLocationStore.setCalendarId(null);
-        TrainLocationStore.setSelectedRouteId(null);
-        TrainLocationStore.setStationAxisStations([]);
-        TrainLocationStore.setTripClasses([]);
-        TrainLocationStore.setTripBlocksByDirection({});
-        TrainLocationStore.setItineraryLinks([]);
-        TrainLocationStore.restoreOperationSightingTimeCrossSections({});
-        TrainLocationStore.setHasFetchedTrainLocation(false);
-        TrainLocationStore.resetLoading();
     });
 
     it('全部成功したら条件と中身を保存する', async () => {
@@ -166,16 +153,14 @@ describe('TrainLocationComponent の圏外の保存', () => {
             apply: expect.any(Function),
         });
         expect(isLoadingWhenRestored).toBe(true);
-        expect(TrainLocationStore.snapshot()).toEqual({
+        expect(store.snapshot()).toEqual({
             stationAxisStations,
             tripClasses,
             tripBlocksByDirection,
             itineraryLinks,
         });
-        expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
-        expect(
-            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
-        ).toBe(true);
+        expect(store.isLoading()).toBe(false);
+        expect(store.hasFetchedTrainLocation()).toBe(true);
     });
 
     it('片方が先に失敗しても、遅い方が終わるまで保存した中身を戻さない', async () => {
@@ -203,10 +188,8 @@ describe('TrainLocationComponent の圏外の保存', () => {
 
         expect(save).not.toHaveBeenCalled();
         expect(restore).not.toHaveBeenCalled();
-        expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
-        expect(
-            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
-        ).toBe(true);
+        expect(store.isLoading()).toBe(false);
+        expect(store.hasFetchedTrainLocation()).toBe(true);
     });
 
     it('前の取得が失敗していたら、路線だけの取り直しが成功しても保存しない（ダイヤと路線の組がずれるため）', async () => {
@@ -277,7 +260,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
     it('成功したあとの路線だけの取り直しは、新しい条件で保存する', async () => {
         await component.fetchData(both);
         save.mockClear();
-        TrainLocationStore.setSelectedRouteId('route-2');
+        store.setSelectedRouteId('route-2');
 
         await component.fetchData({
             refetchTripBlocks: false,
@@ -314,10 +297,8 @@ describe('TrainLocationComponent の圏外の保存', () => {
         await expect(component.fetchData(both)).rejects.toThrow('offline');
 
         expect(restore).toHaveBeenCalledTimes(1);
-        expect(await firstValueFrom(TrainLocationStore.isLoading$)).toBe(false);
-        expect(
-            await firstValueFrom(TrainLocationStore.hasFetchedTrainLocation$),
-        ).toBe(true);
+        expect(store.isLoading()).toBe(false);
+        expect(store.hasFetchedTrainLocation()).toBe(true);
     });
 
     describe('目撃（動いている列車の運用の目撃）', () => {
@@ -332,10 +313,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
 
         it('目撃が取れたら、日付つきで別の key に保存する', async () => {
             sightings$ = new Observable<boolean>((subscriber) => {
-                TrainLocationStore.setOperationSightingTimeCrossSection(
-                    '51',
-                    crossSection,
-                );
+                store.setOperationSightingTimeCrossSection('51', crossSection);
                 subscriber.next(true);
                 subscriber.complete();
             });
@@ -360,7 +338,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
         });
 
         it('目撃が取れなかったら、保存した目撃を戻して失敗は今までどおり投げる（すでに取れていた目撃は残す）', async () => {
-            TrainLocationStore.setOperationSightingTimeCrossSection('52', {
+            store.setOperationSightingTimeCrossSection('52', {
                 expectedSighting: { sightingTime: 'fresh' },
             } as never);
             sightings$ = throwError(() => new Error('offline'));
@@ -389,9 +367,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
                 conditions: sightingConditions(),
                 apply: expect.any(Function),
             });
-            const sightings = await firstValueFrom(
-                TrainLocationStore.operationSightingTimeCrossSections$,
-            );
+            const sightings = store.operationSightingTimeCrossSections();
             expect(sightings['51']).toEqual(crossSection);
             expect(sightings['52']).toEqual({
                 expectedSighting: { sightingTime: 'fresh' },
@@ -406,11 +382,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
                 component.fetchOperationSightings(['51']),
             ).rejects.toThrow('offline');
 
-            expect(
-                await firstValueFrom(
-                    TrainLocationStore.operationSightingTimeCrossSections$,
-                ),
-            ).toEqual({});
+            expect(store.operationSightingTimeCrossSections()).toEqual({});
         });
 
         it('戻す処理が壊れていても、元の失敗を投げ直す', async () => {
@@ -446,7 +418,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
             await expect(
                 component.fetchOperationSightings(['51']),
             ).rejects.toThrow('offline');
-            TrainLocationStore.setSelectedRouteId('route-2');
+            store.setSelectedRouteId('route-2');
             await expect(
                 component.fetchOperationSightings(['51']),
             ).rejects.toThrow('offline');

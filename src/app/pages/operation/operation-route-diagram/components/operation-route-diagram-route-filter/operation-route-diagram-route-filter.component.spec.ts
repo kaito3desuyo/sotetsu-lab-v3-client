@@ -1,9 +1,9 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
-import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
-import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationRouteDiagramStore } from '../../stores/operation-route-diagram.store';
 import { OperationRouteDiagramRouteFilterComponent } from './operation-route-diagram-route-filter.component';
@@ -21,10 +21,36 @@ function makeStation(stationId: string, routeIds: string[]): any {
 
 describe('OperationRouteDiagramRouteFilterComponent', () => {
     let component: OperationRouteDiagramRouteFilterComponent;
+    let store: InstanceType<typeof OperationRouteDiagramStore>;
     let fixture: ComponentFixture<OperationRouteDiagramRouteFilterComponent>;
 
     beforeEach(async () => {
-        OperationRouteDiagramStore.setStations([
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramRouteFilterComponent],
+            providers: [
+                {
+                    // 系統順はいずみ野線が本線より前（並びが入れ替わることを確かめるため）
+                    provide: RouteStationListState,
+                    useValue: {
+                        routeStations: signal([
+                            { routeId: 'いずみ野線', agencyId: 'so' },
+                            { routeId: '本線', agencyId: 'so' },
+                        ]),
+                    },
+                },
+                {
+                    provide: AgencyListState,
+                    useValue: {
+                        agencies: signal([
+                            { agencyId: 'so', agencyName: '相鉄' },
+                        ]),
+                    },
+                },
+            ],
+        }).compileComponents();
+
+        store = TestBed.inject(OperationRouteDiagramStore);
+        store.setStations([
             makeStation('かしわ台', ['本線']),
             makeStation('大和', ['本線']),
             // 二俣川は本線といずみ野線の分岐駅。経由路線（本線）と同一駅で繋がる
@@ -35,7 +61,7 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
             // 表示されないことを P8-3 のテストで確認する。
             makeStation('厚木', ['厚木線']),
         ]);
-        OperationRouteDiagramStore.setOperationTrips({
+        store.setOperationTrips({
             operation: {} as any,
             trips: [
                 {
@@ -44,41 +70,13 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
                 } as any,
             ],
         });
-        OperationRouteDiagramStore.setSelectedRouteIds(['本線']);
-
-        await TestBed.configureTestingModule({
-            imports: [OperationRouteDiagramRouteFilterComponent],
-            providers: [
-                {
-                    // 系統順はいずみ野線が本線より前（並びが入れ替わることを確かめるため）
-                    provide: RouteStationListStateQuery,
-                    useValue: {
-                        routeStations$: of([
-                            { routeId: 'いずみ野線', agencyId: 'so' },
-                            { routeId: '本線', agencyId: 'so' },
-                        ]),
-                    },
-                },
-                {
-                    provide: AgencyListStateQuery,
-                    useValue: {
-                        agencies$: of([{ agencyId: 'so', agencyName: '相鉄' }]),
-                    },
-                },
-            ],
-        }).compileComponents();
+        store.setSelectedRouteIds(['本線']);
 
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
         component = fixture.componentInstance;
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationRouteDiagramStore.setStations([]);
-        OperationRouteDiagramStore.setOperationTrips(null);
-        OperationRouteDiagramStore.setSelectedRouteIds([]);
     });
 
     it('should create', () => {
@@ -119,6 +117,7 @@ describe('OperationRouteDiagramRouteFilterComponent', () => {
 
 describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）', () => {
     let fixture: ComponentFixture<OperationRouteDiagramRouteFilterComponent>;
+    let store: InstanceType<typeof OperationRouteDiagramStore>;
 
     function makeRouteStation(
         stationId: string,
@@ -138,14 +137,29 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
     }
 
     beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramRouteFilterComponent],
+            providers: [
+                {
+                    provide: RouteStationListState,
+                    useValue: { routeStations: signal([]) },
+                },
+                {
+                    provide: AgencyListState,
+                    useValue: { agencies: signal([]) },
+                },
+            ],
+        }).compileComponents();
+
+        store = TestBed.inject(OperationRouteDiagramStore);
         // 選択肢 r1(本線)/r2(厚木線)（group なし）、選択 ['r1']。
         // 会社・系統の対応表（Route/AgencyStateQuery）には出てこない路線にして
         // group が付かないようにする。
-        OperationRouteDiagramStore.setStations([
+        store.setStations([
             makeRouteStation('st-r1', 'r1', '本線'),
             makeRouteStation('st-r2', 'r2', '厚木線'),
         ]);
-        OperationRouteDiagramStore.setOperationTrips({
+        store.setOperationTrips({
             operation: {} as any,
             trips: [
                 {
@@ -154,32 +168,12 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
                 } as any,
             ],
         });
-        OperationRouteDiagramStore.setSelectedRouteIds(['r1']);
-
-        await TestBed.configureTestingModule({
-            imports: [OperationRouteDiagramRouteFilterComponent],
-            providers: [
-                {
-                    provide: RouteStationListStateQuery,
-                    useValue: { routeStations$: of([]) },
-                },
-                {
-                    provide: AgencyListStateQuery,
-                    useValue: { agencies$: of([]) },
-                },
-            ],
-        }).compileComponents();
+        store.setSelectedRouteIds(['r1']);
 
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
         fixture.detectChanges();
-    });
-
-    afterEach(() => {
-        OperationRouteDiagramStore.setStations([]);
-        OperationRouteDiagramStore.setOperationTrips(null);
-        OperationRouteDiagramStore.setSelectedRouteIds([]);
     });
 
     it('細帯の要約は「路線：…」か「全路線」で、絞り込み中を帯に渡す', () => {
@@ -195,6 +189,7 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
 
 describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     let fixture: ComponentFixture<OperationRouteDiagramRouteFilterComponent>;
+    let store: InstanceType<typeof OperationRouteDiagramStore>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -204,19 +199,12 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
-    });
-
-    afterEach(() => {
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
-        OperationRouteDiagramStore.setStations([]);
-        OperationRouteDiagramStore.setOperationTrips(null);
-        OperationRouteDiagramStore.setSelectedRouteIds([]);
+        store = TestBed.inject(OperationRouteDiagramStore);
     });
 
     it('運用番号があって取る前は、操作帯に路線のチップの形の骨組みを出す', () => {
-        OperationRouteDiagramStore.setOperationId('op-1');
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        store.setOperationId('op-1');
+        store.setHasFetchedOperationTrips(false);
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
@@ -229,8 +217,8 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     });
 
     it('取る前から取った後まで、操作帯は同じ要素のまま（取り直しで作り直さない）', () => {
-        OperationRouteDiagramStore.setOperationId('op-1');
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        store.setOperationId('op-1');
+        store.setHasFetchedOperationTrips(false);
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
@@ -238,7 +226,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
         const el = fixture.nativeElement as HTMLElement;
         const before = el.querySelector('app-control-band');
 
-        OperationRouteDiagramStore.setStations([
+        store.setStations([
             {
                 stationId: 's1',
                 routeStationLists: [
@@ -246,7 +234,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
                 ],
             },
         ] as never);
-        OperationRouteDiagramStore.setOperationTrips({
+        store.setOperationTrips({
             operation: {},
             trips: [
                 {
@@ -255,7 +243,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
                 },
             ],
         } as never);
-        OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
+        store.setHasFetchedOperationTrips(true);
         fixture.detectChanges();
 
         expect(el.querySelector('app-filter-chips')).not.toBeNull();
@@ -264,7 +252,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     });
 
     it('運用番号が無ければ、操作帯ごと出さない（audit C6 のまま）', () => {
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        store.setOperationId(null as unknown as string);
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
@@ -278,7 +266,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     });
 
     it('alwaysVisible なら、運用番号が未設定でチップが無くても帯を出す', () => {
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        store.setOperationId(null as unknown as string);
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );
@@ -293,7 +281,7 @@ describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {
     });
 
     it('路線のチップが無いとき（運用を開いていない）は、要約に路線を付けない', () => {
-        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        store.setOperationId(null as unknown as string);
         fixture = TestBed.createComponent(
             OperationRouteDiagramRouteFilterComponent,
         );

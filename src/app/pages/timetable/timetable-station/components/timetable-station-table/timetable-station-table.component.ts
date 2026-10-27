@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    inject,
+    input,
+} from '@angular/core';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimetableStationTripCellComponent } from '../timetable-station-trip-cell/timetable-station-trip-cell.component';
 import { TimetableStationStore } from '../../stores/timetable-station.store';
@@ -19,22 +23,14 @@ export class TimetableStationTableComponent {
      */
     readonly showCurrentFormation = input.required<boolean>();
 
-    readonly calendar = toSignal(TimetableStationStore.calendar$);
-    readonly tripClasses = toSignal(TimetableStationStore.tripClasses$, {
-        initialValue: [],
-    });
-    readonly stations = toSignal(TimetableStationStore.stations$, {
-        initialValue: [],
-    });
-    readonly timetableData = toSignal(TimetableStationStore.timetableData$, {
-        initialValue: [],
-    });
-    readonly operations = toSignal(TimetableStationStore.operations$, {
-        initialValue: [],
-    });
-    readonly operationSightingTimeCrossSections = toSignal(
-        TimetableStationStore.operationSightingTimeCrossSections$,
-        { initialValue: {} },
-    );
-    readonly stationId = toSignal(TimetableStationStore.stationId$);
+    readonly #store = inject(TimetableStationStore);
+
+    readonly calendar = this.#store.calendar;
+    readonly tripClasses = this.#store.tripClasses;
+    readonly stations = this.#store.stations;
+    readonly timetableData = this.#store.timetableData;
+    readonly operations = this.#store.operations;
+    readonly operationSightingTimeCrossSections =
+        this.#store.operationSightingTimeCrossSections;
+    readonly stationId = this.#store.stationId;
 }

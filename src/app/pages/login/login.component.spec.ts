@@ -1,13 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { of } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
-import { TokenStateStore } from 'src/app/global-states/token.state';
-import {
-    UserStateQuery,
-    UserStateStore,
-} from 'src/app/global-states/user.state';
+import { TokenState } from 'src/app/global-states/token.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
 import { LoginComponent } from './login.component';
 
@@ -30,11 +26,13 @@ describe('LoginComponent', () => {
             imports: [LoginComponent],
             providers: [
                 { provide: AuthService, useValue: authService },
-                { provide: TokenStateStore, useValue: tokenStateStore },
-                { provide: UserStateStore, useValue: userStateStore },
+                { provide: TokenState, useValue: tokenStateStore },
                 {
-                    provide: UserStateQuery,
-                    useValue: { isLoggedIn$: of(options.loggedIn) },
+                    provide: UserState,
+                    useValue: {
+                        ...userStateStore,
+                        isLoggedIn: () => options.loggedIn,
+                    },
                 },
                 { provide: Router, useValue: router },
                 {

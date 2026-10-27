@@ -67,4 +67,5 @@
 - 新しくページを足すときは、取得の成功で `save`、失敗で `restore` を書く。上の規則を守る。保存する形が変わって読めなくなるときは `OFFLINE_SNAPSHOT_VERSION` を上げる（古い保存は捨てられる）。
 - 時刻表などのデータの API が Service Worker に保存されるので、通信が遅いだけの回線でも 3 秒待った後は保存した応答が出る。目撃と現在位置は保存されず、圏外では取得が失敗してページの保存から出る。
 - real-time だけでなくダッシュボードも、取得に失敗して保存した中身を戻さなかった（手元に中身がある・保存が無い・戻せなかった）ときは `データの取得に失敗しました` を出す。戻せたときは戻した旨の知らせだけを出す。
+- 2026-10-27 の Elf からの移行（ADR-0016）で、保存と復元の呼び出しは、コンポーネントが `OfflineSnapshots` を inject して呼ぶ形から、ストアの部品 `withOfflineSnapshots`（`core/store-features/`）が持つ `saveOfflineSnapshot(name, conditions)` と `restoreOfflineSnapshot(name, conditions)` に移った。何を保存するか（`key`・`select`・`apply`）はストアの定義に並ぶ。保存先・キー（`offline-snapshot:<key>`）・形・版・戻す決まりは変えていない。localforage の読み書きは `DeviceStorage` に寄せた。
 - 殻（`index.csr.html`）と `ngsw-config.json` の `index` は SSR のビルドで初めて要るので、計画 2c で行う。

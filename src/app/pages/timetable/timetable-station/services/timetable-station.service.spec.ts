@@ -42,6 +42,8 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         },
     } as never;
 
+    let store: InstanceType<typeof TimetableStationStore>;
+
     const setupWith = (sightingService: unknown) => {
         TestBed.configureTestingModule({
             providers: [
@@ -54,13 +56,11 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
             ],
         });
         const service = TestBed.inject(TimetableStationService);
+        store = TestBed.inject(TimetableStationStore);
 
-        TimetableStationStore.resetOperationSightingTimeCrossSections();
-        TimetableStationStore.setTrips([
-            tripWithOp('t1', 'op-1'),
-            tripWithOp('t2', 'op-2'),
-        ]);
-        TimetableStationStore.setOperations([
+        store.resetOperationSightingTimeCrossSections();
+        store.setTrips([tripWithOp('t1', 'op-1'), tripWithOp('t2', 'op-2')]);
+        store.setOperations([
             { operationId: 'op-1', operationNumber: '51' },
             { operationId: 'op-2', operationNumber: '52' },
         ] as never);
@@ -79,7 +79,7 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         expect(findMany).toHaveBeenCalledWith({
             operationNumbers: ['51', '52'],
         });
-        const record = TimetableStationStore.operationSightingTimeCrossSections;
+        const record = store.operationSightingTimeCrossSections();
         expect(record['52']).toBeDefined();
         expect(record['51']).toBeUndefined();
     });
@@ -96,9 +96,7 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         );
 
         expect(fetched).toBe(false);
-        expect(
-            TimetableStationStore.operationSightingTimeCrossSections,
-        ).toEqual({});
+        expect(store.operationSightingTimeCrossSections()).toEqual({});
     });
 
     it('fetchTrips は方向ごとの運行を 1 本で取り、脚注用の運行とその駅に停まる列車を両方入れる', async () => {
@@ -129,17 +127,16 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
             ],
         });
         const service = TestBed.inject(TimetableStationService);
+        const store = TestBed.inject(TimetableStationStore);
 
-        TimetableStationStore.setCalendarId('cal-1');
-        TimetableStationStore.setStationId('st-1');
-        TimetableStationStore.setTripDirection(ETripDirection.INBOUND);
+        store.setCalendarId('cal-1');
+        store.setStationId('st-1');
+        store.setTripDirection(ETripDirection.INBOUND);
 
         await lastValueFrom(service.fetchTrips());
 
         expect(findManyByFilter).toHaveBeenCalledTimes(1);
-        expect(TimetableStationStore.tripBlocks).toBe(tripBlocks);
-        expect(TimetableStationStore.trips.map((t) => t.tripId)).toEqual([
-            'stop',
-        ]);
+        expect(store.tripBlocks()).toBe(tripBlocks);
+        expect(store.trips().map((t) => t.tripId)).toEqual(['stop']);
     });
 });
