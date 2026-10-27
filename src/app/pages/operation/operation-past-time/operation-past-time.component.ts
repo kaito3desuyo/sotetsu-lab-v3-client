@@ -11,6 +11,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
@@ -20,7 +21,10 @@ import { OperationPastTimeFilterComponent } from './components/operation-past-ti
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
 import { OperationPastTimeTableComponent } from './components/operation-past-time-table/operation-past-time-table.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
-import { OperationPastTimeStore } from './stores/operation-past-time.store';
+import {
+    OperationPastTimeSnapshot,
+    OperationPastTimeStore,
+} from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
 import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
 
@@ -29,6 +33,9 @@ OperationPastTimeStore.resetLoading();
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'OperationPastTime';
 
 @Component({
     selector: 'app-operation-past-time',
@@ -48,6 +55,7 @@ export class OperationPastTimeComponent {
     readonly #router = inject(Router);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
     readonly #ssrResponse = inject(SsrResponse);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #pageMeta = inject(PageMeta);
 
     readonly isLoading = toSignal(OperationPastTimeStore.isLoading$);
@@ -129,12 +137,18 @@ export class OperationPastTimeComponent {
 
     async fetchData(): Promise<void> {
         const seq = ++fetchSeq;
+        const conditions = {
+            referenceDate: OperationPastTimeStore.referenceDate ?? null,
+            days: OperationPastTimeStore.days ?? null,
+            includeInvalidated: OperationPastTimeStore.includeInvalidated,
+        };
         OperationPastTimeStore.enableLoading();
         OperationPastTimeStore.setHasFetchedPastTime(false);
 
         try {
             // どれも日付の範囲だけで取れるので並行に取る（以前は 1 本ずつ待っていた）
-            await Promise.all([
+            // 失敗を決める前に全部の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+            const results = await Promise.allSettled([
                 lastValueFrom(
                     this.#operationPastTimeService.fetchCalendarByDate(),
                 ),
@@ -146,6 +160,36 @@ export class OperationPastTimeComponent {
                     this.#operationPastTimeService.fetchOperationSightingsV3(),
                 ),
             ]);
+            const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failure) {
+                // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）。
+                // 戻す処理が壊れていても、取得の失敗をそのまま投げる（読み込み中は finally で解く）
+                if (seq === fetchSeq) {
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: OperationPastTimeSnapshot) =>
+                                OperationPastTimeStore.restoreSnapshot(data),
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗を優先する
+                    }
+                }
+                throw failure.reason;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する。
+            // 起点の日・日数の無い URL は、取るものが無く空のままなので保存しない
+            if (seq === fetchSeq && OperationPastTimeStore.dates.length > 0) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: OperationPastTimeStore.snapshot(),
+                });
+            }
         } finally {
             // 途中の reject でローディングバーが残り続けないようにする
             OperationPastTimeStore.disableLoading();

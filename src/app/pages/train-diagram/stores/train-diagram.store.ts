@@ -66,6 +66,23 @@ type StoreProps = {
     controlCollapsed: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（calendarId・selectedRouteIds）と画面の設定
+ * （縮尺・方向・選択中の列車・操作帯の畳み状態）は入れない。
+ */
+export type TrainDiagramSnapshot = Pick<
+    StoreProps,
+    | 'networkStations'
+    | 'routeStations'
+    | 'tripClasses'
+    | 'tripBlocksByDirection'
+    | 'itineraryLinks'
+>;
+
+/** 圏外のために端末に保存する目撃（運用番号ごと。列車の保存とは別に、日付つきで保存する） */
+export type TrainDiagramSightingsSnapshot =
+    StoreProps['operationSightingTimeCrossSections'];
+
 const store = createStore(
     { name: 'TrainDiagramStore' },
     withProps<StoreProps>({
@@ -285,6 +302,44 @@ export const TrainDiagramStore = {
     },
     setControlCollapsed(collapsed: boolean): void {
         store.update(setProp('controlCollapsed', () => collapsed));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): TrainDiagramSnapshot {
+        const {
+            networkStations,
+            routeStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        } = store.getValue();
+        return {
+            networkStations,
+            routeStations,
+            tripClasses,
+            tripBlocksByDirection,
+            itineraryLinks,
+        };
+    },
+    /** 保存した中身を戻す（条件の calendarId・selectedRouteIds と画面の設定は今のまま） */
+    restoreSnapshot(data: TrainDiagramSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            networkStations: data.networkStations,
+            routeStations: data.routeStations,
+            tripClasses: data.tripClasses,
+            tripBlocksByDirection: data.tripBlocksByDirection,
+            itineraryLinks: data.itineraryLinks,
+        }));
+    },
+    /** 圏外のために保存する目撃を取り出す */
+    snapshotOperationSightingTimeCrossSections(): TrainDiagramSightingsSnapshot {
+        return store.getValue().operationSightingTimeCrossSections;
+    },
+    /** 保存した目撃に置き換える */
+    restoreOperationSightingTimeCrossSections(
+        data: TrainDiagramSightingsSnapshot,
+    ): void {
+        store.update(setProp('operationSightingTimeCrossSections', () => data));
     },
 
     persistInitialized$: persist.initialized$,

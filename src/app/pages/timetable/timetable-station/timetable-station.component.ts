@@ -14,8 +14,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
+import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import {
+    OfflineConditions,
+    OfflineSnapshots,
+} from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
@@ -23,6 +28,7 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListStateQuery } from 'src/app/global-states/route-station-list.state';
@@ -44,7 +50,11 @@ import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-
 import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
-import { TimetableStationStore } from './stores/timetable-station.store';
+import {
+    TimetableStationSightingsSnapshot,
+    TimetableStationSnapshot,
+    TimetableStationStore,
+} from './stores/timetable-station.store';
 import { formatTimetableStationSummary } from './utils/timetable-station-summary.util';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
@@ -53,6 +63,12 @@ TimetableStationStore.resetLoading();
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'TimetableStation';
+
+/** 圏外のために保存する充当編成のキー（目撃は Service Worker に残らないので別に保存する） */
+const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TimetableStationSightings';
 
 /** 駅の選択欄の先頭の「全線（駅を選ばない）」の値。選ぶと全線時刻表へ移る（2026-10-22） */
 export const ALL_LINE_OPTION = '__all-line__';
@@ -81,6 +97,7 @@ export class TimetableStationComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #timetableStationService = inject(TimetableStationService);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
@@ -296,14 +313,48 @@ export class TimetableStationComponent {
         TimetableStationStore.setHasFetchedTimetable(false);
 
         try {
+            const conditions = {
+                calendarId: TimetableStationStore.calendarId,
+                stationId: TimetableStationStore.stationId,
+                tripDirection: TimetableStationStore.tripDirection,
+            };
+
             // 互いに依存しないので並行に取る（以前は 1 本ずつ待っていた）
-            await Promise.all([
+            // 失敗を決める前に全部の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+            const results = await Promise.allSettled([
                 lastValueFrom(this.#timetableStationService.fetchCalendar()),
                 lastValueFrom(this.#timetableStationService.fetchTrips()),
                 lastValueFrom(this.#timetableStationService.fetchTripClasses()),
                 lastValueFrom(this.#timetableStationService.fetchStations()),
                 lastValueFrom(this.#timetableStationService.fetchOperations()),
             ]);
+            const failure = results.find(
+                (result) => result.status === 'rejected',
+            );
+            if (failure) {
+                // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
+                if (seq === fetchSeq) {
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: TimetableStationSnapshot) =>
+                                TimetableStationStore.restoreSnapshot(data),
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                    }
+                }
+                throw failure.reason;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (seq === fetchSeq) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: TimetableStationStore.snapshot(),
+                });
+            }
             // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
             if (seq === fetchSeq) {
@@ -313,9 +364,22 @@ export class TimetableStationComponent {
             // 充当編成は列車の運用番号とダイヤ（今日かどうか）が揃ってから取る。
             // B7: 過去ダイヤ表示時は編成関連のフェッチ自体をスキップする
             if (this.isTodaysCalendar()) {
-                await lastValueFrom(
+                const sightingsFetched = await lastValueFrom(
                     this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
                 );
+                // 目撃は Service Worker に残らないので、時刻表とは別に、日付つきで保存する
+                if (seq === fetchSeq) {
+                    await this.#saveOrRestoreSightings({
+                        conditions: {
+                            ...conditions,
+                            date: format(
+                                getRailwayDate(new Date()),
+                                'yyyy-MM-dd',
+                            ),
+                        },
+                        fetched: sightingsFetched,
+                    });
+                }
             } else {
                 TimetableStationStore.resetOperationSightingTimeCrossSections();
             }
@@ -325,6 +389,33 @@ export class TimetableStationComponent {
                 TimetableStationStore.setHasFetchedTimetable(true);
             }
             TimetableStationStore.disableLoading();
+        }
+    }
+
+    /** 充当編成が取れたら保存し、取れなかったら同じ日の保存を戻す（戻せなければ今のまま） */
+    async #saveOrRestoreSightings(params: {
+        conditions: OfflineConditions;
+        fetched: boolean;
+    }): Promise<void> {
+        if (params.fetched) {
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions: params.conditions,
+                data: TimetableStationStore.snapshotOperationSightingTimeCrossSections(),
+            });
+            return;
+        }
+        try {
+            await this.#offlineSnapshots.restore({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions: params.conditions,
+                apply: (data: TimetableStationSightingsSnapshot) =>
+                    TimetableStationStore.restoreOperationSightingTimeCrossSections(
+                        data,
+                    ),
+            });
+        } catch {
+            // 保存した中身が壊れていても、従来どおり充当編成を出さないだけにする
         }
     }
 

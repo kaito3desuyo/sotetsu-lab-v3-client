@@ -37,6 +37,15 @@ type StoreProps = {
     controlCollapsed: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（calendarId・tripDirection）と画面の設定
+ * （選択中の路線・ページ送り・畳み状態）は入れない。
+ */
+export type TimetableAllLineSnapshot = Pick<
+    StoreProps,
+    'stations' | 'agencies' | 'routeOrder' | 'tripBlocks'
+>;
+
 const store = createStore(
     { name: 'TimetableAllLineStore' },
     withProps<StoreProps>({
@@ -295,6 +304,21 @@ export const TimetableAllLineStore = {
     },
     setControlCollapsed(collapsed: boolean): void {
         store.update(setProp('controlCollapsed', () => collapsed));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): TimetableAllLineSnapshot {
+        const { stations, agencies, routeOrder, tripBlocks } = store.getValue();
+        return { stations, agencies, routeOrder, tripBlocks };
+    },
+    /** 保存した中身を戻す（条件の calendarId・tripDirection は今のまま） */
+    restoreSnapshot(data: TimetableAllLineSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            stations: data.stations,
+            agencies: data.agencies,
+            routeOrder: data.routeOrder,
+            tripBlocks: data.tripBlocks,
+        }));
     },
 
     persistInitialized$: persist.initialized$,

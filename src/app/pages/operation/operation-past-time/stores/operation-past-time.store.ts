@@ -38,6 +38,15 @@ type StoreProps = {
     hasFetchedPastTime: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（referenceDate・days・includeInvalidated）と
+ * 画面の設定（選択中の会社）は入れない。
+ */
+export type OperationPastTimeSnapshot = Pick<
+    StoreProps,
+    'calendars' | 'operations' | 'formations' | 'operationSightings'
+>;
+
 const store = createStore(
     { name: 'OperationPastTimeStore' },
     withProps<StoreProps>({
@@ -146,6 +155,22 @@ export const OperationPastTimeStore = {
     /** いまの条件の取得が終わったか（失敗しても true）。取る前は表の代わりに骨組みを出す */
     setHasFetchedPastTime(value: boolean): void {
         store.update(setProp('hasFetchedPastTime', () => value));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): OperationPastTimeSnapshot {
+        const { calendars, operations, formations, operationSightings } =
+            store.getValue();
+        return { calendars, operations, formations, operationSightings };
+    },
+    /** 保存した中身を戻す（条件の referenceDate・days・includeInvalidated は今のまま） */
+    restoreSnapshot(data: OperationPastTimeSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            calendars: data.calendars,
+            operations: data.operations,
+            formations: data.formations,
+            operationSightings: data.operationSightings,
+        }));
     },
 
     referenceDate$: store.pipe(select((state) => state.referenceDate)),

@@ -91,8 +91,11 @@ describe('Service: TimetableStation 耐障害性（T6.8 再差し戻し回帰）
         });
 
         // reject せず解決すること（=フェッチ全滅・ローディング残留の回帰防止）
-        await lastValueFrom(service.fetchOperationSightingTimeCrossSections());
+        const fetched = await lastValueFrom(
+            service.fetchOperationSightingTimeCrossSections(),
+        );
 
+        expect(fetched).toBe(false);
         expect(
             TimetableStationStore.operationSightingTimeCrossSections,
         ).toEqual({});

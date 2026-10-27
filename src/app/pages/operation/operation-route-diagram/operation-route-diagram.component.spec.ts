@@ -6,7 +6,19 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { BehaviorSubject, defer, EMPTY, of, Subject, throwError } from 'rxjs';
+import {
+    BehaviorSubject,
+    defer,
+    EMPTY,
+    firstValueFrom,
+    Observable,
+    of,
+    Subject,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -596,5 +608,251 @@ describe('OperationRouteDiagramComponent のサーバー', () => {
         OperationRouteDiagramStore.setOperationId(null as unknown as string);
         OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
         OperationRouteDiagramStore.resetLoading();
+    });
+});
+
+describe('OperationRouteDiagramComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<OperationRouteDiagramComponent>;
+    let fetchDataSpy: jest.SpyInstance;
+    let trips$: Observable<undefined>;
+    let stations$: Observable<undefined>;
+    let links$: Observable<undefined>;
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+    // spy に差し替わる前の本物の fetchData
+    const originalFetchData =
+        OperationRouteDiagramComponent.prototype.fetchData;
+
+    const operationTrips = {
+        operation: { operationId: 'op-1', calendarId: 'cal-1' },
+        trips: [],
+    } as never;
+    const itineraryLinks = [{ tripOperationListId: 'link-1' }] as never;
+    const stations = [{ stationId: 'st-1' }] as never;
+    const stationAliases = { 'st-2': 'st-1' };
+    const conditions = { operationId: 'op-1' };
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
+    // 「処理されない拒否」と見なされ、ComponentFixture が投げ直してしまう
+    const failLater = (message: string) =>
+        timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
+
+    const setup = async () => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // 本物の fetchData の失敗だけ受け流す
+        const original = OperationRouteDiagramComponent.prototype.fetchData;
+        fetchDataSpy = jest
+            .spyOn(OperationRouteDiagramComponent.prototype, 'fetchData')
+            .mockImplementation(function (
+                this: OperationRouteDiagramComponent,
+            ) {
+                return original.call(this).catch(() => undefined);
+            });
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({ operation_id: 'op-1' }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        fetchOperationTrips: () => trips$,
+                        fetchStations: () => stations$,
+                        fetchItineraryLinks: () => links$,
+                    },
+                },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(OperationRouteDiagramComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    };
+
+    // 取得は成功した形のストア（サービスの差し替えはストアへ書かないので、先に入れておく）
+    const fillStore = () => {
+        OperationRouteDiagramStore.setOperationTrips(operationTrips);
+        OperationRouteDiagramStore.setItineraryLinks(itineraryLinks);
+        OperationRouteDiagramStore.setStations(stations);
+        OperationRouteDiagramStore.setStationAliases(stationAliases);
+    };
+
+    afterEach(() => {
+        fetchDataSpy.mockRestore();
+        fixture?.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        OperationRouteDiagramStore.setOperationTrips(null);
+        OperationRouteDiagramStore.setItineraryLinks([]);
+        OperationRouteDiagramStore.setStations([]);
+        OperationRouteDiagramStore.setStationAliases({});
+        OperationRouteDiagramStore.setSelectedRouteIds([]);
+        OperationRouteDiagramStore.setOperationId(null as unknown as string);
+        OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
+        OperationRouteDiagramStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        trips$ = of(undefined);
+        stations$ = of(undefined);
+        links$ = of(undefined);
+        await setup();
+        fillStore();
+
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        await flush();
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'OperationRouteDiagram',
+            conditions,
+            data: { operationTrips, itineraryLinks, stations, stationAliases },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('前後の運用の取得だけが失敗したときは、保存も戻しもしない', async () => {
+        trips$ = of(undefined);
+        stations$ = of(undefined);
+        links$ = failLater('offline-links');
+        await setup();
+        fillStore();
+
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻し、路線の選択を中身に合わせる', async () => {
+        trips$ = failLater('offline');
+        stations$ = of(undefined);
+        links$ = of(undefined);
+        await setup();
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = fixture.componentInstance.isLoading();
+                params.apply(
+                    {
+                        operationTrips: {
+                            operation: {
+                                operationId: 'op-1',
+                                calendarId: 'cal-1',
+                            },
+                            trips: [
+                                {
+                                    startTime: { stationId: 'st-1' },
+                                    endTime: { stationId: 'st-1' },
+                                },
+                            ],
+                        },
+                        itineraryLinks,
+                        stations: [
+                            {
+                                stationId: 'st-1',
+                                routeStationLists: [
+                                    { route: { routeId: 'route-9' } },
+                                ],
+                            },
+                        ],
+                        stationAliases,
+                    },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'OperationRouteDiagram',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(
+            await firstValueFrom(OperationRouteDiagramStore.stations$),
+        ).toEqual([expect.objectContaining({ stationId: 'st-1' })]);
+        expect(
+            await firstValueFrom(OperationRouteDiagramStore.itineraryLinks$),
+        ).toEqual(itineraryLinks);
+        // 戻した駅・運用の経由路線に選択を合わせている
+        expect(
+            await firstValueFrom(OperationRouteDiagramStore.selectedRouteIds$),
+        ).toEqual(['route-9']);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('片方が先に失敗しても、残りの取得（前後の運用を含む）が終わってから戻す', async () => {
+        const stationsLate = new Subject<undefined>();
+        const linksLate = new Subject<undefined>();
+        trips$ = failLater('offline');
+        stations$ = stationsLate;
+        links$ = linksLate;
+        await setup();
+
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        stationsLate.next(undefined);
+        stationsLate.complete();
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        linksLate.next(undefined);
+        linksLate.complete();
+        await flush();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        trips$ = failLater('offline-first');
+        stations$ = of(undefined);
+        links$ = of(undefined);
+        await setup();
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+
+        // 取り直しを始めてから、先の取得の失敗が届く
+        trips$ = of(undefined);
+        await fixture.componentInstance.fetchData();
+        await flush();
+
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('戻す処理が壊れていても、読み込み中を解き、取得の失敗を投げる', async () => {
+        trips$ = of(undefined);
+        stations$ = of(undefined);
+        links$ = of(undefined);
+        await setup();
+        restore.mockRejectedValue(new Error('broken snapshot'));
+        fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        // コンストラクタの取得は受け流す
+        await flush();
+
+        trips$ = failLater('offline-again');
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline-again');
+
+        expect(restore).toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 });

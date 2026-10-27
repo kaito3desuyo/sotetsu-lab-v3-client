@@ -7,8 +7,9 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { Subject, of } from 'rxjs';
+import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
 
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
@@ -422,5 +423,237 @@ describe('TimetableStationComponent のサーバー', () => {
 
         expect(component.isTodaysCalendar()).toBe(true);
         expect(component.showCurrentFormation()).toBe(false);
+    });
+});
+
+describe('TimetableStationComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<TimetableStationComponent>;
+    let fetchDataSpy: jest.SpyInstance;
+    let originalFetchData: TimetableStationComponent['fetchData'];
+    let trips$: Observable<undefined>;
+    let operations$: Observable<undefined> = of(undefined);
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+
+    const calendar = { calendarId: 'cal-1' } as never;
+    const trips = [{ tripId: 'trip-1' }] as never;
+    const tripBlocks = [{ tripBlockId: 'block-1' }] as never;
+    const tripClasses = [{ tripClassId: 'class-1' }] as never;
+    const stations = [{ stationId: 'st-1' }] as never;
+    const operations = [{ operationId: 'op-1' }] as never;
+    const conditions = {
+        calendarId: 'cal-1',
+        stationId: 'st-1',
+        tripDirection: 0,
+    };
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
+    // 「処理されない拒否」と見なされ、ComponentFixture が投げ直してしまう
+    const failLater = (message: string) =>
+        timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
+
+    const setup = async () => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // 本物の fetchData の失敗だけ受け流す
+        originalFetchData = TimetableStationComponent.prototype.fetchData;
+        const original = originalFetchData;
+        fetchDataSpy = jest
+            .spyOn(TimetableStationComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: TimetableStationComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        const ok = () => of(undefined);
+        await TestBed.configureTestingModule({
+            imports: [TimetableStationComponent],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                calendar_id: 'cal-1',
+                                station_id: 'st-1',
+                                trip_direction: '0',
+                            }),
+                        ),
+                    },
+                },
+                {
+                    provide: TimetableStationService,
+                    useValue: {
+                        fetchCalendar: ok,
+                        fetchTrips: () => trips$,
+                        fetchTripClasses: ok,
+                        fetchStations: ok,
+                        fetchOperations: () => operations$,
+                        fetchOperationSightingTimeCrossSections: ok,
+                    },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(TimetableStationComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    };
+
+    const fillStore = () => {
+        TimetableStationStore.setCalendar(calendar);
+        TimetableStationStore.setTrips(trips);
+        TimetableStationStore.setTripBlocks(tripBlocks);
+        TimetableStationStore.setTripClasses(tripClasses);
+        TimetableStationStore.setStations(stations);
+        TimetableStationStore.setOperations(operations);
+    };
+
+    const emptyStore = () => {
+        TimetableStationStore.setCalendar(null as never);
+        TimetableStationStore.setTrips([]);
+        TimetableStationStore.setTripBlocks([]);
+        TimetableStationStore.setTripClasses([]);
+        TimetableStationStore.setStations([]);
+        TimetableStationStore.setOperations([]);
+    };
+
+    afterEach(() => {
+        operations$ = of(undefined);
+        fetchDataSpy.mockRestore();
+        fixture.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        emptyStore();
+        TimetableStationStore.setHasFetchedTimetable(false);
+        TimetableStationStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        trips$ = of(undefined);
+        await setup();
+        fillStore();
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'TimetableStation',
+            conditions,
+            data: {
+                calendar,
+                trips,
+                tripBlocks,
+                tripClasses,
+                stations,
+                operations,
+            },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻す', async () => {
+        trips$ = failLater('offline');
+        await setup();
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = fixture.componentInstance.isLoading();
+                params.apply(
+                    {
+                        calendar,
+                        trips,
+                        tripBlocks,
+                        tripClasses,
+                        stations,
+                        operations,
+                    },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'TimetableStation',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(TimetableStationStore.snapshot()).toEqual({
+            calendar,
+            trips,
+            tripBlocks,
+            tripClasses,
+            stations,
+            operations,
+        });
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        trips$ = failLater('offline-first');
+        await setup();
+        fixture = TestBed.createComponent(TimetableStationComponent);
+
+        // 取り直しを始めてから、先の取得の失敗が届く
+        trips$ = of(undefined);
+        await fixture.componentInstance.fetchData();
+        await flush();
+
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('片方が先に失敗しても、遅い方が終わるまで保存した中身を戻さない', async () => {
+        trips$ = failLater('offline');
+        // 先に失敗した取得より遅く終わる取得
+        operations$ = timer(50).pipe(switchMap(() => of(undefined)));
+        await setup();
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(restore).not.toHaveBeenCalled();
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('戻す処理が壊れていても読み込みを解く', async () => {
+        trips$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('restore broken'));
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
+    });
+
+    it('戻す処理が壊れていても、元の取得の失敗を投げ直す', async () => {
+        trips$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('restore broken'));
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        // コンストラクタの取得は失敗を受け流すので、本物の fetchData を直接呼んで確かめる
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline');
+
+        expect(restore).toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
     });
 });

@@ -55,6 +55,27 @@ type StoreProps = {
     isVisibleCurrentPosition: boolean;
 };
 
+/**
+ * 圏外のために端末に保存する中身。画面の設定（絞り込み・トグル）と最終更新・読み込み中は入れない。
+ */
+export type OperationRealTimeSnapshot = Pick<
+    StoreProps,
+    | 'routes'
+    | 'agencyOrder'
+    | 'stations'
+    | 'tripClasses'
+    | 'calendar'
+    | 'operations'
+    | 'itineraryLinks'
+    | 'formations'
+    | 'operationGroups'
+    | 'operationSightingTimeCrossSections'
+    | 'formationSightingTimeCrossSections'
+    | 'operationSightingHistories'
+    | 'formationSightingHistories'
+    | 'currentPositions'
+>;
+
 const store = createStore(
     { name: 'OperationRealTimeStore' },
     withProps<StoreProps>({
@@ -241,6 +262,70 @@ export const OperationRealTimeStore = {
         const time = finalUpdateTime ?? Math.floor(Date.now() / 1000);
         store.update(setProp('finalUpdateTime', () => time));
     },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): OperationRealTimeSnapshot {
+        const {
+            routes,
+            agencyOrder,
+            stations,
+            tripClasses,
+            calendar,
+            operations,
+            itineraryLinks,
+            formations,
+            operationGroups,
+            operationSightingTimeCrossSections,
+            formationSightingTimeCrossSections,
+            operationSightingHistories,
+            formationSightingHistories,
+            currentPositions,
+        } = store.getValue();
+        return {
+            routes,
+            agencyOrder,
+            stations,
+            tripClasses,
+            calendar,
+            operations,
+            itineraryLinks,
+            formations,
+            operationGroups,
+            operationSightingTimeCrossSections,
+            formationSightingTimeCrossSections,
+            operationSightingHistories,
+            formationSightingHistories,
+            currentPositions,
+        };
+    },
+    /**
+     * 保存した中身を戻す（画面の設定は今のまま）。
+     * 「最終更新」には保存した時刻（epoch ミリ秒）を出す。
+     * 運用・編成は保存できた時点で取得済みなので、骨組みではなく中身を出す。
+     */
+    restoreSnapshot(data: OperationRealTimeSnapshot, savedAt: number): void {
+        store.update((state) => ({
+            ...state,
+            routes: data.routes,
+            agencyOrder: data.agencyOrder,
+            stations: data.stations,
+            tripClasses: data.tripClasses,
+            calendar: data.calendar,
+            operations: data.operations,
+            itineraryLinks: data.itineraryLinks,
+            formations: data.formations,
+            hasFetchedOperations: true,
+            hasFetchedFormations: true,
+            operationGroups: data.operationGroups,
+            operationSightingTimeCrossSections:
+                data.operationSightingTimeCrossSections,
+            formationSightingTimeCrossSections:
+                data.formationSightingTimeCrossSections,
+            operationSightingHistories: data.operationSightingHistories,
+            formationSightingHistories: data.formationSightingHistories,
+            currentPositions: data.currentPositions,
+            finalUpdateTime: Math.floor(savedAt / 1000),
+        }));
+    },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));
     },
@@ -249,6 +334,13 @@ export const OperationRealTimeStore = {
     },
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
+    },
+    /** 運用・編成を取得済みとする印を外す（テストで、前のテストの取得を持ち越さないため） */
+    resetHasFetched(): void {
+        store.update(
+            setProp('hasFetchedOperations', () => false),
+            setProp('hasFetchedFormations', () => false),
+        );
     },
     setIsEnableAutoReload(isEnable: boolean): void {
         store.update(setProp('isEnableAutoReload', () => isEnable));
@@ -333,6 +425,9 @@ export const OperationRealTimeStore = {
         select((state) => state.isVisibleCurrentPosition),
     ),
 
+    get hasFetchedOperations(): boolean {
+        return store.getValue().hasFetchedOperations;
+    },
     get routes(): RouteDetailsDto[] {
         return store.getValue().routes;
     },

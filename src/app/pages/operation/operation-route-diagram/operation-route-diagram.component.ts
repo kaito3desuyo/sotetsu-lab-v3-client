@@ -18,6 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { lastValueFrom, of } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -45,7 +46,10 @@ import { OperationRouteDiagramDrawingComponent } from './components/operation-ro
 import { OperationRouteDiagramRouteFilterComponent } from './components/operation-route-diagram-route-filter/operation-route-diagram-route-filter.component';
 import { OperationRouteDiagramNavigateTimetable } from './interfaces/operation-route-diagram.interface';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
-import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
+import {
+    OperationRouteDiagramSnapshot,
+    OperationRouteDiagramStore,
+} from './stores/operation-route-diagram.store';
 import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import {
     reconnectTripOperationLists,
@@ -59,6 +63,9 @@ OperationRouteDiagramStore.resetLoading();
 let fetchSeq = 0;
 // ダイヤの替えの世代番号（同じ理由でモジュールに置く）
 let calendarChangeSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'OperationRouteDiagram';
 
 @Component({
     selector: 'app-operation-route-diagram',
@@ -86,6 +93,7 @@ export class OperationRouteDiagramComponent {
     );
     readonly #operationService = inject(OperationService);
     readonly #notification = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
     readonly calendars = toSignal(inject(CalendarListStateQuery).calendars$, {
@@ -361,6 +369,9 @@ export class OperationRouteDiagramComponent {
         if (!OperationRouteDiagramStore.operationId) return;
 
         const seq = ++fetchSeq;
+        const conditions = {
+            operationId: OperationRouteDiagramStore.operationId,
+        };
         OperationRouteDiagramStore.enableLoading();
         OperationRouteDiagramStore.setHasFetchedOperationTrips(false);
 
@@ -373,12 +384,43 @@ export class OperationRouteDiagramComponent {
         ]);
 
         // 前後の運用はダイヤが分かってから取る。取れなくても行路図は出す
+        let hasFetchedItineraryLinks = true;
         try {
             await lastValueFrom(
                 this.#operationRouteDiagramService.fetchItineraryLinks(),
             );
         } catch {
+            hasFetchedItineraryLinks = false;
             OperationRouteDiagramStore.setItineraryLinks([]);
+        }
+
+        const failure = results.find(
+            (result): result is PromiseRejectedResult =>
+                result.status === 'rejected',
+        );
+        if (failure) {
+            // 通信できないときは、同じ運用で保存した中身を出す（古い取得の失敗では戻さない）。
+            // 取得がすべて終わってから戻す（遅れて届いた成功が、戻した中身を上書きしないように）
+            // 戻す処理が壊れていても、読み込み中は必ず解く
+            if (seq === fetchSeq) {
+                try {
+                    await this.#offlineSnapshots.restore({
+                        key: OFFLINE_SNAPSHOT_KEY,
+                        conditions,
+                        apply: (data: OperationRouteDiagramSnapshot) =>
+                            OperationRouteDiagramStore.restoreSnapshot(data),
+                    });
+                } catch {
+                    // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                }
+            }
+        } else if (hasFetchedItineraryLinks && seq === fetchSeq) {
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SNAPSHOT_KEY,
+                conditions,
+                data: OperationRouteDiagramStore.snapshot(),
+            });
         }
 
         // 運用の URL にダイヤは無い。取った運用のダイヤでタグを付ける（その時刻表が書き換わったら失効）
@@ -395,10 +437,6 @@ export class OperationRouteDiagramComponent {
             OperationRouteDiagramStore.setHasFetchedOperationTrips(true);
         }
 
-        const failure = results.find(
-            (result): result is PromiseRejectedResult =>
-                result.status === 'rejected',
-        );
         if (failure) {
             throw failure.reason;
         }

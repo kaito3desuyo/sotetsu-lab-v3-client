@@ -17,6 +17,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListStateQuery } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
@@ -36,6 +38,8 @@ import { TrainLocationLineComponent } from './components/train-location-line/tra
 import { TrainLocationService } from './services/train-location.service';
 import {
     TrainLocationMode,
+    TrainLocationSightingsSnapshot,
+    TrainLocationSnapshot,
     TrainLocationStore,
 } from './stores/train-location.store';
 import { applyContinuationsToCards } from './utils/apply-continuations-to-cards.util';
@@ -70,6 +74,12 @@ TrainLocationStore.resetLoading();
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
 
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'TrainLocation';
+
+/** 圏外のために保存する目撃のキー（目撃は Service Worker に残らないので別に保存する） */
+const OFFLINE_SIGHTINGS_SNAPSHOT_KEY = 'TrainLocationSightings';
+
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
@@ -93,6 +103,7 @@ export class TrainLocationComponent {
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #trainLocationService = inject(TrainLocationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #todaysCalendarListStateQuery = inject(
         TodaysCalendarListStateQuery,
     );
@@ -380,6 +391,19 @@ export class TrainLocationComponent {
     });
 
     readonly #firstLoadDone = signal(false);
+    /**
+     * ストアのダイヤと路線の組が、今の条件と合っているか。路線だけ・ダイヤだけの取り直しは、
+     * この組が合っているときだけ圏外用に保存する（前の取得が失敗していると、新旧が混ざった中身になるため）
+     */
+    #storeInSync = false;
+    /** ストアの前後の運用（つながり）が、取得の失敗で空のまま劣化しているか。取れたら消す */
+    #isLinksDegraded = false;
+    /**
+     * 目撃を圏外用の保存から戻して知らせた条件（date を含む）。
+     * 圏外の間は 10 秒ごとに取得に失敗するので、同じ条件では 1 回しか戻さず知らせない。
+     * 目撃が取れたら消す（次に圏外になったらまた 1 回だけ知らせる）
+     */
+    #sightingsRestoredFor: string | null = null;
 
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の路線図が一瞬出ないようにする
@@ -398,11 +422,7 @@ export class TrainLocationComponent {
                 if (!this.isTodaySelected() || !operationNumbers.length) {
                     return;
                 }
-                void lastValueFrom(
-                    this.#trainLocationService.fetchMissingOperationSightingTimeCrossSections(
-                        operationNumbers,
-                    ),
-                );
+                void this.fetchOperationSightings(operationNumbers);
             });
 
         this.#route.paramMap
@@ -474,6 +494,10 @@ export class TrainLocationComponent {
         refetchStationAxis: boolean;
     }): Promise<void> {
         const seq = ++fetchSeq;
+        const conditions = {
+            calendarId: TrainLocationStore.calendarId,
+            routeId: TrainLocationStore.selectedRouteId,
+        };
         TrainLocationStore.enableLoading();
         TrainLocationStore.setHasFetchedTrainLocation(false);
 
@@ -488,17 +512,38 @@ export class TrainLocationComponent {
                     );
                 }
                 if (flags.refetchTripBlocks) {
-                    await Promise.all([
+                    // 失敗を決める前に両方の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+                    const results = await Promise.allSettled([
                         lastValueFrom(
                             this.#trainLocationService.fetchTripBlocks(),
                         ),
+                        // 折返しの判定用。取れなくても空として扱うので路線図は止めない
                         lastValueFrom(
                             this.#trainLocationService.fetchItineraryLinks(),
                         ),
                     ]);
+                    const rejected = results.find(
+                        (result): result is PromiseRejectedResult =>
+                            result.status === 'rejected',
+                    );
+                    if (rejected) {
+                        throw rejected.reason;
+                    }
+                    // 前後の運用が取れなかった中身は、圏外用に保存しない（良い保存を空のつながりで上書きしない）
+                    const linksResult = results[1];
+                    const hasLinksFailed =
+                        linksResult.status === 'fulfilled' &&
+                        !!linksResult.value?.failed;
+                    // 取れなかったら、ストアのつながりは劣化したまま（路線だけの取り直しでも保存しない）。
+                    // 古い取得が成功しても、新しい取得の印は消さない
+                    if (hasLinksFailed) {
+                        this.#isLinksDegraded = true;
+                    } else if (seq === fetchSeq) {
+                        this.#isLinksDegraded = false;
+                    }
                 }
             };
-            await Promise.all([
+            const results = await Promise.allSettled([
                 fetchTripBlocks(),
                 flags.refetchStationAxis
                     ? lastValueFrom(
@@ -506,6 +551,49 @@ export class TrainLocationComponent {
                       )
                     : undefined,
             ]);
+            const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failure) {
+                // 前の取得が失敗したら、ストアのダイヤと路線の組はずれているかもしれない
+                this.#storeInSync = false;
+                // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）。
+                // 戻す処理が壊れていても、取得の失敗をそのまま投げる（読み込み中は finally で解く）。
+                // 戻したときは初回扱いのまま（次に通信できたら取り直す）
+                if (seq === fetchSeq) {
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: TrainLocationSnapshot) =>
+                                TrainLocationStore.restoreSnapshot(data),
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗を優先する
+                    }
+                }
+                throw failure.reason;
+            }
+            // ダイヤと路線の両方を取り直したか、前の取得が成功していたときだけ、ストアの中身が条件と組になっている
+            // 古い取得で終わったときは、新しい取得とのあいだで組がずれているかもしれない
+            if (seq !== fetchSeq) {
+                this.#storeInSync = false;
+            } else if (flags.refetchTripBlocks && flags.refetchStationAxis) {
+                this.#storeInSync = true;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (
+                !this.#isLinksDegraded &&
+                this.#storeInSync &&
+                seq === fetchSeq
+            ) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: TrainLocationStore.snapshot(),
+                });
+            }
             this.#firstLoadDone.set(true);
         } finally {
             TrainLocationStore.disableLoading();
@@ -513,6 +601,60 @@ export class TrainLocationComponent {
             if (seq === fetchSeq) {
                 TrainLocationStore.setHasFetchedTrainLocation(true);
             }
+        }
+    }
+
+    /**
+     * 動いている列車の運用の目撃を、まだ取っていない分だけ取る。
+     * 目撃は Service Worker に残らないので、列車の保存とは別に、日付つきで圏外用に保存する。
+     * 取れなかったら同じ日の保存を戻し、失敗は今までどおり投げる（戻す処理が壊れていても同じ）。
+     */
+    async fetchOperationSightings(
+        operationNumbers: readonly string[],
+    ): Promise<void> {
+        const conditions = {
+            calendarId: TrainLocationStore.calendarId,
+            routeId: TrainLocationStore.selectedRouteId,
+            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+        };
+        let fetched: boolean;
+        try {
+            fetched = await lastValueFrom(
+                this.#trainLocationService.fetchMissingOperationSightingTimeCrossSections(
+                    operationNumbers,
+                ),
+            );
+        } catch (error) {
+            // すでに取れている目撃は残す。同じ条件ですでに戻して知らせていたら、失敗だけ投げる
+            const restoredKey = JSON.stringify(conditions);
+            if (this.#sightingsRestoredFor === restoredKey) {
+                throw error;
+            }
+            this.#sightingsRestoredFor = restoredKey;
+            try {
+                await this.#offlineSnapshots.restore({
+                    key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                    conditions,
+                    apply: (data: TrainLocationSightingsSnapshot) =>
+                        TrainLocationStore.restoreOperationSightingTimeCrossSections(
+                            {
+                                ...data,
+                                ...TrainLocationStore.operationSightingTimeCrossSections,
+                            },
+                        ),
+                });
+            } catch {
+                // 保存した中身が壊れていても、取得の失敗を優先する
+            }
+            throw error;
+        }
+        if (fetched) {
+            this.#sightingsRestoredFor = null;
+            void this.#offlineSnapshots.save({
+                key: OFFLINE_SIGHTINGS_SNAPSHOT_KEY,
+                conditions,
+                data: TrainLocationStore.snapshotOperationSightingTimeCrossSections(),
+            });
         }
     }
 

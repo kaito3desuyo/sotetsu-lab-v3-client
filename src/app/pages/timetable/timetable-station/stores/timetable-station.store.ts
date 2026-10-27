@@ -39,6 +39,24 @@ type StoreProps = {
     loadingQueue: boolean[];
 };
 
+/**
+ * 圏外のために端末に保存する中身。充当編成（operationSightingTimeCrossSections）は
+ * 「今日」で変わるので入れない。
+ */
+export type TimetableStationSnapshot = Pick<
+    StoreProps,
+    | 'calendar'
+    | 'trips'
+    | 'tripBlocks'
+    | 'tripClasses'
+    | 'stations'
+    | 'operations'
+>;
+
+/** 圏外のために端末に保存する充当編成（時刻表とは別に、日付つきで保存する） */
+export type TimetableStationSightingsSnapshot =
+    StoreProps['operationSightingTimeCrossSections'];
+
 const store = createStore(
     { name: 'TimetableStationStore' },
     withProps<StoreProps>({
@@ -220,6 +238,48 @@ export const TimetableStationStore = {
     },
     resetLoading(): void {
         store.update(setProp('loadingQueue', () => []));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): TimetableStationSnapshot {
+        const {
+            calendar,
+            trips,
+            tripBlocks,
+            tripClasses,
+            stations,
+            operations,
+        } = store.getValue();
+        return {
+            calendar,
+            trips,
+            tripBlocks,
+            tripClasses,
+            stations,
+            operations,
+        };
+    },
+    /** 保存した中身を戻す（条件の calendarId・stationId・tripDirection は今のまま） */
+    restoreSnapshot(data: TimetableStationSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            calendar: data.calendar,
+            trips: data.trips,
+            tripBlocks: data.tripBlocks,
+            tripClasses: data.tripClasses,
+            stations: data.stations,
+            operations: data.operations,
+        }));
+    },
+
+    /** 圏外のために保存する充当編成を取り出す */
+    snapshotOperationSightingTimeCrossSections(): TimetableStationSightingsSnapshot {
+        return store.getValue().operationSightingTimeCrossSections;
+    },
+    /** 保存した充当編成を戻す */
+    restoreOperationSightingTimeCrossSections(
+        data: TimetableStationSightingsSnapshot,
+    ): void {
+        store.update(setProp('operationSightingTimeCrossSections', () => data));
     },
 
     calendarId$: store.pipe(select((state) => state.calendarId)),

@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { mergeMap, switchMap } from 'rxjs/operators';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -46,7 +47,10 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
 import { TimetableAllLineTableComponent } from './components/timetable-all-line-table/timetable-all-line-table.component';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
-import { TimetableAllLineStore } from './stores/timetable-all-line.store';
+import {
+    TimetableAllLineSnapshot,
+    TimetableAllLineStore,
+} from './stores/timetable-all-line.store';
 
 // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
 TimetableAllLineStore.resetLoading();
@@ -54,6 +58,9 @@ TimetableAllLineStore.resetLoading();
 // 取得の世代番号。ストアと同じくモジュールに置き、ページのインスタンスをまたいで一意にする
 // （離れてすぐ戻ったとき、前のインスタンスの取得の終わりが新しい骨組みを消さないように）
 let fetchSeq = 0;
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'TimetableAllLine';
 
 @Component({
     selector: 'app-timetable-all-line',
@@ -79,6 +86,7 @@ export class TimetableAllLineComponent {
     readonly #loading = inject(LoadingService);
     readonly #error = inject(ErrorHandlerService);
     readonly #notification = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #confirmDialogService = inject(ConfirmDialogService);
     readonly #calendarSelectDialogService = inject(CalendarSelectDialogService);
     readonly #timetableAllLineService = inject(TimetableAllLineService);
@@ -230,6 +238,10 @@ export class TimetableAllLineComponent {
         const seq = ++fetchSeq;
         TimetableAllLineStore.enableLoading();
         TimetableAllLineStore.setHasFetchedTripBlocks(false);
+        const conditions = {
+            calendarId: TimetableAllLineStore.calendarId,
+            tripDirection: TimetableAllLineStore.tripDirection,
+        };
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -246,10 +258,40 @@ export class TimetableAllLineComponent {
             );
             // 駅一覧と trip-blocks は互いの結果を使わないので、同時に取る
             // （駅一覧は serviceId、trip-blocks はストアの条件で決まる）
-            await Promise.all([
+            // 失敗を決める前に両方の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+            const results = await Promise.allSettled([
                 lastValueFrom(this.#timetableAllLineService.fetchStations()),
                 lastValueFrom(this.#timetableAllLineService.fetchTripBlocks()),
             ]);
+            const failure = results.find(
+                (result) => result.status === 'rejected',
+            );
+            if (failure) {
+                // 通信できないときは、同じ条件で保存した中身を出す（古い取得の失敗では戻さない）
+                if (seq === fetchSeq) {
+                    try {
+                        await this.#offlineSnapshots.restore({
+                            key: OFFLINE_SNAPSHOT_KEY,
+                            conditions,
+                            apply: (data: TimetableAllLineSnapshot) => {
+                                TimetableAllLineStore.restoreSnapshot(data);
+                                TimetableAllLineStore.initializeSelectedRouteIds();
+                            },
+                        });
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗をそのまま投げる
+                    }
+                }
+                throw failure.reason;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (seq === fetchSeq) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions,
+                    data: TimetableAllLineStore.snapshot(),
+                });
+            }
             TimetableAllLineStore.initializeSelectedRouteIds();
         } finally {
             TimetableAllLineStore.disableLoading();

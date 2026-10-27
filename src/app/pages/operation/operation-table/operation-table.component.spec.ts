@@ -10,8 +10,17 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { Subject, of, throwError } from 'rxjs';
+import {
+    Observable,
+    Subject,
+    firstValueFrom,
+    of,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
 
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListStateQuery } from 'src/app/global-states/calendar-list.state';
@@ -19,7 +28,10 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { TodaysCalendarListStateQuery } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTableComponent } from './operation-table.component';
 import { OperationTableService } from './services/operation-table.service';
-import { OperationTableStore } from './stores/operation-table.store';
+import {
+    OperationTableStore,
+    pickOperationTableSettings,
+} from './stores/operation-table.store';
 
 describe('OperationTableComponent', () => {
     let component: OperationTableComponent;
@@ -607,5 +619,285 @@ describe('OperationTableComponent のサーバー', () => {
 
         expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
         expect(fetchCalendar).toHaveBeenCalled();
+    });
+});
+
+describe('OperationTableComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<OperationTableComponent>;
+    let fetchDataSpy: jest.SpyInstance;
+    let originalFetchData: OperationTableComponent['fetchData'];
+    let calendar$: Observable<undefined>;
+    let trips$: Observable<undefined>;
+    let stations$: Observable<undefined>;
+    let tripClasses$: Observable<undefined>;
+    let links$: Observable<undefined>;
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+
+    const calendar = { calendarId: 'cal-1' } as never;
+    const operationTrips = [
+        {
+            operation: { operationId: 'op-1', operationNumber: '11' },
+            trips: [],
+        },
+    ] as never;
+    const itineraryLinks = [{ tripOperationListId: 'link-1' }] as never;
+    const stations = [{ stationId: 'st-1' }] as never;
+    const tripClasses = [{ tripClassId: 'class-1' }] as never;
+    const conditions = { calendarId: 'cal-1' };
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
+    // 「処理されない拒否」と見なされ、ComponentFixture が投げ直してしまう
+    const failLater = (message: string) =>
+        timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
+
+    const setup = async () => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // 本物の fetchData の失敗だけ受け流す
+        originalFetchData = OperationTableComponent.prototype.fetchData;
+        const original = originalFetchData;
+        fetchDataSpy = jest
+            .spyOn(OperationTableComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: OperationTableComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        await TestBed.configureTestingModule({
+            imports: [OperationTableComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({ calendar_id: 'cal-1' }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationTableService,
+                    useValue: {
+                        fetchCalendar: () => calendar$,
+                        fetchOperationTrips: () => trips$,
+                        fetchStations: () => stations$,
+                        fetchTripClasses: () => tripClasses$,
+                        fetchItineraryLinks: () => links$,
+                    },
+                },
+                {
+                    provide: CalendarListStateQuery,
+                    useValue: { calendars$: of([]) },
+                },
+                {
+                    provide: TodaysCalendarListStateQuery,
+                    useValue: { todaysCalendarId: 'cal-1' },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(OperationTableComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+    };
+
+    const succeedAll = () => {
+        calendar$ = of(undefined);
+        trips$ = of(undefined);
+        stations$ = of(undefined);
+        tripClasses$ = of(undefined);
+        links$ = of(undefined);
+    };
+
+    // 取得は成功した形のストア（サービスの差し替えはストアへ書かないので、先に入れておく）
+    const fillStore = () => {
+        OperationTableStore.setCalendar(calendar);
+        OperationTableStore.setOperationTrips(operationTrips);
+        OperationTableStore.setItineraryLinks(itineraryLinks);
+        OperationTableStore.setStations(stations);
+        OperationTableStore.setTripClasses(tripClasses);
+    };
+
+    afterEach(() => {
+        fetchDataSpy.mockRestore();
+        fixture?.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        OperationTableStore.setCalendar(null as never);
+        OperationTableStore.setOperationTrips([]);
+        OperationTableStore.setItineraryLinks([]);
+        OperationTableStore.setStations([]);
+        OperationTableStore.setTripClasses([]);
+        OperationTableStore.setSelectedGroupNames([]);
+        OperationTableStore.setCalendarId(null);
+        OperationTableStore.setHasFetchedOperationTrips(false);
+        OperationTableStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        succeedAll();
+        await setup();
+        fillStore();
+
+        fixture = TestBed.createComponent(OperationTableComponent);
+        await flush();
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'OperationTable',
+            conditions,
+            data: {
+                calendar,
+                operationTrips,
+                itineraryLinks,
+                stations,
+                tripClasses,
+            },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('前後の運用の取得だけが失敗したときは、保存も戻しもしない', async () => {
+        succeedAll();
+        links$ = failLater('offline-links');
+        await setup();
+        fillStore();
+
+        fixture = TestBed.createComponent(OperationTableComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻す', async () => {
+        succeedAll();
+        trips$ = failLater('offline');
+        await setup();
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = fixture.componentInstance.isLoading();
+                params.apply(
+                    {
+                        calendar,
+                        operationTrips,
+                        itineraryLinks,
+                        stations,
+                        tripClasses,
+                    },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        fixture = TestBed.createComponent(OperationTableComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'OperationTable',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(await firstValueFrom(OperationTableStore.calendar$)).toEqual(
+            calendar,
+        );
+        expect(OperationTableStore.operations).toEqual(operationTrips);
+        expect(
+            await firstValueFrom(OperationTableStore.itineraryLinks$),
+        ).toEqual(itineraryLinks);
+        expect(await firstValueFrom(OperationTableStore.stations$)).toEqual(
+            stations,
+        );
+        expect(await firstValueFrom(OperationTableStore.tripClasses$)).toEqual(
+            tripClasses,
+        );
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('片方が先に失敗しても、残りの取得（前後の運用を含む）が終わってから戻す', async () => {
+        const stationsLate = new Subject<undefined>();
+        const linksLate = new Subject<undefined>();
+        succeedAll();
+        trips$ = failLater('offline');
+        stations$ = stationsLate;
+        links$ = linksLate;
+        await setup();
+
+        fixture = TestBed.createComponent(OperationTableComponent);
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        stationsLate.next(undefined);
+        stationsLate.complete();
+        await flush();
+        expect(restore).not.toHaveBeenCalled();
+
+        linksLate.next(undefined);
+        linksLate.complete();
+        await flush();
+
+        expect(restore).toHaveBeenCalledTimes(1);
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        succeedAll();
+        trips$ = failLater('offline-first');
+        await setup();
+        fixture = TestBed.createComponent(OperationTableComponent);
+
+        // 取り直しを始めてから、先の取得の失敗が届く
+        trips$ = of(undefined);
+        await fixture.componentInstance.fetchData();
+        await flush();
+
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('戻す処理が壊れていても、読み込み中を解き、取得の失敗を投げる', async () => {
+        succeedAll();
+        trips$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('broken snapshot'));
+        fixture = TestBed.createComponent(OperationTableComponent);
+        // コンストラクタの取得の失敗は受け流す
+        await flush();
+
+        trips$ = failLater('offline-again');
+        await expect(
+            originalFetchData.call(fixture.componentInstance),
+        ).rejects.toThrow('offline-again');
+
+        expect(restore).toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+});
+
+describe('pickOperationTableSettings', () => {
+    it('丸ごと保存の古い値を読み込んでも、運用群以外はストアに入らない', () => {
+        const picked = pickOperationTableSettings({
+            selectedGroupNames: ['1群'],
+            operationTrips: [{ operation: { operationId: 'old' } }],
+            calendar: { calendarId: 'old' },
+            hasFetchedOperationTrips: true,
+            loadingQueue: [true],
+        } as never);
+
+        expect(picked).toEqual({
+            calendarId: null,
+            calendar: null,
+            operationTrips: [],
+            itineraryLinks: [],
+            stations: [],
+            tripClasses: [],
+            selectedGroupNames: ['1群'],
+            hasFetchedOperationTrips: false,
+            loadingQueue: [],
+        });
     });
 });

@@ -5,8 +5,17 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import {
+    firstValueFrom,
+    Observable,
+    of,
+    Subject,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
 
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { OperationPastTimeComponent } from './operation-past-time.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
@@ -242,5 +251,205 @@ describe('OperationPastTimeComponent のサーバー', () => {
             'sighting-date:2026-10-01',
             'sighting-date:2026-10-02',
         ]);
+    });
+});
+
+describe('OperationPastTimeComponent の圏外の保存', () => {
+    let fixture: ComponentFixture<OperationPastTimeComponent>;
+    let fetchDataSpy: jest.SpyInstance;
+    let sightings$: Observable<undefined>;
+    const save = jest.fn(() => Promise.resolve());
+    const restore = jest.fn();
+
+    const calendars = [
+        { date: '2026-10-22', calendar: { calendarId: 'c-1' } },
+    ] as never;
+    const operations = [{ operationId: 'op-1' }] as never;
+    const formations = [{ formationId: 'f-1' }] as never;
+    const operationSightings = [{ operationSightingId: 's-1' }] as never;
+    const conditions = {
+        referenceDate: '2026-10-22',
+        days: 7,
+        includeInvalidated: false,
+    };
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 次のタスクで失敗する取得。すぐ失敗させると「処理されない拒否」と見なされ、
+    // ComponentFixture が投げ直してしまう
+    const failLater = (message: string) =>
+        timer(0).pipe(switchMap(() => throwError(() => new Error(message))));
+
+    const setup = async (
+        params: Record<string, string> = {
+            reference_date: '2026-10-22',
+            days: '7',
+        },
+    ) => {
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
+        // 本物の fetchData の失敗だけ受け流す
+        const original = OperationPastTimeComponent.prototype.fetchData;
+        fetchDataSpy = jest
+            .spyOn(OperationPastTimeComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: OperationPastTimeComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        await TestBed.configureTestingModule({
+            imports: [OperationPastTimeComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                    },
+                },
+                {
+                    provide: OperationPastTimeService,
+                    useValue: {
+                        fetchCalendarByDate: () => of(undefined),
+                        fetchFormations: () => of(undefined),
+                        fetchOperationsV3: () => of(undefined),
+                        fetchOperationSightingsV3: () => sightings$,
+                    },
+                },
+                { provide: OfflineSnapshots, useValue: { save, restore } },
+            ],
+        })
+            .overrideComponent(OperationPastTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+    };
+
+    afterEach(() => {
+        fetchDataSpy.mockRestore();
+        fixture?.destroy();
+        jest.clearAllMocks();
+        restore.mockReset();
+        OperationPastTimeStore.setCalendars([]);
+        OperationPastTimeStore.setOperations([]);
+        OperationPastTimeStore.setFormations([]);
+        OperationPastTimeStore.setOperationSightings([]);
+        OperationPastTimeStore.setReferenceDate(null);
+        OperationPastTimeStore.setDays(null);
+        OperationPastTimeStore.setIncludeInvalidated(false);
+        OperationPastTimeStore.setHasFetchedPastTime(false);
+        OperationPastTimeStore.resetLoading();
+    });
+
+    it('成功したら条件と中身を保存する', async () => {
+        sightings$ = of(undefined);
+        await setup();
+        OperationPastTimeStore.setCalendars(calendars);
+        OperationPastTimeStore.setOperations(operations);
+        OperationPastTimeStore.setFormations(formations);
+        OperationPastTimeStore.setOperationSightings(operationSightings);
+
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        await flush();
+
+        expect(save).toHaveBeenCalledWith({
+            key: 'OperationPastTime',
+            conditions,
+            data: { calendars, operations, formations, operationSightings },
+        });
+        expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('日付の無い URL では、成功しても保存しない', async () => {
+        sightings$ = of(undefined);
+        // 起点の日・日数の無い素の URL（取得は何もせず終わる）
+        await setup({});
+
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).not.toHaveBeenCalled();
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('失敗したら保存した中身を、読み込み中を解く前に戻す', async () => {
+        sightings$ = failLater('offline');
+        await setup();
+        let isLoadingWhenRestored: boolean | undefined;
+        restore.mockImplementation(
+            (params: { apply: (data: unknown, savedAt: number) => void }) => {
+                isLoadingWhenRestored = fixture.componentInstance.isLoading();
+                params.apply(
+                    { calendars, operations, formations, operationSightings },
+                    0,
+                );
+                return Promise.resolve(null);
+            },
+        );
+
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        await flush();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(restore).toHaveBeenCalledWith({
+            key: 'OperationPastTime',
+            conditions,
+            apply: expect.any(Function),
+        });
+        expect(isLoadingWhenRestored).toBe(true);
+        expect(await firstValueFrom(OperationPastTimeStore.calendars$)).toEqual(
+            calendars,
+        );
+        expect(
+            await firstValueFrom(OperationPastTimeStore.operations$),
+        ).toEqual(operations);
+        expect(
+            await firstValueFrom(OperationPastTimeStore.formations$),
+        ).toEqual(formations);
+        expect(
+            await firstValueFrom(OperationPastTimeStore.operationSightings$),
+        ).toEqual(operationSightings);
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+        expect(
+            await firstValueFrom(OperationPastTimeStore.hasFetchedPastTime$),
+        ).toBe(true);
+    });
+
+    it('戻す処理が壊れていても、読み込み中は解く', async () => {
+        sightings$ = failLater('offline');
+        await setup();
+        restore.mockRejectedValue(new Error('broken snapshot'));
+
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        await flush();
+
+        expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('取得の失敗は今までどおり投げ直す', async () => {
+        sightings$ = failLater('offline');
+        await setup();
+        restore.mockResolvedValue(null);
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+        // コンストラクタの取得が終わるのを待ってから、本物の取得を直接呼ぶ
+        await flush();
+        sightings$ = failLater('offline-again');
+        fetchDataSpy.mockRestore();
+
+        await expect(fixture.componentInstance.fetchData()).rejects.toThrow(
+            'offline-again',
+        );
+    });
+
+    it('古い取得が失敗しても、保存した中身は戻さない', async () => {
+        const first$ = new Subject<undefined>();
+        sightings$ = first$;
+        await setup();
+        fixture = TestBed.createComponent(OperationPastTimeComponent);
+
+        // 取り直しを始めてから、先の取得の失敗が届く
+        sightings$ = of(undefined);
+        await fixture.componentInstance.fetchData();
+        first$.error(new Error('offline-first'));
+        await flush();
+
+        expect(restore).not.toHaveBeenCalled();
     });
 });

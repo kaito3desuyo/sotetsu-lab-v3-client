@@ -123,12 +123,13 @@ export class OperationRealTimeService {
     /**
      * 運用のつながり。位置表示で乗り移りの端を見分けるためだけに使うので、
      * 取れなくても空として扱い（従来の入出庫の値だけの判定）、ページは止めない。
+     * 取れなかったことは failed で返す（呼び出し側が、劣化した中身を圏外用に保存しないため）。
      */
-    fetchItineraryLinks(): Observable<void> {
+    fetchItineraryLinks(): Observable<{ failed: boolean }> {
         const calendarId = OperationRealTimeStore.calendar?.calendarId;
         if (!calendarId) {
             OperationRealTimeStore.setItineraryLinks([]);
-            return of(undefined);
+            return of({ failed: false });
         }
         return this.#operationService
             .findManyItineraryLinks({ calendarId })
@@ -136,11 +137,11 @@ export class OperationRealTimeService {
                 tap((links) => {
                     OperationRealTimeStore.setItineraryLinks(links);
                 }),
+                map(() => ({ failed: false })),
                 catchError(() => {
                     OperationRealTimeStore.setItineraryLinks([]);
-                    return of(undefined);
+                    return of({ failed: true });
                 }),
-                map(() => undefined),
             );
     }
 

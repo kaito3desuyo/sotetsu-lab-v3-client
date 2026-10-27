@@ -39,13 +39,15 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
         } as unknown as OperationSightingTimeCrossSectionDto;
         findMany.mockReturnValue(of({ '12': crossSection }));
 
-        await lastValueFrom(
+        const fetched = await lastValueFrom(
             service.fetchMissingOperationSightingTimeCrossSections([
                 '11',
                 '12',
                 '12',
             ]),
         );
+
+        expect(fetched).toBe(true);
 
         expect(findMany).toHaveBeenCalledTimes(1);
         expect(findMany).toHaveBeenCalledWith({ operationNumbers: ['12'] });
@@ -62,10 +64,11 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
             latestSighting: null,
         } as never);
 
-        await lastValueFrom(
+        const fetched = await lastValueFrom(
             service.fetchMissingOperationSightingTimeCrossSections(['13']),
         );
 
+        expect(fetched).toBe(false);
         expect(findMany).not.toHaveBeenCalled();
     });
 });

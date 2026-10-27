@@ -30,6 +30,15 @@ type StoreProps = {
     loadingQueue: boolean[];
 };
 
+/**
+ * 圏外のために端末に保存する中身。条件（operationId）と画面の状態
+ * （選択中の路線・取得済みの印・読み込み中）は入れない。
+ */
+export type OperationRouteDiagramSnapshot = Pick<
+    StoreProps,
+    'operationTrips' | 'itineraryLinks' | 'stations' | 'stationAliases'
+>;
+
 const store = createStore(
     { name: 'OperationRouteDiagramStore' },
     withProps<StoreProps>({
@@ -107,6 +116,22 @@ export const OperationRouteDiagramStore = {
     /** いまの運用の取得が終わったか（失敗しても true）。取る前は図と路線のチップの代わりに骨組みを出す */
     setHasFetchedOperationTrips(value: boolean): void {
         store.update(setProp('hasFetchedOperationTrips', () => value));
+    },
+    /** 圏外のために保存する中身を取り出す */
+    snapshot(): OperationRouteDiagramSnapshot {
+        const { operationTrips, itineraryLinks, stations, stationAliases } =
+            store.getValue();
+        return { operationTrips, itineraryLinks, stations, stationAliases };
+    },
+    /** 保存した中身を戻す（条件の operationId は今のまま） */
+    restoreSnapshot(data: OperationRouteDiagramSnapshot): void {
+        store.update((state) => ({
+            ...state,
+            operationTrips: data.operationTrips,
+            itineraryLinks: data.itineraryLinks,
+            stations: data.stations,
+            stationAliases: data.stationAliases,
+        }));
     },
     enableLoading(): void {
         store.update(setProp('loadingQueue', (state) => state.concat(true)));

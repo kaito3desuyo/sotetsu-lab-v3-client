@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter, lastValueFrom, map } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -29,12 +30,18 @@ import { OperationRealTimeFormationTableComponent } from './components/operation
 import { OperationRealTimeLegendComponent } from './components/operation-real-time-legend/operation-real-time-legend.component';
 import { OperationRealTimeOperationTableComponent } from './components/operation-real-time-operation-table/operation-real-time-operation-table.component';
 import { OperationRealTimeService } from './services/operation-real-time.service';
-import { OperationRealTimeStore } from './stores/operation-real-time.store';
+import {
+    OperationRealTimeSnapshot,
+    OperationRealTimeStore,
+} from './stores/operation-real-time.store';
 import { filterRealTimeOperations } from './utils/operation-real-time-filter.util';
 import { formatRealTimeSummary } from './utils/operation-real-time-summary.util';
 
 /** Tailwind の md。これ以上は運用順・編成順を横並び、未満はタブ */
 const DESKTOP_QUERY = '(min-width: 768px)';
+
+/** 圏外のために保存する中身のキー */
+const OFFLINE_SNAPSHOT_KEY = 'OperationRealTime';
 
 const firstLoading = signal(true);
 OperationRealTimeStore.resetLoading();
@@ -63,6 +70,7 @@ export class OperationRealTimeComponent {
     readonly #destroyRef = inject(DestroyRef);
     readonly #socketService = inject(SocketService);
     readonly #notification = inject(NotificationService);
+    readonly #offlineSnapshots = inject(OfflineSnapshots);
     readonly #operationRealTimeService = inject(OperationRealTimeService);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #breakpointObserver = inject(BreakpointObserver);
@@ -140,6 +148,9 @@ export class OperationRealTimeComponent {
     }
 
     async fetchData(): Promise<void> {
+        // この取得を始める前に、すでに取れた中身がある（前の訪問・自動更新の分）なら、
+        // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
+        const hasFetchedBefore = OperationRealTimeStore.hasFetchedOperations;
         OperationRealTimeStore.enableLoading();
         try {
             // 運用群は他フェッチに依存しないため最初に取得する。
@@ -157,7 +168,8 @@ export class OperationRealTimeComponent {
             await lastValueFrom(
                 this.#operationRealTimeService.fetchOperations(),
             );
-            await lastValueFrom(
+            // 前後の運用が取れなくても画面は出す。ただし、その中身は圏外用に保存しない
+            const itineraryLinks = await lastValueFrom(
                 this.#operationRealTimeService.fetchItineraryLinks(),
             );
             await lastValueFrom(
@@ -178,15 +190,46 @@ export class OperationRealTimeComponent {
                 this.#operationRealTimeService.fetchSightingHistories(),
             );
 
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (!itineraryLinks?.failed) {
+                void this.#offlineSnapshots.save({
+                    key: OFFLINE_SNAPSHOT_KEY,
+                    conditions: {},
+                    data: OperationRealTimeStore.snapshot(),
+                });
+            }
+
             if (firstLoading()) {
                 OperationRealTimeStore.setFinalUpdateTime();
                 firstLoading.set(false);
             }
         } catch (error) {
             console.error(error);
-            this.#notification.open('データの取得に失敗しました', 'OK');
+            // 保存した中身で戻せたら、そのページの知らせが出る。戻せなければ（取れた中身が手元にあって
+            // 戻さなかったときも）今の失敗の文言を出す
+            if (hasFetchedBefore || !(await this.#restoreSnapshot())) {
+                this.#notification.open('データの取得に失敗しました', 'OK');
+            }
         } finally {
             OperationRealTimeStore.disableLoading();
+        }
+    }
+
+    /**
+     * 保存した中身を戻す。戻せたら true。戻す処理が壊れていても、読み込み中を解けるよう握りつぶす
+     * （自動更新・ソケット・再読み込みの失敗では呼ばない。最初の取得だけ）
+     */
+    async #restoreSnapshot(): Promise<boolean> {
+        try {
+            const restored = await this.#offlineSnapshots.restore({
+                key: OFFLINE_SNAPSHOT_KEY,
+                conditions: {},
+                apply: (data: OperationRealTimeSnapshot, savedAt: number) =>
+                    OperationRealTimeStore.restoreSnapshot(data, savedAt),
+            });
+            return restored !== null;
+        } catch {
+            return false;
         }
     }
 
