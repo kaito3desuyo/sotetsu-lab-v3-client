@@ -51,7 +51,6 @@
   - `serverless.ts`: Lambda、Function URL、OAC、許可、キャッシュポリシー、振り分け、Origin Shield、CacheTagConfig、エラー時の殻、stage param
   - `.github/workflows/deploy-on-push-version-tags.yml`: stage の入力、Lambda の配置、`--delete` を外す
   - `scripts/ssr-check.mjs`: 圧縮と `/healthz` の確かめを足し、本番ビルドを読むようにする
-  - `src/app/core/ssr/cache-control.ts`: `long` の長さ（Task 3 の判断）
 - 作る
   - `lambda/run.sh`: LWA から起こされる起動スクリプト
   - `scripts/check-cfn-template.mjs`: `osls package` の出力を確かめる
@@ -118,26 +117,9 @@
   - 落ちたら、足りない依存の名前を報告に書く。Task 4 の `package.patterns` に足すことになる。
 - [ ] **Step 6: コミットする**: `build: :package: 本番ビルドを SSR にし、Service Worker の殻を index.csr.html にする`
 
-### Task 3: CDN に置く長さ（失効が入るまでのつなぎ）
+### Task 3: CDN に置く長さ（作業なし・決定の記録）
 
-ユーザーの判断で決める（計画のレビューで聞く）。推奨は (a)。
-
-- (a) **API の失効（リリース 3）が入るまで、`long` を 1 時間にする**
-  - 値は `public, max-age=0, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=604800`。
-  - 1 時間は、API の時刻表のキャッシュ（1 時間）と同じ長さだ。
-  - リリース 3 が入ったら 1 週間に戻す。
-- (b) **1 週間のまま出す**
-  - 時刻表を入力しても、SSR で初めて開いた人には最長 1 週間、古い HTML が出る。
-  - Service Worker で再訪した人は殻から起動して取り直すので、古い HTML は見ない。
-
-**Files:** Modify: `src/app/core/ssr/cache-control.ts`（＋その spec）、`scripts/ssr-check.mjs` の `LONG`
-
-- [ ] **Step 1:** spec の `long` の期待値を、決めた値に変える。jest で FAIL になることを見る
-- [ ] **Step 2:** `CACHE_CONTROL.long` を変える。コメントに、リリース 3 で 1 週間に戻すことを書く
-- [ ] **Step 3:** jest と `ssr:check` が通ることを見る
-- [ ] **Step 4:** コミットする: `refactor: :wrench: 失効が入るまで、SSR の HTML を CDN に置く長さを 1 時間にする`
-
-(b) を選んだ場合、この作業は飛ばす。
+`long` は 1 週間（`s-maxage=604800`）のまま変えない。2026-10-27 にユーザーが決めた。理由は、API の失効（リリース 3・api リポジトリ）を先に出すからだ。つなぎの短い値は使わない。この判断により、Task 7 の本番リリースは、リリース 3 が本番に出たあとにしかできない。
 
 ### Task 4: `serverless.ts` に SSR の Lambda と振り分けを書く
 
@@ -242,6 +224,9 @@ AWS に `sotetsu-lab-v3-stg-client-cfstack` を作る。ユーザーの許可を
 
 ### Task 7: 本番に出し、spec 10 章で確かめる（コントローラーとユーザー）
 
+- [ ] **Step 0: 前提を確かめる**
+  - api のリリース 3（`Cache-Tag` の失効）が本番に出ていること。出ていなければ、ここで止める。
+  - Task 6 の試し 3 で、API の失効が stg の配信に効くことを確かめてあること。
 - [ ] **Step 1: 出す前の計測**
   - 本番（CSR）で、スマホの幅と速度を真似て、駅別時刻表・運用表・real-time・ダッシュボードの「開いてから中身が出るまで」を測る。
   - 手順は memory の Lighthouse の手順に従う。結果は `.context/ssr-enable/before.md` に書く。
@@ -251,7 +236,7 @@ AWS に `sotetsu-lab-v3-stg-client-cfstack` を作る。ユーザーの許可を
     - Express の中で圧縮するわけ
     - 殻への切り替えをエラーページにしたわけ（Task 4 Step 3）
     - stage param `ssr` での切り戻しの手順
-    - `long` のつなぎ（Task 3）
+    - 失効（リリース 3）を先に出したので、`long` は 1 週間のまま（Task 3）
   - コミットする: `docs: :memo: SSR を Lambda で動かす決めごとを ADR に書く`
 - [ ] **Step 3:** PR を作ってマージする（ユーザー）。版は minor にする。タグの push でデプロイされる。
 - [ ] **Step 4: 本番で確かめる（spec 10 章）**
