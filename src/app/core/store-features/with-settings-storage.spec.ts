@@ -125,6 +125,51 @@ describe('withSettingsStorage', () => {
         });
     });
 
+    it('間引きの窓の中で何度変えても、最後の値を 1 回だけ書く', async () => {
+        getItem.mockResolvedValue(null);
+        const store = setup();
+        await flush();
+
+        patchState(unprotected(store), { selectedGroupNames: ['B'] });
+        await jest.advanceTimersByTimeAsync(60);
+        patchState(unprotected(store), { selectedGroupNames: ['B', 'C'] });
+        await jest.advanceTimersByTimeAsync(60);
+        patchState(unprotected(store), { selectedGroupNames: ['B', 'C', 'D'] });
+        await jest.advanceTimersByTimeAsync(99);
+        expect(setItem).not.toHaveBeenCalled();
+
+        await jest.advanceTimersByTimeAsync(1);
+        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledWith({
+            key: KEY,
+            value: { selectedGroupNames: ['B', 'C', 'D'] },
+        });
+    });
+
+    it('参照だけ違って中身が同じ値に差し替えても書かない', async () => {
+        getItem.mockResolvedValue({ selectedGroupNames: ['A'] });
+        const store = setup();
+        await flush();
+
+        patchState(unprotected(store), { selectedGroupNames: ['A'] });
+        await jest.advanceTimersByTimeAsync(1000);
+
+        expect(setItem).not.toHaveBeenCalled();
+    });
+
+    it('窓の中で変えて元に戻したら書かない', async () => {
+        getItem.mockResolvedValue({ selectedGroupNames: ['A'] });
+        const store = setup();
+        await flush();
+
+        patchState(unprotected(store), { selectedGroupNames: ['B'] });
+        await jest.advanceTimersByTimeAsync(50);
+        patchState(unprotected(store), { selectedGroupNames: ['A'] });
+        await jest.advanceTimersByTimeAsync(1000);
+
+        expect(setItem).not.toHaveBeenCalled();
+    });
+
     it('fields 以外の変更では書かない', async () => {
         getItem.mockResolvedValue(null);
         const store = setup();

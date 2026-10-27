@@ -94,17 +94,21 @@ export function withSettingsStorage<State extends object>(config: {
                 let last = JSON.stringify(pick(getState(store) as State));
                 store._settingsReady.set(true);
 
+                // 変更のたびにやるのはタイマーの掛け直しだけ。
+                // 文字列にするのは間引きが明けたときの 1 回にする（入力のたびに重くしない）
                 watchState(
                     store,
-                    (state) => {
-                        const serialized = JSON.stringify(pick(state as State));
-                        if (serialized === last) {
-                            return;
-                        }
-
-                        last = serialized;
+                    () => {
                         clearTimeout(timer);
                         timer = setTimeout(() => {
+                            const serialized = JSON.stringify(
+                                pick(getState(store) as State),
+                            );
+                            if (serialized === last) {
+                                return;
+                            }
+
+                            last = serialized;
                             void write();
                         }, debounceMs);
                     },
