@@ -4,7 +4,7 @@ import type {
     ActivatedRouteSnapshot,
     RouterStateSnapshot,
 } from '@angular/router';
-import { isObservable, Observable, Subject } from 'rxjs';
+import { isObservable, Observable, of, Subject } from 'rxjs';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { InitializeState } from 'src/app/global-states/initialize.state';
 import { pageResolver } from './page.resolver';
@@ -98,6 +98,19 @@ describe('pageResolver', () => {
         TestBed.tick();
 
         expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('旧 Observable が of(false) で終わっても（サーバーの Elf）、1 回解決する', () => {
+        TestBed.inject(InitializeState).markInitialized();
+        const next = jest.fn();
+        const error = jest.fn();
+
+        run(pageResolver(of(false))).subscribe({ next, error });
+        TestBed.tick();
+
+        expect(error).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(undefined);
     });
 
     it('Observable<boolean> を渡したら、その復元も待つ（移行中の互換）', () => {
