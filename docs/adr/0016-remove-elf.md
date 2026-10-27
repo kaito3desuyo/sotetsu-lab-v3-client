@@ -22,8 +22,12 @@
 - **`global-states/` の `*StateStore` と `*StateQuery` の組は 1 つの SignalStore にまとめた**（一覧は `withEntities`）。`initialize.state.ts` と、ページのファイル先頭にあった `let fetchSeq`・`firstLoading` なども、ストアの中へ移した。時間で変わる値は `withComputed`（メモ化される）でなく `withMethods` のクロージャに持つ。
 - **読む側は signal にそろえた**。`xxx$` と `get xxx` はやめた。書き込みメソッドの名前は変えず、中を `patchState` にした。
 - **`withDevtools`（`@ngrx-toolkit/core`）は開発ビルドだけ**。`withAppDevtools(name)` が、本番では `withDevToolsStub` に切り替える。`@angular-architects/ngrx-toolkit` は非推奨なので使わない。
-- **`main.ts` と `main.server.ts` からは `enableElfProdMode()` だけを消した。`localForage.config`（DB `sotetsu-lab-v3-client`、`storeName: 'elf_state'`）は残した**。利用者の端末の設定・下書き・圏外用の保存がそこに入っているので、名前を変えると読めなくなる。
+- **`main.ts` と `main.server.ts` からは `enableElfProdMode()` を消した（`main.ts` の `devTools()` はそれより前、Task 5 / R5 で消している）。`localForage.config`（DB `sotetsu-lab-v3-client`、`storeName: 'elf_state'`）は残した**。利用者の端末の設定・下書き・圏外用の保存がそこに入っているので、名前を変えると読めなくなる。
 - **`pageResolver` は Observable を受けない**。設定の保存を持つストアの token を渡し、その `settingsReady` が true になるのを待つ。
+- **設定の見張り（`withSettingsStorage`）は、保存する項目（`fields`）の参照が変わったときだけ間引きを掛け直す（R13）**。real-time ページの毎秒の読み込み中の印（`loadingQueue`）の書き換えで掛け直しが続き、1000ms の保存が飢えたため。実地の確かめで見つかった。
+- **`pageResolver` は、signal がすでに true なら `toObservable` を作らず同期で解決する**。`toObservable` は購読をやめても残る effect を作るので、遷移のたびに作らない。待つときだけ作る。
+- **socket.service の `toObservable`（root の injector で `take(1)`）は、root に effect を 1 つ残す**（アプリを閉じるまで。1 回だけ）。トークンがすぐ取れないときは、次の flush の後につなぐ（同期ではつながない）。
+- **`server.ts` の描画の列は 2c まで残す（R14）**。ストアは DI でリクエストごとに分かれたので、列を外しても混線しない。列を外して同時に描く確かめ（`.context/m29/ssr-concurrent.mjs`、2026-10-27）は、このブランチで通り、Elf のビルドでは同じ確かめが落ちた。それでも同時描画の可否は 2c で決めるので、それまでは保守的な守りとして置く。外すときはこの確かめを、列を外したビルドでもう一度回す。
 
 ### なぜ Elf をやめたか
 

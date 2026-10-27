@@ -334,7 +334,7 @@ export const TimetableStationStore = signalStore(
     withAppDevtools('TimetableStationStore'),
     withHooks({
         onInit(store) {
-            // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
             store.resetLoading();
         },
     }),

@@ -201,7 +201,7 @@ export const TrainLocationStore = signalStore(
     withAppDevtools('TrainLocationStore'),
     withHooks({
         onInit(store) {
-            // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（train-diagram と同一パターン）
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
             store.resetLoading();
         },
     }),

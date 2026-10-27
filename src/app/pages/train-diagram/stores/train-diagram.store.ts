@@ -54,7 +54,7 @@ type StoreProps = {
     /** ServiceService.findOneWithStations 由来の網羅駅（全線時刻表と同一の並び順）。 */
     networkStations: StationDetailsDto[];
     /**
-     * 全路線（RouteStationListState.routeStations$ 由来）。駅軸上で隣接しない
+     * 全路線（routeStations() 由来）。駅軸上で隣接しない
      * 接続駅（分岐駅）を複製挿入する判定（buildStationAxis の routesOrderedStationIds）に使う。
      */
     routeStations: RouteDetailsDto[];
@@ -70,7 +70,7 @@ type StoreProps = {
     hasFetchedTrainDiagram: boolean;
     /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
-    /** 操作帯を畳んでいるか。これだけを persistState で保存する（docs/design.md 列車ダイヤグラム）。 */
+    /** 操作帯を畳んでいるか。これだけを withSettingsStorage で保存する（docs/design.md 列車ダイヤグラム）。 */
     controlCollapsed: boolean;
 };
 
@@ -395,7 +395,7 @@ export const TrainDiagramStore = signalStore(
     withAppDevtools('TrainDiagramStore'),
     withHooks({
         onInit(store) {
-            // チャンク再入時に前回のフェッチ失敗で loadingQueue が残留するのを防ぐ（operation-real-time と同一パターン）
+            // 旧版のファイル先頭の resetLoading() を引き継いだもの。fields 以外は戻さないので、今は空の loadingQueue を空にするだけ
             store.resetLoading();
         },
     }),

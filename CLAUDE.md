@@ -81,7 +81,7 @@ pages/<feature>/
 - **読む**: Observable の `xxx$` や `get xxx` は無い。`store.xxx()` と signal で読む。RxJS の流れの中で要るときだけ `toObservable` を使う。
 - **書く**: 書き込みメソッドは `withMethods` に置き、中は `patchState`。ストアの中身を spec から直接書くときは `@ngrx/signals/testing` の `unprotected` を使う（`protectedState` は既定の true のまま）。
 - **時間で変わる値を `withComputed` に入れない**: computed はメモ化される。取得の世代番号（`fetchSeq`）は `withMethods` の中のクロージャ変数に持ち、`nextFetchSeq()` と `isLatestFetch(seq)` で出す。
-- **読み込み中の印の掃除**: ファイルの先頭で `resetLoading()` を呼ばない。`withHooks({ onInit })` に置く。
+- **読み込み中の印の掃除**: 新しいページには要らない。既存の 9 ページの `withHooks({ onInit })` にある `resetLoading()` は、旧版のファイル先頭の呼び出しを引き継いだもの。`onInit` はストアを作ったときの 1 回だけで、`withSettingsStorage` は `fields` 以外を戻さないため、今は空の `loadingQueue` を空にするだけ（チャンク再入時の守りではない）。
 - **画面の設定と下書きの保存**: `withSettingsStorage({ key, fields, debounceMs })`（`core/store-features/`）。起動時に `fields` だけを戻し、変わったときだけ書く。読み込みが済むと `settingsReady` が true になり、保存を持つページの route は `pageResolver(FooStore)` でそれを待つ。
 - **取ったデータの保存（圏外用）**: `withOfflineSnapshots({ main: { key, select, apply } })`（ADR-0015）。ストアに `saveOfflineSnapshot(name, conditions)` と `restoreOfflineSnapshot(name, conditions)` が付く。取得に成功したら save、失敗したら restore を、コンポーネントが呼ぶ。ストアの定義を見れば何を保存しているか分かる。`select`・`apply` が他のメソッドを呼ぶので `withFeature` で包む。
 - **DevTools**: `withAppDevtools('FooStore')`（開発ビルドだけ Redux DevTools に繋がる）。
@@ -122,7 +122,6 @@ export const FooStore = signalStore(
     }),
   ),
   withAppDevtools('FooStore'),
-  withHooks({ onInit: (store) => store.resetLoading() }),
 );
 ```
 
