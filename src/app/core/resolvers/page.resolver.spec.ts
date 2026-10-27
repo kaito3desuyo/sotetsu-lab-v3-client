@@ -1,25 +1,26 @@
+import { Injectable, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type {
     ActivatedRouteSnapshot,
     RouterStateSnapshot,
 } from '@angular/router';
-import { BehaviorSubject, isObservable, Observable, Subject } from 'rxjs';
+import { isObservable, Observable, Subject } from 'rxjs';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
-import { InitializeStateQuery } from 'src/app/global-states/initialize.state';
+import { InitializeState } from 'src/app/global-states/initialize.state';
 import { pageResolver } from './page.resolver';
 
+@Injectable({ providedIn: 'root' })
+class SettingsStub {
+    readonly settingsReady = signal(false);
+}
+
 describe('pageResolver', () => {
-    let isInitialized$: BehaviorSubject<boolean>;
     let set: jest.Mock;
 
     beforeEach(() => {
-        isInitialized$ = new BehaviorSubject(false);
         set = jest.fn();
         TestBed.configureTestingModule({
-            providers: [
-                { provide: InitializeStateQuery, useValue: { isInitialized$ } },
-                { provide: PageMeta, useValue: { set } },
-            ],
+            providers: [{ provide: PageMeta, useValue: { set } }],
         });
     });
 
@@ -49,19 +50,63 @@ describe('pageResolver', () => {
     it('グローバルの初期化が済むまで解決しない', () => {
         const next = jest.fn();
         run(pageResolver()).subscribe(next);
+        TestBed.tick();
         expect(next).not.toHaveBeenCalled();
 
-        isInitialized$.next(true);
+        TestBed.inject(InitializeState).markInitialized();
+        TestBed.tick();
 
         expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('ストアの永続化を渡したら、その復元も待つ', () => {
+    it('引数なしなら、初期化が済んでいればすぐ出す', () => {
+        TestBed.inject(InitializeState).markInitialized();
+        const next = jest.fn();
+
+        run(pageResolver()).subscribe(next);
+        TestBed.tick();
+
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(undefined);
+    });
+
+    it('設定の保存を持つストアの token を渡したら、settingsReady が true になるまで待つ', () => {
+        TestBed.inject(InitializeState).markInitialized();
+        const settings = TestBed.inject(SettingsStub);
+        const next = jest.fn();
+
+        run(pageResolver(SettingsStub)).subscribe(next);
+        TestBed.tick();
+        expect(next).not.toHaveBeenCalled();
+
+        settings.settingsReady.set(true);
+        TestBed.tick();
+
+        expect(next).toHaveBeenCalledTimes(1);
+        expect(next).toHaveBeenCalledWith(undefined);
+    });
+
+    it('token を渡しても、グローバルの初期化が済むまでは解決しない', () => {
+        TestBed.inject(SettingsStub).settingsReady.set(true);
+        const next = jest.fn();
+
+        run(pageResolver(SettingsStub)).subscribe(next);
+        TestBed.tick();
+        expect(next).not.toHaveBeenCalled();
+
+        TestBed.inject(InitializeState).markInitialized();
+        TestBed.tick();
+
+        expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('Observable<boolean> を渡したら、その復元も待つ（移行中の互換）', () => {
         const persistInitialized$ = new Subject<boolean>();
         const next = jest.fn();
-        isInitialized$.next(true);
+        TestBed.inject(InitializeState).markInitialized();
 
         run(pageResolver(persistInitialized$)).subscribe(next);
+        TestBed.tick();
         expect(next).not.toHaveBeenCalled();
 
         persistInitialized$.next(true);

@@ -6,7 +6,7 @@ import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max
 import { AgencyListStateStore } from 'src/app/global-states/agency-list.state';
 import { CalendarListStateStore } from 'src/app/global-states/calendar-list.state';
 import { FeatureFlagStateStore } from 'src/app/global-states/feature-flag.state';
-import { InitializeStateStore } from 'src/app/global-states/initialize.state';
+import { InitializeState } from 'src/app/global-states/initialize.state';
 import { RouteStationListStateStore } from 'src/app/global-states/route-station-list.state';
 import { ServiceListStateStore } from 'src/app/global-states/service-list.state';
 import { TodaysCalendarListStateStore } from 'src/app/global-states/todays-calendar-list.state';
@@ -27,7 +27,7 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
     const todaysOperationListStateStore = inject(TodaysOperationListStateStore);
     const todaysFormationListStateStore = inject(TodaysFormationListStateStore);
     const featureFlagStateStore = inject(FeatureFlagStateStore);
-    const initializeStateStore = inject(InitializeStateStore);
+    const initializeState = inject(InitializeState);
     // サーバーはゲストとして描き、HTML を CDN に置く。プロフィールと「今日」のものは
     // 人や日で変わるので取らない（spec 5.2・5.3）。ブラウザで起動した後に取る
     const isServer = isPlatformServer(inject(PLATFORM_ID));
@@ -74,7 +74,7 @@ export const initialDataResolver: ResolveFn<boolean> = async (route, state) => {
               ]),
     ]);
 
-    initializeStateStore.markInitialized();
+    initializeState.markInitialized();
 
     return true;
 };
