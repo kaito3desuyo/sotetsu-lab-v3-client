@@ -29,6 +29,7 @@ import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
 import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
 import { OperationRouteDiagramComponent } from './operation-route-diagram.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 describe('OperationRouteDiagramComponent', () => {
     let component: OperationRouteDiagramComponent;
@@ -49,7 +50,10 @@ describe('OperationRouteDiagramComponent', () => {
             ],
         })
             .overrideComponent(OperationRouteDiagramComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
 
@@ -150,7 +154,10 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
             ],
         })
             .overrideComponent(OperationRouteDiagramComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
         fixture = TestBed.createComponent(OperationRouteDiagramComponent);

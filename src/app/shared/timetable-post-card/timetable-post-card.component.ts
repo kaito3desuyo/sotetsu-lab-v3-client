@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    computed,
+    inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
     FormBuilder,
@@ -21,6 +26,7 @@ import { PanelCardComponent } from 'src/app/shared/panel-card/panel-card.compone
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 type Form = FormGroup<{
     calendarId: FormControl<string>;
@@ -40,6 +46,7 @@ type Form = FormGroup<{
         AppButtonComponent,
         PanelCardComponent,
         SegmentToggleComponent,
+        LazyOptionsDirective,
     ],
 })
 export class TimetablePostCardComponent {
@@ -69,6 +76,17 @@ export class TimetablePostCardComponent {
     );
 
     readonly calendars = inject(CalendarListState).calendars;
+
+    /** 選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示に使う。 */
+    readonly #selectedCalendarId = toSignal(
+        this.form.controls.calendarId.valueChanges,
+        { initialValue: this.form.controls.calendarId.value },
+    );
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.#selectedCalendarId(),
+        ),
+    );
 
     /** 時刻表の入力は編集者だけ。足りない人には入力欄の代わりに案内を出す */
     readonly canEditTimetable = inject(UserState).canEditTimetable;

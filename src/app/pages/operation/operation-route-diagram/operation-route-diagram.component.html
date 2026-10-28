@@ -36,21 +36,38 @@
                         <mat-select
                             [value]="selectedCalendarId()"
                             (valueChange)="onCalendarChange($event)"
+                            appLazyOptions
+                            #lazyCalendar="appLazyOptions"
                         >
-                            @for (
-                                calendar of calendars();
-                                track calendar.calendarId
-                            ) {
-                                <mat-option [value]="calendar.calendarId">
+                            @if (lazyCalendar.ready()) {
+                                @for (
+                                    calendar of calendars();
+                                    track calendar.calendarId
+                                ) {
+                                    <mat-option [value]="calendar.calendarId">
+                                        {{
+                                            calendar.startDate
+                                                | dateFns
+                                                    : {
+                                                          format: 'yyyy/M/d改正',
+                                                          parseFormat:
+                                                              'yyyy-MM-dd',
+                                                      }
+                                        }}
+                                        {{ calendar.calendarName }}
+                                    </mat-option>
+                                }
+                            } @else if (selectedCalendar(); as selected) {
+                                <mat-option [value]="selected.calendarId">
                                     {{
-                                        calendar.startDate
+                                        selected.startDate
                                             | dateFns
                                                 : {
                                                       format: 'yyyy/M/d改正',
                                                       parseFormat: 'yyyy-MM-dd',
                                                   }
                                     }}
-                                    {{ calendar.calendarName }}
+                                    {{ selected.calendarName }}
                                 </mat-option>
                             }
                         </mat-select>

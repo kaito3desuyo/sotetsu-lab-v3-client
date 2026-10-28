@@ -19,6 +19,7 @@ import {
     ALL_LINE_OPTION,
     TimetableStationComponent,
 } from './timetable-station.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 describe('TimetableStationComponent', () => {
     let component: TimetableStationComponent;
@@ -50,7 +51,10 @@ describe('TimetableStationComponent', () => {
             ],
         })
             .overrideComponent(TimetableStationComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
 
@@ -159,7 +163,10 @@ describe('TimetableStationComponent の読み込み中', () => {
             ],
         })
             .overrideComponent(TimetableStationComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
         fixture = TestBed.createComponent(TimetableStationComponent);

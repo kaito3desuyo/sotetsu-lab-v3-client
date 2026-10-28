@@ -37,6 +37,7 @@ import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-to
 import { TimetableStationTableComponent } from './components/timetable-station-table/timetable-station-table.component';
 import { TimetableStationService } from './services/timetable-station.service';
 import { TimetableStationComponent } from './timetable-station.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 /**
  * T6.8 再差し戻し回帰テスト: リロード相当の初回フェッチ（実際の解決順序・
@@ -222,6 +223,7 @@ async function setup(overrides?: {
                     DateFnsPipe,
                     ControlBandComponent,
                     EmptyStateComponent,
+                    LazyOptionsDirective,
                     SegmentToggleComponent,
                     TimetableStationTableComponent,
                     StubSearchCardComponent,

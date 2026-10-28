@@ -33,6 +33,7 @@ import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/con
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 describe('TimetableAllLineComponent', () => {
     let component: TimetableAllLineComponent;
@@ -72,7 +73,10 @@ describe('TimetableAllLineComponent', () => {
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
 
@@ -119,7 +123,10 @@ describe('TimetableAllLineComponent をサーバーで描くとき', () => {
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
 
@@ -321,7 +328,10 @@ describe('TimetableAllLineComponent の読み込み中', () => {
             ],
         })
             .overrideComponent(TimetableAllLineComponent, {
-                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
         beforeCreate?.(TestBed.inject(TimetableAllLineStore));

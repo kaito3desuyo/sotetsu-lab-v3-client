@@ -34,6 +34,8 @@
                     <mat-select
                         [value]="calendarId()"
                         (valueChange)="onCalendarChange($event)"
+                        appLazyOptions
+                        #lazyCalendar="appLazyOptions"
                     >
                         <mat-select-trigger>
                             @if (selectedCalendar(); as selected) {
@@ -48,10 +50,24 @@
                                 {{ selected.calendarName }}
                             }
                         </mat-select-trigger>
-                        @for (
-                            calendar of calendars();
-                            track calendar.calendarId
-                        ) {
+                        @if (lazyCalendar.ready()) {
+                            @for (
+                                calendar of calendars();
+                                track calendar.calendarId
+                            ) {
+                                <mat-option [value]="calendar.calendarId">
+                                    {{
+                                        calendar.startDate
+                                            | dateFns
+                                                : {
+                                                      format: 'yyyy/M/d改正',
+                                                      parseFormat: 'yyyy-MM-dd',
+                                                  }
+                                    }}
+                                    {{ calendar.calendarName }}
+                                </mat-option>
+                            }
+                        } @else if (selectedCalendar(); as calendar) {
                             <mat-option [value]="calendar.calendarId">
                                 {{
                                     calendar.startDate
@@ -76,22 +92,30 @@
                 <mat-select
                     [value]="stationId()"
                     (valueChange)="onStationChange($event)"
+                    appLazyOptions
+                    #lazyStation="appLazyOptions"
                 >
                     <mat-option [value]="allLineOption"
                         >全線（駅を選ばない）</mat-option
                     >
                     <mat-divider></mat-divider>
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">
-                                    {{ station.stationName }}
-                                </mat-option>
-                            }
-                        </mat-optgroup>
+                    @if (lazyStation.ready()) {
+                        @for (group of stationGroups(); track group.routeId) {
+                            <mat-optgroup [label]="group.label">
+                                @for (
+                                    station of group.stations;
+                                    track station.stationId
+                                ) {
+                                    <mat-option [value]="station.stationId">
+                                        {{ station.stationName }}
+                                    </mat-option>
+                                }
+                            </mat-optgroup>
+                        }
+                    } @else if (selectedStation(); as station) {
+                        <mat-option [value]="station.stationId">
+                            {{ station.stationName }}
+                        </mat-option>
                     }
                 </mat-select>
             </mat-form-field>

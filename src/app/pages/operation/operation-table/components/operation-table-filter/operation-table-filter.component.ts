@@ -20,6 +20,7 @@ import { OperationTableStore } from '../../stores/operation-table.store';
 import { operationGroupOptions } from 'src/app/shared/operation-group.util';
 import { SkeletonChipsComponent } from 'src/app/shared/skeleton/skeleton-chips.component';
 import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 /**
  * 運用表: ダイヤ select（常設・変更で calendar_id を差し替えて再取得）+
@@ -42,6 +43,7 @@ import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-butt
         FilterChipsComponent,
         SkeletonChipsComponent,
         TodayCalendarButtonComponent,
+        LazyOptionsDirective,
     ],
 })
 export class OperationTableFilterComponent {
@@ -52,6 +54,13 @@ export class OperationTableFilterComponent {
     readonly calendarId = input<string | null>(null);
 
     readonly calendarChange = output<string>();
+
+    /** 選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示に使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.calendarId(),
+        ),
+    );
 
     readonly selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 

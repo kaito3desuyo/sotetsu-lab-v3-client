@@ -20,6 +20,7 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 
 @Component({
@@ -34,6 +35,7 @@ import { buildStationGroups } from 'src/app/shared/station-groups.util';
         MatListModule,
         MatFormFieldModule,
         MatSelectModule,
+        LazyOptionsDirective,
     ],
 })
 export class SidenavComponent {
@@ -72,14 +74,19 @@ export class SidenavComponent {
 
     /** 上り/下りリンクの行き先名。駅を選べば駅別時刻表、選ばなければ全線時刻表へ飛ぶ。 */
     readonly timetableLinkPrefix = computed(() => {
-        const selectedStationId = this.selectedStationId();
-        if (!selectedStationId) {
+        if (!this.selectedStationId()) {
             return '全線時刻表';
         }
-        const station = this.stationGroups()
+        return this.selectedStation()?.stationName ?? '駅別時刻表';
+    });
+
+    /** 選んでいる駅。選択肢を作る前（lazy-options）も select の表示に使う。 */
+    readonly selectedStation = computed(() => {
+        const selectedStationId = this.selectedStationId();
+        if (!selectedStationId) return undefined;
+        return this.stationGroups()
             .flatMap((group) => group.stations)
             .find((o) => o.stationId === selectedStationId);
-        return station?.stationName ?? '駅別時刻表';
     });
 
     readonly inboundTimetableLink = computed(() => {

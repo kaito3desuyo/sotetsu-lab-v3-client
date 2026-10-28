@@ -24,6 +24,7 @@ import { FilterChipsComponent } from 'src/app/shared/filter-chips/filter-chips.c
 import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
 import { TrainLocationMode } from '../../stores/train-location.store';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 /**
  * 列車位置情報の表示設定。畳まず 2 行（ユーザー判断 2026-09-26）:
@@ -42,6 +43,7 @@ import { TrainLocationMode } from '../../stores/train-location.store';
         FormsModule,
         FilterChipsComponent,
         SegmentToggleComponent,
+        LazyOptionsDirective,
     ],
 })
 export class TrainLocationControllerComponent {
@@ -103,10 +105,12 @@ export class TrainLocationControllerComponent {
     });
 
     /** 現在時刻のときに字で示すダイヤ（例 2026/3/14改正 土休日） */
+    /** 選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示にも使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find((c) => c.calendarId === this.calendarId()),
+    );
     readonly calendarLabel = computed(() => {
-        const calendar = this.calendars().find(
-            (c) => c.calendarId === this.calendarId(),
-        );
+        const calendar = this.selectedCalendar();
         return calendar ? formatCalendarSummaryLabel(calendar) : '';
     });
 

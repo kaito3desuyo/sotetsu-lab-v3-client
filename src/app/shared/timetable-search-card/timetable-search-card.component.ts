@@ -32,6 +32,7 @@ import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { AppButtonComponent } from '../app-button/app-button.component';
+import { LazyOptionsDirective } from '../lazy-options/lazy-options.directive';
 import { PanelCardComponent } from '../panel-card/panel-card.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
@@ -57,6 +58,7 @@ type Form = FormGroup<{
         PanelCardComponent,
         AppButtonComponent,
         DateFnsPipe,
+        LazyOptionsDirective,
     ],
 })
 export class TimetableSearchCardComponent {
@@ -100,6 +102,28 @@ export class TimetableSearchCardComponent {
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),
     );
+    /** 選んでいるダイヤ・駅。選択肢を作る前（lazy-options）の select の表示に使う。 */
+    readonly #selectedCalendarId = toSignal(
+        this.form.controls.calendarId.valueChanges,
+        { initialValue: this.form.controls.calendarId.value },
+    );
+    readonly #selectedStationId = toSignal(
+        this.form.controls.stationId.valueChanges,
+        { initialValue: this.form.controls.stationId.value },
+    );
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.#selectedCalendarId(),
+        ),
+    );
+    readonly selectedStation = computed(() => {
+        const stationId = this.#selectedStationId();
+        return stationId
+            ? this.stationGroups()
+                  .flatMap((group) => group.stations)
+                  .find((station) => station.stationId === stationId)
+            : undefined;
+    });
     readonly #todaysCalendarId = inject(TodaysCalendarListState)
         .todaysCalendarId;
 
