@@ -23,6 +23,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # 同じ stage のデプロイを重ねない（待たせて、途中のものは止めない）
+    concurrency:
+      group: deploy-${{ inputs.stage || 'prod' }}
+      cancel-in-progress: false
     permissions:
       id-token: write
       contents: read
@@ -52,6 +56,22 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           aws-region: ap-northeast-1
+
+      - name: Sync hashed files before deploy
+        # osls deploy から後の sync までの間に Lambda が描いた新しい HTML が、まだ S3 に無いチャンクを読んで真っ白になるのを防ぐ。
+        # 名前にハッシュの付くファイルだけを先に置く（下の 1 回目の sync と同じ include・cache-control・--delete なし）。
+        # スタックがまだ無い（初回の stg）ときは何もしないで進む。
+        env:
+          STAGE: ${{ inputs.stage || 'prod' }}
+        run: |
+          bucket="$(aws cloudformation describe-stacks --stack-name "sotetsu-lab-v3-$STAGE-client-cfstack" \
+            --query "Stacks[0].Outputs[?OutputKey=='WebBucketName'].OutputValue" --output text 2>/dev/null || true)"
+          if [ -z "$bucket" ] || [ "$bucket" = "None" ]; then
+            echo "スタックまたは WebBucketName が無いので、先行 sync を飛ばす"
+            exit 0
+          fi
+          aws s3 sync ./dist/build-by-ci/browser "s3://$bucket" --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*" --include "chunk-*.js" --include "main-*.js" --include "polyfills-*.js" --include "styles-*.css" --include "media/*"
 
       - name: Deploy AWS resources
         # タグの push では inputs が空なので prod・on になる。
