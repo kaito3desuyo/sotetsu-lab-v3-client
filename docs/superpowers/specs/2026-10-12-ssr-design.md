@@ -207,7 +207,8 @@
   - `/api/*` → BFF（今のまま）
   - 拡張子（js・css・フォント・画像など）と `assets/*` → S3（今のまま）
   - それ以外 → SSR の Lambda
-- CDN の鍵は「パス（matrix param を含む）＋クエリ」。Cookie・Authorization は鍵にも Lambda にも渡さない
+- CDN の鍵は「パス（matrix param を含む）」だけ。Cookie・Authorization は鍵にも Lambda にも渡さない
+  - 【2026-10-28 変更・ユーザー判断】クエリも鍵と Lambda に渡さない。SSR のページはクエリを読まず、SNS から来るリンクの `fbclid`・`utm_*` で鍵が割れて毎回描き直し、誰でもクエリを変えて Lambda を回せてしまうため。クエリはブラウザの URL に残るので、ブラウザで描くページ（ログインの `return_to`）は困らない。サーバーでクエリを読むページを作るときは、許可リストに足す
 - index.html の 1 年キャッシュの問題（2.2）は client #275 で先に直す。SSR の後は HTML が Lambda から来る。S3 に残す静的ファイルは名前にハッシュが付くので 1 年のままでよい
 
 ## 9. 切り戻し
