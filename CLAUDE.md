@@ -27,7 +27,7 @@ npm run cypress:run    # ヘッドレス
 
 ## アーキテクチャ
 
-Angular 22 SPA。SSR 設定は存在するが無効（`ssr: false`）。バックエンドは `environment.apiUrl` で指定された別サービス。
+Angular 22 SPA。本番は SSR（Lambda）。描き方は `app.routes.server.ts`。バックエンドは `environment.apiUrl` で指定された別サービス。
 
 ### `src/app/` 配下のレイヤー構成
 

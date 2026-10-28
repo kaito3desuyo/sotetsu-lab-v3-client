@@ -161,6 +161,7 @@
 ### 6.5 Lambda を速くする
 
 - メモリを多めに（CPU も増える）、arm64、API と同じ warmup プラグインで寝起きを減らす
+- 2c の注（2026-10-28・ユーザー判断）: warmup プラグインは入れない。寝起き（Init）は 293ms で、待ち時間の大半は描画（運用表 4〜5 秒）。HTML は CDN に置くので Lambda が動くのは失効後の最初の 1 人だけで、5 分ごとに起こしても温かいのは 1 台だけ。効くのは 6.4 の温め（リリース 4）。枠組み（Express・Fastify・Hono）も比べ、起動の差は数十 ms・応答の差は数 ms で、Express のまま（ADR-0017）
 
 ### 6.6 古い版の JS・CSS を残す
 
@@ -207,13 +208,15 @@
   - `/api/*` → BFF（今のまま）
   - 拡張子（js・css・フォント・画像など）と `assets/*` → S3（今のまま）
   - それ以外 → SSR の Lambda
-- CDN の鍵は「パス（matrix param を含む）＋クエリ」。Cookie・Authorization は鍵にも Lambda にも渡さない
+- CDN の鍵は「パス（matrix param を含む）」だけ。Cookie・Authorization は鍵にも Lambda にも渡さない
+  - 【2026-10-28 変更・ユーザー判断】クエリも鍵と Lambda に渡さない。SSR のページはクエリを読まず、SNS から来るリンクの `fbclid`・`utm_*` で鍵が割れて毎回描き直し、誰でもクエリを変えて Lambda を回せてしまうため。クエリはブラウザの URL に残るので、ブラウザで描くページ（ログインの `return_to`）は困らない。サーバーでクエリを読むページを作るときは、許可リストに足す
 - index.html の 1 年キャッシュの問題（2.2）は client #275 で先に直す。SSR の後は HTML が Lambda から来る。S3 に残す静的ファイルは名前にハッシュが付くので 1 年のままでよい
 
 ## 9. 切り戻し
 
 - 振り分けの既定先を S3＋`spa-routing` に戻せば今の形に戻る。osls の設定値（stage の param）1 つで切り替えられるようにする
 - Lambda が落ちたら S3 の index.html を出す、CloudFront のオリジングループの自動切り替えを付ける
+  - 【2026-10-28 変更】オリジングループも配信の `CustomErrorResponses` も使わない（14.2 の注記）。Lambda が落ちた・時間切れのときは CloudFront のエラーになり、CDN に置いてある分は `stale-if-error` で古いページが出続ける。手順は ADR-0017
 
 ## 10. 確かめ方
 
@@ -325,6 +328,7 @@ AWS で読んだ事実（読むだけ・2026-10-24）:
 - **応答は Lambda（Express）で圧縮する**。`compression` の middleware で、`Accept-Encoding` に応じて br（品質 5）・gzip（品質 6）・圧縮なしを返し分け、`Vary: Accept-Encoding` を付ける
   - CloudFront は配信元が `Content-Encoding` を付けた応答をそのままキャッシュして配り、圧縮し直さない。キャッシュは `Accept-Encoding` を `br,gzip`・`gzip`・`br`・`identity` にそろえた値ごとに分かれ、その値が Lambda にも届く（AWS の文書）。キャッシュポリシーで Gzip・Brotli を有効にする
 - **圧縮を受け付けない相手（`identity`）で 6MB を超えたら、S3 の殻に切り替える**（ユーザー判断）。Lambda は上限を超えた応答を返せずエラーになり、オリジングループ（9 章）が S3 の `index.csr.html` に切り替える。普通のブラウザと Googlebot は圧縮を受け付けるので、ここに来るのは curl や古い bot くらい
+  - 【2026-10-28 変更・ユーザー判断】切り替えは `server.ts` が行う。描いた HTML が 5MiB を超え、相手が br も gzip も受け付けなければ、Lambda に同梱した `index.csr.html` を `short` で返す。オリジングループは S3 に元の画面のパスが届いて 403/404 になり、配信全体の `CustomErrorResponses` は `/api/*`（BFF）の 502〜504 まで殻の 200 に化けさせるので、どちらも使わない。Lambda が落ちた・時間切れのときは CloudFront のエラーになる
   - 殻: SSR でビルドすると、ブラウザ側の出力は `index.html` でなく `index.csr.html`（`<app-root>` が空の HTML）になる（手元のビルド出力で確認）。これを S3 に上げて切り替え先にし、Service Worker の `index` もこれに合わせる（7.4）
 - 描画を 1 本ずつにする列（2a）は残す。Lambda は 1 環境 1 リクエストなので効かないが、手元で要る
 
@@ -346,6 +350,19 @@ AWS で読んだ事実（読むだけ・2026-10-24）:
 - Origin Shield は東京（ap-northeast-1）に置ける
 - `s-maxage`・`stale-while-revalidate`・`stale-if-error` は CloudFront の最大 TTL で頭打ちになる。最小 TTL は 0
 - 出典と引用は作業メモ（git 管理外）`.context/ssr-plan/2c-aws-research.md`
+
+### 14.5 stg で試した結果（2026-10-28）
+
+stack `sotetsu-lab-v3-stg-client-cfstack`（CloudFront の既定ドメイン）で 14.3 の 6 点を試した。配備用バケット `sotetsu-lab-v3-stg-client-sls-deployment-bucket` は osls が作らないので、先に手で作った（prod のものも手で作ってあった）。
+
+1. brotli は出せる。運用表（平日 2026-03-14）は br で 358KB・gzip で 538KB。`Vary: Accept-Encoding` と `Cache-Tag` が付く
+2. `identity` の運用表は、`server.ts` の切り替えで殻（81KB・`ng-server-context` 無し）が 200・`short` で返る（14.2 の変更による。オリジングループは試していない）
+3. タグの失効は効く。`Cache-Tag: calendar:<id>` の付いた駅別時刻表は、`#calendar:<id>` の失効が `Completed` になったあと Miss に戻り、タグの無いトップは Hit のままだった
+4. matrix param の `;` は Express まで届く（駅別時刻表の題名に駅名が入る）。`DefaultRootObject` を付けないので `/` も SSR になる
+5. CloudFront は Function URL に、Function URL の名前を Host にして送る。`allowedHosts` は `*.lambda-url.ap-northeast-1.on.aws` と `localhost`（ssr:check 用）だけでよい（詰めた版を stg に出し直して 200 を確かめた）
+6. 寝起き（Init Duration）は 293ms。warmup の非 HTTP イベントは LWA が `/events` に流し、エラーにならない。描画は運用表 3.2〜7.5 秒・駅別 3.3 秒・トップ 0.4 秒（手元では運用表 2.1 秒のうち API 待ちは約 0.6 秒で、残りは描画）
+
+Cookie・`Authorization` を付けた要求も、付けない要求と同じ鍵で Hit する（どちらも鍵に入らない）。
 
 ## 15. リリース 2b: 圏外の保存と Service Worker（2026-10-26 追記）
 
