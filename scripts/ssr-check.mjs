@@ -253,22 +253,15 @@ async function checkTransport() {
                         `content-encoding: ${encoding} (expected none)`,
                     );
                 }
-                // 圧縮を受け付けない相手には、描いた HTML が 5MiB を超えるので殻に切り替わる（Lambda の応答上限 6MB）
+                // 運用表はサーバーで最初の 8 枚だけ描くので、圧縮しなくても 5MiB に届かず、描いた HTML がそのまま返る。
+                // 5MiB を超えたときの殻への切り替え（server.ts）は、今のページでは起きない守り
                 if (res.status !== 200) problems.push(`status ${res.status}`);
-                if (body.includes('ng-server-context')) {
-                    problems.push('body is rendered (expected the shell)');
+                if (!body.includes('ng-server-context')) {
+                    problems.push('body is not rendered');
                 }
-                if (!body.includes('<app-root')) {
-                    problems.push('body lacks <app-root (not the shell)');
-                }
-                if (res.headers.get('cache-control') !== SHORT) {
+                if (res.headers.get('cache-control') !== LONG) {
                     problems.push(
-                        `cache-control: ${res.headers.get('cache-control')} (expected short)`,
-                    );
-                }
-                if (res.headers.get('cache-tag') !== null) {
-                    problems.push(
-                        `cache-tag: ${res.headers.get('cache-tag')} (expected none)`,
+                        `cache-control: ${res.headers.get('cache-control')} (expected long)`,
                     );
                 }
                 const type = res.headers.get('content-type') ?? '';
