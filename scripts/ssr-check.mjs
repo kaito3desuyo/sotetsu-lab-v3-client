@@ -220,7 +220,7 @@ async function check(entry) {
     return ok;
 }
 
-// 圧縮の選び方（br が無ければ gzip・どちらも無ければ素のまま）と、Lambda Web Adapter の受け口
+// 圧縮の選び方（br が無ければ gzip・どちらも無ければ素のまま。素のままで 5MiB を超えるなら殻）と、Lambda Web Adapter の受け口
 async function checkTransport() {
     const table = `${BASE}/operation/table;calendar_id=${CALENDAR}`;
     const cases = [
@@ -245,11 +245,37 @@ async function checkTransport() {
                     headers: { 'accept-encoding': 'identity' },
                     signal: AbortSignal.timeout(TIMEOUT_MS),
                 });
-                await res.text();
+                const body = await res.text();
+                const problems = [];
                 const encoding = res.headers.get('content-encoding');
-                return encoding === null
-                    ? []
-                    : [`content-encoding: ${encoding} (expected none)`];
+                if (encoding !== null) {
+                    problems.push(
+                        `content-encoding: ${encoding} (expected none)`,
+                    );
+                }
+                // 圧縮を受け付けない相手には、描いた HTML が 5MiB を超えるので殻に切り替わる（Lambda の応答上限 6MB）
+                if (res.status !== 200) problems.push(`status ${res.status}`);
+                if (body.includes('ng-server-context')) {
+                    problems.push('body is rendered (expected the shell)');
+                }
+                if (!body.includes('<app-root')) {
+                    problems.push('body lacks <app-root (not the shell)');
+                }
+                if (res.headers.get('cache-control') !== SHORT) {
+                    problems.push(
+                        `cache-control: ${res.headers.get('cache-control')} (expected short)`,
+                    );
+                }
+                if (res.headers.get('cache-tag') !== null) {
+                    problems.push(
+                        `cache-tag: ${res.headers.get('cache-tag')} (expected none)`,
+                    );
+                }
+                const type = res.headers.get('content-type') ?? '';
+                if (!/^text\/html;\s*charset=utf-8$/i.test(type)) {
+                    problems.push(`content-type: ${type}`);
+                }
+                return problems;
             },
         },
         {

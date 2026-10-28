@@ -103,6 +103,8 @@ const serverlessConfiguration: AWS = {
                     '!**',
                     'lambda/run.sh',
                     'dist/build-by-ci/server/**',
+                    // server.ts が 6MB 超のとき返す殻（server.mjs の ../browser/index.csr.html）
+                    'dist/build-by-ci/browser/index.csr.html',
                 ],
             },
         },
@@ -309,20 +311,9 @@ const serverlessConfiguration: AWS = {
                         },
                         // 切り戻しのときも外さない（外すと Cache-Tag で貯めたタグが抜ける）
                         CacheTagConfig: { HeaderName: 'Cache-Tag' },
-                        // SSR の Lambda が 502・503・504 を返したら、S3 の殻（/index.csr.html は *.* で S3 に届く）に差し替える。
-                        // オリジングループだと S3 に元の画面のパスが届き、殻しか無い S3 では 403/404 になるため、こちらにする
-                        CustomErrorResponses: {
-                            'Fn::If': [
-                                'SsrOn',
-                                [502, 503, 504].map((ErrorCode) => ({
-                                    ErrorCode,
-                                    ResponsePagePath: '/index.csr.html',
-                                    ResponseCode: 200,
-                                    ErrorCachingMinTTL: 10,
-                                })),
-                                { Ref: 'AWS::NoValue' },
-                            ],
-                        },
+                        // CustomErrorResponses は付けない。殻への切り替えは server.ts が描いた HTML が 6MB 超のときだけ行う。
+                        // Lambda が落ちた・時間切れのときは CloudFront のエラーになる
+                        // （配信全体の CustomErrorResponses は /api/* の 5xx も殻の 200 に化けさせる）
                         Origins: [
                             {
                                 Id: s3OriginId,

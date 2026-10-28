@@ -343,21 +343,10 @@ if (ssrOn) {
         !dc.DefaultRootObject,
         dc.DefaultRootObject,
     );
-    const errors = dc.CustomErrorResponses ?? [];
-    for (const code of [502, 503, 504]) {
-        const e = errors.find((x) => x.ErrorCode === code);
-        check(
-            `${code} が /index.csr.html・200・ErrorCachingMinTTL 10`,
-            e?.ResponsePagePath === '/index.csr.html' &&
-                e?.ResponseCode === 200 &&
-                e?.ErrorCachingMinTTL === 10,
-            e,
-        );
-    }
     check(
-        'CustomErrorResponses が 502・503・504 の 3 つ',
-        errors.length === 3,
-        errors.length,
+        'CustomErrorResponses が無い（/api/* の 5xx まで殻に化けるため。殻への切り替えは server.ts）',
+        (dc.CustomErrorResponses ?? []).length === 0,
+        dc.CustomErrorResponses,
     );
     check(
         'CacheTagConfig.HeaderName が Cache-Tag',
