@@ -70,8 +70,6 @@
               },
               "security": {
                 "allowedHosts": [
-                  "v3.sotetsu-lab.com",
-                  "*.cloudfront.net",
                   "*.lambda-url.ap-northeast-1.on.aws",
                   "localhost"
                 ]
