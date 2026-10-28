@@ -603,7 +603,7 @@ describe('ControlBandComponent', () => {
             expect(FakeIntersectionObserver.instances).toHaveLength(0);
             expect(offset()).toBe('');
             expect(hostEl()).not.toHaveClass('tw-sticky');
-            expect(hostEl().style.top).toBe('');
+            expect(hostEl()).toHaveStyle({ top: '' });
         });
 
         it('要約の行を初めから出し、その「畳む」で操作部を隠して collapsed を書き戻す。「開く」で戻る', async () => {
