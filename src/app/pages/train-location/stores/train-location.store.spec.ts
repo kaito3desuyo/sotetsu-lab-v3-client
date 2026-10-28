@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { TrainLocationStore } from './train-location.store';
 
@@ -208,58 +207,5 @@ describe('TrainLocationStore', () => {
                 '52': fresh,
             });
         });
-    });
-});
-
-describe('TrainLocationStore の操作帯の保存', () => {
-    const getItem = jest.fn();
-    const setItem = jest.fn();
-    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
-
-    beforeEach(() => {
-        getItem.mockReset();
-        setItem.mockReset();
-        getItem.mockResolvedValue(null);
-        setItem.mockResolvedValue(undefined);
-        TestBed.configureTestingModule({
-            providers: [
-                {
-                    provide: DeviceStorage,
-                    useValue: { getItem, setItem, removeItem: jest.fn() },
-                },
-            ],
-        });
-    });
-
-    it('初めは false で、set すると変わる', () => {
-        const store = TestBed.inject(TrainLocationStore);
-        expect(store.controlCollapsed()).toBe(false);
-
-        store.setControlCollapsed(true);
-        expect(store.controlCollapsed()).toBe(true);
-    });
-
-    it('端末には controlCollapsed だけを、ストア名のキーで書く', async () => {
-        const store = TestBed.inject(TrainLocationStore);
-        await flush();
-        expect(getItem).toHaveBeenCalledWith('TrainLocationStore');
-
-        store.setControlCollapsed(true);
-        await flush();
-
-        expect(setItem).toHaveBeenLastCalledWith({
-            key: 'TrainLocationStore',
-            value: { controlCollapsed: true },
-        });
-    });
-
-    it('保存してある畳み状態を戻し、settingsReady を true にする', async () => {
-        getItem.mockResolvedValue({ controlCollapsed: true });
-
-        const store = TestBed.inject(TrainLocationStore);
-        await flush();
-
-        expect(store.controlCollapsed()).toBe(true);
-        expect(store.settingsReady()).toBe(true);
     });
 });

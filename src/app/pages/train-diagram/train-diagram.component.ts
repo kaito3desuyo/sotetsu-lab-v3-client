@@ -236,12 +236,6 @@ export class TrainDiagramComponent {
      */
     readonly showTodayParts = afterFirstRender(this.isTodaySelected, false);
 
-    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
-    readonly controlCollapsed = afterFirstRender(
-        this.#store.controlCollapsed,
-        false,
-    );
-
     /** 細帯の要約に出す路線チップの選択肢（チップと同じ組み立て。ずれると要約の「○○の N 路線」がチップと合わない） */
     readonly #routeOptions = computed<FilterChipOption[]>(() =>
         buildRouteOptions(this.#routeStations(), this.#agencies()),
@@ -1108,10 +1102,6 @@ export class TrainDiagramComponent {
 
     onDirectionFilterChange(directionFilter: DiagramDirectionFilter): void {
         this.#replaceViewParams({ direction: directionFilter });
-    }
-
-    onControlCollapsedChange(collapsed: boolean): void {
-        this.#store.setControlCollapsed(collapsed);
     }
 
     /**

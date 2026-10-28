@@ -12,7 +12,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
-import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
@@ -56,12 +55,6 @@ export class OperationPastTimeComponent {
     readonly filterActive = computed(
         () => this.#selectedAgencyIds().length > 0,
     );
-    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
-    readonly controlCollapsed = afterFirstRender(
-        this.#store.controlCollapsed,
-        false,
-    );
-
     readonly bandSummary = computed(() =>
         formatPastTimeSummary({
             referenceDate: this.#referenceDate(),
@@ -81,10 +74,6 @@ export class OperationPastTimeComponent {
                 : null,
         ]);
     });
-
-    onControlCollapsedChange(collapsed: boolean): void {
-        this.#store.setControlCollapsed(collapsed);
-    }
 
     onClearFilter(): void {
         this.#store.setSelectedAgencyIds([]);

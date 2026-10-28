@@ -37,7 +37,7 @@ describe('OperationTableStore の保存', () => {
         expect(setItem).toHaveBeenCalledTimes(1);
         expect(setItem).toHaveBeenCalledWith({
             key: 'OperationTableStore',
-            value: { selectedGroupNames: [], controlCollapsed: false },
+            value: { selectedGroupNames: [] },
         });
         // 設定以外は古い値を戻さない
         expect(store.operationTrips()).toEqual([]);
@@ -58,7 +58,7 @@ describe('OperationTableStore の保存', () => {
         expect(store.selectedGroupNames()).toEqual(['1群']);
         expect(setItem).toHaveBeenLastCalledWith({
             key: 'OperationTableStore',
-            value: { selectedGroupNames: ['1群'], controlCollapsed: false },
+            value: { selectedGroupNames: ['1群'] },
         });
     });
 
@@ -73,22 +73,7 @@ describe('OperationTableStore の保存', () => {
         expect(setItem).toHaveBeenCalledTimes(1);
         expect(setItem).toHaveBeenCalledWith({
             key: 'OperationTableStore',
-            value: { selectedGroupNames: ['7群'], controlCollapsed: false },
-        });
-    });
-
-    it('操作帯を畳んだ状態は設定として保存し、次に開いたときに戻る', async () => {
-        getItem.mockResolvedValue(null);
-        const store = TestBed.inject(OperationTableStore);
-        await flush();
-        expect(store.controlCollapsed()).toBe(false);
-
-        store.setControlCollapsed(true);
-        await flush();
-
-        expect(setItem).toHaveBeenLastCalledWith({
-            key: 'OperationTableStore',
-            value: { selectedGroupNames: [], controlCollapsed: true },
+            value: { selectedGroupNames: ['7群'] },
         });
     });
 });

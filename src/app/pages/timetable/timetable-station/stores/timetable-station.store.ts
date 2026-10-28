@@ -12,7 +12,6 @@ import { format, parse } from 'date-fns';
 import { minBy } from 'es-toolkit/compat';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -45,8 +44,6 @@ type StoreProps = {
         string,
         OperationSightingTimeCrossSectionDto
     >;
-    /** 操作帯を畳んでいるか。端末に保存する */
-    controlCollapsed: boolean;
     hasFetchedTimetable: boolean;
     loadingQueue: boolean[];
 };
@@ -80,7 +77,6 @@ const initialState: StoreProps = {
     stations: [],
     operations: [],
     operationSightingTimeCrossSections: {},
-    controlCollapsed: false,
     hasFetchedTimetable: false,
     loadingQueue: [],
 };
@@ -266,9 +262,6 @@ export const TimetableStationStore = signalStore(
             resetOperationSightingTimeCrossSections(): void {
                 patchState(store, { operationSightingTimeCrossSections: {} });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             /** いまの駅・ダイヤ・方向の取得が終わったか（失敗しても true）。取る前は時刻表の代わりに骨組みを出す */
             setHasFetchedTimetable(value: boolean): void {
                 patchState(store, { hasFetchedTimetable: value });
@@ -320,11 +313,6 @@ export const TimetableStationStore = signalStore(
                 patchState(store, { operationSightingTimeCrossSections: data });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると取得したデータまで書き、前の条件へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'TimetableStationStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

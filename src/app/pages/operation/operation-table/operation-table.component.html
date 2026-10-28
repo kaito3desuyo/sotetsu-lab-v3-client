@@ -18,8 +18,6 @@
          改正日・ダイヤ名は select の選択値として表示を維持する。
          操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
     <app-control-band
-        [collapsed]="controlCollapsed()"
-        (collapsedChange)="onControlCollapsedChange($event)"
         [summary]="bandSummary()"
         [filterActive]="filterActive()"
         [clearable]="true"

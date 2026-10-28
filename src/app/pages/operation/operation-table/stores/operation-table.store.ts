@@ -27,8 +27,6 @@ type StoreProps = {
     stations: StationDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     selectedGroupNames: string[];
-    /** 操作帯を畳んでいるか。端末に保存する */
-    controlCollapsed: boolean;
     hasFetchedOperationTrips: boolean;
     loadingQueue: boolean[];
 };
@@ -53,7 +51,6 @@ const initialState: StoreProps = {
     stations: [],
     tripClasses: [],
     selectedGroupNames: [],
-    controlCollapsed: false,
     hasFetchedOperationTrips: false,
     loadingQueue: [],
 };
@@ -119,9 +116,6 @@ export const OperationTableStore = signalStore(
             setSelectedGroupNames(groupNames: string[]): void {
                 patchState(store, { selectedGroupNames: groupNames });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             /** いまの calendar_id の取得が終わったか（失敗しても true）。取る前は一覧の代わりに骨組みを出す */
             setHasFetchedOperationTrips(value: boolean): void {
                 patchState(store, { hasFetchedOperationTrips: value });
@@ -163,11 +157,11 @@ export const OperationTableStore = signalStore(
         };
     }),
     // B4: リアルタイム運用情報ページ（OperationRealTimeStore）とは独立した永続化キー。
-    // 保存するのは運用群の選択と操作帯の開閉だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
+    // 保存するのは運用群の選択だけ（全部保存すると列車データ（数 MB）まで書き、前のダイヤへ戻ってしまう）。
     // ページの中身は取得に失敗したときだけ OfflineSnapshots から戻す
     withSettingsStorage<StoreProps>({
         key: 'OperationTableStore',
-        fields: ['selectedGroupNames', 'controlCollapsed'],
+        fields: ['selectedGroupNames'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

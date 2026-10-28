@@ -1,18 +1,4 @@
-<div [class]="bandClass" data-testid="control-band-band">
-    <div
-        #content
-        data-testid="control-band-content"
-        [id]="contentId"
-        [class]="contentClass()"
-        [attr.inert]="contentHidden() ? '' : null"
-    >
-        <div [class]="contentInnerClass()">
-            <div [class]="contentPaddingClass()">
-                <ng-content></ng-content>
-            </div>
-        </div>
-    </div>
-
+<div [class]="bandClass()" data-testid="control-band-band">
     <div data-testid="control-band-bar" [class]="barClass()">
         @if (filterActive()) {
             <span
@@ -43,14 +29,25 @@
             data-testid="control-band-toggle"
             class="tw-shrink-0"
             [attr.aria-controls]="contentId"
-            [attr.aria-expanded]="expanded()"
+            [attr.aria-expanded]="open()"
             (click)="toggle()"
         >
-            <mat-icon>{{
-                expanded() ? 'expand_less' : 'expand_more'
-            }}</mat-icon>
+            <mat-icon>{{ open() ? 'expand_less' : 'expand_more' }}</mat-icon>
             {{ toggleLabel() }}
         </button>
+    </div>
+
+    <div
+        data-testid="control-band-content"
+        [id]="contentId"
+        [class]="contentClass()"
+        [attr.inert]="open() ? null : ''"
+    >
+        <div [class]="contentInnerClass()">
+            <div [class]="contentPaddingClass()">
+                <ng-content></ng-content>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -59,7 +56,5 @@
         data-testid="control-band-scrim"
         class="tw-fixed tw-inset-0 tw-z-40"
         (click)="close()"
-        (wheel)="close()"
-        (touchmove)="close()"
     ></div>
 }

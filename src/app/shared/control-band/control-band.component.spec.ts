@@ -10,39 +10,25 @@ import {
 
 class FakeResizeObserver {
     static instances: FakeResizeObserver[] = [];
-    disconnected = false;
-    constructor(public callback: ResizeObserverCallback) {
+    constructor() {
         FakeResizeObserver.instances.push(this);
     }
     observe(): void {}
-    disconnect(): void {
-        this.disconnected = true;
-    }
+    disconnect(): void {}
 }
 
 class FakeIntersectionObserver {
     static instances: FakeIntersectionObserver[] = [];
-    disconnected = false;
-    constructor(
-        public callback: IntersectionObserverCallback,
-        public options?: IntersectionObserverInit,
-    ) {
+    constructor() {
         FakeIntersectionObserver.instances.push(this);
     }
     observe(): void {}
-    disconnect(): void {
-        this.disconnected = true;
-    }
+    disconnect(): void {}
 }
-
-let mediaListeners: (() => void)[] = [];
-let desktop = false;
 
 function installGlobals(): void {
     FakeResizeObserver.instances = [];
     FakeIntersectionObserver.instances = [];
-    mediaListeners = [];
-    desktop = false;
     Object.defineProperty(window, 'ResizeObserver', {
         writable: true,
         value: FakeResizeObserver,
@@ -50,22 +36,6 @@ function installGlobals(): void {
     Object.defineProperty(window, 'IntersectionObserver', {
         writable: true,
         value: FakeIntersectionObserver,
-    });
-    Object.defineProperty(window, 'scrollY', {
-        configurable: true,
-        writable: true,
-        value: 0,
-    });
-    Object.defineProperty(window, 'matchMedia', {
-        writable: true,
-        value: jest.fn().mockImplementation(() => ({
-            get matches() {
-                return desktop;
-            },
-            addEventListener: (_: string, fn: () => void) =>
-                mediaListeners.push(fn),
-            removeEventListener: jest.fn(),
-        })),
     });
 }
 
@@ -77,14 +47,14 @@ function installGlobals(): void {
                 [filterActive]="filterActive()"
                 [clearable]="clearable()"
                 [collapse]="collapse()"
-                [(collapsed)]="collapsed"
+                [flush]="flush()"
                 (clear)="cleared = cleared + 1"
             >
                 <button type="button" class="chip">チップ</button>
             </app-control-band>
         }
         <p class="outside">本文</p>
-        <div class="box" data-control-band-scroll>
+        <div class="box">
             <span class="in-box">箱の中身</span>
         </div>
     `,
@@ -97,7 +67,7 @@ class HostComponent {
     filterActive = signal(true);
     clearable = signal(true);
     collapse = signal<ControlBandCollapse>('page');
-    collapsed = false;
+    flush = signal(false);
     cleared = 0;
 }
 
@@ -126,41 +96,15 @@ describe('ControlBandComponent', () => {
         configure?.(host);
         fixture.detectChanges();
         await fixture.whenStable();
-        const el = fixture.nativeElement.querySelector(
-            'app-control-band',
-        ) as HTMLElement | null;
-        if (el) {
-            Object.defineProperty(el, 'offsetHeight', {
-                configurable: true,
-                value: 250,
-            });
-        }
-        if (host.collapse() === 'page') measure();
     }
 
-    /** host の高さが変わった（測り直した） */
-    function measure(): void {
-        const list = FakeResizeObserver.instances;
-        const ro = list[list.length - 1];
-        ro?.callback([], ro as unknown as ResizeObserver);
+    function click(id: string): void {
+        q(id)!.click();
         fixture.detectChanges();
     }
 
-    /** 操作部がヘッダーの下に隠れた（true）／見えた（false） */
-    function formHidden(hidden: boolean): void {
-        const list = FakeIntersectionObserver.instances;
-        const io = list[list.length - 1];
-        io.callback(
-            [{ isIntersecting: !hidden } as IntersectionObserverEntry],
-            io as unknown as IntersectionObserver,
-        );
-        fixture.detectChanges();
-    }
-
-    /** スクロールして操作部が隠れた所で「開く」 */
-    function openBand(): void {
-        formHidden(true);
-        q('control-band-toggle')!.click();
+    function fire(el: Element | Document, event: Event): void {
+        el.dispatchEvent(event);
         fixture.detectChanges();
     }
 
@@ -176,11 +120,6 @@ describe('ControlBandComponent', () => {
         }
     }
 
-    function click(id: string): void {
-        q(id)!.click();
-        fixture.detectChanges();
-    }
-
     const offset = (): string =>
         document.documentElement.style.getPropertyValue(
             '--control-band-offset',
@@ -191,208 +130,173 @@ describe('ControlBandComponent', () => {
         jest.restoreAllMocks();
     });
 
-    describe('page', () => {
-        it('要約の行を初めから操作部の下に出し、host の top は「ヘッダー + 40 + 罫線 1 − 帯の高さ」', async () => {
-            await setup();
-            expect(hostEl()).toHaveClass('tw-sticky');
-            expect(hostEl()).toHaveStyle({ top: '-161px' });
+    // 型を問わず同じ振る舞い
+    describe.each<ControlBandCollapse>(['page', 'box'])('%s', (collapse) => {
+        const start = (): Promise<void> =>
+            setup((h) => h.collapse.set(collapse));
+
+        it('要約の行が上、操作部が下の順。初めは畳んだ形（要約の行だけ）', async () => {
+            await start();
+            const band = q('control-band-band')!;
+            expect(band.firstElementChild).toBe(q('control-band-bar'));
+            expect(band.lastElementChild).toBe(q('control-band-content'));
             expect(q('control-band-summary')).toHaveTextContent(
                 '絞り込み中：東急 3/10 運用',
             );
-            const band = q('control-band-band')!;
-            expect(band.lastElementChild).toBe(q('control-band-bar'));
-            expect(band.firstElementChild).toBe(q('control-band-content'));
-        });
-
-        it('操作部が見えているかを、ヘッダーの高さを差し引いて見る', async () => {
-            await setup();
-            const io = FakeIntersectionObserver.instances[0];
-            expect(io.options?.rootMargin).toBe('-49px 0px 0px 0px');
-            desktop = true;
-            mediaListeners.forEach((fn) => fn());
-            const list = FakeIntersectionObserver.instances;
-            expect(io.disconnected).toBe(true);
-            expect(list[list.length - 1].options?.rootMargin).toBe(
-                '-65px 0px 0px 0px',
-            );
-        });
-
-        it('一番上（操作部が見えている）では「畳む」で、その場で操作部を隠す', async () => {
-            await setup();
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-            expect(q('control-band-toggle')).toHaveAttribute(
-                'aria-expanded',
-                'true',
-            );
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(true);
             expectShown(false);
             expect(q('control-band-scrim')).toBeNull();
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-            // 帯が要約の行だけになると、ヘッダーのすぐ下に止まる
-            Object.defineProperty(hostEl(), 'offsetHeight', {
-                configurable: true,
-                value: 41,
-            });
-            measure();
-            expect(hostEl()).toHaveStyle({ top: '48px' });
-        });
-
-        it('畳んだまま一番上で「開く」と、重ねずにその場で広げる', async () => {
-            await setup();
-            click('control-band-toggle');
-            formHidden(true); // 隠した操作部は見えない
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(false);
-            expect(q('control-band-scrim')).toBeNull();
-            expectShown(true);
-        });
-
-        it('畳んでスクロールした後の「開く」は重ねて出し、閉じると畳んだ状態に戻る', async () => {
-            await setup();
-            click('control-band-toggle');
-            formHidden(true);
-            window.scrollY = 300;
-            click('control-band-toggle');
-            expect(q('control-band-scrim')).toBeInTheDocument();
-            expectShown(true);
-            // 帯の高さを変えず、要約の行の下に落として出す
-            expect(q('control-band-content')).toHaveClass(
-                'tw-absolute',
-                'tw-top-full',
-            );
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(true);
-            expectShown(false);
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-        });
-
-        it('開く・畳むは動かす（高さは grid の行、重ねるときは top）。動きを減らす設定では動かさない', async () => {
-            await setup();
-            expect(q('control-band-content')).toHaveClass(
-                'tw-transition-[grid-template-rows]',
-                'motion-reduce:tw-transition-none',
-            );
-            expect(hostEl()).toHaveClass(
-                'tw-transition-[top]',
-                'motion-reduce:tw-transition-none',
-            );
-        });
-
-        it('その場で畳む動きの間は帯の中で縮め、終わったら要約の行の下に移す', async () => {
-            await setup();
-            jest.useFakeTimers();
-            try {
-                click('control-band-toggle');
-                expect(q('control-band-content')).not.toHaveClass(
-                    'tw-absolute',
-                );
-                jest.advanceTimersByTime(300);
-                fixture.detectChanges();
-                expect(q('control-band-content')).toHaveClass(
-                    'tw-absolute',
-                    'tw-top-full',
-                );
-                // 一番上で広げるときも、帯の中に戻してから伸ばす
-                click('control-band-toggle');
-                expect(q('control-band-content')).not.toHaveClass(
-                    'tw-absolute',
-                );
-                expectShown(true);
-            } finally {
-                jest.useRealTimers();
-            }
-        });
-
-        it('操作部がヘッダーの下に隠れたら、ボタンは「開く」', async () => {
-            await setup();
-            formHidden(true);
             expect(q('control-band-toggle')).toHaveTextContent('開く');
             expect(q('control-band-toggle')).toHaveAttribute(
                 'aria-expanded',
                 'false',
             );
+            expect(component().open()).toBe(false);
         });
 
-        it('要約の行はいつも 40px 残るので、変数はずっと 40px', async () => {
-            await setup();
-            expect(offset()).toBe('40px');
-            window.dispatchEvent(new Event('scroll'));
-            fixture.detectChanges();
-            expect(offset()).toBe('40px');
-        });
-
-        it('影は付けない（下の罫線だけ）', async () => {
-            await setup();
-            expect(q('control-band-band')).not.toHaveClass('tw-shadow-md');
-            expect(q('control-band-band')).toHaveClass(
-                'tw-border-b',
-                'tw-border-solid',
-            );
-        });
-
-        it('768px をまたぐと top が -145px になる', async () => {
-            await setup();
-            desktop = true;
-            mediaListeners.forEach((fn) => fn());
-            fixture.detectChanges();
-            expect(hostEl()).toHaveStyle({ top: '-145px' });
-        });
-
-        it('帯の高さが変わったら top を測り直す', async () => {
-            await setup();
-            Object.defineProperty(hostEl(), 'offsetHeight', {
-                configurable: true,
-                value: 300,
-            });
-            measure();
-            expect(hostEl()).toHaveStyle({ top: '-211px' });
-        });
-
-        it('「開く」で全部降ろしてページに重ね、要約の行は 1 つのまま「畳む」になる', async () => {
-            await setup();
-            openBand();
-            expect(hostEl()).toHaveStyle({ top: '48px' });
+        it('「開く」は操作部を要約の行の下に重ねて出す（ページの流れに入れない）。幕つき', async () => {
+            await start();
+            click('control-band-toggle');
+            expectShown(true);
             expect(q('control-band-scrim')).toBeInTheDocument();
-            expect(q('control-band-band')).not.toHaveClass('tw-shadow-md');
-            expect(q('control-band-content')!.firstElementChild).toHaveClass(
-                'tw-overflow-y-auto',
+            expect(q('control-band-content')).toHaveClass(
+                'tw-absolute',
+                'tw-inset-x-0',
+                'tw-top-full',
             );
-            // 畳んでいなければ帯ごと降ろす（落とさない）
-            expect(q('control-band-content')).not.toHaveClass('tw-absolute');
+            // 畳んでいる間も同じ置き方なので、開いても帯より下は動かない
+            click('control-band-toggle');
+            expect(q('control-band-content')).toHaveClass(
+                'tw-absolute',
+                'tw-top-full',
+            );
             expect(all('control-band-bar')).toBe(1);
             expect(all('control-band-toggle')).toBe(1);
+        });
+
+        it('開くと「畳む」になり、押すと閉じて「開く」に戻る', async () => {
+            await start();
+            click('control-band-toggle');
+            expect(q('control-band-toggle')).toHaveTextContent('畳む');
             expect(q('control-band-toggle')).toHaveAttribute(
                 'aria-expanded',
                 'true',
             );
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-            expect(offset()).toBe('40px');
+            expect(component().open()).toBe(true);
+            click('control-band-toggle');
+            expectShown(false);
+            expect(q('control-band-scrim')).toBeNull();
+            expect(q('control-band-toggle')).toHaveTextContent('開く');
+            expect(component().open()).toBe(false);
+        });
+
+        it('高さの上限は「画面 − ヘッダー − 40px」で、超えたら中でスクロールする', async () => {
+            await start();
+            click('control-band-toggle');
+            const inner = q('control-band-content')!.firstElementChild!;
+            expect(inner).toHaveClass(
+                'tw-overflow-y-auto',
+                'tw-max-h-[calc(100dvh_-_88px)]',
+                'md:tw-max-h-[calc(100dvh_-_104px)]',
+            );
+        });
+
+        it('罫線: 要約の行の下はいつも引き、操作部は開いている間だけ自分の下に引く', async () => {
+            await start();
+            const rule = ['tw-border-b', 'tw-border-solid', 'tw-border-rule'];
+            expect(q('control-band-bar')).toHaveClass(...rule);
+            expect(q('control-band-content')).not.toHaveClass('tw-border-b');
+            click('control-band-toggle');
+            expect(q('control-band-bar')).toHaveClass(...rule);
+            expect(q('control-band-content')).toHaveClass(...rule);
+            expect(q('control-band-band')).not.toHaveClass('tw-border-b');
+            // 影は付けない（下の罫線だけ）
+            expect(q('control-band-band')).not.toHaveClass('tw-shadow-md');
+        });
+
+        it('開く・畳むは 0fr⇄1fr で動かす。動きを減らす設定では動かさない。位置は動かさない', async () => {
+            await start();
+            expect(q('control-band-content')).toHaveClass(
+                'tw-transition-[grid-template-rows]',
+                'tw-duration-200',
+                'motion-reduce:tw-transition-none',
+            );
+            expect(hostEl()).not.toHaveClass('tw-transition-[top]');
+            expect(q('control-band-band')).not.toHaveClass(
+                'tw-transition-[top]',
+            );
         });
 
         it('帯は幕（tw-z-40）より上に重なり、展開中に操作部と「畳む」を押せる', async () => {
-            await setup();
-            openBand();
+            await start();
+            click('control-band-toggle');
             expect(q('control-band-band')).toHaveClass('tw-z-50');
             expect(q('control-band-scrim')).toHaveClass('tw-z-40');
         });
 
-        it('重ねたときの「畳む」で元に戻る', async () => {
-            await setup();
-            openBand();
+        it('幕を押すと閉じる', async () => {
+            await start();
             click('control-band-toggle');
+            click('control-band-scrim');
             expect(q('control-band-scrim')).toBeNull();
-            expect(hostEl()).toHaveStyle({ top: '-161px' });
-            expect(q('control-band-band')).not.toHaveClass('tw-shadow-md');
+            expectShown(false);
+        });
+
+        it('スクロール（wheel・touchmove・スクロールのキー・scroll）では、閉じない。幕の上でも閉じない', async () => {
+            await start();
+            click('control-band-toggle');
+            const scrim = q('control-band-scrim')!;
+            const inBox = fixture.nativeElement.querySelector(
+                '.in-box',
+            ) as HTMLElement;
+            for (const el of [scrim, inBox]) {
+                fire(el, new Event('wheel', { bubbles: true }));
+                fire(el, new Event('touchmove', { bubbles: true }));
+                fire(el, new Event('scroll', { bubbles: true }));
+                for (const key of [
+                    'PageDown',
+                    'PageUp',
+                    'Home',
+                    'End',
+                    ' ',
+                    'ArrowUp',
+                    'ArrowDown',
+                ]) {
+                    fire(
+                        el,
+                        new KeyboardEvent('keydown', { key, bubbles: true }),
+                    );
+                }
+            }
+            document.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'PageDown' }),
+            );
+            window.dispatchEvent(new Event('scroll'));
+            fixture.detectChanges();
+            expect(q('control-band-scrim')).toBeInTheDocument();
+            expectShown(true);
+        });
+
+        it('畳んでいる間の箱のスクロールで、何も起きない', async () => {
+            await start();
+            const inBox = fixture.nativeElement.querySelector(
+                '.in-box',
+            ) as HTMLElement;
+            fire(inBox, new Event('wheel', { bubbles: true }));
+            fire(inBox, new Event('touchmove', { bubbles: true }));
+            fire(
+                inBox,
+                new KeyboardEvent('keydown', {
+                    key: 'PageDown',
+                    bubbles: true,
+                }),
+            );
+            expectShown(false);
             expect(q('control-band-toggle')).toHaveTextContent('開く');
         });
 
-        it('展開中に scroll イベントが来ても閉じない。チップを押しても閉じない', async () => {
-            await setup();
-            openBand();
-            window.dispatchEvent(new Event('scroll'));
-            fixture.detectChanges();
+        it('チップを押しても閉じない', async () => {
+            await start();
+            click('control-band-toggle');
             (
                 fixture.nativeElement.querySelector('.chip') as HTMLElement
             ).click();
@@ -400,28 +304,15 @@ describe('ControlBandComponent', () => {
             expect(q('control-band-scrim')).toBeInTheDocument();
         });
 
-        it.each([
-            ['幕を押す', (el: HTMLElement) => el.click()],
-            [
-                '幕の上で wheel',
-                (el: HTMLElement) => el.dispatchEvent(new Event('wheel')),
-            ],
-            [
-                '幕の上で touchmove',
-                (el: HTMLElement) => el.dispatchEvent(new Event('touchmove')),
-            ],
-        ])('%s と閉じる', async (_, act) => {
-            await setup();
-            openBand();
-            act(q('control-band-scrim')!);
+        it('Esc で閉じる。帯の中の ArrowDown や、開く前の Esc では何も起きない', async () => {
+            await start();
+            document.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'Escape' }),
+            );
             fixture.detectChanges();
-            expect(q('control-band-scrim')).toBeNull();
-            expect(hostEl()).toHaveStyle({ top: '-161px' });
-        });
+            expectShown(false);
 
-        it('Esc と帯の外の PageDown で閉じる。帯の中の ArrowDown では閉じない', async () => {
-            await setup();
-            openBand();
+            click('control-band-toggle');
             (
                 fixture.nativeElement.querySelector('.chip') as HTMLElement
             ).dispatchEvent(
@@ -434,13 +325,6 @@ describe('ControlBandComponent', () => {
             expect(q('control-band-scrim')).toBeInTheDocument();
 
             document.dispatchEvent(
-                new KeyboardEvent('keydown', { key: 'PageDown' }),
-            );
-            fixture.detectChanges();
-            expect(q('control-band-scrim')).toBeNull();
-
-            openBand();
-            document.dispatchEvent(
                 new KeyboardEvent('keydown', { key: 'Escape' }),
             );
             fixture.detectChanges();
@@ -448,8 +332,8 @@ describe('ControlBandComponent', () => {
         });
 
         it('ほかの部品が処理した Esc（mat-select の選択肢を閉じる等）では閉じない', async () => {
-            await setup();
-            openBand();
+            await start();
+            click('control-band-toggle');
             const event = new KeyboardEvent('keydown', {
                 key: 'Escape',
                 cancelable: true,
@@ -461,8 +345,8 @@ describe('ControlBandComponent', () => {
         });
 
         it('Esc で閉じたら、開閉のボタンにフォーカスを戻す', async () => {
-            await setup();
-            openBand();
+            await start();
+            click('control-band-toggle');
             (
                 fixture.nativeElement.querySelector('.chip') as HTMLElement
             ).focus();
@@ -473,19 +357,22 @@ describe('ControlBandComponent', () => {
             expect(q('control-band-toggle')).toHaveFocus();
         });
 
-        it('Tab で帯の外へフォーカスが出たら閉じる。帯の中での移動では閉じない', async () => {
-            await setup();
-            openBand();
+        it('Tab で帯の外へフォーカスが出たら閉じる。帯の中・cdk の overlay・popover への移動では閉じない', async () => {
+            await start();
+            click('control-band-toggle');
             const chip = fixture.nativeElement.querySelector(
                 '.chip',
             ) as HTMLElement;
-            chip.dispatchEvent(
-                new FocusEvent('focusout', {
-                    bubbles: true,
-                    relatedTarget: q('control-band-toggle'),
-                }),
-            );
-            fixture.detectChanges();
+            const focusOutTo = (next: Element | null): void => {
+                chip.dispatchEvent(
+                    new FocusEvent('focusout', {
+                        bubbles: true,
+                        relatedTarget: next,
+                    }),
+                );
+                fixture.detectChanges();
+            };
+            focusOutTo(q('control-band-toggle'));
             expect(q('control-band-scrim')).toBeInTheDocument();
 
             // mat-select の選択肢（cdk の overlay）へ移っても閉じない
@@ -494,13 +381,7 @@ describe('ControlBandComponent', () => {
             const option = document.createElement('div');
             overlay.appendChild(option);
             document.body.appendChild(overlay);
-            chip.dispatchEvent(
-                new FocusEvent('focusout', {
-                    bubbles: true,
-                    relatedTarget: option,
-                }),
-            );
-            fixture.detectChanges();
+            focusOutTo(option);
             expect(q('control-band-scrim')).toBeInTheDocument();
             overlay.remove();
 
@@ -510,16 +391,19 @@ describe('ControlBandComponent', () => {
             const popoverOption = document.createElement('div');
             popover.appendChild(popoverOption);
             document.body.appendChild(popover);
-            chip.dispatchEvent(
-                new FocusEvent('focusout', {
-                    bubbles: true,
-                    relatedTarget: popoverOption,
-                }),
-            );
-            fixture.detectChanges();
+            focusOutTo(popoverOption);
             expect(q('control-band-scrim')).toBeInTheDocument();
             popover.remove();
 
+            focusOutTo(fixture.nativeElement.querySelector('.outside'));
+            expect(q('control-band-scrim')).toBeNull();
+        });
+
+        it('閉じているときの focusout では何も起きない', async () => {
+            await start();
+            const chip = fixture.nativeElement.querySelector(
+                '.chip',
+            ) as HTMLElement;
             chip.dispatchEvent(
                 new FocusEvent('focusout', {
                     bubbles: true,
@@ -528,11 +412,11 @@ describe('ControlBandComponent', () => {
                 }),
             );
             fixture.detectChanges();
-            expect(q('control-band-scrim')).toBeNull();
+            expectShown(false);
         });
 
         it('開閉のボタンの aria-controls は操作部を指す', async () => {
-            await setup();
+            await start();
             const id = q('control-band-content')!.id;
             expect(id).toMatch(/^control-band-content-\d+$/);
             expect(q('control-band-toggle')).toHaveAttribute(
@@ -542,249 +426,99 @@ describe('ControlBandComponent', () => {
         });
 
         it('絞り込み中は縦線と［解除］を出し、［解除］で clear を出す', async () => {
-            await setup();
+            await start();
             expect(q('control-band-filter-mark')).toBeInTheDocument();
             q('control-band-clear')!.click();
             expect(host.cleared).toBe(1);
         });
 
         it('絞り込み中でなければ縦線も［解除］も出さない', async () => {
-            await setup((h) => h.filterActive.set(false));
+            await setup((h) => {
+                h.collapse.set(collapse);
+                h.filterActive.set(false);
+            });
             expect(q('control-band-filter-mark')).toBeNull();
             expect(q('control-band-clear')).toBeNull();
         });
 
         it('clearable でなければ［解除］を出さない', async () => {
-            await setup((h) => h.clearable.set(false));
+            await setup((h) => {
+                h.collapse.set(collapse);
+                h.clearable.set(false);
+            });
             expect(q('control-band-filter-mark')).toBeInTheDocument();
             expect(q('control-band-clear')).toBeNull();
         });
 
-        it('部品が消えたら変数を消し、観測をやめる', async () => {
+        it('位置を測らない（ResizeObserver・IntersectionObserver を使わない）', async () => {
+            await start();
+            click('control-band-toggle');
+            expect(FakeResizeObserver.instances).toHaveLength(0);
+            expect(FakeIntersectionObserver.instances).toHaveLength(0);
+        });
+    });
+
+    describe('page', () => {
+        it('host は消え（display: contents）、帯の外枠が sticky でヘッダーのすぐ下（48px、md 以上は 64px）に貼り付く', async () => {
+            await setup();
+            expect(hostEl()).toHaveClass('tw-contents');
+            expect(hostEl()).not.toHaveClass('tw-sticky');
+            expect(q('control-band-band')).toHaveClass(
+                'tw-sticky',
+                'tw-top-12',
+                'md:tw-top-16',
+                'tw-z-50',
+                'tw-bg-white',
+            );
+            // 負のマージンは貼り付く帯の外枠に付ける（host の消えた親の箱の中で貼り付くため）
+            expect(q('control-band-band')).toHaveClass(
+                '-tw-mx-4',
+                '-tw-mt-4',
+                'xl:-tw-mt-16',
+            );
+        });
+
+        it('flush のときは負のマージンを付けない', async () => {
+            await setup((h) => h.flush.set(true));
+            expect(q('control-band-band')).toHaveClass('tw-sticky');
+            expect(q('control-band-band')).not.toHaveClass('-tw-mx-4');
+            expect(q('control-band-bar')).toHaveClass('tw-px-3');
+        });
+
+        it('--control-band-offset は要約の行の 40px をずっと入れておく。開閉では変わらない', async () => {
+            await setup();
+            expect(offset()).toBe('40px');
+            click('control-band-toggle');
+            expect(offset()).toBe('40px');
+            click('control-band-toggle');
+            expect(offset()).toBe('40px');
+        });
+
+        it('部品が消えたら変数を消す', async () => {
             await setup();
             expect(offset()).toBe('40px');
             host.shown.set(false);
             fixture.detectChanges();
             expect(offset()).toBe('');
-            expect(FakeResizeObserver.instances[0].disconnected).toBe(true);
-            expect(FakeIntersectionObserver.instances[0].disconnected).toBe(
-                true,
-            );
-        });
-
-        it('ResizeObserver が無い環境では top を付けない', async () => {
-            installGlobals();
-            Object.defineProperty(window, 'ResizeObserver', {
-                writable: true,
-                value: undefined,
-            });
-            await TestBed.configureTestingModule({
-                imports: [HostComponent, NoopAnimationsModule],
-            }).compileComponents();
-            fixture = TestBed.createComponent(HostComponent);
-            fixture.detectChanges();
-            expect(getComputedStyle(hostEl()).top).toBe('');
         });
     });
 
     describe('box', () => {
-        const inBox = (): HTMLElement =>
-            fixture.nativeElement.querySelector('.in-box');
-        const fire = (el: Element, event: Event): void => {
-            el.dispatchEvent(event);
-            fixture.detectChanges();
-        };
-        const wheel = (el: Element): void =>
-            fire(el, new Event('wheel', { bubbles: true }));
-
-        it('host は tw-sticky を持たない。観測せず、変数も使わない', async () => {
+        it('貼り付かない。host が余白を打ち消し、変数も入れない', async () => {
             await setup((h) => h.collapse.set('box'));
-            expect(FakeResizeObserver.instances).toHaveLength(0);
-            expect(FakeIntersectionObserver.instances).toHaveLength(0);
+            expect(hostEl()).toHaveClass('tw-block', '-tw-mx-4', '-tw-mt-4');
+            expect(q('control-band-band')).toHaveClass('tw-relative');
+            expect(q('control-band-band')).not.toHaveClass('tw-sticky');
             expect(offset()).toBe('');
-            expect(hostEl()).not.toHaveClass('tw-sticky');
-            expect(hostEl()).toHaveStyle({ top: '' });
         });
 
-        it('要約の行を初めから出し、その「畳む」で操作部を隠して collapsed を書き戻す。「開く」で戻る', async () => {
-            await setup((h) => h.collapse.set('box'));
-            expect(q('control-band-bar')).toBeInTheDocument();
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-            expectShown(true);
-            q('control-band-toggle')!.click();
-            fixture.detectChanges();
-            expect(host.collapsed).toBe(true);
-            expectShown(false);
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-            expect(q('control-band-scrim')).toBeNull();
-
-            q('control-band-toggle')!.click();
-            fixture.detectChanges();
-            expect(host.collapsed).toBe(false);
-            expectShown(true);
-        });
-
-        it('collapsed=true で始めたら畳んだまま出る', async () => {
+        it('flush のときは host に負のマージンを付けない', async () => {
             await setup((h) => {
                 h.collapse.set('box');
-                h.collapsed = true;
+                h.flush.set(true);
             });
-            expect(q('control-band-bar')).toBeInTheDocument();
-            expectShown(false);
-        });
-
-        it('[data-control-band-scroll] の中の wheel で操作部を隠し、ボタンは「開く」。collapsed は変えない', async () => {
-            await setup((h) => h.collapse.set('box'));
-            wheel(inBox());
-            expectShown(false);
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-            expect(q('control-band-toggle')).toHaveAttribute(
-                'aria-expanded',
-                'false',
-            );
-            expect(host.collapsed).toBe(false);
-        });
-
-        it('touchmove でも隠す', async () => {
-            await setup((h) => h.collapse.set('box'));
-            fire(inBox(), new Event('touchmove', { bubbles: true }));
-            expectShown(false);
-            expect(host.collapsed).toBe(false);
-        });
-
-        it('スクロールのキー（PageDown）で隠す。スクロール用でないキー（a）では隠さない', async () => {
-            await setup((h) => h.collapse.set('box'));
-            fire(
-                inBox(),
-                new KeyboardEvent('keydown', { key: 'a', bubbles: true }),
-            );
-            expectShown(true);
-            fire(
-                inBox(),
-                new KeyboardEvent('keydown', {
-                    key: 'PageDown',
-                    bubbles: true,
-                }),
-            );
-            expectShown(false);
-            expect(host.collapsed).toBe(false);
-        });
-
-        it('箱の外（帯の中を含む）の wheel・touchmove・キーでは隠さない', async () => {
-            await setup((h) => h.collapse.set('box'));
-            const chip = fixture.nativeElement.querySelector(
-                '.chip',
-            ) as HTMLElement;
-            const outside = fixture.nativeElement.querySelector(
-                '.outside',
-            ) as HTMLElement;
-            for (const el of [chip, outside]) {
-                wheel(el);
-                fire(el, new Event('touchmove', { bubbles: true }));
-                fire(
-                    el,
-                    new KeyboardEvent('keydown', {
-                        key: 'PageDown',
-                        bubbles: true,
-                    }),
-                );
-            }
-            expectShown(true);
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-        });
-
-        it('scroll イベントだけでは隠さない', async () => {
-            await setup((h) => h.collapse.set('box'));
-            fire(inBox(), new Event('scroll', { bubbles: true }));
-            window.dispatchEvent(new Event('scroll'));
-            fixture.detectChanges();
-            expectShown(true);
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-        });
-
-        it('隠れた後の「開く」は要約の行の下に重ねて開き（幕つき）、閉じると隠れたまま', async () => {
-            await setup((h) => h.collapse.set('box'));
-            wheel(inBox());
-            click('control-band-toggle');
-            expect(component().open()).toBe(true);
-            expect(q('control-band-scrim')).toBeInTheDocument();
-            expectShown(true);
-            expect(q('control-band-content')).toHaveClass(
-                'tw-absolute',
-                'tw-top-full',
-            );
-            expect(q('control-band-toggle')).toHaveTextContent('畳む');
-            expect(host.collapsed).toBe(false);
-
-            click('control-band-toggle');
-            expect(component().open()).toBe(false);
-            expect(q('control-band-scrim')).toBeNull();
-            expectShown(false);
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-            expect(host.collapsed).toBe(false);
-        });
-
-        it('重ねて開いている間の箱のスクロールでは、状態を変えない', async () => {
-            await setup((h) => h.collapse.set('box'));
-            wheel(inBox());
-            click('control-band-toggle');
-            wheel(inBox());
-            expectShown(true);
-            expect(component().open()).toBe(true);
-        });
-
-        it('重ねて開いた幕の上の wheel で閉じ、隠れたまま', async () => {
-            await setup((h) => h.collapse.set('box'));
-            wheel(inBox());
-            click('control-band-toggle');
-            fire(q('control-band-scrim')!, new Event('wheel'));
-            expect(q('control-band-scrim')).toBeNull();
-            expectShown(false);
-        });
-
-        it('畳む・広げるはその場（collapsed が切り替わり、open は false のまま）', async () => {
-            await setup((h) => h.collapse.set('box'));
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(true);
-            expect(component().open()).toBe(false);
-            expect(q('control-band-content')).not.toHaveClass('tw-absolute');
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(false);
-            expect(component().open()).toBe(false);
-            expect(q('control-band-scrim')).toBeNull();
-            expectShown(true);
-        });
-
-        it('ボタンで畳んでいる間に箱をスクロールしてから「開く」と、その場で広げる', async () => {
-            await setup((h) => h.collapse.set('box'));
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(true);
-            wheel(inBox());
-            fire(
-                inBox(),
-                new KeyboardEvent('keydown', {
-                    key: 'PageDown',
-                    bubbles: true,
-                }),
-            );
-            expect(q('control-band-toggle')).toHaveTextContent('開く');
-            click('control-band-toggle');
-            expect(host.collapsed).toBe(false);
-            expect(component().open()).toBe(false);
-            expect(q('control-band-scrim')).toBeNull();
-            expectShown(true);
-            expect(q('control-band-content')).not.toHaveClass('tw-absolute');
-        });
-
-        it('部品が消えたら document の聞き取りをやめる', async () => {
-            await setup((h) => h.collapse.set('box'));
-            const remove = jest.spyOn(document, 'removeEventListener');
-            host.shown.set(false);
-            fixture.detectChanges();
-            const removed = remove.mock.calls.map(([type]) => type);
-            expect(removed).toEqual(
-                expect.arrayContaining(['wheel', 'touchmove', 'keydown']),
-            );
+            expect(hostEl()).toHaveClass('tw-block');
+            expect(hostEl()).not.toHaveClass('-tw-mx-4');
         });
     });
 });

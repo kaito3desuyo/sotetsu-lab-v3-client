@@ -13,12 +13,7 @@
         </div>
     }
 
-    <app-control-band
-        [flush]="true"
-        [summary]="bandSummary()"
-        [collapsed]="controlCollapsed()"
-        (collapsedChange)="onControlCollapsedChange($event)"
-    >
+    <app-control-band [flush]="true" [summary]="bandSummary()">
         <app-train-location-controller
             [calendarId]="calendarId()"
             [selectedRouteId]="selectedRouteId()"

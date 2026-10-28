@@ -262,54 +262,6 @@ describe('TrainDiagramStore', () => {
         });
     });
 
-    describe('controlCollapsed の保存', () => {
-        it('初めは false で、set すると変わる', () => {
-            const store = TestBed.inject(TrainDiagramStore);
-            expect(store.controlCollapsed()).toBe(false);
-
-            store.setControlCollapsed(true);
-            expect(store.controlCollapsed()).toBe(true);
-        });
-
-        it('端末には controlCollapsed だけを、今までと同じキーで書く', async () => {
-            const store = TestBed.inject(TrainDiagramStore);
-            await flush();
-            expect(getItem).toHaveBeenCalledWith('TrainDiagramStore');
-
-            store.setControlCollapsed(true);
-            await flush();
-
-            const calls = setItem.mock.calls.filter(
-                ([params]) => params.key === 'TrainDiagramStore',
-            );
-            expect(calls.length).toBeGreaterThan(0);
-            for (const [params] of calls) {
-                expect(Object.keys(params.value)).toEqual(['controlCollapsed']);
-            }
-            expect(calls[calls.length - 1][0].value).toEqual({
-                controlCollapsed: true,
-            });
-        });
-
-        it('保存してある畳み状態を戻す。古い丸ごと保存は畳み状態だけに書き直し、列車データは戻さない', async () => {
-            getItem.mockResolvedValue({
-                controlCollapsed: true,
-                tripBlocksByDirection: { 0: [{ tripBlockId: 'old' }] },
-            });
-
-            const store = TestBed.inject(TrainDiagramStore);
-            await flush();
-
-            expect(store.controlCollapsed()).toBe(true);
-            expect(setItem).toHaveBeenCalledWith({
-                key: 'TrainDiagramStore',
-                value: { controlCollapsed: true },
-            });
-            expect(store.tripBlocksByDirection()).toEqual({});
-            expect(store.settingsReady()).toBe(true);
-        });
-    });
-
     describe('取得の世代番号', () => {
         it('nextFetchSeq は進め、currentFetchSeq は進めずにいまの番号を返す', () => {
             const store = TestBed.inject(TrainDiagramStore);

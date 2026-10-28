@@ -10,7 +10,6 @@ import {
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
@@ -70,8 +69,6 @@ type StoreProps = {
     hasFetchedTrainDiagram: boolean;
     /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
-    /** 操作帯を畳んでいるか。これだけを withSettingsStorage で保存する（docs/design.md 列車ダイヤグラム）。 */
-    controlCollapsed: boolean;
 };
 
 /**
@@ -106,7 +103,6 @@ const initialState: StoreProps = {
     itineraryLinks: [],
     loadingQueue: [],
     hasFetchedTrainDiagram: false,
-    controlCollapsed: false,
 };
 
 /**
@@ -329,9 +325,6 @@ export const TrainDiagramStore = signalStore(
             setHasFetchedTrainDiagram(value: boolean): void {
                 patchState(store, { hasFetchedTrainDiagram: value });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             /** 圏外のために保存する中身を取り出す */
             snapshot(): TrainDiagramSnapshot {
                 return {
@@ -363,12 +356,6 @@ export const TrainDiagramStore = signalStore(
                 patchState(store, { operationSightingTimeCrossSections: data });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
-    // 開いたときに前のダイヤ・路線へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'TrainDiagramStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

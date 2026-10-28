@@ -24,7 +24,6 @@ import { toZonedTime } from 'date-fns-tz';
 import { flow, groupBy, isString } from 'es-toolkit';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -45,8 +44,6 @@ type StoreProps = {
     formations: FormationDetailsDto[];
     operationSightings: OperationSightingDetailsDto[];
     selectedAgencyIds: string[];
-    /** 操作帯を畳んでいるか。端末に保存する */
-    controlCollapsed: boolean;
     loadingQueue: boolean[];
     hasFetchedPastTime: boolean;
 };
@@ -69,7 +66,6 @@ const initialState: StoreProps = {
     formations: [],
     operationSightings: [],
     selectedAgencyIds: [],
-    controlCollapsed: false,
     loadingQueue: [],
     hasFetchedPastTime: false,
 };
@@ -178,9 +174,6 @@ export const OperationPastTimeStore = signalStore(
             setSelectedAgencyIds(agencyIds: string[]): void {
                 patchState(store, { selectedAgencyIds: agencyIds });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             enableLoading(): void {
                 patchState(store, (state) => ({
                     loadingQueue: state.loadingQueue.concat(true),
@@ -217,11 +210,6 @@ export const OperationPastTimeStore = signalStore(
                 });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると取得したデータまで書き、前の条件へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'OperationPastTimeStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

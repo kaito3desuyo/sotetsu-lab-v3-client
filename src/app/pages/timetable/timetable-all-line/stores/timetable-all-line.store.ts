@@ -18,7 +18,6 @@ import {
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -48,8 +47,6 @@ type StoreProps = {
     pageSettings: PageEvent;
     loadingQueue: boolean[];
     hasFetchedTripBlocks: boolean;
-    /** 操作帯を畳んでいるか。これだけを端末に保存する（列車ダイヤグラムと同じ） */
-    controlCollapsed: boolean;
 };
 
 /**
@@ -77,7 +74,6 @@ const initialState: StoreProps = {
     },
     loadingQueue: [],
     hasFetchedTripBlocks: false,
-    controlCollapsed: false,
 };
 
 /** 表示方向に並べ替えた駅リスト（上り = 逆順）。 */
@@ -482,9 +478,6 @@ export const TimetableAllLineStore = signalStore(
             setHasFetchedTripBlocks(value: boolean): void {
                 patchState(store, { hasFetchedTripBlocks: value });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             /** 圏外のために保存する中身を取り出す */
             snapshot(): TimetableAllLineSnapshot {
                 return {
@@ -504,12 +497,6 @@ export const TimetableAllLineStore = signalStore(
                 });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると列車データ（数 MB）まで書き、
-    // 開いたときに前のダイヤ・路線へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'TimetableAllLineStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

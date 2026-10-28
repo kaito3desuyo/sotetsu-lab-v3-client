@@ -10,7 +10,6 @@ import {
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
@@ -34,8 +33,6 @@ type StoreProps = {
         string,
         OperationSightingTimeCrossSectionDto
     >;
-    /** 操作帯を畳んでいるか。端末に保存する */
-    controlCollapsed: boolean;
     loadingQueue: boolean[];
     hasFetchedTrainLocation: boolean;
 };
@@ -67,7 +64,6 @@ const initialState: StoreProps = {
     tripBlocksByDirection: {},
     itineraryLinks: [],
     operationSightingTimeCrossSections: {},
-    controlCollapsed: false,
     loadingQueue: [],
     hasFetchedTrainLocation: false,
 };
@@ -133,9 +129,6 @@ export const TrainLocationStore = signalStore(
                     },
                 }));
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             enableLoading(): void {
                 patchState(store, (state) => ({
                     loadingQueue: state.loadingQueue.concat(true),
@@ -182,11 +175,6 @@ export const TrainLocationStore = signalStore(
                 patchState(store, { operationSightingTimeCrossSections: data });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると取得したデータまで書き、前の条件へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'TrainLocationStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

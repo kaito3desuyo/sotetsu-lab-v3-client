@@ -10,7 +10,6 @@ import {
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
-import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { visibleStations } from 'src/app/core/utils/visible-stations.util';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
@@ -34,8 +33,6 @@ type StoreProps = {
     stations: StationDetailsDto[];
     stationAliases: RouteDiagramStationAliases;
     selectedRouteIds: string[];
-    /** 操作帯を畳んでいるか。端末に保存する */
-    controlCollapsed: boolean;
     hasFetchedOperationTrips: boolean;
     loadingQueue: boolean[];
 };
@@ -56,7 +53,6 @@ const initialState: StoreProps = {
     stations: [],
     stationAliases: {},
     selectedRouteIds: [],
-    controlCollapsed: false,
     hasFetchedOperationTrips: false,
     loadingQueue: [],
 };
@@ -215,9 +211,6 @@ export const OperationRouteDiagramStore = signalStore(
                 );
                 patchState(store, { selectedRouteIds: routeIds });
             },
-            setControlCollapsed(collapsed: boolean): void {
-                patchState(store, { controlCollapsed: collapsed });
-            },
             /** いまの運用の取得が終わったか（失敗しても true）。取る前は図と路線のチップの代わりに骨組みを出す */
             setHasFetchedOperationTrips(value: boolean): void {
                 patchState(store, { hasFetchedOperationTrips: value });
@@ -254,11 +247,6 @@ export const OperationRouteDiagramStore = signalStore(
                 patchState(store, { loadingQueue: [] });
             },
         };
-    }),
-    // 保存するのは操作帯の開閉だけ。全部保存すると取得したデータまで書き、前の条件へ戻ってしまう
-    withSettingsStorage<StoreProps>({
-        key: 'OperationRouteDiagramStore',
-        fields: ['controlCollapsed'],
     }),
     withFeature((store) =>
         withOfflineSnapshots({

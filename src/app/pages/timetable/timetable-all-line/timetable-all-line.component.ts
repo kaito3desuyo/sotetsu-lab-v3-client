@@ -102,11 +102,6 @@ export class TimetableAllLineComponent {
     readonly endpoints = this.#store.endpoints;
     readonly previousTrips = this.#store.previousTrips;
     readonly isAwaitingTripBlocks = this.#store.isAwaitingTripBlocks;
-    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
-    readonly controlCollapsed = afterFirstRender(
-        this.#store.controlCollapsed,
-        false,
-    );
     /** 骨組みの行の数（画面 1 枚分を埋める数。あふれた分は箱が隠す） */
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
@@ -297,10 +292,6 @@ export class TimetableAllLineComponent {
         const params: Params = { ...this.#route.snapshot.params };
         delete params['trip_block_id'];
         return params;
-    }
-
-    onControlCollapsedChange(collapsed: boolean): void {
-        this.#store.setControlCollapsed(collapsed);
     }
 
     onPaged(pageSettings: PageEvent): void {

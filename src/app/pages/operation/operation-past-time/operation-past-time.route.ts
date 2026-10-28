@@ -1,7 +1,6 @@
 import { Route } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { OperationPastTimeService } from './services/operation-past-time.service';
-import { OperationPastTimeStore } from './stores/operation-past-time.store';
 
 export const OPERATION_PAST_TIME_ROUTES: Route[] = [
     {
@@ -12,7 +11,7 @@ export const OPERATION_PAST_TIME_ROUTES: Route[] = [
             ),
         providers: [OperationPastTimeService],
         resolve: {
-            from: pageResolver(OperationPastTimeStore),
+            from: pageResolver(),
         },
         data: {
             title: '過去の運用情報',

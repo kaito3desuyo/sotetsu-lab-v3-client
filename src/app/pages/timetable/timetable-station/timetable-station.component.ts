@@ -187,12 +187,6 @@ export class TimetableStationComponent {
         () => !!this.calendar() && this.timetableData().length === 0,
     );
 
-    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
-    readonly controlCollapsed = afterFirstRender(
-        this.#store.controlCollapsed,
-        false,
-    );
-
     /** 細帯の要約（絞り込みはこのページに無いので常に表示）。 */
     readonly bandSummary = computed(() =>
         formatTimetableStationSummary({
@@ -380,10 +374,6 @@ export class TimetableStationComponent {
         } catch {
             // 保存した中身が壊れていても、従来どおり充当編成を出さないだけにする
         }
-    }
-
-    onControlCollapsedChange(collapsed: boolean): void {
-        this.#store.setControlCollapsed(collapsed);
     }
 
     onStationChange(stationId: string): void {

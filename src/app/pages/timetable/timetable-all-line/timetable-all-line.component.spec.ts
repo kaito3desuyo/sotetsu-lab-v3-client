@@ -677,14 +677,6 @@ describe('TimetableAllLineComponent の帯の操作', () => {
         ]);
     });
 
-    it('畳んだ状態は collapsedChange で受け、collapsed に返す', () => {
-        expect(component.controlCollapsed()).toBe(false);
-        component.onControlCollapsedChange(true);
-        expect(component.controlCollapsed()).toBe(true);
-        component.onControlCollapsedChange(false);
-        expect(component.controlCollapsed()).toBe(false);
-    });
-
     it('上り下りの切替は、押した向きへ移る', () => {
         component.onDirectionChange(0);
         expect(navigate).toHaveBeenCalledWith([

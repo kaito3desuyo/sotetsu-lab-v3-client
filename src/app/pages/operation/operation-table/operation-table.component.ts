@@ -98,12 +98,6 @@ export class OperationTableComponent {
     readonly filterActive = computed(
         () => this.selectedGroupNames().length > 0,
     );
-    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
-    readonly controlCollapsed = afterFirstRender(
-        this.#store.controlCollapsed,
-        false,
-    );
-
     readonly bandSummary = computed(() => {
         const trips = this.operationTrips();
         const shown = trips.filter((t) =>
@@ -119,10 +113,6 @@ export class OperationTableComponent {
             total: trips.length,
         });
     });
-
-    onControlCollapsedChange(collapsed: boolean): void {
-        this.#store.setControlCollapsed(collapsed);
-    }
 
     onClearFilter(): void {
         this.#store.setSelectedGroupNames([]);
