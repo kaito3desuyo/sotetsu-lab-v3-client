@@ -185,6 +185,13 @@ describe('OperationRouteDiagramRouteFilterComponent の細帯要約（Task 8）'
         expect(band.filterActive()).toBe(true);
         expect(band.clearable()).toBe(false);
     });
+
+    it('帯は貼り付かない box（ページが高さ固定でスクロールしないため）', () => {
+        const band = fixture.debugElement.query(
+            By.directive(ControlBandComponent),
+        ).componentInstance as ControlBandComponent;
+        expect(band.collapse()).toBe('box');
+    });
 });
 
 describe('OperationRouteDiagramRouteFilterComponent の読み込み中', () => {

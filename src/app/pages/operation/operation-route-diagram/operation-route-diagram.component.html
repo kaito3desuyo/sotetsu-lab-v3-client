@@ -9,12 +9,18 @@
     </div>
 }
 
+<!-- tw-h-full は html/body に height:100% が無いため効かず、main が中身の高さに伸びてページごと
+     スクロールしてしまう。ヘッダー（sticky、48/64px）の下に来る唯一の非固定要素なので、
+     ヘッダー高さぶんを引いた 100dvh を直接充てて main の高さを画面の残りに固定する
+     （全線時刻表・列車ダイヤグラムと同じ calc(100dvh-Npx) パターン）。操作帯は中身なりの高さのまま、
+     図のカード（tw-flex-1）が残りを全部取り、縦横スクロールはカードの中の #scroller だけが受ける
+     （2026-10-28 ユーザー指示で全線時刻表と同じ作りにした）。左右と上の余白・帯の突き抜けは他ページと
+     同じ gutter（16/24/32/64px）で、下は画面の高さを惜しんで 16px だけ -->
 <main
-    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+    class="tw-box-border tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-gap-4 tw-bg-paper-2 tw-px-4 tw-pb-4 tw-pt-4 md:tw-h-[calc(100dvh-64px)] md:tw-px-6 md:tw-pt-6 lg:tw-px-8 lg:tw-pt-8 xl:tw-px-16 xl:tw-pt-16"
 >
     <!-- ページ名はヘッダー（layout header の pageTitle）だけに出し、本文に重ねない -->
-    <!-- 操作帯（sticky）を div で包まない。包むと貼り付く範囲がその div の高さまでになり、
-         スクロールすると帯ごと流れていく -->
+    <!-- 操作帯は box（貼り付かない）。ページはスクロールしないので、div で包んでも帯は流れない -->
     <!-- 検索カードの中身（ダイヤ・運用番号）を帯に寄せた（2026-10-22）。前後の運用は帯の中の名前付きボタン -->
     <app-operation-route-diagram-route-filter
         [alwaysVisible]="true"
@@ -115,53 +121,56 @@
          実際に設定できるコントロールの間に 280px の広告が挟まっており、
          このページ上で操作できること自体が見えなかった（audit C6）。
          2026-10-22 に検索カードを無くし、選択欄は上の帯に寄せた。 -->
-    <div class="tw-flex tw-flex-col tw-gap-4">
-        <div>
-            @if (isAwaitingOperationTrips()) {
-                <!-- 取る前は図と同じ白地に、ダイヤの帯（48px）と図の場所を画面 1 枚分取る。
-                     以前は路線の絞り込みの行が後から出て図を押し下げていた（CLS 0.89・2026-10-22） -->
-                <div
-                    class="tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-overflow-hidden tw-rounded-card tw-bg-white md:tw-h-[calc(100dvh-64px)]"
-                    aria-label="読み込み中"
-                    data-testid="route-diagram-skeleton"
-                >
-                    <app-skeleton-bar
-                        class="tw-h-12 tw-w-full tw-shrink-0 tw-rounded-none"
-                    ></app-skeleton-bar>
-                    <div class="tw-flex tw-flex-row tw-gap-6 tw-p-4">
-                        @for (column of skeletonStationColumns; track column) {
-                            <app-skeleton-bar
-                                class="tw-h-16 tw-w-4"
-                            ></app-skeleton-bar>
-                        }
-                    </div>
-                    <div class="tw-flex tw-flex-col tw-gap-10 tw-px-4">
-                        @for (row of skeletonTripRows; track row) {
-                            <app-skeleton-bar
-                                class="tw-h-3 tw-w-3/4"
-                            ></app-skeleton-bar>
-                        }
-                    </div>
+    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
+        @if (isAwaitingOperationTrips()) {
+            <!-- 取る前は図と同じ白地に、ダイヤの帯（48px）と図の場所を残りの高さいっぱいに取る。
+               以前は路線の絞り込みの行が後から出て図を押し下げていた（CLS 0.89・2026-10-22） -->
+            <div
+                class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-hidden tw-rounded-card tw-bg-white"
+                aria-label="読み込み中"
+                data-testid="route-diagram-skeleton"
+            >
+                <app-skeleton-bar
+                    class="tw-h-12 tw-w-full tw-shrink-0 tw-rounded-none"
+                ></app-skeleton-bar>
+                <div class="tw-flex tw-flex-row tw-gap-6 tw-p-4">
+                    @for (column of skeletonStationColumns; track column) {
+                        <app-skeleton-bar
+                            class="tw-h-16 tw-w-4"
+                        ></app-skeleton-bar>
+                    }
                 </div>
-            } @else if (drawingDisplayed()) {
-                <app-operation-route-diagram-drawing
-                    [stations]="stations()"
-                    [tripOperationLists]="tripOperationLists()"
-                    [calendar]="calendar()"
-                    [operation]="operation()"
-                    [linkLabels]="linkLabels()"
-                    [itineraryLinks]="itineraryLinks()"
-                    (clickNavigateTimetable)="onClickNavigateTimetable($event)"
-                ></app-operation-route-diagram-drawing>
-            } @else {
-                <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。 -->
+                <div class="tw-flex tw-flex-col tw-gap-10 tw-px-4">
+                    @for (row of skeletonTripRows; track row) {
+                        <app-skeleton-bar
+                            class="tw-h-3 tw-w-3/4"
+                        ></app-skeleton-bar>
+                    }
+                </div>
+            </div>
+        } @else if (drawingDisplayed()) {
+            <app-operation-route-diagram-drawing
+                [stations]="stations()"
+                [tripOperationLists]="tripOperationLists()"
+                [calendar]="calendar()"
+                [operation]="operation()"
+                [linkLabels]="linkLabels()"
+                [itineraryLinks]="itineraryLinks()"
+                (clickNavigateTimetable)="onClickNavigateTimetable($event)"
+            ></app-operation-route-diagram-drawing>
+        } @else {
+            <!-- G12: mockup-07 準拠の3点セット（アイコン+説明+次アクション）。 -->
+            <!-- カードの場所（残りの高さ）の中央に出す -->
+            <div
+                class="tw-flex tw-min-h-0 tw-flex-1 tw-items-center tw-justify-center"
+            >
                 <app-empty-state
                     icon="route"
                     message="運用番号を設定して検索してください"
                     actionLabel="運用表を見る"
                     (actionClick)="onEmptyStateActionClick()"
                 ></app-empty-state>
-            }
-        </div>
+            </div>
+        }
     </div>
 </main>
