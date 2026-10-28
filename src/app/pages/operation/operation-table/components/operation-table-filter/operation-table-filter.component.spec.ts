@@ -5,6 +5,7 @@ import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableStore } from '../../stores/operation-table.store';
 import { OperationTableFilterComponent } from './operation-table-filter.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 const deviceStorageStub = {
     provide: DeviceStorage,
@@ -105,7 +106,10 @@ describe('OperationTableFilterComponent の読み込み中', () => {
             providers: [deviceStorageStub],
         })
             .overrideComponent(OperationTableFilterComponent, {
-                set: { imports: [DateFnsPipe], schemas: [NO_ERRORS_SCHEMA] },
+                set: {
+                    imports: [DateFnsPipe, LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
         fixture = TestBed.createComponent(OperationTableFilterComponent);

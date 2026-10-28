@@ -35,6 +35,7 @@ import { UserState } from 'src/app/global-states/user.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
@@ -58,6 +59,7 @@ import { TimetableAllLineStore } from './stores/timetable-all-line.store';
         MatProgressBarModule,
         MatSelectModule,
         DateFnsPipe,
+        LazyOptionsDirective,
         SkeletonBarComponent,
         StickyDirectionToggleComponent,
         TimetableAllLineRouteFilterComponent,

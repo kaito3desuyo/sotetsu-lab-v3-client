@@ -253,7 +253,7 @@ async function checkTransport() {
                         `content-encoding: ${encoding} (expected none)`,
                     );
                 }
-                // 運用表はサーバーで最初の 8 枚だけ描くので、圧縮しなくても 5MiB に届かず、描いた HTML がそのまま返る。
+                // 運用表はサーバーで最初の 4 枚だけ描くので、圧縮しなくても 5MiB に届かず、描いた HTML がそのまま返る。
                 // 5MiB を超えたときの殻への切り替え（server.ts）は、今のページでは起きない守り
                 if (res.status !== 200) problems.push(`status ${res.status}`);
                 if (!body.includes('ng-server-context')) {

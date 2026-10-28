@@ -21,22 +21,32 @@
         <div class="station-filter">
             <mat-form-field subscriptSizing="dynamic" class="tw-w-full">
                 <mat-label>駅名</mat-label>
-                <mat-select [formControl]="stationId">
+                <mat-select
+                    [formControl]="stationId"
+                    appLazyOptions
+                    #lazyStation="appLazyOptions"
+                >
                     <mat-option [value]="null">
                         選択しない（全線検索）
                     </mat-option>
 
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">
-                                    {{ station.stationName }}
-                                </mat-option>
-                            }
-                        </mat-optgroup>
+                    @if (lazyStation.ready()) {
+                        @for (group of stationGroups(); track group.routeId) {
+                            <mat-optgroup [label]="group.label">
+                                @for (
+                                    station of group.stations;
+                                    track station.stationId
+                                ) {
+                                    <mat-option [value]="station.stationId">
+                                        {{ station.stationName }}
+                                    </mat-option>
+                                }
+                            </mat-optgroup>
+                        }
+                    } @else if (selectedStation(); as station) {
+                        <mat-option [value]="station.stationId">
+                            {{ station.stationName }}
+                        </mat-option>
                     }
                 </mat-select>
             </mat-form-field>

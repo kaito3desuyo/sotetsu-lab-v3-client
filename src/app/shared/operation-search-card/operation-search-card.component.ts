@@ -1,6 +1,7 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     inject,
     input,
     linkedSignal,
@@ -24,6 +25,7 @@ import { OperationService } from 'src/app/libs/operation/usecase/operation.servi
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { PanelCardComponent } from '../panel-card/panel-card.component';
 import { toOperationSelectOptions } from '../operation-select-options.util';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 @Component({
     selector: 'app-operation-search-card',
@@ -40,6 +42,7 @@ import { toOperationSelectOptions } from '../operation-select-options.util';
         AppButtonComponent,
         PanelCardComponent,
         DateFnsPipe,
+        LazyOptionsDirective,
     ],
 })
 export class OperationSearchCardComponent {
@@ -62,6 +65,13 @@ export class OperationSearchCardComponent {
         () => this.calendarId() || (this.#todaysCalendarId() ?? null),
     );
     readonly selectedOperationId = linkedSignal(() => this.operationId());
+
+    /** 選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示に使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.selectedCalendarId(),
+        ),
+    );
 
     /** 選んだダイヤの運用（休車の 100 を除き、番号順）。 */
     readonly operations = toSignal(

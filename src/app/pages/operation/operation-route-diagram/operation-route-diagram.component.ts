@@ -51,6 +51,7 @@ import {
     reconnectTripOperationLists,
     withOutsideStationColumns,
 } from './utils/operation-route-diagram-reconnect-trip-operation-lists.util';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 @Component({
     selector: 'app-operation-route-diagram',
@@ -67,6 +68,7 @@ import {
         SkeletonBarComponent,
         StepNavComponent,
         TodayCalendarButtonComponent,
+        LazyOptionsDirective,
     ],
 })
 export class OperationRouteDiagramComponent {
@@ -130,6 +132,13 @@ export class OperationRouteDiagramComponent {
             return source.todaysCalendarId ?? null;
         },
     });
+
+    /** 帯で選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示に使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find(
+            (calendar) => calendar.calendarId === this.selectedCalendarId(),
+        ),
+    );
 
     /** 帯の運用番号の選択肢（検索カードと同じ並び）。 */
     readonly operationOptions = toSignal(

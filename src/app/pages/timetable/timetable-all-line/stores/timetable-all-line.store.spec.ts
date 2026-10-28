@@ -1,6 +1,8 @@
+import { PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 import { TimetableAllLineStore } from './timetable-all-line.store';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -14,6 +16,28 @@ const station = (stationId: string, routeId: string): never =>
         stationId,
         stationName: stationId,
         routeStationLists: [route(routeId)],
+    }) as never;
+
+/** 1 つの駅に 1 本だけ停まる列車ブロック。tripId は `<ブロック ID>-trip` */
+const block = (tripBlockId: string, time: string): never =>
+    ({
+        tripBlockId,
+        trips: [
+            {
+                tripId: `${tripBlockId}-trip`,
+                tripBlockId,
+                times: [
+                    {
+                        timeId: tripBlockId,
+                        stationId: 'st-1',
+                        arrivalTime: time,
+                        departureTime: time,
+                        arrivalDays: 0,
+                        departureDays: 0,
+                    },
+                ],
+            },
+        ],
     }) as never;
 
 describe('TimetableAllLineStore', () => {
@@ -192,5 +216,158 @@ describe('TimetableAllLineStore', () => {
         });
         expect(store.stations().map((s) => s.stationId)).toEqual(['st-9']);
         expect(store.selectedRouteIds()).toEqual(['route-9']);
+    });
+    describe('並び順の受け渡し（TransferState）', () => {
+        const ORDER_KEY = makeStateKey<unknown>('timetable-all-line-order');
+        // 入力順 x, y, z の並べ替え結果は y(9:00), x(10:00), z(11:00)
+        const blocks = [
+            block('x', '10:00:00'),
+            block('y', '09:00:00'),
+            block('z', '11:00:00'),
+        ];
+        const tripIds = (store: {
+            trips: () => { tripId: string }[];
+        }): string[] => store.trips().map((trip) => trip.tripId);
+
+        const setup = (platform: 'server' | 'browser') => {
+            TestBed.configureTestingModule({
+                providers: [{ provide: PLATFORM_ID, useValue: platform }],
+            });
+            const transferState = TestBed.inject(TransferState);
+            const store = TestBed.inject(TimetableAllLineStore);
+            store.setStations([station('st-1', 'r1')]);
+            store.setCalendarId('cal-1');
+            store.setTripDirection(1);
+            return { store, transferState };
+        };
+
+        afterEach(() => jest.restoreAllMocks());
+
+        it('サーバーでは並べた順を TransferState に入れる', () => {
+            const { store, transferState } = setup('server');
+            store.setTripBlocks(blocks);
+            const expected = TimetableAllLineUtil.sortTrips(
+                store.stations(),
+                blocks,
+            ).map((b) => b.tripBlockId);
+
+            expect(tripIds(store)).toEqual(['y-trip', 'x-trip', 'z-trip']);
+            expect(transferState.get(ORDER_KEY, null)).toEqual({
+                calendarId: 'cal-1',
+                tripDirection: 1,
+                order: expected,
+            });
+            expect(expected).toEqual(['y', 'x', 'z']);
+        });
+
+        it('サーバーでも列車ブロックが 0 本なら何も入れない', () => {
+            const { store, transferState } = setup('server');
+            store.setTripBlocks([]);
+
+            expect(store.trips()).toEqual([]);
+            expect(transferState.hasKey(ORDER_KEY)).toBe(false);
+        });
+
+        it('ブラウザで条件が合えば、並べ替えずに渡された順で並べ、キーを消す', () => {
+            const { store, transferState } = setup('browser');
+            transferState.set(ORDER_KEY, {
+                calendarId: 'cal-1',
+                tripDirection: 1,
+                order: ['z', 'x', 'y'],
+            });
+            const sortTrips = jest.spyOn(TimetableAllLineUtil, 'sortTrips');
+            store.setTripBlocks(blocks);
+
+            expect(tripIds(store)).toEqual(['z-trip', 'x-trip', 'y-trip']);
+            expect(sortTrips).not.toHaveBeenCalled();
+            expect(transferState.hasKey(ORDER_KEY)).toBe(false);
+        });
+
+        it('ブラウザで列車ブロックが 0 本の間は、キーを残して今までどおり', () => {
+            const { store, transferState } = setup('browser');
+            transferState.set(ORDER_KEY, {
+                calendarId: 'cal-1',
+                tripDirection: 1,
+                order: ['z', 'x', 'y'],
+            });
+            const sortTrips = jest.spyOn(TimetableAllLineUtil, 'sortTrips');
+
+            expect(store.trips()).toEqual([]);
+            expect(transferState.hasKey(ORDER_KEY)).toBe(true);
+
+            sortTrips.mockClear(); // 0 本のときの呼び出しは数えない
+            store.setTripBlocks(blocks);
+            expect(tripIds(store)).toEqual(['z-trip', 'x-trip', 'y-trip']);
+            expect(sortTrips).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            [
+                'calendarId が違う',
+                {
+                    calendarId: 'cal-2',
+                    tripDirection: 1,
+                    order: ['z', 'x', 'y'],
+                },
+            ],
+            [
+                'tripDirection が違う',
+                {
+                    calendarId: 'cal-1',
+                    tripDirection: 0,
+                    order: ['z', 'x', 'y'],
+                },
+            ],
+            [
+                'ID が足りない',
+                { calendarId: 'cal-1', tripDirection: 1, order: ['z', 'x'] },
+            ],
+            [
+                '知らない ID がある',
+                {
+                    calendarId: 'cal-1',
+                    tripDirection: 1,
+                    order: ['z', 'x', 'q'],
+                },
+            ],
+            [
+                'ID が重複している',
+                {
+                    calendarId: 'cal-1',
+                    tripDirection: 1,
+                    order: ['z', 'x', 'x'],
+                },
+            ],
+        ])(
+            'ブラウザで中身が合わない（%s）ときは並べ替え、キーを消す',
+            (_, transferred) => {
+                const { store, transferState } = setup('browser');
+                transferState.set(ORDER_KEY, transferred);
+                const sortTrips = jest.spyOn(TimetableAllLineUtil, 'sortTrips');
+                store.setTripBlocks(blocks);
+
+                expect(tripIds(store)).toEqual(['y-trip', 'x-trip', 'z-trip']);
+                expect(sortTrips).toHaveBeenCalledTimes(1);
+                expect(transferState.hasKey(ORDER_KEY)).toBe(false);
+            },
+        );
+
+        it('ブラウザで受け渡しを使ったあとに方向を変えると、並べ替える', () => {
+            const { store, transferState } = setup('browser');
+            transferState.set(ORDER_KEY, {
+                calendarId: 'cal-1',
+                tripDirection: 1,
+                order: ['z', 'x', 'y'],
+            });
+            const sortTrips = jest.spyOn(TimetableAllLineUtil, 'sortTrips');
+            store.setTripBlocks(blocks);
+            expect(tripIds(store)).toEqual(['z-trip', 'x-trip', 'y-trip']);
+            expect(sortTrips).not.toHaveBeenCalled();
+
+            store.setTripDirection(0);
+
+            expect(tripIds(store)).toEqual(['y-trip', 'x-trip', 'z-trip']);
+            expect(sortTrips).toHaveBeenCalledTimes(1);
+        });
     });
 });

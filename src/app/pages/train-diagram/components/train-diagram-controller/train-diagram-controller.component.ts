@@ -29,6 +29,7 @@ import {
     DIAGRAM_START_HOUR,
     formatHourLabel,
 } from '../../utils/diagram-timeline.util';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 
 /**
  * N1 ダイヤグラムの操作部（5.7）: 畳まない 2 行の表示設定（列車位置情報と同じ・
@@ -56,6 +57,7 @@ import {
         MatIconModule,
         MatTooltipModule,
         FilterChipsComponent,
+        LazyOptionsDirective,
     ],
 })
 export class TrainDiagramControllerComponent {
@@ -85,10 +87,12 @@ export class TrainDiagramControllerComponent {
         buildRouteOptions(this.routes(), this.agencies()),
     );
 
+    /** 選んでいるダイヤ。選択肢を作る前（lazy-options）の select の表示にも使う。 */
+    readonly selectedCalendar = computed(() =>
+        this.calendars().find((c) => c.calendarId === this.calendarId()),
+    );
     readonly calendarLabel = computed(() => {
-        const calendar = this.calendars().find(
-            (c) => c.calendarId === this.calendarId(),
-        );
+        const calendar = this.selectedCalendar();
         return calendar ? formatCalendarSummaryLabel(calendar) : 'ダイヤ未選択';
     });
 

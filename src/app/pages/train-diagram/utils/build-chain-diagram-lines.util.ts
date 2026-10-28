@@ -1,3 +1,4 @@
+import { AllKeys } from 'src/app/core/utils/all-keys';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { StationAxis } from 'src/app/shared/diagram-scale';
@@ -31,6 +32,34 @@ type ChainStopOwner = {
 };
 
 /**
+ * 停車の浅いコピー。展開（...）はビルドで遅い補助関数になるため、項目を書き並べる
+ * （AllKeys で TimeDetailsDto に項目が増えたときの書き漏らしを防ぐ）。
+ */
+function copyTimeDetails(time: TimeDetailsDto): TimeDetailsDto {
+    const copy: AllKeys<TimeDetailsDto> = {
+        timeId: time.timeId,
+        tripId: time.tripId,
+        stationId: time.stationId,
+        stopId: time.stopId,
+        stopSequence: time.stopSequence,
+        pickupType: time.pickupType,
+        dropoffType: time.dropoffType,
+        arrivalDays: time.arrivalDays,
+        arrivalTime: time.arrivalTime,
+        departureDays: time.departureDays,
+        departureTime: time.departureTime,
+        createdAt: time.createdAt,
+        updatedAt: time.updatedAt,
+        trip: time.trip,
+        station: time.station,
+        stop: time.stop,
+        startTripOperationLists: time.startTripOperationLists,
+        endTripOperationLists: time.endTripOperationLists,
+    };
+    return copy;
+}
+
+/**
  * 続きの順に並んだ trips の times を 1 本の停車列につなげる。
  *
  * つなぎ目の駅 X（前の列車の最後の停車＝次の列車の最初の停車、findContinuations の
@@ -56,11 +85,9 @@ function buildMergedStops(trips: readonly TripDetailsDto[]): {
         sorted.forEach((stop, idxInTrip) => {
             if (tripIndex > 0 && idxInTrip === 0 && allStops.length > 0) {
                 const prev = allStops[allStops.length - 1];
-                const merged: TimeDetailsDto = {
-                    ...prev,
-                    departureTime: stop.departureTime,
-                    departureDays: stop.departureDays,
-                };
+                const merged = copyTimeDetails(prev);
+                merged.departureTime = stop.departureTime;
+                merged.departureDays = stop.departureDays;
                 allStops[allStops.length - 1] = merged;
                 const prevOwner = ownerByStop.get(prev);
                 ownerByStop.delete(prev);
@@ -70,7 +97,7 @@ function buildMergedStops(trips: readonly TripDetailsDto[]): {
                 });
                 return;
             }
-            const copy: TimeDetailsDto = { ...stop };
+            const copy = copyTimeDetails(stop);
             allStops.push(copy);
             ownerByStop.set(copy, {
                 arrTripIndex: tripIndex,
@@ -494,14 +521,16 @@ export function buildChainDiagramLines(params: {
                 axisStationIds.has(ownFirstStop.stationId)
             ) {
                 const firstPoint = state.allPoints[0];
-                depotMarks.push({
+                // transfer は無いときは項目ごと作らない（undefined を入れない）
+                const mark: TripDiagramDepotMark = {
                     kind: 'out',
-                    ...(transferOut && !trip.depotOut
-                        ? { transfer: true }
-                        : {}),
                     minute: firstPoint.minute,
                     y: firstPoint.y,
-                });
+                };
+                if (transferOut && !trip.depotOut) {
+                    mark.transfer = true;
+                }
+                depotMarks.push(mark);
             }
         }
         if (index === trips.length - 1 && (trip.depotIn || transferIn)) {
@@ -512,23 +541,31 @@ export function buildChainDiagramLines(params: {
                 axisStationIds.has(ownLastStop.stationId)
             ) {
                 const lastPoint = state.allPoints[state.allPoints.length - 1];
-                depotMarks.push({
+                const mark: TripDiagramDepotMark = {
                     kind: 'in',
-                    ...(transferIn && !trip.depotIn ? { transfer: true } : {}),
                     minute: lastPoint.minute,
                     y: lastPoint.y,
-                });
+                };
+                if (transferIn && !trip.depotIn) {
+                    mark.transfer = true;
+                }
+                depotMarks.push(mark);
             }
         }
 
         const stopLabels: TripDiagramStopLabel[] = state.stopLabels.map(
-            (label, i) => ({
-                ...label,
-                side: computeStopLabelSide(
-                    state.allPoints,
-                    state.stopLabelPointIndices[i],
-                ),
-            }),
+            (label, i) => {
+                const withSide: AllKeys<TripDiagramStopLabel> = {
+                    minute: label.minute,
+                    y: label.y,
+                    text: label.text,
+                    side: computeStopLabelSide(
+                        state.allPoints,
+                        state.stopLabelPointIndices[i],
+                    ),
+                };
+                return withSide;
+            },
         );
 
         lines.push({

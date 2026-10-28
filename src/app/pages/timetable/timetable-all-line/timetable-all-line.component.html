@@ -44,21 +44,37 @@
                     <mat-select
                         [value]="calendarId()"
                         (valueChange)="onCalendarChange($event)"
+                        appLazyOptions
+                        #lazyCalendar="appLazyOptions"
                     >
-                        @for (
-                            calendar of calendars();
-                            track calendar.calendarId
-                        ) {
-                            <mat-option [value]="calendar.calendarId">
+                        @if (lazyCalendar.ready()) {
+                            @for (
+                                calendar of calendars();
+                                track calendar.calendarId
+                            ) {
+                                <mat-option [value]="calendar.calendarId">
+                                    {{
+                                        calendar.startDate
+                                            | dateFns
+                                                : {
+                                                      format: 'yyyy/M/d改正',
+                                                      parseFormat: 'yyyy-MM-dd',
+                                                  }
+                                    }}
+                                    {{ calendar.calendarName }}
+                                </mat-option>
+                            }
+                        } @else if (calendar(); as selected) {
+                            <mat-option [value]="selected.calendarId">
                                 {{
-                                    calendar.startDate
+                                    selected.startDate
                                         | dateFns
                                             : {
                                                   format: 'yyyy/M/d改正',
                                                   parseFormat: 'yyyy-MM-dd',
                                               }
                                 }}
-                                {{ calendar.calendarName }}
+                                {{ selected.calendarName }}
                             </mat-option>
                         }
                     </mat-select>
@@ -75,18 +91,22 @@
                     placeholder="駅を選ぶ"
                     [disabled]="!calendarId()"
                     (valueChange)="onStationSelect($event)"
+                    appLazyOptions
+                    #lazyStation="appLazyOptions"
                 >
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">
-                                    {{ station.stationName }}
-                                </mat-option>
-                            }
-                        </mat-optgroup>
+                    @if (lazyStation.ready()) {
+                        @for (group of stationGroups(); track group.routeId) {
+                            <mat-optgroup [label]="group.label">
+                                @for (
+                                    station of group.stations;
+                                    track station.stationId
+                                ) {
+                                    <mat-option [value]="station.stationId">
+                                        {{ station.stationName }}
+                                    </mat-option>
+                                }
+                            </mat-optgroup>
+                        }
                     }
                 </mat-select>
             </mat-form-field>

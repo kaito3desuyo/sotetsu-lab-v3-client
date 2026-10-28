@@ -45,6 +45,88 @@ describe('GoogleAnalyticsService', () => {
         );
     });
 
+    describe('sendPageView', () => {
+        type IdleGlobal = { requestIdleCallback?: unknown };
+        const g = globalThis as unknown as IdleGlobal;
+
+        afterEach(() => {
+            delete g.requestIdleCallback;
+            jest.useRealTimers();
+        });
+
+        it('requestIdleCallback があれば、暇になるまで送らず、timeout 2000 で予約する', () => {
+            const idle = jest.fn();
+            g.requestIdleCallback = idle;
+
+            service.sendPageView('題名', 'timetable');
+
+            expect(gtagMock).not.toHaveBeenCalled();
+            expect(idle).toHaveBeenCalledWith(expect.any(Function), {
+                timeout: 2000,
+            });
+
+            idle.mock.calls[0][0]();
+
+            expect(gtagMock).toHaveBeenCalledTimes(1);
+            expect(gtagMock).toHaveBeenCalledWith(
+                'event',
+                'page_view',
+                expect.objectContaining({
+                    page_title: '題名',
+                    page_path: '/timetable',
+                }),
+            );
+        });
+
+        it('requestIdleCallback が無ければ setTimeout 0 で送る', () => {
+            jest.useFakeTimers();
+            delete g.requestIdleCallback;
+
+            service.sendPageView('題名', '/timetable');
+
+            expect(gtagMock).not.toHaveBeenCalled();
+            jest.advanceTimersByTime(0);
+
+            expect(gtagMock).toHaveBeenCalledWith('event', 'page_view', {
+                page_title: '題名',
+                page_location: location.href,
+                page_path: '/timetable',
+            });
+        });
+
+        it('page_location は呼んだ時点の URL で、暇になるまでに遷移しても変わらない', () => {
+            const idle = jest.fn();
+            g.requestIdleCallback = idle;
+            window.history.pushState({}, '', '/before');
+
+            service.sendPageView('題名', '/before');
+            window.history.pushState({}, '', '/after');
+            idle.mock.calls[0][0]();
+
+            expect(gtagMock).toHaveBeenCalledWith(
+                'event',
+                'page_view',
+                expect.objectContaining({
+                    page_location: expect.stringMatching(/\/before$/),
+                }),
+            );
+        });
+
+        it('setUserProperties は page_view が暇を待つ間もその場で呼ばれ、順番が崩れない', () => {
+            const idle = jest.fn();
+            g.requestIdleCallback = idle;
+
+            service.sendPageView('題名', '/timetable');
+            service.setUserProperties({ loggedIn: true, role: 'editor' });
+            idle.mock.calls[0][0]();
+
+            expect(gtagMock.mock.calls.map((c) => c[1])).toEqual([
+                'user_properties',
+                'page_view',
+            ]);
+        });
+    });
+
     it('ログインしていなければ役割は guest にする', () => {
         service.setUserProperties({ loggedIn: false, role: null });
 

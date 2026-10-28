@@ -35,6 +35,7 @@ import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import {
     buildStationGroups,
@@ -65,6 +66,7 @@ export const ALL_LINE_OPTION = '__all-line__';
         DateFnsPipe,
         ControlBandComponent,
         EmptyStateComponent,
+        LazyOptionsDirective,
         SkeletonBarComponent,
         StepNavComponent,
         StickyDirectionToggleComponent,
@@ -150,6 +152,13 @@ export class TimetableStationComponent {
     readonly showCurrentFormation = afterFirstRender(
         this.isTodaysCalendar,
         false,
+    );
+
+    /** 駅 select の選択中の駅。選択肢を作る前（lazy-options）の表示に使う。 */
+    readonly selectedStation = computed(() =>
+        this.stationOptions().find(
+            (station) => station.stationId === this.stationId(),
+        ),
     );
 
     /** ダイヤ select の選択中表示（改正日 + ダイヤ名）に使う。 */

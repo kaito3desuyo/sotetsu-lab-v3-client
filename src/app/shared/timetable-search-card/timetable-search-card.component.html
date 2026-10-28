@@ -3,18 +3,39 @@
         <form class="tw-flex tw-flex-col tw-gap-4" [formGroup]="form">
             <mat-form-field>
                 <mat-label>ダイヤ</mat-label>
-                <mat-select formControlName="calendarId">
-                    @for (calendar of calendars(); track calendar.calendarId) {
-                        <mat-option [value]="calendar.calendarId">
+                <mat-select
+                    formControlName="calendarId"
+                    appLazyOptions
+                    #lazyCalendar="appLazyOptions"
+                >
+                    @if (lazyCalendar.ready()) {
+                        @for (
+                            calendar of calendars();
+                            track calendar.calendarId
+                        ) {
+                            <mat-option [value]="calendar.calendarId">
+                                {{
+                                    calendar.startDate
+                                        | dateFns
+                                            : {
+                                                  format: 'yyyy/M/d改正',
+                                                  parseFormat: 'yyyy-MM-dd',
+                                              }
+                                }}
+                                {{ calendar.calendarName }}
+                            </mat-option>
+                        }
+                    } @else if (selectedCalendar(); as selected) {
+                        <mat-option [value]="selected.calendarId">
                             {{
-                                calendar.startDate
+                                selected.startDate
                                     | dateFns
                                         : {
                                               format: 'yyyy/M/d改正',
                                               parseFormat: 'yyyy-MM-dd',
                                           }
                             }}
-                            {{ calendar.calendarName }}
+                            {{ selected.calendarName }}
                         </mat-option>
                     }
                 </mat-select>
@@ -35,18 +56,28 @@
 
             <mat-form-field>
                 <mat-label>駅名</mat-label>
-                <mat-select formControlName="stationId">
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">
-                                    {{ station.stationName }}
-                                </mat-option>
-                            }
-                        </mat-optgroup>
+                <mat-select
+                    formControlName="stationId"
+                    appLazyOptions
+                    #lazyStation="appLazyOptions"
+                >
+                    @if (lazyStation.ready()) {
+                        @for (group of stationGroups(); track group.routeId) {
+                            <mat-optgroup [label]="group.label">
+                                @for (
+                                    station of group.stations;
+                                    track station.stationId
+                                ) {
+                                    <mat-option [value]="station.stationId">
+                                        {{ station.stationName }}
+                                    </mat-option>
+                                }
+                            </mat-optgroup>
+                        }
+                    } @else if (selectedStation(); as selected) {
+                        <mat-option [value]="selected.stationId">
+                            {{ selected.stationName }}
+                        </mat-option>
                     }
                 </mat-select>
                 @if (form.get('stationId').hasError('required')) {
