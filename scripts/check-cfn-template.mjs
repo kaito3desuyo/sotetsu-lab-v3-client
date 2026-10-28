@@ -261,8 +261,8 @@ check(
     pk.HeadersConfig,
 );
 check(
-    'QueryStringsConfig が all',
-    pk.QueryStringsConfig?.QueryStringBehavior === 'all',
+    'QueryStringsConfig が none',
+    pk.QueryStringsConfig?.QueryStringBehavior === 'none',
     pk.QueryStringsConfig,
 );
 

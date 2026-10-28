@@ -251,7 +251,8 @@ const serverlessConfiguration: AWS = {
                             EnableAcceptEncodingBrotli: true,
                             CookiesConfig: { CookieBehavior: 'none' },
                             HeadersConfig: { HeaderBehavior: 'none' },
-                            QueryStringsConfig: { QueryStringBehavior: 'all' },
+                            // クエリは鍵にも Lambda にも入れない。SSR のページはクエリを読まず、fbclid・utm_* で鍵が割れて毎回描き直すため（spec 8 章・2026-10-28）
+                            QueryStringsConfig: { QueryStringBehavior: 'none' },
                         },
                     },
                 },
