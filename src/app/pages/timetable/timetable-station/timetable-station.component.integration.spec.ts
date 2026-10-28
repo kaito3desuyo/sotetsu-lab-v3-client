@@ -7,6 +7,7 @@ import {
 import {
     ComponentFixture,
     ComponentFixtureAutoDetect,
+    DeferBlockBehavior,
     TestBed,
 } from '@angular/core/testing';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -119,6 +120,8 @@ async function setup(overrides?: {
     tripBlock?: unknown;
 }): Promise<ComponentFixture<TimetableStationComponent>> {
     await TestBed.configureTestingModule({
+        // 時の行のセルの格子は @defer（画面に入ったら描く）。ここでは中身まで描かれることを見る
+        deferBlockBehavior: DeferBlockBehavior.Playthrough,
         imports: [TimetableStationComponent],
         providers: [
             provideRouter([]),
@@ -232,6 +235,34 @@ async function setup(overrides?: {
 }
 
 describe('TimetableStationComponent 統合（初回ロードの表示モデル再構築）', () => {
+    // jsdom には IntersectionObserver が無い。@defer の on viewport が働くよう、
+    // 観測を始めたら次のタスクで「画面に入った」と通知する代役を置く
+    const originalObserver = globalThis.IntersectionObserver;
+    beforeAll(() => {
+        globalThis.IntersectionObserver = class {
+            constructor(
+                private readonly callback: IntersectionObserverCallback,
+            ) {}
+            observe(target: Element): void {
+                // Angular が観測の登録を終えてから通知する
+                setTimeout(() =>
+                    this.callback(
+                        [{ isIntersecting: true, target }] as never,
+                        this as never,
+                    ),
+                );
+            }
+            unobserve(): void {}
+            disconnect(): void {}
+            takeRecords(): IntersectionObserverEntry[] {
+                return [];
+            }
+        } as never;
+    });
+    afterAll(() => {
+        globalThis.IntersectionObserver = originalObserver;
+    });
+
     it('初回フェッチ解決後、追加操作なしで全セルに充当編成が描画される', async () => {
         const fixture = await setup();
 
