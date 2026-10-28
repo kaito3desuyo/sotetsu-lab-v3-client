@@ -36,10 +36,6 @@ const angularApp = new AngularNodeAppEngine();
 app.get('/healthz', (_req, res) => {
     res.set('Cache-Control', CACHE_CONTROL['no-store']).status(200).send('ok');
 });
-// HTTP でないイベント（warmup など）を LWA が送る先（AWS_LWA_PASS_THROUGH_PATH の既定）。
-app.post('/events', (_req, res) => {
-    res.status(204).end();
-});
 
 // 描いた HTML を br（品質 5）か gzip（品質 6）にする。1KB 未満は圧縮しない。
 app.use(

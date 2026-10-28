@@ -96,9 +96,14 @@ const one = (type) => {
 };
 
 // ---- Lambda ----
-// warmup プラグインの warmer も AWS::Lambda::Function なので、SSR のものを論理 ID で選ぶ
-const fn = resources.SsrLambdaFunction ?? { Properties: {} };
-check('SsrLambdaFunction がある', resources.SsrLambdaFunction !== undefined);
+// warmup は使わない（CDN に置いてあるので Lambda が動くのは失効後の最初の 1 人だけ・ADR-0017）
+const [fnId, fn] = one('AWS::Lambda::Function');
+check('Lambda の論理 ID が SsrLambdaFunction', fnId === 'SsrLambdaFunction', fnId);
+check(
+    '定期実行（AWS::Events::Rule）が無い',
+    byType('AWS::Events::Rule').length === 0,
+    byType('AWS::Events::Rule').map(([id]) => id),
+);
 const fp = fn.Properties;
 check('Runtime が nodejs24.x', fp.Runtime === 'nodejs24.x', fp.Runtime);
 check(
@@ -160,7 +165,6 @@ check(
     distId === 'AppCloudFrontDistribution',
     distId,
 );
-// warmup プラグインの EventBridge 用の許可は除き、SSR の関数への許可だけを見る
 const permissions = byType('AWS::Lambda::Permission')
     .map(([, r]) => r.Properties)
     .filter((p) =>

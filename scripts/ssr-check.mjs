@@ -1,7 +1,7 @@
 // 手元で SSR を起動し、主なページをサーバーで描けるか確かめる。
 // 先に `npm run build:ssr-check`。サーバーは本番の API を読む（読むだけ）。
 // 見ること: 状態コード・サーバーで描いたか（ng-server-context）・CDN に置く長さ・キャッシュタグ・題名・圧縮・サーバーのエラー
-// と、Lambda Web Adapter が叩く /healthz と POST /events
+// と、Lambda Web Adapter が叩く /healthz
 import { spawn } from 'node:child_process';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -287,18 +287,6 @@ async function checkTransport() {
                     );
                 }
                 return problems;
-            },
-        },
-        {
-            name: 'POST /events',
-            run: async () => {
-                const res = await fetch(`${BASE}/events`, {
-                    method: 'POST',
-                    body: '{}',
-                    signal: AbortSignal.timeout(TIMEOUT_MS),
-                });
-                await res.text();
-                return res.status === 204 ? [] : [`status ${res.status}`];
             },
         },
     ];

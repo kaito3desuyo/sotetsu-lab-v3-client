@@ -31,7 +31,6 @@ const s3Behavior = {
 const serverlessConfiguration: AWS = {
     service: `${system}-client`,
     frameworkVersion: '3',
-    plugins: ['serverless-plugin-warmup'],
     provider: {
         name: 'aws',
         stage: 'prod',
@@ -48,8 +47,15 @@ const serverlessConfiguration: AWS = {
             serverSideEncryption: 'AES256',
         },
     },
-    // zip を関数ごとに作る。warmup プラグインの関数が ssr 用の patterns（!**）に巻き込まれないようにする
-    package: { individually: true },
+    package: {
+        patterns: [
+            '!**',
+            'lambda/run.sh',
+            'dist/build-by-ci/server/**',
+            // server.ts が 6MB 超のとき返す殻（server.mjs の ../browser/index.csr.html）
+            'dist/build-by-ci/browser/index.csr.html',
+        ],
+    },
     params: {
         default: {
             prefix: `${system}-\${sls:stage}-client`,
@@ -60,25 +66,6 @@ const serverlessConfiguration: AWS = {
         },
         prod: {
             aliases: 'v3.sotetsu-lab.com',
-        },
-    },
-    custom: {
-        warmup: {
-            defaultWarmer: {
-                enabled: true,
-                name: '${param:prefix}-warmup-lambda',
-                vpc: false,
-                events: [
-                    {
-                        schedule: 'cron(0/5 0-14 ? * * *)',
-                    },
-                    {
-                        schedule: 'cron(0/5 21-23 ? * * *)',
-                    },
-                ],
-                concurrency: 1,
-                logRetentionInDays: 7,
-            },
         },
     },
     functions: {
@@ -100,15 +87,6 @@ const serverlessConfiguration: AWS = {
                 PORT: '8080',
             },
             url: { authorizer: 'aws_iam' },
-            package: {
-                patterns: [
-                    '!**',
-                    'lambda/run.sh',
-                    'dist/build-by-ci/server/**',
-                    // server.ts が 6MB 超のとき返す殻（server.mjs の ../browser/index.csr.html）
-                    'dist/build-by-ci/browser/index.csr.html',
-                ],
-            },
         },
     },
     resources: {
