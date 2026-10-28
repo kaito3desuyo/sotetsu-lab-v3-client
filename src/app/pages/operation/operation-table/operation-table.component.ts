@@ -83,8 +83,8 @@ export class OperationTableComponent {
     readonly hasFetchedOperationTrips = this.#store.hasFetchedOperationTrips;
     /** 骨組みのカードの数。1440px で 4 面 × 2 段あれば画面 1 枚分を埋める */
     readonly skeletonCards = Array.from({ length: 8 }, (_, i) => i);
-    /** サーバーで中身まで描くカードの数（骨組みと同じ画面 1 枚分） */
-    readonly SERVER_RENDERED_CARDS = 8;
+    /** サーバーで中身まで描くカードの数。1440px で 1 段目の 4 面。カードは縦に長く 1 段で画面が埋まる（2026-10-28 実測） */
+    readonly SERVER_RENDERED_CARDS = 4;
     /** 骨組みのカード 1 枚の列車の行の数 */
     readonly skeletonRows = Array.from({ length: 12 }, (_, i) => i);
 
