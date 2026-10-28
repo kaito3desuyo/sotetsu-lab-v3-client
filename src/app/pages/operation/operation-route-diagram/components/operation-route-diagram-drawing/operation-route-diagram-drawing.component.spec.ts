@@ -167,6 +167,25 @@ describe('OperationRouteDiagramDrawingComponent', () => {
             expect(component).toBeTruthy();
         });
 
+        it('カードは残りの高さを全部取り、縦横スクロールは #scroller だけが受ける（高さ固定）', () => {
+            fixture.detectChanges();
+            const el = fixture.nativeElement as HTMLElement;
+            const scroller = el.querySelector(
+                'article > div[class*="tw-overflow-auto"]',
+            );
+
+            expect(el).toHaveClass('tw-flex-1', 'tw-min-h-0', 'tw-flex-col');
+            expect(el.querySelector('article')).toHaveClass(
+                'tw-flex',
+                'tw-flex-col',
+                'tw-flex-1',
+                'tw-min-h-0',
+            );
+            expect(scroller).toHaveClass('tw-min-h-0', 'tw-flex-1');
+            expect(scroller?.className).not.toContain('max-h-');
+            expect(scroller?.className).not.toContain('control-band-offset');
+        });
+
         it('駅の列はスクロール枠の幅いっぱいに広げる', () => {
             component.availableWidth.set(1312);
             fixture.detectChanges();

@@ -677,14 +677,6 @@ describe('TimetableAllLineComponent の帯の操作', () => {
         ]);
     });
 
-    it('畳んだ状態は collapsedChange で受け、collapsed に返す', () => {
-        expect(component.controlCollapsed()).toBe(false);
-        component.onControlCollapsedChange(true);
-        expect(component.controlCollapsed()).toBe(true);
-        component.onControlCollapsedChange(false);
-        expect(component.controlCollapsed()).toBe(false);
-    });
-
     it('上り下りの切替は、押した向きへ移る', () => {
         component.onDirectionChange(0);
         expect(navigate).toHaveBeenCalledWith([
@@ -881,19 +873,20 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
 
     it('古い取得が失敗しても、保存した中身は戻さない', async () => {
         stations$ = of(undefined);
-        // 取り直しが先に始まるよう、失敗は次のタスクよりさらに後に届ける
-        // （fetchData の途中の await の数に、タスクの順が左右されないようにする）
-        tripBlocks$ = timer(5).pipe(
-            switchMap(() => throwError(() => new Error('offline-first'))),
-        );
+        // 先の取得の失敗は、取り直しが終わってから手で届ける。
+        // 時間で届けると、遅い CI では取り直しより先に届いてしまう（2026-10-28 に CI で落ちた）
+        const firstTripBlocks = new Subject<undefined>();
+        tripBlocks$ = firstTripBlocks;
         await setup();
         fixture = TestBed.createComponent(TimetableAllLineComponent);
         // 先の取得が trip-blocks を取りに行くまで待つ（取る前に差し替えると先の取得も成功してしまう）
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        while (!firstTripBlocks.observed) {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
 
-        // 取り直しを始めてから、先の取得の失敗が届く
         tripBlocks$ = of(undefined);
         await fixture.componentInstance.fetchData();
+        firstTripBlocks.error(new Error('offline-first'));
         await flush();
 
         expect(restore).not.toHaveBeenCalled();

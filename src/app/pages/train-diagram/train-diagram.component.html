@@ -18,13 +18,7 @@
         </div>
     }
 
-    <app-control-band
-        collapse="manual"
-        [flush]="true"
-        [summary]="bandSummary()"
-        [collapsed]="controlCollapsed()"
-        (collapsedChange)="onControlCollapsedChange($event)"
-    >
+    <app-control-band collapse="box" [flush]="true" [summary]="bandSummary()">
         <app-train-diagram-controller
             [calendarId]="calendarId()"
             [selectedRouteIds]="selectedRouteIds()"

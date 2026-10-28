@@ -76,6 +76,7 @@ const OUTSIDE_HEADER_COLOR = '#9e9e9e';
     selector: 'app-operation-route-diagram-drawing',
     templateUrl: './operation-route-diagram-drawing.component.html',
     styleUrl: './operation-route-diagram-drawing.component.scss',
+    host: { class: 'tw-flex tw-min-h-0 tw-flex-1 tw-flex-col' },
     imports: [
         NgTemplateOutlet,
         PaddingPipe,

@@ -207,6 +207,37 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
         expect(query('[data-testid="route-diagram-skeleton"]')).toBeNull();
     });
 
+    it('main は全線時刻表と同じ高さ固定（ページ全体はスクロールしない）', async () => {
+        await setup({ operation_id: 'op-1' });
+
+        const main = query('main');
+        expect(main).toHaveClass(
+            'tw-box-border',
+            'tw-flex',
+            'tw-flex-col',
+            'tw-h-[calc(100dvh-48px)]',
+            'md:tw-h-[calc(100dvh-64px)]',
+            'tw-pb-4',
+        );
+        expect(query('[data-testid="route-diagram-skeleton"]')).toHaveClass(
+            'tw-flex-1',
+            'tw-min-h-0',
+        );
+        expect(
+            query('[data-testid="route-diagram-skeleton"]')?.className,
+        ).not.toContain('calc(100dvh');
+    });
+
+    it('空状態はカードの場所の中央に出す', async () => {
+        await setup({});
+
+        expect(query('app-empty-state')?.parentElement).toHaveClass(
+            'tw-flex-1',
+            'tw-items-center',
+            'tw-justify-center',
+        );
+    });
+
     it('運用番号が無ければ、骨組みでなく「運用番号を設定して検索してください」を出す', async () => {
         await setup({});
 

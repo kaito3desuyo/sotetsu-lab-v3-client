@@ -4,7 +4,6 @@ import {
     computed,
     inject,
     input,
-    model,
 } from '@angular/core';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -39,8 +38,6 @@ export class TimetableAllLineRouteFilterComponent {
     readonly alwaysVisible = input(false);
     /** 要約の頭（ダイヤと方向）。路線の要約の前に付ける */
     readonly summaryLead = input('');
-    /** 操作帯を畳んでいるか。畳んだ状態はページが持つ（列車ダイヤグラムと同じ manual の帯） */
-    readonly collapsed = model(false);
 
     readonly #store = inject(TimetableAllLineStore);
 

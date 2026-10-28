@@ -64,26 +64,6 @@ describe('TimetableAllLineStore', () => {
         });
     });
 
-    it('操作帯の畳み状態だけを、今までと同じキーで保存・復元する', async () => {
-        getItem.mockResolvedValue({
-            controlCollapsed: true,
-            tripBlocks: [{ tripBlockId: 'old' }],
-        });
-
-        const store = TestBed.inject(TimetableAllLineStore);
-        await flush();
-
-        expect(getItem).toHaveBeenCalledWith('TimetableAllLineStore');
-        expect(store.controlCollapsed()).toBe(true);
-        // 古い丸ごと保存は、畳み状態だけに書き直す。列車データは戻さない
-        expect(setItem).toHaveBeenCalledWith({
-            key: 'TimetableAllLineStore',
-            value: { controlCollapsed: true },
-        });
-        expect(store.tripBlocks()).toEqual([]);
-        expect(store.settingsReady()).toBe(true);
-    });
-
     it('取得の世代番号は、新しい番号だけが最新になる', () => {
         const store = TestBed.inject(TimetableAllLineStore);
         const first = store.nextFetchSeq();

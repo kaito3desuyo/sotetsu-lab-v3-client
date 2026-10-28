@@ -58,24 +58,12 @@ describe('TimetableAllLineRouteFilterComponent', () => {
         expect(band.clearable()).toBe(false);
     });
 
-    it('帯は列車ダイヤグラムと同じ manual（余白は他ページと同じ gutter なので flush にしない）で、畳んだ状態をページと受け渡す', () => {
+    it('帯は列車ダイヤグラムと同じ box（余白は他ページと同じ gutter なので flush にしない）', () => {
         const band = fixture.debugElement.query(
             By.directive(ControlBandComponent),
         ).componentInstance as ControlBandComponent;
-        expect(band.collapse()).toBe('manual');
+        expect(band.collapse()).toBe('box');
         expect(band.flush()).toBe(false);
-        expect(band.collapsed()).toBe(false);
-
-        fixture.componentRef.setInput('collapsed', true);
-        fixture.detectChanges();
-        expect(band.collapsed()).toBe(true);
-
-        const emitted: boolean[] = [];
-        fixture.componentInstance.collapsed.subscribe((value) =>
-            emitted.push(value),
-        );
-        band.collapsed.set(false);
-        expect(emitted).toEqual([false]);
     });
 });
 

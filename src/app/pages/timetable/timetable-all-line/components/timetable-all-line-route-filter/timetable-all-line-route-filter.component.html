@@ -2,8 +2,7 @@
     <!-- 操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05）。
          取る前も帯の高さを取り、チップの形の骨組みを出す（2026-10-22） -->
     <app-control-band
-        collapse="manual"
-        [(collapsed)]="collapsed"
+        collapse="box"
         [summary]="bandSummaryOrEmpty()"
         [filterActive]="!isAwaitingTripBlocks() && filterActive()"
     >

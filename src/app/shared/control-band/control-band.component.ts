@@ -1,6 +1,5 @@
 import { DOCUMENT } from '@angular/common';
 import {
-    afterNextRender,
     ChangeDetectionStrategy,
     Component,
     computed,
@@ -9,7 +8,6 @@ import {
     ElementRef,
     inject,
     input,
-    model,
     output,
     signal,
     viewChild,
@@ -17,33 +15,16 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
-export type ControlBandCollapse = 'scroll' | 'manual';
+export type ControlBandCollapse = 'page' | 'box';
 
-const HEADER_HEIGHT = { mobile: 48, desktop: 64 } as const;
-const DESKTOP_QUERY = '(min-width: 768px)';
 const OFFSET_PROPERTY = '--control-band-offset';
-const BAR_HEIGHT_PX = 40;
-const BAR_HEIGHT = `${BAR_HEIGHT_PX}px`;
-/** 止まったときに残す高さ。要約の行と帯の下の罫線（1px） */
-const STUCK_VISIBLE_PX = BAR_HEIGHT_PX + 1;
-/** 利用者のスクロールとみなすキー。操作部の中で押されたものは数えない */
-const SCROLL_KEYS = new Set([
-    'PageUp',
-    'PageDown',
-    'Home',
-    'End',
-    ' ',
-    'ArrowUp',
-    'ArrowDown',
-]);
+const BAR_HEIGHT = '40px';
 
 const GUTTER_MARGIN =
     '-tw-mx-4 -tw-mt-4 md:-tw-mx-6 md:-tw-mt-6 lg:-tw-mx-8 lg:-tw-mt-8 xl:-tw-mx-16 xl:-tw-mt-16';
 const GUTTER_PADDING_X = 'tw-px-4 md:tw-px-6 lg:tw-px-8 xl:tw-px-16';
 /** 開く・畳むの動き（ユーザー指示 2026-10-06「開く/畳む動きはアニメーションしてほしい」） */
 const MOTION = 'tw-duration-200 tw-ease-out motion-reduce:tw-transition-none';
-/** 動きが終わるまで待つ時間（MOTION の 200ms に少し足す） */
-const SETTLE_MS = 250;
 let nextId = 0;
 
 /**
@@ -58,24 +39,23 @@ let nextId = 0;
  * チップの行は Material の既定でチップの上下に 4px の余白を持ち、帯の下やラベルとの間だけ 4px 広がって
  * いたので、帯の中に限って打ち消す（共有のチップ部品は他のページでも使うので触らない）。
  *
- * 貼り付きと折りたたみ（docs/design.md「操作帯は貼り付き、どこからでも開ける」・2026-10-06）:
- * - scroll: 帯は上から 操作部・要約の行（40px）の順で、要約の行は初めから出しておく。
- *   host を `position: sticky` にし、`top` を「ヘッダーの高さ + 40px + 罫線 1px − 帯の高さ」（負の値）にする。
- *   スクロールでは操作部だけがヘッダーの下に潜り、要約の行が残った所で止まる。ページの流れから
- *   抜けないので中身は跳ねない。操作部は薄くも覆いもしない（ユーザー判断 2026-10-06
- *   「最初から要約を表示した上でスクロールしたら畳む、の方がより実装がシンプルなのでは？」）。
- *   要約の行はいつも 40px 残るので、`--control-band-offset: 40px` はずっと入れておく。
- *   操作部が見えている間（一番上の辺り）は、要約の行のボタンが「畳む」になり、その場で操作部を隠して
- *   要約の行だけにする（ユーザー指示 2026-10-06「一番上にいる状態の時もたためてほしい」）。
- *   畳んだまま一番上で「開く」と、その場で広げる。操作部がヘッダーの下に隠れている間（と、畳んで
- *   スクロールした後）は「開く」で `top` をヘッダーの高さにし、帯の全部をページに重ねる。
- *   その場で広げると、ページの中身が帯の伸びた分だけ下へ跳ねるからだ。操作部が見えているかは
- *   IntersectionObserver で見る（スクロールのたびの計算はしない）。
- * - manual: 要約の行は同じく初めから出し、その「畳む」で操作部を隠して 40px の 1 行にする。固定も重ねもしない
- *   （列車ダイヤグラム）。操作部の右に「畳む」の列を取ると、スマホでチップや選択欄が狭くなった（2026-10-06）。
- * - 展開は scroll イベントでは閉じない。絞り込むとページが短くなりブラウザがスクロール位置を
- *   詰めるので、scroll イベントで閉じるとチップを押した瞬間に閉じる。幕の上の wheel・touchmove と
- *   スクロールするキーで閉じる。
+ * 作り（docs/design.md「操作帯は貼り付き、どこからでも開ける」・2026-10-06、2026-10-28 に作り直し）:
+ * - ページの流れの中に置くのは要約の行（40px・下に罫線 1 本）だけ。操作部はいつも、要約の行のすぐ下に
+ *   重ねて出す（`position: absolute` を要約の行を含む帯の外枠に対して `top-full` で落とす）。
+ *   重ねるだけなので、帯より下の中身は開いても畳んでも動かない。
+ *   初めは畳んだ形（要約の行だけ）。開閉は保存しない（ユーザー判断 2026-10-28）。
+ * - 要約の行の右端のボタン（「開く」「畳む」の 2 つだけ）で開閉する。開くと幕（tw-z-40）を敷き、
+ *   操作部は高さを 0fr→1fr で 200ms かけて伸ばす。高さの上限は「画面 − ヘッダー − 40px」で、超えたら中でスクロールする。
+ *   重ねた操作部は自分の下に罫線を引く。動きを減らす設定の端末では動かさない。
+ *   操作部の右に「畳む」の列を取ると、スマホでチップや選択欄が狭くなった（2026-10-06）。
+ * - 閉じるのは「畳む」・幕を押す・Esc・Tab で帯の外へ出たとき。スクロール（wheel・touchmove・スクロールのキー・
+ *   scroll イベント）では閉じない（ユーザー指示 2026-10-28「スクロールしたときに自動で閉じる機能はオミット」）。
+ *   絞り込むとページが短くなりブラウザがスクロール位置を詰めるので、scroll で閉じるとチップを押した瞬間に閉じてしまう。
+ * - page: ページがスクロールするページ用。帯の外枠を `position: sticky`（`top` はヘッダーの高さ 48px、md 以上は 64px）にして
+ *   要約の行をヘッダーのすぐ下に貼り付ける。sticky は親の箱の中でしか貼り付かないので、host は `display: contents`
+ *   （包む部品もすでに `tw-contents`）。要約の行はいつも 40px 残るので、`--control-band-offset: 40px` をずっと入れる。
+ * - box: 高さ固定のページ用（ページ全体はスクロールせず、図・表の箱が縦横にスクロールする）。貼り付かない。
+ *   ページがスクロールしないので `--control-band-offset` も入れない。
  */
 @Component({
     selector: 'app-control-band',
@@ -90,7 +70,6 @@ let nextId = 0;
     imports: [MatButtonModule, MatIconModule],
     host: {
         '[class]': 'hostClass()',
-        '[style.top.px]': 'hostTop()',
         '(document:keydown)': 'onDocumentKeydown($event)',
         '(focusout)': 'onFocusOut($event)',
     },
@@ -104,85 +83,54 @@ export class ControlBandComponent {
     readonly summary = input('');
     readonly filterActive = input(false);
     readonly clearable = input(false);
-    readonly collapse = input<ControlBandCollapse>('scroll');
+    readonly collapse = input<ControlBandCollapse>('page');
     readonly flush = input(false);
-    readonly collapsed = model(false);
     readonly clear = output<void>();
 
+    /** 操作部を重ねて開いているか。初めは畳んだ形で、保存しない */
     readonly open = signal(false);
-    /** 操作部の一部でもヘッダーの下より下に見えているか（scroll のときだけ測る） */
-    readonly formVisible = signal(true);
-    readonly #bandHeight = signal(0);
-    readonly #headerHeight = signal<number>(HEADER_HEIGHT.mobile);
-    /** その場で畳む・広げる動きの途中か。途中は操作部を帯の中（ページの流れの中）に置いて縮める */
-    readonly #settling = signal(false);
-    #settleTimer: ReturnType<typeof setTimeout> | undefined;
-    private readonly content =
-        viewChild.required<ElementRef<HTMLElement>>('content');
     private readonly toggleButton = viewChild.required('toggleButton', {
         read: ElementRef<HTMLButtonElement>,
     });
     /** 開閉のボタンの aria-controls が指す、操作部の id */
     readonly contentId = `control-band-content-${nextId++}`;
 
-    /** 押すと操作部をその場で隠す状態か（操作部が見えていて、重ねてもいない） */
-    readonly #canCollapse = computed(() =>
-        this.collapse() === 'manual'
-            ? !this.collapsed()
-            : !this.open() && !this.collapsed() && this.formVisible(),
-    );
-    readonly expanded = computed(() => this.open() || this.#canCollapse());
-    /** ボタンの文言は「開く」と「畳む」の 2 つだけ（重ねた操作部を閉じるときも「畳む」。ユーザー指摘 2026-10-06） */
-    readonly toggleLabel = computed(() => (this.expanded() ? '畳む' : '開く'));
+    /** ボタンの文言は「開く」と「畳む」の 2 つだけ（ユーザー指摘 2026-10-06） */
+    readonly toggleLabel = computed(() => (this.open() ? '畳む' : '開く'));
 
-    readonly hostTop = computed<number | null>(() => {
-        if (this.collapse() !== 'scroll') return null;
-        const bandHeight = this.#bandHeight();
-        if (bandHeight <= 0) return null;
-        const header = this.#headerHeight();
-        return this.open() ? header : header + STUCK_VISIBLE_PX - bandHeight;
-    });
-
+    /**
+     * page は host を消して（display: contents）、貼り付く帯の外枠の親をページの箱にする。
+     * box は貼り付かないので、host が負のマージンで余白を打ち消す
+     */
     readonly hostClass = computed(() => {
-        const base = this.flush() ? 'tw-block' : `tw-block ${GUTTER_MARGIN}`;
-        // 重ねて開く・閉じるときは top が動くので、帯がヘッダーの下から降りてくる・戻っていく
-        return this.collapse() === 'scroll'
-            ? `${base} tw-sticky tw-z-50 tw-transition-[top] ${MOTION}`
-            : base;
+        if (this.collapse() === 'page') return 'tw-contents';
+        return this.flush() ? 'tw-block' : `tw-block ${GUTTER_MARGIN}`;
     });
-    // 幕（tw-z-40）は host の重なりの中にあるので、帯を幕より上に置かないと押せない。
+    // 幕（tw-z-40）は host の重なりの外にあるので、帯を幕より上に置かないと押せない。
     // 影は付けない。白い帯と灰色のページ地の差と下の罫線で分ける（開いた時だけ影が付くのはおかしい・
     // ユーザー指摘 2026-10-06）
-    readonly bandClass =
-        'tw-relative tw-z-50 tw-block tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white';
+    readonly bandClass = computed(() => {
+        const base = 'tw-z-50 tw-block tw-bg-white';
+        if (this.collapse() !== 'page') return `tw-relative ${base}`;
+        const margin = this.flush() ? '' : ` ${GUTTER_MARGIN}`;
+        return `tw-sticky tw-top-12 md:tw-top-16 ${base}${margin}`;
+    });
+    /** 要約の行。下の罫線はいつも引く（罫線の分も含めて高さ 40px） */
     readonly barClass = computed(() => {
         const padding = this.flush() ? 'tw-px-3' : GUTTER_PADDING_X;
-        return `tw-relative tw-box-border tw-flex tw-h-10 tw-items-center tw-gap-2 ${padding}`;
+        return `tw-relative tw-box-border tw-flex tw-h-10 tw-items-center tw-gap-2 ${padding} tw-border-0 tw-border-b tw-border-solid tw-border-rule`;
     });
-    /** 操作部を隠しているか（畳んでいて、重ねてもいない） */
-    readonly contentHidden = computed(() => this.collapsed() && !this.open());
     /**
-     * 操作部の外枠。高さは grid の行の 1fr／0fr で動かす（display: none は動かせない）。
-     * 畳んだ後は要約の行の下に落として置き、そのまま重ねて開く。帯の高さ（ページの形）を変えると、
-     * ページの中身が伸びた分だけ下へ跳ねる（スクロール位置を詰め直さないブラウザがある）。
-     * その場で畳む・広げる動きの途中だけは帯の中に置き、帯ごと縮めたり伸ばしたりする。
+     * 操作部の外枠。要約の行の下に落として重ねる（ページの流れに入れない）。
+     * 高さは grid の行の 1fr／0fr で動かす（display: none は動かせない）。開いている間だけ自分の下に罫線を引く
      */
     readonly contentClass = computed(() => {
-        const rows = this.contentHidden()
-            ? 'tw-grid-rows-[0fr]'
-            : 'tw-grid-rows-[1fr]';
-        const dropdown =
-            this.collapse() === 'scroll' &&
-            this.collapsed() &&
-            (this.open() || !this.#settling());
-        const place = dropdown
-            ? `tw-absolute tw-inset-x-0 tw-top-full tw-bg-white${
-                  this.open()
-                      ? ' tw-border-0 tw-border-b tw-border-solid tw-border-rule'
-                      : ''
-              }`
+        const open = this.open();
+        const rows = open ? 'tw-grid-rows-[1fr]' : 'tw-grid-rows-[0fr]';
+        const rule = open
+            ? ' tw-border-0 tw-border-b tw-border-solid tw-border-rule'
             : '';
-        return `tw-grid tw-transition-[grid-template-rows] ${MOTION} ${rows} ${place}`.trim();
+        return `tw-absolute tw-inset-x-0 tw-top-full tw-grid tw-bg-white tw-transition-[grid-template-rows] ${MOTION} ${rows}${rule}`;
     });
     readonly contentInnerClass = computed(() =>
         this.open()
@@ -195,52 +143,23 @@ export class ControlBandComponent {
 
     constructor() {
         effect(() => {
-            if (this.collapse() !== 'scroll') return;
+            if (this.collapse() !== 'page') return;
             this.#document.documentElement.style.setProperty(
                 OFFSET_PROPERTY,
                 BAR_HEIGHT,
             );
         });
         this.#destroyRef.onDestroy(() => {
-            if (this.collapse() === 'scroll') {
+            if (this.collapse() === 'page') {
                 this.#document.documentElement.style.removeProperty(
                     OFFSET_PROPERTY,
                 );
             }
         });
-        afterNextRender(() => {
-            if (this.collapse() === 'scroll') this.#observe();
-        });
-        this.#destroyRef.onDestroy(() => clearTimeout(this.#settleTimer));
     }
 
     toggle(): void {
-        if (this.collapse() === 'manual') {
-            this.collapsed.update((value) => !value);
-            return;
-        }
-        if (this.open()) {
-            this.close();
-        } else if (this.#canCollapse()) {
-            this.#settle();
-            this.collapsed.set(true);
-        } else if (this.collapsed() && window.scrollY < 1) {
-            // 一番上ならその場で広げる。帯はページの一番上にあるので、ここでは何も隠れない
-            this.#settle();
-            this.collapsed.set(false);
-        } else {
-            this.open.set(true);
-        }
-    }
-
-    /** その場で畳む・広げる動きの間だけ、操作部を帯の中に置く */
-    #settle(): void {
-        clearTimeout(this.#settleTimer);
-        this.#settling.set(true);
-        this.#settleTimer = setTimeout(
-            () => this.#settling.set(false),
-            SETTLE_MS,
-        );
+        this.open.update((open) => !open);
     }
 
     close(): void {
@@ -248,72 +167,22 @@ export class ControlBandComponent {
     }
 
     onDocumentKeydown(event: KeyboardEvent): void {
-        if (!this.open()) return;
-        if (event.key === 'Escape') {
-            // mat-select の選択肢を閉じる Esc（defaultPrevented）では帯まで閉じない
-            if (event.defaultPrevented) return;
-            this.close();
-            this.toggleButton().nativeElement.focus();
-            return;
-        }
-        const target = event.target as Node | null;
-        if (target && this.#host.nativeElement.contains(target)) return;
-        if (SCROLL_KEYS.has(event.key)) this.close();
+        if (!this.open() || event.key !== 'Escape') return;
+        // mat-select の選択肢を閉じる Esc（defaultPrevented）では帯まで閉じない
+        if (event.defaultPrevented) return;
+        this.close();
+        this.toggleButton().nativeElement.focus();
     }
 
     /**
      * Tab で帯の外へ出たら閉じる。開いたまま幕の裏の本文にフォーカスが移らないようにする。
-     * mat-select などの選択肢は帯の外（cdk の overlay）に出るので、そこへ移るのは帯の中と同じに扱う
+     * mat-select などの選択肢は帯の外（cdk の overlay、または popover）に出るので、そこへ移るのは帯の中と同じに扱う
      */
     onFocusOut(event: FocusEvent): void {
         if (!this.open()) return;
         const next = event.relatedTarget as HTMLElement | null;
         if (!next || this.#host.nativeElement.contains(next)) return;
-        if (next.closest?.('.cdk-overlay-container')) return;
+        if (next.closest?.('.cdk-overlay-container, [popover]')) return;
         this.close();
-    }
-
-    /** 帯の高さとヘッダーの高さを測る（`top` はこの 2 つで決まる）。操作部が見えているかも見る */
-    #observe(): void {
-        if (typeof ResizeObserver === 'undefined') return;
-        const hostEl = this.#host.nativeElement;
-
-        const resize = new ResizeObserver(() => {
-            this.#bandHeight.set(hostEl.offsetHeight);
-        });
-        resize.observe(hostEl);
-
-        const media = window.matchMedia(DESKTOP_QUERY);
-        const applyHeader = (): void => {
-            this.#headerHeight.set(
-                media.matches ? HEADER_HEIGHT.desktop : HEADER_HEIGHT.mobile,
-            );
-        };
-
-        let intersection: IntersectionObserver | null = null;
-        const watchForm = (): void => {
-            intersection?.disconnect();
-            if (typeof IntersectionObserver === 'undefined') return;
-            intersection = new IntersectionObserver(
-                ([entry]) => this.formVisible.set(entry.isIntersecting),
-                // 1px 余分に差し引く。操作部の下の端がヘッダーの縁にちょうど接したときも、
-                // 接しているだけで「見えている」と出てしまうため
-                { rootMargin: `-${this.#headerHeight() + 1}px 0px 0px 0px` },
-            );
-            intersection.observe(this.content().nativeElement);
-        };
-        const onMediaChange = (): void => {
-            applyHeader();
-            watchForm();
-        };
-        applyHeader();
-        watchForm();
-        media.addEventListener('change', onMediaChange);
-
-        this.#destroyRef.onDestroy(() => {
-            resize.disconnect();
-            intersection?.disconnect();
-            media.removeEventListener('change', onMediaChange);
-        });
     }
 }
