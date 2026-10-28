@@ -35,11 +35,20 @@ export class GoogleAnalyticsService {
 
         this.#logger.log('GoogleAnalyticsService: Send page view =>', path);
 
-        gtag('event', 'page_view', {
+        // 送る中身はこの場で決める（遷移の直後の URL を取りこぼさない）。
+        // 呼ぶのだけを暇なときにし、hydration や描画と競わせない
+        const params = {
             page_title: title,
             page_location: location.href,
             page_path: path,
-        });
+        };
+        const send = (): void => gtag('event', 'page_view', params);
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(send, { timeout: 2000 });
+        } else {
+            // Safari には requestIdleCallback が無い
+            setTimeout(send, 0);
+        }
     }
 
     /**
