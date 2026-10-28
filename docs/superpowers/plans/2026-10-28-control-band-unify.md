@@ -1,4 +1,5 @@
 # 操作帯の畳み方・貼り付き・保存をそろえる Implementation Plan
+> **2026-10-28 追記**: この plan の Task 1・2 のあと、ユーザー指示で形を改めた（spec の追記 1〜4）。箱のスクロールで隠す仕組みと開閉の保存は外し、操作部はいつも重ねて開く形にした。最終の形は spec と ADR-0019 を見ること。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
