@@ -92,6 +92,8 @@ const serverlessConfiguration: AWS = {
             timeout: 20,
             layers: [lambdaWebAdapterLayerArn],
             environment: {
+                // production でないと Express の finalhandler が 500 の本文に err.stack を出す
+                NODE_ENV: 'production',
                 AWS_LAMBDA_EXEC_WRAPPER: '/opt/bootstrap',
                 AWS_LWA_PORT: '8080',
                 AWS_LWA_READINESS_CHECK_PATH: '/healthz',

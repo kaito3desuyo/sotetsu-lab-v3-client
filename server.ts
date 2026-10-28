@@ -28,6 +28,7 @@ try {
 }
 
 const app = express();
+app.disable('x-powered-by');
 const angularApp = new AngularNodeAppEngine();
 
 // AWS Lambda Web Adapter の受け口。Angular に渡す前に答える。

@@ -134,6 +134,11 @@ check(
     env.AWS_LWA_READINESS_CHECK_PATH,
 );
 check('PORT=8080', String(env.PORT) === '8080', env.PORT);
+check(
+    'NODE_ENV=production（500 の本文にスタックを出さない）',
+    env.NODE_ENV === 'production',
+    env.NODE_ENV,
+);
 
 // ---- Function URL ----
 const [, url] = one('AWS::Lambda::Url');
