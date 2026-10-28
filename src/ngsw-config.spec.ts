@@ -23,6 +23,7 @@ interface NgswConfig {
     index: string;
     assetGroups: AssetGroup[];
     dataGroups: DataGroup[];
+    navigationRequestStrategy?: 'freshness' | 'performance';
 }
 
 interface ManifestDataGroup {
@@ -67,6 +68,10 @@ describe('ngsw-config.json の殻（SSR ビルドの出力に合わせる）', (
         const app = config.assetGroups.find((group) => group.name === 'app')!;
         expect(app.resources.files).toContain('/index.csr.html');
         expect(app.resources.files).not.toContain('/index.html');
+    });
+
+    it('画面の URL はネットワークを先に見る（再訪でも CDN の SSR の HTML を使い、圏外のときだけ殻に落ちる）', () => {
+        expect(config.navigationRequestStrategy).toBe('freshness');
     });
 });
 
