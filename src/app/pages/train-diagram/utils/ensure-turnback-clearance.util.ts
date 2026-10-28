@@ -1,7 +1,12 @@
+import { AllKeys } from 'src/app/core/utils/all-keys';
 import { StationAxis, StationAxisEntry } from 'src/app/shared/diagram-scale';
 import {
+    TripDiagramConnector,
+    TripDiagramDepotMark,
     TripDiagramLine,
     TripDiagramPoint,
+    TripDiagramStopLabel,
+    TripDiagramThroughLabel,
 } from './build-trip-diagram-line.util';
 import { Turnback } from './find-turnbacks.util';
 import {
@@ -185,32 +190,66 @@ export function ensureTurnbackClearance(params: {
         yMap.set(rowKey(entry.y), newYs[i]);
     });
     const mapY = (y: number): number => yMap.get(rowKey(y)) ?? y;
-    const remapPoint = (point: TripDiagramPoint): TripDiagramPoint => ({
-        ...point,
-        y: mapY(point.y),
-    });
+    // 展開（...）はビルドで遅い補助関数になるため、項目を書き並べる（AllKeys で書き漏らしを防ぐ）。
+    const remapPoint = (point: TripDiagramPoint): TripDiagramPoint => {
+        const next: AllKeys<TripDiagramPoint> = {
+            minute: point.minute,
+            y: mapY(point.y),
+        };
+        return next;
+    };
 
-    const newLines: TripDiagramLine[] = lines.map((line) => ({
-        ...line,
-        segments: line.segments.map((segment) => segment.map(remapPoint)),
-        throughLabels: line.throughLabels.map((label) => ({
-            ...label,
-            y: mapY(label.y),
-        })),
-        stopLabels: line.stopLabels.map((label) => ({
-            ...label,
-            y: mapY(label.y),
-        })),
-        connectors: line.connectors.map((connector) => ({
-            ...connector,
-            fromY: mapY(connector.fromY),
-            toY: mapY(connector.toY),
-        })),
-        depotMarks: line.depotMarks.map((mark) => ({
-            ...mark,
-            y: mapY(mark.y),
-        })),
-    }));
+    const newLines: TripDiagramLine[] = lines.map((line) => {
+        const next: AllKeys<TripDiagramLine> = {
+            tripId: line.tripId,
+            tripNumber: line.tripNumber,
+            tripClassColor: line.tripClassColor,
+            isDeadhead: line.isDeadhead,
+            segments: line.segments.map((segment) => segment.map(remapPoint)),
+            throughLabels: line.throughLabels.map((label) => {
+                const nextLabel: AllKeys<TripDiagramThroughLabel> = {
+                    minute: label.minute,
+                    y: mapY(label.y),
+                    text: label.text,
+                    anchor: label.anchor,
+                };
+                return nextLabel;
+            }),
+            stopLabels: line.stopLabels.map((label) => {
+                const nextLabel: AllKeys<TripDiagramStopLabel> = {
+                    minute: label.minute,
+                    y: mapY(label.y),
+                    text: label.text,
+                    side: label.side,
+                };
+                return nextLabel;
+            }),
+            connectors: line.connectors.map((connector) => {
+                const nextConnector: AllKeys<TripDiagramConnector> = {
+                    minute: connector.minute,
+                    fromY: mapY(connector.fromY),
+                    toY: mapY(connector.toY),
+                };
+                return nextConnector;
+            }),
+            depotMarks: line.depotMarks.map((mark) => {
+                const nextMark: TripDiagramDepotMark = {
+                    kind: mark.kind,
+                    minute: mark.minute,
+                    y: mapY(mark.y),
+                };
+                // transfer は無いときは項目ごと作らない（undefined を入れない）
+                if ('transfer' in mark) {
+                    nextMark.transfer = mark.transfer;
+                }
+                return nextMark;
+            }),
+            minMinute: line.minMinute,
+            maxMinute: line.maxMinute,
+            isChainHead: line.isChainHead,
+        };
+        return next;
+    });
 
     const newLinesByTripId = new Map<string, TripDiagramLine>();
     for (const line of newLines) {
