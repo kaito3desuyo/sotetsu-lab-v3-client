@@ -325,6 +325,7 @@ AWS で読んだ事実（読むだけ・2026-10-24）:
 - **応答は Lambda（Express）で圧縮する**。`compression` の middleware で、`Accept-Encoding` に応じて br（品質 5）・gzip（品質 6）・圧縮なしを返し分け、`Vary: Accept-Encoding` を付ける
   - CloudFront は配信元が `Content-Encoding` を付けた応答をそのままキャッシュして配り、圧縮し直さない。キャッシュは `Accept-Encoding` を `br,gzip`・`gzip`・`br`・`identity` にそろえた値ごとに分かれ、その値が Lambda にも届く（AWS の文書）。キャッシュポリシーで Gzip・Brotli を有効にする
 - **圧縮を受け付けない相手（`identity`）で 6MB を超えたら、S3 の殻に切り替える**（ユーザー判断）。Lambda は上限を超えた応答を返せずエラーになり、オリジングループ（9 章）が S3 の `index.csr.html` に切り替える。普通のブラウザと Googlebot は圧縮を受け付けるので、ここに来るのは curl や古い bot くらい
+  - 【2026-10-28 変更・ユーザー判断】切り替えは `server.ts` が行う。描いた HTML が 5MiB を超え、相手が br も gzip も受け付けなければ、Lambda に同梱した `index.csr.html` を `short` で返す。オリジングループは S3 に元の画面のパスが届いて 403/404 になり、配信全体の `CustomErrorResponses` は `/api/*`（BFF）の 502〜504 まで殻の 200 に化けさせるので、どちらも使わない。Lambda が落ちた・時間切れのときは CloudFront のエラーになる
   - 殻: SSR でビルドすると、ブラウザ側の出力は `index.html` でなく `index.csr.html`（`<app-root>` が空の HTML）になる（手元のビルド出力で確認）。これを S3 に上げて切り替え先にし、Service Worker の `index` もこれに合わせる（7.4）
 - 描画を 1 本ずつにする列（2a）は残す。Lambda は 1 環境 1 リクエストなので効かないが、手元で要る
 
@@ -346,6 +347,19 @@ AWS で読んだ事実（読むだけ・2026-10-24）:
 - Origin Shield は東京（ap-northeast-1）に置ける
 - `s-maxage`・`stale-while-revalidate`・`stale-if-error` は CloudFront の最大 TTL で頭打ちになる。最小 TTL は 0
 - 出典と引用は作業メモ（git 管理外）`.context/ssr-plan/2c-aws-research.md`
+
+### 14.5 stg で試した結果（2026-10-28）
+
+stack `sotetsu-lab-v3-stg-client-cfstack`（CloudFront の既定ドメイン）で 14.3 の 6 点を試した。配備用バケット `sotetsu-lab-v3-stg-client-sls-deployment-bucket` は osls が作らないので、先に手で作った（prod のものも手で作ってあった）。
+
+1. brotli は出せる。運用表（平日 2026-03-14）は br で 358KB・gzip で 538KB。`Vary: Accept-Encoding` と `Cache-Tag` が付く
+2. `identity` の運用表は、`server.ts` の切り替えで殻（81KB・`ng-server-context` 無し）が 200・`short` で返る（14.2 の変更による。オリジングループは試していない）
+3. タグの失効は効く。`Cache-Tag: calendar:<id>` の付いた駅別時刻表は、`#calendar:<id>` の失効が `Completed` になったあと Miss に戻り、タグの無いトップは Hit のままだった
+4. matrix param の `;` は Express まで届く（駅別時刻表の題名に駅名が入る）。`DefaultRootObject` を付けないので `/` も SSR になる
+5. CloudFront は Function URL に、Function URL の名前を Host にして送る。`allowedHosts` は `*.lambda-url.ap-northeast-1.on.aws` と `localhost`（ssr:check 用）だけでよい（詰めた版を stg に出し直して 200 を確かめた）
+6. 寝起き（Init Duration）は 293ms。warmup の非 HTTP イベントは LWA が `/events` に流し、エラーにならない。描画は運用表 3.2〜7.5 秒・駅別 3.3 秒・トップ 0.4 秒（手元では運用表 2.1 秒のうち API 待ちは約 0.6 秒で、残りは描画）
+
+Cookie・`Authorization` を付けた要求も、付けない要求と同じ鍵で Hit する（どちらも鍵に入らない）。
 
 ## 15. リリース 2b: 圏外の保存と Service Worker（2026-10-26 追記）
 
