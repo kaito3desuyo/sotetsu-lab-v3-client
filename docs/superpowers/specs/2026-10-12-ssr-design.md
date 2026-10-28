@@ -215,6 +215,7 @@
 
 - 振り分けの既定先を S3＋`spa-routing` に戻せば今の形に戻る。osls の設定値（stage の param）1 つで切り替えられるようにする
 - Lambda が落ちたら S3 の index.html を出す、CloudFront のオリジングループの自動切り替えを付ける
+  - 【2026-10-28 変更】オリジングループも配信の `CustomErrorResponses` も使わない（14.2 の注記）。Lambda が落ちた・時間切れのときは CloudFront のエラーになり、CDN に置いてある分は `stale-if-error` で古いページが出続ける。手順は ADR-0017
 
 ## 10. 確かめ方
 
