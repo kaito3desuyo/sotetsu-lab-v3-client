@@ -46,6 +46,8 @@ type StoreProps = {
     operationGroups: OperationGroupDto[];
     selectedAgencyIds: string[];
     selectedGroupNames: string[];
+    /** 操作帯を畳んでいるか。端末に保存する */
+    controlCollapsed: boolean;
     operationSightingTimeCrossSections: Record<
         string,
         OperationSightingTimeCrossSectionDto
@@ -103,6 +105,7 @@ export const OperationRealTimeStore = signalStore(
         operationGroups: [],
         selectedAgencyIds: [],
         selectedGroupNames: [],
+        controlCollapsed: false,
         operationSightingTimeCrossSections: {},
         formationSightingTimeCrossSections: {},
         operationSightingHistories: {},
@@ -197,6 +200,9 @@ export const OperationRealTimeStore = signalStore(
         },
         setSelectedGroupNames(groupNames: string[]): void {
             patchState(store, { selectedGroupNames: groupNames });
+        },
+        setControlCollapsed(collapsed: boolean): void {
+            patchState(store, { controlCollapsed: collapsed });
         },
         setOperationSightingTimeCrossSection(
             operationNumber: string,
@@ -415,6 +421,7 @@ export const OperationRealTimeStore = signalStore(
         fields: [
             'selectedAgencyIds',
             'selectedGroupNames',
+            'controlCollapsed',
             'isEnableAutoReload',
             'isVisibleSightingHistories',
             'isVisibleCurrentPosition',

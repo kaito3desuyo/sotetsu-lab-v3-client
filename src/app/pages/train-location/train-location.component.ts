@@ -13,6 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
@@ -268,6 +269,12 @@ export class TrainLocationComponent {
                 (calendar) => calendar.calendarId === this.calendarId(),
             )?.calendarName,
     );
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        this.#store.controlCollapsed,
+        false,
+    );
+
     readonly bandSummary = computed(() =>
         formatTrainLocationSummary({
             routeName: this.#routeName(),
@@ -582,6 +589,10 @@ export class TrainLocationComponent {
             this.#sightingsRestoredFor = null;
             void this.#store.saveOfflineSnapshot('sightings', conditions);
         }
+    }
+
+    onControlCollapsedChange(collapsed: boolean): void {
+        this.#store.setControlCollapsed(collapsed);
     }
 
     onCalendarIdChange(calendarId: string): void {

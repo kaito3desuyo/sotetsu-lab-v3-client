@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { TrainLocationService } from './services/train-location.service';
+import { TrainLocationStore } from './stores/train-location.store';
 
 export const TRAIN_LOCATION_ROUTES: Route[] = [
     {
@@ -11,7 +12,7 @@ export const TRAIN_LOCATION_ROUTES: Route[] = [
             ),
         providers: [TrainLocationService],
         resolve: {
-            from: pageResolver(),
+            from: pageResolver(TrainLocationStore),
         },
         data: {
             title: '列車位置情報',

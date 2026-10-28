@@ -7,6 +7,7 @@
     alwaysVisible() || isAwaitingOperationTrips() || routeOptions().length > 0
 ) {
     <app-control-band
+        [(collapsed)]="collapsed"
         [summary]="summary()"
         [filterActive]="!isAwaitingOperationTrips() && filterActive()"
     >

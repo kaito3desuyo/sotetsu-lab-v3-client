@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { filter, lastValueFrom, map } from 'rxjs';
+import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -88,6 +89,12 @@ export class OperationRealTimeComponent {
             this.#selectedAgencyIds().length > 0 ||
             this.#selectedGroupNames().length > 0,
     );
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        this.#store.controlCollapsed,
+        false,
+    );
+
     readonly bandSummary = computed(() => {
         const operations = this.#operations();
         const shown = filterRealTimeOperations(
@@ -105,6 +112,10 @@ export class OperationRealTimeComponent {
             total: operations.length,
         });
     });
+
+    onControlCollapsedChange(collapsed: boolean): void {
+        this.#store.setControlCollapsed(collapsed);
+    }
 
     onClearFilter(): void {
         this.#store.setSelectedAgencyIds([]);

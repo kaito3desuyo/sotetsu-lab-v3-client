@@ -16,6 +16,8 @@
          main の gap 16px がひとつ余分に空いていた。
          操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
     <app-control-band
+        [collapsed]="controlCollapsed()"
+        (collapsedChange)="onControlCollapsedChange($event)"
         [summary]="bandSummary()"
         [filterActive]="filterActive()"
         [clearable]="true"

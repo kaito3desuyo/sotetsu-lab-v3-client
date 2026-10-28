@@ -18,6 +18,8 @@
          （ユーザー指示 2026-08-22）。そのため header 行は無くなっている。
          操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
     <app-control-band
+        [collapsed]="controlCollapsed()"
+        (collapsedChange)="onControlCollapsedChange($event)"
         [summary]="bandSummary()"
         [filterActive]="filterActive()"
         [clearable]="true"

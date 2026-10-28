@@ -17,6 +17,8 @@
          スクロールすると帯ごと流れていく -->
     <!-- 検索カードの中身（ダイヤ・運用番号）を帯に寄せた（2026-10-22）。前後の運用は帯の中の名前付きボタン -->
     <app-operation-route-diagram-route-filter
+        [collapsed]="controlCollapsed()"
+        (collapsedChange)="onControlCollapsedChange($event)"
         [alwaysVisible]="true"
         [summaryLead]="summaryLead()"
     >

@@ -84,6 +84,12 @@ export class OperationRouteDiagramComponent {
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
     readonly calendars = inject(CalendarListState).calendars;
+    /** 端末に保存した畳み状態。サーバーは保存を読めないので、最初の描画は開いた形（spec 13.2） */
+    readonly controlCollapsed = afterFirstRender(
+        this.#store.controlCollapsed,
+        false,
+    );
+
     /** 今日のダイヤ。サーバーは今日を取らないので、最初の描画は無い形（spec 5.2） */
     readonly #todaysCalendarId = afterFirstRender(
         inject(TodaysCalendarListState).todaysCalendarId,
@@ -237,6 +243,10 @@ export class OperationRouteDiagramComponent {
             calendar ? formatCalendarSummaryLabel(calendar) : null,
         ]);
     });
+
+    onControlCollapsedChange(collapsed: boolean): void {
+        this.#store.setControlCollapsed(collapsed);
+    }
 
     onOperationChange(operationId: string): void {
         notifyNavigationFailure(

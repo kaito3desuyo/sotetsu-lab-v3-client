@@ -26,7 +26,7 @@ describe('OperationRealTimeStore の保存', () => {
         });
     });
 
-    it('旧い丸ごと保存の値を読んだ後、保存先には設定の 5 項目だけが残る', async () => {
+    it('旧い丸ごと保存の値を読んだ後、保存先には設定の 6 項目だけが残る', async () => {
         getItem.mockResolvedValue({
             routes: [{ routeId: 'old-route' }],
             currentPositions: { '5': { prev: null } },
@@ -45,6 +45,7 @@ describe('OperationRealTimeStore の保存', () => {
             value: {
                 selectedAgencyIds: ['sotetsu'],
                 selectedGroupNames: [],
+                controlCollapsed: false,
                 isEnableAutoReload: true,
                 isVisibleSightingHistories: true,
                 isVisibleCurrentPosition: true,
@@ -58,7 +59,7 @@ describe('OperationRealTimeStore の保存', () => {
         expect(store.settingsReady()).toBe(true);
     });
 
-    it('設定を変えたら、1 秒おいて 5 項目だけを保存する', async () => {
+    it('設定を変えたら、1 秒おいて 6 項目だけを保存する', async () => {
         jest.useFakeTimers();
         try {
             getItem.mockResolvedValue(null);
@@ -77,10 +78,30 @@ describe('OperationRealTimeStore の保存', () => {
                 value: {
                     selectedAgencyIds: [],
                     selectedGroupNames: [],
+                    controlCollapsed: false,
                     isEnableAutoReload: false,
                     isVisibleSightingHistories: true,
                     isVisibleCurrentPosition: true,
                 },
+            });
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('操作帯を畳んだ状態は設定として保存する', async () => {
+        jest.useFakeTimers();
+        try {
+            getItem.mockResolvedValue({ controlCollapsed: true });
+            const store = TestBed.inject(OperationRealTimeStore);
+            await jest.advanceTimersByTimeAsync(0);
+            expect(store.controlCollapsed()).toBe(true);
+
+            store.setControlCollapsed(false);
+            await jest.advanceTimersByTimeAsync(1000);
+            expect(setItem).toHaveBeenLastCalledWith({
+                key: 'OperationRealTimeStore',
+                value: expect.objectContaining({ controlCollapsed: false }),
             });
         } finally {
             jest.useRealTimers();

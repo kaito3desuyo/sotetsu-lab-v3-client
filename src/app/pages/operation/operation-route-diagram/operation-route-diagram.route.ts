@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { OperationRouteDiagramService } from './services/operation-route-diagram.service';
+import { OperationRouteDiagramStore } from './stores/operation-route-diagram.store';
 
 export const OPERATION_ROUTE_DIAGRAM_ROUTES: Route[] = [
     {
@@ -11,7 +12,7 @@ export const OPERATION_ROUTE_DIAGRAM_ROUTES: Route[] = [
             ),
         providers: [OperationRouteDiagramService],
         resolve: {
-            from: pageResolver(),
+            from: pageResolver(OperationRouteDiagramStore),
         },
         data: {
             title: '運用行路図',

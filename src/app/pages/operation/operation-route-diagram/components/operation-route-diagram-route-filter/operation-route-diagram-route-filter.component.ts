@@ -4,6 +4,7 @@ import {
     computed,
     inject,
     input,
+    model,
 } from '@angular/core';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -53,6 +54,8 @@ export class OperationRouteDiagramRouteFilterComponent {
     readonly alwaysVisible = input(false);
     /** 要約の頭（運用番号とダイヤ）。路線の要約の前に付ける */
     readonly summaryLead = input('');
+    /** 操作帯を畳んでいるか。畳んだ状態はページが持つ */
+    readonly collapsed = model(false);
 
     readonly routeOptions = computed<FilterChipOption[]>(() => {
         const agencyNameById = new Map(

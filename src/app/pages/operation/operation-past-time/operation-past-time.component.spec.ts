@@ -42,6 +42,19 @@ describe('OperationPastTimeComponent', () => {
         component = fixture.componentInstance;
     });
 
+    it('畳んだ状態は collapsedChange でストアに保存し、collapsed に返す', () => {
+        const store = TestBed.inject(OperationPastTimeStore);
+        expect(component.controlCollapsed()).toBe(false);
+
+        component.onControlCollapsedChange(true);
+        expect(store.controlCollapsed()).toBe(true);
+        expect(component.controlCollapsed()).toBe(true);
+
+        component.onControlCollapsedChange(false);
+        expect(store.controlCollapsed()).toBe(false);
+        expect(component.controlCollapsed()).toBe(false);
+    });
+
     it('should create', () => {
         expect(component).toBeTruthy();
     });
