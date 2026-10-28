@@ -16,9 +16,11 @@
 
 ## 決定
 
-- **入口は Lambda Web Adapter（LWA）**。`server.ts`（Express）を Lambda の中で `listen` させる。本番も手元（`ssr:check`）も同じ道を通る。`/healthz` は LWA の起動確認、`POST /events` は warmup などの HTTP でないイベントの受け口。
+- **入口は Lambda Web Adapter（LWA）**。`server.ts`（Express）を Lambda の中で `listen` させる。本番も手元（`ssr:check`）も同じ道を通る。`/healthz` は LWA の起動確認。
+  - 枠組みは Express のまま。手元で Fastify・Hono と比べた（2026-10-28・描いた後の HTML を同じ圧縮で返す台）。起動は Hono 86ms・Express 113ms・Fastify 160ms。応答は 3 つとも数 ms 差で、時間の大半は圧縮（zlib）だった。描画（手元で 0.3〜1.4 秒）の前では誤差なので、書き直す手間に見合わない。Hono の `compress` には br も無い。
 - **圧縮は Express の `compression`**。br は品質 5、gzip は品質 6、`Vary: Accept-Encoding`。CloudFront は配信元の圧縮をそのまま置く。
-- **Lambda は arm64・2048MB・20 秒・nodejs24.x、LWA は `LambdaAdapterLayerArm64:30`**（api は :23 のまま。揃えるのは別の機会）。`NODE_ENV=production`（Express の 500 がスタックを返さないため）。warmup は 6:00〜23:59 に 5 分ごと。
+- **Lambda は arm64・2048MB・20 秒・nodejs24.x、LWA は `LambdaAdapterLayerArm64:30`**（api は :23 のまま。揃えるのは別の機会）。`NODE_ENV=production`（Express の 500 がスタックを返さないため）。
+  - warmup は入れない（ユーザー判断・2026-10-28）。寝起き（Init）は 293ms で、消せるのはそれだけ。HTML は CDN に置くので、Lambda が動くのは失効後の最初の 1 人だけ。5 分ごとに起こしても温かいのは 1 台だけ。効くのは失効後に先に描かせる温め（リリース 4）。
   - stg で比べた（2026-10-28）。x86_64・3008MB・V8 の若い世代を大きくする、のどれでも描画の時間は変わらなかった。描画は 1 本のスレッドで律速される。
 - **Function URL は `AWS_IAM`、CloudFront は OAC で署名して呼ぶ**。許可は `lambda:InvokeFunctionUrl` と `lambda:InvokeFunction`（`InvokedViaFunctionUrl`）の 2 つで、どちらも配信の ARN に絞る。
 - **キャッシュの鍵はパス（matrix param を含む）だけ**。Cookie・`Authorization`・クエリは鍵にも Lambda にも渡さない。
