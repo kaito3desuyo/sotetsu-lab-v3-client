@@ -1,4 +1,11 @@
-import { computed } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
+import {
+    PLATFORM_ID,
+    TransferState,
+    computed,
+    inject,
+    makeStateKey,
+} from '@angular/core';
 import { PageEvent } from '@angular/material/paginator';
 import {
     patchState,
@@ -82,16 +89,60 @@ function orderStations(
 }
 
 /**
+ * サーバーで並べた列車ブロックの並び（tripBlockId の順）。ブラウザは hydration のとき
+ * 並べ替えをやり直さず、これで並べる。ダイヤ・方向が違う中身には使わない。
+ */
+type SortedOrderTransfer = {
+    calendarId: CalendarDetailsDto['calendarId'] | null;
+    tripDirection: TripDetailsDto['tripDirection'] | null;
+    order: string[];
+};
+
+const SORTED_ORDER_KEY = makeStateKey<SortedOrderTransfer>(
+    'timetable-all-line-order',
+);
+
+/**
  * ダイヤ並び替え済みの全列車（ページング前）。列は路線絞り込みの影響を受けない
  * （並びは全駅で決め、絞り込みは行を隠すだけ）。並べ方は sort-trips.util.ts を参照。
  */
 function sortedAllTrips(
     orderedStations: StationDetailsDto[],
     tripBlocks: TripBlockDetailsDto[],
+    presorted?: TripBlockDetailsDto[],
 ): TripDetailsDto[] {
-    return TimetableAllLineUtil.sortTrips(orderedStations, tripBlocks).flatMap(
-        (tripBlock) => tripBlock.trips,
+    return (
+        presorted ?? TimetableAllLineUtil.sortTrips(orderedStations, tripBlocks)
+    ).flatMap((tripBlock) => tripBlock.trips);
+}
+
+/** TransferState の並びで tripBlocks を並べる。条件・中身が合わなければ null。 */
+function applyTransferredOrder(
+    transferred: SortedOrderTransfer | null,
+    calendarId: CalendarDetailsDto['calendarId'] | null,
+    tripDirection: TripDetailsDto['tripDirection'] | null,
+    tripBlocks: TripBlockDetailsDto[],
+): TripBlockDetailsDto[] | null {
+    if (
+        !transferred ||
+        transferred.calendarId !== calendarId ||
+        transferred.tripDirection !== tripDirection ||
+        transferred.order.length !== tripBlocks.length
+    ) {
+        return null;
+    }
+    const byId = new Map(
+        tripBlocks.map((tripBlock) => [tripBlock.tripBlockId, tripBlock]),
     );
+    const sorted = transferred.order.flatMap((id) => {
+        const tripBlock = byId.get(id);
+        return tripBlock ? [tripBlock] : [];
+    });
+    // 足りない ID・重複があれば並びが欠けるので使わない
+    return sorted.length === tripBlocks.length &&
+        new Set(sorted).size === sorted.length
+        ? sorted
+        : null;
 }
 
 /** 駅の所属路線を、駅の並び順で重複なく集める（routeId・路線名・会社）。 */
@@ -171,16 +222,51 @@ export const TimetableAllLineStore = signalStore(
             calendarId,
             hasFetchedTripBlocks,
         }) => {
+            const transferState = inject(TransferState);
+            const isServer = isPlatformServer(inject(PLATFORM_ID));
             const orderedStations = computed(() =>
                 orderStations(stations(), tripDirection()),
             );
             const visibleStationList = computed(() =>
                 visibleStations(orderedStations(), selectedRouteIds()),
             );
-            // 並べ替えは 1 回 50〜90ms かかるので、computed で共有する（列・始発/終着の注釈）
-            const sortedTrips = computed(() =>
-                sortedAllTrips(orderedStations(), tripBlocks()),
-            );
+            // 並べ替えは 1 回 50〜90ms かかるので、computed で共有する（列・始発/終着の注釈）。
+            // サーバーで並べた順を TransferState で渡し、ブラウザの最初の 1 回は並べ替えない。
+            // computed の中で TransferState を書く・消すのは副作用だが、SSR から hydration への
+            // 1 回きりの受け渡しなので許す（使い終わりはキーの remove で表し、旗は持たない）
+            const sortedTrips = computed(() => {
+                const blocks = tripBlocks();
+                if (blocks.length === 0) {
+                    return sortedAllTrips(orderedStations(), blocks);
+                }
+                if (isServer) {
+                    const sorted = TimetableAllLineUtil.sortTrips(
+                        orderedStations(),
+                        blocks,
+                    );
+                    transferState.set(SORTED_ORDER_KEY, {
+                        calendarId: calendarId(),
+                        tripDirection: tripDirection(),
+                        order: sorted.map((tripBlock) => tripBlock.tripBlockId),
+                    });
+                    return sortedAllTrips(orderedStations(), blocks, sorted);
+                }
+                if (!transferState.hasKey(SORTED_ORDER_KEY)) {
+                    return sortedAllTrips(orderedStations(), blocks);
+                }
+                const presorted = applyTransferredOrder(
+                    transferState.get(SORTED_ORDER_KEY, null),
+                    calendarId(),
+                    tripDirection(),
+                    blocks,
+                );
+                transferState.remove(SORTED_ORDER_KEY);
+                return sortedAllTrips(
+                    orderedStations(),
+                    blocks,
+                    presorted ?? undefined,
+                );
+            });
             /**
              * 列に出す列車。路線の絞り込み中は、表示駅に 1 つも停まらない（隠れた路線で完結する）列車を
              * 外す（ユーザー指示 2026-09-24）。並びは全駅で決めたものをそのまま使う。
