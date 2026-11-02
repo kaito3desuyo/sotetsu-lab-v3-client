@@ -265,7 +265,7 @@ describe('ModerationService', () => {
             expect(invalidator.invalidate).toHaveBeenCalledTimes(1);
         });
 
-        it('送り直しは最大 10 回で止め、残りを pending で返す', () => {
+        it('送り直しは最大 10 回で止め、済んだ分を連結し、残りを pending で返す', () => {
             const { service, controller } = setup();
             const ids = [uuid(1), uuid(2)];
             let out: { pending: string[]; invalidated: string[] } | undefined;
@@ -275,7 +275,7 @@ describe('ModerationService', () => {
                 .subscribe((r) => (out = r));
             for (let i = 0; i < 10; i++) {
                 controller.expectOne(`${base}/sightings/invalidate`).flush({
-                    invalidated: [],
+                    invalidated: [uuid(100 + i)],
                     skipped: [],
                     failed: null,
                     pending: ids,
@@ -284,6 +284,42 @@ describe('ModerationService', () => {
 
             controller.expectNone(`${base}/sightings/invalidate`);
             expect(out?.pending).toEqual(ids);
+            expect(out?.invalidated).toEqual(
+                Array.from({ length: 10 }, (_, i) => uuid(100 + i)),
+            );
+        });
+
+        it('2 回目以降が通信エラーなら、済んだ分と failed・pending を返し、sighting を 1 回失効させる', () => {
+            const { service, controller, invalidator } = setup();
+            const [a, b, c] = [uuid(1), uuid(2), uuid(3)];
+            let out: unknown;
+            let failed = false;
+
+            service
+                .invalidateSightings({ ids: [a, b, c], reason: 'r' })
+                .subscribe({
+                    next: (r) => (out = r),
+                    error: () => (failed = true),
+                });
+            controller.expectOne(`${base}/sightings/invalidate`).flush({
+                invalidated: [a],
+                skipped: [],
+                failed: null,
+                pending: [b, c],
+            });
+            controller
+                .expectOne(`${base}/sightings/invalidate`)
+                .flush('x', { status: 500, statusText: 'Server Error' });
+
+            expect(failed).toBe(false);
+            expect(out).toEqual({
+                invalidated: [a],
+                skipped: [],
+                failed: { id: b, message: '通信に失敗しました' },
+                pending: [b, c],
+            });
+            expect(invalidator.invalidate).toHaveBeenCalledTimes(1);
+            expect(invalidator.invalidate).toHaveBeenCalledWith('sighting');
         });
 
         it('何も無効化できなかったら失効させない', () => {

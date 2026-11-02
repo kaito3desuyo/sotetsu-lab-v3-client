@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
-import { expand, last, map } from 'rxjs/operators';
+import { Observable, of, tap } from 'rxjs';
+import { catchError, expand, last, map } from 'rxjs/operators';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { ModerationCommand } from '../infrastructure/commands/moderation.command';
 import { ModerationQuery } from '../infrastructure/queries/moderation.query';
@@ -53,6 +53,7 @@ export class ModerationService {
     /**
      * api は約 1 秒で区切り、手を付けなかった id を pending で返す。
      * failed が無いかぎり pending を同じ理由で送り直し（最大 10 回）、結果を 1 つにまとめて返す。
+     * 2 回目以降が通信エラーなら、済んだ分を残して failed（その回の先頭 id）と pending（その回の ids）で返す。1 回目のエラーはそのまま投げる。
      */
     invalidateSightings(
         body: InvalidateSightingsDto,
@@ -77,6 +78,18 @@ export class ModerationService {
                                   reason,
                               })
                               .pipe(
+                                  catchError(
+                                      (): Observable<ModerationBulkInvalidateResultDto> =>
+                                          of({
+                                              invalidated: [],
+                                              skipped: [],
+                                              failed: {
+                                                  id: merged.pending[0],
+                                                  message: '通信に失敗しました',
+                                              },
+                                              pending: merged.pending,
+                                          }),
+                                  ),
                                   map((result): Step => ({
                                       merged: {
                                           invalidated:
