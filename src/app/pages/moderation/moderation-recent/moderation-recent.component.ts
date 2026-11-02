@@ -36,6 +36,7 @@ export class ModerationRecentComponent implements OnInit {
     readonly sightings = this.#store.sightings;
     readonly hasMore = this.#store.hasMore;
     readonly hasFetched = this.#store.hasFetched;
+    readonly firstFetchFailed = this.#store.firstFetchFailed;
     readonly isLoading = this.#store.isLoading;
 
     readonly columns = [
@@ -54,18 +55,30 @@ export class ModerationRecentComponent implements OnInit {
     ): string => row.operationSightingId;
 
     ngOnInit(): void {
-        void this.#run(this.#service.fetchFirstPage());
+        this.reload();
+    }
+
+    /** 最初の 1 ページを取り直す（初回と、失敗したあとの再読み込み） */
+    reload(): void {
+        this.#store.setFirstFetchFailed(false);
+        void this.#run(this.#service.fetchFirstPage(), true);
     }
 
     loadMore(): void {
         void this.#run(this.#service.fetchNextPage());
     }
 
-    async #run(fetch$: ReturnType<ModerationRecentService['fetchFirstPage']>) {
+    async #run(
+        fetch$: ReturnType<ModerationRecentService['fetchFirstPage']>,
+        isFirst = false,
+    ) {
         this.#store.enableLoading();
         try {
             await lastValueFrom(fetch$);
         } catch {
+            if (isFirst && !this.#store.hasFetched()) {
+                this.#store.setFirstFetchFailed(true);
+            }
             this.#notification.open('投稿の一覧を取得できませんでした', 'OK');
         } finally {
             this.#store.disableLoading();

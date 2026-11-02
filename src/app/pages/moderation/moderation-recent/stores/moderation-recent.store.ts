@@ -14,6 +14,8 @@ type StoreProps = {
     /** 直近の取得が 1 ページぶん満ちていた（= まだ古い投稿が残っているかもしれない） */
     hasMore: boolean;
     hasFetched: boolean;
+    /** 最初の取得に失敗した（一覧がまだ無いので、骨組みでなく再読み込みを出す） */
+    firstFetchFailed: boolean;
     loadingQueue: boolean[];
 };
 
@@ -21,6 +23,7 @@ const initialState: StoreProps = {
     sightings: [],
     hasMore: false,
     hasFetched: false,
+    firstFetchFailed: false,
     loadingQueue: [],
 };
 
@@ -59,6 +62,9 @@ export const ModerationRecentStore = signalStore(
                         hasFetched: true,
                     };
                 });
+            },
+            setFirstFetchFailed(firstFetchFailed: boolean): void {
+                patchState(store, { firstFetchFailed });
             },
             enableLoading(): void {
                 patchState(store, (s) => ({

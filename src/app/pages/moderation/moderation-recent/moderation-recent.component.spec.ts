@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ModerationRecentSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-recent-sighting.dto';
 import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -44,8 +44,12 @@ describe('ModerationRecentComponent', () => {
     let getRecentSightings: jest.Mock;
     let notificationOpen: jest.Mock;
 
-    async function render(first: ModerationRecentSightingDto[]) {
-        getRecentSightings = jest.fn().mockReturnValue(of(first));
+    async function render(first: ModerationRecentSightingDto[] | Error) {
+        getRecentSightings = jest
+            .fn()
+            .mockReturnValue(
+                first instanceof Error ? throwError(() => first) : of(first),
+            );
         notificationOpen = jest.fn();
         await TestBed.configureTestingModule({
             imports: [ModerationRecentComponent],
@@ -158,5 +162,27 @@ describe('ModerationRecentComponent', () => {
         });
         expect(el().querySelectorAll('tbody tr')).toHaveLength(101);
         expect(el()).not.toHaveTextContent('もっと見る');
+    });
+
+    it('初回の取得に失敗したら骨組みを消して再読み込みを出し、押すと取り直して一覧を出す', async () => {
+        await render(new Error('offline'));
+
+        expect(
+            el().querySelector('[data-testid="moderation-recent-skeleton"]'),
+        ).toBeNull();
+        expect(el()).toHaveTextContent('読み込めませんでした');
+        expect(notificationOpen).toHaveBeenCalled();
+        const retry = Array.from(el().querySelectorAll('button')).find((b) =>
+            b.textContent?.includes('再読み込み'),
+        );
+
+        getRecentSightings.mockReturnValue(of([sighting('s1')]));
+        retry.click();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(getRecentSightings).toHaveBeenCalledTimes(2);
+        expect(el()).not.toHaveTextContent('読み込めませんでした');
+        expect(el().querySelectorAll('tbody tr')).toHaveLength(1);
     });
 });
