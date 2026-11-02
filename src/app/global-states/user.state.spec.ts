@@ -103,3 +103,46 @@ describe('UserState.canEditTimetable', () => {
         expect(store.canEditTimetable()).toBe(expected);
     });
 });
+
+describe('UserState の役割の判定', () => {
+    let store: InstanceType<typeof UserState>;
+    let getProfile: jest.Mock;
+
+    beforeEach(() => {
+        getProfile = jest.fn();
+        TestBed.configureTestingModule({
+            providers: [{ provide: UserService, useValue: { getProfile } }],
+        });
+        store = TestBed.inject(UserState);
+    });
+
+    const load = (role: string | null) => {
+        getProfile.mockReturnValue(of(role ? { ...user, role } : null));
+        store.fetch().subscribe();
+    };
+
+    it.each([
+        ['manager', true, true, false],
+        ['editor', true, false, false],
+        ['reporter', false, false, false],
+        ['viewer', false, false, true],
+        [null, false, false, false],
+    ])(
+        'role=%s のとき canModerate=%s・isManager=%s・isViewer=%s',
+        (role, canModerate, isManager, isViewer) => {
+            load(role);
+
+            expect(store.canModerate()).toBe(canModerate);
+            expect(store.isManager()).toBe(isManager);
+            expect(store.isViewer()).toBe(isViewer);
+        },
+    );
+
+    it('viewer は canModerate も canEditTimetable も false で、isViewer は true', () => {
+        load('viewer');
+
+        expect(store.canModerate()).toBe(false);
+        expect(store.canEditTimetable()).toBe(false);
+        expect(store.isViewer()).toBe(true);
+    });
+});

@@ -32,6 +32,12 @@ export const UserState = signalStore(
         isLoggedIn: () => !!userId(),
         /** 時刻表の入力・編集ができるか。画面側の出し分けはすべてこれで判定する */
         canEditTimetable: () => canEditTimetable(role()),
+        /** 見回り（投稿の一覧・投稿者のページ・まとめての無効化）に入れるか */
+        canModerate: () => role() === 'editor' || role() === 'manager',
+        /** BAN・解除・手がかりの表を使えるか */
+        isManager: () => role() === 'manager',
+        /** 閲覧のみ。投稿フォームを出さない */
+        isViewer: () => role() === 'viewer',
     })),
     withMethods((store) => {
         const userService = inject(UserService);
