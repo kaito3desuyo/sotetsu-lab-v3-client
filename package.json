@@ -103,5 +103,8 @@
   "akitaCli": {
     "customFolderName": "true",
     "template": "angular"
+  },
+  "overrides": {
+    "vite": "8.3.3"
   }
 }
