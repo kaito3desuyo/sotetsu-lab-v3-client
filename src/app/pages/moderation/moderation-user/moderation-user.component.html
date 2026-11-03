@@ -62,7 +62,7 @@
                     }
                 </p>
                 <p class="tw-m-0 tw-text-sm">
-                    登録 {{ formatTime(s.createdAt) }}
+                    登録 {{ formatTimeWithYear(s.createdAt) }}
                 </p>
                 <p class="tw-m-0 tw-text-sm">
                     目撃 {{ s.sightingCount }} 件（うち無効
@@ -381,9 +381,7 @@
                                         class="tw-flex tw-flex-col tw-gap-1 tw-py-2"
                                     >
                                         <span class="tw-text-xs tw-text-muted">
-                                            {{
-                                                row.accountCount
-                                            }}
+                                            {{ row.accountCount }}
                                             件のアカウント
                                         </span>
                                         @for (

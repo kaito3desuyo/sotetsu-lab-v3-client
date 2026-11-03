@@ -9,7 +9,7 @@ import {
 } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
-import { BehaviorSubject, NEVER, of, throwError } from 'rxjs';
+import { BehaviorSubject, NEVER, of, Subject, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { UserState } from 'src/app/global-states/user.state';
@@ -513,5 +513,94 @@ describe('ModerationUserComponent', () => {
         expect(el()).not.toHaveTextContent('tetsu_x');
         expect(el()).not.toHaveTextContent('203.0.113.24');
         expect(el().querySelectorAll('tbody tr')).toHaveLength(0);
+    });
+
+    it('無効化の応答を待つあいだに別の人へ移っても、応答後に前の人の要約・目撃で上書きしない', async () => {
+        await render({ sightings: [sighting('s1')] });
+        const response = new Subject<ModerationBulkInvalidateResultDto>();
+        moderation.invalidateSightings.mockReturnValue(response);
+        await click(checkbox('select-all-valid'));
+        await click(byId('bulk-invalidate-button'));
+
+        moderation.getUser.mockReturnValue(
+            of(summary({ userId: 'u2', username: 'second' })),
+        );
+        moderation.getUserSightings.mockReturnValue(
+            of([sighting('t1', { operationNumber: '77Z' })]),
+        );
+        params.next(convertToParamMap({ userId: 'u2' }));
+        await settle();
+        const getUserCalls = moderation.getUser.mock.calls.length;
+        notificationOpen.mockClear();
+
+        response.next({
+            invalidated: ['s1'],
+            skipped: [],
+            failed: null,
+            pending: [],
+        });
+        response.complete();
+        await settle();
+
+        expect(moderation.getUser).toHaveBeenCalledTimes(getUserCalls);
+        expect(byId('moderation-user-summary')).toHaveTextContent('second');
+        expect(el()).toHaveTextContent('77Z');
+        expect(notificationOpen).not.toHaveBeenCalled();
+    });
+
+    it('取り足しの応答を待つあいだに別の人へ移ったら、失敗しても通知しない', async () => {
+        const page = Array.from({ length: 100 }, (_, i) =>
+            sighting(`s${i}`, {
+                createdAt: `2026-11-02T10:00:00.${String(999 - i).padStart(3, '0')}Z`,
+            }),
+        );
+        await render({ sightings: page });
+        const next = new Subject<ModerationSightingDto[]>();
+        moderation.getUserSightings.mockReturnValue(next);
+        const more = Array.from(el().querySelectorAll('button')).find((b) =>
+            b.textContent?.includes('もっと見る'),
+        );
+        await click(more);
+
+        moderation.getUserSightings.mockReturnValue(of([sighting('t1')]));
+        moderation.getUser.mockReturnValue(
+            of(summary({ userId: 'u2', username: 'second' })),
+        );
+        params.next(convertToParamMap({ userId: 'u2' }));
+        await settle();
+        notificationOpen.mockClear();
+        next.error(new Error('offline'));
+        await settle();
+
+        expect(notificationOpen).not.toHaveBeenCalled();
+        expect(byId('moderation-user-summary')).toHaveTextContent('second');
+    });
+
+    it('投稿者が 404 のときは、manager でも手がかりの失敗を通知しない', async () => {
+        await render();
+        moderation.getUser.mockReturnValue(
+            throwError(() => new FetchError(404, 'Not Found')),
+        );
+        moderation.getUserTraces.mockReturnValue(
+            throwError(() => new FetchError(404, 'Not Found')),
+        );
+        patchState(unprotected(TestBed.inject(UserState)), { role: 'manager' });
+        notificationOpen.mockClear();
+
+        params.next(convertToParamMap({ userId: 'ghost' }));
+        await settle();
+
+        expect(el()).toHaveTextContent('投稿者が見つかりません');
+        expect(notificationOpen).not.toHaveBeenCalled();
+    });
+
+    it('登録の日時は年まで出す', async () => {
+        await render({
+            summary: summary({ createdAt: '2026-11-03T01:00:00.000Z' }),
+        });
+
+        expect(byId('moderation-user-summary')).toHaveTextContent(
+            '登録 2026/11/03 10:00',
+        );
     });
 });

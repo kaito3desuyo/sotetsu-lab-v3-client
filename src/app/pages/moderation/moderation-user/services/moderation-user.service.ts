@@ -16,6 +16,9 @@ export class ModerationUserService {
 
     /** 要約と目撃の先頭 1 ページを取り直す（初回と、無効化のあとの取り直し） */
     fetchUser(userId: string): Observable<void> {
+        if (!this.#isCurrent(userId)) {
+            return of(undefined);
+        }
         const seq = this.#store.nextSightingsSeq();
         return forkJoin({
             summary: this.#moderationService.getUser(userId),
@@ -24,7 +27,10 @@ export class ModerationUserService {
             }),
         }).pipe(
             tap(({ summary, rows }) => {
-                if (this.#store.isLatestSightings(seq)) {
+                if (
+                    this.#isCurrent(userId) &&
+                    this.#store.isLatestSightings(seq)
+                ) {
                     this.#store.setSummary(summary);
                     this.#store.replaceSightings(
                         rows,
@@ -39,7 +45,7 @@ export class ModerationUserService {
     /** いま出ている最後の行より古い 1 ページを取り足す */
     fetchNextSightings(userId: string): Observable<void> {
         const last = this.#store.sightings().at(-1);
-        if (!last) {
+        if (!last || !this.#isCurrent(userId)) {
             return of(undefined);
         }
         const seq = this.#store.nextSightingsSeq();
@@ -50,7 +56,10 @@ export class ModerationUserService {
             })
             .pipe(
                 tap((rows) => {
-                    if (this.#store.isLatestSightings(seq)) {
+                    if (
+                        this.#isCurrent(userId) &&
+                        this.#store.isLatestSightings(seq)
+                    ) {
                         this.#store.appendSightings(
                             rows,
                             rows.length >= MODERATION_USER_PAGE_SIZE,
@@ -63,10 +72,16 @@ export class ModerationUserService {
 
     /** 手がかり。manager だけが呼ぶ（api も manager だけ） */
     fetchTraces(userId: string): Observable<void> {
+        if (!this.#isCurrent(userId)) {
+            return of(undefined);
+        }
         const seq = this.#store.nextTracesSeq();
         return this.#moderationService.getUserTraces(userId).pipe(
             tap((traces) => {
-                if (this.#store.isLatestTraces(seq)) {
+                if (
+                    this.#isCurrent(userId) &&
+                    this.#store.isLatestTraces(seq)
+                ) {
                     this.#store.setTraces(traces);
                 }
             }),
@@ -98,8 +113,13 @@ export class ModerationUserService {
 
     /** 返ってきた要約を出す。そのあいだに別の人のページへ移っていたら捨てる */
     #replaceSummary(summary: ModerationUserSummaryDto): void {
-        if (this.#store.userId() === summary.userId) {
+        if (this.#isCurrent(summary.userId)) {
             this.#store.setSummary(summary);
         }
+    }
+
+    /** いま見ている投稿者か。別の人のページへ移ったあとに返った応答で、画面を書かないための確認 */
+    #isCurrent(userId: string): boolean {
+        return this.#store.userId() === userId;
     }
 }

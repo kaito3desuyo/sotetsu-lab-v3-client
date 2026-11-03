@@ -18,7 +18,10 @@ import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/mode
 import { ModerationTraceDto } from 'src/app/libs/moderation/usecase/dtos/moderation-trace.dto';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
-import { formatTokyoDateTime } from '../utils/format-tokyo-date-time.util';
+import {
+    formatTokyoDateTime,
+    formatTokyoDateTimeWithYear,
+} from '../utils/format-tokyo-date-time.util';
 import { ModerationConfirmDialogComponent } from './components/moderation-confirm-dialog/moderation-confirm-dialog.component';
 import {
     ModerationConfirmDialogData,
@@ -103,6 +106,7 @@ export class ModerationUserComponent {
     readonly skeletonRows = Array.from({ length: 6 }, (_, i) => i);
 
     readonly formatTime = formatTokyoDateTime;
+    readonly formatTimeWithYear = formatTokyoDateTimeWithYear;
     readonly roleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
     readonly trackBySighting = (
         _: number,
@@ -134,9 +138,9 @@ export class ModerationUserComponent {
         }
         this.#store.setFirstFetchFailed(false);
         this.#store.setNotFound(false);
-        void this.#loadUser(userId);
+        const userLoaded = this.#loadUser(userId);
         if (this.#userState.isManager()) {
-            this.reloadTraces();
+            void this.#loadTraces(userId, userLoaded);
         }
     }
 
@@ -155,6 +159,7 @@ export class ModerationUserComponent {
         void this.#run(
             this.#service.fetchNextSightings(userId),
             '目撃の一覧を取得できませんでした',
+            userId,
         );
     }
 
@@ -191,7 +196,7 @@ export class ModerationUserComponent {
             reasonRequired: true,
             confirmLabel: '無効にする',
         });
-        if (!confirmed) {
+        if (!confirmed || this.#store.userId() !== userId) {
             return;
         }
 
@@ -200,6 +205,10 @@ export class ModerationUserComponent {
             const result = await lastValueFrom(
                 this.#service.invalidateSightings(ids, confirmed.reason),
             );
+            // 応答を待つあいだに別の人のページへ移っていたら、通知も取り直しもしない
+            if (this.#store.userId() !== userId) {
+                return;
+            }
             const failed = result.failed
                 ? this.#store
                       .sightings()
@@ -210,10 +219,12 @@ export class ModerationUserComponent {
                 'OK',
             );
         } catch (error) {
-            this.#notification.open(
-                errorMessage(error, '無効にできませんでした'),
-                'OK',
-            );
+            if (this.#store.userId() === userId) {
+                this.#notification.open(
+                    errorMessage(error, '無効にできませんでした'),
+                    'OK',
+                );
+            }
             return;
         } finally {
             this.#store.disableLoading();
@@ -223,6 +234,7 @@ export class ModerationUserComponent {
         await this.#run(
             this.#service.fetchUser(userId),
             '一覧を取り直せませんでした',
+            userId,
         );
     }
 
@@ -253,7 +265,7 @@ export class ModerationUserComponent {
                       confirmLabel: '解く',
                   },
         );
-        if (!confirmed) {
+        if (!confirmed || this.#store.userId() !== summary.userId) {
             return;
         }
 
@@ -269,18 +281,24 @@ export class ModerationUserComponent {
                               : confirmed.reason,
                       ),
             );
-            this.#notification.open(
-                banning ? 'BAN しました' : 'BAN を解きました',
-                'OK',
-            );
+            if (this.#store.userId() === summary.userId) {
+                this.#notification.open(
+                    banning ? 'BAN しました' : 'BAN を解きました',
+                    'OK',
+                );
+            }
         } catch (error) {
-            this.#notification.open(
-                errorMessage(
-                    error,
-                    banning ? 'BAN できませんでした' : 'BAN を解けませんでした',
-                ),
-                'OK',
-            );
+            if (this.#store.userId() === summary.userId) {
+                this.#notification.open(
+                    errorMessage(
+                        error,
+                        banning
+                            ? 'BAN できませんでした'
+                            : 'BAN を解けませんでした',
+                    ),
+                    'OK',
+                );
+            }
         } finally {
             this.#store.disableLoading();
         }
@@ -328,12 +346,17 @@ export class ModerationUserComponent {
         }
     }
 
-    async #loadTraces(userId: string): Promise<void> {
+    /** @param userLoaded 要約の取得の終わり。投稿者が無い（404）なら手がかりの失敗は出さない */
+    async #loadTraces(
+        userId: string,
+        userLoaded?: Promise<void>,
+    ): Promise<void> {
         this.#store.setTracesFailed(false);
         try {
             await lastValueFrom(this.#service.fetchTraces(userId));
         } catch {
-            if (this.#store.userId() === userId) {
+            await userLoaded;
+            if (this.#store.userId() === userId && !this.#store.notFound()) {
                 this.#store.setTracesFailed(true);
                 this.#notification.open('手がかりを取得できませんでした', 'OK');
             }
@@ -343,12 +366,16 @@ export class ModerationUserComponent {
     async #run(
         fetch$: ReturnType<ModerationUserService['fetchUser']>,
         failureMessage: string,
+        userId: string,
     ): Promise<void> {
         this.#store.enableLoading();
         try {
             await lastValueFrom(fetch$);
         } catch {
-            this.#notification.open(failureMessage, 'OK');
+            // 取っているあいだに別の人のページへ移っていたら、前の人の失敗は出さない
+            if (this.#store.userId() === userId) {
+                this.#notification.open(failureMessage, 'OK');
+            }
         } finally {
             this.#store.disableLoading();
         }
