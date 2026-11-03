@@ -80,6 +80,20 @@ export const APP_ROUTES: Routes = [
             ),
     },
     {
+        path: 'privacy-policy',
+        loadChildren: () =>
+            import('./pages/privacy-policy/privacy-policy.route').then(
+                (mod) => mod.PRIVACY_POLICY_ROUTES,
+            ),
+    },
+    {
+        path: 'disclaimer',
+        loadChildren: () =>
+            import('./pages/disclaimer/disclaimer.route').then(
+                (mod) => mod.DISCLAIMER_ROUTES,
+            ),
+    },
+    {
         path: 'login',
         loadChildren: () =>
             import('./pages/login/login.route').then((mod) => mod.LOGIN_ROUTES),
