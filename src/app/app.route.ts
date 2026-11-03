@@ -3,7 +3,6 @@ import {
     maintenanceGuard,
     noMaintenanceGuard,
 } from './core/guards/maintenance.guard';
-import { moderationGuard } from './core/guards/moderation.guard';
 import { initialDataResolver } from './core/resolvers/initial-data.resolver';
 
 export const APP_ROUTES: Routes = [
@@ -74,13 +73,13 @@ export const APP_ROUTES: Routes = [
         runGuardsAndResolvers: 'always',
     },
     {
-        // M18 投稿管理。editor / manager だけ（moderationGuard）。SSR では描かない
+        // M18 投稿管理。editor / manager だけ（守りは moderation.route.ts）。SSR では描かない
         path: 'moderation',
         loadChildren: () =>
             import('./pages/moderation/moderation.route').then(
                 (mod) => mod.MODERATION_ROUTES,
             ),
-        canActivate: [maintenanceGuard, moderationGuard],
+        canActivate: [maintenanceGuard],
         resolve: {
             from: initialDataResolver,
         },
