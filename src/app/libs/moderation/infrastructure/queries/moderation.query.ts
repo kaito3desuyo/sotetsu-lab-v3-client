@@ -27,7 +27,7 @@ export class ModerationQuery {
     getUser(userId: string): Observable<ModerationUserSummaryDto> {
         return this.#http
             .get<ModerationUserSummaryModel>(
-                `${this.#v3ApiUrl}/users/${userId}`,
+                `${this.#v3ApiUrl}/users/${encodeURIComponent(userId)}`,
             )
             .pipe(map((model) => ModerationDtoBuilder.buildUserSummary(model)));
     }
@@ -38,7 +38,7 @@ export class ModerationQuery {
     ): Observable<ModerationSightingDto[]> {
         return this.#http
             .get<ModerationSightingModel[]>(
-                `${this.#v3ApiUrl}/users/${userId}/sightings`,
+                `${this.#v3ApiUrl}/users/${encodeURIComponent(userId)}/sightings`,
                 { params: this.#pageParams(params) },
             )
             .pipe(map((models) => ModerationDtoBuilder.buildSightings(models)));
@@ -50,7 +50,9 @@ export class ModerationQuery {
         return this.#http
             .get<{
                 userId: string | null;
-            }>(`${this.#v3ApiUrl}/sightings/${operationSightingId}/author`)
+            }>(
+                `${this.#v3ApiUrl}/sightings/${encodeURIComponent(operationSightingId)}/author`,
+            )
             .pipe(map(({ userId }) => ({ userId })));
     }
 
@@ -72,7 +74,7 @@ export class ModerationQuery {
     getUserTraces(userId: string): Observable<ModerationTraceDto[]> {
         return this.#http
             .get<ModerationTraceModel[]>(
-                `${this.#v3ApiUrl}/users/${userId}/traces`,
+                `${this.#v3ApiUrl}/users/${encodeURIComponent(userId)}/traces`,
             )
             .pipe(map((models) => ModerationDtoBuilder.buildTraces(models)));
     }

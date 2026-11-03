@@ -220,14 +220,14 @@
 
                 @if (hasMore()) {
                     <div>
-                        <button
-                            mat-stroked-button
-                            type="button"
+                        <app-button
+                            variant="secondary"
+                            [fullWidth]="false"
                             [disabled]="isLoading()"
-                            (click)="loadMore()"
+                            (buttonClick)="loadMore()"
                         >
                             もっと見る
-                        </button>
+                        </app-button>
                     </div>
                 }
             }

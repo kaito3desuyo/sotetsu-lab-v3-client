@@ -21,11 +21,15 @@ import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.se
 import { ModerationUserComponent } from './moderation-user.component';
 import { ModerationUserService } from './services/moderation-user.service';
 
+const U1 = '11111111-1111-4111-8111-111111111111';
+const U2 = '22222222-2222-4222-8222-222222222222';
+const GHOST = '99999999-9999-4999-8999-999999999999';
+
 function summary(
     overrides: Partial<ModerationUserSummaryDto> = {},
 ): ModerationUserSummaryDto {
     return {
-        userId: 'u1',
+        userId: U1,
         username: 'tetsu_x',
         displayName: 'てつ',
         role: 'reporter',
@@ -94,7 +98,7 @@ describe('ModerationUserComponent', () => {
     let dialogOpen: jest.Mock;
 
     async function render(options: Options = {}) {
-        params = new BehaviorSubject(convertToParamMap({ userId: 'u1' }));
+        params = new BehaviorSubject(convertToParamMap({ userId: U1 }));
         moderation = {
             getUser: jest
                 .fn()
@@ -164,7 +168,7 @@ describe('ModerationUserComponent', () => {
     it('投稿者の要約を出す', async () => {
         await render();
 
-        expect(moderation.getUser).toHaveBeenCalledWith('u1');
+        expect(moderation.getUser).toHaveBeenCalledWith(U1);
         const text = byId('moderation-user-summary').textContent;
         expect(text).toContain('tetsu_x');
         expect(text).toContain('てつ');
@@ -185,7 +189,7 @@ describe('ModerationUserComponent', () => {
     it('MANAGER には BAN と手がかりが出て、手がかりを取りに行く', async () => {
         await render({ role: 'manager', traces: [trace()] });
 
-        expect(moderation.getUserTraces).toHaveBeenCalledWith('u1');
+        expect(moderation.getUserTraces).toHaveBeenCalledWith(U1);
         expect(byId('moderation-ban-section')).not.toBeNull();
         expect(byId('ban-button')).toHaveTextContent('BAN');
         expect(byId('moderation-traces-section')).toHaveTextContent(
@@ -197,7 +201,7 @@ describe('ModerationUserComponent', () => {
     });
 
     it('自分のページには BAN のボタンが無い（手がかりは出る）', async () => {
-        await render({ role: 'manager', me: 'u1' });
+        await render({ role: 'manager', me: U1 });
 
         expect(byId('ban-button')).toBeNull();
         expect(byId('moderation-traces-section')).not.toBeNull();
@@ -281,7 +285,7 @@ describe('ModerationUserComponent', () => {
         const data = dialogOpen.mock.calls[0][1].data;
         expect(data.lines.join('')).toContain('tetsu_x');
         expect(data.reasonRequired).toBe(true);
-        expect(moderation.ban).toHaveBeenCalledWith('u1', '荒らし');
+        expect(moderation.ban).toHaveBeenCalledWith(U1, '荒らし');
         expect(byId('moderation-user-summary')).toHaveTextContent('BAN 中');
         expect(byId('ban-button')).toHaveTextContent('BAN を解く');
     });
@@ -320,7 +324,7 @@ describe('ModerationUserComponent', () => {
         await click(byId('ban-button'));
 
         expect(dialogOpen.mock.calls[0][1].data.reasonRequired).toBe(false);
-        expect(moderation.unban).toHaveBeenCalledWith('u1', undefined);
+        expect(moderation.unban).toHaveBeenCalledWith(U1, undefined);
         expect(byId('moderation-user-summary')).not.toHaveTextContent('BAN 中');
         expect(byId('ban-button')).toHaveTextContent('BAN');
         expect(byId('ban-button')).not.toHaveTextContent('BAN を解く');
@@ -338,7 +342,7 @@ describe('ModerationUserComponent', () => {
             ],
         });
 
-        expect(moderation.getUserSightings).toHaveBeenCalledWith('u1', {
+        expect(moderation.getUserSightings).toHaveBeenCalledWith(U1, {
             limit: 100,
         });
         expect(byId('bulk-invalidate-button')).toBeDisabled();
@@ -455,7 +459,7 @@ describe('ModerationUserComponent', () => {
         );
         await click(more);
 
-        expect(moderation.getUserSightings).toHaveBeenLastCalledWith('u1', {
+        expect(moderation.getUserSightings).toHaveBeenLastCalledWith(U1, {
             limit: 100,
             before: page[99].createdAt,
         });
@@ -468,7 +472,7 @@ describe('ModerationUserComponent', () => {
         moderation.getUser.mockReturnValue(
             throwError(() => new FetchError(404, 'Not Found')),
         );
-        params.next(convertToParamMap({ userId: 'ghost' }));
+        params.next(convertToParamMap({ userId: GHOST }));
         await settle();
 
         expect(el()).toHaveTextContent('投稿者が見つかりません');
@@ -480,12 +484,12 @@ describe('ModerationUserComponent', () => {
         moderation.getUser.mockReturnValue(
             throwError(() => new Error('offline')),
         );
-        params.next(convertToParamMap({ userId: 'u2' }));
+        params.next(convertToParamMap({ userId: U2 }));
         await settle();
         expect(el()).toHaveTextContent('読み込めませんでした');
 
         moderation.getUser.mockReturnValue(
-            of(summary({ userId: 'u2', username: 'second' })),
+            of(summary({ userId: U2, username: 'second' })),
         );
         const retry = Array.from(el().querySelectorAll('button')).find((b) =>
             b.textContent?.includes('再読み込み'),
@@ -506,10 +510,10 @@ describe('ModerationUserComponent', () => {
         moderation.getUser.mockReturnValue(NEVER);
         moderation.getUserSightings.mockReturnValue(NEVER);
         moderation.getUserTraces.mockReturnValue(NEVER);
-        params.next(convertToParamMap({ userId: 'u2' }));
+        params.next(convertToParamMap({ userId: U2 }));
         await settle();
 
-        expect(moderation.getUser).toHaveBeenLastCalledWith('u2');
+        expect(moderation.getUser).toHaveBeenLastCalledWith(U2);
         expect(el()).not.toHaveTextContent('tetsu_x');
         expect(el()).not.toHaveTextContent('203.0.113.24');
         expect(el().querySelectorAll('tbody tr')).toHaveLength(0);
@@ -523,12 +527,12 @@ describe('ModerationUserComponent', () => {
         await click(byId('bulk-invalidate-button'));
 
         moderation.getUser.mockReturnValue(
-            of(summary({ userId: 'u2', username: 'second' })),
+            of(summary({ userId: U2, username: 'second' })),
         );
         moderation.getUserSightings.mockReturnValue(
             of([sighting('t1', { operationNumber: '77Z' })]),
         );
-        params.next(convertToParamMap({ userId: 'u2' }));
+        params.next(convertToParamMap({ userId: U2 }));
         await settle();
         const getUserCalls = moderation.getUser.mock.calls.length;
         notificationOpen.mockClear();
@@ -564,9 +568,9 @@ describe('ModerationUserComponent', () => {
 
         moderation.getUserSightings.mockReturnValue(of([sighting('t1')]));
         moderation.getUser.mockReturnValue(
-            of(summary({ userId: 'u2', username: 'second' })),
+            of(summary({ userId: U2, username: 'second' })),
         );
-        params.next(convertToParamMap({ userId: 'u2' }));
+        params.next(convertToParamMap({ userId: U2 }));
         await settle();
         notificationOpen.mockClear();
         next.error(new Error('offline'));
@@ -587,11 +591,27 @@ describe('ModerationUserComponent', () => {
         patchState(unprotected(TestBed.inject(UserState)), { role: 'manager' });
         notificationOpen.mockClear();
 
-        params.next(convertToParamMap({ userId: 'ghost' }));
+        params.next(convertToParamMap({ userId: GHOST }));
         await settle();
 
         expect(el()).toHaveTextContent('投稿者が見つかりません');
         expect(notificationOpen).not.toHaveBeenCalled();
+    });
+
+    it('userId が UUID の形でなければ、見つからない扱いにして何も取りに行かない', async () => {
+        await render({ role: 'manager' });
+        moderation.getUser.mockClear();
+        moderation.getUserSightings.mockClear();
+        moderation.getUserTraces.mockClear();
+
+        params.next(convertToParamMap({ userId: '../admin' }));
+        await settle();
+
+        expect(el()).toHaveTextContent('投稿者が見つかりません');
+        expect(byId('moderation-user-summary')).toBeNull();
+        expect(moderation.getUser).not.toHaveBeenCalled();
+        expect(moderation.getUserSightings).not.toHaveBeenCalled();
+        expect(moderation.getUserTraces).not.toHaveBeenCalled();
     });
 
     it('登録の日時は年まで出す', async () => {

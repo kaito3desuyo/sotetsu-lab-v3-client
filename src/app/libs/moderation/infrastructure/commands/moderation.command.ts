@@ -34,7 +34,7 @@ export class ModerationCommand {
     ban(userId: string, reason: string): Observable<ModerationUserSummaryDto> {
         return this.#http
             .post<ModerationUserSummaryModel>(
-                `${this.#v3ApiUrl}/users/${userId}/ban`,
+                `${this.#v3ApiUrl}/users/${encodeURIComponent(userId)}/ban`,
                 { reason },
             )
             .pipe(map((model) => ModerationDtoBuilder.buildUserSummary(model)));
@@ -46,7 +46,7 @@ export class ModerationCommand {
     ): Observable<ModerationUserSummaryDto> {
         return this.#http
             .post<ModerationUserSummaryModel>(
-                `${this.#v3ApiUrl}/users/${userId}/unban`,
+                `${this.#v3ApiUrl}/users/${encodeURIComponent(userId)}/unban`,
                 reason === undefined ? {} : { reason },
             )
             .pipe(map((model) => ModerationDtoBuilder.buildUserSummary(model)));

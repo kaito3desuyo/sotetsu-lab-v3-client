@@ -101,6 +101,20 @@ describe('ModerationService', () => {
             bare.flush([]);
         });
 
+        it('URL に載せる id は encodeURIComponent をかける', () => {
+            const { service, controller } = setup();
+
+            service.getUser('a/b?c').subscribe();
+            service.getSightingAuthor('x/../y').subscribe();
+            service.ban('a/b', '理由').subscribe();
+
+            controller.expectOne(`${base}/users/a%2Fb%3Fc`).flush(summary);
+            controller
+                .expectOne(`${base}/sightings/x%2F..%2Fy/author`)
+                .flush({ userId: null });
+            controller.expectOne(`${base}/users/a%2Fb/ban`).flush(summary);
+        });
+
         it('getSightingAuthor は GET /sightings/:id/author', () => {
             const { service, controller } = setup();
             let out: unknown;

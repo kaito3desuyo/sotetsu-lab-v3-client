@@ -16,6 +16,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { UserState } from 'src/app/global-states/user.state';
 import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-sighting.dto';
 import { ModerationTraceDto } from 'src/app/libs/moderation/usecase/dtos/moderation-trace.dto';
+import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import {
@@ -41,6 +42,9 @@ const ROLE_LABELS: Record<string, string> = {
     manager: '管理者',
 };
 
+const UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Component({
     selector: 'app-moderation-user',
     templateUrl: './moderation-user.component.html',
@@ -50,6 +54,7 @@ const ROLE_LABELS: Record<string, string> = {
         MatButtonModule,
         MatCheckboxModule,
         MatTableModule,
+        AppButtonComponent,
         EmptyStateComponent,
         SkeletonBarComponent,
     ],
@@ -125,7 +130,12 @@ export class ModerationUserComponent {
             .subscribe((userId) => {
                 if (userId) {
                     this.#store.beginUser(userId);
-                    this.reload();
+                    // UUID でない値は api の URL に載せず、見つからない扱いにする
+                    if (UUID_PATTERN.test(userId)) {
+                        this.reload();
+                    } else {
+                        this.#store.setNotFound(true);
+                    }
                 }
             });
     }
@@ -133,7 +143,7 @@ export class ModerationUserComponent {
     /** 要約・目撃の先頭・（manager なら）手がかりを取り直す。初回と、失敗したあとの再読み込み */
     reload(): void {
         const userId = this.#store.userId();
-        if (!userId) {
+        if (!userId || !UUID_PATTERN.test(userId)) {
             return;
         }
         this.#store.setFirstFetchFailed(false);
