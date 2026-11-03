@@ -73,6 +73,20 @@ describe('HeaderComponent', () => {
         );
     });
 
+    it('viewer は名前をリンクにしない（マイページには入れない）', () => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: 'u2',
+            displayName: '閲覧太郎',
+            role: 'viewer',
+        });
+        fixture.detectChanges();
+
+        const header: HTMLElement =
+            fixture.nativeElement.querySelector('header');
+        expect(header.querySelector('a[href="/my-page"]')).toBeNull();
+        expect(header).toHaveTextContent(/ようこそ\s*閲覧太郎\s*さん/);
+    });
+
     it('ゲストの「ゲスト さん」はリンクにしない', () => {
         fixture.detectChanges();
 

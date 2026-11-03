@@ -2,6 +2,7 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     inject,
     input,
     output,
@@ -39,6 +40,13 @@ export class HeaderComponent {
 
     /** サーバーと、それを引き継ぐ最初の描画はゲストの形にする（spec 5.3。CDN で別の人に配られるため） */
     readonly isLoggedIn = afterFirstRender(this.#userState.isLoggedIn, false);
+    /** 名前をマイページへのリンクにするか（サイドナビの canShowMyPage と同じ。viewer はガードに戻されるので行き止まりになる） */
+    readonly canLinkMyPage = afterFirstRender(
+        computed(
+            () => this.#userState.isLoggedIn() && !this.#userState.isViewer(),
+        ),
+        false,
+    );
     readonly displayName = this.#userState.displayName;
 
     /**
