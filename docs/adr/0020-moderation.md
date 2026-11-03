@@ -4,7 +4,7 @@
 - **Agent**: claude-sonnet-5-5
 - **ステータス**: 採用済み（本番へのデプロイ前。見た目の確かめが残る）
 - **ブランチ**: feature/moderation
-- **関連**: spec `docs/superpowers/specs/2026-11-03-moderation-design.md`、api の ADR-0013（口・役割・BAN・手がかり・まとめての無効化の決定はそちら。ここでは繰り返さない）、ADR-0009（登録制）、ADR-0014（SSR の描き分け）、ADR-0019（操作帯）
+- **関連**: spec `docs/superpowers/specs/2026-11-03-moderation-design.md`、api の ADR-0013（口・役割・BAN・手がかり・まとめての無効化の決定はそちら。ここでは繰り返さない）、ADR-0011（ログイン・新規登録のページ、フラグとゲストへの投稿の案内）、ADR-0009（Supabase Auth。BAN 直後も JWT が `reporter` のままになる話）、ADR-0014（SSR の描き分け）、ADR-0019（操作帯）
 
 ---
 
@@ -58,7 +58,7 @@
   - 10 回で尽きて `pending` が残ったときは、通知で残りの件数を出す。
 - 通知は「N 件を無効にしました」に、飛ばした件数（すでに無効・見つからない）と、`failed` があれば「〇〇で止まりました: message」を足す。
 - 確認のダイアログ（`moderation-confirm-dialog`）で、件数と対象の名前を書き、理由（1〜200 字）を必須にする。BAN も同じ部品を使う。1 回に選べるのは 200 件まで（api の上限）で、超えたらボタンを押せなくして上限を示す。
-- 無効化が済んだら、`QueryInvalidator.invalidate('sighting')` で目撃のキャッシュを捨て、投稿者の要約と目撃の先頭を取り直す。BAN・解除も同じ。
+- 無効化が済んだら、`QueryInvalidator.invalidate('sighting')` で目撃のキャッシュを捨て、投稿者の要約と目撃の先頭を取り直す。BAN・解除は目撃を取り直さず、返ってきた要約（`ModerationUserSummaryDto`）で画面の要約を差し替える。`QueryInvalidator.invalidate('sighting')` は BAN・解除の成功後にも呼ぶ（ほかの画面の目撃のキャッシュを捨てるため）。
 - 規則違反（422）は api の message をそのまま通知に出す。
 
 ### 投稿者を切り替えたときの古い応答
