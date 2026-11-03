@@ -131,6 +131,45 @@ describe('OperationSightingService（投稿者ごと・新着・まとめての�
             bare.flush([]);
         });
 
+        it('findManyMine は limit と before を渡し、無ければ付けない', () => {
+            const { service, controller } = setup();
+            let out: unknown;
+
+            service
+                .findManyMine({
+                    limit: 50,
+                    before: '2026-10-05T00:00:00.000Z',
+                })
+                .subscribe((r) => (out = r));
+            const req = controller.expectOne(
+                (r) => r.url === `${usersBase}/me/operation-sightings`,
+            );
+            expect(req.request.method).toBe('GET');
+            expect(req.request.params.get('limit')).toBe('50');
+            expect(req.request.params.get('before')).toBe(
+                '2026-10-05T00:00:00.000Z',
+            );
+            const sighting = {
+                operationSightingId: 's1',
+                sightingTime: '2026-10-05T00:00:00.000Z',
+                createdAt: '2026-10-05T00:00:01.000Z',
+                operationNumber: '01',
+                formationNumber: '9701',
+                invalidated: true,
+                invalidatedBy: { userId: 'm1', username: 'mgr' },
+                corroboration: 'invalidated',
+            };
+            req.flush([sighting]);
+            expect(out).toEqual([sighting]);
+
+            service.findManyMine().subscribe();
+            const bare = controller.expectOne(
+                (r) => r.url === `${usersBase}/me/operation-sightings`,
+            );
+            expect(bare.request.params.keys()).toEqual([]);
+            bare.flush([]);
+        });
+
         it('URL に載せる id は encodeURIComponent をかける', () => {
             const { service, controller } = setup();
 

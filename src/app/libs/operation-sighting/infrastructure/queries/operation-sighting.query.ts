@@ -8,6 +8,7 @@ import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
+import { MyOperationSightingDto } from '../../usecase/dtos/my-operation-sighting.dto';
 import { OperationSightingAuthorDto } from '../../usecase/dtos/operation-sighting-author.dto';
 import { OperationSightingListParamsDto } from '../../usecase/dtos/operation-sighting-list-params.dto';
 import { OperationSightingRecentDto } from '../../usecase/dtos/operation-sighting-recent.dto';
@@ -17,6 +18,7 @@ import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighti
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationSightingDtoBuilder } from '../builders/operation-sighting.dto.builder';
 import { OperationSightingTimeCrossSectionDtoBuilder } from '../builders/operation-sighting-time-cross-section.dto.builder';
+import { MyOperationSightingModel } from '../models/my-operation-sighting.model';
 import {
     OperationSightingRecentModel,
     OperationSightingSummaryModel,
@@ -227,6 +229,22 @@ export class OperationSightingQuery {
                     OperationSightingDtoBuilder.buildSummariesFromModels(
                         models,
                     ),
+                ),
+            );
+    }
+
+    /** 本人の目撃（裏付けつき）。QueryCache を通さず、呼ぶたびに取る */
+    findManyMine(
+        params: OperationSightingListParamsDto = {},
+    ): Observable<MyOperationSightingDto[]> {
+        return this.#http
+            .get<MyOperationSightingModel[]>(
+                `${environment.apiUrl}/v3/users/me/operation-sightings`,
+                { params: this.#listParams(params) },
+            )
+            .pipe(
+                map((models) =>
+                    OperationSightingDtoBuilder.buildMineFromModels(models),
                 ),
             );
     }

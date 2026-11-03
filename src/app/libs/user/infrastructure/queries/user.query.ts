@@ -4,10 +4,12 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
+import { MySummaryDto } from '../../usecase/dtos/my-summary.dto';
 import { UserAccessTraceDto } from '../../usecase/dtos/user-access-trace.dto';
 import { UserDetailsDto } from '../../usecase/dtos/user-details.dto';
 import { UserSummaryDto } from '../../usecase/dtos/user-summary.dto';
 import { UserDtoBuilder } from '../builders/user.dto.builder';
+import { MySummaryModel } from '../models/my-summary.model';
 import { UserAccessTraceModel } from '../models/user-access-trace.model';
 import { UserSummaryModel } from '../models/user-summary.model';
 import { UserModel } from '../models/user.model';
@@ -54,6 +56,15 @@ export class UserQuery {
                 `${this.#v3ApiUrl}/${encodeURIComponent(userId)}`,
             )
             .pipe(map((model) => UserDtoBuilder.buildSummaryFromModel(model)));
+    }
+
+    /** 本人の投稿の要約。QueryCache を通さず、呼ぶたびに取る */
+    findMySummary(): Observable<MySummaryDto> {
+        return this.#http
+            .get<MySummaryModel>(`${this.#v3ApiUrl}/me`)
+            .pipe(
+                map((model) => UserDtoBuilder.buildMySummaryFromModel(model)),
+            );
     }
 
     /** 手がかり。QueryCache を通さず、呼ぶたびに取る */
