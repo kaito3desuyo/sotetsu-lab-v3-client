@@ -40,6 +40,7 @@ module.exports = {
             'accent-deep': 'var(--color-accent-deep)',
             'recency-today': 'var(--color-recency-today)',
             'recency-yesterday': 'var(--color-recency-yesterday)',
+            corroborated: 'var(--color-corroborated)',
             accent: {
                 50: '#fdefe7',
                 100: '#fad7c2',

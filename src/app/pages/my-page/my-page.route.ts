@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 import { myPageGuard } from './guards/my-page.guard';
+import { MyPageService } from './services/my-page.service';
 
 /**
  * マイページは、ログイン中で viewer でない人だけ（myPageGuard）。
@@ -18,6 +19,7 @@ export const MY_PAGE_ROUTES: Route[] = [
                     import('./my-page.component').then(
                         (mod) => mod.MyPageComponent,
                     ),
+                providers: [MyPageService],
                 resolve: {
                     from: pageResolver(),
                 },

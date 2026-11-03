@@ -85,6 +85,7 @@ modern-minimal は白基調・細く見える枠・小さい角丸・計器盤�
 | `--color-rule-strong`       | `oklch(62% 0.02 263)` `#808693`     | **UI部品の枠線**（入力欄・チップ・ボタン枠）                                     |
 | `--color-recency-today`     | `oklch(50% 0.19 27)` `#b7191c`      | 本日中の目撃・更新時刻                                                           |
 | `--color-recency-yesterday` | `oklch(50% 0.13 150)` `#137738`     | 昨日の目撃・更新時刻                                                             |
+| `--color-corroborated`      | `oklch(50% 0.13 150)` `#137738`     | マイページの目撃の「裏付けあり」の字（鮮度とは別の意味。他の用途に流用しない）   |
 | `--color-focus`             | `oklch(52% 0.2 48.5)` `#bc2f00`     | 明面のフォーカスリング                                                           |
 | `--color-focus-on-dark`     | `oklch(86% 0.15 48.5)` `#ffb175`    | navy 面のフォーカスリング                                                        |
 
