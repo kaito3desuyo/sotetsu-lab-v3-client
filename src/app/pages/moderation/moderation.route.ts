@@ -8,5 +8,11 @@ export const MODERATION_ROUTES: Route[] = [
                 (mod) => mod.MODERATION_RECENT_ROUTES,
             ),
     },
-    // Task 3: users/:userId（投稿者のページ。moderation-user/）をここに足す
+    {
+        path: 'users/:userId',
+        loadChildren: () =>
+            import('./moderation-user/moderation-user.route').then(
+                (mod) => mod.MODERATION_USER_ROUTES,
+            ),
+    },
 ];
