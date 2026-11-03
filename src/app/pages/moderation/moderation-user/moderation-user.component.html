@@ -1,15 +1,12 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <header class="tw-flex tw-flex-col tw-gap-1">
-        <a
-            class="tw-text-sm tw-text-primary-500 tw-underline"
-            [routerLink]="['/moderation']"
-        >
-            見回りの一覧へ戻る
-        </a>
-        <h2 class="mat-h2 !tw-m-0">投稿者のページ</h2>
-    </header>
+    <a
+        class="tw-self-start tw-text-sm tw-text-primary-500 tw-underline"
+        [routerLink]="['/moderation']"
+    >
+        見回りの一覧へ戻る
+    </a>
 
     @if (notFound()) {
         <app-empty-state

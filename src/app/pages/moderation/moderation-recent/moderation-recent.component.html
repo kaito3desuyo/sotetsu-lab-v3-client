@@ -1,12 +1,9 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <header class="tw-flex tw-flex-col tw-gap-1">
-        <h2 class="mat-h2 !tw-m-0">見回り</h2>
-        <p class="tw-m-0 tw-text-sm tw-text-muted">
-            目撃の投稿を新しい順に並べています。投稿者の名前を押すと、その人の投稿をまとめて見られます。
-        </p>
-    </header>
+    <p class="tw-m-0 tw-text-sm tw-text-muted">
+        目撃の投稿を新しい順に並べています。投稿者の名前を押すと、その人の投稿をまとめて見られます。
+    </p>
 
     @if (firstFetchFailed() && !hasFetched()) {
         <app-empty-state
