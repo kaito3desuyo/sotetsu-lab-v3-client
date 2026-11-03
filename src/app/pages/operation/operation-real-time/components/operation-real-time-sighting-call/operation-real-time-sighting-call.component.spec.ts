@@ -60,6 +60,8 @@ describe('OperationRealTimeSightingCallComponent', () => {
             '12K の目撃を投稿する',
         );
         expect(chips()[0]).toHaveAttribute('type', 'button');
+        // preflight が無いので、字をアプリの字にそろえないとブラウザ既定のボタンの字になる
+        expect(chips()[0]).toHaveClass('tw-font-[inherit]');
 
         chips()[1].click();
 
