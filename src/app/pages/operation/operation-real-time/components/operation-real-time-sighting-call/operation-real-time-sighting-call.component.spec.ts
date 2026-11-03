@@ -48,9 +48,7 @@ describe('OperationRealTimeSightingCallComponent', () => {
         setup([{ operationNumber: '12K' }, { operationNumber: '58S' }]);
 
         expect(root()).toHaveTextContent(/目撃募集/);
-        expect(root()).toHaveTextContent(
-            /いま走っていて、今日まだ目撃の無い運用/,
-        );
+        expect(root()).toHaveTextContent(/走行中・本日未目撃の運用/);
         expect(chips().map((b) => b.textContent?.trim())).toEqual([
             '12K',
             '58S',

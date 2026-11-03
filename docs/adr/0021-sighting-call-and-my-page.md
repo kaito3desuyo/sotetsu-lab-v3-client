@@ -34,7 +34,7 @@
 - **部品は `operation-real-time-sighting-call/`**（`operation-real-time/components/` の下）。real-time の操作帯の**下・凡例の上**に、貼り付かない白帯を 1 本。凡例と同じ左右の余白・上下 8px。
 - **帯の下に罫線を 1 本引く**（`tw-border-b`）。凡例とのあいだに隙間を作らず、帯と凡例が続いて見えるようにする。main の gap 16px と横の gutter は負のマージンで打ち消す（凡例と同じ手）。
 - **0 件のときは帯ごと消え、余白も残さない。** ホスト要素に `tw-contents` を付け、何も描かないときに main の flex の gap を取らないようにした（中の帯が flex の item になる）。
-- 文言は 1 行目に「目撃募集」と「いま走っていて、今日まだ目撃の無い運用」、2 行目に運用番号のチップ。チップは折り返す。
+- 文言は 1 行目に「目撃募集」と「走行中・本日未目撃の運用」、2 行目に運用番号のチップ。チップは折り返す。
 - チップは `button`。見た目は `app-operation-number-link` と同じ（運用群の色の背景・高さ 28px・角丸）。**字はアプリの字**（`tw-font-[inherit]`）。preflight が無効なので、`button` はそのままだとブラウザ既定の字になる。
 - 押すと、その運用番号を入れて投稿ダイアログを開く（行の投稿ボタンと同じ `OperationPostDialogService.open({ operationNumber })`）。
 - ロック済みの real-time に新しい面を足すので、**実装より先に `docs/design.md` に掟を書き足した**（「操作カード」の節と履歴）。
@@ -62,7 +62,7 @@
 - 手本は `pages/moderation/moderation-user`（ストアの持ち方・世代番号・重複排除・キーセット）。1 回に 50 件取る（`MY_PAGE_SIZE`）。
 - `libs/user` に `findMySummary()`（`GET /v3/users/me`）、`libs/operation-sighting` に `findManyMine(params)`（`GET /v3/users/me/operation-sightings`）を足した。
 - 0 件のときは「まだ投稿がありません」と、リアルタイム運用情報へのリンク。
-- 注記は「ログインして出した目撃だけを数えます（記録は 2026年10月24日から）。裏付けは、同じ日に他の人が同じ編成を同じ運用で見たかどうかです。」。日付は本番の author 行の最古（2026-10-24 05:02 JST、2026-11-03 実測）による。
+- 注記は「2026/10/24 以降のログイン中の投稿を集計。裏付けありは、同じ日に他の人が同じ編成を同じ運用番号で目撃したもの」。日付は本番の author 行の最古（2026-10-24 05:02 JST、2026-11-03 実測）による。
 
 ### 裏付けの言葉と色
 
