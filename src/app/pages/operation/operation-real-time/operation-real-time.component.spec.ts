@@ -2,6 +2,7 @@ import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import {
     BehaviorSubject,
@@ -322,6 +323,94 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             service['fetchOperationSightingTimeCrossSections'],
         ).not.toHaveBeenCalled();
         expect(notification.open).not.toHaveBeenCalled();
+    });
+});
+
+describe('OperationRealTimeComponent の目撃募集の帯', () => {
+    let fixture: ComponentFixture<OperationRealTimeComponent>;
+    let store: InstanceType<typeof OperationRealTimeStore>;
+
+    const running = { current: {}, prev: null, next: null } as never;
+
+    beforeEach(async () => {
+        const ok = () => jest.fn(() => of(undefined));
+        const service = {
+            fetchOperationGroups: ok(),
+            fetchRoutes: ok(),
+            fetchStations: ok(),
+            fetchTripClasses: ok(),
+            fetchCalendar: ok(),
+            fetchOperations: ok(),
+            fetchItineraryLinks: ok(),
+            fetchFormations: ok(),
+            fetchCurrentPositions: ok(),
+            fetchOperationSightingTimeCrossSections: ok(),
+            fetchFormationSightingTimeCrossSections: ok(),
+            fetchSightingHistories: ok(),
+            fetchCurrentPositionThatShouldUpdate: ok(),
+        };
+        await TestBed.configureTestingModule({
+            imports: [OperationRealTimeComponent],
+            providers: [
+                provideRouter([]),
+                deviceStorageStub,
+                { provide: OperationRealTimeService, useValue: service },
+                { provide: SocketService, useValue: { on: () => EMPTY } },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: OperationPostCardService,
+                    useValue: { submitEvent$: EMPTY },
+                },
+            ],
+        })
+            .overrideComponent(OperationRealTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        store = TestBed.inject(OperationRealTimeStore);
+        store.setOperations([
+            { operationNumber: '12K' },
+            { operationNumber: '52K' },
+            { operationNumber: '100' },
+        ] as never);
+        for (const operationNumber of ['12K', '52K']) {
+            store.setCurrentPosition(operationNumber, running);
+            store.setOperationSightingHistory(operationNumber, []);
+        }
+        fixture = TestBed.createComponent(OperationRealTimeComponent);
+        fixture.detectChanges();
+    });
+
+    afterEach(() => fixture.destroy());
+
+    const callOperations = () =>
+        (
+            fixture.debugElement.query(
+                By.css('app-operation-real-time-sighting-call'),
+            ).properties as { operations: { operationNumber: string }[] }
+        ).operations.map((o) => o.operationNumber);
+
+    it('目撃募集の帯は絞り込み後の運用から選ぶ', () => {
+        expect(callOperations()).toEqual(['12K', '52K']);
+
+        store.setSelectedGroupNames(['5K群']);
+        fixture.detectChanges();
+
+        expect(callOperations()).toEqual(['52K']);
+    });
+
+    it('目撃募集の帯は操作帯と凡例の間に置く', () => {
+        const children = Array.from(
+            (fixture.nativeElement as HTMLElement).querySelector('main')!
+                .children,
+        ).map((e) => e.tagName.toLowerCase());
+
+        const band = children.indexOf('app-operation-real-time-sighting-call');
+        expect(band).toBe(children.indexOf('app-control-band') + 1);
+        expect(band).toBe(
+            children.indexOf('app-operation-real-time-legend') - 1,
+        );
     });
 });
 
