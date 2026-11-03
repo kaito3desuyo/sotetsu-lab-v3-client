@@ -67,6 +67,7 @@ describe('HeaderComponent', () => {
         const link: HTMLAnchorElement | null =
             fixture.nativeElement.querySelector('header a[href="/my-page"]');
         expect(link?.textContent?.trim()).toBe('相鉄太郎');
+        expect(link).toHaveClass('[color:inherit]', 'tw-underline');
         expect(fixture.nativeElement.querySelector('header')).toHaveTextContent(
             /ようこそ\s*相鉄太郎 さん/,
         );
