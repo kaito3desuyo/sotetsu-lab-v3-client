@@ -12,7 +12,7 @@
 
 - 2026-11-01〜02 のゲストの荒らしを、EDITOR 1 人が 1 件ずつ無効にして片付けた（api の ADR-0013 の背景）。一人の投稿をまとめて無効にし、MANAGER が BAN でき、同じ手がかりの別アカウントを見つけられる画面が要る。
 - 入口は 2 つ。新しい「投稿管理」の一覧と、過去の運用表で目撃のセルを押したときのメニュー（ユーザー判断）。
-- api に `/v3/moderation` の口ができた（EDITOR・MANAGER の読み取りと無効化、MANAGER だけの BAN・解除・手がかり）。役割は `reporter`・`editor`・`manager` に `viewer`（BAN 済み）が加わった。
+- api に投稿管理の口ができた（EDITOR・MANAGER の読み取りと無効化、MANAGER だけの BAN・解除・手がかり）。口は `/v3/users/:userId`（要約・`ban`・`unban`・`traces`・`operation-sightings`）と `/v3/operation-sightings`（`recent`・`:id/author`・`invalidate`）に分かれている（api も画面の名前でなくドメインで切り直した。2026-11-03）。役割は `reporter`・`editor`・`manager` に `viewer`（BAN 済み）が加わった。
 
 ## 決定
 
@@ -22,7 +22,7 @@
   - `/moderation` — 新着の一覧（`moderation-recent/`）。投稿者つきで新しい順に出し、「登録して間もない」（`newAccount`）と「短い時間に何件も」（`burst`）の印を付ける。
   - `/moderation/users/:userId` — 投稿者のページ（`moderation-user/`）。
 - 投稿者のページの部品は `moderation-user/components/` に置く（確認のダイアログ `moderation-confirm-dialog`）。ストア・サービスは他のページと同じ形（CLAUDE.md の標準ページ構成）。
-- API を包む `libs/moderation/` を足した。ページは `usecase/` の `ModerationService` だけを見る。
+- **投稿管理は画面の名前でドメインではないので、api を包む層は `libs/user` と `libs/operation-sighting` に置く（2026-11-03）。** 利用者の要約・BAN・解除・手がかりは `UserService`（`findSummary`・`findAccessTraces`・`ban`・`unban`）、投稿者ごとの目撃・投稿者・新着・まとめての無効化は `OperationSightingService`（`findManyByUserId`・`findAuthor`・`findManyRecent`・`invalidateMany`）に足した。ページは `usecase/` のこの 2 つだけを見る。`libs/moderation/` は無い。
 - サイドナビの「管理」の節に「投稿管理」を足す。`canModerate()` が真のときだけ出す。
 
 ### SSR では描かない（CSR・NO_STORE）
@@ -47,18 +47,18 @@
 ### ゲストの扱い
 
 - 投稿者の無い目撃（ゲストの投稿、2026-10-23 より前の投稿）は、一覧で「ゲスト」と出し、投稿者のページへのリンクを付けない。
-- 過去の運用表のメニュー「この投稿者を見る」は、押したときに `GET /sightings/:id/author` を引き、`userId` が null なら「ゲストの投稿です」と通知するだけで遷移しない。
+- 過去の運用表のメニュー「この投稿者を見る」は、押したときに `GET /v3/operation-sightings/:id/author` を引き、`userId` が null なら「ゲストの投稿です」と通知するだけで遷移しない。
 - `sightedAsOperation`（運用を引き継いだ推測の目撃）では項目を無効にする。
 
 ### まとめての無効化
 
-- **api は約 1 秒で区切り、手を付けなかった id を `pending` で返す**（api の ADR-0013。計画には無かった）。`ModerationService.invalidateSightings` が、`pending` が空になるか `failed` が出るまで同じ理由で**送り直し（最大 10 回）、結果を足し合わせて 1 つにまとめて返す**。画面は区切りを意識しない。
+- **api は約 1 秒で区切り、手を付けなかった id を `pending` で返す**（api の ADR-0013。計画には無かった）。`OperationSightingService.invalidateMany` が、`pending` が空になるか `failed` が出るまで同じ理由で**送り直し（最大 10 回）、結果を足し合わせて 1 つにまとめて返す**。画面は区切りを意識しない。
   - 結果の `invalidated`・`skipped` は足し、`failed`・`pending` は最後の回のものにする。
   - **2 回目以降が HTTP エラーなら、それまでの結果を残して `failed = { id: その回の先頭の id, message: '通信に失敗しました' }`・`pending = その回に送った ids` を入れて正常に返す。** 1 回目のエラーはそのまま投げる。途中で投げると、済んだ分が画面に分からなくなり、取り直しも走らないため。
   - 10 回で尽きて `pending` が残ったときは、通知で残りの件数を出す。
 - 通知は「N 件を無効にしました」に、飛ばした件数（すでに無効・見つからない）と、`failed` があれば「〇〇で止まりました: message」を足す。
 - 確認のダイアログ（`moderation-confirm-dialog`）で、件数と対象の名前を書き、理由（1〜200 字）を必須にする。BAN も同じ部品を使う。1 回に選べるのは 200 件まで（api の上限）で、超えたらボタンを押せなくして上限を示す。
-- 無効化が済んだら、`QueryInvalidator.invalidate('sighting')` で目撃のキャッシュを捨て、投稿者の要約と目撃の先頭を取り直す。BAN・解除は目撃を取り直さず、返ってきた要約（`ModerationUserSummaryDto`）で画面の要約を差し替える。`QueryInvalidator.invalidate('sighting')` は BAN・解除の成功後にも呼ぶ（ほかの画面の目撃のキャッシュを捨てるため）。
+- 無効化が済んだら、`QueryInvalidator.invalidate('sighting')` で目撃のキャッシュを捨て、投稿者の要約と目撃の先頭を取り直す。BAN・解除は目撃を取り直さず、返ってきた要約（`UserSummaryDto`）で画面の要約を差し替える。`QueryInvalidator.invalidate('sighting')` は BAN・解除の成功後にも呼ぶ（ほかの画面の目撃のキャッシュを捨てるため）。
 - 規則違反（422）は api の message をそのまま通知に出す。
 
 ### 投稿者を切り替えたときの古い応答
@@ -83,7 +83,7 @@
 
 ## 結果
 
-- 新しいページは 2 つ（`moderation-recent`・`moderation-user`）、`libs/moderation/`、`moderationGuard`、`UserState` の 3 つの computed。過去の運用表（`pages/operation/operation-past-time/…/operation-past-time-table`）と投稿フォーム（`shared/operation-post-card/operation-post-form`）は 1 項目・1 分岐の追加だけ。
+- 新しいページは 2 つ（`moderation-recent`・`moderation-user`）、`libs/user`・`libs/operation-sighting` への追加、`moderationGuard`、`UserState` の 3 つの computed。過去の運用表（`pages/operation/operation-past-time/…/operation-past-time-table`）と投稿フォーム（`shared/operation-post-card/operation-post-form`）は 1 項目・1 分岐の追加だけ。
 - 各タスクごとに spec を書いた（service・store・guard・サイドナビ・各ページ・確認のダイアログ・過去の運用表・投稿フォーム）。
 
 ## 残っていること
