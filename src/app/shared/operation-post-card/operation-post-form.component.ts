@@ -87,7 +87,10 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
 
-    readonly isLoggedIn = inject(UserState).isLoggedIn;
+    readonly #userState = inject(UserState);
+    readonly isLoggedIn = this.#userState.isLoggedIn;
+    /** viewer は投稿できない（api が 403 で断る）ので、フォームの代わりに案内を出す */
+    readonly isViewer = this.#userState.isViewer;
     /** 目撃の投稿を登録者だけにするか（フィーチャーフラグ。off の間はゲストにもフォームを出す） */
     readonly registeredOnly = inject(FeatureFlagState).registeredOnlyPosting;
     /** フラグが on のときだけ、ゲストには入力欄の代わりにログインの案内を出す */

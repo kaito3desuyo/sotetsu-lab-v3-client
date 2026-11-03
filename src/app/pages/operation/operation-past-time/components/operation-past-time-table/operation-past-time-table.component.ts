@@ -8,11 +8,14 @@ import { Router } from '@angular/router';
 import { format, subDays, subHours } from 'date-fns';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
+import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
 import { UserState } from 'src/app/global-states/user.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
+import { OperationNumberTagContextMenu } from 'src/app/shared/operation-number-tag/operation-number-tag-context-menu.type';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
 import { OperationPastTimeService } from '../../services/operation-past-time.service';
@@ -41,6 +44,8 @@ export class OperationPastTimeTableComponent {
     readonly #router = inject(Router);
     readonly #userState = inject(UserState);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
+    readonly #moderationService = inject(ModerationService);
+    readonly #notificationService = inject(NotificationService);
     readonly #operationSightingInvalidationDialogService = inject(
         OperationSightingInvalidationDialogService,
     );
@@ -74,6 +79,8 @@ export class OperationPastTimeTableComponent {
         const role = this.userRole();
         return role !== 'manager' && role !== 'editor';
     });
+    /** 投稿者のページへの入口は editor・manager にだけ出す（reporter・viewer・ゲストには項目ごと出さない） */
+    readonly canModerate = this.#userState.canModerate;
     readonly visibleFormations = computed(() => {
         const selectedAgencyIds = this.selectedAgencyIds();
         return this.formations().filter((formation: FormationDetailsDto) =>
@@ -126,6 +133,42 @@ export class OperationPastTimeTableComponent {
                 }
             });
         };
+    }
+
+    /** 無効化・復元の後ろに「この投稿者を見る」を足す。権限が無ければ足さない。 */
+    withAuthorMenu(
+        menus: OperationNumberTagContextMenu[],
+        sighting: OperationSightingDetailsDto,
+    ): OperationNumberTagContextMenu[] {
+        if (!this.canModerate()) return menus;
+        return menus.concat({
+            icon: 'person_search',
+            text: 'この投稿者を見る',
+            disabled: !!sighting.sightedAsOperation,
+            onClick: () => this.#viewAuthor(sighting),
+        });
+    }
+
+    #viewAuthor(sighting: OperationSightingDetailsDto): void {
+        this.#moderationService
+            .getSightingAuthor(sighting.operationSightingId)
+            .subscribe({
+                next: ({ userId }) => {
+                    if (userId) {
+                        this.#router.navigate(['/moderation/users', userId]);
+                    } else {
+                        this.#notificationService.open(
+                            'ゲストの投稿です',
+                            'OK',
+                        );
+                    }
+                },
+                error: () =>
+                    this.#notificationService.open(
+                        '投稿者を取得できませんでした',
+                        'OK',
+                    ),
+            });
     }
 
     /** G12: 0件空状態の次アクション。会社チップの絞り込み（表示フィルタ）を解除する。 */

@@ -1,4 +1,8 @@
-@if (!showGuestPrompt()) {
+@if (isViewer()) {
+    <div class="tw-flex tw-flex-col tw-items-center tw-gap-4 tw-py-4">
+        <p class="tw-m-0">投稿できません</p>
+    </div>
+} @else if (!showGuestPrompt()) {
     <form
         class="tw-flex tw-flex-col tw-gap-4"
         [formGroup]="sightingForm"

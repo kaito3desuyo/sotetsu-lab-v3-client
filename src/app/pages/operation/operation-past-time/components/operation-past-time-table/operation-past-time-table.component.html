@@ -178,34 +178,39 @@
                                                                     sighting.operationId,
                                                             },
                                                         ]"
-                                                        [contextMenus]="[
-                                                            {
-                                                                icon: 'block',
-                                                                text: '無効化',
-                                                                disabled:
-                                                                    contextMenuDisabled() ||
-                                                                    !!sighting.sightedAsOperation ||
-                                                                    sighting.invalidation !==
-                                                                        null,
-                                                                onClick:
-                                                                    generateOnClickInvalidateCallback(
-                                                                        sighting
-                                                                    ),
-                                                            },
-                                                            {
-                                                                icon: 'restore',
-                                                                text: '復元',
-                                                                disabled:
-                                                                    contextMenuDisabled() ||
-                                                                    !!sighting.sightedAsOperation ||
-                                                                    sighting.invalidation ===
-                                                                        null,
-                                                                onClick:
-                                                                    generateOnClickRestoreCallback(
-                                                                        sighting
-                                                                    ),
-                                                            },
-                                                        ]"
+                                                        [contextMenus]="
+                                                            withAuthorMenu(
+                                                                [
+                                                                    {
+                                                                        icon: 'block',
+                                                                        text: '無効化',
+                                                                        disabled:
+                                                                            contextMenuDisabled() ||
+                                                                            !!sighting.sightedAsOperation ||
+                                                                            sighting.invalidation !==
+                                                                                null,
+                                                                        onClick:
+                                                                            generateOnClickInvalidateCallback(
+                                                                                sighting
+                                                                            ),
+                                                                    },
+                                                                    {
+                                                                        icon: 'restore',
+                                                                        text: '復元',
+                                                                        disabled:
+                                                                            contextMenuDisabled() ||
+                                                                            !!sighting.sightedAsOperation ||
+                                                                            sighting.invalidation ===
+                                                                                null,
+                                                                        onClick:
+                                                                            generateOnClickRestoreCallback(
+                                                                                sighting
+                                                                            ),
+                                                                    },
+                                                                ],
+                                                                sighting
+                                                            )
+                                                        "
                                                         [inferred]="
                                                             !!sighting.sightedAsOperation
                                                         "

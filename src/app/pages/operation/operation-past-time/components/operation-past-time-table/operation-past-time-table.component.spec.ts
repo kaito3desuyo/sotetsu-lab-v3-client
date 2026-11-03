@@ -4,7 +4,9 @@ import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
 import { UserState } from 'src/app/global-states/user.state';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
@@ -16,12 +18,18 @@ import { OperationPastTimeTableComponent } from './operation-past-time-table.com
 describe('OperationPastTimeTableComponent', () => {
     let component: OperationPastTimeTableComponent;
     let fixture: ComponentFixture<OperationPastTimeTableComponent>;
+    let getSightingAuthor: jest.Mock;
+    let notify: jest.Mock;
 
     beforeEach(async () => {
+        getSightingAuthor = jest.fn();
+        notify = jest.fn();
         await TestBed.configureTestingModule({
             imports: [OperationPastTimeTableComponent],
             providers: [
                 provideRouter([]),
+                { provide: ModerationService, useValue: { getSightingAuthor } },
+                { provide: NotificationService, useValue: { open: notify } },
                 {
                     provide: OperationPastTimeService,
                     useValue: {
@@ -293,13 +301,110 @@ describe('OperationPastTimeTableComponent', () => {
                 .queryAll(By.directive(OperationNumberTagComponent))
                 .map((d) => d.componentInstance.contextMenus());
 
-            // 直接（11K）→ 引き継ぎ（12K）の順
+            // 直接（11K）→ 引き継ぎ（12K）の順。メニューは 無効化・復元・この投稿者を見る
             expect(
                 menus[0].map((m: { disabled: boolean }) => m.disabled),
-            ).toEqual([false, true]);
+            ).toEqual([false, true, false]);
             expect(
                 menus[1].map((m: { disabled: boolean }) => m.disabled),
-            ).toEqual([true, true]);
+            ).toEqual([true, true, true]);
+        });
+
+        describe('この投稿者を見る', () => {
+            type Menu = {
+                text: string;
+                disabled: boolean;
+                onClick: () => void;
+            };
+            const menusOf = (index: number): Menu[] =>
+                fixture.debugElement
+                    .queryAll(By.directive(OperationNumberTagComponent))
+                    [index].componentInstance.contextMenus();
+            const authorMenu = (index: number): Menu | undefined =>
+                menusOf(index).find((m) => m.text === 'この投稿者を見る');
+            const setRole = (role: string): void =>
+                patchState(unprotected(TestBed.inject(UserState)), {
+                    role,
+                } as never);
+
+            it('editor の直接の目撃のメニューには「この投稿者を見る」があり押せる', () => {
+                setRole('editor');
+                setupCell();
+
+                expect(authorMenu(0)).toEqual(
+                    expect.objectContaining({
+                        icon: 'person_search',
+                        disabled: false,
+                    }),
+                );
+            });
+
+            it('引き継いだ目撃では押せない', () => {
+                setRole('editor');
+                setupCell();
+
+                expect(authorMenu(1).disabled).toBe(true);
+            });
+
+            it('reporter・viewer のメニューには出さない', () => {
+                setRole('reporter');
+                setupCell();
+                expect(authorMenu(0)).toBeUndefined();
+
+                setRole('viewer');
+                fixture.detectChanges();
+                expect(authorMenu(0)).toBeUndefined();
+            });
+
+            it('投稿者がいれば投稿者のページへ行く', () => {
+                setRole('editor');
+                setupCell();
+                getSightingAuthor.mockReturnValue(of({ userId: 'u-9' }));
+                const navigate = jest
+                    .spyOn(TestBed.inject(Router), 'navigate')
+                    .mockResolvedValue(true);
+
+                authorMenu(0).onClick();
+
+                expect(getSightingAuthor).toHaveBeenCalledWith('s-1');
+                expect(navigate).toHaveBeenCalledWith([
+                    '/moderation/users',
+                    'u-9',
+                ]);
+            });
+
+            it('投稿者がいなければ「ゲストの投稿です」と通知するだけ', () => {
+                setRole('editor');
+                setupCell();
+                getSightingAuthor.mockReturnValue(of({ userId: null }));
+                const navigate = jest
+                    .spyOn(TestBed.inject(Router), 'navigate')
+                    .mockResolvedValue(true);
+
+                authorMenu(0).onClick();
+
+                expect(notify).toHaveBeenCalledWith('ゲストの投稿です', 'OK');
+                expect(navigate).not.toHaveBeenCalled();
+            });
+
+            it('取得に失敗したら「投稿者を取得できませんでした」と通知する', () => {
+                setRole('editor');
+                setupCell();
+                getSightingAuthor.mockReturnValue(
+                    throwError(() => new Error('boom')),
+                );
+                const navigate = jest
+                    .spyOn(TestBed.inject(Router), 'navigate')
+                    .mockResolvedValue(true);
+
+                authorMenu(0).onClick();
+
+                expect(notify).toHaveBeenCalledWith(
+                    '投稿者を取得できませんでした',
+                    'OK',
+                );
+                expect(navigate).not.toHaveBeenCalled();
+            });
         });
     });
 });
