@@ -15,7 +15,7 @@ type CurrentPositionLike = {
  * 「目撃なし」と数えられて募集が光らないようにするため。並びは入力のまま。
  */
 export function selectSightingCallOperations<
-    T extends { operationNumber: string },
+    T extends { operationNumber?: string },
 >(params: {
     operations: T[];
     currentPositions: Record<string, CurrentPositionLike | undefined>;
@@ -23,13 +23,15 @@ export function selectSightingCallOperations<
 }): T[] {
     const { operations, currentPositions, histories } = params;
     return operations.filter((operation) => {
-        const position = currentPositions[operation.operationNumber];
+        const { operationNumber } = operation;
+        if (!operationNumber) return false;
+        const position = currentPositions[operationNumber];
         if (!position) return false;
         const isRunning =
             position.current != null ||
             (position.prev != null && position.next != null);
         if (!isRunning) return false;
-        const history = histories[operation.operationNumber];
+        const history = histories[operationNumber];
         return Array.isArray(history) && history.length === 0;
     });
 }

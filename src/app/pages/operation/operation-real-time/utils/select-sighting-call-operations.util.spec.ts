@@ -1,3 +1,4 @@
+import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { selectSightingCallOperations } from './select-sighting-call-operations.util';
 
 describe('selectSightingCallOperations', () => {
@@ -96,5 +97,33 @@ describe('selectSightingCallOperations', () => {
                 histories: { '12K': [], '58S': [], '61K': [] },
             }).map((o) => o.operationNumber),
         ).toEqual(['61K', '12K', '58S']);
+    });
+
+    it('運用番号の無い要素は返さない', () => {
+        const operations: OperationDetailsDto[] = [
+            { operationId: 'o1' },
+            { operationId: 'o2', operationNumber: '' },
+            { operationId: 'o3', operationNumber: '12K' },
+        ];
+        expect(
+            selectSightingCallOperations({
+                operations,
+                currentPositions: { '12K': running, '': running },
+                histories: { '12K': [], '': [] },
+            }),
+        ).toEqual([operations[2]]);
+    });
+
+    it('実際の OperationDetailsDto[] をキャストなしで受けられる', () => {
+        const operations: OperationDetailsDto[] = [
+            { operationId: 'o1', operationNumber: '12K' },
+            { operationId: 'o2', operationNumber: '58S' },
+        ];
+        const selected: OperationDetailsDto[] = selectSightingCallOperations({
+            operations,
+            currentPositions: { '12K': running, '58S': running },
+            histories: { '12K': [], '58S': [{}] },
+        });
+        expect(selected).toEqual([operations[0]]);
     });
 });
