@@ -6,7 +6,7 @@ import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
 import { of, throwError } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { UserState } from 'src/app/global-states/user.state';
 import { OperationSightingInvalidationDialogService } from 'src/app/shared/operation-sighting-invalidation-dialog/operation-sighting-invalidation-dialog.service';
 import { OperationSightingRestorationDialogService } from 'src/app/shared/operation-sighting-restoration-dialog/operation-sighting-restoration-dialog.service';
@@ -18,17 +18,17 @@ import { OperationPastTimeTableComponent } from './operation-past-time-table.com
 describe('OperationPastTimeTableComponent', () => {
     let component: OperationPastTimeTableComponent;
     let fixture: ComponentFixture<OperationPastTimeTableComponent>;
-    let getSightingAuthor: jest.Mock;
+    let findAuthor: jest.Mock;
     let notify: jest.Mock;
 
     beforeEach(async () => {
-        getSightingAuthor = jest.fn();
+        findAuthor = jest.fn();
         notify = jest.fn();
         await TestBed.configureTestingModule({
             imports: [OperationPastTimeTableComponent],
             providers: [
                 provideRouter([]),
-                { provide: ModerationService, useValue: { getSightingAuthor } },
+                { provide: OperationSightingService, useValue: { findAuthor } },
                 { provide: NotificationService, useValue: { open: notify } },
                 {
                     provide: OperationPastTimeService,
@@ -359,14 +359,14 @@ describe('OperationPastTimeTableComponent', () => {
             it('投稿者がいれば投稿者のページへ行く', () => {
                 setRole('editor');
                 setupCell();
-                getSightingAuthor.mockReturnValue(of({ userId: 'u-9' }));
+                findAuthor.mockReturnValue(of({ userId: 'u-9' }));
                 const navigate = jest
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);
 
                 authorMenu(0).onClick();
 
-                expect(getSightingAuthor).toHaveBeenCalledWith('s-1');
+                expect(findAuthor).toHaveBeenCalledWith('s-1');
                 expect(navigate).toHaveBeenCalledWith([
                     '/moderation/users',
                     'u-9',
@@ -376,7 +376,7 @@ describe('OperationPastTimeTableComponent', () => {
             it('投稿者がいなければ「ゲストの投稿です」と通知するだけ', () => {
                 setRole('editor');
                 setupCell();
-                getSightingAuthor.mockReturnValue(of({ userId: null }));
+                findAuthor.mockReturnValue(of({ userId: null }));
                 const navigate = jest
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);
@@ -390,9 +390,7 @@ describe('OperationPastTimeTableComponent', () => {
             it('取得に失敗したら「投稿者を取得できませんでした」と通知する', () => {
                 setRole('editor');
                 setupCell();
-                getSightingAuthor.mockReturnValue(
-                    throwError(() => new Error('boom')),
-                );
+                findAuthor.mockReturnValue(throwError(() => new Error('boom')));
                 const navigate = jest
                     .spyOn(TestBed.inject(Router), 'navigate')
                     .mockResolvedValue(true);

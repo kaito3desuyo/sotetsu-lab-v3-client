@@ -7,9 +7,9 @@ import {
     withState,
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
-import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-sighting.dto';
-import { ModerationTraceDto } from 'src/app/libs/moderation/usecase/dtos/moderation-trace.dto';
-import { ModerationUserSummaryDto } from 'src/app/libs/moderation/usecase/dtos/moderation-user-summary.dto';
+import { OperationSightingSummaryDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-summary.dto';
+import { UserAccessTraceDto } from 'src/app/libs/user/usecase/dtos/user-access-trace.dto';
+import { UserSummaryDto } from 'src/app/libs/user/usecase/dtos/user-summary.dto';
 
 /** api が一度に受ける無効化の id の数 */
 export const MODERATION_INVALIDATE_MAX_IDS = 200;
@@ -17,8 +17,8 @@ export const MODERATION_INVALIDATE_MAX_IDS = 200;
 type StoreProps = {
     /** いま見ている投稿者。別の人へ移ったら beginUser で中身ごと入れ替える */
     userId: string | null;
-    summary: ModerationUserSummaryDto | null;
-    sightings: ModerationSightingDto[];
+    summary: UserSummaryDto | null;
+    sightings: OperationSightingSummaryDto[];
     /** 直近の取得が 1 ページぶん満ちていた（= まだ古い目撃が残っているかもしれない） */
     hasMore: boolean;
     hasFetched: boolean;
@@ -26,7 +26,7 @@ type StoreProps = {
     firstFetchFailed: boolean;
     notFound: boolean;
     /** 手がかり。manager だけが取る。null は未取得 */
-    traces: ModerationTraceDto[] | null;
+    traces: UserAccessTraceDto[] | null;
     tracesFailed: boolean;
     selectedIds: string[];
     loadingQueue: boolean[];
@@ -83,7 +83,7 @@ export const ModerationUserStore = signalStore(
             isLatestSightings: (seq: number): boolean => seq === sightingsSeq,
             nextTracesSeq: (): number => ++tracesSeq,
             isLatestTraces: (seq: number): boolean => seq === tracesSeq,
-            setSummary(summary: ModerationUserSummaryDto): void {
+            setSummary(summary: UserSummaryDto): void {
                 patchState(store, { summary });
             },
             setNotFound(notFound: boolean): void {
@@ -94,7 +94,7 @@ export const ModerationUserStore = signalStore(
             },
             /** 要約と最初の 1 ページを入れ替える。選びは空に戻す */
             replaceSightings(
-                sightings: ModerationSightingDto[],
+                sightings: OperationSightingSummaryDto[],
                 hasMore: boolean,
             ): void {
                 patchState(store, {
@@ -105,7 +105,7 @@ export const ModerationUserStore = signalStore(
                 });
             },
             appendSightings(
-                sightings: ModerationSightingDto[],
+                sightings: OperationSightingSummaryDto[],
                 hasMore: boolean,
             ): void {
                 patchState(store, (s) => {
@@ -122,7 +122,7 @@ export const ModerationUserStore = signalStore(
                     };
                 });
             },
-            setTraces(traces: ModerationTraceDto[] | null): void {
+            setTraces(traces: UserAccessTraceDto[] | null): void {
                 patchState(store, { traces, tracesFailed: false });
             },
             setTracesFailed(tracesFailed: boolean): void {

@@ -4,14 +4,19 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
+import { UserAccessTraceDto } from '../../usecase/dtos/user-access-trace.dto';
 import { UserDetailsDto } from '../../usecase/dtos/user-details.dto';
+import { UserSummaryDto } from '../../usecase/dtos/user-summary.dto';
 import { UserDtoBuilder } from '../builders/user.dto.builder';
+import { UserAccessTraceModel } from '../models/user-access-trace.model';
+import { UserSummaryModel } from '../models/user-summary.model';
 import { UserModel } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserQuery {
     readonly #http = inject(HttpClient);
     readonly #backendUrl = environment.backendUrl + '/user';
+    readonly #v3ApiUrl = environment.apiUrl + '/v3/users';
     readonly #cache = new QueryCache();
 
     /**
@@ -40,5 +45,27 @@ export class UserQuery {
             forceReload: maxAgeMs === undefined,
             maxAgeMs,
         });
+    }
+
+    /** 投稿管理の取得。QueryCache を通さず、呼ぶたびに取る */
+    findSummary(userId: string): Observable<UserSummaryDto> {
+        return this.#http
+            .get<UserSummaryModel>(
+                `${this.#v3ApiUrl}/${encodeURIComponent(userId)}`,
+            )
+            .pipe(map((model) => UserDtoBuilder.buildSummaryFromModel(model)));
+    }
+
+    /** 手がかり。QueryCache を通さず、呼ぶたびに取る */
+    findAccessTraces(userId: string): Observable<UserAccessTraceDto[]> {
+        return this.#http
+            .get<UserAccessTraceModel[]>(
+                `${this.#v3ApiUrl}/${encodeURIComponent(userId)}/traces`,
+            )
+            .pipe(
+                map((models) =>
+                    UserDtoBuilder.buildAccessTracesFromModels(models),
+                ),
+            );
     }
 }

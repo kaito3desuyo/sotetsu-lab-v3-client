@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ModerationRecentStore } from '../stores/moderation-recent.store';
 
 /** 1 回の取得で頼む件数。これに満たなければ、もう古い投稿は無い */
@@ -10,13 +10,13 @@ export const MODERATION_RECENT_PAGE_SIZE = 100;
 @Injectable()
 export class ModerationRecentService {
     readonly #store = inject(ModerationRecentStore);
-    readonly #moderationService = inject(ModerationService);
+    readonly #operationSightingService = inject(OperationSightingService);
 
     /** 新しい順の先頭 1 ページを取り直し、一覧を入れ替える */
     fetchFirstPage(): Observable<void> {
         const seq = this.#store.nextFetchSeq();
-        return this.#moderationService
-            .getRecentSightings({ limit: MODERATION_RECENT_PAGE_SIZE })
+        return this.#operationSightingService
+            .findManyRecent({ limit: MODERATION_RECENT_PAGE_SIZE })
             .pipe(
                 tap((rows) => {
                     if (this.#store.isLatestFetch(seq)) {
@@ -37,8 +37,8 @@ export class ModerationRecentService {
             return of(undefined);
         }
         const seq = this.#store.nextFetchSeq();
-        return this.#moderationService
-            .getRecentSightings({
+        return this.#operationSightingService
+            .findManyRecent({
                 limit: MODERATION_RECENT_PAGE_SIZE,
                 before: last.createdAt,
             })

@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { ModerationRecentSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-recent-sighting.dto';
+import { OperationSightingRecentDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-recent.dto';
 import { ModerationRecentStore } from './moderation-recent.store';
 
-function row(id: string): ModerationRecentSightingDto {
+function row(id: string): OperationSightingRecentDto {
     return {
         operationSightingId: id,
         sightingTime: '2026-11-02T10:00:00.000Z',

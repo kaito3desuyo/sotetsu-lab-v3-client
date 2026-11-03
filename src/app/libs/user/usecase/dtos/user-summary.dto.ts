@@ -1,4 +1,4 @@
-export interface ModerationUserSummaryDto {
+export interface UserSummaryDto {
     userId: string;
     username: string;
     displayName: string;

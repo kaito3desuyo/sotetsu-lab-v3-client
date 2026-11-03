@@ -8,7 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { ModerationRecentSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-recent-sighting.dto';
+import { OperationSightingRecentDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-recent.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -51,7 +51,7 @@ export class ModerationRecentComponent implements OnInit {
     readonly formatTime = formatTokyoDateTime;
     readonly trackBySighting = (
         _: number,
-        row: ModerationRecentSightingDto,
+        row: OperationSightingRecentDto,
     ): string => row.operationSightingId;
 
     ngOnInit(): void {

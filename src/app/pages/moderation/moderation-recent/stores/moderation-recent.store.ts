@@ -7,10 +7,10 @@ import {
     withState,
 } from '@ngrx/signals';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
-import { ModerationRecentSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-recent-sighting.dto';
+import { OperationSightingRecentDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-recent.dto';
 
 type StoreProps = {
-    sightings: ModerationRecentSightingDto[];
+    sightings: OperationSightingRecentDto[];
     /** 直近の取得が 1 ページぶん満ちていた（= まだ古い投稿が残っているかもしれない） */
     hasMore: boolean;
     hasFetched: boolean;
@@ -39,13 +39,13 @@ export const ModerationRecentStore = signalStore(
             nextFetchSeq: (): number => ++fetchSeq,
             isLatestFetch: (seq: number): boolean => seq === fetchSeq,
             replaceSightings(
-                sightings: ModerationRecentSightingDto[],
+                sightings: OperationSightingRecentDto[],
                 hasMore: boolean,
             ): void {
                 patchState(store, { sightings, hasMore, hasFetched: true });
             },
             appendSightings(
-                sightings: ModerationRecentSightingDto[],
+                sightings: OperationSightingRecentDto[],
                 hasMore: boolean,
             ): void {
                 patchState(store, (s) => {

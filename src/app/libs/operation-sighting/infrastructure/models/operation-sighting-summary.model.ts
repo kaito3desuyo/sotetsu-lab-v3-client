@@ -1,4 +1,4 @@
-export interface ModerationSightingModel {
+export interface OperationSightingSummaryModel {
     operationSightingId: string;
     sightingTime: string;
     createdAt: string;
@@ -8,7 +8,7 @@ export interface ModerationSightingModel {
     invalidatedBy: { userId: string; username: string } | null;
 }
 
-export interface ModerationRecentSightingModel extends ModerationSightingModel {
+export interface OperationSightingRecentModel extends OperationSightingSummaryModel {
     author: {
         userId: string;
         username: string;

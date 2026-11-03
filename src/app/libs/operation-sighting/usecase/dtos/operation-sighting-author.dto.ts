@@ -1,4 +1,4 @@
-export interface ModerationSightingAuthorDto {
+export interface OperationSightingAuthorDto {
     /** ゲスト・2026-10-23 より前の目撃は null */
     userId: string | null;
 }

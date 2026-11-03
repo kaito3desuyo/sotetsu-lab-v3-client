@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-sighting.dto';
+import { OperationSightingSummaryDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-summary.dto';
 import { ModerationUserStore } from './moderation-user.store';
 
 function row(
     id: string,
-    overrides: Partial<ModerationSightingDto> = {},
-): ModerationSightingDto {
+    overrides: Partial<OperationSightingSummaryDto> = {},
+): OperationSightingSummaryDto {
     return {
         operationSightingId: id,
         sightingTime: '2026-11-02T10:00:00.000Z',

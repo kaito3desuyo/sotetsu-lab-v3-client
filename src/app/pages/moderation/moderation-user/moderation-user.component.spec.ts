@@ -13,11 +13,12 @@ import { BehaviorSubject, NEVER, of, Subject, throwError } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { UserState } from 'src/app/global-states/user.state';
-import { ModerationBulkInvalidateResultDto } from 'src/app/libs/moderation/usecase/dtos/moderation-bulk-invalidate-result.dto';
-import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-sighting.dto';
-import { ModerationTraceDto } from 'src/app/libs/moderation/usecase/dtos/moderation-trace.dto';
-import { ModerationUserSummaryDto } from 'src/app/libs/moderation/usecase/dtos/moderation-user-summary.dto';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { InvalidateManyOperationSightingsResultDto } from 'src/app/libs/operation-sighting/usecase/dtos/invalidate-many-operation-sightings-result.dto';
+import { OperationSightingSummaryDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-summary.dto';
+import { UserAccessTraceDto } from 'src/app/libs/user/usecase/dtos/user-access-trace.dto';
+import { UserSummaryDto } from 'src/app/libs/user/usecase/dtos/user-summary.dto';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { ModerationUserComponent } from './moderation-user.component';
 import { ModerationUserService } from './services/moderation-user.service';
 
@@ -25,9 +26,7 @@ const U1 = '11111111-1111-4111-8111-111111111111';
 const U2 = '22222222-2222-4222-8222-222222222222';
 const GHOST = '99999999-9999-4999-8999-999999999999';
 
-function summary(
-    overrides: Partial<ModerationUserSummaryDto> = {},
-): ModerationUserSummaryDto {
+function summary(overrides: Partial<UserSummaryDto> = {}): UserSummaryDto {
     return {
         userId: U1,
         username: 'tetsu_x',
@@ -45,8 +44,8 @@ function summary(
 
 function sighting(
     id: string,
-    overrides: Partial<ModerationSightingDto> = {},
-): ModerationSightingDto {
+    overrides: Partial<OperationSightingSummaryDto> = {},
+): OperationSightingSummaryDto {
     return {
         operationSightingId: id,
         sightingTime: '2026-11-02T10:00:00.000Z',
@@ -60,8 +59,8 @@ function sighting(
 }
 
 function trace(
-    overrides: Partial<ModerationTraceDto> = {},
-): ModerationTraceDto {
+    overrides: Partial<UserAccessTraceDto> = {},
+): UserAccessTraceDto {
     return {
         ip: '203.0.113.24',
         userAgents: ['iPhone / Safari'],
@@ -77,39 +76,45 @@ function trace(
 type Options = {
     role?: 'editor' | 'manager';
     me?: string;
-    summary?: ModerationUserSummaryDto;
-    sightings?: ModerationSightingDto[];
-    traces?: ModerationTraceDto[];
+    summary?: UserSummaryDto;
+    sightings?: OperationSightingSummaryDto[];
+    traces?: UserAccessTraceDto[];
     dialogResult?: { reason: string } | undefined;
 };
 
 describe('ModerationUserComponent', () => {
     let fixture: ComponentFixture<ModerationUserComponent>;
     let params: BehaviorSubject<ParamMap>;
-    let moderation: {
-        getUser: jest.Mock;
-        getUserSightings: jest.Mock;
-        getUserTraces: jest.Mock;
-        invalidateSightings: jest.Mock;
+    let userApi: {
+        findSummary: jest.Mock;
+        findAccessTraces: jest.Mock;
         ban: jest.Mock;
         unban: jest.Mock;
+    };
+    let sightingApi: {
+        findManyByUserId: jest.Mock;
+        invalidateMany: jest.Mock;
     };
     let notificationOpen: jest.Mock;
     let dialogOpen: jest.Mock;
 
     async function render(options: Options = {}) {
         params = new BehaviorSubject(convertToParamMap({ userId: U1 }));
-        moderation = {
-            getUser: jest
+        userApi = {
+            findSummary: jest
                 .fn()
                 .mockReturnValue(of(options.summary ?? summary())),
-            getUserSightings: jest
+            findAccessTraces: jest
                 .fn()
-                .mockReturnValue(of(options.sightings ?? [sighting('s1')])),
-            getUserTraces: jest.fn().mockReturnValue(of(options.traces ?? [])),
-            invalidateSightings: jest.fn(),
+                .mockReturnValue(of(options.traces ?? [])),
             ban: jest.fn(),
             unban: jest.fn(),
+        };
+        sightingApi = {
+            findManyByUserId: jest
+                .fn()
+                .mockReturnValue(of(options.sightings ?? [sighting('s1')])),
+            invalidateMany: jest.fn(),
         };
         notificationOpen = jest.fn();
         dialogOpen = jest.fn().mockReturnValue({
@@ -126,7 +131,11 @@ describe('ModerationUserComponent', () => {
                 provideRouter([]),
                 ModerationUserService,
                 { provide: ActivatedRoute, useValue: { paramMap: params } },
-                { provide: ModerationService, useValue: moderation },
+                { provide: UserService, useValue: userApi },
+                {
+                    provide: OperationSightingService,
+                    useValue: sightingApi,
+                },
                 {
                     provide: NotificationService,
                     useValue: { open: notificationOpen },
@@ -168,7 +177,7 @@ describe('ModerationUserComponent', () => {
     it('投稿者の要約を出す', async () => {
         await render();
 
-        expect(moderation.getUser).toHaveBeenCalledWith(U1);
+        expect(userApi.findSummary).toHaveBeenCalledWith(U1);
         const text = byId('moderation-user-summary').textContent;
         expect(text).toContain('tetsu_x');
         expect(text).toContain('てつ');
@@ -183,13 +192,13 @@ describe('ModerationUserComponent', () => {
         expect(byId('moderation-ban-section')).toBeNull();
         expect(byId('moderation-traces-section')).toBeNull();
         expect(byId('ban-button')).toBeNull();
-        expect(moderation.getUserTraces).not.toHaveBeenCalled();
+        expect(userApi.findAccessTraces).not.toHaveBeenCalled();
     });
 
     it('MANAGER には BAN と手がかりが出て、手がかりを取りに行く', async () => {
         await render({ role: 'manager', traces: [trace()] });
 
-        expect(moderation.getUserTraces).toHaveBeenCalledWith(U1);
+        expect(userApi.findAccessTraces).toHaveBeenCalledWith(U1);
         expect(byId('moderation-ban-section')).not.toBeNull();
         expect(byId('ban-button')).toHaveTextContent('BAN');
         expect(byId('moderation-traces-section')).toHaveTextContent(
@@ -275,7 +284,7 @@ describe('ModerationUserComponent', () => {
 
     it('BAN は確認で理由を聞き、返った要約に差し替える', async () => {
         await render({ role: 'manager' });
-        moderation.ban.mockReturnValue(
+        userApi.ban.mockReturnValue(
             of(summary({ banned: true, role: 'viewer' })),
         );
 
@@ -285,7 +294,7 @@ describe('ModerationUserComponent', () => {
         const data = dialogOpen.mock.calls[0][1].data;
         expect(data.lines.join('')).toContain('tetsu_x');
         expect(data.reasonRequired).toBe(true);
-        expect(moderation.ban).toHaveBeenCalledWith(U1, '荒らし');
+        expect(userApi.ban).toHaveBeenCalledWith(U1, '荒らし');
         expect(byId('moderation-user-summary')).toHaveTextContent('BAN 中');
         expect(byId('ban-button')).toHaveTextContent('BAN を解く');
     });
@@ -295,12 +304,12 @@ describe('ModerationUserComponent', () => {
 
         await click(byId('ban-button'));
 
-        expect(moderation.ban).not.toHaveBeenCalled();
+        expect(userApi.ban).not.toHaveBeenCalled();
     });
 
     it('BAN が 422 で断られたら、api の言葉を通知する', async () => {
         await render({ role: 'manager' });
-        moderation.ban.mockReturnValue(
+        userApi.ban.mockReturnValue(
             throwError(() => new FetchError(422, 'すでに BAN されています')),
         );
 
@@ -319,12 +328,12 @@ describe('ModerationUserComponent', () => {
             summary: summary({ banned: true, role: 'viewer' }),
             dialogResult: { reason: '' },
         });
-        moderation.unban.mockReturnValue(of(summary({ banned: false })));
+        userApi.unban.mockReturnValue(of(summary({ banned: false })));
 
         await click(byId('ban-button'));
 
         expect(dialogOpen.mock.calls[0][1].data.reasonRequired).toBe(false);
-        expect(moderation.unban).toHaveBeenCalledWith(U1, undefined);
+        expect(userApi.unban).toHaveBeenCalledWith(U1, undefined);
         expect(byId('moderation-user-summary')).not.toHaveTextContent('BAN 中');
         expect(byId('ban-button')).toHaveTextContent('BAN');
         expect(byId('ban-button')).not.toHaveTextContent('BAN を解く');
@@ -342,7 +351,7 @@ describe('ModerationUserComponent', () => {
             ],
         });
 
-        expect(moderation.getUserSightings).toHaveBeenCalledWith(U1, {
+        expect(sightingApi.findManyByUserId).toHaveBeenCalledWith(U1, {
             limit: 100,
         });
         expect(byId('bulk-invalidate-button')).toBeDisabled();
@@ -370,13 +379,13 @@ describe('ModerationUserComponent', () => {
                 sighting('s4', { operationNumber: '26K' }),
             ],
         });
-        const result: ModerationBulkInvalidateResultDto = {
+        const result: InvalidateManyOperationSightingsResultDto = {
             invalidated: ['s1', 's2'],
             skipped: [{ id: 's3', reason: 'already_invalidated' }],
             failed: { id: 's4', message: '保存に失敗しました' },
             pending: ['s5', 's6', 's7'],
         };
-        moderation.invalidateSightings.mockReturnValue(of(result));
+        sightingApi.invalidateMany.mockReturnValue(of(result));
         await click(checkbox('select-all-valid'));
 
         await click(byId('bulk-invalidate-button'));
@@ -384,7 +393,7 @@ describe('ModerationUserComponent', () => {
         const data = dialogOpen.mock.calls[0][1].data;
         expect(data.lines.join('')).toContain('tetsu_x');
         expect(data.lines.join('')).toContain('4 件');
-        expect(moderation.invalidateSightings).toHaveBeenCalledWith({
+        expect(sightingApi.invalidateMany).toHaveBeenCalledWith({
             ids: ['s1', 's2', 's3', 's4'],
             reason: '荒らし',
         });
@@ -395,13 +404,13 @@ describe('ModerationUserComponent', () => {
         );
         expect(message).toContain('26K で止まりました: 保存に失敗しました');
         expect(message).toContain('残り 3 件は無効にできていません');
-        expect(moderation.getUser).toHaveBeenCalledTimes(2);
-        expect(moderation.getUserSightings).toHaveBeenCalledTimes(2);
+        expect(userApi.findSummary).toHaveBeenCalledTimes(2);
+        expect(sightingApi.findManyByUserId).toHaveBeenCalledTimes(2);
     });
 
     it('全部通ったときは件数だけを通知する', async () => {
         await render({ sightings: [sighting('s1')] });
-        moderation.invalidateSightings.mockReturnValue(
+        sightingApi.invalidateMany.mockReturnValue(
             of({ invalidated: ['s1'], skipped: [], failed: null, pending: [] }),
         );
         await click(checkbox('select-all-valid'));
@@ -420,7 +429,7 @@ describe('ModerationUserComponent', () => {
 
         await click(byId('bulk-invalidate-button'));
 
-        expect(moderation.invalidateSightings).not.toHaveBeenCalled();
+        expect(sightingApi.invalidateMany).not.toHaveBeenCalled();
     });
 
     it('一度に 200 件を超えて選ぶとボタンを押せず、ヒントを出す', async () => {
@@ -450,7 +459,7 @@ describe('ModerationUserComponent', () => {
             }),
         );
         await render({ sightings: page });
-        moderation.getUserSightings.mockReturnValue(
+        sightingApi.findManyByUserId.mockReturnValue(
             of([sighting('older', { createdAt: '2026-11-01T00:00:00.000Z' })]),
         );
 
@@ -459,7 +468,7 @@ describe('ModerationUserComponent', () => {
         );
         await click(more);
 
-        expect(moderation.getUserSightings).toHaveBeenLastCalledWith(U1, {
+        expect(sightingApi.findManyByUserId).toHaveBeenLastCalledWith(U1, {
             limit: 100,
             before: page[99].createdAt,
         });
@@ -469,7 +478,7 @@ describe('ModerationUserComponent', () => {
     it('投稿者が見つからなければ（404）その旨を出す', async () => {
         await render();
         // 描き直し: 見つからない人へ
-        moderation.getUser.mockReturnValue(
+        userApi.findSummary.mockReturnValue(
             throwError(() => new FetchError(404, 'Not Found')),
         );
         params.next(convertToParamMap({ userId: GHOST }));
@@ -481,14 +490,14 @@ describe('ModerationUserComponent', () => {
 
     it('初回の取得に失敗したら再読み込みを出し、押すと取り直す', async () => {
         await render();
-        moderation.getUser.mockReturnValue(
+        userApi.findSummary.mockReturnValue(
             throwError(() => new Error('offline')),
         );
         params.next(convertToParamMap({ userId: U2 }));
         await settle();
         expect(el()).toHaveTextContent('読み込めませんでした');
 
-        moderation.getUser.mockReturnValue(
+        userApi.findSummary.mockReturnValue(
             of(summary({ userId: U2, username: 'second' })),
         );
         const retry = Array.from(el().querySelectorAll('button')).find((b) =>
@@ -507,13 +516,13 @@ describe('ModerationUserComponent', () => {
         });
         expect(byId('moderation-user-summary')).toHaveTextContent('tetsu_x');
 
-        moderation.getUser.mockReturnValue(NEVER);
-        moderation.getUserSightings.mockReturnValue(NEVER);
-        moderation.getUserTraces.mockReturnValue(NEVER);
+        userApi.findSummary.mockReturnValue(NEVER);
+        sightingApi.findManyByUserId.mockReturnValue(NEVER);
+        userApi.findAccessTraces.mockReturnValue(NEVER);
         params.next(convertToParamMap({ userId: U2 }));
         await settle();
 
-        expect(moderation.getUser).toHaveBeenLastCalledWith(U2);
+        expect(userApi.findSummary).toHaveBeenLastCalledWith(U2);
         expect(el()).not.toHaveTextContent('tetsu_x');
         expect(el()).not.toHaveTextContent('203.0.113.24');
         expect(el().querySelectorAll('tbody tr')).toHaveLength(0);
@@ -521,20 +530,21 @@ describe('ModerationUserComponent', () => {
 
     it('無効化の応答を待つあいだに別の人へ移っても、応答後に前の人の要約・目撃で上書きしない', async () => {
         await render({ sightings: [sighting('s1')] });
-        const response = new Subject<ModerationBulkInvalidateResultDto>();
-        moderation.invalidateSightings.mockReturnValue(response);
+        const response =
+            new Subject<InvalidateManyOperationSightingsResultDto>();
+        sightingApi.invalidateMany.mockReturnValue(response);
         await click(checkbox('select-all-valid'));
         await click(byId('bulk-invalidate-button'));
 
-        moderation.getUser.mockReturnValue(
+        userApi.findSummary.mockReturnValue(
             of(summary({ userId: U2, username: 'second' })),
         );
-        moderation.getUserSightings.mockReturnValue(
+        sightingApi.findManyByUserId.mockReturnValue(
             of([sighting('t1', { operationNumber: '77Z' })]),
         );
         params.next(convertToParamMap({ userId: U2 }));
         await settle();
-        const getUserCalls = moderation.getUser.mock.calls.length;
+        const getUserCalls = userApi.findSummary.mock.calls.length;
         notificationOpen.mockClear();
 
         response.next({
@@ -546,7 +556,7 @@ describe('ModerationUserComponent', () => {
         response.complete();
         await settle();
 
-        expect(moderation.getUser).toHaveBeenCalledTimes(getUserCalls);
+        expect(userApi.findSummary).toHaveBeenCalledTimes(getUserCalls);
         expect(byId('moderation-user-summary')).toHaveTextContent('second');
         expect(el()).toHaveTextContent('77Z');
         expect(notificationOpen).not.toHaveBeenCalled();
@@ -559,15 +569,15 @@ describe('ModerationUserComponent', () => {
             }),
         );
         await render({ sightings: page });
-        const next = new Subject<ModerationSightingDto[]>();
-        moderation.getUserSightings.mockReturnValue(next);
+        const next = new Subject<OperationSightingSummaryDto[]>();
+        sightingApi.findManyByUserId.mockReturnValue(next);
         const more = Array.from(el().querySelectorAll('button')).find((b) =>
             b.textContent?.includes('もっと見る'),
         );
         await click(more);
 
-        moderation.getUserSightings.mockReturnValue(of([sighting('t1')]));
-        moderation.getUser.mockReturnValue(
+        sightingApi.findManyByUserId.mockReturnValue(of([sighting('t1')]));
+        userApi.findSummary.mockReturnValue(
             of(summary({ userId: U2, username: 'second' })),
         );
         params.next(convertToParamMap({ userId: U2 }));
@@ -582,10 +592,10 @@ describe('ModerationUserComponent', () => {
 
     it('投稿者が 404 のときは、manager でも手がかりの失敗を通知しない', async () => {
         await render();
-        moderation.getUser.mockReturnValue(
+        userApi.findSummary.mockReturnValue(
             throwError(() => new FetchError(404, 'Not Found')),
         );
-        moderation.getUserTraces.mockReturnValue(
+        userApi.findAccessTraces.mockReturnValue(
             throwError(() => new FetchError(404, 'Not Found')),
         );
         patchState(unprotected(TestBed.inject(UserState)), { role: 'manager' });
@@ -600,18 +610,18 @@ describe('ModerationUserComponent', () => {
 
     it('userId が UUID の形でなければ、見つからない扱いにして何も取りに行かない', async () => {
         await render({ role: 'manager' });
-        moderation.getUser.mockClear();
-        moderation.getUserSightings.mockClear();
-        moderation.getUserTraces.mockClear();
+        userApi.findSummary.mockClear();
+        sightingApi.findManyByUserId.mockClear();
+        userApi.findAccessTraces.mockClear();
 
         params.next(convertToParamMap({ userId: '../admin' }));
         await settle();
 
         expect(el()).toHaveTextContent('投稿者が見つかりません');
         expect(byId('moderation-user-summary')).toBeNull();
-        expect(moderation.getUser).not.toHaveBeenCalled();
-        expect(moderation.getUserSightings).not.toHaveBeenCalled();
-        expect(moderation.getUserTraces).not.toHaveBeenCalled();
+        expect(userApi.findSummary).not.toHaveBeenCalled();
+        expect(sightingApi.findManyByUserId).not.toHaveBeenCalled();
+        expect(userApi.findAccessTraces).not.toHaveBeenCalled();
     });
 
     it('登録の日時は年まで出す', async () => {

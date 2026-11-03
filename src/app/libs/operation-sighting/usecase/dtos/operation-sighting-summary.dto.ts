@@ -1,4 +1,4 @@
-export interface ModerationSightingDto {
+export interface OperationSightingSummaryDto {
     operationSightingId: string;
     sightingTime: string;
     createdAt: string;

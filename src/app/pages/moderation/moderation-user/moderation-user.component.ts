@@ -14,8 +14,8 @@ import { distinctUntilChanged, firstValueFrom, lastValueFrom, map } from 'rxjs';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { UserState } from 'src/app/global-states/user.state';
-import { ModerationSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-sighting.dto';
-import { ModerationTraceDto } from 'src/app/libs/moderation/usecase/dtos/moderation-trace.dto';
+import { OperationSightingSummaryDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-summary.dto';
+import { UserAccessTraceDto } from 'src/app/libs/user/usecase/dtos/user-access-trace.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -115,9 +115,9 @@ export class ModerationUserComponent {
     readonly roleLabel = (role: string): string => ROLE_LABELS[role] ?? role;
     readonly trackBySighting = (
         _: number,
-        row: ModerationSightingDto,
+        row: OperationSightingSummaryDto,
     ): string => row.operationSightingId;
-    readonly trackByTrace = (_: number, row: ModerationTraceDto): string =>
+    readonly trackByTrace = (_: number, row: UserAccessTraceDto): string =>
         row.ip;
 
     constructor() {

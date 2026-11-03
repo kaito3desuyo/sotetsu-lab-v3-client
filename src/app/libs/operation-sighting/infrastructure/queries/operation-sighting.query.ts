@@ -8,11 +8,19 @@ import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
+import { OperationSightingAuthorDto } from '../../usecase/dtos/operation-sighting-author.dto';
+import { OperationSightingListParamsDto } from '../../usecase/dtos/operation-sighting-list-params.dto';
+import { OperationSightingRecentDto } from '../../usecase/dtos/operation-sighting-recent.dto';
+import { OperationSightingSummaryDto } from '../../usecase/dtos/operation-sighting-summary.dto';
 import { TIME_CROSS_SECTION_FIELDS } from '../../usecase/operation-sighting-time-cross-section-fields';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from '../../usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationSightingDtoBuilder } from '../builders/operation-sighting.dto.builder';
 import { OperationSightingTimeCrossSectionDtoBuilder } from '../builders/operation-sighting-time-cross-section.dto.builder';
+import {
+    OperationSightingRecentModel,
+    OperationSightingSummaryModel,
+} from '../models/operation-sighting-summary.model';
 import { OperationSightingTimeCrossSectionModel } from '../models/operation-sighting-time-cross-section.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
 
@@ -202,5 +210,63 @@ export class OperationSightingQuery {
                         ),
                 ),
             );
+    }
+
+    /** 投稿者ごとの目撃。QueryCache を通さず、呼ぶたびに取る */
+    findManyByUserId(
+        userId: string,
+        params: OperationSightingListParamsDto = {},
+    ): Observable<OperationSightingSummaryDto[]> {
+        return this.#http
+            .get<OperationSightingSummaryModel[]>(
+                `${environment.apiUrl}/v3/users/${encodeURIComponent(userId)}/operation-sightings`,
+                { params: this.#listParams(params) },
+            )
+            .pipe(
+                map((models) =>
+                    OperationSightingDtoBuilder.buildSummariesFromModels(
+                        models,
+                    ),
+                ),
+            );
+    }
+
+    /** 新着の目撃（投稿者つき）。QueryCache を通さず、呼ぶたびに取る */
+    findManyRecent(
+        params: OperationSightingListParamsDto = {},
+    ): Observable<OperationSightingRecentDto[]> {
+        return this.#http
+            .get<OperationSightingRecentModel[]>(`${this.#v3ApiUrl}/recent`, {
+                params: this.#listParams(params),
+            })
+            .pipe(
+                map((models) =>
+                    OperationSightingDtoBuilder.buildRecentsFromModels(models),
+                ),
+            );
+    }
+
+    /** 投稿者。QueryCache を通さず、呼ぶたびに取る */
+    findAuthor(
+        operationSightingId: string,
+    ): Observable<OperationSightingAuthorDto> {
+        return this.#http
+            .get<{
+                userId: string | null;
+            }>(
+                `${this.#v3ApiUrl}/${encodeURIComponent(operationSightingId)}/author`,
+            )
+            .pipe(map(({ userId }) => ({ userId })));
+    }
+
+    #listParams({ limit, before }: OperationSightingListParamsDto): HttpParams {
+        let params = new HttpParams();
+        if (limit !== undefined) {
+            params = params.set('limit', limit);
+        }
+        if (before !== undefined) {
+            params = params.set('before', before);
+        }
+        return params;
     }
 }

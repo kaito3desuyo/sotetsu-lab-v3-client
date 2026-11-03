@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { ModerationBulkInvalidateResultDto } from 'src/app/libs/moderation/usecase/dtos/moderation-bulk-invalidate-result.dto';
-import { ModerationUserSummaryDto } from 'src/app/libs/moderation/usecase/dtos/moderation-user-summary.dto';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { InvalidateManyOperationSightingsResultDto } from 'src/app/libs/operation-sighting/usecase/dtos/invalidate-many-operation-sightings-result.dto';
+import { UserSummaryDto } from 'src/app/libs/user/usecase/dtos/user-summary.dto';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { UserService } from 'src/app/libs/user/usecase/user.service';
 import { ModerationUserStore } from '../stores/moderation-user.store';
 
 /** 1 回の取得で頼む件数。これに満たなければ、もう古い目撃は無い */
@@ -12,7 +13,8 @@ export const MODERATION_USER_PAGE_SIZE = 100;
 @Injectable()
 export class ModerationUserService {
     readonly #store = inject(ModerationUserStore);
-    readonly #moderationService = inject(ModerationService);
+    readonly #userService = inject(UserService);
+    readonly #operationSightingService = inject(OperationSightingService);
 
     /** 要約と目撃の先頭 1 ページを取り直す（初回と、無効化のあとの取り直し） */
     fetchUser(userId: string): Observable<void> {
@@ -21,8 +23,8 @@ export class ModerationUserService {
         }
         const seq = this.#store.nextSightingsSeq();
         return forkJoin({
-            summary: this.#moderationService.getUser(userId),
-            rows: this.#moderationService.getUserSightings(userId, {
+            summary: this.#userService.findSummary(userId),
+            rows: this.#operationSightingService.findManyByUserId(userId, {
                 limit: MODERATION_USER_PAGE_SIZE,
             }),
         }).pipe(
@@ -49,8 +51,8 @@ export class ModerationUserService {
             return of(undefined);
         }
         const seq = this.#store.nextSightingsSeq();
-        return this.#moderationService
-            .getUserSightings(userId, {
+        return this.#operationSightingService
+            .findManyByUserId(userId, {
                 limit: MODERATION_USER_PAGE_SIZE,
                 before: last.createdAt,
             })
@@ -76,7 +78,7 @@ export class ModerationUserService {
             return of(undefined);
         }
         const seq = this.#store.nextTracesSeq();
-        return this.#moderationService.getUserTraces(userId).pipe(
+        return this.#userService.findAccessTraces(userId).pipe(
             tap((traces) => {
                 if (
                     this.#isCurrent(userId) &&
@@ -92,27 +94,24 @@ export class ModerationUserService {
     invalidateSightings(
         ids: string[],
         reason: string,
-    ): Observable<ModerationBulkInvalidateResultDto> {
-        return this.#moderationService.invalidateSightings({ ids, reason });
+    ): Observable<InvalidateManyOperationSightingsResultDto> {
+        return this.#operationSightingService.invalidateMany({ ids, reason });
     }
 
-    ban(userId: string, reason: string): Observable<ModerationUserSummaryDto> {
-        return this.#moderationService
+    ban(userId: string, reason: string): Observable<UserSummaryDto> {
+        return this.#userService
             .ban(userId, reason)
             .pipe(tap((summary) => this.#replaceSummary(summary)));
     }
 
-    unban(
-        userId: string,
-        reason?: string,
-    ): Observable<ModerationUserSummaryDto> {
-        return this.#moderationService
+    unban(userId: string, reason?: string): Observable<UserSummaryDto> {
+        return this.#userService
             .unban(userId, reason)
             .pipe(tap((summary) => this.#replaceSummary(summary)));
     }
 
     /** 返ってきた要約を出す。そのあいだに別の人のページへ移っていたら捨てる */
-    #replaceSummary(summary: ModerationUserSummaryDto): void {
+    #replaceSummary(summary: UserSummaryDto): void {
         if (this.#isCurrent(summary.userId)) {
             this.#store.setSummary(summary);
         }

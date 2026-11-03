@@ -1,6 +1,6 @@
-import { ModerationSightingDto } from './moderation-sighting.dto';
+import { OperationSightingSummaryDto } from './operation-sighting-summary.dto';
 
-export interface ModerationRecentSightingDto extends ModerationSightingDto {
+export interface OperationSightingRecentDto extends OperationSightingSummaryDto {
     /** ゲスト（投稿者の無い目撃）は null */
     author: {
         userId: string;

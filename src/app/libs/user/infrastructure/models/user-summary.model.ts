@@ -1,4 +1,4 @@
-export interface ModerationUserSummaryModel {
+export interface UserSummaryModel {
     userId: string;
     username: string;
     displayName: string;

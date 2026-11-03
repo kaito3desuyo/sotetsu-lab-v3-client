@@ -1,4 +1,5 @@
-export interface ModerationTraceModel {
+export interface UserAccessTraceDto {
+    /** IPv6 は /64 の網 */
     ip: string;
     userAgents: string[];
     count: number;

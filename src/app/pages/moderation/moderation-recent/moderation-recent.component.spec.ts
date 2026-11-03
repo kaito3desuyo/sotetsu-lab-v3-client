@@ -2,18 +2,18 @@ import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { ModerationRecentSightingDto } from 'src/app/libs/moderation/usecase/dtos/moderation-recent-sighting.dto';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { OperationSightingRecentDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-recent.dto';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { ModerationRecentComponent } from './moderation-recent.component';
 import { ModerationRecentService } from './services/moderation-recent.service';
 
-type Author = NonNullable<ModerationRecentSightingDto['author']>;
+type Author = NonNullable<OperationSightingRecentDto['author']>;
 
 function sighting(
     id: string,
-    overrides: Partial<ModerationRecentSightingDto> = {},
-): ModerationRecentSightingDto {
+    overrides: Partial<OperationSightingRecentDto> = {},
+): OperationSightingRecentDto {
     return {
         operationSightingId: id,
         sightingTime: '2026-11-02T10:00:00.000Z',
@@ -41,11 +41,11 @@ function author(overrides: Partial<Author> = {}): Author {
 
 describe('ModerationRecentComponent', () => {
     let fixture: ComponentFixture<ModerationRecentComponent>;
-    let getRecentSightings: jest.Mock;
+    let findManyRecent: jest.Mock;
     let notificationOpen: jest.Mock;
 
-    async function render(first: ModerationRecentSightingDto[] | Error) {
-        getRecentSightings = jest
+    async function render(first: OperationSightingRecentDto[] | Error) {
+        findManyRecent = jest
             .fn()
             .mockReturnValue(
                 first instanceof Error ? throwError(() => first) : of(first),
@@ -57,8 +57,8 @@ describe('ModerationRecentComponent', () => {
                 provideRouter([]),
                 ModerationRecentService,
                 {
-                    provide: ModerationService,
-                    useValue: { getRecentSightings },
+                    provide: OperationSightingService,
+                    useValue: { findManyRecent },
                 },
                 {
                     provide: NotificationService,
@@ -79,7 +79,7 @@ describe('ModerationRecentComponent', () => {
     it('新しい順に 100 件を頼み、投稿時刻（日本時間）・運番・編成を出す', async () => {
         await render([sighting('s1')]);
 
-        expect(getRecentSightings).toHaveBeenCalledWith({ limit: 100 });
+        expect(findManyRecent).toHaveBeenCalledWith({ limit: 100 });
         const cells = el().querySelectorAll('tbody tr')[0].textContent;
         expect(cells).toContain('11/2 19:00:05');
         expect(cells).toContain('10A');
@@ -145,7 +145,7 @@ describe('ModerationRecentComponent', () => {
             }),
         );
         await render(page);
-        getRecentSightings.mockReturnValue(
+        findManyRecent.mockReturnValue(
             of([sighting('older', { createdAt: '2026-11-01T00:00:00.000Z' })]),
         );
 
@@ -156,7 +156,7 @@ describe('ModerationRecentComponent', () => {
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(getRecentSightings).toHaveBeenLastCalledWith({
+        expect(findManyRecent).toHaveBeenLastCalledWith({
             limit: 100,
             before: page[99].createdAt,
         });
@@ -176,12 +176,12 @@ describe('ModerationRecentComponent', () => {
             b.textContent?.includes('再読み込み'),
         );
 
-        getRecentSightings.mockReturnValue(of([sighting('s1')]));
+        findManyRecent.mockReturnValue(of([sighting('s1')]));
         retry.click();
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(getRecentSightings).toHaveBeenCalledTimes(2);
+        expect(findManyRecent).toHaveBeenCalledTimes(2);
         expect(el()).not.toHaveTextContent('読み込めませんでした');
         expect(el().querySelectorAll('tbody tr')).toHaveLength(1);
     });

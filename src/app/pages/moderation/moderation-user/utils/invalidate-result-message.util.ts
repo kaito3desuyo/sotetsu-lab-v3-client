@@ -1,4 +1,4 @@
-import { ModerationBulkInvalidateResultDto } from 'src/app/libs/moderation/usecase/dtos/moderation-bulk-invalidate-result.dto';
+import { InvalidateManyOperationSightingsResultDto } from 'src/app/libs/operation-sighting/usecase/dtos/invalidate-many-operation-sightings-result.dto';
 
 /**
  * まとめての無効化の結果を、1 つの通知の文にする。
@@ -6,7 +6,7 @@ import { ModerationBulkInvalidateResultDto } from 'src/app/libs/moderation/useca
  * @param failedLabel 止まった目撃の呼び名（運番など）。一覧に無ければ id の頭を使う
  */
 export function buildInvalidateResultMessage(
-    result: ModerationBulkInvalidateResultDto,
+    result: InvalidateManyOperationSightingsResultDto,
     failedLabel?: string,
 ): string {
     const parts = [`${result.invalidated.length} 件を無効にしました`];

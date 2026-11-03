@@ -10,7 +10,7 @@ import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
-import { ModerationService } from 'src/app/libs/moderation/usecase/moderation.service';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { UserState } from 'src/app/global-states/user.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -44,7 +44,7 @@ export class OperationPastTimeTableComponent {
     readonly #router = inject(Router);
     readonly #userState = inject(UserState);
     readonly #operationPastTimeService = inject(OperationPastTimeService);
-    readonly #moderationService = inject(ModerationService);
+    readonly #operationSightingService = inject(OperationSightingService);
     readonly #notificationService = inject(NotificationService);
     readonly #operationSightingInvalidationDialogService = inject(
         OperationSightingInvalidationDialogService,
@@ -150,8 +150,8 @@ export class OperationPastTimeTableComponent {
     }
 
     #viewAuthor(sighting: OperationSightingDetailsDto): void {
-        this.#moderationService
-            .getSightingAuthor(sighting.operationSightingId)
+        this.#operationSightingService
+            .findAuthor(sighting.operationSightingId)
             .subscribe({
                 next: ({ userId }) => {
                     if (userId) {
