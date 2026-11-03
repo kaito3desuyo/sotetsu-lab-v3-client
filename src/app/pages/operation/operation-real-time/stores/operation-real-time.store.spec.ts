@@ -275,6 +275,27 @@ describe('OperationRealTimeStore', () => {
         );
     });
 
+    it('restoreSnapshot は履歴を新しいとは見なさず、snapshot にも入れない', () => {
+        const store = TestBed.inject(OperationRealTimeStore);
+        store.setHistoriesFresh(true);
+        const snapshot = store.snapshot();
+
+        store.restoreSnapshot(snapshot, 1_700_000_000_000);
+
+        expect(store.historiesFresh()).toBe(false);
+        expect(Object.keys(snapshot)).not.toContain('historiesFresh');
+    });
+
+    it('historiesFresh は最初 false で、setHistoriesFresh で切り替わる', () => {
+        const store = TestBed.inject(OperationRealTimeStore);
+
+        expect(store.historiesFresh()).toBe(false);
+
+        store.setHistoriesFresh(true);
+
+        expect(store.historiesFresh()).toBe(true);
+    });
+
     it('圏外用の保存は main のキーで、保存した中身と時刻を戻す', async () => {
         const store = TestBed.inject(OperationRealTimeStore);
         store.setRoutes([{ routeId: 'r-1' }] as never);

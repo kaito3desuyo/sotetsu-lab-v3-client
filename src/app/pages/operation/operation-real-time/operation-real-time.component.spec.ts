@@ -378,6 +378,7 @@ describe('OperationRealTimeComponent の目撃募集の帯', () => {
             store.setCurrentPosition(operationNumber, running);
             store.setOperationSightingHistory(operationNumber, []);
         }
+        store.setHistoriesFresh(true);
         fixture = TestBed.createComponent(OperationRealTimeComponent);
         fixture.detectChanges();
     });
@@ -398,6 +399,18 @@ describe('OperationRealTimeComponent の目撃募集の帯', () => {
         fixture.detectChanges();
 
         expect(callOperations()).toEqual(['52K']);
+    });
+
+    it('今日の履歴を取れていない間は、在線と空の履歴があっても帯の対象を出さない', () => {
+        store.setHistoriesFresh(false);
+        fixture.detectChanges();
+
+        expect(callOperations()).toEqual([]);
+
+        store.setHistoriesFresh(true);
+        fixture.detectChanges();
+
+        expect(callOperations()).toEqual(['12K', '52K']);
     });
 
     it('目撃募集の帯は操作帯と凡例の間に置く', () => {

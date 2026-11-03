@@ -87,6 +87,7 @@ export class OperationRealTimeComponent {
     readonly #selectedGroupNames = this.#store.normalizedSelectedGroupNames;
     readonly #currentPositions = this.#store.currentPositions;
     readonly #sightingHistories = this.#store.operationSightingHistories;
+    readonly #historiesFresh = this.#store.historiesFresh;
 
     readonly filterActive = computed(
         () =>
@@ -112,8 +113,10 @@ export class OperationRealTimeComponent {
     });
 
     /** 目撃募集の帯の対象。運用順の一覧と同じ絞り込みを通してから選ぶ（並びも同じ） */
-    readonly callOperations = computed(() =>
-        selectSightingCallOperations({
+    readonly callOperations = computed(() => {
+        // 圏外の保存から戻した古い履歴では選ばない（今日の履歴を取れてから）
+        if (!this.#historiesFresh()) return [];
+        return selectSightingCallOperations({
             operations: filterRealTimeOperations(
                 this.#operations(),
                 this.#selectedAgencyIds(),
@@ -123,8 +126,8 @@ export class OperationRealTimeComponent {
             ),
             currentPositions: this.#currentPositions(),
             histories: this.#sightingHistories(),
-        }),
-    );
+        });
+    });
 
     onClearFilter(): void {
         this.#store.setSelectedAgencyIds([]);

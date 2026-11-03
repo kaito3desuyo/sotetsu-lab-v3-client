@@ -56,6 +56,8 @@ type StoreProps = {
     >;
     operationSightingHistories: Record<string, OperationSightingDetailsDto[]>;
     formationSightingHistories: Record<string, OperationSightingDetailsDto[]>;
+    /** 今日の目撃履歴を取得できたか。圏外の保存から戻した履歴は古いので false（保存には入れない） */
+    historiesFresh: boolean;
     currentPositions: Record<string, OperationCurrentPositionDto>;
     finalUpdateTime: number;
     loadingQueue: boolean[];
@@ -107,6 +109,7 @@ export const OperationRealTimeStore = signalStore(
         formationSightingTimeCrossSections: {},
         operationSightingHistories: {},
         formationSightingHistories: {},
+        historiesFresh: false,
         currentPositions: {},
         finalUpdateTime: Math.floor(Date.now() / 1000),
         loadingQueue: [],
@@ -242,6 +245,9 @@ export const OperationRealTimeStore = signalStore(
                 },
             }));
         },
+        setHistoriesFresh(historiesFresh: boolean): void {
+            patchState(store, { historiesFresh });
+        },
         setCurrentPosition(
             operationNumber: string,
             currentPosition: OperationCurrentPositionDto,
@@ -309,6 +315,8 @@ export const OperationRealTimeStore = signalStore(
                     data.formationSightingTimeCrossSections,
                 operationSightingHistories: data.operationSightingHistories,
                 formationSightingHistories: data.formationSightingHistories,
+                // 保存した履歴は今日のものとは限らない。取り直すまで新しいとは見なさない
+                historiesFresh: false,
                 currentPositions: data.currentPositions,
                 finalUpdateTime: Math.floor(savedAt / 1000),
             });
