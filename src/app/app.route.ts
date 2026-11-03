@@ -73,6 +73,19 @@ export const APP_ROUTES: Routes = [
         runGuardsAndResolvers: 'always',
     },
     {
+        // M18 投稿管理。editor / manager だけ（守りは moderation.route.ts）。SSR では描かない
+        path: 'moderation',
+        loadChildren: () =>
+            import('./pages/moderation/moderation.route').then(
+                (mod) => mod.MODERATION_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
         path: 'library',
         loadChildren: () =>
             import('./pages/library/library.route').then(

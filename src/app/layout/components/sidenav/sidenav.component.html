@@ -122,6 +122,17 @@
             <span matListItemTitle>相鉄の車両</span>
         </a>
 
+        @if (canModerate()) {
+            <h3 matSubheader>管理</h3>
+            <a
+                mat-list-item
+                routerLink="/moderation"
+                routerLinkActive="is-active"
+            >
+                <span matListItemTitle>投稿管理</span>
+            </a>
+        }
+
         <h3 matSubheader>このサイトについて</h3>
         <a
             mat-list-item

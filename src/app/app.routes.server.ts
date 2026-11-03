@@ -27,6 +27,12 @@ export const serverRoutes: ServerRoute[] = [
         renderMode: RenderMode.Client,
         headers: NO_STORE,
     },
+    { path: 'moderation', renderMode: RenderMode.Client, headers: NO_STORE },
+    {
+        path: 'moderation/**',
+        renderMode: RenderMode.Client,
+        headers: NO_STORE,
+    },
     { path: '', renderMode: RenderMode.Server, headers: LONG },
     {
         path: 'operation/real-time',

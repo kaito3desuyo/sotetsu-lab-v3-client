@@ -1,0 +1,52 @@
+<form
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-6"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+>
+    <header class="tw-flex tw-flex-row tw-items-center tw-justify-between">
+        <h2 class="tw-m-0 tw-text-2xl tw-font-normal">{{ data.title }}</h2>
+        <button
+            mat-icon-button
+            type="button"
+            tabindex="-1"
+            aria-label="ダイアログを閉じる"
+            (click)="onCancel()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+        <div class="tw-flex tw-flex-col tw-gap-1">
+            @for (line of data.lines; track $index) {
+                <p class="tw-m-0">{{ line }}</p>
+            }
+        </div>
+        <mat-form-field>
+            <mat-label>
+                理由{{ data.reasonRequired ? '' : '（任意）' }}
+            </mat-label>
+            <textarea matInput formControlName="reason" rows="3"></textarea>
+            <mat-hint align="end">
+                {{ form.controls.reason.value.length }} / {{ maxLength }}
+            </mat-hint>
+            @if (form.controls.reason.hasError('required')) {
+                <mat-error>必須項目です</mat-error>
+            } @else if (form.controls.reason.hasError('maxlength')) {
+                <mat-error>{{ maxLength }} 字までです</mat-error>
+            }
+        </mat-form-field>
+    </div>
+    <div class="tw-flex tw-flex-row tw-justify-center tw-gap-4">
+        <button mat-button type="button" color="primary" (click)="onCancel()">
+            キャンセル
+        </button>
+        <button
+            mat-flat-button
+            type="submit"
+            color="warn"
+            [disabled]="form.invalid"
+        >
+            {{ data.confirmLabel }}
+        </button>
+    </div>
+</form>

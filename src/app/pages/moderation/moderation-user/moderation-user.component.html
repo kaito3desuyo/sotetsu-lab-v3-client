@@ -1,0 +1,485 @@
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <a
+        class="tw-self-start tw-text-sm tw-text-primary-500 tw-underline"
+        [routerLink]="['/moderation']"
+    >
+        投稿管理の一覧へ戻る
+    </a>
+
+    @if (notFound()) {
+        <app-empty-state
+            icon="person_off"
+            message="投稿者が見つかりません"
+        ></app-empty-state>
+    } @else if (firstFetchFailed() && !hasFetched()) {
+        <app-empty-state
+            icon="error_outline"
+            message="読み込めませんでした"
+            subtitle="通信の状態を確かめて、もう一度お試しください。"
+            actionLabel="再読み込み"
+            (actionClick)="reload()"
+        ></app-empty-state>
+    } @else if (!summary() || !hasFetched()) {
+        <div
+            class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+            aria-label="読み込み中"
+            data-testid="moderation-user-skeleton"
+        >
+            @for (row of skeletonRows; track row) {
+                <app-skeleton-bar class="tw-h-5 tw-w-full"></app-skeleton-bar>
+            }
+        </div>
+    } @else {
+        <!-- 1 段目: 要約 -->
+        @if (summary(); as s) {
+            <section
+                class="tw-flex tw-flex-col tw-gap-1 tw-rounded-card tw-bg-white tw-p-4"
+                data-testid="moderation-user-summary"
+            >
+                <p
+                    class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-x-3 tw-gap-y-1"
+                >
+                    <span class="tw-text-lg tw-font-bold">{{
+                        s.username
+                    }}</span>
+                    <span class="tw-text-sm"
+                        >（表示名 {{ s.displayName }}）</span
+                    >
+                    <span class="tw-text-sm">
+                        役割: {{ roleLabel(s.role) }}（{{ s.role }}）
+                    </span>
+                    @if (s.banned) {
+                        <span
+                            class="tw-whitespace-nowrap tw-rounded-chip tw-bg-red-100 tw-px-2 tw-text-sm tw-font-bold tw-text-red-700"
+                        >
+                            BAN 中
+                        </span>
+                    }
+                </p>
+                <p class="tw-m-0 tw-text-sm">
+                    登録 {{ formatTimeWithYear(s.createdAt) }}
+                </p>
+                <p class="tw-m-0 tw-text-sm">
+                    目撃 {{ s.sightingCount }} 件（うち無効
+                    {{ s.invalidatedCount }} 件）
+                    @if (s.firstSightingAt) {
+                        　初投稿 {{ formatTime(s.firstSightingAt) }}
+                    }
+                    @if (s.lastSightingAt) {
+                        　最終 {{ formatTime(s.lastSightingAt) }}
+                    }
+                </p>
+            </section>
+        }
+
+        <!-- 2 段目: manager だけ。BAN と手がかり -->
+        @if (isManager()) {
+            <section
+                class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+                data-testid="moderation-ban-section"
+            >
+                <h3 class="mat-h3 !tw-m-0">BAN</h3>
+                @if (canBan()) {
+                    <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-4">
+                        @if (summary()?.banned) {
+                            <button
+                                mat-stroked-button
+                                type="button"
+                                data-testid="ban-button"
+                                [disabled]="isLoading()"
+                                (click)="toggleBan()"
+                            >
+                                BAN を解く
+                            </button>
+                            <span class="tw-text-sm tw-text-muted">
+                                理由は書かなくてもかまいません。元の役割に戻ります。
+                            </span>
+                        } @else {
+                            <button
+                                mat-flat-button
+                                color="warn"
+                                type="button"
+                                data-testid="ban-button"
+                                [disabled]="isLoading()"
+                                (click)="toggleBan()"
+                            >
+                                BAN（viewer に格下げ）
+                            </button>
+                            <span class="tw-text-sm tw-text-muted">
+                                理由を書いて確定します。解くときは元の役割に戻ります。
+                            </span>
+                        }
+                    </div>
+                } @else {
+                    <p class="tw-m-0 tw-text-sm tw-text-muted">
+                        自分と manager の人は BAN できません。
+                    </p>
+                }
+            </section>
+
+            <section
+                class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+                data-testid="moderation-traces-section"
+            >
+                <h3 class="mat-h3 !tw-m-0">
+                    手がかり
+                    <span class="tw-text-sm tw-font-normal">
+                        （投稿・登録のときの記録）
+                    </span>
+                </h3>
+                @if (tracesFailed()) {
+                    <app-empty-state
+                        icon="error_outline"
+                        message="手がかりを読み込めませんでした"
+                        actionLabel="再読み込み"
+                        (actionClick)="reloadTraces()"
+                    ></app-empty-state>
+                } @else if (traces() === null) {
+                    <app-skeleton-bar
+                        class="tw-h-5 tw-w-full"
+                    ></app-skeleton-bar>
+                } @else if (traces().length === 0) {
+                    <p class="tw-m-0 tw-text-sm tw-text-muted">
+                        記録はありません。
+                    </p>
+                } @else {
+                    <div class="tw-overflow-x-auto">
+                        <table
+                            mat-table
+                            class="tw-w-full"
+                            [dataSource]="traces()"
+                            [trackBy]="trackByTrace"
+                        >
+                            <ng-container matColumnDef="ip">
+                                <th
+                                    mat-header-cell
+                                    class="tw-whitespace-nowrap"
+                                    *matHeaderCellDef
+                                >
+                                    IP アドレス
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    <span class="tw-whitespace-nowrap">
+                                        {{ row.ip }}
+                                    </span>
+                                    @if (row.shared) {
+                                        <span
+                                            class="tw-ml-1 tw-whitespace-nowrap tw-text-xs tw-text-muted"
+                                        >
+                                            共用
+                                        </span>
+                                    }
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="userAgents">
+                                <th
+                                    mat-header-cell
+                                    class="tw-whitespace-nowrap"
+                                    *matHeaderCellDef
+                                >
+                                    端末
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    <div
+                                        class="tw-flex tw-max-w-xs tw-flex-col tw-gap-1 tw-py-2"
+                                    >
+                                        @for (
+                                            ua of row.userAgents;
+                                            track $index
+                                        ) {
+                                            <span
+                                                class="tw-truncate tw-text-sm"
+                                                [attr.title]="ua"
+                                            >
+                                                {{ ua }}
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="count">
+                                <th
+                                    mat-header-cell
+                                    class="tw-whitespace-nowrap"
+                                    *matHeaderCellDef
+                                >
+                                    回数
+                                </th>
+                                <td
+                                    mat-cell
+                                    *matCellDef="let row"
+                                    class="tw-whitespace-nowrap"
+                                >
+                                    {{ row.count }}
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="lastSeenAt">
+                                <th
+                                    mat-header-cell
+                                    class="tw-whitespace-nowrap"
+                                    *matHeaderCellDef
+                                >
+                                    最後
+                                </th>
+                                <td
+                                    mat-cell
+                                    *matCellDef="let row"
+                                    class="tw-whitespace-nowrap"
+                                >
+                                    {{ formatTime(row.lastSeenAt) }}
+                                </td>
+                            </ng-container>
+
+                            <ng-container matColumnDef="otherAccounts">
+                                <th
+                                    mat-header-cell
+                                    class="tw-whitespace-nowrap"
+                                    *matHeaderCellDef
+                                >
+                                    同じ手がかりのアカウント
+                                </th>
+                                <td mat-cell *matCellDef="let row">
+                                    <div
+                                        class="tw-flex tw-flex-col tw-gap-1 tw-py-2"
+                                    >
+                                        <span class="tw-text-xs tw-text-muted">
+                                            {{ row.accountCount }}
+                                            件のアカウント
+                                        </span>
+                                        @for (
+                                            account of row.otherAccounts;
+                                            track account.userId
+                                        ) {
+                                            <span
+                                                class="tw-flex tw-items-center tw-gap-2"
+                                            >
+                                                <a
+                                                    class="tw-text-primary-500 tw-underline"
+                                                    [routerLink]="[
+                                                        '/moderation',
+                                                        'users',
+                                                        account.userId,
+                                                    ]"
+                                                >
+                                                    {{ account.username }}
+                                                </a>
+                                                @if (account.banned) {
+                                                    <span
+                                                        class="tw-whitespace-nowrap tw-rounded-chip tw-bg-red-100 tw-px-2 tw-text-xs tw-font-bold tw-text-red-700"
+                                                    >
+                                                        BAN 中
+                                                    </span>
+                                                }
+                                            </span>
+                                        } @empty {
+                                            <span class="tw-text-sm">なし</span>
+                                        }
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <tr
+                                mat-header-row
+                                *matHeaderRowDef="traceColumns"
+                            ></tr>
+                            <tr
+                                mat-row
+                                *matRowDef="let row; columns: traceColumns"
+                                [class.tw-opacity-50]="row.shared"
+                            ></tr>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+
+        <!-- 3 段目: 目撃の一覧とまとめての無効化 -->
+        <section
+            class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+            data-testid="moderation-sightings-section"
+        >
+            <h3 class="mat-h3 !tw-m-0">目撃の一覧</h3>
+            <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-4">
+                <button
+                    mat-flat-button
+                    color="warn"
+                    type="button"
+                    data-testid="bulk-invalidate-button"
+                    [disabled]="
+                        selectedCount() === 0 ||
+                        overSelectionLimit() ||
+                        isLoading()
+                    "
+                    (click)="invalidateSelected()"
+                >
+                    選んだ {{ selectedCount() }} 件を無効にする
+                </button>
+                <mat-checkbox
+                    data-testid="select-all-valid"
+                    [checked]="allValidSelected()"
+                    [disabled]="sightings().length === 0"
+                    (change)="toggleAllValid($event.checked)"
+                >
+                    まだ有効なものを全部選ぶ
+                </mat-checkbox>
+                @if (overSelectionLimit()) {
+                    <span class="tw-text-sm tw-text-red-700">
+                        一度に {{ maxIds }} 件まで（いま
+                        {{ selectedCount() }} 件）
+                    </span>
+                }
+            </div>
+
+            @if (sightings().length === 0) {
+                <app-empty-state
+                    icon="inbox"
+                    message="投稿はまだありません"
+                ></app-empty-state>
+            } @else {
+                <div class="tw-overflow-x-auto">
+                    <table
+                        mat-table
+                        class="tw-w-full"
+                        [dataSource]="sightings()"
+                        [trackBy]="trackBySighting"
+                    >
+                        <ng-container matColumnDef="select">
+                            <th
+                                mat-header-cell
+                                class="tw-whitespace-nowrap"
+                                *matHeaderCellDef
+                            ></th>
+                            <td mat-cell *matCellDef="let row">
+                                <mat-checkbox
+                                    [attr.data-testid]="
+                                        'select-row-' + row.operationSightingId
+                                    "
+                                    [attr.aria-label]="
+                                        row.operationNumber + ' を選ぶ'
+                                    "
+                                    [checked]="
+                                        selectedSet().has(
+                                            row.operationSightingId
+                                        )
+                                    "
+                                    [disabled]="row.invalidated"
+                                    (change)="
+                                        toggleRow(
+                                            row.operationSightingId,
+                                            $event.checked
+                                        )
+                                    "
+                                ></mat-checkbox>
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="createdAt">
+                            <th
+                                mat-header-cell
+                                class="tw-whitespace-nowrap"
+                                *matHeaderCellDef
+                            >
+                                投稿時刻
+                            </th>
+                            <td
+                                mat-cell
+                                *matCellDef="let row"
+                                class="tw-whitespace-nowrap"
+                            >
+                                {{ formatTime(row.createdAt) }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="operationNumber">
+                            <th
+                                mat-header-cell
+                                class="tw-whitespace-nowrap"
+                                *matHeaderCellDef
+                            >
+                                運番
+                            </th>
+                            <td
+                                mat-cell
+                                *matCellDef="let row"
+                                class="tw-whitespace-nowrap"
+                            >
+                                {{ row.operationNumber }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="formationNumber">
+                            <th
+                                mat-header-cell
+                                class="tw-whitespace-nowrap"
+                                *matHeaderCellDef
+                            >
+                                編成
+                            </th>
+                            <td
+                                mat-cell
+                                *matCellDef="let row"
+                                class="tw-whitespace-nowrap"
+                            >
+                                {{ row.formationNumber }}
+                            </td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="status">
+                            <th
+                                mat-header-cell
+                                class="tw-whitespace-nowrap"
+                                *matHeaderCellDef
+                            >
+                                状態
+                            </th>
+                            <td
+                                mat-cell
+                                *matCellDef="let row"
+                                class="tw-whitespace-nowrap"
+                            >
+                                @if (row.invalidated) {
+                                    <span class="tw-text-muted">無効</span>
+                                    @if (row.invalidatedBy; as by) {
+                                        <span class="tw-text-xs tw-text-muted">
+                                            （{{ by.username }}）
+                                        </span>
+                                    }
+                                } @else {
+                                    有効
+                                }
+                            </td>
+                        </ng-container>
+
+                        <tr
+                            mat-header-row
+                            *matHeaderRowDef="sightingColumns"
+                        ></tr>
+                        <tr
+                            mat-row
+                            *matRowDef="let row; columns: sightingColumns"
+                            [class.tw-opacity-60]="row.invalidated"
+                        ></tr>
+                    </table>
+                </div>
+
+                @if (hasMore()) {
+                    <div>
+                        <app-button
+                            variant="secondary"
+                            [fullWidth]="false"
+                            [disabled]="isLoading()"
+                            (buttonClick)="loadMore()"
+                        >
+                            もっと見る
+                        </app-button>
+                    </div>
+                }
+            }
+        </section>
+    }
+</main>

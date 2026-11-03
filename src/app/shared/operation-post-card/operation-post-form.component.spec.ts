@@ -421,6 +421,39 @@ describe('OperationPostFormComponent の表示（テンプレートあり）', (
         expect(links).toContain('/register?return_to=/operation/real-time');
     });
 
+    it('viewer にはフォームでなく「投稿できません」を出す', () => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            role: 'viewer',
+        });
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el).toHaveTextContent('投稿できません');
+        expect(el.querySelector('form')).toBeNull();
+        expect(el).not.toHaveTextContent('ログインが必要です');
+    });
+
+    it('viewer でもフラグ off ならフォームを出さない', () => {
+        setRegisteredOnly(false);
+        patchState(unprotected(TestBed.inject(UserState)), {
+            role: 'viewer',
+        });
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement.querySelector('form')).toBeNull();
+    });
+
+    it('reporter にはフォームを出す', () => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            role: 'reporter',
+        });
+        fixture.detectChanges();
+
+        const el: HTMLElement = fixture.nativeElement;
+        expect(el.querySelector('form')).not.toBeNull();
+        expect(el).not.toHaveTextContent('投稿できません');
+    });
+
     it('フラグ off のゲストにはフォームを出す（案内は出さない）', () => {
         setRegisteredOnly(false);
         setLoggedIn(false);

@@ -1,0 +1,187 @@
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <p class="tw-m-0 tw-text-sm tw-text-muted">
+        目撃の投稿を新しい順に並べています。投稿者の名前を押すと、その人の投稿をまとめて見られます。
+    </p>
+
+    @if (firstFetchFailed() && !hasFetched()) {
+        <app-empty-state
+            icon="error_outline"
+            message="読み込めませんでした"
+            subtitle="通信の状態を確かめて、もう一度お試しください。"
+            actionLabel="再読み込み"
+            (actionClick)="reload()"
+        ></app-empty-state>
+    } @else if (!hasFetched()) {
+        <div
+            class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4"
+            aria-label="読み込み中"
+            data-testid="moderation-recent-skeleton"
+        >
+            @for (row of skeletonRows; track row) {
+                <app-skeleton-bar class="tw-h-5 tw-w-full"></app-skeleton-bar>
+            }
+        </div>
+    } @else if (sightings().length === 0) {
+        <app-empty-state
+            icon="inbox"
+            message="投稿はまだありません"
+        ></app-empty-state>
+    } @else {
+        <div class="tw-overflow-x-auto tw-rounded-card tw-bg-white">
+            <table
+                mat-table
+                class="tw-w-full"
+                [dataSource]="sightings()"
+                [trackBy]="trackBySighting"
+            >
+                <ng-container matColumnDef="createdAt">
+                    <th
+                        mat-header-cell
+                        class="tw-whitespace-nowrap"
+                        *matHeaderCellDef
+                    >
+                        投稿時刻
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let row"
+                        class="tw-whitespace-nowrap"
+                    >
+                        {{ formatTime(row.createdAt) }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="operationNumber">
+                    <th
+                        mat-header-cell
+                        class="tw-whitespace-nowrap"
+                        *matHeaderCellDef
+                    >
+                        運番
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let row"
+                        class="tw-whitespace-nowrap"
+                    >
+                        {{ row.operationNumber }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="formationNumber">
+                    <th
+                        mat-header-cell
+                        class="tw-whitespace-nowrap"
+                        *matHeaderCellDef
+                    >
+                        編成
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let row"
+                        class="tw-whitespace-nowrap"
+                    >
+                        {{ row.formationNumber }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="author">
+                    <th
+                        mat-header-cell
+                        class="tw-whitespace-nowrap"
+                        *matHeaderCellDef
+                    >
+                        投稿者
+                    </th>
+                    <td mat-cell *matCellDef="let row">
+                        @if (row.author; as author) {
+                            <div class="tw-flex tw-flex-col tw-gap-1 tw-py-2">
+                                <a
+                                    class="tw-font-bold tw-text-primary-500 tw-underline"
+                                    [routerLink]="[
+                                        '/moderation',
+                                        'users',
+                                        author.userId,
+                                    ]"
+                                >
+                                    {{ author.username }}
+                                </a>
+                                <span class="tw-text-xs tw-text-muted">
+                                    {{ author.displayName }}
+                                </span>
+                                @if (author.newAccount || author.burst) {
+                                    <span class="tw-flex tw-flex-wrap tw-gap-1">
+                                        @if (author.newAccount) {
+                                            <span
+                                                class="tw-whitespace-nowrap tw-rounded-chip tw-border tw-border-solid tw-border-accent-deep tw-px-2 tw-text-xs tw-text-accent-deep"
+                                            >
+                                                登録して間もない
+                                            </span>
+                                        }
+                                        @if (author.burst) {
+                                            <span
+                                                class="tw-whitespace-nowrap tw-rounded-chip tw-border tw-border-solid tw-border-accent-deep tw-px-2 tw-text-xs tw-text-accent-deep"
+                                            >
+                                                短い時間に多い
+                                            </span>
+                                        }
+                                    </span>
+                                }
+                            </div>
+                        } @else {
+                            <span class="tw-text-muted">ゲスト</span>
+                        }
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <th
+                        mat-header-cell
+                        class="tw-whitespace-nowrap"
+                        *matHeaderCellDef
+                    >
+                        状態
+                    </th>
+                    <td
+                        mat-cell
+                        *matCellDef="let row"
+                        class="tw-whitespace-nowrap"
+                    >
+                        @if (row.invalidated) {
+                            <span class="tw-text-muted">無効</span>
+                            @if (row.invalidatedBy; as by) {
+                                <span class="tw-text-xs tw-text-muted">
+                                    （{{ by.username }}）
+                                </span>
+                            }
+                        } @else {
+                            有効
+                        }
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="columns"></tr>
+                <tr
+                    mat-row
+                    *matRowDef="let row; columns: columns"
+                    [class.tw-opacity-60]="row.invalidated"
+                ></tr>
+            </table>
+        </div>
+
+        @if (hasMore()) {
+            <div>
+                <app-button
+                    variant="secondary"
+                    [fullWidth]="false"
+                    [disabled]="isLoading()"
+                    (buttonClick)="loadMore()"
+                >
+                    もっと見る
+                </app-button>
+            </div>
+        }
+    }
+</main>
