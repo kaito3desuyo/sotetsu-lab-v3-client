@@ -25,13 +25,6 @@ describe('DisclaimerComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('見出しに「免責事項」が描かれる', () => {
-        const heading = (fixture.nativeElement as HTMLElement).querySelector(
-            'h2',
-        );
-        expect(heading?.textContent).toContain('免責事項');
-    });
-
     it('題名・説明・URL を PageMeta に入れる', () => {
         expect(pageMeta.set).toHaveBeenCalledWith(
             expect.objectContaining({

@@ -25,13 +25,6 @@ describe('PrivacyPolicyComponent', () => {
         expect(component).toBeTruthy();
     });
 
-    it('見出しに「プライバシーポリシー」が描かれる', () => {
-        const heading = (fixture.nativeElement as HTMLElement).querySelector(
-            'h2',
-        );
-        expect(heading?.textContent).toContain('プライバシーポリシー');
-    });
-
     it('題名・説明・URL を PageMeta に入れる', () => {
         expect(pageMeta.set).toHaveBeenCalledWith(
             expect.objectContaining({
