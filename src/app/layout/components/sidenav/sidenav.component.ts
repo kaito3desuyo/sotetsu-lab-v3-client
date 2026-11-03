@@ -64,7 +64,7 @@ export class SidenavComponent {
         fragment: 'ignored',
     };
 
-    /** 見回りは editor / manager にだけ出す */
+    /** 投稿管理は editor / manager にだけ出す */
     readonly canModerate = this.#userState.canModerate;
 
     readonly todaysCalendarId = this.#todaysCalendarListState.todaysCalendarId;

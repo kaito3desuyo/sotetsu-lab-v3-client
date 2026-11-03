@@ -90,7 +90,7 @@ describe('moderationGuard', () => {
 
             expect(router.serializeUrl(result as UrlTree)).toBe('/');
             expect(notificationOpen).toHaveBeenCalledWith(
-                '見回りの権限がありません',
+                '投稿管理の権限がありません',
                 'OK',
             );
         },

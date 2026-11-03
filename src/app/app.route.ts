@@ -74,7 +74,7 @@ export const APP_ROUTES: Routes = [
         runGuardsAndResolvers: 'always',
     },
     {
-        // M18 投稿の見回り。editor / manager だけ（moderationGuard）。SSR では描かない
+        // M18 投稿管理。editor / manager だけ（moderationGuard）。SSR では描かない
         path: 'moderation',
         loadChildren: () =>
             import('./pages/moderation/moderation.route').then(

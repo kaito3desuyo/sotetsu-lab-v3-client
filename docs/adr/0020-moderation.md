@@ -1,4 +1,4 @@
-# ADR-0020: 投稿の見回り（M18）の画面 — トップレベルの `moderation/`、CSR、役割で出し分け
+# ADR-0020: 投稿管理（M18）の画面 — トップレベルの `moderation/`、CSR、役割で出し分け
 
 - **日時**: 2026-11-03
 - **Agent**: claude-sonnet-5-5
@@ -11,7 +11,7 @@
 ## 背景
 
 - 2026-11-01〜02 のゲストの荒らしを、EDITOR 1 人が 1 件ずつ無効にして片付けた（api の ADR-0013 の背景）。一人の投稿をまとめて無効にし、MANAGER が BAN でき、同じ手がかりの別アカウントを見つけられる画面が要る。
-- 入口は 2 つ。新しい「見回り」の一覧と、過去の運用表で目撃のセルを押したときのメニュー（ユーザー判断）。
+- 入口は 2 つ。新しい「投稿管理」の一覧と、過去の運用表で目撃のセルを押したときのメニュー（ユーザー判断）。
 - api に `/v3/moderation` の口ができた（EDITOR・MANAGER の読み取りと無効化、MANAGER だけの BAN・解除・手がかり）。役割は `reporter`・`editor`・`manager` に `viewer`（BAN 済み）が加わった。
 
 ## 決定
@@ -23,7 +23,7 @@
   - `/moderation/users/:userId` — 投稿者のページ（`moderation-user/`）。
 - 投稿者のページの部品は `moderation-user/components/` に置く（確認のダイアログ `moderation-confirm-dialog`）。ストア・サービスは他のページと同じ形（CLAUDE.md の標準ページ構成）。
 - API を包む `libs/moderation/` を足した。ページは `usecase/` の `ModerationService` だけを見る。
-- サイドナビの「管理」の節に「見回り」を足す。`canModerate()` が真のときだけ出す。
+- サイドナビの「管理」の節に「投稿管理」を足す。`canModerate()` が真のときだけ出す。
 
 ### SSR では描かない（CSR・NO_STORE）
 
@@ -33,7 +33,7 @@
 
 - `moderationGuard`（`core/guards/moderation.guard.ts`）を、`maintenanceGuard` と並べて `moderation` のルートに掛ける。形は `timetable-edit.guard` と同じ。
   - ガードは親ルートの `initialDataResolver` より先に走り、直接開いたときは利用者の状態がまだ空。そこで `TokenState` と `UserState` の取得（`ROUTE_CHECK_MAX_AGE_MS` の使い回し）を**ガードの中で先に待つ**。
-  - `canModerate()`（`editor` または `manager`）なら通す。未ログインは `/login?return_to=…` へ。ログイン済みで権限が無ければ「見回りの権限がありません」を出して `/` へ。
+  - `canModerate()`（`editor` または `manager`）なら通す。未ログインは `/login?return_to=…` へ。ログイン済みで権限が無ければ「投稿管理の権限がありません」を出して `/` へ。
 - 子ルートの `users/:userId` には別のガードを足さない。親のガードで足りる。
 
 ### EDITOR と MANAGER の出し分け
@@ -75,11 +75,11 @@
 
 ## 退けた案
 
-- **投稿者を権限なしの画面にも出し、名前だけ伏せる**: 見回りの画面は EDITOR 以上の仕事の場なので、入口ごと出さない。一般の利用者には今までどおり投稿者を見せない。
+- **投稿者を権限なしの画面にも出し、名前だけ伏せる**: 投稿管理の画面は EDITOR 以上の仕事の場なので、入口ごと出さない。一般の利用者には今までどおり投稿者を見せない。
 - **MANAGER だけの部分を描いて隠す（CSS・disabled）**: 取得まで走ると 403 が出る。描かず、取らない。
 - **まとめての無効化の区切りを画面に出し、利用者に続きを押させる**: 送り直しは機械的にできる。誤りなら「残り N 件」を出す形に変えるだけで済む（service の中の変更）。
 - **ガードを子ルートごとに足す**: 親で足りる。
-- **`/operation/...` の下に置く**: 見回りは運用の閲覧ではなく管理の仕事。train-diagram と同じくトップレベルにそろえる。
+- **`/operation/...` の下に置く**: 投稿管理は運用の閲覧ではなく管理の仕事。train-diagram と同じくトップレベルにそろえる。
 
 ## 結果
 
@@ -90,7 +90,7 @@
 
 - **この ADR は api の migration が本番に流れる前提。** api の `1793639742858-AddUserAccessTraces`・`1793642165620-AddUserRoleChanges` を先に流す（api の ADR-0013 の「出す順」）。流す前に client を出すと、手がかり・BAN の口が落ちる。プライバシーポリシー（#273）の追記が api より先に出ていることも条件。
 - **実ログインでの目視が未了。** 412px と 1440px の両方で、EDITOR と MANAGER のログインで見る（手元の api は本番 DB を読む。BAN・無効化は本番に書くので、確かめは保存テスト用のアカウントで、元に戻せる範囲だけ）。確かめる点：
-  - サイドナビの「見回り」の字下げ（他にアイコンの無い見出しの並び）。
+  - サイドナビの「投稿管理」の字下げ（他にアイコンの無い見出しの並び）。
   - 一覧の印（`newAccount`・`burst`）のバッジの見え方、投稿者の username リンク＋displayName。
   - 投稿者のページの要約で、登録日に年が出るか。
   - `users/:userId` が空パスの子ルートの後ろで正しくマッチするか。

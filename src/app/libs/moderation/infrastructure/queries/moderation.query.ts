@@ -17,7 +17,7 @@ import {
 import { ModerationTraceModel } from '../models/moderation-trace.model';
 import { ModerationUserSummaryModel } from '../models/moderation-user-summary.model';
 
-/** 見回りの取得。QueryCache を通さず、呼ぶたびに取る */
+/** 投稿管理の取得。QueryCache を通さず、呼ぶたびに取る */
 @Injectable({ providedIn: 'root' })
 export class ModerationQuery {
     readonly #http = inject(HttpClient);

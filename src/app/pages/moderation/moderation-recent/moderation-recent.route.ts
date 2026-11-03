@@ -14,7 +14,7 @@ export const MODERATION_RECENT_ROUTES: Route[] = [
             from: pageResolver(),
         },
         data: {
-            title: '見回り',
+            title: '投稿管理',
         },
         runGuardsAndResolvers: 'always',
     },

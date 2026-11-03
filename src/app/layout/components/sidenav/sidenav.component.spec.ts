@@ -33,7 +33,7 @@ describe('SidenavComponent', () => {
         expect(component.timetableLinkPrefix()).toBe('駅別時刻表');
     });
 
-    describe('見回りのリンク', () => {
+    describe('投稿管理のリンク', () => {
         function linkTexts(): string {
             fixture.detectChanges();
             return (fixture.nativeElement as HTMLElement).textContent ?? '';
@@ -48,19 +48,19 @@ describe('SidenavComponent', () => {
 
         it('ゲストには出さない', () => {
             setRole(null);
-            expect(linkTexts()).not.toContain('見回り');
+            expect(linkTexts()).not.toContain('投稿管理');
         });
 
         it('reporter・viewer には出さない', () => {
             setRole('reporter');
-            expect(linkTexts()).not.toContain('見回り');
+            expect(linkTexts()).not.toContain('投稿管理');
             setRole('viewer');
-            expect(linkTexts()).not.toContain('見回り');
+            expect(linkTexts()).not.toContain('投稿管理');
         });
 
         it.each(['editor', 'manager'])('%s には出す', (role) => {
             setRole(role);
-            expect(linkTexts()).toContain('見回り');
+            expect(linkTexts()).toContain('投稿管理');
             expect(
                 (fixture.nativeElement as HTMLElement).querySelector(
                     'a[href="/moderation"]',

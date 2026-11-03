@@ -8,7 +8,7 @@ import { TokenState } from 'src/app/global-states/token.state';
 import { UserState } from 'src/app/global-states/user.state';
 
 /**
- * 見回り（投稿者の一覧と無効化・BAN）は editor / manager だけ。
+ * 投稿管理（投稿者の一覧と無効化・BAN）は editor / manager だけ。
  * ガードは親ルートの initialDataResolver より先に走るので、直接開いたときは利用者の状態がまだ空。
  * そこで resolver と同じ取得（トークンと profile、ROUTE_CHECK_MAX_AGE_MS の使い回し）をここで先に済ませる。
  */
@@ -33,6 +33,6 @@ export const moderationGuard: CanActivateFn = async (route, state) => {
         });
     }
 
-    notification.open('見回りの権限がありません', 'OK');
+    notification.open('投稿管理の権限がありません', 'OK');
     return router.parseUrl('/');
 };

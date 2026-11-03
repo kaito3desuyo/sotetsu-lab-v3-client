@@ -1,8 +1,8 @@
-# M18 投稿の見回り（client） Implementation Plan
+# M18 投稿管理（client） Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** EDITOR 以上が荒らしの投稿者を見つけてまとめて無効にし、MANAGER が BAN と手がかりの確認をできる画面（見回りの一覧・投稿者のページ・過去の運用表からの入口）を作る。
+**Goal:** EDITOR 以上が荒らしの投稿者を見つけてまとめて無効にし、MANAGER が BAN と手がかりの確認をできる画面（投稿管理の一覧・投稿者のページ・過去の運用表からの入口）を作る。
 
 **Architecture:** api の `/v3/moderation/*`（api の計画 `docs/superpowers/plans/2026-11-03-moderation.md` の Task 4〜6）を `libs/moderation/` で包み、トップレベルのページ `pages/moderation/`（一覧と投稿者のページの 2 つの子ルート）から使う。どちらも CSR・ガード付き。
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- 見回りの一覧・投稿者のページ・「この投稿者を見る」は `editor`・`manager` にだけ出す。BAN・解除・手がかりは `manager` だけ。
+- 投稿管理の一覧・投稿者のページ・「この投稿者を見る」は `editor`・`manager` にだけ出す。BAN・解除・手がかりは `manager` だけ。
 - 投稿者の名前は EDITOR 以上にだけ見せる。
 - 自分と MANAGER のページには BAN のボタンを出さない。ゲスト（投稿者の無い目撃）は一覧で「ゲスト」と出し、投稿者のページへ行けない。
 - 手がかりの表は `shared: true` の行を弱めて出す（`tw-opacity-50` 程度）。
@@ -45,15 +45,15 @@
 
 - [ ] **Step 1: テストを書く** — service spec: 「invalidateSightings は POST /v3/moderation/sightings/invalidate に ids と reason を送り、成功後に sighting を失効させる」「ban は POST /v3/moderation/users/:id/ban」。user.state spec: 「viewer は canModerate も canEditTimetable も false・isViewer は true」。
 - [ ] **Step 2: FAIL → Step 3: 実装 → Step 4: PASS**
-- [ ] **Step 5: コミット** — `feat: :sparkles: 見回りの API を包む libs を足す`
+- [ ] **Step 5: コミット** — `feat: :sparkles: 投稿管理の API を包む libs を足す`
 
-### Task 2: ルートとガード・見回りの一覧
+### Task 2: ルートとガード・投稿管理の一覧
 
 **Files:**
-- Create: `src/app/core/guards/moderation.guard.ts`（＋spec。`timetable-edit.guard.ts` と同じ形で `canModerate` を見る。通知の文言「見回りの権限がありません」）
+- Create: `src/app/core/guards/moderation.guard.ts`（＋spec。`timetable-edit.guard.ts` と同じ形で `canModerate` を見る。通知の文言「投稿管理の権限がありません」）
 - Modify: `src/app/app.route.ts`（`path: 'moderation'`・`canActivate: [maintenanceGuard, moderationGuard]`・`initialDataResolver`）、`src/app/app.routes.server.ts`
 - Create: `src/app/pages/moderation/moderation.route.ts`、`pages/moderation/moderation-recent/`（一覧のページ・store・service・components）
-- Modify: `src/app/layout/components/sidenav/sidenav.component.html`（`canModerate()` のときだけ「見回り」。アイコン `shield`）
+- Modify: `src/app/layout/components/sidenav/sidenav.component.html`（`canModerate()` のときだけ「投稿管理」。アイコン `shield`）
 
 **Interfaces:**
 - ルート: `/moderation`（一覧）・`/moderation/users/:userId`（投稿者のページ・Task 3）。
@@ -62,7 +62,7 @@
 - [ ] **Step 1: テストを書く** — guard spec: Review Focus 2 の 2 件と「editor は通す」。一覧の spec: 「ゲストの行は名前がリンクでない」「newAccount・burst の印が出る」「もっと見るで before を付けて取り足す」。
 - [ ] **Step 2: FAIL → Step 3: 実装 → Step 4: PASS**
 - [ ] **Step 5: 実データで見る** — 手元（api は本番 DB を読む）に EDITOR でログインし、412 と 1440 で一覧を開いてスクリーンショット。印の付き方を本番の 11/01〜02 の投稿で確かめる。
-- [ ] **Step 6: コミット** — `feat: :sparkles: 見回りの一覧のページを足す`
+- [ ] **Step 6: コミット** — `feat: :sparkles: 投稿管理の一覧のページを足す`
 
 ### Task 3: 投稿者のページ
 
@@ -98,7 +98,7 @@
 ### Task 5: ADR
 
 - Create: `docs/adr/0020-moderation.md`（client の ADR の書き方に倣う。ページの置き場・CSR・ガード・EDITOR と MANAGER の出し分け・ゲストの扱い）
-- [ ] **Step 1: 書く → Step 2: コミット** — `docs: :memo: 投稿の見回り（M18）の ADR を書く`
+- [ ] **Step 1: 書く → Step 2: コミット** — `docs: :memo: 投稿管理（M18）の ADR を書く`
 
 ## 計画の外（ユーザーと一緒に）
 
