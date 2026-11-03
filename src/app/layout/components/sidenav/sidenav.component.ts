@@ -7,7 +7,6 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
 import {
@@ -34,7 +33,6 @@ import { buildStationGroups } from 'src/app/shared/station-groups.util';
         RouterLink,
         RouterLinkActive,
         ReactiveFormsModule,
-        MatIconModule,
         MatListModule,
         MatFormFieldModule,
         MatSelectModule,
