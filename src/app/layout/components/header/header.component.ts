@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
@@ -22,7 +22,13 @@ import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
     selector: 'app-header',
     templateUrl: './header.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatButtonModule, MatIconModule, MatMenuModule, MatSnackBarModule],
+    imports: [
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        MatSnackBarModule,
+        RouterLink,
+    ],
 })
 export class HeaderComponent {
     #router = inject(Router);

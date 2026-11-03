@@ -32,7 +32,12 @@
     @if (isLoggedIn()) {
         <div class="tw-hidden md:tw-block">
             <p class="tw-m-0 tw-text-xs">
-                ようこそ<br />{{ displayName() }} さん
+                ようこそ<br /><a
+                    routerLink="/my-page"
+                    class="tw-text-inherit tw-no-underline"
+                    >{{ displayName() }}</a
+                >
+                さん
             </p>
         </div>
     } @else {

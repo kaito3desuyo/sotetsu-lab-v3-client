@@ -122,6 +122,13 @@
             <span matListItemTitle>相鉄の車両</span>
         </a>
 
+        @if (canShowMyPage()) {
+            <h3 matSubheader>アカウント</h3>
+            <a mat-list-item routerLink="/my-page" routerLinkActive="is-active">
+                <span matListItemTitle>マイページ</span>
+            </a>
+        }
+
         @if (canModerate()) {
             <h3 matSubheader>管理</h3>
             <a
