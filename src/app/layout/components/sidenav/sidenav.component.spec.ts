@@ -84,10 +84,10 @@ describe('SidenavComponent', () => {
 
         it('ゲスト・viewer には「マイページ」を出さない', () => {
             setRole(null);
-            expect(render().textContent).not.toContain('マイページ');
-            expect(render().textContent).not.toContain('アカウント');
+            expect(render()).not.toHaveTextContent('マイページ');
+            expect(render()).not.toHaveTextContent('アカウント');
             setRole('viewer');
-            expect(render().textContent).not.toContain('マイページ');
+            expect(render()).not.toHaveTextContent('マイページ');
             expect(render().querySelector('a[href="/my-page"]')).toBeNull();
         });
 
@@ -117,7 +117,7 @@ describe('SidenavComponent', () => {
                     .querySelector('a[href="/my-page"]')
                     ?.textContent?.trim(),
             ).toBe('マイページ');
-            expect(element.textContent).not.toContain('投稿管理');
+            expect(element).not.toHaveTextContent('投稿管理');
         });
     });
 
