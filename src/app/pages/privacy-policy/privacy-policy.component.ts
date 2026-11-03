@@ -1,5 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { TitleService } from 'src/app/core/services/title.service';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+
+const PRIVACYPOLICY_DESCRIPTION =
+    'Sotetsu Lab. v3 における利用者の情報の取扱いについて定めたプライバシーポリシーです。';
 
 @Component({
     selector: 'app-privacy-policy',
@@ -7,11 +10,12 @@ import { TitleService } from 'src/app/core/services/title.service';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrivacyPolicyComponent {
-    readonly #titleService = inject(TitleService);
-
     constructor() {
-        // 取得データが無く resolver を持たない静的ページなので、
-        // library-vehicle と同じくここで直接 document.title を設定する。
-        this.#titleService.setTitle('プライバシーポリシー');
+        // 取得データが無く resolver を持たない静的ページなので、library-vehicle と同じくここで題名・説明・OGP を入れる
+        inject(PageMeta).set({
+            title: 'プライバシーポリシー',
+            description: PRIVACYPOLICY_DESCRIPTION,
+            url: '/privacy-policy',
+        });
     }
 }
