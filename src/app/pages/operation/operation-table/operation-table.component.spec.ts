@@ -463,7 +463,7 @@ describe('OperationTableComponent の読み込み中', () => {
 
     it('取得に失敗しても骨組みを消す（保存していたカードを出すため）', async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
-        // zone.js が未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す
+        // 未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す
         const original = OperationTableComponent.prototype.fetchData;
         const spy = jest
             .spyOn(OperationTableComponent.prototype, 'fetchData')

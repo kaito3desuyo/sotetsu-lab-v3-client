@@ -188,7 +188,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
 
     it('取り終えたら骨組みを消す（失敗しても）', async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
-        // zone.js が未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す
+        // 未処理の拒否としてテストを落とす。ここだけ本物の fetchData の失敗を受け流す
         const original = OperationRouteDiagramComponent.prototype.fetchData;
         const spy = jest
             .spyOn(OperationRouteDiagramComponent.prototype, 'fetchData')

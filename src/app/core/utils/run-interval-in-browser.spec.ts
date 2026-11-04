@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, PLATFORM_ID } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    PLATFORM_ID,
+    signal,
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { runIntervalInBrowser } from './run-interval-in-browser';
 
@@ -26,6 +31,19 @@ function render(platformId: 'browser' | 'server') {
     fixture.detectChanges();
     TestBed.tick();
     return fixture;
+}
+
+@Component({
+    selector: 'app-signal-host',
+    template: '{{ count() }}',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+class SignalHostComponent {
+    readonly count = signal(0);
+
+    constructor() {
+        runIntervalInBrowser(1000, () => this.count.update((n) => n + 1));
+    }
 }
 
 describe('runIntervalInBrowser', () => {
@@ -56,5 +74,21 @@ describe('runIntervalInBrowser', () => {
         jest.advanceTimersByTime(3000);
 
         expect(fixture.componentInstance.ticks).toBe(0);
+    });
+
+    it('tick が signal を書くと、変更検知を手で呼ばなくても表示が変わる', async () => {
+        TestBed.configureTestingModule({
+            imports: [SignalHostComponent],
+            providers: [{ provide: PLATFORM_ID, useValue: 'browser' }],
+        });
+        const fixture = TestBed.createComponent(SignalHostComponent);
+        fixture.detectChanges();
+        TestBed.tick();
+
+        // 3 回目の tick（3000ms）が予約した描き直しも、偽のタイマーの上で流しきる
+        jest.advanceTimersByTime(3100);
+        await fixture.whenStable();
+
+        expect(fixture.nativeElement).toHaveTextContent('3');
     });
 });
