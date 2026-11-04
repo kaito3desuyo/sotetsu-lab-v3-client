@@ -325,6 +325,23 @@ describe('OperationTableComponent の読み込み中', () => {
     let fixture: ComponentFixture<OperationTableComponent>;
     let trips$: Subject<undefined>;
 
+    // jsdom には IntersectionObserver が無い。zoneless の detectChanges は afterRender まで回り、
+    // @defer の on viewport が観測を始めるため、何も通知しない代役を置く（描画は getDeferBlocks で進める）
+    const originalObserver = globalThis.IntersectionObserver;
+    beforeAll(() => {
+        globalThis.IntersectionObserver = class {
+            observe(): void {}
+            unobserve(): void {}
+            disconnect(): void {}
+            takeRecords(): IntersectionObserverEntry[] {
+                return [];
+            }
+        } as never;
+    });
+    afterAll(() => {
+        globalThis.IntersectionObserver = originalObserver;
+    });
+
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const query = (selector: string) =>
         (fixture.nativeElement as HTMLElement).querySelector(selector);

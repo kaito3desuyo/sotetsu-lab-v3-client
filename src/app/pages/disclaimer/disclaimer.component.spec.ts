@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 
 import { DisclaimerComponent } from './disclaimer.component';
@@ -8,12 +8,12 @@ describe('DisclaimerComponent', () => {
     let fixture: ComponentFixture<DisclaimerComponent>;
     const pageMeta = { set: jest.fn() };
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [DisclaimerComponent],
             providers: [{ provide: PageMeta, useValue: pageMeta }],
         }).compileComponents();
-    }));
+    });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(DisclaimerComponent);

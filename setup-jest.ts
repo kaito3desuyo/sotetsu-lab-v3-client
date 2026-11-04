@@ -1,4 +1,4 @@
-import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
 import '@testing-library/jest-dom';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -8,4 +8,4 @@ dayjs.extend(customParseFormat);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
-setupZoneTestEnv();
+setupZonelessTestEnv();

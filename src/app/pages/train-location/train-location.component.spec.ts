@@ -6,6 +6,7 @@ import {
     Router,
     convertToParamMap,
     provideRouter,
+    withRouterConfig,
 } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -23,7 +24,10 @@ describe('TrainLocationComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TrainLocationComponent],
             providers: [
-                provideRouter([]),
+                provideRouter(
+                    [],
+                    withRouterConfig({ resolveNavigationPromiseOnError: true }),
+                ),
                 {
                     provide: TrainLocationService,
                     useValue: {
@@ -246,7 +250,12 @@ describe('TrainLocationComponent', () => {
             await TestBed.configureTestingModule({
                 imports: [TrainLocationComponent],
                 providers: [
-                    provideRouter([]),
+                    provideRouter(
+                        [],
+                        withRouterConfig({
+                            resolveNavigationPromiseOnError: true,
+                        }),
+                    ),
                     {
                         provide: ActivatedRoute,
                         useValue: {
@@ -387,7 +396,10 @@ describe('TrainLocationComponent の再訪', () => {
         await TestBed.configureTestingModule({
             imports: [TrainLocationComponent],
             providers: [
-                provideRouter([]),
+                provideRouter(
+                    [],
+                    withRouterConfig({ resolveNavigationPromiseOnError: true }),
+                ),
                 {
                     provide: ActivatedRoute,
                     useValue: {
@@ -527,7 +539,10 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
         await TestBed.configureTestingModule({
             imports: [TrainLocationComponent],
             providers: [
-                provideRouter([]),
+                provideRouter(
+                    [],
+                    withRouterConfig({ resolveNavigationPromiseOnError: true }),
+                ),
                 { provide: PLATFORM_ID, useValue: 'server' },
                 {
                     provide: TrainLocationService,
