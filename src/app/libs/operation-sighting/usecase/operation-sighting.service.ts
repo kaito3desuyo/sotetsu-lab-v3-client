@@ -7,6 +7,7 @@ import { OperationSightingQuery } from '../infrastructure/queries/operation-sigh
 import { InvalidateManyOperationSightingsResultDto } from './dtos/invalidate-many-operation-sightings-result.dto';
 import { InvalidateManyOperationSightingsDto } from './dtos/invalidate-many-operation-sightings.dto';
 import { InvalidateOperationSightingDto } from './dtos/invalidate-operation-sighting.dto';
+import { MyOperationSightingDto } from './dtos/my-operation-sighting.dto';
 import { OperationSightingAuthorDto } from './dtos/operation-sighting-author.dto';
 import { OperationSightingDetailsDto } from './dtos/operation-sighting-details.dto';
 import { OperationSightingListParamsDto } from './dtos/operation-sighting-list-params.dto';
@@ -95,6 +96,12 @@ export class OperationSightingService {
         params?: OperationSightingListParamsDto,
     ): Observable<OperationSightingSummaryDto[]> {
         return this.#operationSightingQuery.findManyByUserId(userId, params);
+    }
+
+    findManyMine(
+        params?: OperationSightingListParamsDto,
+    ): Observable<MyOperationSightingDto[]> {
+        return this.#operationSightingQuery.findManyMine(params);
     }
 
     findManyRecent(

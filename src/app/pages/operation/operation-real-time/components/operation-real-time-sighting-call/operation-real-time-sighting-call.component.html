@@ -1,0 +1,33 @@
+<!-- 操作帯の下・凡例の上に置く貼り付かない白帯（2026-11 M13）。凡例と同じ左右の余白・上下 8px。
+     main の gap 16px は負のマージンで打ち消し、操作帯のすぐ下に付ける。0 件・viewer は帯ごと出さない -->
+@if (operations().length > 0 && !userState.isViewer()) {
+    <section
+        class="-tw-mx-4 -tw-mt-4 tw-flex tw-flex-col tw-gap-2 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2 md:-tw-mx-6 md:tw-px-6 lg:-tw-mx-8 lg:tw-px-8 xl:-tw-mx-16 xl:tw-px-16"
+    >
+        <p
+            class="tw-m-0 tw-flex tw-flex-wrap tw-items-baseline tw-gap-x-2 tw-text-base tw-text-ink"
+        >
+            <strong class="tw-font-bold">目撃募集</strong>
+            <span class="tw-text-ink-2">走行中・本日未目撃の運用</span>
+        </p>
+        <ul class="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-gap-2 tw-p-0">
+            @for (operation of operations(); track operation.operationNumber) {
+                <li class="tw-m-0 tw-p-0">
+                    <button
+                        type="button"
+                        class="tw-inline-flex tw-h-7 tw-min-w-9 tw-cursor-pointer tw-items-center tw-justify-center tw-rounded tw-border-0 tw-px-1.5 tw-font-[inherit] tw-text-sm tw-leading-none tw-text-black"
+                        [style.background-color]="
+                            operation.operationNumber | operationNumberColor
+                        "
+                        [attr.aria-label]="
+                            operation.operationNumber + ' の目撃を投稿する'
+                        "
+                        (click)="onClickChip(operation.operationNumber)"
+                    >
+                        {{ operation.operationNumber }}
+                    </button>
+                </li>
+            }
+        </ul>
+    </section>
+}

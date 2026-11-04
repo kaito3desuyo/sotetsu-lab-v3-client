@@ -69,6 +69,58 @@ describe('SidenavComponent', () => {
         });
     });
 
+    describe('マイページのリンク', () => {
+        function render(): HTMLElement {
+            fixture.detectChanges();
+            return fixture.nativeElement as HTMLElement;
+        }
+
+        function setRole(role: string | null): void {
+            patchState(unprotected(TestBed.inject(UserState)), {
+                userId: role ? 'u1' : null,
+                role,
+            });
+        }
+
+        it('ゲスト・viewer には「マイページ」を出さない', () => {
+            setRole(null);
+            expect(render()).not.toHaveTextContent('マイページ');
+            expect(render()).not.toHaveTextContent('アカウント');
+            setRole('viewer');
+            expect(render()).not.toHaveTextContent('マイページ');
+            expect(render().querySelector('a[href="/my-page"]')).toBeNull();
+        });
+
+        it('editor には「アカウント」の下に「マイページ」を出し、「管理」より上にある', () => {
+            setRole('editor');
+            const element = render();
+            const headings = Array.from(element.querySelectorAll('h3'), (h) =>
+                h.textContent?.trim(),
+            );
+            expect(headings).toContain('アカウント');
+            expect(headings.indexOf('アカウント')).toBeLessThan(
+                headings.indexOf('管理'),
+            );
+            const link = element.querySelector('a[href="/my-page"]');
+            expect(link?.textContent?.trim()).toBe('マイページ');
+            const text = element.textContent ?? '';
+            expect(text.indexOf('マイページ')).toBeLessThan(
+                text.indexOf('投稿管理'),
+            );
+        });
+
+        it('reporter でも出す（管理は出さない）', () => {
+            setRole('reporter');
+            const element = render();
+            expect(
+                element
+                    .querySelector('a[href="/my-page"]')
+                    ?.textContent?.trim(),
+            ).toBe('マイページ');
+            expect(element).not.toHaveTextContent('投稿管理');
+        });
+    });
+
     it('「このサイトについて」からプライバシーポリシーと免責事項へつなぐ', () => {
         fixture.detectChanges();
         const element = fixture.nativeElement as HTMLElement;

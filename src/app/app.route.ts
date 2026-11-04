@@ -86,6 +86,19 @@ export const APP_ROUTES: Routes = [
         runGuardsAndResolvers: 'always',
     },
     {
+        // M13 マイページ。ログイン中で viewer でない人だけ（守りは my-page.route.ts）。SSR では描かない
+        path: 'my-page',
+        loadChildren: () =>
+            import('./pages/my-page/my-page.route').then(
+                (mod) => mod.MY_PAGE_ROUTES,
+            ),
+        canActivate: [maintenanceGuard],
+        resolve: {
+            from: initialDataResolver,
+        },
+        runGuardsAndResolvers: 'always',
+    },
+    {
         path: 'library',
         loadChildren: () =>
             import('./pages/library/library.route').then(

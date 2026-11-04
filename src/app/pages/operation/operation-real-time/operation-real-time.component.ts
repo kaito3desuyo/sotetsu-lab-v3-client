@@ -25,11 +25,13 @@ import { OperationPostCardService } from 'src/app/shared/operation-post-card/ope
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
+import { OperationRealTimeSightingCallComponent } from './components/operation-real-time-sighting-call/operation-real-time-sighting-call.component';
 import { OperationRealTimeLegendComponent } from './components/operation-real-time-legend/operation-real-time-legend.component';
 import { OperationRealTimeOperationTableComponent } from './components/operation-real-time-operation-table/operation-real-time-operation-table.component';
 import { OperationRealTimeService } from './services/operation-real-time.service';
 import { OperationRealTimeStore } from './stores/operation-real-time.store';
 import { filterRealTimeOperations } from './utils/operation-real-time-filter.util';
+import { selectSightingCallOperations } from './utils/select-sighting-call-operations.util';
 import { formatRealTimeSummary } from './utils/operation-real-time-summary.util';
 
 /** Tailwind の md。これ以上は運用順・編成順を横並び、未満はタブ */
@@ -53,6 +55,7 @@ const DESKTOP_QUERY = '(min-width: 768px)';
         OperationRealTimeOperationTableComponent,
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
+        OperationRealTimeSightingCallComponent,
     ],
 })
 export class OperationRealTimeComponent {
@@ -82,6 +85,9 @@ export class OperationRealTimeComponent {
         this.#store.operationSightingTimeCrossSections;
     readonly #selectedAgencyIds = this.#store.selectedAgencyIds;
     readonly #selectedGroupNames = this.#store.normalizedSelectedGroupNames;
+    readonly #currentPositions = this.#store.currentPositions;
+    readonly #sightingHistories = this.#store.operationSightingHistories;
+    readonly #historiesFresh = this.#store.historiesFresh;
 
     readonly filterActive = computed(
         () =>
@@ -103,6 +109,23 @@ export class OperationRealTimeComponent {
             selectedGroupNames: this.#selectedGroupNames(),
             shown,
             total: operations.length,
+        });
+    });
+
+    /** 目撃募集の帯の対象。運用順の一覧と同じ絞り込みを通してから選ぶ（並びも同じ） */
+    readonly callOperations = computed(() => {
+        // 圏外の保存から戻した古い履歴では選ばない（今日の履歴を取れてから）
+        if (!this.#historiesFresh()) return [];
+        return selectSightingCallOperations({
+            operations: filterRealTimeOperations(
+                this.#operations(),
+                this.#selectedAgencyIds(),
+                this.#selectedGroupNames(),
+                this.#timeCrossSections(),
+                this.#formations(),
+            ),
+            currentPositions: this.#currentPositions(),
+            histories: this.#sightingHistories(),
         });
     });
 

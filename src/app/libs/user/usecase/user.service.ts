@@ -3,6 +3,7 @@ import { Observable, tap } from 'rxjs';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { UserCommand } from '../infrastructure/commands/user.command';
 import { UserQuery } from '../infrastructure/queries/user.query';
+import { MySummaryDto } from './dtos/my-summary.dto';
 import { RegisterUserDto } from './dtos/register-user.dto';
 import { UserAccessTraceDto } from './dtos/user-access-trace.dto';
 import { UserDetailsDto } from './dtos/user-details.dto';
@@ -27,6 +28,10 @@ export class UserService {
 
     findSummary(userId: string): Observable<UserSummaryDto> {
         return this.#userQuery.findSummary(userId);
+    }
+
+    findMySummary(): Observable<MySummaryDto> {
+        return this.#userQuery.findMySummary();
     }
 
     findAccessTraces(userId: string): Observable<UserAccessTraceDto[]> {

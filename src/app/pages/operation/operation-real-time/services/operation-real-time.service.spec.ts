@@ -26,6 +26,7 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
     const operationSightingService = {
         findManyTimeCrossSectionsByOperationNumbers: jest.fn(),
         findManyTimeCrossSectionsByFormationNumbers: jest.fn(),
+        findManyBySpecificPeriod: jest.fn(),
     };
 
     beforeEach(() => {
@@ -90,6 +91,27 @@ describe('OperationRealTimeService（まとめて取る口）', () => {
         });
         const positions = store.currentPositions();
         expect(positions['11']).toBe(position11);
+    });
+
+    it('今日の目撃履歴を取れたら historiesFresh を true にし、取れなければ false のまま', async () => {
+        operationSightingService.findManyBySpecificPeriod.mockReturnValueOnce(
+            throwError(() => new Error('offline')),
+        );
+
+        await expect(
+            firstValueFrom(service.fetchSightingHistories()),
+        ).rejects.toThrow('offline');
+
+        expect(store.historiesFresh()).toBe(false);
+
+        operationSightingService.findManyBySpecificPeriod.mockReturnValueOnce(
+            of([]),
+        );
+
+        await firstValueFrom(service.fetchSightingHistories());
+
+        expect(store.historiesFresh()).toBe(true);
+        expect(store.operationSightingHistories()['11']).toEqual([]);
     });
 
     it('運用番号の時刻断面は 100 を除いて 1 回で取り、番号ごとにストアへ入れる', async () => {

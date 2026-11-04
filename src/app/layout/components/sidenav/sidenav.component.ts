@@ -67,6 +67,11 @@ export class SidenavComponent {
     /** 投稿管理は editor / manager にだけ出す */
     readonly canModerate = this.#userState.canModerate;
 
+    /** マイページ（自分の目撃投稿）は、ログイン中で viewer でない人にだけ出す */
+    readonly canShowMyPage = computed(
+        () => this.#userState.isLoggedIn() && !this.#userState.isViewer(),
+    );
+
     readonly todaysCalendarId = this.#todaysCalendarListState.todaysCalendarId;
     readonly #routeStations = this.#routeStationListState.routeStations;
     readonly #agencies = this.#agencyListState.agencies;

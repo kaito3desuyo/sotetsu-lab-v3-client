@@ -29,6 +29,11 @@
         </div>
     </app-control-band>
 
+    <!-- 目撃募集の帯（2026-11 M13）。操作帯の下・凡例の上の貼り付かない白帯。0 件・viewer では何も描かない -->
+    <app-operation-real-time-sighting-call
+        [operations]="callOperations()"
+    ></app-operation-real-time-sighting-call>
+
     <!-- 凡例は列車ダイヤグラムと同じく操作帯のすぐ下の白い全幅の帯（ユーザー判断 2026-10-06）。
          操作帯の要約の行（40px＋罫線 1px）の下に貼り付く。main の gap 16px と横 gutter は
          負のマージンで打ち消し、中身で同じ gutter を戻す。ページの中の貼り付く物なので z-30（重なりの順） -->

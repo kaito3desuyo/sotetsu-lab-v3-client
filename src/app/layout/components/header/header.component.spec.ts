@@ -4,7 +4,7 @@ import { unprotected } from '@ngrx/signals/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { UserState } from 'src/app/global-states/user.state';
 
 import { HeaderComponent } from './header.component';
@@ -17,7 +17,7 @@ describe('HeaderComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [HeaderComponent],
-            providers: [provideHttpClient(withXhr())],
+            providers: [provideHttpClient(withXhr()), provideRouter([])],
         }).compileComponents();
 
         router = TestBed.inject(Router);
@@ -55,6 +55,45 @@ describe('HeaderComponent', () => {
         );
         const iconNames = icons.map((icon) => icon.textContent?.trim());
         expect(iconNames).not.toContain('refresh');
+    });
+
+    it('ログイン中は名前が /my-page へのリンク', () => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: 'u1',
+            displayName: '相鉄太郎',
+        });
+        fixture.detectChanges();
+
+        const link: HTMLAnchorElement | null =
+            fixture.nativeElement.querySelector('header a[href="/my-page"]');
+        expect(link?.textContent?.trim()).toBe('相鉄太郎');
+        expect(link).toHaveClass('[color:inherit]', 'tw-underline');
+        expect(fixture.nativeElement.querySelector('header')).toHaveTextContent(
+            /ようこそ\s*相鉄太郎 さん/,
+        );
+    });
+
+    it('viewer は名前をリンクにしない（マイページには入れない）', () => {
+        patchState(unprotected(TestBed.inject(UserState)), {
+            userId: 'u2',
+            displayName: '閲覧太郎',
+            role: 'viewer',
+        });
+        fixture.detectChanges();
+
+        const header: HTMLElement =
+            fixture.nativeElement.querySelector('header');
+        expect(header.querySelector('a[href="/my-page"]')).toBeNull();
+        expect(header).toHaveTextContent(/ようこそ\s*閲覧太郎\s*さん/);
+    });
+
+    it('ゲストの「ゲスト さん」はリンクにしない', () => {
+        fixture.detectChanges();
+
+        const header: HTMLElement =
+            fixture.nativeElement.querySelector('header');
+        expect(header.querySelector('a')).toBeNull();
+        expect(header).toHaveTextContent(/ゲスト さん/);
     });
 
     it('新規登録は、今のページを return_to にして /register へ移る', () => {

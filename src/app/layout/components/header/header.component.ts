@@ -2,6 +2,7 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     inject,
     input,
     output,
@@ -10,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
@@ -22,7 +23,13 @@ import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
     selector: 'app-header',
     templateUrl: './header.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatButtonModule, MatIconModule, MatMenuModule, MatSnackBarModule],
+    imports: [
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        MatSnackBarModule,
+        RouterLink,
+    ],
 })
 export class HeaderComponent {
     #router = inject(Router);
@@ -33,6 +40,13 @@ export class HeaderComponent {
 
     /** サーバーと、それを引き継ぐ最初の描画はゲストの形にする（spec 5.3。CDN で別の人に配られるため） */
     readonly isLoggedIn = afterFirstRender(this.#userState.isLoggedIn, false);
+    /** 名前をマイページへのリンクにするか（サイドナビの canShowMyPage と同じ。viewer はガードに戻されるので行き止まりになる） */
+    readonly canLinkMyPage = afterFirstRender(
+        computed(
+            () => this.#userState.isLoggedIn() && !this.#userState.isViewer(),
+        ),
+        false,
+    );
     readonly displayName = this.#userState.displayName;
 
     /**

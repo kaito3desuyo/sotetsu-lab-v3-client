@@ -1,6 +1,7 @@
 import { FormationDtoBuilder } from 'src/app/libs/formation/infrastructure/builders/formation.dto.builder';
 import { OperationDtoBuilder } from 'src/app/libs/operation/infrastructure/builders/operation.dto.builder';
 import { InvalidateManyOperationSightingsResultDto } from '../../usecase/dtos/invalidate-many-operation-sightings-result.dto';
+import { MyOperationSightingDto } from '../../usecase/dtos/my-operation-sighting.dto';
 import { OperationSightingDetailsDto } from '../../usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingRecentDto } from '../../usecase/dtos/operation-sighting-recent.dto';
 import { OperationSightingSummaryDto } from '../../usecase/dtos/operation-sighting-summary.dto';
@@ -9,6 +10,7 @@ import {
     OperationSightingRecentModel,
     OperationSightingSummaryModel,
 } from '../models/operation-sighting-summary.model';
+import { MyOperationSightingModel } from '../models/my-operation-sighting.model';
 import { OperationSightingModel } from '../models/operation-sighting.model';
 
 export const OperationSightingDtoBuilder = {
@@ -41,6 +43,13 @@ export const OperationSightingDtoBuilder = {
         models: OperationSightingSummaryModel[],
     ): OperationSightingSummaryDto[] =>
         models.map((m) => OperationSightingDtoBuilder.buildSummaryFromModel(m)),
+    buildMineFromModels: (
+        models: MyOperationSightingModel[],
+    ): MyOperationSightingDto[] =>
+        models.map((m) => ({
+            ...OperationSightingDtoBuilder.buildSummaryFromModel(m),
+            corroboration: m.corroboration,
+        })),
     buildRecentsFromModels: (
         models: OperationSightingRecentModel[],
     ): OperationSightingRecentDto[] =>

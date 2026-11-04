@@ -62,6 +62,34 @@ describe('UserService（要約・手がかり・BAN）', () => {
             expect(results).toEqual([summary, summary]);
         });
 
+        it('findMySummary は GET /users/me を毎回取る', () => {
+            const { service, controller } = setup();
+            const mine = {
+                sightingCount: 3,
+                invalidatedCount: 1,
+                firstSightingAt: '2026-10-02T00:00:00.000Z',
+                lastSightingAt: null,
+                corroboration: {
+                    corroborated: 1,
+                    conflicting: 0,
+                    uncorroborated: 1,
+                    invalidated: 1,
+                },
+            };
+            const results: unknown[] = [];
+
+            service.findMySummary().subscribe((r) => results.push(r));
+            service.findMySummary().subscribe((r) => results.push(r));
+
+            const reqs = controller.match(`${base}/me`);
+            expect(reqs).toHaveLength(2);
+            reqs.forEach((r) => {
+                expect(r.request.method).toBe('GET');
+                r.flush(mine);
+            });
+            expect(results).toEqual([mine, mine]);
+        });
+
         it('URL に載せる id は encodeURIComponent をかける', () => {
             const { service, controller } = setup();
 

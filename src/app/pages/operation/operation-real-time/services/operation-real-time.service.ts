@@ -293,6 +293,8 @@ export class OperationRealTimeService {
                             filtered,
                         );
                     }
+
+                    this.#store.setHistoriesFresh(true);
                 }),
                 map(() => undefined),
             );
