@@ -1,6 +1,6 @@
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { provideHttpClient, withXhr } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA, PLATFORM_ID } from '@angular/core';
+import { NO_ERRORS_SCHEMA, PLATFORM_ID, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -17,6 +17,7 @@ import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { SocketService } from 'src/app/core/services/socket.service';
+import { UserState } from 'src/app/global-states/user.state';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OperationRealTimeService } from './services/operation-real-time.service';
@@ -326,13 +327,15 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     });
 });
 
-describe('OperationRealTimeComponent の目撃募集の帯', () => {
+describe('OperationRealTimeComponent の目撃募集の札', () => {
     let fixture: ComponentFixture<OperationRealTimeComponent>;
     let store: InstanceType<typeof OperationRealTimeStore>;
+    const isViewer = signal(false);
 
     const running = { current: {}, prev: null, next: null } as never;
 
     beforeEach(async () => {
+        isViewer.set(false);
         const ok = () => jest.fn(() => of(undefined));
         const service = {
             fetchOperationGroups: ok(),
@@ -357,6 +360,7 @@ describe('OperationRealTimeComponent の目撃募集の帯', () => {
                 { provide: OperationRealTimeService, useValue: service },
                 { provide: SocketService, useValue: { on: () => EMPTY } },
                 { provide: NotificationService, useValue: { open: () => {} } },
+                { provide: UserState, useValue: { isViewer } },
                 {
                     provide: OperationPostCardService,
                     useValue: { submitEvent$: EMPTY },
@@ -386,22 +390,31 @@ describe('OperationRealTimeComponent の目撃募集の帯', () => {
     afterEach(() => fixture.destroy());
 
     const callOperations = () =>
-        (
-            fixture.debugElement.query(
-                By.css('app-operation-real-time-sighting-call'),
-            ).properties as { operations: { operationNumber: string }[] }
-        ).operations.map((o) => o.operationNumber);
+        fixture.componentInstance
+            .callOperations()
+            .map((o) => o.operationNumber);
+    const chip = () =>
+        fixture.debugElement.query(
+            By.css('app-operation-real-time-sighting-call'),
+        );
+    const chipInputs = () =>
+        chip().properties as { count: number; active: boolean };
+    const onlyNumbers = () => {
+        const set = fixture.componentInstance.callOperationNumbers();
+        return set === null ? null : [...set];
+    };
 
-    it('目撃募集の帯は絞り込み後の運用から選ぶ', () => {
+    it('募集中の運用は絞り込み後の運用から選ぶ', () => {
         expect(callOperations()).toEqual(['12K', '52K']);
 
         store.setSelectedGroupNames(['5K群']);
         fixture.detectChanges();
 
         expect(callOperations()).toEqual(['52K']);
+        expect(chipInputs().count).toBe(1);
     });
 
-    it('今日の履歴を取れていない間は、在線と空の履歴があっても帯の対象を出さない', () => {
+    it('今日の履歴を取れていない間は、在線と空の履歴があっても募集中の運用を出さない', () => {
         store.setHistoriesFresh(false);
         fixture.detectChanges();
 
@@ -413,17 +426,76 @@ describe('OperationRealTimeComponent の目撃募集の帯', () => {
         expect(callOperations()).toEqual(['12K', '52K']);
     });
 
-    it('目撃募集の帯は操作帯と凡例の間に置く', () => {
-        const children = Array.from(
-            (fixture.nativeElement as HTMLElement).querySelector('main')!
-                .children,
-        ).map((e) => e.tagName.toLowerCase());
+    it('札は運用順のタブの先頭に、件数と絞りの状態を渡して置く', () => {
+        const row = chip().nativeElement.parentElement as HTMLElement;
 
-        const band = children.indexOf('app-operation-real-time-sighting-call');
-        expect(band).toBe(children.indexOf('app-control-band') + 1);
-        expect(band).toBe(
-            children.indexOf('app-operation-real-time-legend') - 1,
+        expect(chip()).not.toBeNull();
+        expect(chipInputs()).toEqual(
+            expect.objectContaining({ count: 2, active: false }),
         );
+        // 白帯は無く、札は main の直下には置かない
+        expect(row.tagName.toLowerCase()).not.toBe('main');
+        expect(row.className).toContain('tw-bg-white');
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelectorAll(
+                'app-operation-real-time-sighting-call',
+            ).length,
+        ).toBe(1);
+    });
+
+    it('0 件なら札を描かない', () => {
+        store.setHistoriesFresh(false);
+        fixture.detectChanges();
+
+        expect(chip()).toBeNull();
+    });
+
+    it('viewer には札を出さない（絞りも効かない）', () => {
+        fixture.componentInstance.onToggleCallFilter();
+        fixture.detectChanges();
+        expect(onlyNumbers()).toEqual(['12K', '52K']);
+
+        isViewer.set(true);
+        fixture.detectChanges();
+
+        expect(chip()).toBeNull();
+        expect(fixture.componentInstance.showCallChip()).toBe(false);
+        expect(onlyNumbers()).toBeNull();
+    });
+
+    it('札を押すと運用順が募集中だけに絞られ、もう一度押すと解ける', () => {
+        expect(onlyNumbers()).toBeNull();
+
+        chip().triggerEventHandler('toggled', undefined);
+        fixture.detectChanges();
+
+        expect(chipInputs().active).toBe(true);
+        expect(onlyNumbers()).toEqual(['12K', '52K']);
+
+        chip().triggerEventHandler('toggled', undefined);
+        fixture.detectChanges();
+
+        expect(chipInputs().active).toBe(false);
+        expect(onlyNumbers()).toBeNull();
+    });
+
+    it('絞り中に募集中が 0 件になると絞りを解き、1 件に戻っても絞りは戻らない', () => {
+        fixture.componentInstance.onToggleCallFilter();
+        fixture.detectChanges();
+        expect(fixture.componentInstance.callOnly()).toBe(true);
+
+        store.setHistoriesFresh(false);
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.callOnly()).toBe(false);
+        expect(onlyNumbers()).toBeNull();
+
+        store.setHistoriesFresh(true);
+        fixture.detectChanges();
+
+        expect(callOperations().length).toBeGreaterThan(0);
+        expect(fixture.componentInstance.callOnly()).toBe(false);
+        expect(onlyNumbers()).toBeNull();
     });
 });
 

@@ -6,6 +6,7 @@ import {
     computed,
     DestroyRef,
     inject,
+    linkedSignal,
     PLATFORM_ID,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -19,6 +20,7 @@ import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { UserState } from 'src/app/global-states/user.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -67,6 +69,7 @@ export class OperationRealTimeComponent {
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #breakpointObserver = inject(BreakpointObserver);
     readonly #postDialog = inject(OperationPostDialogService);
+    readonly #userState = inject(UserState);
 
     /** 最初の描画から正しい側を作るよう、初期値は同期で読む（違う配置が一瞬出ると CLS になる） */
     readonly isDesktop = toSignal(
@@ -128,6 +131,34 @@ export class OperationRealTimeComponent {
             histories: this.#sightingHistories(),
         });
     });
+
+    /** 目撃募集の札を出すか。0 件・viewer では出さない（札を描く行ごと消す） */
+    readonly showCallChip = computed(
+        () => this.callOperations().length > 0 && !this.#userState.isViewer(),
+    );
+    /**
+     * 札を押して運用順を募集中だけに絞っているか（2026-11 B3）。保存しない（ページを離れたら消える）。
+     * 募集中が 0 件との境を跨いだら false に戻す。絞り中に 0 件になって自動で解けたあと、
+     * 1 件以上に戻っても絞りは戻らない
+     */
+    readonly callOnly = linkedSignal<boolean, boolean>({
+        source: () => this.callOperations().length === 0,
+        computation: () => false,
+    });
+    /** 実際に効いている絞り（札が出ているときだけ。viewer には効かせない） */
+    readonly callFilterActive = computed(
+        () => this.callOnly() && this.showCallChip(),
+    );
+    /** 運用順の一覧へ渡す絞り。null なら絞らない */
+    readonly callOperationNumbers = computed<ReadonlySet<string> | null>(() =>
+        this.callFilterActive()
+            ? new Set(this.callOperations().map((o) => o.operationNumber))
+            : null,
+    );
+
+    onToggleCallFilter(): void {
+        this.callOnly.update((on) => !on);
+    }
 
     onClearFilter(): void {
         this.#store.setSelectedAgencyIds([]);

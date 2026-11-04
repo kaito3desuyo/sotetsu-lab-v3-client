@@ -146,6 +146,24 @@ describe('OperationRealTimeOperationTableComponent', () => {
         expect(numbers()).toEqual(['12']);
     });
 
+    it('limitToOperationNumbers を渡すと、その運用だけを出す。null なら絞らない', () => {
+        fixture.componentRef.setInput(
+            'limitToOperationNumbers',
+            new Set(['51', '100']),
+        );
+        // 休車の 100 は、集合にあっても会社・群の絞りの前の段で除かれたまま出ない
+        expect(numbers()).toEqual(['51']);
+
+        fixture.componentRef.setInput(
+            'limitToOperationNumbers',
+            new Set(['12']),
+        );
+        expect(numbers()).toEqual(['12']);
+
+        fixture.componentRef.setInput('limitToOperationNumbers', null);
+        expect(numbers()).toEqual(['12', '51']);
+    });
+
     it('運用番号で断面・履歴・現在位置を引き、無ければ空で返す', () => {
         const position = {} as OperationCurrentPositionDto;
         store.setCurrentPosition('12', position);
