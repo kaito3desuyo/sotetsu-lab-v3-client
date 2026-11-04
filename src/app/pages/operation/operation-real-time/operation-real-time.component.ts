@@ -136,13 +136,18 @@ export class OperationRealTimeComponent {
     readonly showCallChip = computed(
         () => this.callOperations().length > 0 && !this.#userState.isViewer(),
     );
+    readonly #noCallOperations = computed(
+        () => this.callOperations().length === 0,
+    );
     /**
      * 札を押して運用順を募集中だけに絞っているか（2026-11 B3）。保存しない（ページを離れたら消える）。
      * 募集中が 0 件との境を跨いだら false に戻す。絞り中に 0 件になって自動で解けたあと、
      * 1 件以上に戻っても絞りは戻らない
      */
     readonly callOnly = linkedSignal<boolean, boolean>({
-        source: () => this.callOperations().length === 0,
+        // linkedSignal は source の値を比べず、読んだ signal が変われば computation を走らせる。
+        // 毎分の更新で募集中の顔ぶれが変わるたびに解けないよう、0 件かどうかを computed で挟む
+        source: this.#noCallOperations,
         computation: () => false,
     });
     /** 実際に効いている絞り（札が出ているときだけ。viewer には効かせない） */

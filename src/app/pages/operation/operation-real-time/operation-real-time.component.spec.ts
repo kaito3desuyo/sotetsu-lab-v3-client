@@ -479,6 +479,19 @@ describe('OperationRealTimeComponent の目撃募集の札', () => {
         expect(onlyNumbers()).toBeNull();
     });
 
+    it('絞り中に募集中が入れ替わっても 1 件以上あるうちは絞りを解かない', () => {
+        fixture.componentInstance.onToggleCallFilter();
+        fixture.detectChanges();
+
+        // 毎分の更新で在線と履歴が書き換わり、募集中の顔ぶれが変わる
+        store.setOperationSightingHistory('12K', [{}] as never);
+        fixture.detectChanges();
+
+        expect(callOperations()).toEqual(['52K']);
+        expect(fixture.componentInstance.callOnly()).toBe(true);
+        expect(onlyNumbers()).toEqual(['52K']);
+    });
+
     it('絞り中に募集中が 0 件になると絞りを解き、1 件に戻っても絞りは戻らない', () => {
         fixture.componentInstance.onToggleCallFilter();
         fixture.detectChanges();
