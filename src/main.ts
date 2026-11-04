@@ -1,4 +1,4 @@
-import { enableProdMode, provideZoneChangeDetection } from '@angular/core';
+import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import localForage from 'localforage';
 import { AppComponent } from './app/app.component';
@@ -19,7 +19,6 @@ if (environment.production) {
 gtag('js', new Date());
 gtag('config', environment.analytics.id, { send_page_view: false });
 
-bootstrapApplication(AppComponent, {
-    ...appConfig,
-    providers: [provideZoneChangeDetection(), ...appConfig.providers],
-}).catch((err) => console.error(err));
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+    console.error(err),
+);

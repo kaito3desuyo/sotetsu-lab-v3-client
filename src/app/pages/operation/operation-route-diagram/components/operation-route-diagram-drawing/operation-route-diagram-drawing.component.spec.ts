@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -82,11 +82,11 @@ describe('OperationRouteDiagramDrawingComponent', () => {
     let component: OperationRouteDiagramDrawingComponent;
     let fixture: ComponentFixture<OperationRouteDiagramDrawingComponent>;
 
-    beforeEach(waitForAsync(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             imports: [OperationRouteDiagramDrawingComponent],
         }).compileComponents();
-    }));
+    });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(

@@ -122,7 +122,7 @@ describe('TimetableStationComponent の読み込み中', () => {
 
     beforeEach(async () => {
         // fetchData() は失敗を投げ直す（既存の振る舞い）。コンストラクタは受け止めないので、
-        // zone.js が未処理の拒否としてテストを落とす。ここでは本物の fetchData の失敗だけ受け流す
+        // 未処理の拒否としてテストを落とす。ここでは本物の fetchData の失敗だけ受け流す
         const original = TimetableStationComponent.prototype.fetchData;
         fetchDataSpy = jest
             .spyOn(TimetableStationComponent.prototype, 'fetchData')

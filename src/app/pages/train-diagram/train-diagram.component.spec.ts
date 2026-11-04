@@ -6,6 +6,7 @@ import {
     Router,
     convertToParamMap,
     provideRouter,
+    withRouterConfig,
 } from '@angular/router';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { format } from 'date-fns';
@@ -51,7 +52,10 @@ describe('TrainDiagramComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TrainDiagramComponent],
             providers: [
-                provideRouter([]),
+                provideRouter(
+                    [],
+                    withRouterConfig({ resolveNavigationPromiseOnError: true }),
+                ),
                 {
                     provide: TrainDiagramService,
                     useValue: {
