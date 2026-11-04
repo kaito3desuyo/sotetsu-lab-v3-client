@@ -10,6 +10,7 @@ import {
     importProvidersFrom,
     inject,
     provideAppInitializer,
+    provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatPaginatorIntl } from '@angular/material/paginator';
@@ -77,6 +78,8 @@ export const appConfig: ApplicationConfig = {
             }),
         ),
         { provide: ErrorHandler, useClass: ErrorHandlerService },
+        // zone.js が無いと、未処理の Promise 拒否や window の error は ErrorHandler に届かない。その経路を戻す
+        provideBrowserGlobalErrorListeners(),
         provideAppInitializer(() => inject(WebVitalsReporter).start()),
         // 先に登録した方が外側。失敗を FetchError に直すのは、AuthInterceptor が 401 で取り直した後
         {
