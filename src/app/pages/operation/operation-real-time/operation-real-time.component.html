@@ -29,11 +29,6 @@
         </div>
     </app-control-band>
 
-    <!-- 目撃募集の帯（2026-11 M13）。操作帯の下・凡例の上の貼り付かない白帯。0 件・viewer では何も描かない -->
-    <app-operation-real-time-sighting-call
-        [operations]="callOperations()"
-    ></app-operation-real-time-sighting-call>
-
     <!-- 凡例は列車ダイヤグラムと同じく操作帯のすぐ下の白い全幅の帯（ユーザー判断 2026-10-06）。
          操作帯の要約の行（40px＋罫線 1px）の下に貼り付く。main の gap 16px と横 gutter は
          負のマージンで打ち消し、中身で同じ gutter を戻す。ページの中の貼り付く物なので z-30（重なりの順） -->
@@ -61,8 +56,20 @@
                     >
                         運用順
                     </h2>
+                    <!-- 目撃募集の札（2026-11 B3）。押すと運用順を募集中だけに絞る。保存しない。
+                         見出しの行の右端に置き、行は足さない。0 件・viewer では描かない -->
+                    @if (showCallChip()) {
+                        <app-operation-real-time-sighting-call
+                            class="tw-ml-auto tw-self-center"
+                            [count]="callOperations().length"
+                            [active]="callFilterActive()"
+                            (toggled)="onToggleCallFilter()"
+                        ></app-operation-real-time-sighting-call>
+                    }
                 </div>
-                <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
+                <app-operation-real-time-operation-table
+                    [limitToOperationNumbers]="callOperationNumbers()"
+                ></app-operation-real-time-operation-table>
             </div>
 
             <div class="tw-flex-1 tw-self-start">
@@ -87,8 +94,23 @@
         <div class="tw-mx-[-16px]">
             <mat-tab-group>
                 <mat-tab label="運用順">
+                    <!-- 目撃募集の札（2026-11 B3）。押すと運用順を募集中だけに絞る。保存しない。
+                         0 件・viewer では行ごと描かない -->
+                    @if (showCallChip()) {
+                        <div
+                            class="tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2"
+                        >
+                            <app-operation-real-time-sighting-call
+                                [count]="callOperations().length"
+                                [active]="callFilterActive()"
+                                (toggled)="onToggleCallFilter()"
+                            ></app-operation-real-time-sighting-call>
+                        </div>
+                    }
                     <div class="tw-px-4 tw-pt-3">
-                        <app-operation-real-time-operation-table></app-operation-real-time-operation-table>
+                        <app-operation-real-time-operation-table
+                            [limitToOperationNumbers]="callOperationNumbers()"
+                        ></app-operation-real-time-operation-table>
                     </div>
                 </mat-tab>
                 <mat-tab label="編成順">

@@ -1,93 +1,69 @@
-import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { UserState } from 'src/app/global-states/user.state';
-import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationRealTimeSightingCallComponent } from './operation-real-time-sighting-call.component';
 
 describe('OperationRealTimeSightingCallComponent', () => {
     let fixture: ComponentFixture<OperationRealTimeSightingCallComponent>;
-    const open = jest.fn();
-    const isLoggedIn = signal(true);
-    const isViewer = signal(false);
 
-    const root = () => fixture.nativeElement as HTMLElement;
-    const chips = () =>
-        Array.from(root().querySelectorAll<HTMLButtonElement>('button'));
+    const button = () =>
+        (fixture.nativeElement as HTMLElement).querySelector('button')!;
+    const text = () => button().textContent?.replace(/\s+/g, ' ').trim();
 
-    const setup = (operations: { operationNumber: string }[]) => {
+    const setup = (count: number, active: boolean) => {
         fixture = TestBed.createComponent(
             OperationRealTimeSightingCallComponent,
         );
-        fixture.componentRef.setInput('operations', operations);
+        fixture.componentRef.setInput('count', count);
+        fixture.componentRef.setInput('active', active);
         fixture.detectChanges();
     };
 
     beforeEach(async () => {
-        open.mockClear();
-        isLoggedIn.set(true);
-        isViewer.set(false);
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeSightingCallComponent],
-            providers: [
-                provideRouter([]),
-                { provide: UserState, useValue: { isLoggedIn, isViewer } },
-                { provide: OperationPostDialogService, useValue: { open } },
-            ],
         }).compileComponents();
     });
 
-    it('対象が 0 件なら何も描かない', () => {
-        setup([]);
+    it('未選択では「目撃募集 3 ›」を白地・1px の枠で出す', () => {
+        setup(3, false);
 
-        expect(root().children.length).toBe(0);
-        expect(root().textContent?.trim()).toBe('');
-    });
-
-    it('運用番号のチップを並べ、押すと運用番号を入れて投稿ダイアログを開く', () => {
-        setup([{ operationNumber: '12K' }, { operationNumber: '58S' }]);
-
-        expect(root()).toHaveTextContent(/目撃募集/);
-        expect(root()).toHaveTextContent(/走行中・本日未目撃の運用/);
-        expect(chips().map((b) => b.textContent?.trim())).toEqual([
-            '12K',
-            '58S',
-        ]);
-        expect(chips()[0]).toHaveAttribute(
-            'aria-label',
-            '12K の目撃を投稿する',
+        expect(text()).toBe('目撃募集 3 ›');
+        expect(button()).toHaveAttribute('type', 'button');
+        expect(button()).toHaveAttribute('aria-pressed', 'false');
+        expect(button()).toHaveClass(
+            'tw-bg-white',
+            'tw-text-ink',
+            'tw-border',
+            'tw-border-solid',
+            'tw-border-rule-strong',
+            'tw-rounded-full',
+            'tw-h-8',
+            'tw-font-[inherit]',
         );
-        expect(chips()[0]).toHaveAttribute('type', 'button');
-        // preflight が無いので、字をアプリの字にそろえないとブラウザ既定のボタンの字になる
-        expect(chips()[0]).toHaveClass('tw-font-[inherit]');
-
-        chips()[1].click();
-
-        expect(open).toHaveBeenCalledWith({ operationNumber: '58S' });
+        expect(button()).not.toHaveClass('tw-bg-accent-500');
     });
 
-    it('ゲストがチップを押すと /login?return_to=… へ送る', async () => {
-        isLoggedIn.set(false);
-        const router = TestBed.inject(Router);
-        const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);
-        jest.spyOn(router, 'url', 'get').mockReturnValue(
-            '/operation/real-time?x=1',
+    it('絞っている間は、オレンジで塗って末尾を ✕ にし、aria-pressed を true にする', () => {
+        setup(3, true);
+
+        expect(text()).toBe('目撃募集 3 ✕');
+        expect(button()).toHaveAttribute('aria-pressed', 'true');
+        expect(button()).toHaveClass(
+            'tw-bg-accent-500',
+            'tw-text-accent-ink',
+            'tw-border-accent-500',
+            'tw-border',
         );
-        setup([{ operationNumber: '12K' }]);
-
-        chips()[0].click();
-
-        expect(open).not.toHaveBeenCalled();
-        expect(navigate).toHaveBeenCalledWith(['/login'], {
-            queryParams: { return_to: '/operation/real-time?x=1' },
-        });
+        expect(button()).not.toHaveClass('tw-bg-white');
+        expect(button()).not.toHaveClass('tw-border-rule-strong');
     });
 
-    it('viewer には描かない', () => {
-        isViewer.set(true);
-        setup([{ operationNumber: '12K' }]);
+    it('押すと toggled を出す', () => {
+        setup(3, false);
+        const emitted = jest.fn();
+        fixture.componentInstance.toggled.subscribe(emitted);
 
-        expect(chips().length).toBe(0);
-        expect(root().textContent?.trim()).toBe('');
+        button().click();
+
+        expect(emitted).toHaveBeenCalledTimes(1);
     });
 });

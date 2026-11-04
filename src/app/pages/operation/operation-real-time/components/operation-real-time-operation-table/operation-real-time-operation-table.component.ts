@@ -3,6 +3,7 @@ import {
     Component,
     computed,
     inject,
+    input,
 } from '@angular/core';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
@@ -48,15 +49,22 @@ export class OperationRealTimeOperationTableComponent {
     readonly selectedAgencyIds = this.#store.selectedAgencyIds;
     readonly selectedGroupNames = this.#store.normalizedSelectedGroupNames;
 
-    readonly filteredOperations = computed(() =>
-        filterRealTimeOperations(
+    /** 渡されたら、その運用番号の運用だけに絞る（目撃募集の札の絞り）。null なら絞らない */
+    readonly limitToOperationNumbers = input<ReadonlySet<string> | null>(null);
+
+    readonly filteredOperations = computed(() => {
+        const filtered = filterRealTimeOperations(
             this.operations() ?? [],
             this.selectedAgencyIds(),
             this.selectedGroupNames(),
             this.timeCrossSections() ?? {},
             this.formations() ?? [],
-        ),
-    );
+        );
+        const only = this.limitToOperationNumbers();
+        return only === null
+            ? filtered
+            : filtered.filter((o) => only.has(o.operationNumber));
+    });
 
     readonly queryTimeCrossSectionByOperationNumber = (
         operationNumber: string,
