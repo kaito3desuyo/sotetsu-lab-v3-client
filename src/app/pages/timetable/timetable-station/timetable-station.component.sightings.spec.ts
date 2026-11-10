@@ -38,7 +38,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
     } as unknown as OperationSightingTimeCrossSectionDto;
     const today = () => format(getRailwayDate(new Date()), 'yyyy-MM-dd');
     const conditions = (date: string) => ({
-        calendarId: 'cal-1',
+        calendarId: '00000000-0000-4000-8000-000000000001',
         stationId: 'st-1',
         tripDirection: 0,
         date,
@@ -67,7 +67,8 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                     useValue: {
                         paramMap: of(
                             convertToParamMap({
-                                calendar_id: 'cal-1',
+                                calendar_id:
+                                    '00000000-0000-4000-8000-000000000001',
                                 station_id: 'st-1',
                                 trip_direction: '0',
                             }),
@@ -94,7 +95,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                 set: { template: '', imports: [] },
             })
             .compileComponents();
-        setTodaysCalendars(['cal-1']);
+        setTodaysCalendars(['00000000-0000-4000-8000-000000000001']);
     };
 
     const sightingsSaves = () =>

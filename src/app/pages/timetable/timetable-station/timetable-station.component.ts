@@ -33,6 +33,7 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
+import { parseUuidParam } from 'src/app/shared/uuid-param.util';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
@@ -216,7 +217,10 @@ export class TimetableStationComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const rawCalendarId = paramMap.get('calendar_id');
+                // UUID でない（"undefined" など）ダイヤは、無いときと同じく今日のダイヤで補う
+                const rawCalendarId = parseUuidParam(
+                    paramMap.get('calendar_id'),
+                );
                 const rawStationId = paramMap.get('station_id');
                 // 読めない向き（"abc" など）は、無いときと同じ扱いにする
                 const tripDirection = parseTripDirectionParam(

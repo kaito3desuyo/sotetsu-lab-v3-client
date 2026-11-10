@@ -1,7 +1,12 @@
-import { HttpBackend, HttpClient } from '@angular/common/http';
+import {
+    HttpBackend,
+    HttpClient,
+    HttpErrorResponse,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
-import { map, Observable, tap } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
 import { environment } from 'src/environments/environment';
 import { withAppDevtools } from '../core/store-features/with-app-devtools';
@@ -38,10 +43,23 @@ export const MaintenanceState = signalStore(
                     .get({
                         name: 'fetch',
                         params: {},
+                        // HttpBackend で直接取るので FetchErrorInterceptor を通らない。失敗はここで FetchError に直す
                         fetch: () =>
-                            http.get<State>(
-                                environment.backendUrl + '/maintenance',
-                            ),
+                            http
+                                .get<State>(
+                                    environment.backendUrl + '/maintenance',
+                                )
+                                .pipe(
+                                    catchError((error: unknown) =>
+                                        throwError(() =>
+                                            error instanceof HttpErrorResponse
+                                                ? FetchError.fromHttpErrorResponse(
+                                                      error,
+                                                  )
+                                                : error,
+                                        ),
+                                    ),
+                                ),
                         forceReload: maxAgeMs === undefined,
                         maxAgeMs,
                     })

@@ -7,7 +7,10 @@ import { unprotected } from '@ngrx/signals/testing';
 import { of, Subject } from 'rxjs';
 
 import { FetchError } from './core/classes/custom-error';
-import { AppUpdateService } from './core/services/app-update.service';
+import {
+    APP_LOCATION,
+    AppUpdateService,
+} from './core/services/app-update.service';
 import { GoogleAnalyticsService } from './core/services/google-analytics.service';
 import { NotificationService } from './core/services/notification.service';
 import { SocketService } from './core/services/socket.service';
@@ -24,8 +27,13 @@ describe('AppComponent', () => {
     let setUserProperties: jest.Mock;
     let sendEvent: jest.Mock;
     let tokenFetch: jest.Mock;
+    let assign: jest.Mock;
+    let notify: jest.Mock;
 
     beforeEach(async () => {
+        sessionStorage.clear();
+        assign = jest.fn();
+        notify = jest.fn();
         tokenFetch = jest.fn(() => of(undefined));
         socketMessages = new Subject<unknown>();
         setUserProperties = jest.fn();
@@ -58,7 +66,21 @@ describe('AppComponent', () => {
                         ],
                         children: [],
                     },
+                    {
+                        path: 'stale-chunk',
+                        loadComponent: () =>
+                            Promise.reject(
+                                new TypeError(
+                                    'Importing a module script failed.',
+                                ),
+                            ),
+                    },
                 ]),
+                {
+                    provide: APP_LOCATION,
+                    useValue: { assign, reload: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: notify } },
                 { provide: AppUpdateService, useValue: {} },
                 {
                     provide: TokenState,
@@ -72,7 +94,6 @@ describe('AppComponent', () => {
                         sendEvent,
                     },
                 },
-                { provide: NotificationService, useValue: { open: () => {} } },
                 {
                     provide: SocketService,
                     useValue: {
@@ -171,6 +192,49 @@ describe('AppComponent', () => {
 
         expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
             error_message: 'FetchError 503 /v3/agencies: 止まっています',
+        });
+    });
+
+    describe('古い版の部品が読めないとき', () => {
+        const navigate = () =>
+            TestBed.inject(Router)
+                .navigateByUrl('/stale-chunk')
+                .catch(() => {});
+
+        it('移ろうとした URL を丸ごと読み込み直す（理由は GA に送る）', async () => {
+            TestBed.createComponent(AppComponent);
+
+            await navigate();
+
+            expect(assign).toHaveBeenCalledWith('/stale-chunk');
+            expect(notify).not.toHaveBeenCalled();
+            expect(sendEvent).toHaveBeenCalledWith('page_load_error', {
+                error_message: 'TypeError: Importing a module script failed.',
+            });
+        });
+
+        it('読み込み直してもまた読めなければ、回し続けずに失敗を知らせる', async () => {
+            TestBed.createComponent(AppComponent);
+
+            await navigate();
+            await navigate();
+
+            expect(assign).toHaveBeenCalledTimes(1);
+            expect(notify).toHaveBeenCalledWith(
+                'ページの読み込みに失敗しました',
+                'OK',
+            );
+        });
+
+        it('ほかの失敗では読み込み直さない', async () => {
+            TestBed.createComponent(AppComponent);
+
+            await TestBed.inject(Router)
+                .navigateByUrl('/broken')
+                .catch(() => {});
+
+            expect(assign).not.toHaveBeenCalled();
+            expect(notify).toHaveBeenCalled();
         });
     });
 
