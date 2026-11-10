@@ -118,7 +118,7 @@ export class OperationRealTimeFormationCardComponent {
     );
 
     openPost(): void {
-        this.#postDialog.open({
+        this.#postDialog.open('realtime_formation_card', {
             agencyId: this.formation().agencyId,
             formationOrVehicleNumber: this.formation().formationNumber,
         });

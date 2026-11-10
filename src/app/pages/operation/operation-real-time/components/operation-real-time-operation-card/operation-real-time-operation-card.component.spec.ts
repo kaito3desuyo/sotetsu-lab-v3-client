@@ -140,7 +140,7 @@ describe('OperationRealTimeOperationCardComponent', () => {
             'button[data-testid="row-post"]',
         ) as HTMLButtonElement;
         button.click();
-        expect(open).toHaveBeenCalledWith({
+        expect(open).toHaveBeenCalledWith('realtime_operation_card', {
             operationNumber: component.operation().operationNumber,
         });
     });

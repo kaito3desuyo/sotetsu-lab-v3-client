@@ -122,7 +122,7 @@ describe('OperationRealTimeFormationCardComponent', () => {
             'button[data-testid="row-post"]',
         ) as HTMLButtonElement;
         button.click();
-        expect(open).toHaveBeenCalledWith({
+        expect(open).toHaveBeenCalledWith('realtime_formation_card', {
             agencyId: component.formation().agencyId,
             formationOrVehicleNumber: component.formation().formationNumber,
         });

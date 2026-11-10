@@ -42,7 +42,10 @@ describe('OperationPostDialogComponent', () => {
                 },
                 {
                     provide: MAT_DIALOG_DATA,
-                    useValue: { operationNumber: '11' },
+                    useValue: {
+                        source: 'realtime_operation_card',
+                        initialValue: { operationNumber: '11' },
+                    },
                 },
                 {
                     provide: OperationPostCardService,
@@ -80,6 +83,13 @@ describe('OperationPostDialogComponent', () => {
             By.directive(OperationPostFormComponent),
         ).componentInstance as OperationPostFormComponent;
         expect(form.initialValue()).toEqual({ operationNumber: '11' });
+    });
+
+    it('開いた場所をフォームに渡す', () => {
+        const form = fixture.debugElement.query(
+            By.directive(OperationPostFormComponent),
+        ).componentInstance as OperationPostFormComponent;
+        expect(form.source()).toBe('realtime_operation_card');
     });
 
     it('投稿に成功したら閉じる', () => {
