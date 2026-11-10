@@ -63,13 +63,28 @@
             }
         </div>
 
-        <a
-            [routerLink]="info().detailLink"
-            (click)="closed.emit()"
-            class="tw-text-sm tw-font-bold tw-text-primary-500"
+        <div
+            class="tw-flex tw-flex-row tw-items-center tw-justify-between tw-gap-2"
         >
-            全線時刻表で見る ›
-        </a>
+            <a
+                [routerLink]="info().detailLink"
+                (click)="closed.emit()"
+                class="tw-text-sm tw-font-bold tw-text-primary-500"
+            >
+                全線時刻表で見る ›
+            </a>
+            @if (canPost() && info().operationNumber) {
+                <button
+                    type="button"
+                    mat-stroked-button
+                    aria-label="この運用で投稿"
+                    (click)="openPost()"
+                >
+                    <mat-icon>edit_note</mat-icon>
+                    投稿
+                </button>
+            }
+        </div>
     </div>
 
     <button
