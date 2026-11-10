@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- `serverless-alarms.ts` は api の計画の Task 3 の Interfaces と同じ中身。ARN は `${ssm:sotetsu-lab-v3-monitoring-alarm-topic-arn, ''}`、Condition は `IsProd`。
+- `serverless-alarms.ts` は api の計画の Task 3 の Interfaces と同じ中身。ARN は `${ssm:sotetsu-lab-v3-${sls:stage}-monitoring-alarm-topic-arn, ''}`、Condition は `IsProd`。
 - アラームの値は api の計画の Global Constraints と同じ。
 - prettier はファイル単位で当てる（client のメモ）。
 - コミットの形と末尾の 2 行は monitoring の計画と同じ。
