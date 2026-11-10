@@ -7,7 +7,9 @@ import { OperationPostFormComponent } from './operation-post-form.component';
     selector: 'app-operation-post-card',
     template: `
         <app-panel-card heading="運用情報を投稿する">
-            <app-operation-post-form></app-operation-post-form>
+            <app-operation-post-form
+                source="top_card"
+            ></app-operation-post-form>
         </app-panel-card>
     `,
     styleUrl: './operation-post-card.component.scss',

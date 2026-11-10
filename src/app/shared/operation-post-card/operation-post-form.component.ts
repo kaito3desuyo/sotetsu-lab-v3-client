@@ -2,13 +2,17 @@ import {
     ChangeDetectionStrategy,
     Component,
     computed,
+    afterNextRender,
     DestroyRef,
     effect,
+    ElementRef,
     inject,
+    Injector,
     input,
     output,
     signal,
     untracked,
+    viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -19,6 +23,7 @@ import {
     ReactiveFormsModule,
     Validators,
 } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -31,10 +36,16 @@ import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
+import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { formatFormationAnnotation } from '../formation-annotation.util';
+import { PickableTrain } from '../train-picker/pickable-train.interface';
+import { TrainPickerComponent } from '../train-picker/train-picker.component';
 import { AppButtonComponent } from '../app-button/app-button.component';
 import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
@@ -44,7 +55,18 @@ import {
     filterAgenciesWithFormations,
     OperationPostCardStore,
 } from './operation-post-card.store';
-import { toSightingTimeIso } from './sighting-precheck.util';
+import { OperationPostSource } from './operation-post-source.type';
+import {
+    FORMATION_NOT_IN_TODAY_MESSAGE,
+    findSightingBlockers,
+    isFormationNotInToday,
+    SIGHTING_BLOCK_MESSAGES,
+    SightingBlockReason,
+    toSightingTimeIso,
+} from './sighting-precheck.util';
+
+/** 編成番号の候補の最大件数（スマホで長くなりすぎないように） */
+const MAX_FORMATION_CANDIDATES = 20;
 
 type Form = FormGroup<{
     agencyId: FormControl<string>;
@@ -72,7 +94,9 @@ export interface OperationPostInitialValue {
         MatSelectModule,
         MatSnackBarModule,
         MatButtonModule,
+        MatAutocompleteModule,
         RouterLink,
+        TrainPickerComponent,
         SegmentToggleComponent,
         AppButtonComponent,
     ],
@@ -86,6 +110,15 @@ export class OperationPostFormComponent {
     readonly #router = inject(Router);
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #injector = inject(Injector);
+    readonly #todaysOperations = inject(TodaysOperationListState)
+        .todaysOperations;
+    readonly #agencyList = inject(AgencyListState).agencies;
+    readonly #todaysFormationsSorted = inject(TodaysFormationListState)
+        .todaysFormationsSorted;
+    /** viewChild は ES private (#) にできないので private を使う */
+    private readonly formationInput =
+        viewChild<ElementRef<HTMLInputElement>>('formationInput');
 
     readonly #userState = inject(UserState);
     readonly isLoggedIn = this.#userState.isLoggedIn;
@@ -105,6 +138,10 @@ export class OperationPostFormComponent {
 
     /** 初めに入れておく値（リアルタイムの行から開いたとき）。2026-10-22 */
     readonly initialValue = input<OperationPostInitialValue>({});
+    /** どこから開いたか（GA の source）。トップのカードは自分自身が入口 */
+    readonly source = input<OperationPostSource>('top_card');
+    /** フォームの代わりに「列車を選ぶ」画面を出すか。FormGroup はこの部品に残るので入力途中の値は消えない */
+    readonly mode = signal<'form' | 'picker'>('form');
     /** 投稿に成功したときだけ流す（ダイアログを閉じるため） */
     readonly submitted = output<void>();
     /** 送っている間（2 回送らない・ダイアログを閉じさせないため。2026-10-23） */
@@ -135,6 +172,42 @@ export class OperationPostFormComponent {
         ),
     );
 
+    /** valueChanges を流さない patchValue（初期値）も拾うため、フォームの値は手で同期する */
+    readonly #formValue = signal(this.sightingForm.getRawValue());
+    /** 列車から選んだ運用番号。値が変わったら「選んだ」扱いを外す */
+    #pickedOperationNumber: string | null = null;
+    #operationFromTrain = false;
+
+    /** 打った字で始まる今日の編成（所属を選んでいればその会社だけ）。推測の充当編成は混ぜない */
+    readonly formationCandidates = computed<FormationDetailsDto[]>(() => {
+        const { agencyId, formationOrVehicleNumber } = this.#formValue();
+        const typed = formationOrVehicleNumber.trim();
+        if (typed === '') return [];
+        return this.#todaysFormationsSorted()
+            .filter(
+                (f) =>
+                    (agencyId === '' || f.agencyId === agencyId) &&
+                    (f.formationNumber ?? '').startsWith(typed),
+            )
+            .slice(0, MAX_FORMATION_CANDIDATES);
+    });
+    /** 今日の編成に無い番号。止めずに注意だけ出す（車両番号かもしれないため） */
+    readonly formationNotInToday = computed(() => {
+        const { agencyId, formationOrVehicleNumber } = this.#formValue();
+        return isFormationNotInToday({
+            agencyId,
+            formationOrVehicleNumber,
+            todaysFormations: this.#todaysFormationsSorted(),
+        });
+    });
+    readonly formationNotInTodayMessage = FORMATION_NOT_IN_TODAY_MESSAGE;
+    readonly blockMessages = SIGHTING_BLOCK_MESSAGES;
+
+    /** 候補の option の副表示（形式・会社） */
+    formationAnnotation(formation: FormationDetailsDto): string {
+        return formatFormationAnnotation(formation, this.#agencyList());
+    }
+
     readonly timeSetting = toSignal(
         this.sightingForm.get('timeSetting').valueChanges,
         { initialValue: this.sightingForm.get('timeSetting').value },
@@ -153,9 +226,10 @@ export class OperationPostFormComponent {
         effect(() => {
             const initial = this.initialValue();
             // emitEvent: false。初期値の反映で valueChanges を流すと、触る前に sighting_form_start が飛ぶ
-            untracked(() =>
-                this.sightingForm.patchValue(initial, { emitEvent: false }),
-            );
+            untracked(() => {
+                this.sightingForm.patchValue(initial, { emitEvent: false });
+                this.#formValue.set(this.sightingForm.getRawValue());
+            });
         });
     }
 
@@ -169,7 +243,47 @@ export class OperationPostFormComponent {
         this.sightingForm.get('timeSetting').setValue(value);
     }
 
+    openPicker(): void {
+        this.mode.set('picker');
+        this.#ga.sendEvent('train_picker_open', { source: this.source() });
+    }
+
+    closePicker(): void {
+        this.mode.set('form');
+    }
+
+    onTrainPicked(train: PickableTrain): void {
+        this.#pickedOperationNumber = train.operationNumber;
+        this.sightingForm.patchValue({
+            operationNumber: train.operationNumber,
+        });
+        this.#operationFromTrain = true;
+        this.mode.set('form');
+        this.#ga.sendEvent('train_picker_select', { source: this.source() });
+        // 編成番号は車体を見て打つので、続けて打てるよう欄にフォーカスする。
+        // フォームの描き直しを待ってから（picker の間は欄が DOM に無い）
+        afterNextRender(() => this.formationInput()?.nativeElement.focus(), {
+            injector: this.#injector,
+        });
+    }
+
     hookEvent(): void {
+        this.sightingForm.valueChanges
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => {
+                this.#formValue.set(this.sightingForm.getRawValue());
+            });
+
+        // 選んだ番号と違う値に打ち直したら、列車から選んだとは数えない
+        this.sightingForm
+            .get('operationNumber')
+            .valueChanges.pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe((value) => {
+                if (value !== this.#pickedOperationNumber) {
+                    this.#operationFromTrain = false;
+                }
+            });
+
         this.sightingForm
             .get('timeSetting')
             .valueChanges.pipe(takeUntilDestroyed(this.#destroyRef))
@@ -188,7 +302,7 @@ export class OperationPostFormComponent {
         this.sightingForm.valueChanges
             .pipe(take(1), takeUntilDestroyed(this.#destroyRef))
             .subscribe(() => {
-                this.#ga.sendEvent('sighting_form_start');
+                this.#ga.sendEvent('sighting_form_start', this.#gaParams());
             });
     }
 
@@ -211,7 +325,21 @@ export class OperationPostFormComponent {
             now,
         });
 
-        this.#ga.sendEvent('sighting_submit');
+        const blockers = findSightingBlockers({
+            operationNumber,
+            sightingTimeIso: convertedSightingTime,
+            now,
+            // 100 は一覧に無いが、findSightingBlockers が通す。空なら運用番号は確かめない
+            todaysOperationNumbers: this.#todaysOperations().map(
+                (o) => o.operationNumber,
+            ),
+        });
+        if (blockers.length > 0) {
+            this.#block(blockers);
+            return;
+        }
+
+        this.#ga.sendEvent('sighting_submit', this.#gaParams());
 
         this.#setSubmitting(true);
         this.#loading.open();
@@ -230,6 +358,7 @@ export class OperationPostFormComponent {
 
         if (result.isFailure()) {
             this.#ga.sendEvent('sighting_submit_failure', {
+                ...this.#gaParams(),
                 // GA のイベントの値は 100 文字まで
                 error_message: result.error.message.slice(0, 100),
             });
@@ -245,11 +374,13 @@ export class OperationPostFormComponent {
         }
 
         if (result.isSuccess()) {
-            this.#ga.sendEvent('sighting_submit_success');
+            this.#ga.sendEvent('sighting_submit_success', this.#gaParams());
             this.#snackBar.open('目撃情報を投稿しました', 'OK', {
                 duration: 3000,
             });
 
+            this.#pickedOperationNumber = null;
+            this.#operationFromTrain = false;
             formGroupDirective.resetForm({
                 agencyId: '',
                 formationOrVehicleNumber: '',
@@ -261,6 +392,36 @@ export class OperationPostFormComponent {
             this.#operationPostCardService.emitSubmitEvent();
             this.submitted.emit();
         }
+    }
+
+    /** どの欄に出すか: 未来の時刻は目撃時刻、運用番号は運用番号の欄 */
+    #block(reasons: SightingBlockReason[]): void {
+        for (const reason of reasons) {
+            const control = this.sightingForm.get(
+                reason === 'future_time' ? 'sightingTime' : 'operationNumber',
+            );
+            control.setErrors({ precheck: reason });
+            control.markAsTouched();
+        }
+        this.#ga.sendEvent('sighting_submit_blocked', {
+            source: this.source(),
+            reason: reasons[0],
+        });
+    }
+
+    #gaParams(): {
+        source: OperationPostSource;
+        time_setting: 'current' | 'specified';
+        operation_from_train: 0 | 1;
+    } {
+        return {
+            source: this.source(),
+            time_setting:
+                this.sightingForm.getRawValue().timeSetting === 'specifiedTime'
+                    ? 'specified'
+                    : 'current',
+            operation_from_train: this.#operationFromTrain ? 1 : 0,
+        };
     }
 
     #setSubmitting(value: boolean): void {

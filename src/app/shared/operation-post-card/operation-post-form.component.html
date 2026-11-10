@@ -2,6 +2,13 @@
     <div class="tw-flex tw-flex-col tw-items-center tw-gap-4 tw-py-4">
         <p class="tw-m-0">投稿できません</p>
     </div>
+} @else if (!showGuestPrompt() && mode() === 'picker') {
+    <!-- 列車を選ぶ画面はフォームの場所に入れ替えて出す。入力途中の値は
+     FormGroup がこの部品に残っているので、戻っても消えない。 -->
+    <app-train-picker
+        (picked)="onTrainPicked($event)"
+        (cancelled)="closePicker()"
+    ></app-train-picker>
 } @else if (!showGuestPrompt()) {
     <form
         class="tw-flex tw-flex-col tw-gap-4"
@@ -40,11 +47,35 @@
 
                     <mat-form-field class="tw-min-w-0 sm:tw-flex-1">
                         <mat-label>編成番号 or 車両番号</mat-label>
+                        <!-- 欄は手で打つまま。今日走っている編成を候補に出すだけ。
+                         推測の充当編成は混ぜない（見ずに推測のまま投稿されるのを避ける。M30） -->
                         <input
+                            #formationInput
                             matInput
                             formControlName="formationOrVehicleNumber"
+                            [matAutocomplete]="formationAuto"
                         />
-                        <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
+                        <mat-autocomplete #formationAuto="matAutocomplete">
+                            @for (
+                                formation of formationCandidates();
+                                track formation.formationId
+                            ) {
+                                <mat-option [value]="formation.formationNumber">
+                                    {{ formation.formationNumber }}
+                                    <span class="tw-text-xs tw-opacity-70">
+                                        {{ formationAnnotation(formation) }}
+                                    </span>
+                                </mat-option>
+                            }
+                        </mat-autocomplete>
+                        <!-- 今日の編成に無い番号は止めず注意だけ（車両番号の可能性があり、client では見分けられない） -->
+                        @if (formationNotInToday()) {
+                            <mat-hint>{{
+                                formationNotInTodayMessage
+                            }}</mat-hint>
+                        } @else {
+                            <mat-hint> 例：12101 / 101 / 3101 </mat-hint>
+                        }
                         @if (
                             sightingForm
                                 .get('formationOrVehicleNumber')
@@ -61,16 +92,45 @@
                  位置も編成番号の下（改修前と同じ並び）に戻した。
                  98 §G4 は「運用番号は select（モック）」としていたが、
                  選択より打ったほうが速いという実利用側の判断で覆す。 -->
-                <mat-form-field class="tw-w-full">
-                    <mat-label>運用番号</mat-label>
-                    <input matInput formControlName="operationNumber" />
-                    <mat-hint>休車の場合は「100」を入力</mat-hint>
-                    @if (
-                        sightingForm.get('operationNumber').hasError('required')
-                    ) {
-                        <mat-error> <strong>必須項目</strong>です </mat-error>
-                    }
-                </mat-form-field>
+                <!-- 「列車から選ぶ」は欄の横に足すだけ。欄は伸び、ボタンは幅を保つ。 -->
+                <div class="tw-flex tw-items-start tw-gap-2">
+                    <mat-form-field class="tw-min-w-0 tw-flex-1">
+                        <mat-label>運用番号</mat-label>
+                        <input matInput formControlName="operationNumber" />
+                        <mat-hint>休車の場合は「100」を入力</mat-hint>
+                        @if (
+                            sightingForm
+                                .get('operationNumber')
+                                .hasError('required')
+                        ) {
+                            <mat-error>
+                                <strong>必須項目</strong>です
+                            </mat-error>
+                        } @else if (
+                            sightingForm
+                                .get('operationNumber')
+                                .hasError('precheck')
+                        ) {
+                            <mat-error>
+                                {{
+                                    blockMessages[
+                                        sightingForm
+                                            .get('operationNumber')
+                                            .getError('precheck')
+                                    ]
+                                }}
+                            </mat-error>
+                        }
+                    </mat-form-field>
+                    <button
+                        mat-stroked-button
+                        type="button"
+                        class="tw-mt-1 tw-shrink-0"
+                        (click)="openPicker()"
+                    >
+                        列車から選ぶ
+                    </button>
+                </div>
 
                 <app-segment-toggle
                     [options]="timeSettingOptions"
@@ -102,6 +162,20 @@
                         ) {
                             <mat-error>
                                 <strong>必須項目</strong>です
+                            </mat-error>
+                        } @else if (
+                            sightingForm
+                                .get('sightingTime')
+                                .hasError('precheck')
+                        ) {
+                            <mat-error>
+                                {{
+                                    blockMessages[
+                                        sightingForm
+                                            .get('sightingTime')
+                                            .getError('precheck')
+                                    ]
+                                }}
                             </mat-error>
                         }
                     </mat-form-field>
