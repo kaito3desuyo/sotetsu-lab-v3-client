@@ -28,6 +28,12 @@ class StubTrainPickerComponent {
     readonly cancelled = output<void>();
 }
 
+/** 運用番号の欄（mat-form-field） */
+const operationNumberField = (form: HTMLElement): HTMLElement =>
+    form
+        .querySelector('input[formcontrolname="operationNumber"]')!
+        .closest('mat-form-field') as HTMLElement;
+
 describe('OperationPostFormComponent（テンプレート）', () => {
     let fixture: ComponentFixture<OperationPostFormComponent>;
     let component: OperationPostFormComponent;
@@ -132,21 +138,19 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         ).toHaveTextContent('指定された運用番号の運用情報が見つかりません');
     });
 
-    it('エラーが無いとき、説明が出てボタンも出る', () => {
+    it('エラーが無いとき、説明が出て、欄の下に「列車から選ぶ」のボタンがある', () => {
         const form: HTMLElement = fixture.nativeElement;
-        expect(form.querySelector('#operation-number-hint')).toHaveTextContent(
-            '休車の場合は「100」を入力',
-        );
         expect(
-            form.querySelector('input[formcontrolname="operationNumber"]'),
-        ).toHaveAttribute(
-            'aria-describedby',
-            expect.stringContaining('operation-number-hint'),
+            operationNumberField(form).querySelector('mat-hint'),
+        ).toHaveTextContent('休車の場合は「100」を入力');
+        const button = [...form.querySelectorAll('button')].find((b) =>
+            b.textContent?.includes('列車から選ぶ'),
         );
-        expect(form).toHaveTextContent('列車から選ぶ');
+        expect(button).toBeDefined();
+        expect(button).toHaveAttribute('mat-stroked-button');
     });
 
-    it('送る前の確認で止めたとき、説明は隠れてボタンは残る', async () => {
+    it('送る前の確認で止めたとき、説明の代わりにエラーが出てボタンは残る', async () => {
         patchState(
             unprotected(TestBed.inject(TodaysOperationListState)),
             setAllEntities(
@@ -167,7 +171,7 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         fixture.detectChanges();
 
         const form: HTMLElement = fixture.nativeElement;
-        expect(form.querySelector('#operation-number-hint')).toBeNull();
+        expect(operationNumberField(form).querySelector('mat-hint')).toBeNull();
         expect(form.querySelector('mat-error')).not.toBeNull();
         expect(form).toHaveTextContent('列車から選ぶ');
     });

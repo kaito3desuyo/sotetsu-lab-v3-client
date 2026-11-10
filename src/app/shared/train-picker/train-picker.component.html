@@ -13,7 +13,7 @@
     </div>
 
     <mat-form-field>
-        <mat-label>いる駅</mat-label>
+        <mat-label>駅名</mat-label>
         <mat-select
             appLazyOptions
             #lazyStation="appLazyOptions"
@@ -65,7 +65,7 @@
         </div>
     } @else if (!store.stationId()) {
         @if (store.settingsReady()) {
-            <p class="tw-m-0 tw-text-muted">いる駅を選んでください</p>
+            <p class="tw-m-0 tw-text-muted">駅を選んでください</p>
         }
     } @else if (!store.isLoading()) {
         <div class="tw-flex tw-flex-col tw-gap-2">

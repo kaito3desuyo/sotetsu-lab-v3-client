@@ -109,9 +109,7 @@ describe('TrainPickerComponent', () => {
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(fixture.nativeElement).toHaveTextContent(
-            /いる駅を選んでください/,
-        );
+        expect(fixture.nativeElement).toHaveTextContent(/駅を選んでください/);
         expect(
             fixture.nativeElement.querySelector('[data-train-row]'),
         ).toBeNull();
@@ -286,7 +284,7 @@ describe('TrainPickerComponent', () => {
         ).toHaveTextContent(/7:12着/);
     });
 
-    it('駅を選ぶ前でも、いる駅の選択肢が 1 回目のタップの前から描かれている', async () => {
+    it('駅を選ぶ前でも、駅名の選択肢が 1 回目のタップの前から描かれている', async () => {
         routes = [
             {
                 routeId: 'r1',
@@ -314,15 +312,13 @@ describe('TrainPickerComponent', () => {
         fixture.detectChanges();
         // 戻し終える前（getItem は未解決のまま）
         expect(fixture.nativeElement).not.toHaveTextContent(
-            /いる駅を選んでください/,
+            /駅を選んでください/,
         );
 
         await fixture.whenStable();
         fixture.detectChanges();
 
-        expect(fixture.nativeElement).toHaveTextContent(
-            /いる駅を選んでください/,
-        );
+        expect(fixture.nativeElement).toHaveTextContent(/駅を選んでください/);
     });
 
     describe('一覧のスクロール', () => {
