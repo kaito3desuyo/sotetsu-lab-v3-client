@@ -100,38 +100,57 @@
                  位置も編成番号の下（改修前と同じ並び）に戻した。
                  98 §G4 は「運用番号は select（モック）」としていたが、
                  選択より打ったほうが速いという実利用側の判断で覆す。 -->
-                <!-- 「列車から選ぶ」は欄の横に足すだけ。欄は伸び、ボタンは幅を保つ。 -->
-                <div class="tw-flex tw-items-start tw-gap-2">
-                    <mat-form-field class="tw-min-w-0 tw-flex-1">
+                <!-- 「列車から選ぶ」は欄の下の説明の行の右端に足すだけ（ユーザー判断 2026-11-10）。
+                 エラーが出ている間は説明を隠し、エラーが欄の下を使うので行にはボタンだけが残る -->
+                <div>
+                    @let operationNumberControl =
+                        sightingForm.get('operationNumber');
+                    <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
                         <mat-label>運用番号</mat-label>
-                        <input matInput formControlName="operationNumber" />
-                        <mat-hint>休車の場合は「100」を入力</mat-hint>
-                        @if (
-                            sightingForm
-                                .get('operationNumber')
-                                .hasError('required')
-                        ) {
+                        <input
+                            matInput
+                            formControlName="operationNumber"
+                            aria-describedby="operation-number-hint"
+                        />
+                        @if (operationNumberControl.hasError('required')) {
                             <mat-error>
                                 <strong>必須項目</strong>です
                             </mat-error>
                         } @else if (
-                            sightingForm
-                                .get('operationNumber')
-                                .hasError('precheck')
+                            operationNumberControl.hasError('precheck')
                         ) {
                             <mat-error>
                                 {{ precheckMessage('operationNumber') }}
                             </mat-error>
                         }
                     </mat-form-field>
-                    <button
-                        mat-stroked-button
-                        type="button"
-                        class="tw-mt-1 tw-shrink-0"
-                        (click)="openPicker()"
+                    <div
+                        class="tw-flex tw-items-center tw-justify-between tw-gap-2"
                     >
-                        列車から選ぶ
-                    </button>
+                        @if (
+                            !(
+                                operationNumberControl.invalid &&
+                                operationNumberControl.touched
+                            )
+                        ) {
+                            <span
+                                id="operation-number-hint"
+                                class="tw-px-4 tw-text-xs tw-text-muted"
+                                >休車の場合は「100」を入力</span
+                            >
+                        }
+                        <button
+                            type="button"
+                            class="tw-bg-transparent -tw-my-2 tw-ml-auto tw-inline-flex tw-shrink-0 tw-cursor-pointer tw-items-center tw-gap-1 tw-border-0 tw-px-0 tw-py-2 tw-text-sm tw-font-bold tw-text-primary-500"
+                            (click)="openPicker()"
+                        >
+                            <mat-icon
+                                class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
+                                >train</mat-icon
+                            >
+                            <span>列車から選ぶ ›</span>
+                        </button>
+                    </div>
                 </div>
 
                 <app-segment-toggle

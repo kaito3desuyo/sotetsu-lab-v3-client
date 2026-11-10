@@ -131,4 +131,44 @@ describe('OperationPostFormComponent（テンプレート）', () => {
             fixture.nativeElement.querySelector('mat-error'),
         ).toHaveTextContent('指定された運用番号の運用情報が見つかりません');
     });
+
+    it('エラーが無いとき、説明が出てボタンも出る', () => {
+        const form: HTMLElement = fixture.nativeElement;
+        expect(form.querySelector('#operation-number-hint')).toHaveTextContent(
+            '休車の場合は「100」を入力',
+        );
+        expect(
+            form.querySelector('input[formcontrolname="operationNumber"]'),
+        ).toHaveAttribute(
+            'aria-describedby',
+            expect.stringContaining('operation-number-hint'),
+        );
+        expect(form).toHaveTextContent('列車から選ぶ');
+    });
+
+    it('送る前の確認で止めたとき、説明は隠れてボタンは残る', async () => {
+        patchState(
+            unprotected(TestBed.inject(TodaysOperationListState)),
+            setAllEntities(
+                [
+                    { operationId: 'op1', operationNumber: '1' },
+                ] as unknown as OperationDetailsDto[],
+                { selectId: (o: OperationDetailsDto) => o.operationId },
+            ),
+        );
+        component.sightingForm.patchValue({
+            agencyId: 'sotetsu',
+            formationOrVehicleNumber: '10701',
+            operationNumber: '99',
+        });
+        await component.submit({
+            resetForm: jest.fn(),
+        } as unknown as Parameters<typeof component.submit>[0]);
+        fixture.detectChanges();
+
+        const form: HTMLElement = fixture.nativeElement;
+        expect(form.querySelector('#operation-number-hint')).toBeNull();
+        expect(form.querySelector('mat-error')).not.toBeNull();
+        expect(form).toHaveTextContent('列車から選ぶ');
+    });
 });
