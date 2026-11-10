@@ -422,6 +422,19 @@ describe('TrainLocationStationPanelComponent', () => {
             expect(buttons()).toHaveLength(0);
         });
 
+        it('canPost が false では元の列のまま・空きの要素も置かない', () => {
+            setup(false);
+            const row = el().querySelector<HTMLElement>('div.tw-grid');
+            expect(row?.className).toContain(
+                'tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)]',
+            );
+            expect(row?.className).toContain(
+                'sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto]',
+            );
+            expect(row?.className).not.toContain('_auto_auto');
+            expect(el().querySelector('.tw-size-10')).toBeNull();
+        });
+
         it('押すと運用番号だけ埋めた投稿ダイアログを開く', () => {
             setup(true);
             buttons()[0].click();

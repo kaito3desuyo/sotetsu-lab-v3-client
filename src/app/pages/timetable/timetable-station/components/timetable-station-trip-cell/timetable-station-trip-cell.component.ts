@@ -73,14 +73,7 @@ export class TimetableStationTripCellComponent {
     readonly showCurrentFormation = input.required<boolean>();
 
     /** 運用番号だけ埋めた投稿ダイアログを開く（M30） */
-    openPost(): void {
-        const operationId = this.trip().tripOperationLists[0]?.operationId;
-        const operationNumber = this.operations().find(
-            (operation) => operation.operationId === operationId,
-        )?.operationNumber;
-        if (!operationNumber) {
-            return;
-        }
+    openPost(operationNumber: string): void {
         this.#operationPostDialog.open('timetable_station', {
             operationNumber,
         });

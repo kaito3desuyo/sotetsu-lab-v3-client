@@ -93,18 +93,20 @@
                 </span>
                 <!-- 投稿ボタン（M30・ユーザー指示 2026-11-10）。編成番号の字とは分けて、その下に小さく置く。
                      24px（高さの見積もり POST_BUTTON_LINE = 24 + 間隔 4） -->
-                <button
-                    type="button"
-                    mat-icon-button
-                    class="!tw-size-6 !tw-p-0"
-                    aria-label="この運用で投稿"
-                    (click)="openPost()"
-                >
-                    <mat-icon
-                        class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
-                        >edit_note</mat-icon
+                @if (operationNumber) {
+                    <button
+                        type="button"
+                        mat-icon-button
+                        class="!tw-size-6 !tw-p-0"
+                        aria-label="この運用で投稿"
+                        (click)="openPost(operationNumber)"
                     >
-                </button>
+                        <mat-icon
+                            class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
+                            >edit_note</mat-icon
+                        >
+                    </button>
+                }
             }
         }
     </div>
