@@ -92,7 +92,8 @@
                     }
                 </span>
                 <!-- 投稿ボタン（M30・ユーザー指示 2026-11-10）。編成番号の字とは分けて、その下に小さく置く。
-                     24px（高さの見積もり POST_BUTTON_LINE = 24 + 間隔 4） -->
+                     24px（高さの見積もり POST_BUTTON_LINE = 24 + 間隔 4）。運用番号を引けたときだけ出す
+                     （見積もりも同じ条件） -->
                 @if (operationNumber) {
                     <button
                         type="button"

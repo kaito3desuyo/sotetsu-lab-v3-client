@@ -112,6 +112,7 @@ describe('TimetableStationTripCellComponent', () => {
     });
 
     async function createFixture(overrides?: {
+        operations?: unknown[];
         operationSightingTimeCrossSections?: Record<string, unknown>;
         showCurrentFormation?: boolean;
     }) {
@@ -146,9 +147,12 @@ describe('TimetableStationTripCellComponent', () => {
             { stationId: 'shonandai', stationName: '湘南台' },
             { stationId: 'kashiwadai', stationName: 'かしわ台' },
         ]);
-        fixture.componentRef.setInput('operations', [
-            { operationId: 'op-1', operationNumber: '51' },
-        ]);
+        fixture.componentRef.setInput(
+            'operations',
+            overrides?.operations ?? [
+                { operationId: 'op-1', operationNumber: '51' },
+            ],
+        );
         fixture.componentRef.setInput(
             'operationSightingTimeCrossSections',
             overrides?.operationSightingTimeCrossSections ?? {},
@@ -246,6 +250,14 @@ describe('TimetableStationTripCellComponent', () => {
         it('充当編成を出さないセルでは出ない', async () => {
             const fixture = await createFixture({
                 showCurrentFormation: false,
+            });
+            expect(postButton(fixture)).toBeNull();
+        });
+
+        it('運用番号を引けないセルでは出ない', async () => {
+            const fixture = await createFixture({
+                showCurrentFormation: true,
+                operations: [],
             });
             expect(postButton(fixture)).toBeNull();
         });

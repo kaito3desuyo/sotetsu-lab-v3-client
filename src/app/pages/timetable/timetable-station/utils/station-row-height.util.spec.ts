@@ -37,6 +37,9 @@ function cell(options: {
     } as unknown as TripDetailsDto;
 }
 
+/** 運用 ID 'op' は運用番号を引ける */
+const RESOLVABLE: ReadonlySet<string> = new Set(['op']);
+
 /** 1 本の行 = セルの高さ + 格子の上下 16。 */
 function oneRow(
     operation: boolean,
@@ -46,6 +49,7 @@ function oneRow(
     return estimateStationRowHeight(
         [cell({ operation, k })],
         showCurrentFormation,
+        RESOLVABLE,
     );
 }
 
@@ -62,6 +66,15 @@ describe('estimateStationRowHeight', () => {
             expect(oneRow(true, 0, true) - oneRow(true, 0, false)).toBe(
                 19 + POST_BUTTON_LINE,
             );
+        });
+        it('運用番号を引けないセルは投稿ボタンの分を足さない', () => {
+            expect(
+                estimateStationRowHeight(
+                    [cell({ operation: true, k: 0 })],
+                    true,
+                    new Set(),
+                ) - oneRow(true, 0, false),
+            ).toBe(19);
         });
         it('運用あり + 編成: k=2 は右の列 32 + 84 = 116 が勝つ', () => {
             expect(oneRow(true, 2, true)).toBe(132);
@@ -104,7 +117,7 @@ describe('estimateStationRowHeight', () => {
 
     describe('本数', () => {
         it('0 本は格子の余白 16 だけ', () => {
-            expect(estimateStationRowHeight([], true)).toBe(16);
+            expect(estimateStationRowHeight([], true, RESOLVABLE)).toBe(16);
         });
 
         it('3 本は セルの合計 + 間隔 4 × 2 + 16', () => {
@@ -114,7 +127,7 @@ describe('estimateStationRowHeight', () => {
                 cell({ operation: false, k: 2, id: 'c' }),
             ];
             // (81 + 投稿ボタン) + 36 + 116 + 8 + 16
-            expect(estimateStationRowHeight(trips, true)).toBe(
+            expect(estimateStationRowHeight(trips, true, RESOLVABLE)).toBe(
                 257 + POST_BUTTON_LINE,
             );
         });
@@ -124,7 +137,9 @@ describe('estimateStationRowHeight', () => {
                 ...cell({ operation: false, k: 0 }),
                 tripOperationLists: undefined,
             } as unknown as TripDetailsDto;
-            expect(estimateStationRowHeight([noList], true)).toBe(52);
+            expect(estimateStationRowHeight([noList], true, RESOLVABLE)).toBe(
+                52,
+            );
         });
     });
 });

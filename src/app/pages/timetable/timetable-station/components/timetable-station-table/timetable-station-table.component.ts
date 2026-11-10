@@ -41,16 +41,22 @@ export class TimetableStationTableComponent {
      * （content-visibility と @defer の placeholder）に使う。行ごとに変更検知のたびに
      * 計算し直さないよう、データと編成の表示が変わったときだけここでまとめて出す
      */
-    readonly rowHeights = computed(
-        () =>
-            new Map(
-                this.timetableData().map((item) => [
-                    `${item.day}:${item.hour}`,
-                    estimateStationRowHeight(
-                        item.trips,
-                        this.showCurrentFormation(),
-                    ),
-                ]),
-            ),
-    );
+    readonly rowHeights = computed(() => {
+        // 投稿ボタンはセルが運用番号を引けたときだけ出る。見積もりも同じ条件にする
+        const resolvableOperationIds = new Set(
+            this.operations()
+                .filter((operation) => operation.operationNumber)
+                .map((operation) => operation.operationId),
+        );
+        return new Map(
+            this.timetableData().map((item) => [
+                `${item.day}:${item.hour}`,
+                estimateStationRowHeight(
+                    item.trips,
+                    this.showCurrentFormation(),
+                    resolvableOperationIds,
+                ),
+            ]),
+        );
+    });
 }

@@ -11,7 +11,8 @@ const OPERATION_LINE = 26;
 const FORMATION_LINE = 19;
 /**
  * 左の列で、編成の下の投稿ボタン（M30・2026-11-10）。ボタン 24px（tw-size-6）+ 列の間隔 4px（tw-gap-1）= 28。
- * 実物で測って確かめる前の暫定値（コントローラーが DOM で実測して直す）
+ * 2026-11-10 に 390px の実物で測った（24px + 4px の間隔 = 28）。
+ * セルの `@if (operationNumber)` と同じく、運用番号を引けるセルにだけ足す
  */
 export const POST_BUTTON_LINE = 28;
 /** 右の列で、↪ 1 つあたり（間隔 4 を含む。最後の 1 つは間隔が要らないので 42k − 4） */
@@ -31,16 +32,25 @@ const others = new TimetableStationFindOtherTripsInSameTripBlockPipe();
  * 式は 2026-10-28 に実機相当の幅で各セルの高さを測って決めた:
  * セル = max(左の列, 右の列)、行 = セルの合計 + セルの間 4px + 格子の上下 16px。
  *
- * - 左の列 = 12 + 24（分）+ 運用があれば 26 + さらに編成を出すなら 19 + 投稿ボタン 28（POST_BUTTON_LINE）
+ * - 左の列 = 12 + 24（分）+ 運用があれば 26 + さらに編成を出すなら 19
+ *   + 運用番号を引けるなら投稿ボタン 28（POST_BUTTON_LINE）
  * - 右の列 = 12 + 24 + ↪ が k 個（k ≥ 1）なら 42k − 4
  *   （↪ の数はセルと同じ TimetableStationFindOtherTripsInSameTripBlockPipe で数える）
  */
 export function estimateStationRowHeight(
     trips: readonly TripDetailsDto[],
     showCurrentFormation: boolean,
+    /** 運用番号を引ける運用の ID（セルが運用 ID から運用番号を引けるかの判定に使う） */
+    resolvableOperationIds: ReadonlySet<string>,
 ): number {
     const cells = trips.reduce(
-        (sum, trip) => sum + estimateCellHeight(trip, showCurrentFormation),
+        (sum, trip) =>
+            sum +
+            estimateCellHeight(
+                trip,
+                showCurrentFormation,
+                resolvableOperationIds,
+            ),
         0,
     );
     return cells + CELL_GAP * Math.max(trips.length - 1, 0) + GRID_PADDING;
@@ -49,14 +59,20 @@ export function estimateStationRowHeight(
 function estimateCellHeight(
     trip: TripDetailsDto,
     showCurrentFormation: boolean,
+    resolvableOperationIds: ReadonlySet<string>,
 ): number {
+    const operationId = trip.tripOperationLists?.[0]?.operationId;
+    const hasPostButton =
+        operationId !== undefined && resolvableOperationIds.has(operationId);
     const hasOperation = (trip.tripOperationLists?.length ?? 0) !== 0;
     const left =
         CELL_PADDING +
         MINUTE_LINE +
         (hasOperation
             ? OPERATION_LINE +
-              (showCurrentFormation ? FORMATION_LINE + POST_BUTTON_LINE : 0)
+              (showCurrentFormation
+                  ? FORMATION_LINE + (hasPostButton ? POST_BUTTON_LINE : 0)
+                  : 0)
             : 0);
 
     const k = others.transform(trip).length;
