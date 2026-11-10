@@ -40,6 +40,7 @@ import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
+import { parseUuidParam } from 'src/app/shared/uuid-param.util';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-toggle/sticky-direction-toggle.component';
@@ -146,7 +147,8 @@ export class TimetableAllLineComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const calendarId = paramMap.get('calendar_id');
+                // UUID でない（"undefined" など）ダイヤは、無いときと同じく取りに行かない
+                const calendarId = parseUuidParam(paramMap.get('calendar_id'));
                 const tripDirection = parseTripDirectionParam(
                     paramMap.get('trip_direction'),
                 );

@@ -44,7 +44,7 @@ import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.d
  * 非同期遅延つき）の後、**追加操作なしで**充当編成が描画されることを検証する。
  * ルートコンポーネント→実ストア→実テーブル→実セルを実描画で通す。
  */
-const CAL = 'cal-2026-weekday';
+const CAL = '00000000-0000-4000-8000-000000000001';
 const YOKOHAMA = 'st-yokohama';
 
 const calendarDto = {
