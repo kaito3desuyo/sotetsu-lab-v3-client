@@ -478,6 +478,120 @@ describe('OperationPostFormComponent', () => {
             );
         });
 
+        it('編成番号と運用番号の前後の空白を落としてから確かめ、送る', async () => {
+            setOperations(['12']);
+            component.sightingForm.patchValue({
+                agencyId: 'sotetsu',
+                formationOrVehicleNumber: ' 10701 ',
+                operationNumber: ' 12 ',
+            });
+
+            await submit();
+
+            expect(postOperationSighting).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    formationOrVehicleNumber: '10701',
+                    operationNumber: '12',
+                }),
+            );
+        });
+
+        it('編成の候補を押したとき、所属が空ならその編成の所属が入り、入っていれば変えない', () => {
+            const formation = {
+                agencyId: 'tokyu',
+                formationNumber: '5050',
+            } as FormationDetailsDto;
+
+            component.onFormationCandidateSelected(formation);
+            expect(component.sightingForm.getRawValue().agencyId).toBe('tokyu');
+
+            component.sightingForm.patchValue({ agencyId: 'sotetsu' });
+            component.onFormationCandidateSelected(formation);
+            expect(component.sightingForm.getRawValue().agencyId).toBe(
+                'sotetsu',
+            );
+        });
+
+        it('時刻指定で送ると GA の time_setting は specified', async () => {
+            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            fill('09:00');
+            sendEvent.mockClear();
+
+            await submit();
+
+            expect(sendEvent).toHaveBeenCalledWith('sighting_submit', {
+                source: 'top_card',
+                time_setting: 'specified',
+                operation_from_train: 0,
+            });
+        });
+
+        it('列車から選んで送り終えた後は、同じ番号を打ち直しても operation_from_train=0', async () => {
+            fill();
+            component.onTrainPicked(train);
+            await submit();
+            component.sightingForm.patchValue({ operationNumber: '31' });
+            sendEvent.mockClear();
+
+            await submit();
+
+            expect(sendEvent).toHaveBeenCalledWith(
+                'sighting_submit',
+                expect.objectContaining({ operation_from_train: 0 }),
+            );
+        });
+
+        it('最初の操作が列車から選ぶでも、sighting_form_start は operation_from_train=1', () => {
+            component.onTrainPicked(train);
+
+            expect(sendEvent).toHaveBeenCalledWith('sighting_form_start', {
+                source: 'top_card',
+                time_setting: 'current',
+                operation_from_train: 1,
+            });
+        });
+
+        it('未来の時刻と運用番号の両方が当たると、両方の欄に出し、blocked の reason は未来の時刻', async () => {
+            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            setOperations(['1']);
+            fill('11:00');
+            sendEvent.mockClear();
+
+            await submit();
+
+            expect(postOperationSighting).not.toHaveBeenCalled();
+            expect(
+                component.sightingForm.controls.sightingTime.getError(
+                    'precheck',
+                ),
+            ).toBe('future_time');
+            expect(
+                component.sightingForm.controls.operationNumber.getError(
+                    'precheck',
+                ),
+            ).toBe('operation_not_found');
+            expect(sendEvent).toHaveBeenCalledWith('sighting_submit_blocked', {
+                source: 'top_card',
+                reason: 'future_time',
+            });
+        });
+
+        it('precheckMessage は止めた理由の文言を返し、止めていなければ空', async () => {
+            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            setOperations(['1']);
+            expect(component.precheckMessage('operationNumber')).toBe('');
+            fill('11:00');
+
+            await submit();
+
+            expect(component.precheckMessage('operationNumber')).toBe(
+                '指定された運用番号の運用情報が見つかりません',
+            );
+            expect(component.precheckMessage('sightingTime')).toBe(
+                '未来の時刻は指定できません',
+            );
+        });
+
         describe('4 時をまたいだ後の一覧', () => {
             const operations = (numbers: string[]) =>
                 of(

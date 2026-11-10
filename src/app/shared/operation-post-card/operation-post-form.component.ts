@@ -1,8 +1,8 @@
 import {
+    afterNextRender,
     ChangeDetectionStrategy,
     Component,
     computed,
-    afterNextRender,
     DestroyRef,
     effect,
     ElementRef,
@@ -29,28 +29,28 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { RouterLink, Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
-import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
-import { AgencyListState } from 'src/app/global-states/agency-list.state';
-import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
+import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { AppButtonComponent } from '../app-button/app-button.component';
 import { formatFormationAnnotation } from '../formation-annotation.util';
+import { LoadingService } from '../loading/loading.service';
+import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
+import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
 import { PickableTrain } from '../train-picker/pickable-train.interface';
 import { TrainPickerComponent } from '../train-picker/train-picker.component';
-import { AppButtonComponent } from '../app-button/app-button.component';
-import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.component';
-import { SegmentToggleOption } from '../segment-toggle/segment-toggle-option.type';
-import { LoadingService } from '../loading/loading.service';
 import { OperationPostCardService } from './operation-post-card.service';
 import {
     filterAgenciesWithFormations,
@@ -247,6 +247,22 @@ export class OperationPostFormComponent {
         this.sightingForm.get('timeSetting').setValue(value);
     }
 
+    /** 編成の候補を押したとき、所属が空ならその編成の会社を入れる（押した候補の会社を入れるだけで推測はしない） */
+    onFormationCandidateSelected(formation: FormationDetailsDto): void {
+        const agencyId = this.sightingForm.controls.agencyId;
+        if (agencyId.value === '') {
+            agencyId.setValue(formation.agencyId);
+        }
+    }
+
+    /** 送る前の確認で止めた理由の文言。止めていなければ空 */
+    precheckMessage(controlName: 'operationNumber' | 'sightingTime'): string {
+        const reason = this.sightingForm
+            .get(controlName)
+            .getError('precheck') as SightingBlockReason | null;
+        return reason ? this.blockMessages[reason] : '';
+    }
+
     openPicker(): void {
         this.mode.set('picker');
         this.#ga.sendEvent('train_picker_open', { source: this.source() });
@@ -258,10 +274,11 @@ export class OperationPostFormComponent {
 
     onTrainPicked(train: PickableTrain): void {
         this.#pickedOperationNumber = train.operationNumber;
+        // patchValue が最初の valueChanges なら sighting_form_start が飛ぶので、先に印を付ける
+        this.#operationFromTrain = true;
         this.sightingForm.patchValue({
             operationNumber: train.operationNumber,
         });
-        this.#operationFromTrain = true;
         this.mode.set('form');
         this.#ga.sendEvent('train_picker_select', { source: this.source() });
         // 編成番号は車体を見て打つので、続けて打てるよう欄にフォーカスする。
@@ -322,13 +339,11 @@ export class OperationPostFormComponent {
         } finally {
             this.#refreshingLists = false;
         }
-        const {
-            agencyId,
-            formationOrVehicleNumber,
-            operationNumber,
-            timeSetting,
-            sightingTime,
-        } = this.sightingForm.value;
+        const { agencyId, timeSetting, sightingTime } = this.sightingForm.value;
+        // 前後の空白は候補・注意・確認・api で食い違うので、ここで落としてから使う
+        const formationOrVehicleNumber =
+            this.sightingForm.value.formationOrVehicleNumber.trim();
+        const operationNumber = this.sightingForm.value.operationNumber.trim();
 
         const now = new Date();
 

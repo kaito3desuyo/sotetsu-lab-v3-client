@@ -60,7 +60,15 @@
                                 formation of formationCandidates();
                                 track formation.formationId
                             ) {
-                                <mat-option [value]="formation.formationNumber">
+                                <mat-option
+                                    [value]="formation.formationNumber"
+                                    (onSelectionChange)="
+                                        $event.isUserInput &&
+                                            onFormationCandidateSelected(
+                                                formation
+                                            )
+                                    "
+                                >
                                     {{ formation.formationNumber }}
                                     <span class="tw-text-xs tw-opacity-70">
                                         {{ formationAnnotation(formation) }}
@@ -112,13 +120,7 @@
                                 .hasError('precheck')
                         ) {
                             <mat-error>
-                                {{
-                                    blockMessages[
-                                        sightingForm
-                                            .get('operationNumber')
-                                            .getError('precheck')
-                                    ]
-                                }}
+                                {{ precheckMessage('operationNumber') }}
                             </mat-error>
                         }
                     </mat-form-field>
@@ -169,13 +171,7 @@
                                 .hasError('precheck')
                         ) {
                             <mat-error>
-                                {{
-                                    blockMessages[
-                                        sightingForm
-                                            .get('sightingTime')
-                                            .getError('precheck')
-                                    ]
-                                }}
+                                {{ precheckMessage('sightingTime') }}
                             </mat-error>
                         }
                     </mat-form-field>
