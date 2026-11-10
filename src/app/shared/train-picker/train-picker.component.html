@@ -20,7 +20,8 @@
             [value]="store.stationId()"
             (selectionChange)="onStationChange($event.value)"
         >
-            @if (lazyStation.ready()) {
+            <!-- 駅を選ぶ前は選択済みの option が無いので、空のままだと 1 回目のタップで開かない。全部描く -->
+            @if (lazyStation.ready() || !store.stationId()) {
                 @for (group of stationGroups(); track group.routeId) {
                     <mat-optgroup [label]="group.label">
                         @for (

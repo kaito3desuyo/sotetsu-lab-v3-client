@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
 import { PLATFORM_ID, Provider, signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatSelect } from '@angular/material/select';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { patchState } from '@ngrx/signals';
@@ -11,6 +13,7 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
+import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -41,6 +44,7 @@ import { buildPickableTrains } from './build-pickable-trains.util';
 describe('TrainPickerComponent', () => {
     let fixture: ComponentFixture<TrainPickerComponent>;
     let findMany: jest.Mock<Observable<unknown>>;
+    let routes: RouteDetailsDto[];
     let calendarIdSignal: WritableSignal<string | null>;
     const blocks = [{ trips: [] }] as unknown as TripBlockDetailsDto[];
 
@@ -71,7 +75,7 @@ describe('TrainPickerComponent', () => {
                 },
                 {
                     provide: RouteStationListState,
-                    useValue: { routeStations: signal([]) },
+                    useValue: { routeStations: signal(routes) },
                 },
                 {
                     provide: AgencyListState,
@@ -93,6 +97,7 @@ describe('TrainPickerComponent', () => {
     };
 
     beforeEach(() => {
+        routes = [];
         findMany = jest.fn(() => of({ 0: blocks, 1: blocks }));
         (buildPickableTrains as jest.Mock).mockReset();
         (buildPickableTrains as jest.Mock).mockReturnValue([TRAIN]);
@@ -209,5 +214,26 @@ describe('TrainPickerComponent', () => {
         expect(findMany).toHaveBeenCalledWith(
             expect.objectContaining({ calendarId: 'cal-new' }),
         );
+    });
+
+    it('駅を選ぶ前でも、いる駅の選択肢が 1 回目のタップの前から描かれている', async () => {
+        routes = [
+            {
+                routeId: 'r1',
+                agencyId: 'a1',
+                routeName: '本線',
+                routeStationLists: [
+                    { station: { stationId: 's1', stationName: '横浜' } },
+                    { station: { stationId: 's2', stationName: '西谷' } },
+                ],
+            },
+        ] as unknown as RouteDetailsDto[];
+        setup();
+        fixture.detectChanges();
+
+        const select: MatSelect = fixture.debugElement.query(
+            By.directive(MatSelect),
+        ).componentInstance;
+        expect(select.options.length).toBe(2);
     });
 });
