@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    input,
+    output,
+} from '@angular/core';
 import {
     MatButtonToggleChange,
     MatButtonToggleModule,
@@ -27,10 +32,8 @@ import { SegmentToggleOption } from './segment-toggle-option.type';
     host: { class: 'tw-block tw-w-full' },
 })
 export class SegmentToggleComponent {
-    /** 必ず2要素（全幅2セグメント固定。3値以上は対象外） */
-    readonly options = input.required<
-        readonly [SegmentToggleOption, SegmentToggleOption]
-    >();
+    /** 2要素が基本。3要素（両方/上り/下り）も等分で並べる */
+    readonly options = input.required<readonly SegmentToggleOption[]>();
     readonly value = input<FilterChipValue | undefined>(undefined);
     readonly disabled = input<boolean>(false);
 
