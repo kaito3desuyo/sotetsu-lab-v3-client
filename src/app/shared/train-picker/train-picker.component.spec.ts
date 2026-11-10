@@ -216,6 +216,55 @@ describe('TrainPickerComponent', () => {
         );
     });
 
+    it('方向のトグルを押すとストアの方向が変わる', async () => {
+        const store = setup();
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const inbound = Array.from(
+            fixture.nativeElement.querySelectorAll('mat-button-toggle button'),
+        ).find((b) => (b as HTMLElement).textContent?.includes('上り'));
+        (inbound as HTMLButtonElement).click();
+
+        expect(store.direction()).toBe('inbound');
+    });
+
+    it('過ぎた行は薄い色で data-past が true、過ぎていない行はそうでない', async () => {
+        (buildPickableTrains as jest.Mock).mockReturnValue([
+            { ...TRAIN, tripId: 'past', isPast: true },
+            { ...TRAIN, tripId: 'future', isPast: false },
+        ]);
+        const store = setup();
+        patchState(unprotected(store), { stationId: 'st-1' });
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        const [past, future] = Array.from(
+            fixture.nativeElement.querySelectorAll('[data-train-row]'),
+        ) as HTMLElement[];
+        expect(past.dataset['past']).toBe('true');
+        expect(past).toHaveClass('tw-text-muted');
+        expect(future.dataset['past']).toBe('false');
+        expect(future).not.toHaveClass('tw-text-muted');
+    });
+
+    it('着だけの列車は時刻に「着」が付く', async () => {
+        (buildPickableTrains as jest.Mock).mockReturnValue([
+            { ...TRAIN, isArrivalOnly: true },
+        ]);
+        const store = setup();
+        patchState(unprotected(store), { stationId: 'st-1' });
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('[data-train-row]'),
+        ).toHaveTextContent(/7:12着/);
+    });
+
     it('駅を選ぶ前でも、いる駅の選択肢が 1 回目のタップの前から描かれている', async () => {
         routes = [
             {

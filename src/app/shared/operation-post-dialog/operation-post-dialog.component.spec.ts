@@ -130,3 +130,35 @@ describe('OperationPostDialogComponent', () => {
         expect(close).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('OperationPostDialogComponent（MAT_DIALOG_DATA が null）', () => {
+    it('右下の投稿ボタン（realtime_fab）・初期値なしで開く', async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationPostDialogComponent],
+            providers: [
+                { provide: MatDialogRef, useValue: { close: jest.fn() } },
+                {
+                    provide: Router,
+                    useValue: { events: new Subject(), url: '/' },
+                },
+                { provide: MAT_DIALOG_DATA, useValue: null },
+            ],
+        })
+            .overrideComponent(OperationPostFormComponent, {
+                set: { template: '', imports: [], providers: [] },
+            })
+            .overrideComponent(OperationPostDialogComponent, {
+                set: { template: '' },
+            })
+            .compileComponents();
+
+        const dialog = TestBed.createComponent(
+            OperationPostDialogComponent,
+        ).componentInstance;
+
+        expect(dialog.data).toEqual({
+            source: 'realtime_fab',
+            initialValue: {},
+        });
+    });
+});

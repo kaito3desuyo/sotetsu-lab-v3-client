@@ -9,7 +9,6 @@ import {
     OperationPostFormComponent,
     OperationPostInitialValue,
 } from '../operation-post-card/operation-post-form.component';
-
 import { OperationPostSource } from '../operation-post-card/operation-post-source.type';
 
 export const OPERATION_POST_DIALOG_TITLE_ID = 'operation-post-dialog-title';
