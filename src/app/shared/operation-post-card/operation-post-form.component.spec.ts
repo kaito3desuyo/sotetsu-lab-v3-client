@@ -645,6 +645,26 @@ describe('OperationPostFormComponent', () => {
                 expect(postOperationSighting).toHaveBeenCalledTimes(1);
             });
 
+            it('一覧の取り直しが途中で失敗したら、次の送信でまた取り直す', async () => {
+                staleSetup();
+                findOperations.mockReturnValueOnce(
+                    throwError(() => new Error('x')),
+                );
+                fill();
+
+                // 失敗した回: 運用番号の確かめは飛ばして送る
+                await submit();
+                expect(postOperationSighting).toHaveBeenCalledTimes(1);
+                expect(findCalendar).toHaveBeenCalledTimes(2);
+
+                // 次の回: 取り直しが再び走り、今度は成功して一覧で確かめる
+                findOperations.mockReturnValue(operations(['1']));
+                await submit();
+                expect(findCalendar).toHaveBeenCalledTimes(3);
+                expect(findOperations).toHaveBeenCalledTimes(2);
+                expect(postOperationSighting).toHaveBeenCalledTimes(1);
+            });
+
             it('引き直した後でも一覧に無い番号は止める', async () => {
                 staleSetup();
                 findOperations.mockReturnValue(operations(['1']));

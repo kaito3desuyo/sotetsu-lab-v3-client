@@ -23,9 +23,11 @@ export class TodaysListsRefresher {
     async refreshIfStale(now: Date = new Date()): Promise<boolean> {
         if (!this.isStale(now)) return true;
         try {
-            await lastValueFrom(this.#calendars.fetch());
+            // 営業日は全部取れてから記録する。途中で失敗したら古いままにして、次も取り直す
+            await lastValueFrom(this.#calendars.fetch({ recordDate: false }));
             await lastValueFrom(this.#operations.fetch());
             await lastValueFrom(this.#formations.fetch());
+            this.#calendars.markFetched(now);
             return true;
         } catch {
             return false;

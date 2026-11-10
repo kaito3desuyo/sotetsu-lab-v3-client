@@ -51,14 +51,26 @@ export const TodaysCalendarListState = signalStore(
                     fetchedDate === format(getRailwayDate(now), 'yyyy-MM-dd')
                 );
             },
-            fetch(): Observable<void> {
+            /** now の営業日の一覧を取り終えたと記録する（取り直しが全部成功したあとに呼ぶ） */
+            markFetched(now: Date = new Date()): void {
+                patchState(store, {
+                    fetchedDate: format(getRailwayDate(now), 'yyyy-MM-dd'),
+                });
+            },
+            /**
+             * recordDate: false のときは営業日を記録しない（operation・formation も取る取り直しで、
+             * 全部成功してから markFetched するため）
+             */
+            fetch(options: { recordDate?: boolean } = {}): Observable<void> {
                 const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
                 return calendarService.findOneBySpecificDate({ date }).pipe(
                     tap((data: CalendarDetailsDto) => {
                         patchState(
                             store,
                             setAllEntities([data], calendarConfig),
-                            { fetchedDate: date },
+                            options.recordDate === false
+                                ? {}
+                                : { fetchedDate: date },
                         );
                     }),
                     map(() => undefined),
