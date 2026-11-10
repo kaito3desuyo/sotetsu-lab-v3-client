@@ -16,6 +16,7 @@ import {
 } from '@angular/router';
 import { watchState } from '@ngrx/signals';
 import { filter, map } from 'rxjs/operators';
+import { isChunkLoadError } from './core/errors/chunk-load-error';
 import { toErrorMessage } from './core/errors/to-error-message';
 import { QueryInvalidator } from './core/query-cache/query-invalidator';
 import { AppUpdateService } from './core/services/app-update.service';
@@ -26,6 +27,7 @@ import {
     SocketSignalType,
 } from './core/services/socket-signal';
 import { SocketService } from './core/services/socket.service';
+import { StaleChunkReload } from './core/services/stale-chunk-reload';
 import { UserState } from './global-states/user.state';
 import { LayoutComponent } from './layout/layout.component';
 import { LoadingService } from './shared/loading/loading.service';
@@ -46,6 +48,7 @@ export class AppComponent implements OnInit, OnDestroy {
     readonly #loadingService = inject(LoadingService);
     readonly #notificationService = inject(NotificationService);
     readonly #userState = inject(UserState);
+    readonly #staleChunkReload = inject(StaleChunkReload);
 
     constructor() {
         // api が保存に成功したら、socket が {"type": …} を送ってくる。その種類の画面内キャッシュを捨てる
@@ -75,6 +78,7 @@ export class AppComponent implements OnInit, OnDestroy {
             )
             .subscribe((ev) => {
                 this.#loadingService.close();
+                this.#staleChunkReload.clear();
                 this.#gaService.sendPageView(
                     this.#title.getTitle(),
                     ev.urlAfterRedirects,
@@ -114,6 +118,13 @@ export class AppComponent implements OnInit, OnDestroy {
                 this.#gaService.sendEvent('page_load_error', {
                     error_message: toErrorMessage(ev.error),
                 });
+                // デプロイの後に古い版のまま移ると、古い版の部品はもう無い。丸ごと読み込み直して新しい版にする
+                if (
+                    isChunkLoadError(ev.error) &&
+                    this.#staleChunkReload.reload(ev.url)
+                ) {
+                    return;
+                }
                 this.#notificationService.open(
                     'ページの読み込みに失敗しました',
                     'OK',
