@@ -4,7 +4,7 @@
             type="button"
             data-back
             aria-label="戻る"
-            class="tw-bg-transparent tw-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full tw-border-0"
+            class="tw-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full tw-border-0 [background-color:transparent] [font-family:inherit]"
             (click)="cancelled.emit()"
         >
             <mat-icon>arrow_back</mat-icon>
@@ -72,7 +72,7 @@
             <button
                 type="button"
                 data-widen-before
-                class="tw-bg-transparent tw-border-0 tw-py-2 tw-text-sm tw-font-bold"
+                class="tw-border-0 tw-py-2 tw-text-sm tw-font-bold [background-color:transparent] [font-family:inherit]"
                 (click)="store.widenBefore()"
             >
                 もっと前
@@ -87,7 +87,7 @@
                         <button
                             type="button"
                             data-train-row
-                            class="tw-bg-transparent tw-flex tw-w-full tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-border-0 tw-border-b tw-border-solid tw-px-2 tw-py-2 tw-text-left"
+                            class="tw-flex tw-w-full tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-border-0 tw-border-b tw-border-solid tw-px-2 tw-py-2 tw-text-left [background-color:transparent] [font-family:inherit]"
                             [class]="train.isPast ? 'tw-text-muted' : ''"
                             [attr.data-past]="train.isPast"
                             (click)="picked.emit(train)"
@@ -118,7 +118,7 @@
             <button
                 type="button"
                 data-widen-after
-                class="tw-bg-transparent tw-border-0 tw-py-2 tw-text-sm tw-font-bold"
+                class="tw-border-0 tw-py-2 tw-text-sm tw-font-bold [background-color:transparent] [font-family:inherit]"
                 (click)="store.widenAfter()"
             >
                 もっと後
