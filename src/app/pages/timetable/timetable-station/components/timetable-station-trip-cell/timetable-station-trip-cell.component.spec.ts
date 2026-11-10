@@ -247,6 +247,19 @@ describe('TimetableStationTripCellComponent', () => {
             expect(postButton(fixture)).not.toBeNull();
         });
 
+        it('右の列の 1 行目（tw-h-6 の行）の中にあり、左の列には無い', async () => {
+            const fixture = await createFixture({ showCurrentFormation: true });
+            const button = postButton(fixture);
+            const grid = (fixture.nativeElement as HTMLElement)
+                .firstElementChild as HTMLElement;
+            const [left, right] = Array.from(grid.children) as HTMLElement[];
+            expect(left.contains(button)).toBe(false);
+            const firstLine = right.firstElementChild as HTMLElement;
+            expect(firstLine).toHaveClass('tw-h-6');
+            expect(firstLine.contains(button)).toBe(true);
+            expect(button).toHaveClass('tw-ml-auto');
+        });
+
         it('充当編成を出さないセルでは出ない', async () => {
             const fixture = await createFixture({
                 showCurrentFormation: false,

@@ -36,6 +36,10 @@
         operationNumber
             ? operationSightingTimeCrossSections()[operationNumber]
             : undefined;
+    @let hasPostButton =
+        showCurrentFormation() &&
+        !!operationNumber &&
+        trip().tripOperationLists.length !== 0;
     @let currentFormationNumber =
         timeCrossSection?.expectedSighting?.formation?.formationNumber;
     @let currentFormationDayCount =
@@ -91,23 +95,6 @@
                         不明
                     }
                 </span>
-                <!-- 投稿ボタン（M30・ユーザー指示 2026-11-10）。編成番号の字とは分けて、その下に小さく置く。
-                     24px（高さの見積もり POST_BUTTON_LINE = 24 + 間隔 4）。運用番号を引けたときだけ出す
-                     （見積もりも同じ条件） -->
-                @if (operationNumber) {
-                    <button
-                        type="button"
-                        mat-icon-button
-                        class="!tw-size-6 !tw-p-0"
-                        aria-label="この運用で投稿"
-                        (click)="openPost(operationNumber)"
-                    >
-                        <mat-icon
-                            class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
-                            >edit_note</mat-icon
-                        >
-                    </button>
-                }
             }
         }
     </div>
@@ -157,6 +144,23 @@
                               }
                 }}
             </span>
+
+            <!-- 投稿ボタン（M30）。1 行目の右端（ユーザー判断 2026-11-10・実測で最長の「通勤特急 3900 新宿三丁目」でも右に 40px 空く）。
+                 24px は 1 行目の高さと同じなのでセルの高さは変わらない -->
+            @if (hasPostButton) {
+                <button
+                    type="button"
+                    mat-icon-button
+                    class="tw-ml-auto !tw-size-6 tw-shrink-0 !tw-p-0"
+                    aria-label="この運用で投稿"
+                    (click)="openPost(operationNumber)"
+                >
+                    <mat-icon
+                        class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
+                        >edit_note</mat-icon
+                    >
+                </button>
+            }
         </div>
 
         <!-- 同一 tripBlock 内で、この列車より後に走る列車（この先の種別変更・直通）だけを出す。
