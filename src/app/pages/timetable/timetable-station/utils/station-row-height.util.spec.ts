@@ -1,5 +1,8 @@
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
-import { estimateStationRowHeight } from './station-row-height.util';
+import {
+    estimateStationRowHeight,
+    POST_BUTTON_LINE,
+} from './station-row-height.util';
 
 /** 始発駅の発車だけを持つ最小の trip。 */
 function trip(tripId: string, departureTime: string): TripDetailsDto {
@@ -48,11 +51,17 @@ function oneRow(
 
 describe('estimateStationRowHeight', () => {
     describe('編成を出す（showCurrentFormation: true）', () => {
-        it('運用あり + 編成: k=0 は 81 + 16', () => {
-            expect(oneRow(true, 0, true)).toBe(97);
+        it('運用あり + 編成: k=0 は 81 + 投稿ボタン + 16', () => {
+            expect(oneRow(true, 0, true)).toBe(97 + POST_BUTTON_LINE);
         });
-        it('運用あり + 編成: k=1 は左の列 81 が勝つ', () => {
-            expect(oneRow(true, 1, true)).toBe(97);
+        it('運用あり + 編成: k=1 は左の列 81 + 投稿ボタンが勝つ', () => {
+            expect(oneRow(true, 1, true)).toBe(97 + POST_BUTTON_LINE);
+        });
+        it('投稿ボタンは編成を出す運用ありのセルの左の列に POST_BUTTON_LINE を足す', () => {
+            expect(POST_BUTTON_LINE).toBe(28);
+            expect(oneRow(true, 0, true) - oneRow(true, 0, false)).toBe(
+                19 + POST_BUTTON_LINE,
+            );
         });
         it('運用あり + 編成: k=2 は右の列 32 + 84 = 116 が勝つ', () => {
             expect(oneRow(true, 2, true)).toBe(132);
@@ -104,8 +113,10 @@ describe('estimateStationRowHeight', () => {
                 cell({ operation: false, k: 0, id: 'b' }),
                 cell({ operation: false, k: 2, id: 'c' }),
             ];
-            // 81 + 36 + 116 + 8 + 16
-            expect(estimateStationRowHeight(trips, true)).toBe(257);
+            // (81 + 投稿ボタン) + 36 + 116 + 8 + 16
+            expect(estimateStationRowHeight(trips, true)).toBe(
+                257 + POST_BUTTON_LINE,
+            );
         });
 
         it('tripOperationLists が無い列車は運用なしとして数える', () => {

@@ -9,6 +9,11 @@ const MINUTE_LINE = 24;
 const OPERATION_LINE = 26;
 /** 左の列で、編成の前の間隔 4 + 編成 15 */
 const FORMATION_LINE = 19;
+/**
+ * 左の列で、編成の下の投稿ボタン（M30・2026-11-10）。ボタン 24px（tw-size-6）+ 列の間隔 4px（tw-gap-1）= 28。
+ * 実物で測って確かめる前の暫定値（コントローラーが DOM で実測して直す）
+ */
+export const POST_BUTTON_LINE = 28;
 /** 右の列で、↪ 1 つあたり（間隔 4 を含む。最後の 1 つは間隔が要らないので 42k − 4） */
 const OTHER_TRIP_LINE = 42;
 /** セルどうしの縦の間隔（tw-gap-y-1） */
@@ -26,7 +31,7 @@ const others = new TimetableStationFindOtherTripsInSameTripBlockPipe();
  * 式は 2026-10-28 に実機相当の幅で各セルの高さを測って決めた:
  * セル = max(左の列, 右の列)、行 = セルの合計 + セルの間 4px + 格子の上下 16px。
  *
- * - 左の列 = 12 + 24（分）+ 運用があれば 26 + さらに編成を出すなら 19
+ * - 左の列 = 12 + 24（分）+ 運用があれば 26 + さらに編成を出すなら 19 + 投稿ボタン 28（POST_BUTTON_LINE）
  * - 右の列 = 12 + 24 + ↪ が k 個（k ≥ 1）なら 42k − 4
  *   （↪ の数はセルと同じ TimetableStationFindOtherTripsInSameTripBlockPipe で数える）
  */
@@ -50,7 +55,8 @@ function estimateCellHeight(
         CELL_PADDING +
         MINUTE_LINE +
         (hasOperation
-            ? OPERATION_LINE + (showCurrentFormation ? FORMATION_LINE : 0)
+            ? OPERATION_LINE +
+              (showCurrentFormation ? FORMATION_LINE + POST_BUTTON_LINE : 0)
             : 0);
 
     const k = others.transform(trip).length;

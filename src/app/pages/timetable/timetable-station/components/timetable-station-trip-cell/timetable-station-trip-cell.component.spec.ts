@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TimetableStationTripCellComponent } from './timetable-station-trip-cell.component';
 
 /**
@@ -104,13 +105,22 @@ const trip6436 = {
 } as never;
 
 describe('TimetableStationTripCellComponent', () => {
+    const open = jest.fn();
+
+    beforeEach(() => {
+        open.mockClear();
+    });
+
     async function createFixture(overrides?: {
         operationSightingTimeCrossSections?: Record<string, unknown>;
         showCurrentFormation?: boolean;
     }) {
         await TestBed.configureTestingModule({
             imports: [TimetableStationTripCellComponent],
-            providers: [provideRouter([])],
+            providers: [
+                provideRouter([]),
+                { provide: OperationPostDialogService, useValue: { open } },
+            ],
         }).compileComponents();
 
         const fixture = TestBed.createComponent(
@@ -218,5 +228,34 @@ describe('TimetableStationTripCellComponent', () => {
         expect(links.every((a) => a.classList.contains('tw-underline'))).toBe(
             true,
         );
+    });
+
+    describe('投稿ボタン', () => {
+        const postButton = (fixture: { nativeElement: unknown }) =>
+            (
+                fixture.nativeElement as HTMLElement
+            ).querySelector<HTMLButtonElement>(
+                'button[aria-label="この運用で投稿"]',
+            );
+
+        it('充当編成を出すセルで運用番号があれば出る', async () => {
+            const fixture = await createFixture({ showCurrentFormation: true });
+            expect(postButton(fixture)).not.toBeNull();
+        });
+
+        it('充当編成を出さないセルでは出ない', async () => {
+            const fixture = await createFixture({
+                showCurrentFormation: false,
+            });
+            expect(postButton(fixture)).toBeNull();
+        });
+
+        it('押すと運用番号だけ埋めた投稿ダイアログを開く', async () => {
+            const fixture = await createFixture({ showCurrentFormation: true });
+            postButton(fixture)?.click();
+            expect(open).toHaveBeenCalledWith('timetable_station', {
+                operationNumber: '51',
+            });
+        });
     });
 });

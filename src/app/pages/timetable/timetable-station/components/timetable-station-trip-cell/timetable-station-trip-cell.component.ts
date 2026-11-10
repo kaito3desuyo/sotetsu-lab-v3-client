@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    inject,
+    input,
+} from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
@@ -13,6 +19,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
@@ -31,6 +38,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     templateUrl: './timetable-station-trip-cell.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        MatButtonModule,
         MatIconModule,
         FindByIdPipe,
         MaxByPipe,
@@ -45,6 +53,8 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     ],
 })
 export class TimetableStationTripCellComponent {
+    readonly #operationPostDialog = inject(OperationPostDialogService);
+
     readonly trip = input.required<TripDetailsDto>();
     readonly calendarId = input.required<CalendarDetailsDto['calendarId']>();
     readonly stationId = input.required<StationDetailsDto['stationId']>();
@@ -61,4 +71,18 @@ export class TimetableStationTripCellComponent {
      * B7: 過去ダイヤ表示時は false になり、充当編成（6）自体を描画しない。
      */
     readonly showCurrentFormation = input.required<boolean>();
+
+    /** 運用番号だけ埋めた投稿ダイアログを開く（M30） */
+    openPost(): void {
+        const operationId = this.trip().tripOperationLists[0]?.operationId;
+        const operationNumber = this.operations().find(
+            (operation) => operation.operationId === operationId,
+        )?.operationNumber;
+        if (!operationNumber) {
+            return;
+        }
+        this.#operationPostDialog.open('timetable_station', {
+            operationNumber,
+        });
+    }
 }
