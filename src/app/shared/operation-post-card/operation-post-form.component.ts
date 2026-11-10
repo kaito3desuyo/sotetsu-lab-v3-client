@@ -25,7 +25,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterLink, Router } from '@angular/router';
-import { addDays, getHours, parse, subDays } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { FetchError } from 'src/app/core/classes/custom-error';
@@ -45,6 +44,7 @@ import {
     filterAgenciesWithFormations,
     OperationPostCardStore,
 } from './operation-post-card.store';
+import { toSightingTimeIso } from './sighting-precheck.util';
 
 type Form = FormGroup<{
     agencyId: FormControl<string>;
@@ -205,23 +205,11 @@ export class OperationPostFormComponent {
 
         const now = new Date();
 
-        let convertedSightingTime = now.toISOString();
-        if (timeSetting === 'specifiedTime') {
-            const parsedSightingTime = parse(sightingTime, 'HH:mm', now);
-            const isLateNight = getHours(now) < 4;
-
-            const adjustedSightingTime = isLateNight
-                ? subDays(
-                      parsedSightingTime,
-                      getHours(parsedSightingTime) >= 4 ? 1 : 0,
-                  )
-                : addDays(
-                      parsedSightingTime,
-                      getHours(parsedSightingTime) < 4 ? 1 : 0,
-                  );
-
-            convertedSightingTime = adjustedSightingTime.toISOString();
-        }
+        const convertedSightingTime = toSightingTimeIso({
+            timeSetting,
+            sightingTime,
+            now,
+        });
 
         this.#ga.sendEvent('sighting_submit');
 
