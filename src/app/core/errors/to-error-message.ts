@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { FetchError } from '../classes/custom-error';
 
 /** GA のイベントの値は 100 文字まで */
@@ -9,6 +10,10 @@ export function toErrorMessage(error: unknown): string {
 }
 
 function describe(error: unknown): string {
+    // HttpBackend で直接取る分は FetchErrorInterceptor を通らない。Error の仲間でないので、そのままだと [object Object] になる
+    if (error instanceof HttpErrorResponse) {
+        return describe(FetchError.fromHttpErrorResponse(error));
+    }
     if (error instanceof FetchError) {
         const path = error.url
             ? ` ${new URL(error.url, 'http://localhost').pathname}`

@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { FetchError } from '../classes/custom-error';
 import { toErrorMessage } from './to-error-message';
 
@@ -16,8 +17,20 @@ describe('toErrorMessage', () => {
     });
 
     it('url の無い FetchError は道筋を省く', () => {
-        expect(toErrorMessage(new FetchError(400, '編成が見つかりません'))).toBe(
-            'FetchError 400: 編成が見つかりません',
+        expect(
+            toErrorMessage(new FetchError(400, '編成が見つかりません')),
+        ).toBe('FetchError 400: 編成が見つかりません');
+    });
+
+    it('HttpErrorResponse（interceptor を通らない取得の失敗）も FetchError と同じ形にする', () => {
+        const error = new HttpErrorResponse({
+            status: 0,
+            url: 'https://v3.sotetsu-lab.com/api/maintenance',
+            error: new ProgressEvent('error'),
+        });
+
+        expect(toErrorMessage(error)).toBe(
+            'FetchError 0 /api/maintenance: 不明なエラーが発生しました',
         );
     });
 
