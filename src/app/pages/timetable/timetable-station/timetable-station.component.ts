@@ -17,6 +17,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { OfflineConditions } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
@@ -81,6 +82,7 @@ export class TimetableStationComponent {
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
     readonly #store = inject(TimetableStationStore);
+    readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #timetableStationService = inject(TimetableStationService);
     readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #calendarListState = inject(CalendarListState);
@@ -213,6 +215,11 @@ export class TimetableStationComponent {
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
         effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+
+        // 自分が運用目撃情報を投稿したとき、この画面の充当編成を取り直す
+        this.#operationPostCardService.submitEvent$
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => void this.#refetchSightingsAfterPost());
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
@@ -354,6 +361,42 @@ export class TimetableStationComponent {
             if (this.#store.isLatestFetch(seq)) {
                 this.#store.setHasFetchedTimetable(true);
             }
+            this.#store.disableLoading();
+        }
+    }
+
+    /**
+     * 投稿のあと、この画面の充当編成（目撃の断面）だけを取り直す。
+     * 時刻表・ダイヤ・駅は取り直さない。充当編成を出していない（今日のダイヤでない）ときは何もしない。
+     * 投稿は 'sighting' のキャッシュを捨てるので、ここで最新が取れる。
+     */
+    async #refetchSightingsAfterPost(): Promise<void> {
+        if (!this.showCurrentFormation()) return;
+
+        const seq = this.#store.currentFetchSeq();
+        const conditions = {
+            calendarId: this.#store.calendarId(),
+            stationId: this.#store.stationId(),
+            tripDirection: this.#store.tripDirection(),
+            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+        };
+        this.#store.enableLoading();
+        try {
+            const fetched = await lastValueFrom(
+                this.#timetableStationService.fetchOperationSightingTimeCrossSections(),
+            );
+            if (!fetched) {
+                this.#notificationService.open(
+                    'データの取得に失敗しました',
+                    'OK',
+                );
+            } else if (this.#store.isLatestFetch(seq)) {
+                void this.#store.saveOfflineSnapshot('sightings', conditions);
+            }
+        } catch (error) {
+            console.error(error);
+            this.#notificationService.open('データの取得に失敗しました', 'OK');
+        } finally {
             this.#store.disableLoading();
         }
     }

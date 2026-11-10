@@ -19,6 +19,8 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -84,6 +86,8 @@ export class TrainLocationComponent {
     readonly #router = inject(Router);
     readonly #trainLocationService = inject(TrainLocationService);
     readonly #store = inject(TrainLocationStore);
+    readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #notificationService = inject(NotificationService);
     readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
@@ -368,6 +372,11 @@ export class TrainLocationComponent {
                 void this.fetchOperationSightings(operationNumbers);
             });
 
+        // 自分が運用目撃情報を投稿したとき、この画面の充当編成を取り直す
+        this.#operationPostCardService.submitEvent$
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => void this.#refetchSightingsAfterPost());
+
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
@@ -581,6 +590,37 @@ export class TrainLocationComponent {
         if (fetched) {
             this.#sightingsRestoredFor = null;
             void this.#store.saveOfflineSnapshot('sightings', conditions);
+        }
+    }
+
+    /**
+     * 投稿のあと、いま動いている列車の運用の目撃（充当編成）だけを、取っている分も含めて取り直す。
+     * 列車・駅は取り直さない。今日のダイヤでないときは何もしない。
+     * 投稿は 'sighting' のキャッシュを捨てるので、ここで最新が取れる。
+     */
+    async #refetchSightingsAfterPost(): Promise<void> {
+        if (!this.isTodaySelected()) return;
+        const operationNumbers = this.#activeOperationNumbers();
+        if (!operationNumbers.length) return;
+
+        const conditions = {
+            calendarId: this.#store.calendarId(),
+            routeId: this.#store.selectedRouteId(),
+            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+        };
+        this.#store.enableLoading();
+        try {
+            await lastValueFrom(
+                this.#trainLocationService.fetchOperationSightingTimeCrossSections(
+                    operationNumbers,
+                ),
+            );
+            void this.#store.saveOfflineSnapshot('sightings', conditions);
+        } catch (error) {
+            console.error(error);
+            this.#notificationService.open('データの取得に失敗しました', 'OK');
+        } finally {
+            this.#store.disableLoading();
         }
     }
 

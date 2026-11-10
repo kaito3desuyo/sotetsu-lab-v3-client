@@ -14,6 +14,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
+import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -35,6 +36,7 @@ import {
     StationAxis,
     StationAxisEntry,
 } from 'src/app/shared/diagram-scale';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -140,6 +142,8 @@ export class TrainDiagramComponent {
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
     readonly #store = inject(TrainDiagramStore);
+    readonly #operationPostCardService = inject(OperationPostCardService);
+    readonly #notificationService = inject(NotificationService);
     readonly #timetableDiagramService = inject(TrainDiagramService);
     readonly #todaysCalendarListState = inject(TodaysCalendarListState);
     readonly #routeStationListState = inject(RouteStationListState);
@@ -844,6 +848,11 @@ export class TrainDiagramComponent {
 
         runIntervalInBrowser(1000, () => this.#now.set(new Date()));
 
+        // 自分が運用目撃情報を投稿したとき、この画面に出ている充当編成を取り直す
+        this.#operationPostCardService.submitEvent$
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(() => void this.#refetchSightingsAfterPost());
+
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
         this.#store.setHasFetchedTrainDiagram(false);
 
@@ -1189,6 +1198,53 @@ export class TrainDiagramComponent {
                 throw error;
             }
             void this.#store.saveOfflineSnapshot('sightings', conditions);
+        }
+    }
+
+    /**
+     * 投稿のあと、この画面がすでに取っている充当編成（運用ごとの目撃の断面）だけを取り直す。
+     * 列車・ダイヤは取り直さない。今日のダイヤを出していないときは何もしない。
+     * 投稿は 'sighting' のキャッシュを捨てるので、ここで最新が取れる。
+     */
+    async #refetchSightingsAfterPost(): Promise<void> {
+        if (!this.showTodayParts()) return;
+        const operationNumbers = Object.keys(
+            this.operationSightingTimeCrossSections(),
+        );
+        if (!operationNumbers.length) return;
+
+        const seq = this.#store.currentFetchSeq();
+        const conditions = {
+            calendarId: this.#store.calendarId(),
+            routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
+            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+        };
+        this.#store.enableLoading();
+        try {
+            const results = await Promise.allSettled(
+                operationNumbers.map((operationNumber) =>
+                    lastValueFrom(
+                        this.#timetableDiagramService.fetchOperationSightingTimeCrossSection(
+                            operationNumber,
+                        ),
+                    ),
+                ),
+            );
+            const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failure) {
+                console.error(failure.reason);
+                this.#notificationService.open(
+                    'データの取得に失敗しました',
+                    'OK',
+                );
+            } else if (this.#store.isLatestFetch(seq)) {
+                void this.#store.saveOfflineSnapshot('sightings', conditions);
+            }
+        } finally {
+            this.#store.disableLoading();
         }
     }
 

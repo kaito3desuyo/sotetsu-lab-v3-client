@@ -122,10 +122,22 @@ export class TrainLocationService {
             return of(false);
         }
 
+        return this.fetchOperationSightingTimeCrossSections(missing).pipe(
+            map(() => true),
+        );
+    }
+
+    /**
+     * 取っている分も含めて、指定した運用の目撃クロスセクションを取り直してストアに入れる。
+     * 投稿のあと（'sighting' のキャッシュは捨てられている）に使う。
+     */
+    fetchOperationSightingTimeCrossSections(
+        operationNumbers: readonly string[],
+    ): Observable<void> {
         // 運用ごとに 1 本ずつ取っていたのを、まとめて返す口 1 本にする（api ADR-0003）
         return this.#operationSightingService
             .findManyTimeCrossSectionsByOperationNumbers({
-                operationNumbers: missing,
+                operationNumbers: Array.from(new Set(operationNumbers)),
             })
             .pipe(
                 tap((data) => {
@@ -139,7 +151,7 @@ export class TrainLocationService {
                         );
                     }
                 }),
-                map(() => true),
+                map(() => undefined),
             );
     }
 }
