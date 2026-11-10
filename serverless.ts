@@ -2,6 +2,28 @@ import type { AWS } from '@serverless/typescript';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { lambdaAlarms } from './serverless-alarms';
+
+const alarms = lambdaAlarms([
+    {
+        logicalId: 'SsrUrl5xxAlarm',
+        alarmName: 'sotetsu-lab-v3-prod-client-ssr-url5xx',
+        description: 'SSR が 1 時間に 5xx を 5 件以上返した',
+        functionLogicalId: 'SsrLambdaFunction',
+        metricName: 'Url5xxCount',
+        threshold: 5,
+    },
+    {
+        logicalId: 'SsrErrorsAlarm',
+        alarmName: 'sotetsu-lab-v3-prod-client-ssr-errors',
+        description:
+            'SSR の Lambda が 1 時間に 3 回以上エラーで終わった（タイムアウトを含む）',
+        functionLogicalId: 'SsrLambdaFunction',
+        metricName: 'Errors',
+        threshold: 3,
+    },
+]);
+
 const system = 'sotetsu-lab-v3' as const;
 
 const certificateArn =
@@ -97,12 +119,14 @@ const serverlessConfiguration: AWS = {
             },
         },
         Conditions: {
+            ...alarms.Conditions,
             SsrOn: { 'Fn::Equals': ['${param:ssr}', 'on'] },
             HasAliases: {
                 'Fn::Not': [{ 'Fn::Equals': ['${param:aliases}', ''] }],
             },
         },
         Resources: {
+            ...alarms.Resources,
             WebBucket: {
                 Type: 'AWS::S3::Bucket',
                 DeletionPolicy: 'Retain',
