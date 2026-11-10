@@ -182,7 +182,7 @@ export class OperationPostFormComponent {
     #pickedOperationNumber: string | null = null;
     #operationFromTrain = false;
     /** 一覧を引き直している間（submitting の前）も 2 回送らせない */
-    #refreshingLists = false;
+    readonly refreshingLists = signal(false);
 
     /** 打った字で始まる今日の編成（所属を選んでいればその会社だけ）。推測の充当編成は混ぜない */
     readonly formationCandidates = computed<FormationDetailsDto[]>(() => {
@@ -331,15 +331,15 @@ export class OperationPostFormComponent {
 
     async submit(formGroupDirective: FormGroupDirective): Promise<void> {
         // 応答待ちのあいだに Enter で 2 回送らない
-        if (this.submitting() || this.#refreshingLists) return;
+        if (this.submitting() || this.refreshingLists()) return;
         // 4 時をまたいで開いたままなら、前の営業日の一覧で止めないよう引き直す。
         // 引き直せなければ運用番号の確かめは飛ばして api に任せる
-        this.#refreshingLists = true;
+        this.refreshingLists.set(true);
         let listsAreFresh: boolean;
         try {
             listsAreFresh = await this.#listsRefresher.refreshIfStale();
         } finally {
-            this.#refreshingLists = false;
+            this.refreshingLists.set(false);
         }
         const { agencyId, timeSetting, sightingTime } = this.sightingForm.value;
         // 前後の空白は候補・注意・確認・api で食い違うので、ここで落としてから使う

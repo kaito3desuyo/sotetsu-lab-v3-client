@@ -7,7 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -216,6 +216,27 @@ describe('TrainPickerComponent', () => {
         );
     });
 
+    it('一覧を引き直せなかったら、古いダイヤで列車を取らず読み込み失敗の表示にする', async () => {
+        const refreshIfStale = jest.fn(async () => false);
+        setup('cal-old', [
+            {
+                provide: TodaysListsRefresher,
+                useValue: { isStale: () => true, refreshIfStale },
+            },
+        ]);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(findMany).not.toHaveBeenCalled();
+        expect(fixture.nativeElement).toHaveTextContent(
+            /列車を読み込めませんでした/,
+        );
+        expect(
+            fixture.nativeElement.querySelector('[data-reload]'),
+        ).not.toBeNull();
+    });
+
     it('方向のトグルを押すとストアの方向が変わる', async () => {
         const store = setup();
         fixture.detectChanges();
@@ -343,6 +364,27 @@ describe('TrainPickerComponent', () => {
 
             store.widenBefore();
             (buildPickableTrains as jest.Mock).mockReturnValue([TRAIN, TRAIN]);
+            await render();
+
+            expect(list().scrollTop).toBe(7);
+        });
+
+        it('同じ駅・方向で引き直しても、一覧のスクロール位置を 0 に戻さない', async () => {
+            rowTops();
+            const store = setup();
+            patchState(unprotected(store), { stationId: 'st-1' });
+            await render();
+            list().scrollTop = 7;
+
+            const pending = new Subject<Record<number, unknown[]>>();
+            findMany.mockReturnValueOnce(pending);
+            const reloading = fixture.componentInstance.reload();
+            fixture.detectChanges();
+            // 読み込み中は一覧の枠が無い
+            expect(list()).toBeNull();
+            pending.next({ 0: blocks, 1: blocks });
+            pending.complete();
+            await reloading;
             await render();
 
             expect(list().scrollTop).toBe(7);

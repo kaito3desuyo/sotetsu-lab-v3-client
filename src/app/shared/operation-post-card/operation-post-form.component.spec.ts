@@ -635,6 +635,22 @@ describe('OperationPostFormComponent', () => {
                 ).toBeNull();
             });
 
+            it('引き直している間は refreshingLists が立ち（送るボタンが無効に見える）、終わると戻る', async () => {
+                staleSetup();
+                const pending = new Subject<{ calendarId: string }>();
+                findCalendar.mockReturnValue(pending);
+                fill();
+
+                const sending = submit();
+                expect(component.refreshingLists()).toBe(true);
+
+                pending.next({ calendarId: 'holiday' });
+                pending.complete();
+                await sending;
+
+                expect(component.refreshingLists()).toBe(false);
+            });
+
             it('引き直しに失敗したら運用番号の確かめは飛ばして送る', async () => {
                 staleSetup();
                 findCalendar.mockReturnValue(throwError(() => new Error('x')));

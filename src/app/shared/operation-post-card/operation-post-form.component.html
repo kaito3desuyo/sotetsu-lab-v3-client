@@ -200,7 +200,9 @@
         <footer class="tw-flex tw-flex-col">
             <app-button
                 type="submit"
-                [disabled]="sightingForm.invalid || submitting()"
+                [disabled]="
+                    sightingForm.invalid || submitting() || refreshingLists()
+                "
             >
                 投稿する
             </app-button>

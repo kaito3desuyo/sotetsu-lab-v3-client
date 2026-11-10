@@ -171,4 +171,23 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         expect(form.querySelector('mat-error')).not.toBeNull();
         expect(form).toHaveTextContent('列車から選ぶ');
     });
+
+    it('一覧を引き直している間は、送るボタンが無効に見える', () => {
+        component.sightingForm.patchValue({
+            agencyId: 'sotetsu',
+            formationOrVehicleNumber: '10701',
+            operationNumber: '1',
+        });
+        fixture.detectChanges();
+        const submitButton = () =>
+            fixture.nativeElement.querySelector(
+                'app-button[type="submit"] button, button[type="submit"]',
+            );
+        expect(submitButton()).toBeEnabled();
+
+        component.refreshingLists.set(true);
+        fixture.detectChanges();
+
+        expect(submitButton()).toBeDisabled();
+    });
 });

@@ -102,6 +102,10 @@ export class TrainPickerComponent {
 
     /** 最後にスクロールを合わせたときの駅・方向 */
     #scrolledKey: string | null = null;
+    /** 最後にスクロールを合わせた一覧の枠（引き直しで作り直されたかの判定） */
+    #scrolledList: HTMLElement | null = null;
+    /** 引き直しの前に覚えておく、一覧のスクロール位置（同じ駅・方向なら戻す） */
+    #savedScrollTop: number | null = null;
 
     constructor() {
         this.#store.resetWindow();
@@ -115,7 +119,18 @@ export class TrainPickerComponent {
             const list = this.trainList()?.nativeElement;
             if (!list) return;
             const key = `${this.#store.stationId()}|${this.#store.direction()}`;
-            if (key === this.#scrolledKey) return;
+            if (key === this.#scrolledKey) {
+                // 引き直し（ローディングで枠が作り直された）後は、覚えておいた位置へ戻す
+                if (list !== this.#scrolledList) {
+                    this.#scrolledList = list;
+                    if (this.#savedScrollTop !== null) {
+                        list.scrollTop = this.#savedScrollTop;
+                        this.#savedScrollTop = null;
+                    }
+                }
+                return;
+            }
+            this.#scrolledList = list;
             this.#scrolledKey = key;
             const rows = Array.from(
                 list.querySelectorAll<HTMLElement>('[data-train-row]'),
@@ -131,11 +146,18 @@ export class TrainPickerComponent {
 
     async reload(): Promise<void> {
         this.#at.set(new Date());
+        this.#savedScrollTop =
+            this.trainList()?.nativeElement.scrollTop ?? null;
         this.#store.enableLoading();
         try {
-            // 4 時をまたいだら、前の営業日のダイヤで列車を取らないよう一覧を引き直す
-            if (this.#listsRefresher.isStale(this.#at())) {
-                await this.#listsRefresher.refreshIfStale(this.#at());
+            // 4 時をまたいだら、前の営業日のダイヤで列車を取らないよう一覧を引き直す。
+            // 引き直せなかったら古いダイヤで列車を並べず、読み込み失敗の表示にする
+            if (
+                this.#listsRefresher.isStale(this.#at()) &&
+                !(await this.#listsRefresher.refreshIfStale(this.#at()))
+            ) {
+                this.#store.setFetchFailed(true);
+                return;
             }
             await lastValueFrom(this.#service.fetchTripBlocks());
         } finally {
