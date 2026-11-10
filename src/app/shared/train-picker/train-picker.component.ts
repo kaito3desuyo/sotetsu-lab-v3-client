@@ -7,6 +7,7 @@ import {
     inject,
     output,
     signal,
+    viewChild,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -49,7 +50,6 @@ export class TrainPickerComponent {
     readonly #store = inject(TrainPickerStore);
     readonly #service = inject(TrainPickerService);
     readonly #listsRefresher = inject(TodaysListsRefresher);
-    readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
     readonly #routeStations = inject(RouteStationListState).routeStations;
     readonly #agencies = inject(AgencyListState).agencies;
 
@@ -57,6 +57,8 @@ export class TrainPickerComponent {
     readonly cancelled = output<void>();
 
     protected readonly store = this.#store;
+    protected readonly trainList =
+        viewChild<ElementRef<HTMLElement>>('trainList');
     /** 開いた時刻。1 分ごとの更新はしない。 */
     readonly #at = signal(new Date());
 
@@ -98,22 +100,32 @@ export class TrainPickerComponent {
         });
     });
 
+    /** 最後にスクロールを合わせたときの駅・方向 */
+    #scrolledKey: string | null = null;
+
     constructor() {
         this.#store.resetWindow();
         void this.reload();
 
-        // 今に一番近い行（過ぎていない最初の行。全部過ぎていれば最後の行）を見える位置へ
+        // 今に一番近い行（過ぎていない最初の行。全部過ぎていれば最後の行）を一覧の枠の中で見える位置へ。
+        // 初回と、駅・方向を変えたときだけ。もっと前・もっと後で窓を広げたときは動かさない。
+        // scrollIntoView はダイアログやページまで動かすので、枠の scrollTop だけを動かす
         afterRenderEffect(() => {
             this.trains();
+            const list = this.trainList()?.nativeElement;
+            if (!list) return;
+            const key = `${this.#store.stationId()}|${this.#store.direction()}`;
+            if (key === this.#scrolledKey) return;
+            this.#scrolledKey = key;
             const rows = Array.from(
-                this.#host.nativeElement.querySelectorAll<HTMLElement>(
-                    '[data-train-row]',
-                ),
+                list.querySelectorAll<HTMLElement>('[data-train-row]'),
             );
             const target =
                 rows.find((row) => row.dataset['past'] !== 'true') ??
                 rows[rows.length - 1];
-            target?.scrollIntoView?.({ block: 'nearest' });
+            if (target) {
+                list.scrollTop = target.offsetTop - list.offsetTop;
+            }
         });
     }
 

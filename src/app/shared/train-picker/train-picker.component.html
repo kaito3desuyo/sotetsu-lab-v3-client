@@ -64,7 +64,9 @@
             </app-button>
         </div>
     } @else if (!store.stationId()) {
-        <p class="tw-m-0 tw-text-muted">いる駅を選んでください</p>
+        @if (store.settingsReady()) {
+            <p class="tw-m-0 tw-text-muted">いる駅を選んでください</p>
+        }
     } @else if (!store.isLoading()) {
         <div class="tw-flex tw-flex-col tw-gap-2">
             <button
@@ -80,7 +82,7 @@
                     この時間帯に選べる列車がありません
                 </p>
             } @else {
-                <div class="tw-max-h-[50dvh] tw-overflow-y-auto">
+                <div #trainList class="tw-max-h-[40dvh] tw-overflow-y-auto">
                     @for (train of trains(); track train.tripId) {
                         <button
                             type="button"

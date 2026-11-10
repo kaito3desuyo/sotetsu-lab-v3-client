@@ -12,11 +12,11 @@ import { FilterChipValue } from '../filter-chips/filter-chip-option.type';
 import { SegmentToggleOption } from './segment-toggle-option.type';
 
 /**
- * 全幅2セグメントトグル共通部品（98 G0-3）。
+ * セグメントトグル共通部品（98 G0-3）。
  *
  * mat-button-toggle-group/mat-button-toggle（単一選択モード）で
  * 上り/下り・現在時刻/時刻指定・編成番号/車両番号 等の2値トグルを
- * モック準拠の全幅2分割ボタンで表現する（controlled component。
+ * モック準拠の全幅の等分ボタンで表現する（controlled component。
  * 永続化は利用側の責務）。
  *
  * 単一選択グループは同一値を再選択してもクリックイベントが

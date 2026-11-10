@@ -236,4 +236,80 @@ describe('TrainPickerComponent', () => {
         ).componentInstance;
         expect(select.options.length).toBe(2);
     });
+
+    it('設定を戻し終えるまでは、駅を選んでくださいを出さない', async () => {
+        setup();
+        const store = TestBed.inject(TrainPickerStore);
+        patchState(unprotected(store), { stationId: null });
+        fixture.detectChanges();
+        // 戻し終える前（getItem は未解決のまま）
+        expect(fixture.nativeElement).not.toHaveTextContent(
+            /いる駅を選んでください/,
+        );
+
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).toHaveTextContent(
+            /いる駅を選んでください/,
+        );
+    });
+
+    describe('一覧のスクロール', () => {
+        const rowTops = (): jest.SpyInstance =>
+            jest
+                .spyOn(HTMLElement.prototype, 'offsetTop', 'get')
+                .mockImplementation(function (this: HTMLElement) {
+                    return this.hasAttribute('data-train-row') ? 120 : 0;
+                });
+
+        afterEach(() => jest.restoreAllMocks());
+
+        const list = (): HTMLElement =>
+            fixture.nativeElement.querySelector('.tw-overflow-y-auto');
+
+        const render = async (): Promise<void> => {
+            fixture.detectChanges();
+            await fixture.whenStable();
+            fixture.detectChanges();
+            await fixture.whenStable();
+        };
+
+        it('最初に出したとき、最初の過ぎていない行へ一覧の枠の中だけで動かす', async () => {
+            rowTops();
+            const store = setup();
+            patchState(unprotected(store), { stationId: 'st-1' });
+
+            await render();
+
+            expect(list().scrollTop).toBe(120);
+        });
+
+        it('もっと前で窓を広げても動かさない', async () => {
+            rowTops();
+            const store = setup();
+            patchState(unprotected(store), { stationId: 'st-1' });
+            await render();
+            list().scrollTop = 7;
+
+            store.widenBefore();
+            (buildPickableTrains as jest.Mock).mockReturnValue([TRAIN, TRAIN]);
+            await render();
+
+            expect(list().scrollTop).toBe(7);
+        });
+
+        it('駅を変えたら動かす', async () => {
+            rowTops();
+            const store = setup();
+            patchState(unprotected(store), { stationId: 'st-1' });
+            await render();
+            list().scrollTop = 7;
+
+            store.setStationId('st-2');
+            await render();
+
+            expect(list().scrollTop).toBe(120);
+        });
+    });
 });
