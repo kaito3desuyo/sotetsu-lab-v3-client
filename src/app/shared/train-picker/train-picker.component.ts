@@ -13,6 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { lastValueFrom } from 'rxjs';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
+import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { AppButtonComponent } from '../app-button/app-button.component';
@@ -47,6 +48,7 @@ import { TrainPickerStore } from './train-picker.store';
 export class TrainPickerComponent {
     readonly #store = inject(TrainPickerStore);
     readonly #service = inject(TrainPickerService);
+    readonly #listsRefresher = inject(TodaysListsRefresher);
     readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
     readonly #routeStations = inject(RouteStationListState).routeStations;
     readonly #agencies = inject(AgencyListState).agencies;
@@ -119,6 +121,10 @@ export class TrainPickerComponent {
         this.#at.set(new Date());
         this.#store.enableLoading();
         try {
+            // 4 時をまたいだら、前の営業日のダイヤで列車を取らないよう一覧を引き直す
+            if (this.#listsRefresher.isStale(this.#at())) {
+                await this.#listsRefresher.refreshIfStale(this.#at());
+            }
             await lastValueFrom(this.#service.fetchTripBlocks());
         } finally {
             this.#store.disableLoading();

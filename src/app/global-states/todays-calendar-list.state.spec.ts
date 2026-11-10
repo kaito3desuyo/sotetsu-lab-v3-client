@@ -73,4 +73,15 @@ describe('TodaysCalendarListState', () => {
             [{ date: '2026-10-27' }],
         ]);
     });
+
+    it('取った営業日を覚え、4 時をまたいだら今日の一覧ではなくなる', () => {
+        findOneBySpecificDate.mockReturnValue(of(calendar('today')));
+        jest.useFakeTimers({ now: new Date(2026, 10, 7, 10, 0) });
+        expect(store.isForToday()).toBe(true);
+
+        store.fetch().subscribe();
+
+        expect(store.isForToday(new Date(2026, 10, 8, 3, 59))).toBe(true);
+        expect(store.isForToday(new Date(2026, 10, 8, 4, 0))).toBe(false);
+    });
 });

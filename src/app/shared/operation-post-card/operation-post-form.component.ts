@@ -40,6 +40,7 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
+import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
@@ -111,6 +112,7 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #injector = inject(Injector);
+    readonly #listsRefresher = inject(TodaysListsRefresher);
     readonly #todaysOperations = inject(TodaysOperationListState)
         .todaysOperations;
     readonly #agencyList = inject(AgencyListState).agencies;
@@ -177,6 +179,8 @@ export class OperationPostFormComponent {
     /** 列車から選んだ運用番号。値が変わったら「選んだ」扱いを外す */
     #pickedOperationNumber: string | null = null;
     #operationFromTrain = false;
+    /** 一覧を引き直している間（submitting の前）も 2 回送らせない */
+    #refreshingLists = false;
 
     /** 打った字で始まる今日の編成（所属を選んでいればその会社だけ）。推測の充当編成は混ぜない */
     readonly formationCandidates = computed<FormationDetailsDto[]>(() => {
@@ -308,7 +312,16 @@ export class OperationPostFormComponent {
 
     async submit(formGroupDirective: FormGroupDirective): Promise<void> {
         // 応答待ちのあいだに Enter で 2 回送らない
-        if (this.submitting()) return;
+        if (this.submitting() || this.#refreshingLists) return;
+        // 4 時をまたいで開いたままなら、前の営業日の一覧で止めないよう引き直す。
+        // 引き直せなければ運用番号の確かめは飛ばして api に任せる
+        this.#refreshingLists = true;
+        let listsAreFresh: boolean;
+        try {
+            listsAreFresh = await this.#listsRefresher.refreshIfStale();
+        } finally {
+            this.#refreshingLists = false;
+        }
         const {
             agencyId,
             formationOrVehicleNumber,
@@ -330,9 +343,9 @@ export class OperationPostFormComponent {
             sightingTimeIso: convertedSightingTime,
             now,
             // 100 は一覧に無いが、findSightingBlockers が通す。空なら運用番号は確かめない
-            todaysOperationNumbers: this.#todaysOperations().map(
-                (o) => o.operationNumber,
-            ),
+            todaysOperationNumbers: listsAreFresh
+                ? this.#todaysOperations().map((o) => o.operationNumber)
+                : [],
         });
         if (blockers.length > 0) {
             this.#block(blockers);

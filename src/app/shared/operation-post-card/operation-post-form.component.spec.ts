@@ -12,6 +12,10 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { FeatureFlagState } from 'src/app/global-states/feature-flag.state';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
@@ -33,6 +37,9 @@ describe('OperationPostFormComponent', () => {
     let handleError: jest.Mock;
     let resetForm: jest.Mock;
     let sendEvent: jest.Mock;
+    let findCalendar: jest.Mock;
+    let findOperations: jest.Mock;
+    let findFormations: jest.Mock;
 
     beforeEach(async () => {
         postOperationSighting = jest.fn(() => of(undefined));
@@ -42,6 +49,9 @@ describe('OperationPostFormComponent', () => {
         handleError = jest.fn();
         resetForm = jest.fn();
         sendEvent = jest.fn();
+        findCalendar = jest.fn(() => of({ calendarId: 'holiday' }));
+        findOperations = jest.fn(() => of([]));
+        findFormations = jest.fn(() => of([]));
         formGroupDirective = {
             resetForm,
         } as unknown as FormGroupDirective;
@@ -71,6 +81,18 @@ describe('OperationPostFormComponent', () => {
                 { provide: ErrorHandlerService, useValue: { handleError } },
                 { provide: SocketService, useValue: { emit: socketEmit } },
                 { provide: GoogleAnalyticsService, useValue: { sendEvent } },
+                {
+                    provide: CalendarService,
+                    useValue: { findOneBySpecificDate: findCalendar },
+                },
+                {
+                    provide: OperationService,
+                    useValue: { findManyByCalendarId: findOperations },
+                },
+                {
+                    provide: FormationService,
+                    useValue: { findManyBySpecificDate: findFormations },
+                },
                 provideRouter([]),
             ],
         })
@@ -454,6 +476,70 @@ describe('OperationPostFormComponent', () => {
                 'sighting_submit',
                 expect.objectContaining({ operation_from_train: 0 }),
             );
+        });
+
+        describe('4 時をまたいだ後の一覧', () => {
+            const operations = (numbers: string[]) =>
+                of(
+                    numbers.map(
+                        (n) =>
+                            ({
+                                operationId: `op${n}`,
+                                operationNumber: n,
+                            }) as unknown as OperationDetailsDto,
+                    ),
+                );
+
+            // 11/7（平日）に一覧を取り、11/8 07:00（休日）に送る
+            const staleSetup = (): void => {
+                jest.useFakeTimers({ now: new Date(2026, 10, 7, 10, 0) });
+                findCalendar.mockReturnValue(of({ calendarId: 'weekday' }));
+                TestBed.inject(TodaysCalendarListState).fetch().subscribe();
+                setOperations(['1']);
+                jest.setSystemTime(new Date(2026, 10, 8, 7, 0));
+                findCalendar.mockReturnValue(of({ calendarId: 'holiday' }));
+                findOperations.mockReturnValue(operations(['1', '12']));
+            };
+
+            it('前の営業日の一覧に無い番号でも、引き直してから確かめて通す', async () => {
+                staleSetup();
+                fill();
+
+                await submit();
+
+                expect(findCalendar).toHaveBeenLastCalledWith({
+                    date: '2026-11-08',
+                });
+                expect(findOperations).toHaveBeenCalledWith({
+                    calendarId: 'holiday',
+                });
+                expect(postOperationSighting).toHaveBeenCalledTimes(1);
+                expect(
+                    component.sightingForm.controls.operationNumber.getError(
+                        'precheck',
+                    ),
+                ).toBeNull();
+            });
+
+            it('引き直しに失敗したら運用番号の確かめは飛ばして送る', async () => {
+                staleSetup();
+                findCalendar.mockReturnValue(throwError(() => new Error('x')));
+                fill();
+
+                await submit();
+
+                expect(postOperationSighting).toHaveBeenCalledTimes(1);
+            });
+
+            it('引き直した後でも一覧に無い番号は止める', async () => {
+                staleSetup();
+                findOperations.mockReturnValue(operations(['1']));
+                fill();
+
+                await submit();
+
+                expect(postOperationSighting).not.toHaveBeenCalled();
+            });
         });
 
         it('時刻指定で未来の時刻なら送らず、sightingTime に precheck エラーと sighting_submit_blocked', async () => {

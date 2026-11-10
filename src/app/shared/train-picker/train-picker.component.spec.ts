@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { PLATFORM_ID, signal } from '@angular/core';
+import { PLATFORM_ID, Provider, signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
@@ -10,6 +10,7 @@ import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
+import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
@@ -40,12 +41,18 @@ import { buildPickableTrains } from './build-pickable-trains.util';
 describe('TrainPickerComponent', () => {
     let fixture: ComponentFixture<TrainPickerComponent>;
     let findMany: jest.Mock<Observable<unknown>>;
+    let calendarIdSignal: WritableSignal<string | null>;
     const blocks = [{ trips: [] }] as unknown as TripBlockDetailsDto[];
 
-    const setup = (calendarId: string | null = 'cal-1') => {
+    const setup = (
+        calendarId: string | null = 'cal-1',
+        extraProviders: Provider[] = [],
+    ) => {
+        calendarIdSignal = signal(calendarId);
         TestBed.configureTestingModule({
             imports: [TrainPickerComponent, NoopAnimationsModule],
             providers: [
+                ...extraProviders,
                 provideRouter([]),
                 { provide: PLATFORM_ID, useValue: 'browser' },
                 {
@@ -57,7 +64,10 @@ describe('TrainPickerComponent', () => {
                 },
                 {
                     provide: TodaysCalendarListState,
-                    useValue: { todaysCalendarId: signal(calendarId) },
+                    useValue: {
+                        todaysCalendarId: calendarIdSignal,
+                        isForToday: () => true,
+                    },
                 },
                 {
                     provide: RouteStationListState,
@@ -178,6 +188,26 @@ describe('TrainPickerComponent', () => {
 
         expect(fixture.nativeElement).toHaveTextContent(
             /列車を読み込めませんでした/,
+        );
+    });
+
+    it('一覧が古ければ引き直してから、その今日のダイヤの ID で列車を取る', async () => {
+        const refreshIfStale = jest.fn(async () => {
+            calendarIdSignal.set('cal-new');
+            return true;
+        });
+        setup('cal-old', [
+            {
+                provide: TodaysListsRefresher,
+                useValue: { isStale: () => true, refreshIfStale },
+            },
+        ]);
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        expect(refreshIfStale).toHaveBeenCalled();
+        expect(findMany).toHaveBeenCalledWith(
+            expect.objectContaining({ calendarId: 'cal-new' }),
         );
     });
 });

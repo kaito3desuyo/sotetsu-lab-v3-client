@@ -5,6 +5,7 @@ import {
     type,
     withComputed,
     withMethods,
+    withState,
 } from '@ngrx/signals';
 import {
     entityConfig,
@@ -27,6 +28,8 @@ const calendarConfig = entityConfig({
 export const TodaysCalendarListState = signalStore(
     { providedIn: 'root' },
     withEntities(calendarConfig),
+    /** 取ったときの営業日（yyyy-MM-dd）。4 時をまたいで古くなったかの判定に使う */
+    withState({ fetchedDate: null as string | null }),
     withComputed(({ entities }) => ({
         todaysCalendarId: () => entities().at(0)?.calendarId,
         /**
@@ -40,20 +43,26 @@ export const TodaysCalendarListState = signalStore(
         const calendarService = inject(CalendarService);
 
         return {
+            /** 取ってある一覧が now の営業日のものか。まだ取っていなければ古いとは言わない */
+            isForToday(now: Date = new Date()): boolean {
+                const fetchedDate = store.fetchedDate();
+                return (
+                    fetchedDate === null ||
+                    fetchedDate === format(getRailwayDate(now), 'yyyy-MM-dd')
+                );
+            },
             fetch(): Observable<void> {
-                return calendarService
-                    .findOneBySpecificDate({
-                        date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
-                    })
-                    .pipe(
-                        tap((data: CalendarDetailsDto) => {
-                            patchState(
-                                store,
-                                setAllEntities([data], calendarConfig),
-                            );
-                        }),
-                        map(() => undefined),
-                    );
+                const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+                return calendarService.findOneBySpecificDate({ date }).pipe(
+                    tap((data: CalendarDetailsDto) => {
+                        patchState(
+                            store,
+                            setAllEntities([data], calendarConfig),
+                            { fetchedDate: date },
+                        );
+                    }),
+                    map(() => undefined),
+                );
             },
         };
     }),
