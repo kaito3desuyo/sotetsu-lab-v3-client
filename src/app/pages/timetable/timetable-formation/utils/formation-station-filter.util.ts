@@ -1,4 +1,5 @@
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
+import { toZeroBasedDays } from './formation-display.util';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { FormationDayRow } from './formation-day.util';
@@ -22,15 +23,20 @@ export interface FormationStationSummary {
 }
 
 const arrivalSeconds = (t: TimeDetailsDto): number => {
-    const v = toServiceSeconds(t.arrivalDays, t.arrivalTime);
+    const v = toServiceSeconds(toZeroBasedDays(t.arrivalDays), t.arrivalTime);
     return Number.isNaN(v)
-        ? toServiceSeconds(t.departureDays, t.departureTime)
+        ? toServiceSeconds(toZeroBasedDays(t.departureDays), t.departureTime)
         : v;
 };
 
 const departureSeconds = (t: TimeDetailsDto): number => {
-    const v = toServiceSeconds(t.departureDays, t.departureTime);
-    return Number.isNaN(v) ? toServiceSeconds(t.arrivalDays, t.arrivalTime) : v;
+    const v = toServiceSeconds(
+        toZeroBasedDays(t.departureDays),
+        t.departureTime,
+    );
+    return Number.isNaN(v)
+        ? toServiceSeconds(toZeroBasedDays(t.arrivalDays), t.arrivalTime)
+        : v;
 };
 
 export const isPassing = (t: TimeDetailsDto): boolean =>

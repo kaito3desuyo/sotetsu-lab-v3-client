@@ -9,6 +9,7 @@ import {
     toDisplayTime,
     toServiceSeconds,
 } from 'src/app/core/utils/railway-day';
+import { toZeroBasedDays } from './formation-display.util';
 
 /** 運用を何で決めたか（画面で出し分けるときの材料） */
 export type FormationDayBasis =
@@ -62,17 +63,20 @@ type Sorted = TripOperationListDetailsDto[];
 
 function startSeconds(t: TripOperationListDetailsDto): number {
     const s = t.startTime;
-    const v = toServiceSeconds(s?.departureDays, s?.departureTime);
+    const v = toServiceSeconds(
+        toZeroBasedDays(s?.departureDays),
+        s?.departureTime,
+    );
     return Number.isNaN(v)
-        ? toServiceSeconds(s?.arrivalDays, s?.arrivalTime)
+        ? toServiceSeconds(toZeroBasedDays(s?.arrivalDays), s?.arrivalTime)
         : v;
 }
 
 function endSeconds(t: TripOperationListDetailsDto): number {
     const e = t.endTime;
-    const v = toServiceSeconds(e?.arrivalDays, e?.arrivalTime);
+    const v = toServiceSeconds(toZeroBasedDays(e?.arrivalDays), e?.arrivalTime);
     return Number.isNaN(v)
-        ? toServiceSeconds(e?.departureDays, e?.departureTime)
+        ? toServiceSeconds(toZeroBasedDays(e?.departureDays), e?.departureTime)
         : v;
 }
 
@@ -391,7 +395,7 @@ function build(
                 label: 'out',
                 stationId: trip.startStationId ?? '',
                 time: toDisplayTime(
-                    trip.startTime?.departureDays ?? 0,
+                    toZeroBasedDays(trip.startTime?.departureDays),
                     trip.startTime?.departureTime ?? '00:00:00',
                 ),
             });
@@ -410,7 +414,7 @@ function build(
                 label: 'in',
                 stationId: trip.endStationId ?? '',
                 time: toDisplayTime(
-                    trip.endTime?.arrivalDays ?? 0,
+                    toZeroBasedDays(trip.endTime?.arrivalDays),
                     trip.endTime?.arrivalTime ?? '00:00:00',
                 ),
             });

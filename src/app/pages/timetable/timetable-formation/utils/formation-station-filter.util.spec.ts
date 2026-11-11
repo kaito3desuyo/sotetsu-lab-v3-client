@@ -13,9 +13,9 @@ function stopTime(stationId: string, seq: number, hms: string): TimeDetailsDto {
         stopSequence: seq,
         pickupType: 0,
         dropoffType: 0,
-        arrivalDays: 0,
+        arrivalDays: 1,
         arrivalTime: hms,
-        departureDays: 0,
+        departureDays: 1,
         departureTime: hms,
     };
 }
@@ -118,8 +118,8 @@ describe('filterByStation', () => {
         const r = row('p', [
             {
                 ...stopTime('x', 1, '00:30:00'),
-                arrivalDays: 1,
-                departureDays: 1,
+                arrivalDays: 2,
+                departureDays: 2,
             },
         ]);
         expect(filterByStation([r], 'x', BASE, at('23:00:00')).done).toBe(0);

@@ -1,4 +1,5 @@
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
+import { toZeroBasedDays } from './formation-display.util';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { FormationDateKind } from '../stores/timetable-formation.store';
 import { FormationDayRow } from './formation-day.util';
@@ -17,17 +18,20 @@ export interface FormationProgress {
 
 const startSec = (t: TripOperationListDetailsDto): number => {
     const s = t.startTime;
-    const v = toServiceSeconds(s?.departureDays, s?.departureTime);
+    const v = toServiceSeconds(
+        toZeroBasedDays(s?.departureDays),
+        s?.departureTime,
+    );
     return Number.isNaN(v)
-        ? toServiceSeconds(s?.arrivalDays, s?.arrivalTime)
+        ? toServiceSeconds(toZeroBasedDays(s?.arrivalDays), s?.arrivalTime)
         : v;
 };
 
 const endSec = (t: TripOperationListDetailsDto): number => {
     const e = t.endTime;
-    const v = toServiceSeconds(e?.arrivalDays, e?.arrivalTime);
+    const v = toServiceSeconds(toZeroBasedDays(e?.arrivalDays), e?.arrivalTime);
     return Number.isNaN(v)
-        ? toServiceSeconds(e?.departureDays, e?.departureTime)
+        ? toServiceSeconds(toZeroBasedDays(e?.departureDays), e?.departureTime)
         : v;
 };
 

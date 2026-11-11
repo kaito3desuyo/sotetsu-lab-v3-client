@@ -12,10 +12,10 @@ const trip = (over: Partial<Extract<FormationDayRow, { kind: 'trip' }>> = {}) =>
             endStationId: 'b',
             startTime: {
                 timeId: 's',
-                departureDays: 0,
+                departureDays: 1,
                 departureTime: '07:07:00',
             },
-            endTime: { timeId: 'e', arrivalDays: 0, arrivalTime: '07:14:00' },
+            endTime: { timeId: 'e', arrivalDays: 1, arrivalTime: '07:14:00' },
             trip: {
                 tripId: 'x',
                 tripNumber: '2515',
@@ -27,7 +27,7 @@ const trip = (over: Partial<Extract<FormationDayRow, { kind: 'trip' }>> = {}) =>
                         stopSequence: 1,
                         pickupType: 0,
                         dropoffType: 0,
-                        departureDays: 0,
+                        departureDays: 1,
                         departureTime: '07:07:00',
                     },
                     {

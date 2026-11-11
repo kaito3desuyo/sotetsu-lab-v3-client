@@ -6,8 +6,8 @@ const trip = (start: string, end: string, estimated = false): FormationDayRow =>
         kind: 'trip',
         trip: {
             tripOperationListId: `${start}-${end}`,
-            startTime: { timeId: 's', departureDays: 0, departureTime: start },
-            endTime: { timeId: 'e', arrivalDays: 0, arrivalTime: end },
+            startTime: { timeId: 's', departureDays: 1, departureTime: start },
+            endTime: { timeId: 'e', arrivalDays: 1, arrivalTime: end },
         },
         operationId: 'op',
         operationNumber: '55',

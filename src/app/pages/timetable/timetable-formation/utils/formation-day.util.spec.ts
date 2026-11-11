@@ -12,14 +12,14 @@ import {
 
 const BASE_DATE = '2026-11-11';
 
-/** 'HH:mm' -> TimeDetailsDto 用（24 時超えは days 1） */
+/** 'HH:mm' -> TimeDetailsDto 用（days は 1 始まり。24 時超えは days 2） */
 function t(hm: string) {
     const [h, m] = hm.split(':').map(Number);
     return {
         timeId: `t-${hm}`,
-        departureDays: h >= 24 ? 1 : 0,
+        departureDays: h >= 24 ? 2 : 1,
         departureTime: `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`,
-        arrivalDays: h >= 24 ? 1 : 0,
+        arrivalDays: h >= 24 ? 2 : 1,
         arrivalTime: `${String(h % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`,
     };
 }
@@ -161,6 +161,27 @@ describe('buildFormationDay', () => {
             operationNumber: '16K',
             estimated: false,
         });
+    });
+
+    it('9:06 の目撃は days=1 の 9:00〜9:30 の列車に当たる', () => {
+        const m1 = tol('m1', 'op55', '07:00', '08:00');
+        const m2 = tol('m2', 'op55', '09:00', '09:30');
+        const n1 = tol('n1', 'op59', '07:00', '08:00');
+        const n2 = tol('n2', 'op59', '09:00', '09:30');
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'op55', '07:30'),
+                    sighting('s2', 'f1', 'op59', '09:06'),
+                ],
+                tripsByOperationId: {
+                    op55: op('op55', '55', [m1, m2]),
+                    op59: op('op59', '59', [n1, n2]),
+                },
+            }),
+        );
+        // 9:06 を含むのは m2（9:00〜9:30）なので、そこから 59 の n2 に替わる
+        expect(summarize(rows)).toEqual(['trip:m1', 'swap:59', 'trip:n2']);
     });
 
     it('乗り移りで 16K から 15K に続け、transfer の帯を入れる', () => {

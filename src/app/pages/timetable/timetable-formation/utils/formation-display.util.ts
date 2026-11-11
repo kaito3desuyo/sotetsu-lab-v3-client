@@ -16,12 +16,19 @@ export const formationBasisLabel: Record<FormationDayBasis, string> = {
 export const isInferredBasis = (basis: FormationDayBasis): boolean =>
     basis === 'circulated' || basis === 'carried-over';
 
+/**
+ * ダイヤの days（その日の列車は 1、翌日 0 時台は 2）を 0 始まりにする。無ければその日（0）。
+ * toDisplayTime・toServiceSeconds は 0 始まりの日数を受けるので、渡す前にこれを通す
+ */
+export const toZeroBasedDays = (days: number | null | undefined): number =>
+    (days ?? 1) - 1;
+
 /** 'H:mm'（24 時超えはそのまま 25:10 のように出す）。時刻が無ければ空 */
 export function formatClock(
-    days: number | undefined,
-    time: string | undefined,
+    days: number | null | undefined,
+    time: string | null | undefined,
 ): string {
-    return time ? toDisplayTime(days ?? 0, time) : '';
+    return time ? toDisplayTime(toZeroBasedDays(days), time) : '';
 }
 
 /** ISO の時刻を日本時間の 'H:mm' にする */

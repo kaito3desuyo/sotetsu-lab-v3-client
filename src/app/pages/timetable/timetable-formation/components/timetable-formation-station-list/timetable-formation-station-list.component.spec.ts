@@ -17,9 +17,9 @@ const visit = (passing: boolean, done: boolean) =>
         },
         time: {
             timeId: 'm',
-            arrivalDays: 0,
+            arrivalDays: 1,
             arrivalTime: passing ? undefined : '07:34:00',
-            departureDays: 0,
+            departureDays: 1,
             departureTime: passing ? undefined : '07:37:00',
         },
         passing,
