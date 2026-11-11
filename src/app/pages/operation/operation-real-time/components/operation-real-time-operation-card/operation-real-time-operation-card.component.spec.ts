@@ -70,6 +70,23 @@ describe('OperationRealTimeOperationCardComponent', () => {
         expect(link?.textContent?.trim()).toBe('8713');
     });
 
+    it('昨日の目撃の下線は編成番号のリンクで消さない', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: {
+                sightingTime: new Date(Date.now() - 86_400_000).toISOString(),
+            },
+            expectedSighting: { formation: { formationNumber: '8713' } },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=8713"]',
+        );
+        // 下線は親の span が持つ。リンク側は text-decoration を変えるクラスを持たない
+        expect(link?.parentElement?.classList).toContain('tw-underline');
+        expect(link?.className).not.toMatch(/underline|line-through/);
+    });
+
     it('履歴は新しい順に並べる', () => {
         fixture.componentRef.setInput('histories', [
             sighting('old'),
