@@ -55,6 +55,9 @@ const NAMES = new Map([
     ['st-yoko', '横浜'],
     ['st-futa', '二俣川'],
     ['st-ebina', '海老名'],
+    ['st-hazawa', '羽沢横浜国大'],
+    ['st-shinjuku', '新宿'],
+    ['st-kawagoe', '川越'],
 ]);
 
 /** 二俣川を dep に発つ（days=1）海老名行き */
@@ -290,5 +293,126 @@ describe('buildPickableTrains', () => {
         );
 
         expect(result.map((r) => r.tripId)).toEqual(['a']);
+    });
+    describe('直通列車の行先（ユーザー指示 2026-11-11）', () => {
+        /** 二俣川 07:12 発 → 羽沢横浜国大 07:30 着（相鉄の区間） */
+        const sotetsu = (o: Parameters<typeof trip>[2] = {}) =>
+            trip(
+                'so',
+                [
+                    time({
+                        stationId: 'st-futa',
+                        stopSequence: 1,
+                        departureDays: 1,
+                        departureTime: '07:12:00',
+                    }),
+                    time({
+                        stationId: 'st-hazawa',
+                        stopSequence: 2,
+                        arrivalDays: 1,
+                        arrivalTime: '07:30:00',
+                    }),
+                ],
+                { direction: 0, ...o },
+            );
+        /** from を dep に発ち、to に arr に着く直通先の区間 */
+        const through = (
+            tripId: string,
+            from: string,
+            dep: string,
+            to: string,
+            arr: string,
+            className = '各停（JR）',
+        ) =>
+            trip(
+                tripId,
+                [
+                    time({
+                        stationId: from,
+                        stopSequence: 1,
+                        departureDays: 1,
+                        departureTime: dep,
+                    }),
+                    time({
+                        stationId: to,
+                        stopSequence: 2,
+                        arrivalDays: 1,
+                        arrivalTime: arr,
+                    }),
+                ],
+                { direction: 0, className },
+            );
+        const block = (...trips: TripDetailsDto[]): TripBlockDetailsDto[] => [
+            { tripBlockId: 'b', trips } as TripBlockDetailsDto,
+        ];
+
+        it('同じ tripBlock の最後の列車の終着駅を行先にする（並びは届いた順ではなく時刻順）', () => {
+            const [row] = run(
+                block(
+                    through(
+                        'jr2',
+                        'st-shinjuku',
+                        '08:10:00',
+                        'st-kawagoe',
+                        '09:00:00',
+                    ),
+                    sotetsu(),
+                    through(
+                        'jr1',
+                        'st-hazawa',
+                        '07:31:00',
+                        'st-shinjuku',
+                        '08:05:00',
+                    ),
+                ),
+                AT,
+            ).filter((r) => r.tripId === 'so');
+
+            expect(row.destinationName).toBe('川越');
+        });
+
+        it('最後が回送なら、回送を除いた最後の列車の終着駅にする', () => {
+            const [row] = run(
+                block(
+                    sotetsu(),
+                    through(
+                        'jr1',
+                        'st-hazawa',
+                        '07:31:00',
+                        'st-shinjuku',
+                        '08:05:00',
+                    ),
+                    through(
+                        'dh',
+                        'st-shinjuku',
+                        '08:10:00',
+                        'st-kawagoe',
+                        '09:00:00',
+                        '回送',
+                    ),
+                ),
+                AT,
+            ).filter((r) => r.tripId === 'so');
+
+            expect(row.destinationName).toBe('新宿');
+        });
+
+        it('選んだ列車そのものが回送なら、その列車の終着駅のまま', () => {
+            const [row] = run(
+                block(
+                    sotetsu({ className: '回送' }),
+                    through(
+                        'jr1',
+                        'st-hazawa',
+                        '07:31:00',
+                        'st-shinjuku',
+                        '08:05:00',
+                    ),
+                ),
+                AT,
+            ).filter((r) => r.tripId === 'so');
+
+            expect(row.destinationName).toBe('羽沢横浜国大');
+        });
     });
 });

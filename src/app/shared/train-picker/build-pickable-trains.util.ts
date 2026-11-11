@@ -1,5 +1,6 @@
 import { getRailwayDate, toDisplayTime } from 'src/app/core/utils/railway-day';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
     resolveArrival,
     resolveDeparture,
@@ -12,10 +13,50 @@ import { PickableTrain, PickerDirection } from './pickable-train.interface';
 const IDLE_OPERATION_NUMBER = '100';
 const DEFAULT_CLASS_COLOR = '#8a8a8a';
 const MINUTE_MS = 60 * 1000;
+const DEADHEAD_CLASS_NAME = '回送';
+
+function isDeadhead(trip: TripDetailsDto): boolean {
+    return (
+        baseTripClassName(trip.tripClass?.tripClassName) === DEADHEAD_CLASS_NAME
+    );
+}
+
+/** trip の最初の時刻（days を含めた分）。並べるためだけに使う */
+function firstMinute(trip: TripDetailsDto): number {
+    const first = timedStops(trip.times)[0];
+    const value = first?.departureTime ?? first?.arrivalTime;
+    if (!first || !value) {
+        return Number.POSITIVE_INFINITY;
+    }
+    const days =
+        (first.departureTime ? first.departureDays : first.arrivalDays) ?? 1;
+    const [h, m] = value.split(':').map(Number);
+    return (days - 1) * 24 * 60 + h * 60 + m;
+}
+
+/**
+ * 行先の駅。直通列車は、同じ tripBlock の中で回送を除いた最後の列車の終着駅
+ * （ユーザー指示 2026-11-11）。選んだ列車そのものが回送なら、その列車の終着駅。
+ */
+function destinationStationId(
+    trip: TripDetailsDto,
+    blockTrips: readonly TripDetailsDto[],
+): string | undefined {
+    const own = timedStops(trip.times).at(-1)?.stationId;
+    if (isDeadhead(trip)) {
+        return own;
+    }
+    const last = [...blockTrips]
+        .filter((t) => !isDeadhead(t))
+        .sort((a, b) => firstMinute(a) - firstMinute(b))
+        .at(-1);
+    return (last && timedStops(last.times).at(-1)?.stationId) ?? own;
+}
 
 /**
  * ある駅に時刻のある列車を、基準時刻 at の前後の幅（両端を含む）で時刻順に返す。
  * 運用番号を持たない列車と休車（100）は含めない。
+ * 行先は直通先まで含めた終着駅（destinationStationId）。
  */
 export function buildPickableTrains(input: {
     tripBlocks: readonly TripBlockDetailsDto[];
@@ -70,7 +111,7 @@ export function buildPickableTrains(input: {
             const displayDays = isArrivalOnly
                 ? stop.arrivalDays
                 : (stop.departureDays ?? stop.arrivalDays);
-            const lastStationId = timedStops(trip.times).at(-1)?.stationId;
+            const lastStationId = destinationStationId(trip, block.trips ?? []);
             trains.push({
                 tripId: trip.tripId,
                 direction: tripDirection,
