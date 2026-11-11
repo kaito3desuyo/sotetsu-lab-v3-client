@@ -1,5 +1,8 @@
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
-import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
+import {
+    ItineraryLinkEndDto,
+    OperationItineraryLinkDto,
+} from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
@@ -345,6 +348,78 @@ describe('buildFormationDay', () => {
             'trip:x1',
             'trip:y1',
         ]);
+    });
+
+    it('不明の行の運用番号は、追い出した目撃の運用にそろえる', () => {
+        // 16K で目撃 → ダイヤで 15K に乗り移り → 8711 が 15K で目撃
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'op16', '08:30'),
+                    sighting('s2', 'f2', 'op15', '11:30', {
+                        formation: {
+                            formationId: 'f2',
+                            formationNumber: '8711',
+                        },
+                    }),
+                ],
+                tripsByOperationId: trips,
+                links: link(a2, b1, '16K', '15K'),
+            }),
+        );
+        expect(summarize(rows)).toEqual(['trip:a1', 'trip:a2', 'unknown:15K']);
+        expect(rows[2]).toMatchObject({
+            kind: 'unknown',
+            lastOperationNumber: '15K',
+            evictedBy: { formationNumber: '8711', sightingTime: jst('11:30') },
+        });
+    });
+
+    it('previous をさかのぼって輪になっても止まる', () => {
+        // A(x1) ← B(y1) ← A(x1) の輪
+        const x1 = tol('x1', 'opA', '08:00', '09:00');
+        const y1 = tol('y1', 'opB', '09:30', '10:30');
+        const end = (
+            t: TripOperationListDetailsDto,
+            operationNumber: string,
+        ): ItineraryLinkEndDto => ({
+            tripOperationListId: t.tripOperationListId,
+            tripId: t.tripId,
+            operationId: t.operationId,
+            operationNumber,
+            stationId: 'st-loop',
+            rule: 1,
+        });
+        const rows = buildFormationDay(
+            input({
+                firstOperationId: 'opA',
+                tripsByOperationId: {
+                    opA: op('opA', 'A', [x1]),
+                    opB: op('opB', 'B', [y1]),
+                },
+                links: [
+                    {
+                        tripOperationListId: 'x1',
+                        tripId: 'trip-x1',
+                        operationId: 'opA',
+                        previous: end(y1, 'B'),
+                        next: null,
+                    },
+                    {
+                        tripOperationListId: 'y1',
+                        tripId: 'trip-y1',
+                        operationId: 'opB',
+                        previous: end(x1, 'A'),
+                        next: null,
+                    },
+                ],
+            }),
+        );
+        const tripIds = rows.flatMap((r) =>
+            r.kind === 'trip' ? [r.trip.tripOperationListId] : [],
+        );
+        expect(new Set(tripIds).size).toBe(tripIds.length);
+        expect([...tripIds].sort()).toEqual(['x1', 'y1']);
     });
 
     it('無効にされた目撃は使わない', () => {

@@ -368,13 +368,14 @@ function build(
             const at = pathIndexContaining(path, sightingSeconds(evictor));
             path.length = at;
             trimTrailingTransfers(path);
-            const lastOpId = effectiveOperationId(lastOwn);
+            // 追い出した目撃は、その時刻にこの編成がたどっている運用で見ている（乗り移りの先もある）
+            const evictedOpId = effectiveOperationId(evictor);
             unknown = {
                 kind: 'unknown',
                 lastOperationNumber:
-                    numberOf(lastOpId) ||
-                    lastOwn.sightedAsOperation?.operationNumber ||
-                    lastOwn.operation?.operationNumber ||
+                    numberOf(evictedOpId) ||
+                    evictor.operation?.operationNumber ||
+                    evictor.sightedAsOperation?.operationNumber ||
                     '',
                 evictedBy: {
                     formationNumber: evictor.formation?.formationNumber ?? '',
