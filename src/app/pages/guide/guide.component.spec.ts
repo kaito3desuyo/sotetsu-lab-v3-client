@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
@@ -56,6 +57,6 @@ describe('GuideComponent', () => {
     });
 
     it('JR 線内で見たときは「列車から選ぶ」を案内する', () => {
-        expect(render().textContent).toContain('列車から選ぶ');
+        expect(render()).toHaveTextContent('列車から選ぶ');
     });
 });
