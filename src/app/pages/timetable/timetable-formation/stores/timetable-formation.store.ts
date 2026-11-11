@@ -17,6 +17,7 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import {
     buildFormationDay,
+    dropCarriedCopies,
     FormationDayBasis,
     FormationDayInput,
 } from '../utils/formation-day.util';
@@ -105,11 +106,11 @@ export const TimetableFormationStore = signalStore(
                     links: links(),
                 };
             });
-            // この編成の目撃を時刻順に並べる（無効なものは除く）
+            // この編成の目撃を時刻順に並べる（無効なものと、元の目撃と重なる引き継ぎの写しは除く）
             const todaysSightings = computed(() => {
                 const f = formation();
                 if (!f) return [];
-                return sightings()
+                return dropCarriedCopies(sightings())
                     .filter((s) => s.formationId === f.formationId)
                     .filter((s) => !s.invalidation)
                     .sort(

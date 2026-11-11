@@ -462,6 +462,82 @@ describe('buildFormationDay', () => {
         ]);
     });
 
+    describe('同日引き継ぎの写し', () => {
+        /** api が返す写し: id は `元の id#運番`、operationId と sightedAsOperation だけが違う */
+        const copyOf = (
+            original: OperationSightingDetailsDto,
+            operationId: string,
+            operationNumber: string,
+            from: { operationId: string; operationNumber: string },
+        ): OperationSightingDetailsDto => ({
+            ...original,
+            operationSightingId: `${original.operationSightingId}#${operationNumber}`,
+            operationId,
+            operation: { operationId, operationNumber },
+            sightedAsOperation: from,
+        });
+
+        it('前向き: 16K の目撃と 15K の写しがあっても、16K → 15K に乗り移るだけで swap は出ない', () => {
+            const original = sighting('s1', 'f1', 'op16', '09:00');
+            const rows = buildFormationDay(
+                input({
+                    sightings: [
+                        original,
+                        copyOf(original, 'op15', '15K', {
+                            operationId: 'op16',
+                            operationNumber: '16K',
+                        }),
+                    ],
+                    tripsByOperationId: trips,
+                    links: link(a2, b1, '16K', '15K'),
+                }),
+            );
+            expect(summarize(rows)).toEqual([
+                'trip:a1',
+                'trip:a2',
+                'transfer:16K>15K',
+                'trip:b1',
+                'trip:b2',
+            ]);
+            expect(rows.every((r) => r.kind !== 'trip' || !r.carriedOver)).toBe(
+                true,
+            );
+        });
+
+        it('後ろ向き: 15K の目撃と 16K の写しがあっても、朝は 16K で引き継ぎにならない', () => {
+            const original = sighting('s1', 'f1', 'op15', '11:30');
+            const rows = buildFormationDay(
+                input({
+                    sightings: [
+                        original,
+                        copyOf(original, 'op16', '16K', {
+                            operationId: 'op15',
+                            operationNumber: '15K',
+                        }),
+                    ],
+                    tripsByOperationId: trips,
+                    links: link(a2, b1, '16K', '15K'),
+                }),
+            );
+            expect(summarize(rows)).toEqual([
+                'trip:a1',
+                'trip:a2',
+                'transfer:16K>15K',
+                'trip:b1',
+                'trip:b2',
+            ]);
+            expect(rows.every((r) => r.kind !== 'trip' || !r.carriedOver)).toBe(
+                true,
+            );
+            rows.forEach((r, i) => {
+                if (r.kind !== 'trip') return;
+                expect(['sighting', 'transfer']).toContain(
+                    basisAt(rows, i, 'sighting'),
+                );
+            });
+        });
+    });
+
     it('missingOperationIds は乗り移り先で trips の無い運用を返す', () => {
         const base = input({
             firstOperationId: 'op16',

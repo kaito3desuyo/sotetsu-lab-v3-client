@@ -85,6 +85,22 @@ function effectiveOperationId(s: OperationSightingDetailsDto): string | null {
     return s.operationId ?? null;
 }
 
+/**
+ * 同日引き継ぎの写し（api が `元の id#運番` の id で返す）のうち、元の目撃が同じ一覧にあるものを捨てる。
+ * 写しは元と同じ時刻・同じ編成で運用だけが違うので、残すと同じ時刻に 2 つの運用で見たことになる。
+ * 元の目撃が無い写しだけが、引き継ぎで運用を決める材料になる
+ */
+export function dropCarriedCopies<
+    T extends Pick<OperationSightingDetailsDto, 'operationSightingId'>,
+>(sightings: T[]): T[] {
+    const ids = new Set(sightings.map((s) => s.operationSightingId));
+    return sightings.filter((s) => {
+        const id = s.operationSightingId ?? '';
+        const hash = id.indexOf('#');
+        return hash < 0 || !ids.has(id.slice(0, hash));
+    });
+}
+
 /** 時刻を含む列車が無い（-1）ときは、最後の列車の添字（length - 1）にする。空なら 0 */
 function lastIfNone(index: number, length: number): number {
     return index >= 0 ? index : Math.max(0, length - 1);
@@ -259,7 +275,7 @@ function build(
         !!s.sightingTime &&
         !Number.isNaN(Date.parse(s.sightingTime)) &&
         effectiveOperationId(s) !== null;
-    const valid = input.sightings.filter(usable);
+    const valid = dropCarriedCopies(input.sightings).filter(usable);
     const own = valid
         .filter((s) => s.formationId === input.formationId)
         .sort((a, b) => sightingSeconds(a) - sightingSeconds(b));
