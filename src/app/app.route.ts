@@ -125,6 +125,13 @@ export const APP_ROUTES: Routes = [
             import('./pages/guide/guide.route').then((mod) => mod.GUIDE_ROUTES),
     },
     {
+        path: 'glossary',
+        loadChildren: () =>
+            import('./pages/glossary/glossary.route').then(
+                (mod) => mod.GLOSSARY_ROUTES,
+            ),
+    },
+    {
         path: 'login',
         loadChildren: () =>
             import('./pages/login/login.route').then((mod) => mod.LOGIN_ROUTES),

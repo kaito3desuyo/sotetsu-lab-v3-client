@@ -68,6 +68,7 @@ export const serverRoutes: ServerRoute[] = [
     { path: 'privacy-policy', renderMode: RenderMode.Server, headers: LONG },
     { path: 'disclaimer', renderMode: RenderMode.Server, headers: LONG },
     { path: 'guide', renderMode: RenderMode.Server, headers: LONG },
+    { path: 'glossary', renderMode: RenderMode.Server, headers: LONG },
     {
         path: '**',
         renderMode: RenderMode.Server,
