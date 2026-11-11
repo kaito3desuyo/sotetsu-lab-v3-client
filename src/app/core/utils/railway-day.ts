@@ -1,4 +1,13 @@
-import { addDays, addSeconds, startOfDay, subDays } from 'date-fns';
+import {
+    addDays,
+    addSeconds,
+    format,
+    getHours,
+    parseISO,
+    startOfDay,
+    subDays,
+} from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 /**
  * 鉄道日の日付境界（この時刻より前は前日の営業日として扱う）
@@ -57,4 +66,15 @@ export function toServiceSeconds(
     if (!time) return NaN;
     const { hours, minutes, seconds } = parseHms(time);
     return (days ?? 0) * 86400 + hours * 3600 + minutes * 60 + (seconds || 0);
+}
+
+/**
+ * 目撃時刻（ISO）を、日本時間で 4:00 区切りの営業日 'yyyy-MM-dd' にする。
+ * 日本時間の 0:00〜3:59 は前日の営業日になる。
+ */
+export function toRailwayDateKey(isoTime: string): string {
+    const date = toZonedTime(parseISO(isoTime), 'Asia/Tokyo');
+    const adjustedDate =
+        getHours(date) < RAILWAY_DAY_BOUNDARY_HOUR ? subDays(date, 1) : date;
+    return format(adjustedDate, 'yyyy-MM-dd');
 }
