@@ -73,6 +73,23 @@ describe('HeaderComponent', () => {
         });
     });
 
+    it('投稿者ページでは help_open に投稿者の id を送らない', () => {
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/moderation/users/abc-123',
+        );
+        fixture.detectChanges();
+
+        (
+            fixture.nativeElement.querySelector(
+                'header button[aria-label="このページの見方"]',
+            ) as HTMLButtonElement
+        ).click();
+
+        expect(sendEvent).toHaveBeenCalledWith('help_open', {
+            page: '/moderation/users/:userId',
+        });
+    });
+
     it('pageTitle 未指定時はロゴ表記「Sotetsu Lab.」を表示する', () => {
         fixture.detectChanges();
 

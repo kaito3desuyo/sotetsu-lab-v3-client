@@ -6,7 +6,7 @@ import {
 } from '@angular/material/bottom-sheet';
 import { RouterLink } from '@angular/router';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
-import { findPageHelp, SITE_INTRO } from './page-help';
+import { findPageHelp, SITE_INTRO, toHelpPage } from './page-help';
 
 export interface PageHelpSheetData {
     /** ヘッダーに出ているページ名。無ければ空文字 */
@@ -36,7 +36,10 @@ export class PageHelpSheetComponent {
     ];
 
     onLinkClick(to: HelpLinkTo): void {
-        this.#ga.sendEvent('help_link', { page: this.#data.path, to });
+        this.#ga.sendEvent('help_link', {
+            page: toHelpPage(this.#data.path),
+            to,
+        });
         this.#sheetRef.dismiss();
     }
 }

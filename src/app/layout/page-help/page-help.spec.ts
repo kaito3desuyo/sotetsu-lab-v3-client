@@ -2,8 +2,31 @@ import {
     findPageHelp,
     PAGE_HELP_TABLE,
     SITE_INTRO,
+    toHelpPage,
     toHelpPath,
 } from './page-help';
+
+describe('toHelpPage（GA に送るパスの型）', () => {
+    it('表にあるページはそのパス', () => {
+        expect(toHelpPage('/operation/table')).toBe('/operation/table');
+        expect(toHelpPage('/')).toBe('/');
+    });
+
+    it('投稿者ページは id を送らずに型に丸める', () => {
+        expect(toHelpPage('/moderation/users/abc-123')).toBe(
+            '/moderation/users/:userId',
+        );
+    });
+
+    it('説明の無い既知のページはそのパス', () => {
+        expect(toHelpPage('/login')).toBe('/login');
+        expect(toHelpPage('/maintenance')).toBe('/maintenance');
+    });
+
+    it('どのページにも当たらない URL は 1 つの値にまとめる', () => {
+        expect(toHelpPage('/no-such-page/xyz')).toBe('(not-found)');
+    });
+});
 
 describe('toHelpPath', () => {
     it('行列パラメータを取り除く', () => {

@@ -1,6 +1,6 @@
 /**
  * ヘッダーの「?」で開く「このページの見方」の文（M25）。
- * ルートの data は増やさず、URL のパスの型から引く。文はユーザーが直すまで【要確認】を残す。
+ * ルートの data は増やさず、URL のパスの型から引く。自信の無い文には印を付け、ユーザーが直すまで残す。
  */
 export interface PageHelp {
     lines: string[];
@@ -156,4 +156,25 @@ export function findPageHelp(path: string): PageHelp | null {
         return MODERATION_USER;
     }
     return null;
+}
+
+/** 説明は無いが、ルートとして実在するページ（GA にそのまま送ってよいもの） */
+const KNOWN_PAGES_WITHOUT_HELP = new Set([
+    '/login',
+    '/maintenance',
+    '/privacy-policy',
+    '/disclaimer',
+]);
+
+/**
+ * GA の help_open・help_link に送るパスの型。投稿者の id や、どこにも当たらない任意の URL はそのまま送らない
+ */
+export function toHelpPage(path: string): string {
+    if (path in PAGE_HELP_TABLE || KNOWN_PAGES_WITHOUT_HELP.has(path)) {
+        return path;
+    }
+    if (path.startsWith('/moderation/users/')) {
+        return '/moderation/users/:userId';
+    }
+    return '(not-found)';
 }

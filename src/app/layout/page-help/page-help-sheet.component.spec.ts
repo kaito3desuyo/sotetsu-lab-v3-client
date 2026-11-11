@@ -65,6 +65,20 @@ describe('PageHelpSheetComponent', () => {
         expect(lines(el)).toEqual(findPageHelp('/')?.lines);
     });
 
+    it('投稿者ページでは help_link に投稿者の id を送らない', () => {
+        const el = render({
+            pageTitle: '投稿者',
+            path: '/moderation/users/abc-123',
+        });
+        links(el)
+            .find((a) => a.getAttribute('href') === '/guide')
+            ?.click();
+        expect(sendEvent).toHaveBeenCalledWith('help_link', {
+            page: '/moderation/users/:userId',
+            to: '/guide',
+        });
+    });
+
     it('用語集のリンクを押すと help_link を送り、シートを閉じる', () => {
         const el = render({
             pageTitle: 'リアルタイム運用情報',
