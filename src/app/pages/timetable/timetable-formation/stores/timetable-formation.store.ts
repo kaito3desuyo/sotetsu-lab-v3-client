@@ -40,6 +40,8 @@ type StoreProps = {
     firstOperationId: string | null;
     /** 明日の問い合わせで返った運用。null なら明日は選べない */
     tomorrowOperationId: string | null;
+    /** 明日の見込みの運用番号（上の段の「56?」に出す） */
+    tomorrowOperationNumber: string | null;
     currentPosition: OperationCurrentPositionDto | null;
     selectedStationId: string | null;
     /** 取得が一度終わったか（終わる前に「編成が無い」を出さないため） */
@@ -63,6 +65,7 @@ const initialState: StoreProps = {
     stations: [],
     firstOperationId: null,
     tomorrowOperationId: null,
+    tomorrowOperationNumber: null,
     currentPosition: null,
     selectedStationId: null,
     loaded: false,
@@ -165,6 +168,7 @@ export const TimetableFormationStore = signalStore(
                     links: [],
                     firstOperationId: null,
                     tomorrowOperationId: null,
+                    tomorrowOperationNumber: null,
                     currentPosition: null,
                     loaded: false,
                     loadError: false,
@@ -196,6 +200,11 @@ export const TimetableFormationStore = signalStore(
             },
             setTomorrowOperationId(tomorrowOperationId: string | null): void {
                 patchState(store, { tomorrowOperationId });
+            },
+            setTomorrowOperationNumber(
+                tomorrowOperationNumber: string | null,
+            ): void {
+                patchState(store, { tomorrowOperationNumber });
             },
             setCurrentPosition(
                 currentPosition: OperationCurrentPositionDto | null,

@@ -58,6 +58,11 @@ export const serverRoutes: ServerRoute[] = [
     },
     { path: 'timetable/station', renderMode: RenderMode.Server, headers: LONG },
     {
+        path: 'timetable/formation',
+        renderMode: RenderMode.Server,
+        headers: LONG,
+    },
+    {
         path: 'timetable/all-line',
         renderMode: RenderMode.Server,
         headers: LONG,

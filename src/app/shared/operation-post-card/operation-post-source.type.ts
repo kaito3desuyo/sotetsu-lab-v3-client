@@ -6,4 +6,5 @@ export type OperationPostSource =
     | 'realtime_formation_card'
     | 'train_diagram'
     | 'train_location'
-    | 'timetable_station';
+    | 'timetable_station'
+    | 'timetable_formation';

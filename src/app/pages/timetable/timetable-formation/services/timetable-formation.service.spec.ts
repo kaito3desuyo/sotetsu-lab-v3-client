@@ -134,6 +134,7 @@ describe('Service: TimetableFormation', () => {
                     expectedSighting: {
                         operation: {
                             operationId: searchTime ? 'op-tomorrow' : 'op-now',
+                            operationNumber: searchTime ? '56' : '55',
                         },
                     },
                 }),
@@ -141,6 +142,7 @@ describe('Service: TimetableFormation', () => {
         await run('2026-11-11', 'today');
         expect(store.firstOperationId()).toBe('op-now');
         expect(store.tomorrowOperationId()).toBe('op-tomorrow');
+        expect(store.tomorrowOperationNumber()).toBe('56');
         expect(store.canSelectTomorrow()).toBe(true);
     });
 

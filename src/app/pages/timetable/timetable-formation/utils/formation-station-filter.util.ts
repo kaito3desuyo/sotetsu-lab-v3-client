@@ -33,7 +33,7 @@ const departureSeconds = (t: TimeDetailsDto): number => {
     return Number.isNaN(v) ? toServiceSeconds(t.arrivalDays, t.arrivalTime) : v;
 };
 
-const isPassing = (t: TimeDetailsDto): boolean =>
+export const isPassing = (t: TimeDetailsDto): boolean =>
     t.pickupType === 1 &&
     t.dropoffType === 1 &&
     !t.arrivalTime &&

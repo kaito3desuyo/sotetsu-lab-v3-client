@@ -17,10 +17,12 @@ import { selectFormationOnDate } from '../utils/select-formation.util';
 
 type CrossSectionResult = {
     operationId: string | null;
+    operationNumber: string | null;
     carriedOver: boolean;
 };
 const NO_CROSS_SECTION: CrossSectionResult = {
     operationId: null,
+    operationNumber: null,
     carriedOver: false,
 };
 
@@ -83,14 +85,14 @@ export class TimetableFormationService {
                           })
                           .pipe(catchError(() => fail([]))),
             // 今日の画面だけ、明日が選べるかを調べる
-            tomorrowOperationId:
+            tomorrow:
                 dateKind === 'today'
                     ? this.#crossSection(
                           formationNumber,
                           `${nextDate(date)}T12:00:00+09:00`,
                           forceReload,
-                      ).pipe(map((cs) => cs.operationId))
-                    : of<string | null>(null),
+                      )
+                    : of(NO_CROSS_SECTION),
             stations: this.#store.stations().length
                 ? of(null)
                 : this.#stationService
@@ -109,7 +111,10 @@ export class TimetableFormationService {
                 this.#store.setCalendar(r.calendar ?? null);
                 this.#store.setFormation(formation);
                 this.#store.setSightings(r.sightings);
-                this.#store.setTomorrowOperationId(r.tomorrowOperationId);
+                this.#store.setTomorrowOperationId(r.tomorrow.operationId);
+                this.#store.setTomorrowOperationNumber(
+                    r.tomorrow.operationNumber,
+                );
                 if (!formation || !r.calendar) {
                     this.#store.setLoaded(true);
                     return of(undefined);
@@ -245,6 +250,9 @@ export class TimetableFormationService {
                 map((cs) => ({
                     operationId:
                         cs?.expectedSighting?.operation?.operationId ?? null,
+                    operationNumber:
+                        cs?.expectedSighting?.operation?.operationNumber ??
+                        null,
                     carriedOver: !!cs?.sightedAsOperation,
                 })),
                 catchError(() => of(NO_CROSS_SECTION)),
