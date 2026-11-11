@@ -21,6 +21,8 @@ export type FormationDayRow =
           operationId: string;
           operationNumber: string;
           estimated: boolean;
+          /** 同日引き継ぎの目撃で運用が決まった列車 */
+          carriedOver: boolean;
       }
     | { kind: 'depot'; label: 'out' | 'in'; stationId: string; time: string }
     | { kind: 'transfer'; from: string; to: string; stationId: string }
@@ -48,6 +50,7 @@ type TripEntry = {
     trip: TripOperationListDetailsDto;
     operationId: string;
     estimated: boolean;
+    carriedOver: boolean;
 };
 type PathEntry =
     | TripEntry
@@ -73,9 +76,14 @@ function endSeconds(t: TripOperationListDetailsDto): number {
         : v;
 }
 
-/** 有効な目撃が決める運用（引き継ぎの `sightedAsOperation` を優先する） */
+/** 目撃が決める運用。引き継ぎの目撃でも `operationId` を使う（`sightedAsOperation` は引き継ぎの印） */
 function effectiveOperationId(s: OperationSightingDetailsDto): string | null {
-    return s.sightedAsOperation?.operationId ?? s.operationId ?? null;
+    return s.operationId ?? null;
+}
+
+/** 時刻を含む列車が無い（-1）ときは、最後の列車の添字（length - 1）にする。空なら 0 */
+function lastIfNone(index: number, length: number): number {
+    return index >= 0 ? index : Math.max(0, length - 1);
 }
 
 function build(
@@ -115,7 +123,13 @@ function build(
     const tripEntry = (
         trip: TripOperationListDetailsDto,
         operationId: string,
-    ): TripEntry => ({ type: 'trip', trip, operationId, estimated: false });
+    ): TripEntry => ({
+        type: 'trip',
+        trip,
+        operationId,
+        estimated: false,
+        carriedOver: false,
+    });
 
     /** 時刻 sec を含む（終わりが sec 以後の最初の）列車の添字。無ければ -1 */
     const indexContaining = (list: Sorted, sec: number): number =>
@@ -213,6 +227,18 @@ function build(
         }
     };
 
+    /** 引き継ぎの目撃で運用が決まった列車に印を付ける（path の from 番目から） */
+    const markCarriedOver = (
+        path: PathEntry[],
+        from: number,
+        s: OperationSightingDetailsDto,
+    ): void => {
+        if (!s.sightedAsOperation) return;
+        for (const e of path.slice(from)) {
+            if (e.type === 'trip') e.carriedOver = true;
+        }
+    };
+
     /** path の末尾に残った乗り移りの帯（行き先の列車を切り落としたあとのもの）を外す */
     const trimTrailingTransfers = (path: PathEntry[]): void => {
         while (path.length > 0 && path[path.length - 1].type === 'transfer') {
@@ -245,9 +271,9 @@ function build(
         if (list) {
             const anchor =
                 own.length > 0
-                    ? Math.max(
-                          0,
+                    ? lastIfNone(
                           indexContaining(list, sightingSeconds(own[0])),
+                          list.length,
                       )
                     : 0;
             // 2. 最初の目撃より前は previous をさかのぼる
@@ -255,7 +281,10 @@ function build(
             path.push(...prefix);
             walk(path, firstOpId, startIdx);
             if (own.length > 0) {
-                lastKnown = pathIndexContaining(path, sightingSeconds(own[0]));
+                const at = pathIndexContaining(path, sightingSeconds(own[0]));
+                // 目撃が最後の列車より後なら、最後の列車まで分かっている
+                lastKnown = at >= 0 ? at : path.length - 1;
+                markCarriedOver(path, 0, own[0]);
             }
         }
     }
@@ -287,7 +316,11 @@ function build(
         lastKnown = path.length - 1;
         if (list) {
             const ni = indexContaining(list, sec);
-            if (ni >= 0) walk(path, opId, ni);
+            if (ni >= 0) {
+                const from = path.length;
+                walk(path, opId, ni);
+                markCarriedOver(path, from, s);
+            }
         }
     }
 
@@ -369,6 +402,7 @@ function build(
             operationId: e.operationId,
             operationNumber: numberOf(e.operationId),
             estimated: e.estimated,
+            carriedOver: e.carriedOver,
         });
         if (trip.trip?.depotIn) {
             rows.push({

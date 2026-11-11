@@ -387,6 +387,59 @@ describe('buildFormationDay', () => {
         });
     });
 
+    it('引き継ぎの目撃は operationId の運用を使い carriedOver を付ける', () => {
+        const rows = buildFormationDay(
+            input({
+                sightings: [
+                    sighting('s1', 'f1', 'o-12', '08:30', {
+                        sightedAsOperation: {
+                            operationId: 'o-11',
+                            operationNumber: '11K',
+                        },
+                    }),
+                ],
+                tripsByOperationId: {
+                    'o-11': op('o-11', '11K', [
+                        tol('p1', 'o-11', '08:00', '09:00'),
+                    ]),
+                    'o-12': op('o-12', '12K', [
+                        tol('q1', 'o-12', '08:00', '09:00'),
+                    ]),
+                },
+            }),
+        );
+        expect(summarize(rows)).toEqual(['trip:q1']);
+        expect(rows[0]).toMatchObject({
+            operationId: 'o-12',
+            operationNumber: '12K',
+            carriedOver: true,
+            estimated: false,
+        });
+    });
+
+    it('最初の目撃がその運用の最後の列車より後でも、昼の乗り移りより前は前の運用', () => {
+        const c1 = tol('c1', 'op15', '11:00', '12:00');
+        const c2 = tol('c2', 'op15', '12:30', '13:30');
+        const c3 = tol('c3', 'op15', '14:00', '15:00');
+        const rows = buildFormationDay(
+            input({
+                sightings: [sighting('s1', 'f1', 'op15', '20:00')],
+                tripsByOperationId: {
+                    op16: trips.op16,
+                    op15: op('op15', '15K', [c1, c2, c3]),
+                },
+                links: link(a2, c2, '16K', '15K'),
+            }),
+        );
+        expect(summarize(rows)).toEqual([
+            'trip:a1',
+            'trip:a2',
+            'transfer:16K>15K',
+            'trip:c2',
+            'trip:c3',
+        ]);
+    });
+
     it('missingOperationIds は乗り移り先で trips の無い運用を返す', () => {
         const base = input({
             firstOperationId: 'op16',
