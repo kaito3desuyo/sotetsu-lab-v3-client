@@ -3,7 +3,6 @@ import {
     patchState,
     signalStore,
     withComputed,
-    withHooks,
     withMethods,
     withState,
 } from '@ngrx/signals';
@@ -234,15 +233,7 @@ export const TimetableFormationStore = signalStore(
                     loadingQueue: state.loadingQueue.slice(1),
                 }));
             },
-            resetLoading(): void {
-                patchState(store, { loadingQueue: [] });
-            },
         };
     }),
     withAppDevtools('TimetableFormationStore'),
-    withHooks({
-        onInit(store) {
-            store.resetLoading();
-        },
-    }),
 );

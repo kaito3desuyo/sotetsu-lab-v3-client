@@ -36,12 +36,18 @@ export class TimetableFormationTripListComponent {
     /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す */
     readonly postRequested = output<string>();
 
-    protected readonly expanded = signal<ReadonlySet<number>>(new Set());
+    /** 開いた列車の tripOperationListId（取り直しで行がずれても同じ列車を開いたままにする） */
+    protected readonly expanded = signal<ReadonlySet<string>>(new Set());
 
-    protected toggle(index: number): void {
+    protected isExpanded(row: TripRow): boolean {
+        return this.expanded().has(row.trip.tripOperationListId);
+    }
+
+    protected toggle(row: TripRow): void {
+        const id = row.trip.tripOperationListId;
         this.expanded.update((set) => {
             const next = new Set(set);
-            if (!next.delete(index)) next.add(index);
+            if (!next.delete(id)) next.add(id);
             return next;
         });
     }

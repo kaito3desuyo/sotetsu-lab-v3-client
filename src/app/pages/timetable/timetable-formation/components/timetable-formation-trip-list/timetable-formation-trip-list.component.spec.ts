@@ -79,6 +79,30 @@ describe('TimetableFormationTripListComponent', () => {
         expect(text(fixture)).toContain('走行中');
     });
 
+    it('取り直しで行がずれても、開いた列車は開いたまま', () => {
+        const fixture = create([trip()], ['future']);
+        const el = fixture.nativeElement as HTMLElement;
+        el.querySelector<HTMLButtonElement>('li button')?.click();
+        fixture.detectChanges();
+        // 前に別の列車が増える
+        const other = trip();
+        const earlier = {
+            ...other,
+            trip: {
+                ...(other as { trip: object }).trip,
+                tripOperationListId: 't0',
+            },
+        } as FormationDayRow;
+        fixture.componentRef.setInput('rows', [earlier, trip()]);
+        fixture.componentRef.setInput('states', ['future', 'future']);
+        fixture.detectChanges();
+        const buttons = el.querySelectorAll<HTMLButtonElement>(
+            'li button[aria-expanded]',
+        );
+        expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
+        expect(buttons[1].getAttribute('aria-expanded')).toBe('true');
+    });
+
     it('推定の列車に「推定」を出す', () => {
         const fixture = create([trip({ estimated: true })], ['past']);
         expect(text(fixture)).toContain('推定');
