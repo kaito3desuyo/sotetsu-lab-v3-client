@@ -5,7 +5,7 @@
 **Goal:** どのページからでもヘッダーの「?」で「このページの見方」を開け、そこから使い方 `/guide` と用語集 `/glossary` に進めるようにする。
 
 **Architecture:**
-- 「このページの見方」の文は、URL のパスで引く 1 枚の表（`layout/page-help/`）に持つ。ルートの data は増やさない。
+- 「このページの見方」の文は、URL のパスから探す 1 つの表（`layout/page-help/`）に持つ。ルートの data は増やさない。
 - ヘッダーの「?」が Material の Bottom Sheet を開く。
 - 使い方と用語集は、免責事項と同じ形の静的なページ（HTML 直書き・`PageMeta`・SSR）にする。
 
@@ -20,7 +20,7 @@
 - 「?」はヘッダーのある全ページに出す。アカウントのボタンの左に置き、`mat-icon-button`、アイコンは `help_outline`、`aria-label="このページの見方"`。
 - ヘッダーは 320px で要素の合計がちょうど画面の幅になっている。ボタンを足しても、ページ名が折り返さずヘッダーからはみ出さないこと。320・360・390px の実物で確かめる。
 - URL は `/guide`（ページ名「使い方」）と `/glossary`（ページ名「用語集」）。
-- GA のイベントは `help_open`（`page`: パスの型）と `help_link`（`page`: パスの型、`to`: `/guide` か `/glossary`）。パスの型は URL から `;` 以降の行列パラメータ・`?` 以降・`#` 以降を落としたもの。
+- GA のイベントは `help_open`（`page`: パスの型）と `help_link`（`page`: パスの型、`to`: `/guide` か `/glossary`）。パスの型は URL から `;` 以降の行列パラメータ・`?` 以降・`#` 以降を取り除いたもの。
 - 文は HTML に直に書く。Markdown を描く仕組みや新しい依存を入れない。
 - 事実に自信の無い所は、文の中に `【要確認】` と書いて画面に見えるようにする。ユーザーがすべて直し終えるまで PR をマージしない（1 本の PR で出す）。
 - 文の根拠: 順送り = api `src/libs/operation/usecase/operation-number-circulation.ts`。推測の「?」・同日引き継ぎ・不明 = api `docs/superpowers/specs/2026-10-19-sighting-run-assignment-design.md` と `sighting-carry-over.read-model.ts`。出庫 ○・入庫 △ と画面の記号 = client `docs/design.md` と画面。直通先と運用番号の見分け方 = spec の該当章と `.context/m25-through-service-research.md`。client と api が食い違ったら api を正とし、ユーザーに報告する。
@@ -33,11 +33,11 @@
 2. 表に無いページ（`/login`・`/maintenance`・404・`/moderation/users/<id>`）でも「?」が動き、サイトの一言説明とリンクだけが出ること。→ Task 1・Task 2 のテスト。
 3. 320px でヘッダーのページ名が折り返さないこと（一番長いページ名「リアルタイム運用情報」「過去の運用情報」で）。→ Task 3 の実物の確認。
 4. 用語集へページ内リンク（`/glossary#junokuri`）で入ったとき、貼り付くヘッダーに見出しが隠れないこと。→ Task 5 のテストと実物の確認。
-5. SSR の HTML に使い方・用語集の本文が入っていること（検索から入る口になるため）。→ Task 6 の確認。
+5. SSR の HTML に使い方・用語集の本文が入っていること（検索から来た人が最初に開くページになるため）。→ Task 6 の確認。
 
 ---
 
-### Task 1: 「このページの見方」の表と引き方
+### Task 1: 「このページの見方」の表と、パスから説明を探す関数
 
 **Files:**
 - Create: `src/app/layout/page-help/page-help.ts`
@@ -46,9 +46,9 @@
 **Interfaces:**
 - Produces:
   - `interface PageHelp { lines: string[] }`
-  - `function toHelpPath(url: string): string` — `;` `?` `#` 以降を落とし、末尾の `/` を落とす（`/` だけは残す）。
-  - `function findPageHelp(path: string): PageHelp | null` — 表を完全一致で引く。無ければ `/moderation/users/` で始まるものは投稿者ページの説明、それ以外は `null`。
-  - `const SITE_INTRO: string` — 表に無いページで出す一言（「相鉄線の『どの編成が、どの列車に入るか』を、みんなの目撃で記録する非公式のサイトです。」を元に下書き）。
+  - `function toHelpPath(url: string): string`：`;` `?` `#` 以降を取り除き、末尾の `/` も取り除く（`/` だけは残す）。
+  - `function findPageHelp(path: string): PageHelp | null`：表から完全一致で探す。無ければ `/moderation/users/` で始まるものは投稿者ページの説明、それ以外は `null`。
+  - `const SITE_INTRO: string`：表に無いページで出す一言（「相鉄線の『どの編成が、どの列車に入るか』を、みんなの目撃で記録する非公式のサイトです。」を元に下書き）。
 - 表のキー（説明を書くページ）: `/`、`/timetable/all-line`、`/timetable/station`、`/timetable/add`・`/timetable/update`・`/timetable/copy`（同じ説明を共有）、`/train-diagram`、`/train-location`、`/operation/real-time`、`/operation/past-time`、`/operation/table`、`/operation/route-diagram`、`/library/vehicle`、`/my-page`、`/moderation`、`/moderation/users/*`、`/register`、`/guide`、`/glossary`。
 - 各ページの説明は 3〜5 行。実際の画面を開いて、見るべき所を具体的に書く（例: リアルタイムは「左の数字が運用番号、太字が編成番号…」）。自信の無い所は `【要確認】`。
 
@@ -64,7 +64,7 @@
 - [ ] **Step 2:** `npx jest --testPathPatterns=src/app/layout/page-help` で FAIL を確かめる
 - [ ] **Step 3:** `page-help.ts` を書く（文の下書きを含む）
 - [ ] **Step 4:** 同じコマンドで PASS
-- [ ] **Step 5:** コミット `feat: :sparkles: ページごとの見方の文と引き方を足す`
+- [ ] **Step 5:** コミット `feat: :sparkles: ページごとの見方の文と探す関数を足す`
 
 ### Task 2: 「このページの見方」のシート
 
@@ -99,7 +99,7 @@
 
 **Interfaces:**
 - Consumes: Task 2 の `PageHelpSheetComponent`・`PageHelpSheetData`、Task 1 の `toHelpPath`
-- ヘッダーは既存の `pageTitle` 入力を使う。パスは `Router.url` を `toHelpPath` に通す。
+- ヘッダーは既存の `pageTitle` 入力を使う。パスは `Router.url` を `toHelpPath` で変換する。
 - 押すと `MatBottomSheet.open(PageHelpSheetComponent, { data: { pageTitle, path } })` と `sendEvent('help_open', { page: path })`。
 
 - [ ] **Step 1: 失敗するテストを書く**
@@ -171,5 +171,5 @@
   - `/guide`・`/glossary`・`/glossary#junokuri`（見出しがヘッダーの下に見える）・各ページの「?」のシート
   - SSR: `npm run build:prod` の出力を手元で起動するか dev の SSR で、`/guide` と `/glossary` の HTML に本文の見出しが入っていることを確かめる
 - [ ] **Step 3:** `【要確認】` の一覧（場所と問い）を作り、スクショと一緒にユーザーに見せる。ユーザーの答えで直し、`【要確認】` が 0 件になるまで繰り返す（`grep -rn "要確認" src/app` が 0 件）
-- [ ] **Step 4:** コミット `docs: :memo: 使い方と用語集の文を確かめた内容に直す`（文の直しの型は内容に合わせる）
+- [ ] **Step 4:** コミット `docs: :memo: 使い方と用語集の文を確かめた内容に直す`（コミットの型は直した内容に合わせる）
 - [ ] **Step 5:** PR を作る（milestone「M25 使い方と用語」が GitHub に無ければ作る）。本文に GA で前後を比べる見方（spec「目標」）を書く
