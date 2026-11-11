@@ -15,6 +15,15 @@ import {
 import { missingOperationIds } from '../utils/formation-day.util';
 import { selectFormationOnDate } from '../utils/select-formation.util';
 
+type CrossSectionResult = {
+    operationId: string | null;
+    carriedOver: boolean;
+};
+const NO_CROSS_SECTION: CrossSectionResult = {
+    operationId: null,
+    carriedOver: false,
+};
+
 /** 'yyyy-MM-dd' の翌日 */
 function nextDate(date: string): string {
     const d = new Date(`${date}T00:00:00Z`);
@@ -47,14 +56,20 @@ export class TimetableFormationService {
         this.#store.startDay({ formationNumber, date, dateKind });
         this.#store.enableLoading();
         const latest = (): boolean => this.#store.isLatestFetch(seq);
+        // 取得の失敗は「ダイヤ無し」「編成無し」でなく loadError で表す
+        let failed = false;
+        const fail = <T>(fallback: T): Observable<T> => {
+            failed = true;
+            return of(fallback);
+        };
 
         return forkJoin({
             calendar: this.#calendarService
                 .findOneBySpecificDate({ date, forceReload })
-                .pipe(catchError(() => of(null))),
+                .pipe(catchError(() => fail(null))),
             formations: this.#formationService
                 .findManyBySpecificDate({ date, forceReload })
-                .pipe(catchError(() => of([]))),
+                .pipe(catchError(() => fail([]))),
             // 明日の目撃は無い。api は date から翌日 4 時までを返す（過去の画面と同じ渡し方）
             sightings:
                 dateKind === 'tomorrow'
@@ -66,15 +81,15 @@ export class TimetableFormationService {
                               includeCarriedOver: true,
                               forceReload,
                           })
-                          .pipe(catchError(() => of([]))),
+                          .pipe(catchError(() => fail([]))),
             // 今日の画面だけ、明日が選べるかを調べる
             tomorrowOperationId:
                 dateKind === 'today'
-                    ? this.#crossSectionOperationId(
+                    ? this.#crossSection(
                           formationNumber,
                           `${nextDate(date)}T12:00:00+09:00`,
                           forceReload,
-                      )
+                      ).pipe(map((cs) => cs.operationId))
                     : of<string | null>(null),
             stations: this.#store.stations().length
                 ? of(null)
@@ -90,6 +105,7 @@ export class TimetableFormationService {
                     formationNumber,
                     date,
                 );
+                this.#store.setLoadError(failed);
                 this.#store.setCalendar(r.calendar ?? null);
                 this.#store.setFormation(formation);
                 this.#store.setSightings(r.sightings);
@@ -103,16 +119,16 @@ export class TimetableFormationService {
                         s.formationId === formation.formationId &&
                         !s.invalidation,
                 );
-                const first$ =
+                const first$: Observable<CrossSectionResult> =
                     dateKind === 'tomorrow'
-                        ? this.#crossSectionOperationId(
+                        ? this.#crossSection(
                               formationNumber,
                               `${date}T12:00:00+09:00`,
                               forceReload,
                           )
                         : dateKind !== 'today' || hasOwnSighting
-                          ? of<string | null>(null)
-                          : this.#crossSectionOperationId(
+                          ? of(NO_CROSS_SECTION)
+                          : this.#crossSection(
                                 formationNumber,
                                 undefined,
                                 forceReload,
@@ -124,20 +140,34 @@ export class TimetableFormationService {
                             calendarId: r.calendar.calendarId,
                             forceReload,
                         })
-                        .pipe(catchError(() => of([]))),
+                        .pipe(catchError(() => fail([]))),
                 }).pipe(
                     switchMap(({ first, links }) => {
                         if (!latest()) return of(undefined);
-                        this.#store.setFirstOperationId(first);
+                        this.#store.setFirstOperationId(first.operationId);
+                        this.#store.setFirstBasis(
+                            hasOwnSighting
+                                ? 'sighting'
+                                : first.carriedOver
+                                  ? 'carried-over'
+                                  : first.operationId
+                                    ? 'circulated'
+                                    : 'unknown',
+                        );
                         this.#store.setLinks(links);
                         return this.#fetchMissingTrips(
                             latest,
                             new Set<string>(),
                             forceReload,
+                            () => {
+                                failed = true;
+                            },
                         );
                     }),
                     tap(() => {
-                        if (latest()) this.#store.setLoaded(true);
+                        if (!latest()) return;
+                        this.#store.setLoadError(failed);
+                        this.#store.setLoaded(true);
                     }),
                 );
             }),
@@ -199,12 +229,12 @@ export class TimetableFormationService {
             );
     }
 
-    /** time-cross-section の予想の運用 id。無い・失敗は null */
-    #crossSectionOperationId(
+    /** time-cross-section の予想の運用 id と、引き継ぎの目撃かどうか。無い・失敗は運用なし */
+    #crossSection(
         formationNumber: string,
         searchTime: string | undefined,
         forceReload: boolean | undefined,
-    ): Observable<string | null> {
+    ): Observable<CrossSectionResult> {
         return this.#operationSightingService
             .findOneTimeCrossSectionByFormationNumber({
                 formationNumber,
@@ -212,11 +242,12 @@ export class TimetableFormationService {
                 forceReload,
             })
             .pipe(
-                map(
-                    (cs) =>
+                map((cs) => ({
+                    operationId:
                         cs?.expectedSighting?.operation?.operationId ?? null,
-                ),
-                catchError(() => of(null)),
+                    carriedOver: !!cs?.sightedAsOperation,
+                })),
+                catchError(() => of(NO_CROSS_SECTION)),
             );
     }
 
@@ -228,6 +259,7 @@ export class TimetableFormationService {
         latest: () => boolean,
         requested: Set<string>,
         forceReload: boolean | undefined,
+        onError?: () => void,
     ): Observable<void> {
         const input = this.#store.dayInput();
         if (!input || !latest()) return of(undefined);
@@ -243,7 +275,10 @@ export class TimetableFormationService {
                     .findOneWithTrips({ operationId, forceReload })
                     .pipe(
                         map((dto) => ({ operationId, dto })),
-                        catchError(() => of({ operationId, dto: null })),
+                        catchError(() => {
+                            onError?.();
+                            return of({ operationId, dto: null });
+                        }),
                     ),
             ),
         ).pipe(
@@ -254,7 +289,12 @@ export class TimetableFormationService {
                     if (dto) got[operationId] = dto;
                 }
                 this.#store.addTrips(got);
-                return this.#fetchMissingTrips(latest, requested, forceReload);
+                return this.#fetchMissingTrips(
+                    latest,
+                    requested,
+                    forceReload,
+                    onError,
+                );
             }),
         );
     }

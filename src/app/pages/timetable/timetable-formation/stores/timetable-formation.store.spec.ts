@@ -44,4 +44,13 @@ describe('Store: TimetableFormation', () => {
         store.disableLoading();
         expect(store.isLoading()).toBe(false);
     });
+
+    it('loadError のときは notFound / noCalendar を立てない', () => {
+        store.setLoaded(true);
+        expect(store.noCalendar()).toBe(true);
+        expect(store.notFound()).toBe(true);
+        store.setLoadError(true);
+        expect(store.noCalendar()).toBe(false);
+        expect(store.notFound()).toBe(false);
+    });
 });

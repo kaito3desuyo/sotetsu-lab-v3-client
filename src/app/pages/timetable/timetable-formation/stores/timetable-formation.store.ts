@@ -44,6 +44,10 @@ type StoreProps = {
     selectedStationId: string | null;
     /** 取得が一度終わったか（終わる前に「編成が無い」を出さないため） */
     loaded: boolean;
+    /** 取得（ダイヤ・編成・目撃・乗り移り・運用の列車）のどれかが失敗したか。「ダイヤ無し」「編成無し」と区別する */
+    loadError: boolean;
+    /** 最初の運用を何で決めたか（basisAt の firstBasis に渡す） */
+    firstBasis: FormationDayBasis;
     loadingQueue: boolean[];
 };
 
@@ -62,6 +66,8 @@ const initialState: StoreProps = {
     currentPosition: null,
     selectedStationId: null,
     loaded: false,
+    loadError: false,
+    firstBasis: 'unknown',
     loadingQueue: [],
 };
 
@@ -80,6 +86,7 @@ export const TimetableFormationStore = signalStore(
             tomorrowOperationId,
             calendar,
             loaded,
+            loadError,
             loadingQueue,
         }) => {
             const dayInput = computed<FormationDayInput | null>(() => {
@@ -116,21 +123,15 @@ export const TimetableFormationStore = signalStore(
                     return input ? buildFormationDay(input) : [];
                 }),
                 todaysSightings,
-                /** 運用を何で決めたか（目撃があれば最初の目撃、無ければダイヤ） */
-                basis: computed<FormationDayBasis>(() => {
-                    const own = todaysSightings();
-                    if (own.length > 0) {
-                        return own[0].sightedAsOperation
-                            ? 'carried-over'
-                            : 'sighting';
-                    }
-                    return firstOperationId() ? 'circulated' : 'unknown';
-                }),
                 canSelectTomorrow: computed(
                     () => dateKind() === 'today' && !!tomorrowOperationId(),
                 ),
-                notFound: computed(() => loaded() && !formation()),
-                noCalendar: computed(() => loaded() && !calendar()),
+                notFound: computed(
+                    () => loaded() && !loadError() && !formation(),
+                ),
+                noCalendar: computed(
+                    () => loaded() && !loadError() && !calendar(),
+                ),
             };
         },
     ),
@@ -166,6 +167,8 @@ export const TimetableFormationStore = signalStore(
                     tomorrowOperationId: null,
                     currentPosition: null,
                     loaded: false,
+                    loadError: false,
+                    firstBasis: 'unknown',
                 });
             },
             setFormation(formation: FormationDetailsDto | null): void {
@@ -201,6 +204,12 @@ export const TimetableFormationStore = signalStore(
             },
             setSelectedStationId(selectedStationId: string | null): void {
                 patchState(store, { selectedStationId });
+            },
+            setLoadError(loadError: boolean): void {
+                patchState(store, { loadError });
+            },
+            setFirstBasis(firstBasis: FormationDayBasis): void {
+                patchState(store, { firstBasis });
             },
             setLoaded(loaded: boolean): void {
                 patchState(store, { loaded });

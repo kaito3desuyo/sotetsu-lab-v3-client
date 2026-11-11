@@ -431,3 +431,25 @@ export function missingOperationIds(input: FormationDayInput): string[] {
     build(input, missing);
     return [...missing];
 }
+
+/**
+ * rows[index] の列車の運用を何で決めたか。index から前へたどり、いちばん近い決め手で決める。
+ * unknown の行が手前にあれば unknown、引き継ぎの列車なら carried-over、乗り移りなら transfer、
+ * 目撃で差し替えた（swap）なら sighting。決め手が無ければ最初の運用の決め方（firstBasis）。
+ */
+export function basisAt(
+    rows: FormationDayRow[],
+    index: number,
+    firstBasis: FormationDayBasis,
+): FormationDayBasis {
+    if (rows.slice(0, index + 1).some((r) => r.kind === 'unknown')) {
+        return 'unknown';
+    }
+    for (let i = Math.min(index, rows.length - 1); i >= 0; i--) {
+        const r = rows[i];
+        if (r.kind === 'trip' && r.carriedOver) return 'carried-over';
+        if (r.kind === 'transfer') return 'transfer';
+        if (r.kind === 'swap') return 'sighting';
+    }
+    return firstBasis;
+}

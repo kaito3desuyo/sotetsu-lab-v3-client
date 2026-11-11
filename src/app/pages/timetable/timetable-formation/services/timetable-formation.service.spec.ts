@@ -246,4 +246,92 @@ describe('Service: TimetableFormation', () => {
         await lastValueFrom(service.fetchCurrentPosition('op-1'));
         expect(store.currentPosition()).toBeNull();
     });
+
+    it('ダイヤの取得に失敗したら loadError で noCalendar にしない', async () => {
+        calendarService.findOneBySpecificDate.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+        expect(store.noCalendar()).toBe(false);
+        expect(store.notFound()).toBe(false);
+    });
+
+    it('目撃の取得に失敗したら loadError', async () => {
+        sightingService.findManyBySpecificPeriod.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+    });
+
+    it('編成・乗り移り・運用の列車の取得に失敗しても loadError', async () => {
+        formationService.findManyBySpecificDate.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+        expect(store.notFound()).toBe(false);
+
+        formationService.findManyBySpecificDate.mockReturnValue(
+            of([formation]),
+        );
+        operationService.findManyItineraryLinks.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+
+        operationService.findManyItineraryLinks.mockReturnValue(of([]));
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({ expectedSighting: { operation: { operationId: 'op-a' } } }),
+        );
+        operationService.findOneWithTrips.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-12', 'tomorrow');
+        expect(store.loadError()).toBe(true);
+    });
+
+    it('取得に成功すれば loadError は false', async () => {
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(false);
+    });
+
+    it('firstBasis: 目撃があれば sighting', async () => {
+        sightingService.findManyBySpecificPeriod.mockReturnValue(
+            of([
+                {
+                    formationId: 'f1',
+                    operationId: 'o',
+                    sightingTime: '2026-11-11T06:00:00+09:00',
+                },
+            ]),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.firstBasis()).toBe('sighting');
+    });
+
+    it('firstBasis: 目撃が無く引き継ぎなら carried-over、運用だけなら circulated、無ければ unknown', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({
+                expectedSighting: { operation: { operationId: 'op-a' } },
+                sightedAsOperation: { operationId: 'x', operationNumber: '1' },
+            }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.firstBasis()).toBe('carried-over');
+
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({ expectedSighting: { operation: { operationId: 'op-a' } } }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.firstBasis()).toBe('circulated');
+
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({ expectedSighting: null }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.firstBasis()).toBe('unknown');
+    });
 });

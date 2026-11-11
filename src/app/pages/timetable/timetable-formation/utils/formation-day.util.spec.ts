@@ -3,6 +3,7 @@ import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/o
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import {
+    basisAt,
     buildFormationDay,
     FormationDayInput,
     FormationDayRow,
@@ -453,5 +454,59 @@ describe('buildFormationDay', () => {
                 tripsByOperationId: trips,
             }),
         ).toEqual([]);
+    });
+});
+
+describe('basisAt', () => {
+    const trip = (carriedOver = false) =>
+        ({
+            kind: 'trip',
+            carriedOver,
+            estimated: false,
+            operationId: 'o',
+            operationNumber: '1',
+            trip: {},
+        }) as never as FormationDayRow;
+    const transfer = {
+        kind: 'transfer',
+        from: '1',
+        to: '2',
+        stationId: 's',
+    } as FormationDayRow;
+    const swap = {
+        kind: 'swap',
+        sightingTime: 't',
+        toOperationNumber: '2',
+    } as FormationDayRow;
+    const unknown = {
+        kind: 'unknown',
+        lastOperationNumber: '1',
+        evictedBy: { formationNumber: '9', sightingTime: 't' },
+    } as FormationDayRow;
+
+    it('決め手が無ければ firstBasis', () => {
+        expect(basisAt([trip(), trip()], 1, 'circulated')).toBe('circulated');
+        expect(basisAt([trip()], 0, 'sighting')).toBe('sighting');
+    });
+    it('直前の決め手が乗り移りなら transfer', () => {
+        expect(basisAt([trip(), transfer, trip()], 2, 'circulated')).toBe(
+            'transfer',
+        );
+    });
+    it('引き継ぎで決まった列車は carried-over', () => {
+        expect(basisAt([trip(true), trip(true)], 1, 'carried-over')).toBe(
+            'carried-over',
+        );
+        expect(basisAt([trip(), transfer, trip(true)], 2, 'circulated')).toBe(
+            'carried-over',
+        );
+    });
+    it('直前の決め手が swap なら sighting（乗り移りより後の swap が勝つ）', () => {
+        expect(basisAt([trip(), transfer, swap, trip()], 3, 'circulated')).toBe(
+            'sighting',
+        );
+    });
+    it('unknown の行以降は unknown', () => {
+        expect(basisAt([trip(), unknown], 1, 'sighting')).toBe('unknown');
     });
 });
