@@ -12,6 +12,11 @@ describe('toHelpPage（GA に送るパスの型）', () => {
         expect(toHelpPage('/')).toBe('/');
     });
 
+    it('編成別時刻表は説明のあるページとして扱う', () => {
+        expect(toHelpPage('/timetable/formation')).toBe('/timetable/formation');
+        expect(PAGE_HELP_TABLE['/timetable/formation']).toBeDefined();
+    });
+
     it('投稿者ページは id を送らずに型に丸める', () => {
         expect(toHelpPage('/moderation/users/abc-123')).toBe(
             '/moderation/users/:userId',

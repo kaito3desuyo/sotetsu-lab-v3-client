@@ -1,5 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -22,6 +23,7 @@ describe('OperationRealTimeFormationCardComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeFormationCardComponent],
             providers: [
+                provideRouter([]),
                 { provide: OperationPostDialogService, useValue: { open } },
             ],
         })
@@ -56,6 +58,15 @@ describe('OperationRealTimeFormationCardComponent', () => {
                 ? { operation: { operationNumber } }
                 : undefined,
         }) as OperationSightingTimeCrossSectionDto;
+
+    it('編成番号は編成別時刻表へのリンクになる', () => {
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=10701"]',
+        );
+        expect(link?.textContent?.trim()).toBe('10701');
+    });
 
     it('予想運用があれば最新の目撃を履歴から除き、残りが無ければ履歴を出さない', () => {
         fixture.componentRef.setInput(

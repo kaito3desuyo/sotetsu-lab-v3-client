@@ -30,7 +30,14 @@
              常時太字にするとその意味と衝突する（ユーザー指摘 2026-08-22）。
              このカードで鮮度を表すのは右隣の運用番号チップの textStyle。 -->
         <span class="tw-text-base tw-tabular-nums tw-leading-tight">
-            {{ formation().formationNumber }}
+            <a
+                class="tw-no-underline [color:inherit] hover:tw-underline"
+                [routerLink]="[
+                    '/timetable/formation',
+                    { formation_number: formation().formationNumber },
+                ]"
+                >{{ formation().formationNumber }}</a
+            >
         </span>
         @if (formationAnnotation()) {
             <span class="tw-text-xs tw-leading-tight tw-text-grey-600">

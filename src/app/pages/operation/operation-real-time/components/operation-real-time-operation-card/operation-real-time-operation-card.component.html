@@ -51,12 +51,18 @@
                     [class.tw-font-bold]="dayCount === 0"
                     [class.tw-underline]="dayCount === 1"
                 >
-                    {{
-                        formationVm.formationNumber +
-                            ((dayCount !== undefined && dayCount !== 0) ||
-                            isInferred()
-                                ? '?'
-                                : '')
+                    <a
+                        class="tw-no-underline [color:inherit] hover:tw-underline"
+                        [routerLink]="[
+                            '/timetable/formation',
+                            { formation_number: formationVm.formationNumber },
+                        ]"
+                        >{{ formationVm.formationNumber }}</a
+                    >{{
+                        (dayCount !== undefined && dayCount !== 0) ||
+                        isInferred()
+                            ? '?'
+                            : ''
                     }}
                 </span>
                 @if (formationAnnotation()) {
