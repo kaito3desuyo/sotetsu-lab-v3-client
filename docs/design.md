@@ -390,6 +390,15 @@ modern-minimal は白基調・細く見える枠・小さい角丸・計器盤�
 -   画面に固定される情報パネル（`train-diagram-info-panel`）
 -   CDK オーバーレイのポップオーバー（`train-location-line`）
 
+### ヘッダーの「?」（このページの見方）
+
+-   2026-11-11（M25）— ヘッダーのアカウントのボタンの左に「?」（`help_outline`、`aria-label="このページの見方"`）を置いた。どのページにも出す。
+    押すと Material の Bottom Sheet に「（ページ名）の見方」（ページ名が無ければ「Sotetsu Lab. の見方」）、説明 3〜5 行、「使い方 ›」「用語集 ›」を出す。
+    説明は `layout/page-help/page-help.ts` の表に、URL のパスの型（`;` `?` `#` 以降を除く）で持つ。表に無いページはサイトの一言説明だけ
+-   ボタンを足すと 320px で「リアルタイム運用情報」が 2 行に折り返した（ページ名の幅 144px・文字 180px）。
+    359px までは右の 2 つのボタンを 40px（左のメニューと同じ）にし、ページ名を 16px にした（ページ名の幅 160px で 1 行）。360px 以上は変えていない
+-   GA: 押すと `help_open`（`page`）、シートのリンクで `help_link`（`page`・`to`）
+
 ### 入力の格子（Material 部品の例外）
 
 **UI は Material 部品を包んで使うのが原則だが、列車情報の入力（`timetable/add|copy|update`）の
