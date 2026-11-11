@@ -99,8 +99,8 @@ describe('TimetableFormationTripListComponent', () => {
         const buttons = el.querySelectorAll<HTMLButtonElement>(
             'li button[aria-expanded]',
         );
-        expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
-        expect(buttons[1].getAttribute('aria-expanded')).toBe('true');
+        expect(buttons[0]).toHaveAttribute('aria-expanded', 'false');
+        expect(buttons[1]).toHaveAttribute('aria-expanded', 'true');
     });
 
     it('推定の列車に「推定」を出す', () => {
