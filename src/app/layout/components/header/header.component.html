@@ -1,5 +1,5 @@
 <header
-    class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-gap-2 tw-bg-primary-500 tw-px-2 tw-text-white md:tw-h-16 md:tw-gap-4 md:tw-px-4"
+    class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-gap-2 tw-bg-primary-500 max-[359px]:tw-gap-1 tw-px-2 tw-text-white md:tw-h-16 md:tw-gap-4 md:tw-px-4"
 >
     <button
         mat-mini-fab
@@ -16,7 +16,9 @@
          空のスペーサーは幅 0 でも両隣に gap を作るため、320px でヘッダーの
          要素合計がちょうど viewport 幅に達し、h1 が 3px 足りず折り返していた。 -->
     @if (pageTitle()) {
-        <h1 class="tw-grow tw-text-lg tw-font-bold md:tw-text-2xl">
+        <h1
+            class="tw-grow tw-text-lg tw-font-bold md:tw-text-2xl"
+        >
             {{ pageTitle() }}
         </h1>
     } @else {
@@ -50,11 +52,22 @@
             <p class="tw-m-0 tw-text-xs">ようこそ<br />ゲスト さん</p>
         </div>
     }
+    <!-- このページの見方（M25）。どのページにも出す。
+         「?」を足すと 320px で「リアルタイム運用情報」が 2 行に折り返したため、
+         359px までは右の 2 つのボタンを 36px にし、要素の間を 4px に詰める（ユーザー判断 2026-11-11・案 1。文字は削らない） -->
+    <button
+        mat-icon-button
+        (click)="onClickHelp()"
+        aria-label="このページの見方"
+        class="!tw-shadow-none max-[359px]:!tw-h-9 max-[359px]:!tw-w-9 max-[359px]:!tw-p-1.5"
+    >
+        <mat-icon>help_outline</mat-icon>
+    </button>
     <button
         mat-icon-button
         [matMenuTriggerFor]="menu"
         aria-label="アカウントメニューを開く"
-        class="!tw-shadow-none"
+        class="!tw-shadow-none max-[359px]:!tw-h-9 max-[359px]:!tw-w-9 max-[359px]:!tw-p-1.5"
     >
         <mat-icon>account_circle</mat-icon>
     </button>

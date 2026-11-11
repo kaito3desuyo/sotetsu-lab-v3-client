@@ -7,17 +7,24 @@ import {
     input,
     output,
 } from '@angular/core';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
+import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
 import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { TokenState } from 'src/app/global-states/token.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
+import { toHelpPage, toHelpPath } from 'src/app/layout/page-help/page-help';
+import {
+    PageHelpSheetComponent,
+    PageHelpSheetData,
+} from 'src/app/layout/page-help/page-help-sheet.component';
 
 @Component({
     selector: 'app-header',
@@ -37,6 +44,8 @@ export class HeaderComponent {
     readonly #authService = inject(AuthService);
     readonly #tokenState = inject(TokenState);
     readonly #userState = inject(UserState);
+    readonly #bottomSheet = inject(MatBottomSheet);
+    readonly #ga = inject(GoogleAnalyticsService);
 
     /** サーバーと、それを引き継ぐ最初の描画はゲストの形にする（spec 5.3。CDN で別の人に配られるため） */
     readonly isLoggedIn = afterFirstRender(this.#userState.isLoggedIn, false);
@@ -70,6 +79,14 @@ export class HeaderComponent {
             );
         }
         return safeReturnTo(url);
+    }
+
+    /** 「?」: このページの見方をシートで出す（M25） */
+    onClickHelp(): void {
+        const path = toHelpPath(this.#router.url);
+        const data: PageHelpSheetData = { pageTitle: this.pageTitle(), path };
+        this.#bottomSheet.open(PageHelpSheetComponent, { data });
+        this.#ga.sendEvent('help_open', { page: toHelpPage(path) });
     }
 
     onClickRegister(): void {

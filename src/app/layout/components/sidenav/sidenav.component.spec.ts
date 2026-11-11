@@ -121,6 +121,17 @@ describe('SidenavComponent', () => {
         });
     });
 
+    it('「このサイトについて」から使い方と用語集へつなぐ', () => {
+        fixture.detectChanges();
+        const element = fixture.nativeElement as HTMLElement;
+        expect(
+            element.querySelector('a[href="/guide"]')?.textContent?.trim(),
+        ).toBe('使い方');
+        expect(
+            element.querySelector('a[href="/glossary"]')?.textContent?.trim(),
+        ).toBe('用語集');
+    });
+
     it('「このサイトについて」からプライバシーポリシーと免責事項へつなぐ', () => {
         fixture.detectChanges();
         const element = fixture.nativeElement as HTMLElement;

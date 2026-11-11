@@ -4,7 +4,10 @@ import { unprotected } from '@ngrx/signals/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { provideRouter, Router } from '@angular/router';
+import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
+import { PageHelpSheetComponent } from 'src/app/layout/page-help/page-help-sheet.component';
 import { UserState } from 'src/app/global-states/user.state';
 
 import { HeaderComponent } from './header.component';
@@ -13,11 +16,20 @@ describe('HeaderComponent', () => {
     let component: HeaderComponent;
     let fixture: ComponentFixture<HeaderComponent>;
     let router: Router;
+    let open: jest.Mock;
+    let sendEvent: jest.Mock;
 
     beforeEach(async () => {
+        open = jest.fn();
+        sendEvent = jest.fn();
         await TestBed.configureTestingModule({
             imports: [HeaderComponent],
-            providers: [provideHttpClient(withXhr()), provideRouter([])],
+            providers: [
+                provideHttpClient(withXhr()),
+                provideRouter([]),
+                { provide: MatBottomSheet, useValue: { open } },
+                { provide: GoogleAnalyticsService, useValue: { sendEvent } },
+            ],
         }).compileComponents();
 
         router = TestBed.inject(Router);
@@ -27,6 +39,55 @@ describe('HeaderComponent', () => {
 
     it('should create', () => {
         expect(component).toBeTruthy();
+    });
+
+    it('「?」（このページの見方）はアカウントのボタンより前にある', () => {
+        fixture.detectChanges();
+
+        const buttons: HTMLButtonElement[] = Array.from(
+            fixture.nativeElement.querySelectorAll('header button'),
+        );
+        const labels = buttons.map((b) => b.getAttribute('aria-label'));
+        const help = labels.indexOf('このページの見方');
+        expect(help).toBeGreaterThanOrEqual(0);
+        expect(help).toBeLessThan(labels.indexOf('アカウントメニューを開く'));
+    });
+
+    it('「?」を押すと、パスの型でシートを開き help_open を送る', () => {
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/operation/table;calendar_id=x',
+        );
+        fixture.componentRef.setInput('pageTitle', '運用表');
+        fixture.detectChanges();
+
+        const help: HTMLButtonElement = fixture.nativeElement.querySelector(
+            'header button[aria-label="このページの見方"]',
+        );
+        help.click();
+
+        expect(open).toHaveBeenCalledWith(PageHelpSheetComponent, {
+            data: { pageTitle: '運用表', path: '/operation/table' },
+        });
+        expect(sendEvent).toHaveBeenCalledWith('help_open', {
+            page: '/operation/table',
+        });
+    });
+
+    it('投稿者ページでは help_open に投稿者の id を送らない', () => {
+        jest.spyOn(router, 'url', 'get').mockReturnValue(
+            '/moderation/users/abc-123',
+        );
+        fixture.detectChanges();
+
+        (
+            fixture.nativeElement.querySelector(
+                'header button[aria-label="このページの見方"]',
+            ) as HTMLButtonElement
+        ).click();
+
+        expect(sendEvent).toHaveBeenCalledWith('help_open', {
+            page: '/moderation/users/:userId',
+        });
     });
 
     it('pageTitle 未指定時はロゴ表記「Sotetsu Lab.」を表示する', () => {
@@ -177,6 +238,10 @@ describe('HeaderComponent をサーバーで描くとき', () => {
             providers: [
                 provideHttpClient(withXhr()),
                 { provide: PLATFORM_ID, useValue: 'server' },
+                {
+                    provide: GoogleAnalyticsService,
+                    useValue: { sendEvent: jest.fn() },
+                },
             ],
         }).compileComponents();
         patchState(unprotected(TestBed.inject(UserState)), {
