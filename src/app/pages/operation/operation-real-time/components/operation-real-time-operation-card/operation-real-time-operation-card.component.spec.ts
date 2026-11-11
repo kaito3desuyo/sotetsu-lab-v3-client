@@ -82,9 +82,11 @@ describe('OperationRealTimeOperationCardComponent', () => {
         const link = (fixture.nativeElement as HTMLElement).querySelector(
             'a[href="/timetable/formation;formation_number=8713"]',
         );
-        // 下線は親の span が持つ。リンク側は text-decoration を変えるクラスを持たない
+        // 下線は親の span が持つ。リンク側は継ぐだけで、自分では下線を足さず消しもしない
         expect(link?.parentElement?.classList).toContain('tw-underline');
-        expect(link?.className).not.toMatch(/underline|line-through/);
+        expect(link?.classList).toContain('[text-decoration:inherit]');
+        expect(link?.classList).not.toContain('tw-no-underline');
+        expect(link?.classList).not.toContain('tw-underline');
     });
 
     it('履歴は新しい順に並べる', () => {
