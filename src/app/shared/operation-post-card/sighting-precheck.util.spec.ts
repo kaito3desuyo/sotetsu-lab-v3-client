@@ -1,0 +1,220 @@
+import {
+    findSightingBlockers,
+    isFormationNotInToday,
+    toSightingTimeIso,
+} from './sighting-precheck.util';
+
+describe('toSightingTimeIso', () => {
+    it('currentTime は now の ISO', () => {
+        const now = new Date(2026, 10, 10, 10, 0);
+        expect(
+            toSightingTimeIso({
+                timeSetting: 'currentTime',
+                sightingTime: '09:00',
+                now,
+            }),
+        ).toBe(now.toISOString());
+    });
+
+    it('specifiedTime 10:00 に 09:30 を打つと当日 09:30', () => {
+        const now = new Date(2026, 10, 10, 10, 0);
+        expect(
+            toSightingTimeIso({
+                timeSetting: 'specifiedTime',
+                sightingTime: '09:30',
+                now,
+            }),
+        ).toBe(new Date(2026, 10, 10, 9, 30).toISOString());
+    });
+
+    it('specifiedTime 10:00 に 03:50 を打つと翌日 03:50（営業日の終わり）', () => {
+        const now = new Date(2026, 10, 10, 10, 0);
+        expect(
+            toSightingTimeIso({
+                timeSetting: 'specifiedTime',
+                sightingTime: '03:50',
+                now,
+            }),
+        ).toBe(new Date(2026, 10, 11, 3, 50).toISOString());
+    });
+
+    it('specifiedTime 02:00 に 23:30 を打つと前日 23:30', () => {
+        const now = new Date(2026, 10, 10, 2, 0);
+        expect(
+            toSightingTimeIso({
+                timeSetting: 'specifiedTime',
+                sightingTime: '23:30',
+                now,
+            }),
+        ).toBe(new Date(2026, 10, 9, 23, 30).toISOString());
+    });
+});
+
+describe('toSightingTimeIso の 4 時の境目', () => {
+    const iso = (now: Date) =>
+        toSightingTimeIso({
+            timeSetting: 'specifiedTime',
+            sightingTime: '04:00',
+            now,
+        });
+
+    it('now が 03:59 のとき 04:00 は前の営業日の 04:00（前日）', () => {
+        expect(iso(new Date(2026, 10, 10, 3, 59))).toBe(
+            new Date(2026, 10, 9, 4, 0).toISOString(),
+        );
+    });
+
+    it('now が 04:00 のとき 04:00 は当日の 04:00', () => {
+        expect(iso(new Date(2026, 10, 10, 4, 0))).toBe(
+            new Date(2026, 10, 10, 4, 0).toISOString(),
+        );
+    });
+});
+
+describe('findSightingBlockers', () => {
+    const now = new Date(2026, 10, 10, 10, 0);
+
+    it('sightingTimeIso が now より後なら future_time', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '10',
+                sightingTimeIso: new Date(2026, 10, 10, 10, 1).toISOString(),
+                now,
+                todaysOperationNumbers: [],
+            }),
+        ).toEqual(['future_time']);
+    });
+
+    it('now と同じ時刻なら止めない', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '10',
+                sightingTimeIso: now.toISOString(),
+                now,
+                todaysOperationNumbers: [],
+            }),
+        ).toEqual([]);
+    });
+
+    it('今日の運用に無い番号なら operation_not_found', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '99',
+                sightingTimeIso: now.toISOString(),
+                now,
+                todaysOperationNumbers: ['10', '11'],
+            }),
+        ).toEqual(['operation_not_found']);
+    });
+
+    it('両方当てはまるなら future_time, operation_not_found の順', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '99',
+                sightingTimeIso: new Date(2026, 10, 10, 11, 0).toISOString(),
+                now,
+                todaysOperationNumbers: ['10'],
+            }),
+        ).toEqual(['future_time', 'operation_not_found']);
+    });
+
+    it('今日の一覧にある番号は止めない', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '11',
+                sightingTimeIso: now.toISOString(),
+                now,
+                todaysOperationNumbers: ['10', '11'],
+            }),
+        ).toEqual([]);
+    });
+
+    it('100 は今日の一覧に無くても止めない', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '100',
+                sightingTimeIso: now.toISOString(),
+                now,
+                todaysOperationNumbers: ['10', '11'],
+            }),
+        ).toEqual([]);
+    });
+
+    it('todaysOperationNumbers が空なら運用番号は確かめない', () => {
+        expect(
+            findSightingBlockers({
+                operationNumber: '99',
+                sightingTimeIso: now.toISOString(),
+                now,
+                todaysOperationNumbers: [],
+            }),
+        ).toEqual([]);
+    });
+});
+
+describe('isFormationNotInToday', () => {
+    const todaysFormations = [
+        { agencyId: 'a1', formationNumber: '9701' },
+        { agencyId: 'a2', formationNumber: '1001' },
+    ];
+
+    it('所属を選んでいて、その会社の今日の編成に無ければ true', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: 'a1',
+                formationOrVehicleNumber: '1001',
+                todaysFormations,
+            }),
+        ).toBe(true);
+    });
+
+    it('所属が空なら全社の今日の編成で探す', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: '',
+                formationOrVehicleNumber: '1001',
+                todaysFormations,
+            }),
+        ).toBe(false);
+    });
+
+    it('車両番号らしい 10101 でも編成番号に無ければ true（止めずに注意だけなので true でよい）', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: '',
+                formationOrVehicleNumber: '10101',
+                todaysFormations,
+            }),
+        ).toBe(true);
+    });
+
+    it('todaysFormations が空なら false', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: 'a1',
+                formationOrVehicleNumber: '9701',
+                todaysFormations: [],
+            }),
+        ).toBe(false);
+    });
+
+    it('前後の空白は無視して比べる（今日の編成にある番号なら false）', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: 'a1',
+                formationOrVehicleNumber: ' 9701 ',
+                todaysFormations,
+            }),
+        ).toBe(false);
+    });
+
+    it('入力が空なら false', () => {
+        expect(
+            isFormationNotInToday({
+                agencyId: 'a1',
+                formationOrVehicleNumber: '  ',
+                todaysFormations,
+            }),
+        ).toBe(false);
+    });
+});

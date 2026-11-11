@@ -84,7 +84,7 @@ describe('OperationRealTimeComponent', () => {
             'button[data-testid="post-fab"]',
         ) as HTMLButtonElement;
         fab.click();
-        expect(open).toHaveBeenCalledWith();
+        expect(open).toHaveBeenCalledWith('realtime_fab');
     });
 
     it('投稿カードを出さない', () => {

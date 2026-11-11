@@ -218,6 +218,10 @@ export const TimetableStationStore = signalStore(
             nextFetchSeq(): number {
                 return ++fetchSeq;
             },
+            /** 世代を進めずに、いまの番号を返す（取り直しの途中で新しい取得が始まったかを見るため） */
+            currentFetchSeq(): number {
+                return fetchSeq;
+            },
             isLatestFetch(seq: number): boolean {
                 return seq === fetchSeq;
             },

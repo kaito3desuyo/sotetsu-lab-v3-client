@@ -122,7 +122,7 @@ export class OperationRealTimeOperationCardComponent {
     });
 
     openPost(): void {
-        this.#postDialog.open({
+        this.#postDialog.open('realtime_operation_card', {
             operationNumber: this.operation().operationNumber,
         });
     }

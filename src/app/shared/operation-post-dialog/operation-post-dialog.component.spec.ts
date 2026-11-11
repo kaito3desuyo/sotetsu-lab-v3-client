@@ -42,7 +42,10 @@ describe('OperationPostDialogComponent', () => {
                 },
                 {
                     provide: MAT_DIALOG_DATA,
-                    useValue: { operationNumber: '11' },
+                    useValue: {
+                        source: 'realtime_operation_card',
+                        initialValue: { operationNumber: '11' },
+                    },
                 },
                 {
                     provide: OperationPostCardService,
@@ -82,6 +85,13 @@ describe('OperationPostDialogComponent', () => {
         expect(form.initialValue()).toEqual({ operationNumber: '11' });
     });
 
+    it('開いた場所をフォームに渡す', () => {
+        const form = fixture.debugElement.query(
+            By.directive(OperationPostFormComponent),
+        ).componentInstance as OperationPostFormComponent;
+        expect(form.source()).toBe('realtime_operation_card');
+    });
+
     it('投稿に成功したら閉じる', () => {
         const form = fixture.debugElement.query(
             By.directive(OperationPostFormComponent),
@@ -118,5 +128,37 @@ describe('OperationPostDialogComponent', () => {
     it('画面遷移が始まったら閉じる（ゲストが「ログイン」を押したとき）', () => {
         routerEvents.next(new NavigationStart(1, '/login'));
         expect(close).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('OperationPostDialogComponent（MAT_DIALOG_DATA が null）', () => {
+    it('右下の投稿ボタン（realtime_fab）・初期値なしで開く', async () => {
+        await TestBed.configureTestingModule({
+            imports: [OperationPostDialogComponent],
+            providers: [
+                { provide: MatDialogRef, useValue: { close: jest.fn() } },
+                {
+                    provide: Router,
+                    useValue: { events: new Subject(), url: '/' },
+                },
+                { provide: MAT_DIALOG_DATA, useValue: null },
+            ],
+        })
+            .overrideComponent(OperationPostFormComponent, {
+                set: { template: '', imports: [], providers: [] },
+            })
+            .overrideComponent(OperationPostDialogComponent, {
+                set: { template: '' },
+            })
+            .compileComponents();
+
+        const dialog = TestBed.createComponent(
+            OperationPostDialogComponent,
+        ).componentInstance;
+
+        expect(dialog.data).toEqual({
+            source: 'realtime_fab',
+            initialValue: {},
+        });
     });
 });

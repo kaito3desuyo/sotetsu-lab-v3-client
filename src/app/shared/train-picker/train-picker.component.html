@@ -1,0 +1,128 @@
+<div class="tw-flex tw-flex-col tw-gap-4">
+    <div class="tw-flex tw-items-center tw-gap-2">
+        <button
+            type="button"
+            data-back
+            aria-label="戻る"
+            class="tw-flex tw-h-10 tw-w-10 tw-items-center tw-justify-center tw-rounded-full tw-border-0 [background-color:transparent] [font-family:inherit]"
+            (click)="cancelled.emit()"
+        >
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="tw-text-base tw-font-bold">列車から選ぶ</span>
+    </div>
+
+    <mat-form-field>
+        <mat-label>駅名</mat-label>
+        <mat-select
+            appLazyOptions
+            #lazyStation="appLazyOptions"
+            [value]="store.stationId()"
+            (selectionChange)="onStationChange($event.value)"
+        >
+            <!-- 駅を選ぶ前は選択済みの option が無いので、空のままだと 1 回目のタップで開かない。全部描く -->
+            @if (lazyStation.ready() || !store.stationId()) {
+                @for (group of stationGroups(); track group.routeId) {
+                    <mat-optgroup [label]="group.label">
+                        @for (
+                            station of group.stations;
+                            track station.stationId
+                        ) {
+                            <mat-option [value]="station.stationId">
+                                {{ station.stationName }}
+                            </mat-option>
+                        }
+                    </mat-optgroup>
+                }
+            } @else if (selectedStation(); as selected) {
+                <mat-option [value]="selected.stationId">
+                    {{ selected.stationName }}
+                </mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+
+    <app-segment-toggle
+        [options]="directionOptions"
+        [value]="store.direction()"
+        (valueChange)="onDirectionChange($event)"
+    ></app-segment-toggle>
+
+    @if (store.isLoading()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+
+    @if (store.fetchFailed()) {
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <p class="tw-m-0">列車を読み込めませんでした</p>
+            <app-button
+                variant="secondary"
+                data-reload
+                (buttonClick)="reload()"
+            >
+                再読み込み
+            </app-button>
+        </div>
+    } @else if (!store.stationId()) {
+        @if (store.settingsReady()) {
+            <p class="tw-m-0 tw-text-muted">駅を選んでください</p>
+        }
+    } @else if (!store.isLoading()) {
+        <div class="tw-flex tw-flex-col tw-gap-2">
+            <button
+                type="button"
+                data-widen-before
+                class="tw-border-0 tw-py-2 tw-text-sm tw-font-bold [background-color:transparent] [font-family:inherit]"
+                (click)="store.widenBefore()"
+            >
+                もっと前
+            </button>
+            @if (trains().length === 0) {
+                <p class="tw-m-0 tw-text-muted">
+                    この時間帯に選べる列車がありません
+                </p>
+            } @else {
+                <div #trainList class="tw-max-h-[40dvh] tw-overflow-y-auto">
+                    @for (train of trains(); track train.tripId) {
+                        <button
+                            type="button"
+                            data-train-row
+                            class="tw-flex tw-w-full tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-border-0 tw-border-b tw-border-solid tw-border-grey-300 tw-px-2 tw-py-2 tw-text-left [background-color:transparent] [font-family:inherit]"
+                            [class]="train.isPast ? 'tw-text-muted' : ''"
+                            [attr.data-past]="train.isPast"
+                            (click)="picked.emit(train)"
+                        >
+                            <span class="tw-font-bold tw-tabular-nums">
+                                {{ train.displayTime
+                                }}{{ train.isArrivalOnly ? '着' : '' }}
+                            </span>
+                            <app-trip-label
+                                chipSize="sm"
+                                [tripClassName]="train.tripClassName"
+                                [tripClassColor]="train.tripClassColor"
+                                [tripNumber]="train.tripNumber"
+                            ></app-trip-label>
+                            <span>{{ train.destinationName }}</span>
+                            <span
+                                class="tw-ml-auto tw-rounded tw-px-2 tw-py-0.5 tw-text-sm tw-font-bold tw-text-black"
+                                [style.background-color]="
+                                    train.operationNumber | operationNumberColor
+                                "
+                            >
+                                {{ train.operationNumber }}
+                            </span>
+                        </button>
+                    }
+                </div>
+            }
+            <button
+                type="button"
+                data-widen-after
+                class="tw-border-0 tw-py-2 tw-text-sm tw-font-bold [background-color:transparent] [font-family:inherit]"
+                (click)="store.widenAfter()"
+            >
+                もっと後
+            </button>
+        </div>
+    }
+</div>

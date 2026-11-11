@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TrainDiagramInfoPanelComponent } from './train-diagram-info-panel.component';
 
 describe('TrainDiagramInfoPanelComponent', () => {
@@ -14,13 +15,18 @@ describe('TrainDiagramInfoPanelComponent', () => {
         detailLink: ['/timetable', 'all-line', {}],
     };
 
+    const open = jest.fn();
     let component: TrainDiagramInfoPanelComponent;
     let fixture: ComponentFixture<TrainDiagramInfoPanelComponent>;
 
     beforeEach(async () => {
+        open.mockClear();
         await TestBed.configureTestingModule({
             imports: [TrainDiagramInfoPanelComponent],
-            providers: [provideRouter([])],
+            providers: [
+                provideRouter([]),
+                { provide: OperationPostDialogService, useValue: { open } },
+            ],
         })
             .overrideComponent(TrainDiagramInfoPanelComponent, {
                 set: { schemas: [NO_ERRORS_SCHEMA] },
@@ -103,5 +109,52 @@ describe('TrainDiagramInfoPanelComponent', () => {
         expect(disconnect).toHaveBeenCalled();
 
         (window as any).ResizeObserver = originalResizeObserver;
+    });
+
+    describe('投稿ボタン', () => {
+        const postButton = (): HTMLButtonElement | null =>
+            fixture.nativeElement.querySelector(
+                'button[aria-label="この運用で投稿"]',
+            );
+
+        it('canPost かつ運用番号ありで出る', () => {
+            fixture.componentRef.setInput('info', {
+                ...baseInfo,
+                operationNumber: '43G',
+            });
+            fixture.componentRef.setInput('canPost', true);
+            fixture.detectChanges();
+            expect(postButton()).not.toBeNull();
+        });
+
+        it('canPost が false では出ない', () => {
+            fixture.componentRef.setInput('info', {
+                ...baseInfo,
+                operationNumber: '43G',
+            });
+            fixture.detectChanges();
+            expect(postButton()).toBeNull();
+        });
+
+        it('運用番号が無いと出ない', () => {
+            fixture.componentRef.setInput('canPost', true);
+            fixture.detectChanges();
+            expect(postButton()).toBeNull();
+        });
+
+        it('押すと投稿ダイアログを開いて closed を出す', () => {
+            fixture.componentRef.setInput('info', {
+                ...baseInfo,
+                operationNumber: '43G',
+            });
+            fixture.componentRef.setInput('canPost', true);
+            fixture.detectChanges();
+            const closed = jest.spyOn(component.closed, 'emit');
+            postButton()?.click();
+            expect(open).toHaveBeenCalledWith('train_diagram', {
+                operationNumber: '43G',
+            });
+            expect(closed).toHaveBeenCalled();
+        });
     });
 });

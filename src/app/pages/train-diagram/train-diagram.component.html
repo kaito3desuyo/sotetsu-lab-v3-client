@@ -101,6 +101,7 @@
     @if (selectedTripInfo(); as info) {
         <app-train-diagram-info-panel
             [info]="info"
+            [canPost]="showTodayParts()"
             (closed)="onInfoPanelClosed()"
             (heightChange)="onInfoPanelHeightChange($event)"
         ></app-train-diagram-info-panel>

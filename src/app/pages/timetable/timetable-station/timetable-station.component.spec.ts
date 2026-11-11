@@ -12,6 +12,7 @@ import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { TimetableStationService } from './services/timetable-station.service';
@@ -742,5 +743,119 @@ describe('TimetableStationComponent の圏外の保存', () => {
         expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
         expect(fixture.componentInstance.hasFetchedTimetable()).toBe(true);
+    });
+});
+
+describe('TimetableStationComponent の投稿後の取り直し', () => {
+    const calendarId = '00000000-0000-4000-8000-000000000001';
+    const open = jest.fn();
+    const fetchTrips = jest.fn(() => of(undefined));
+    const fetchSightings = jest.fn<Observable<boolean>, []>(() => of(true));
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    const setup = async (todayIds: string[]) => {
+        const ok = () => of(undefined);
+        await TestBed.configureTestingModule({
+            imports: [TimetableStationComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                calendar_id: calendarId,
+                                station_id: 'st-1',
+                                trip_direction: '0',
+                            }),
+                        ),
+                    },
+                },
+                {
+                    provide: TimetableStationService,
+                    useValue: {
+                        fetchCalendar: ok,
+                        fetchTrips,
+                        fetchTripClasses: ok,
+                        fetchStations: ok,
+                        fetchOperations: ok,
+                        fetchOperationSightingTimeCrossSections: fetchSightings,
+                    },
+                },
+                { provide: NotificationService, useValue: { open } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save: jest.fn(), restore: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(TimetableStationComponent, {
+                set: { template: '', imports: [] },
+            })
+            .compileComponents();
+        setTodaysCalendars(todayIds);
+        const fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+        // 作ったときの取得を数えないようにする
+        jest.clearAllMocks();
+        return fixture;
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        fetchSightings.mockImplementation(() => of(true));
+        TestBed.inject(TimetableStationStore).resetLoading();
+    });
+
+    it('投稿されたら充当編成だけを 1 回取り直し、時刻表は取り直さない', async () => {
+        const fixture = await setup([calendarId]);
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(fetchSightings).toHaveBeenCalledTimes(1);
+        expect(fetchTrips).not.toHaveBeenCalled();
+        expect(open).not.toHaveBeenCalled();
+        fixture.destroy();
+    });
+
+    it('今日のダイヤでなければ何も取らない', async () => {
+        const fixture = await setup([]);
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(fetchSightings).not.toHaveBeenCalled();
+        expect(fetchTrips).not.toHaveBeenCalled();
+        fixture.destroy();
+    });
+
+    it('取得に失敗したら通知を出し、投げない', async () => {
+        const fixture = await setup([calendarId]);
+        const consoleError = jest
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
+        fetchSightings.mockImplementation(() =>
+            throwError(() => new Error('offline')),
+        );
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(open).toHaveBeenCalledWith('データの取得に失敗しました', 'OK');
+        expect(TestBed.inject(TimetableStationStore).isLoading()).toBe(false);
+        consoleError.mockRestore();
+        fixture.destroy();
+    });
+
+    it('取れなかった（false）ときも通知を出す', async () => {
+        const fixture = await setup([calendarId]);
+        fetchSightings.mockImplementation(() => of(false));
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(open).toHaveBeenCalledWith('データの取得に失敗しました', 'OK');
+        fixture.destroy();
     });
 });

@@ -9,8 +9,14 @@ import {
     OperationPostFormComponent,
     OperationPostInitialValue,
 } from '../operation-post-card/operation-post-form.component';
+import { OperationPostSource } from '../operation-post-card/operation-post-source.type';
 
 export const OPERATION_POST_DIALOG_TITLE_ID = 'operation-post-dialog-title';
+
+export interface OperationPostDialogData {
+    source: OperationPostSource;
+    initialValue: OperationPostInitialValue;
+}
 
 /** リアルタイム運用情報の投稿ダイアログ（右下の投稿ボタン・行の投稿ボタンから開く。2026-10-22） */
 @Component({
@@ -33,7 +39,8 @@ export const OPERATION_POST_DIALOG_TITLE_ID = 'operation-post-dialog-title';
                 </button>
             </header>
             <app-operation-post-form
-                [initialValue]="data"
+                [initialValue]="data.initialValue"
+                [source]="data.source"
                 (submitted)="close()"
                 (submittingChange)="onSubmittingChange($event)"
             ></app-operation-post-form>
@@ -45,8 +52,11 @@ export const OPERATION_POST_DIALOG_TITLE_ID = 'operation-post-dialog-title';
 export class OperationPostDialogComponent {
     readonly #dialogRef = inject(MatDialogRef<OperationPostDialogComponent>);
     readonly #router = inject(Router);
-    readonly data: OperationPostInitialValue =
-        inject<OperationPostInitialValue | null>(MAT_DIALOG_DATA) ?? {};
+    readonly data: OperationPostDialogData =
+        inject<OperationPostDialogData | null>(MAT_DIALOG_DATA) ?? {
+            source: 'realtime_fab',
+            initialValue: {},
+        };
 
     /** 見出しの id（ダイアログの名前として読み上げる） */
     readonly titleId = OPERATION_POST_DIALOG_TITLE_ID;

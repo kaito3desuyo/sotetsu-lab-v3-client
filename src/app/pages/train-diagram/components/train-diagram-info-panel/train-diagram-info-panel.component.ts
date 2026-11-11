@@ -8,10 +8,12 @@ import {
     input,
     output,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-selected-trip-info.interface';
 
@@ -32,6 +34,7 @@ import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-sel
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         RouterLink,
+        MatButtonModule,
         MatIconModule,
         TripLabelComponent,
         DateFnsPipe,
@@ -45,7 +48,11 @@ export class TrainDiagramInfoPanelComponent {
     readonly #elementRef = inject(ElementRef<HTMLElement>);
     readonly #destroyRef = inject(DestroyRef);
 
+    readonly #operationPostDialog = inject(OperationPostDialogService);
+
     readonly info = input.required<TrainDiagramSelectedTripInfo>();
+    /** 投稿ボタンを出すか（今日のダイヤのときだけ。M30） */
+    readonly canPost = input(false);
 
     readonly closed = output<void>();
     readonly heightChange = output<number>();
@@ -64,5 +71,14 @@ export class TrainDiagramInfoPanelComponent {
             observer.observe(this.#elementRef.nativeElement);
             this.#destroyRef.onDestroy(() => observer.disconnect());
         });
+    }
+
+    openPost(): void {
+        const operationNumber = this.info().operationNumber;
+        if (!operationNumber) {
+            return;
+        }
+        this.#operationPostDialog.open('train_diagram', { operationNumber });
+        this.closed.emit();
     }
 }

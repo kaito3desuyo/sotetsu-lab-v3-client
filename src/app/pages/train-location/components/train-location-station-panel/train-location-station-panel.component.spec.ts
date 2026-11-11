@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { By } from '@angular/platform-browser';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripClassChipComponent } from 'src/app/shared/trip-class-chip/trip-class-chip.component';
 import { StationArrival } from '../../interfaces/station-arrival.interface';
 import { TrainLocationStationPanelComponent } from './train-location-station-panel.component';
@@ -30,13 +31,18 @@ function arrival(o: Partial<StationArrival>): StationArrival {
 
 describe('TrainLocationStationPanelComponent', () => {
     let fixture: ComponentFixture<TrainLocationStationPanelComponent>;
+    const open = jest.fn();
     const el = () => fixture.nativeElement as HTMLElement;
 
     beforeEach(() => {
         localStorage.clear();
+        open.mockClear();
         TestBed.configureTestingModule({
             imports: [TrainLocationStationPanelComponent],
-            providers: [provideRouter([])],
+            providers: [
+                provideRouter([]),
+                { provide: OperationPostDialogService, useValue: { open } },
+            ],
         });
         fixture = TestBed.createComponent(TrainLocationStationPanelComponent);
     });
@@ -385,5 +391,56 @@ describe('TrainLocationStationPanelComponent', () => {
         ) as HTMLElement;
         const container = operationSpan.parentElement as HTMLElement;
         expect(container.className).toContain('tw-flex-wrap');
+    });
+
+    describe('投稿ボタン', () => {
+        const buttons = () =>
+            el().querySelectorAll<HTMLButtonElement>(
+                'button[aria-label="この列車の運用で投稿"]',
+            );
+        const setup = (canPost: boolean) => {
+            fixture.componentRef.setInput('stationId', 'C');
+            fixture.componentRef.setInput('stationName', '二俣川');
+            fixture.componentRef.setInput('canPost', canPost);
+            fixture.componentRef.setInput('arrivals', {
+                inbound: [
+                    arrival({ tripId: 'a', operationNumber: '30K' }),
+                    arrival({ tripId: 'b', operationNumber: undefined }),
+                ],
+                outbound: [],
+            });
+            fixture.detectChanges();
+        };
+
+        it('canPost のとき運用番号のある行だけに出る', () => {
+            setup(true);
+            expect(buttons()).toHaveLength(1);
+        });
+
+        it('canPost が false では出ない', () => {
+            setup(false);
+            expect(buttons()).toHaveLength(0);
+        });
+
+        it('canPost が false では元の列のまま・空きの要素も置かない', () => {
+            setup(false);
+            const row = el().querySelector<HTMLElement>('div.tw-grid');
+            expect(row?.className).toContain(
+                'tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)]',
+            );
+            expect(row?.className).toContain(
+                'sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto]',
+            );
+            expect(row?.className).not.toContain('_auto_auto');
+            expect(el().querySelector('.tw-size-10')).toBeNull();
+        });
+
+        it('押すと運用番号だけ埋めた投稿ダイアログを開く', () => {
+            setup(true);
+            buttons()[0].click();
+            expect(open).toHaveBeenCalledWith('train_location', {
+                operationNumber: '30K',
+            });
+        });
     });
 });

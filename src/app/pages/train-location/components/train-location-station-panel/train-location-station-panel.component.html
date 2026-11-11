@@ -69,7 +69,12 @@
     </h3>
     @for (row of rows; track row.tripId) {
         <div
-            class="tw-grid tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)] tw-items-center tw-gap-x-2 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-4 tw-py-2 tw-text-sm sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto]"
+            class="tw-grid tw-items-center tw-gap-x-2 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-4 tw-py-2 tw-text-sm"
+            [class]="
+                canPost()
+                    ? 'tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto] sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto_auto]'
+                    : 'tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)] sm:tw-grid-cols-[4.5rem_4rem_minmax(0,1fr)_auto]'
+            "
             [class.tw-bg-accent-50]="isImminent(row)"
         >
             <span
@@ -200,6 +205,26 @@
                     </span>
                 </div>
             </div>
+            @if (canPost()) {
+                <!-- 投稿ボタン（M30）。スマホは 1 行目の右端、sm 以上は行先の右の最後の列。
+                     運用番号の無い行も同じ幅の空きを置き、右端の列をそろえる -->
+                @if (row.operationNumber) {
+                    <button
+                        type="button"
+                        mat-icon-button
+                        class="sm:tw-order-last"
+                        aria-label="この列車の運用で投稿"
+                        (click)="openPost(row)"
+                    >
+                        <mat-icon>edit_note</mat-icon>
+                    </button>
+                } @else {
+                    <span
+                        class="tw-size-10 sm:tw-order-last"
+                        aria-hidden="true"
+                    ></span>
+                }
+            }
             <span
                 class="tw-col-span-3 tw-text-xs tw-text-muted sm:tw-col-span-1 sm:tw-text-right"
                 >{{ row.whereText }}</span

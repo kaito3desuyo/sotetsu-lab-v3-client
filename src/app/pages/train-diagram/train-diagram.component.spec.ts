@@ -13,6 +13,8 @@ import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { getRailwayDate } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainDiagramComponent } from './train-diagram.component';
@@ -1740,5 +1742,129 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                 expectedSighting: { sightingTime: 'fresh' },
             });
         });
+    });
+});
+
+describe('TrainDiagramComponent の投稿後の取り直し', () => {
+    const open = jest.fn();
+    const fetchTripBlocks = jest.fn(() => of(undefined));
+    const fetchSighting = jest.fn<Observable<undefined>, [string]>(() =>
+        of(undefined),
+    );
+    const flush = async () => {
+        for (let i = 0; i < 20; i++) await Promise.resolve();
+    };
+
+    const setup = async (calendarId: string) => {
+        await TestBed.configureTestingModule({
+            imports: [TrainDiagramComponent],
+            providers: [
+                { provide: Router, useValue: { navigate: jest.fn() } },
+                { provide: Location, useValue: { replaceState: jest.fn() } },
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                calendar_id: calendarId,
+                                route_ids: 'route-1',
+                                time: '0700',
+                            }),
+                        ),
+                        snapshot: { params: {} },
+                    },
+                },
+                {
+                    provide: TrainDiagramService,
+                    useValue: {
+                        fetchTripClasses: () => of(undefined),
+                        fetchTripBlocks,
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchNetworkStations: () => of(undefined),
+                        fetchOperationSightingTimeCrossSection: fetchSighting,
+                    },
+                },
+                {
+                    provide: RouteStationListState,
+                    useValue: {
+                        routeStations: signal([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                    },
+                },
+                { provide: NotificationService, useValue: { open } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save: jest.fn(), restore: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(TrainDiagramComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        setTodaysCalendars(['cal-today']);
+        const fixture = TestBed.createComponent(TrainDiagramComponent);
+        await flush();
+        // すでに見ている運用の充当編成
+        TestBed.inject(TrainDiagramStore).setOperationSightingTimeCrossSection(
+            '1',
+            {} as never,
+        );
+        TestBed.inject(TrainDiagramStore).setOperationSightingTimeCrossSection(
+            '2',
+            {} as never,
+        );
+        jest.clearAllMocks();
+        return fixture;
+    };
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        fetchSighting.mockImplementation(() => of(undefined));
+        TestBed.inject(TrainDiagramStore).resetLoading();
+    });
+
+    it('投稿されたら、すでに取っている運用の充当編成だけを取り直し、列車は取り直さない', async () => {
+        const fixture = await setup('cal-today');
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(fetchSighting).toHaveBeenCalledTimes(2);
+        expect(fetchSighting).toHaveBeenCalledWith('1');
+        expect(fetchSighting).toHaveBeenCalledWith('2');
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        expect(open).not.toHaveBeenCalled();
+        fixture.destroy();
+    });
+
+    it('今日のダイヤでなければ何も取らない', async () => {
+        const fixture = await setup('cal-other');
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(fetchSighting).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        fixture.destroy();
+    });
+
+    it('取得に失敗したら通知を出し、投げない', async () => {
+        const fixture = await setup('cal-today');
+        const consoleError = jest
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
+        fetchSighting.mockImplementation(() =>
+            throwError(() => new Error('offline')),
+        );
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(open).toHaveBeenCalledWith('データの取得に失敗しました', 'OK');
+        expect(TestBed.inject(TrainDiagramStore).isLoading()).toBe(false);
+        consoleError.mockRestore();
+        fixture.destroy();
     });
 });

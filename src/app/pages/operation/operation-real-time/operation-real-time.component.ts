@@ -171,7 +171,7 @@ export class OperationRealTimeComponent {
     }
 
     openPost(): void {
-        this.#postDialog.open();
+        this.#postDialog.open('realtime_fab');
     }
 
     constructor() {

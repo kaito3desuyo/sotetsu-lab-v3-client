@@ -2,12 +2,16 @@ import { NgTemplateOutlet } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    inject,
     input,
     signal,
 } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { RouterLink } from '@angular/router';
 import { format } from 'date-fns';
+import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import {
     StationArrival,
@@ -29,6 +33,8 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         RouterLink,
+        MatButtonModule,
+        MatIconModule,
         TripLabelComponent,
         NgTemplateOutlet,
         OperationNumberColorPipe,
@@ -36,10 +42,14 @@ import {
     host: { class: 'tw-block' },
 })
 export class TrainLocationStationPanelComponent {
+    readonly #operationPostDialog = inject(OperationPostDialogService);
+
     readonly stationId = input<string | null>(null);
     readonly stationName = input<string>('');
     readonly interchangeRoutes = input<TrainLocationInterchangeRoute[]>([]);
     readonly arrivals = input<StationArrivals>({ inbound: [], outbound: [] });
+    /** 各行に投稿ボタンを出すか（今日のダイヤのときだけ。M30） */
+    readonly canPost = input(false);
 
     readonly isOpen = signal(readStationPanelOpen());
 
@@ -80,5 +90,14 @@ export class TrainLocationStationPanelComponent {
 
     isImminent(arrival: StationArrival): boolean {
         return arrival.minutesUntil < 3;
+    }
+
+    openPost(row: StationArrival): void {
+        if (!row.operationNumber) {
+            return;
+        }
+        this.#operationPostDialog.open('train_location', {
+            operationNumber: row.operationNumber,
+        });
     }
 }

@@ -8,7 +8,10 @@ import {
     provideRouter,
     withRouterConfig,
 } from '@angular/router';
-import { of, Subject, throwError } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
+import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { NotificationService } from 'src/app/core/services/notification.service';
+import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationComponent } from './train-location.component';
@@ -579,5 +582,169 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
         expect(navigate).not.toHaveBeenCalled();
         expect(fetchTripBlocks).not.toHaveBeenCalled();
         expect(fixture.nativeElement).toHaveAttribute('ngskiphydration');
+    });
+});
+
+describe('TrainLocationComponent の投稿後の取り直し', () => {
+    const open = jest.fn();
+    const fetchTripBlocks = jest.fn(() => of(undefined));
+    const fetchMissing = jest.fn(() => of(false));
+    const refetch = jest.fn<Observable<undefined>, [readonly string[]]>(() =>
+        of(undefined),
+    );
+    let fixture: ComponentFixture<TrainLocationComponent>;
+
+    const flush = async () => {
+        for (let i = 0; i < 20; i++) {
+            await Promise.resolve();
+        }
+    };
+
+    // 9:10 に駅 a から駅 b へ走っている列車（運用 11）を在線させる
+    const putRunningTrip = () => {
+        const store = TestBed.inject(TrainLocationStore);
+        store.setStationAxisStations([
+            { stationId: 'a' },
+            { stationId: 'b' },
+        ] as never);
+        store.setTripBlocksByDirection({
+            0: [
+                {
+                    trips: [
+                        {
+                            tripId: 't1',
+                            times: [
+                                {
+                                    stationId: 'a',
+                                    departureTime: '09:00:00',
+                                    stopSequence: 1,
+                                },
+                                {
+                                    stationId: 'b',
+                                    arrivalTime: '09:30:00',
+                                    stopSequence: 2,
+                                },
+                            ],
+                            tripOperationLists: [
+                                { operation: { operationNumber: '11' } },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        } as never);
+        fixture.detectChanges();
+    };
+
+    const setup = async (todayIds: string[]) => {
+        const params = { route_id: 'route-1', station_id: 's1' };
+        await TestBed.configureTestingModule({
+            imports: [TrainLocationComponent],
+            providers: [
+                provideRouter(
+                    [],
+                    withRouterConfig({ resolveNavigationPromiseOnError: true }),
+                ),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(convertToParamMap(params)),
+                        snapshot: { params },
+                    },
+                },
+                {
+                    provide: TrainLocationService,
+                    useValue: {
+                        fetchTripClasses: () => of(undefined),
+                        fetchTripBlocks,
+                        fetchItineraryLinks: () => of(undefined),
+                        fetchStationAxis: () => of(undefined),
+                        fetchMissingOperationSightingTimeCrossSections:
+                            fetchMissing,
+                        fetchOperationSightingTimeCrossSections: refetch,
+                    },
+                },
+                {
+                    provide: RouteStationListState,
+                    useValue: {
+                        routeStations: signal([
+                            { routeId: 'route-1', routeName: '本線' },
+                        ]),
+                        operatingSystemEndsByRouteId: signal({}),
+                    },
+                },
+                { provide: NotificationService, useValue: { open } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save: jest.fn(), restore: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(TrainLocationComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        setTodaysCalendars(todayIds);
+        fixture = TestBed.createComponent(TrainLocationComponent);
+        fixture.detectChanges();
+        await flush();
+        putRunningTrip();
+        await flush();
+        // 作ったときと在線させたときの取得を数えないようにする
+        jest.clearAllMocks();
+    };
+
+    beforeEach(() => {
+        jest.useFakeTimers({
+            now: new Date('2026-10-22T09:10:00'),
+            doNotFake: ['queueMicrotask', 'nextTick'],
+        });
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+        fixture.destroy();
+        jest.clearAllMocks();
+        refetch.mockImplementation(() => of(undefined));
+        TestBed.inject(TrainLocationStore).resetLoading();
+    });
+
+    it('投稿されたら、いま動いている列車の運用の目撃を取り直し、列車は取り直さない', async () => {
+        await setup(['cal-today']);
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(refetch).toHaveBeenCalledTimes(1);
+        expect(refetch).toHaveBeenCalledWith(['11']);
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        expect(open).not.toHaveBeenCalled();
+    });
+
+    it('今日のダイヤでなければ何も取らない', async () => {
+        await setup([]);
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(refetch).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+    });
+
+    it('取得に失敗したら通知を出し、投げない', async () => {
+        await setup(['cal-today']);
+        const consoleError = jest
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
+        refetch.mockImplementation(() =>
+            throwError(() => new Error('offline')),
+        );
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+
+        expect(open).toHaveBeenCalledWith('データの取得に失敗しました', 'OK');
+        expect(TestBed.inject(TrainLocationStore).isLoading()).toBe(false);
+        consoleError.mockRestore();
     });
 });
