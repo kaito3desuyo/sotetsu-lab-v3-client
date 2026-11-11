@@ -4,6 +4,7 @@ import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service'
 import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TimetableFormationStore } from '../stores/timetable-formation.store';
 import { TimetableFormationService } from './timetable-formation.service';
@@ -36,6 +37,7 @@ describe('Service: TimetableFormation', () => {
         findManyItineraryLinks: jest.fn(),
         findOneWithCurrentPosition: jest.fn(),
     };
+    const tripBlockService = { findManyByCalendarId: jest.fn() };
     const sightingService = {
         findManyBySpecificPeriod: jest.fn(),
         findOneTimeCrossSectionByFormationNumber: jest.fn(),
@@ -55,6 +57,7 @@ describe('Service: TimetableFormation', () => {
             ({ operationId }: { operationId: string }) =>
                 of(tripsOf(operationId)),
         );
+        tripBlockService.findManyByCalendarId.mockReturnValue(of({}));
         sightingService.findManyBySpecificPeriod.mockReturnValue(of([]));
         sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
             of({ expectedSighting: null }),
@@ -66,6 +69,7 @@ describe('Service: TimetableFormation', () => {
                 { provide: FormationService, useValue: formationService },
                 { provide: StationService, useValue: stationService },
                 { provide: OperationService, useValue: operationService },
+                { provide: TripBlockService, useValue: tripBlockService },
                 {
                     provide: OperationSightingService,
                     useValue: sightingService,
@@ -372,5 +376,84 @@ describe('Service: TimetableFormation', () => {
         );
         await run('2026-11-11', 'today');
         expect(store.firstBasis()).toBe('unknown');
+    });
+    describe('各駅の時刻', () => {
+        const setupFirstOperation = () => {
+            sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+                of({
+                    expectedSighting: { operation: { operationId: 'op-a' } },
+                }),
+            );
+            operationService.findOneWithTrips.mockReturnValue(
+                of({
+                    operation: { operationId: 'op-a', operationNumber: '1' },
+                    trips: [
+                        {
+                            tripOperationListId: 'a1',
+                            tripId: 't1',
+                            trip: { tripId: 't1' },
+                            startTime: {
+                                departureDays: 1,
+                                departureTime: '06:00:00',
+                            },
+                            endTime: {
+                                arrivalDays: 1,
+                                arrivalTime: '07:00:00',
+                            },
+                        },
+                    ],
+                }),
+            );
+        };
+
+        it('各駅の時刻は trip-block から列車ごとに付ける', async () => {
+            setupFirstOperation();
+            const time = (stopSequence: number, stationId: string) => ({
+                stopSequence,
+                stationId,
+                arrivalDays: 1,
+                arrivalTime: '06:00:00',
+                departureDays: 1,
+                departureTime: '06:00:00',
+            });
+            tripBlockService.findManyByCalendarId.mockReturnValue(
+                of({
+                    0: [
+                        {
+                            tripBlockId: 'b1',
+                            trips: [
+                                {
+                                    tripId: 't1',
+                                    times: [time(2, 's2'), time(1, 's1')],
+                                },
+                                { tripId: 'other', times: [time(1, 'x')] },
+                            ],
+                        },
+                    ],
+                    1: [],
+                }),
+            );
+            await run('2026-11-12', 'tomorrow');
+            const row = store
+                .rows()
+                .find((r) => r.kind === 'trip') as never as {
+                trip: { trip: { times: { stopSequence: number }[] } };
+            };
+            expect(row.trip.trip.times.map((t) => t.stopSequence)).toEqual([
+                1, 2,
+            ]);
+            expect(tripBlockService.findManyByCalendarId).toHaveBeenCalledWith(
+                expect.objectContaining({ calendarId: 'c1' }),
+            );
+        });
+
+        it('trip-block の取得に失敗したら loadError', async () => {
+            setupFirstOperation();
+            tripBlockService.findManyByCalendarId.mockReturnValue(
+                throwError(() => new Error('x')),
+            );
+            await run('2026-11-12', 'tomorrow');
+            expect(store.loadError()).toBe(true);
+        });
     });
 });

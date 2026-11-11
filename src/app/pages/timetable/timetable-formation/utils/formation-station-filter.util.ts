@@ -39,11 +39,14 @@ const departureSeconds = (t: TimeDetailsDto): number => {
         : v;
 };
 
+/**
+ * 通過か。着発の時刻が両方無ければ通過。
+ * trip-block の取得は pickupType・dropoffType を返さないので、時刻の有無で決める
+ * （両方 1 の駅も、あれば通過）。
+ */
 export const isPassing = (t: TimeDetailsDto): boolean =>
-    t.pickupType === 1 &&
-    t.dropoffType === 1 &&
-    !t.arrivalTime &&
-    !t.departureTime;
+    (!t.arrivalTime && !t.departureTime) ||
+    (t.pickupType === 1 && t.dropoffType === 1);
 
 /** 時刻の分かる停車駅（通過でない駅）か */
 const hasTime = (t: TimeDetailsDto): boolean =>

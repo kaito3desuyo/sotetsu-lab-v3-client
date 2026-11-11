@@ -56,6 +56,27 @@ function stopAtFutamata(id: string, hms: string): FormationDayRow {
 }
 
 describe('filterByStation', () => {
+    it('pickupType が無くても時刻が両方 null なら通過', () => {
+        const pass = passTime('futamata', 2);
+        delete pass.pickupType;
+        delete pass.dropoffType;
+        const r = filterByStation(
+            [
+                row('p', [
+                    stopTime('yokohama', 1, '10:00:00'),
+                    pass,
+                    stopTime('ebina', 3, '11:00:00'),
+                ]),
+            ],
+            'futamata',
+            BASE,
+            at('12:00:00'),
+        );
+        expect(r.passes).toBe(1);
+        expect(r.stops).toBe(0);
+        expect(r.done).toBe(1);
+    });
+
     it('モックの二俣川: 16 回（停車 14・通過 2）', () => {
         const rows: FormationDayRow[] = [];
         for (let i = 0; i < 14; i++) {

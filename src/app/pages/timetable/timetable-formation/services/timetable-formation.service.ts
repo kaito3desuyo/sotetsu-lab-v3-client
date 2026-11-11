@@ -8,6 +8,9 @@ import { OperationSightingService } from 'src/app/libs/operation-sighting/usecas
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
+import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import {
     FormationDateKind,
     TimetableFormationStore,
@@ -53,7 +56,10 @@ export class TimetableFormationService {
     readonly #stationService = inject(StationService);
     readonly #operationService = inject(OperationService);
     readonly #operationSightingService = inject(OperationSightingService);
+    readonly #tripBlockService = inject(TripBlockService);
     readonly #store = inject(TimetableFormationStore);
+    /** 列車ごとの各駅の時刻。運用の列車の api は時刻を返さないので trip-block から補う */
+    #timesByTripId = new Map<string, TimeDetailsDto[]>();
 
     /**
      * 編成の 1 日分（目撃・最初の運用・乗り移り・運用の列車）を取ってストアへ入れる。
@@ -158,6 +164,10 @@ export class TimetableFormationService {
                             );
                 return forkJoin({
                     first: first$,
+                    times: this.#fetchTimesByTripId(
+                        r.calendar.calendarId,
+                        forceReload,
+                    ).pipe(catchError(() => fail(new Map()))),
                     links: this.#operationService
                         .findManyItineraryLinks({
                             calendarId: r.calendar.calendarId,
@@ -165,8 +175,9 @@ export class TimetableFormationService {
                         })
                         .pipe(catchError(() => fail([]))),
                 }).pipe(
-                    switchMap(({ first, links }) => {
+                    switchMap(({ first, links, times }) => {
                         if (!latest()) return of(undefined);
+                        this.#timesByTripId = times;
                         this.#store.setFirstOperationId(first.operationId);
                         this.#store.setFirstBasis(
                             hasOwnSighting
@@ -256,6 +267,54 @@ export class TimetableFormationService {
             );
     }
 
+    /** その日のダイヤの全列車の時刻を、列車 id ごとに stopSequence 順で */
+    #fetchTimesByTripId(
+        calendarId: string,
+        forceReload: boolean | undefined,
+    ): Observable<Map<string, TimeDetailsDto[]>> {
+        return this.#tripBlockService
+            .findManyByCalendarId({
+                calendarId,
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
+                forceReload,
+            })
+            .pipe(
+                map((byDirection) => {
+                    const result = new Map<string, TimeDetailsDto[]>();
+                    for (const blocks of Object.values(byDirection)) {
+                        for (const block of blocks) {
+                            for (const trip of block.trips ?? []) {
+                                result.set(
+                                    trip.tripId,
+                                    [...(trip.times ?? [])].sort(
+                                        (a, b) =>
+                                            (a.stopSequence ?? 0) -
+                                            (b.stopSequence ?? 0),
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                    return result;
+                }),
+            );
+    }
+
+    /** 運用の各列車に、trip-block から取った時刻を付ける */
+    #attachTimes(dto: OperationTripsDto): OperationTripsDto {
+        return {
+            ...dto,
+            trips: dto.trips.map((tol) => {
+                const tripId = tol.tripId ?? tol.trip?.tripId;
+                const times = tripId
+                    ? this.#timesByTripId.get(tripId)
+                    : undefined;
+                if (!times || !tripId) return tol;
+                return { ...tol, trip: { ...tol.trip, tripId, times } };
+            }),
+        };
+    }
+
     /** time-cross-section の予想の運用 id と、引き継ぎの目撃かどうか。無い・失敗は運用なし */
     #crossSection(
         formationNumber: string,
@@ -316,7 +375,7 @@ export class TimetableFormationService {
                 if (!latest()) return of(undefined);
                 const got: Record<string, OperationTripsDto> = {};
                 for (const { operationId, dto } of results) {
-                    if (dto) got[operationId] = dto;
+                    if (dto) got[operationId] = this.#attachTimes(dto);
                 }
                 this.#store.addTrips(got);
                 return this.#fetchMissingTrips(
