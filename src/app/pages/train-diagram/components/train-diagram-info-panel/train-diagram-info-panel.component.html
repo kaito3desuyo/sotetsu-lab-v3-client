@@ -63,36 +63,37 @@
             }
         </div>
 
-        <div
-            class="tw-flex tw-flex-row tw-items-center tw-justify-between tw-gap-2"
+        <a
+            [routerLink]="info().detailLink"
+            (click)="closed.emit()"
+            class="tw-text-sm tw-font-bold tw-text-primary-500"
         >
-            <a
-                [routerLink]="info().detailLink"
-                (click)="closed.emit()"
-                class="tw-text-sm tw-font-bold tw-text-primary-500"
-            >
-                全線時刻表で見る ›
-            </a>
-            @if (canPost() && info().operationNumber) {
-                <button
-                    type="button"
-                    mat-stroked-button
-                    aria-label="この運用で投稿"
-                    (click)="openPost()"
-                >
-                    <mat-icon>edit_note</mat-icon>
-                    投稿
-                </button>
-            }
-        </div>
+            全線時刻表で見る ›
+        </a>
     </div>
 
-    <button
-        type="button"
-        class="tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-white"
-        aria-label="閉じる"
-        (click)="closed.emit()"
+    <!-- 右の列: 上に閉じる、下に投稿（ユーザー指示 2026-11-11「閉じるボタンの真下・表示範囲の右下に張り付ける」） -->
+    <div
+        class="tw-flex tw-flex-col tw-items-end tw-justify-between tw-gap-2 tw-self-stretch"
     >
-        <mat-icon>close</mat-icon>
-    </button>
+        <button
+            type="button"
+            class="tw-flex tw-h-8 tw-w-8 tw-items-center tw-justify-center tw-rounded-full tw-border-0 tw-bg-white"
+            aria-label="閉じる"
+            (click)="closed.emit()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+        @if (canPost() && info().operationNumber) {
+            <button
+                type="button"
+                mat-stroked-button
+                aria-label="この運用で投稿"
+                (click)="openPost()"
+            >
+                <mat-icon>edit_note</mat-icon>
+                投稿
+            </button>
+        }
+    </div>
 </div>
