@@ -1,0 +1,57 @@
+<figure
+    class="tw-m-0 tw-flex tw-flex-col tw-gap-4 tw-rounded-card tw-border tw-border-solid tw-border-rule tw-bg-white tw-p-4 tw-text-sm tw-text-ink"
+>
+    <!-- 運用・編成・目撃・推測の関係 -->
+    <div class="tw-flex tw-flex-col tw-gap-2">
+        <div class="tw-flex tw-flex-col tw-items-start tw-gap-1">
+            <span
+                class="tw-rounded-control tw-border tw-border-solid tw-border-rule tw-px-2 tw-py-1"
+                >運用 <b>11</b>：ダイヤで決まる列車の並び</span
+            >
+            <span class="tw-pl-3 tw-text-xs tw-text-ink-2"
+                ><span aria-hidden="true">↑ </span>その日に入る</span
+            >
+            <span
+                class="tw-rounded-control tw-border tw-border-solid tw-border-rule tw-px-2 tw-py-1"
+                >編成 <b>10706</b>：つないだ 1 組の車両</span
+            >
+        </div>
+        <p class="tw-m-0 tw-text-ink-2">
+            どの編成がどの運用に入ったかを、見た人の
+            <b class="tw-text-ink">目撃</b>
+            で記録します。目撃が無い運用は、前の日の目撃から
+            <b class="tw-text-ink">順送り</b>
+            で推測し、「10706?」のように「?」を付けて出します。
+        </p>
+    </div>
+
+    <!-- 順送りの輪（1 群） -->
+    <div class="tw-flex tw-flex-col tw-gap-2">
+        <p class="tw-m-0 tw-font-bold">1 群の順送り（次の日に 1 つ進む）</p>
+        <ol
+            class="tw-m-0 tw-flex tw-list-none tw-flex-wrap tw-items-center tw-gap-x-1 tw-gap-y-2 tw-p-0"
+            aria-label="11 → 12 → 13 → 14 → 15 → 16 → 11"
+        >
+            @for (n of ring; track n) {
+                <li class="tw-flex tw-items-center tw-gap-1">
+                    <span
+                        class="tw-rounded-chip tw-bg-paper-2 tw-px-2 tw-py-1 tw-font-bold"
+                        >{{ n }}</span
+                    >
+                    <span aria-hidden="true">→</span>
+                </li>
+            }
+            <li class="tw-flex tw-items-center tw-gap-1">
+                <span
+                    class="tw-rounded-chip tw-bg-paper-2 tw-px-2 tw-py-1 tw-font-bold"
+                    >11</span
+                >
+                <span class="tw-text-xs tw-text-ink-2">（最初に戻る）</span>
+            </li>
+        </ol>
+        <p class="tw-m-0 tw-text-ink-2">
+            今日 11 に入った編成は、明日は 12 に入る、と推測します。16 の次は 11
+            に戻ります。
+        </p>
+    </div>
+</figure>

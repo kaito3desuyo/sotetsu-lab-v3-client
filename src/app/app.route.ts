@@ -120,6 +120,11 @@ export const APP_ROUTES: Routes = [
             ),
     },
     {
+        path: 'guide',
+        loadChildren: () =>
+            import('./pages/guide/guide.route').then((mod) => mod.GUIDE_ROUTES),
+    },
+    {
         path: 'login',
         loadChildren: () =>
             import('./pages/login/login.route').then((mod) => mod.LOGIN_ROUTES),
