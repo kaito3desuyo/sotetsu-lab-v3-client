@@ -11,6 +11,7 @@ import {
     FormationDayInput,
     FormationDayRow,
     missingOperationIds,
+    operationChain,
 } from './formation-day.util';
 
 const BASE_DATE = '2026-11-11';
@@ -680,5 +681,47 @@ describe('basisAt', () => {
     });
     it('unknown の行以降は unknown', () => {
         expect(basisAt([trip(), unknown], 1, 'sighting')).toBe('unknown');
+    });
+});
+
+describe('operationChain', () => {
+    const trip = (operationNumber: string, carriedOver = false) =>
+        ({
+            kind: 'trip',
+            carriedOver,
+            estimated: false,
+            operationId: `o-${operationNumber}`,
+            operationNumber,
+            trip: {},
+        }) as never as FormationDayRow;
+    const transfer = {
+        kind: 'transfer',
+        from: '16K',
+        to: '15K',
+        stationId: 's',
+    } as FormationDayRow;
+
+    it('その日にたどった運用を時刻順に、続く重複を除いて並べる', () => {
+        expect(
+            operationChain(
+                [trip('16K'), trip('16K'), transfer, trip('15K'), trip('15K')],
+                'sighting',
+            ),
+        ).toEqual([
+            { operationNumber: '16K', inferred: false },
+            { operationNumber: '15K', inferred: false },
+        ]);
+    });
+
+    it('推測で決めた運用には inferred を付ける', () => {
+        expect(
+            operationChain([trip('16K'), transfer, trip('15K')], 'circulated'),
+        ).toEqual([
+            { operationNumber: '16K', inferred: true },
+            { operationNumber: '15K', inferred: false },
+        ]);
+        expect(operationChain([trip('12K', true)], 'sighting')).toEqual([
+            { operationNumber: '12K', inferred: true },
+        ]);
     });
 });

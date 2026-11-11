@@ -48,6 +48,26 @@ describe('TimetableFormationHeaderComponent', () => {
         expect(t).toContain('（順送り?）');
     });
 
+    it('乗り移りのある日は、運用を「16K → 15K」とチップで並べる', () => {
+        const fixture = create({
+            formation: { formationId: 'f' },
+            currentOperationNumber: '15K',
+            currentBasisLabel: 'ダイヤの乗り移り',
+            operationChain: [
+                { operationNumber: '16K', inferred: false },
+                { operationNumber: '15K', inferred: false },
+            ],
+        });
+        const chain = (fixture.nativeElement as HTMLElement).querySelector(
+            '[data-testid="operation-chain"]',
+        );
+        expect(chain).not.toBeNull();
+        expect(chain?.querySelectorAll('app-operation-number-tag').length).toBe(
+            2,
+        );
+        expect(chain?.textContent?.replace(/\s+/g, ' ')).toContain('16K → 15K');
+    });
+
     it('編成番号を打つと、その値を出力する', () => {
         const fixture = create({ formationNumber: '8713' });
         const emitted: string[] = [];

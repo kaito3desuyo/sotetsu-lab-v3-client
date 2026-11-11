@@ -35,7 +35,7 @@ import {
     FormationDateKind,
     TimetableFormationStore,
 } from './stores/timetable-formation.store';
-import { basisAt } from './utils/formation-day.util';
+import { basisAt, operationChain } from './utils/formation-day.util';
 import {
     formatSightingClock,
     formationBasisLabel,
@@ -160,6 +160,12 @@ export class TimetableFormationComponent {
             ? row.operationNumber
             : null;
     });
+    /** その日にたどった運用（「16K → 15K」）。いまの運用が不明なら出さない */
+    protected readonly operationChain = computed(() =>
+        this.currentBasis() === 'unknown'
+            ? []
+            : operationChain(this.rows(), this.#store.firstBasis()),
+    );
     protected readonly currentBasisLabel = computed(() =>
         this.rows().length > 0
             ? formationBasisLabel[this.currentBasis()]

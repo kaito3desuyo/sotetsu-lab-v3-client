@@ -9,7 +9,7 @@ import {
     toDisplayTime,
     toServiceSeconds,
 } from 'src/app/core/utils/railway-day';
-import { toZeroBasedDays } from './formation-display.util';
+import { isInferredBasis, toZeroBasedDays } from './formation-display.util';
 
 /** 運用を何で決めたか（画面で出し分けるときの材料） */
 export type FormationDayBasis =
@@ -473,4 +473,33 @@ export function basisAt(
         if (r.kind === 'swap') return 'sighting';
     }
     return firstBasis;
+}
+
+/** 上の段に並べる、その日にたどった運用の 1 つ */
+export interface FormationOperationChainItem {
+    operationNumber: string;
+    /** 推測（順送り・同日引き継ぎ）で決めた運用か。番号に「?」を付ける */
+    inferred: boolean;
+}
+
+/**
+ * その日にたどった運用の番号を時刻順に並べる（「16K → 15K」）。同じ運用の列車が続く間は 1 つにまとめる。
+ * 推測かどうかは、その運用の最初の列車を basisAt で決めた決め手で見る
+ */
+export function operationChain(
+    rows: FormationDayRow[],
+    firstBasis: FormationDayBasis,
+): FormationOperationChainItem[] {
+    const chain: FormationOperationChainItem[] = [];
+    rows.forEach((r, i) => {
+        if (r.kind !== 'trip' || !r.operationNumber) return;
+        if (chain[chain.length - 1]?.operationNumber === r.operationNumber) {
+            return;
+        }
+        chain.push({
+            operationNumber: r.operationNumber,
+            inferred: isInferredBasis(basisAt(rows, i, firstBasis)),
+        });
+    });
+    return chain;
 }

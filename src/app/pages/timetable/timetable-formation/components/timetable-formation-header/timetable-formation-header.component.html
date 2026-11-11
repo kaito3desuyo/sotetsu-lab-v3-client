@@ -16,7 +16,7 @@
                 (keydown.enter)="onInput($event)"
             />
         </mat-form-field>
-        @if (formation(); as f) {
+        @if (formation()) {
             <p class="tw-m-0 tw-pb-2 tw-text-sm tw-text-muted">
                 {{ annotation() }}
             </p>
@@ -54,10 +54,31 @@
                 <span class="tw-text-xs tw-text-muted">{{
                     operationHeading()
                 }}</span>
-                <app-operation-number-tag
-                    [operationNumber]="number"
-                    [inferred]="currentInferred()"
-                ></app-operation-number-tag>
+                @if (operationChain().length > 1) {
+                    <span
+                        class="tw-flex tw-flex-wrap tw-items-center tw-gap-1"
+                        data-testid="operation-chain"
+                    >
+                        @for (
+                            item of operationChain();
+                            track $index;
+                            let last = $last
+                        ) {
+                            <app-operation-number-tag
+                                [operationNumber]="item.operationNumber"
+                                [inferred]="item.inferred"
+                            ></app-operation-number-tag>
+                            @if (!last) {
+                                <span class="tw-text-muted">→</span>
+                            }
+                        }
+                    </span>
+                } @else {
+                    <app-operation-number-tag
+                        [operationNumber]="number"
+                        [inferred]="currentInferred()"
+                    ></app-operation-number-tag>
+                }
                 @if (currentBasisLabel(); as basis) {
                     <span
                         class="tw-text-xs tw-text-muted"

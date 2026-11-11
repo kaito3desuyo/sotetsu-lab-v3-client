@@ -20,6 +20,7 @@ import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag
 import { StationGroup } from 'src/app/shared/station-groups.util';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { FormationDateKind } from '../../stores/timetable-formation.store';
+import { FormationOperationChainItem } from '../../utils/formation-day.util';
 
 export interface FormationHeaderSighting {
     /** 'H:mm' */
@@ -57,6 +58,8 @@ export class TimetableFormationHeaderComponent {
     readonly currentBasisLabel = input<string | null>(null);
     /** 運用番号に「?」を付けるか */
     readonly currentInferred = input(false);
+    /** その日にたどった運用（「16K → 15K」）。2 つ以上あるときは 1 つのチップの代わりに並べる */
+    readonly operationChain = input<FormationOperationChainItem[]>([]);
     readonly position = input<OperationCurrentPositionDto | null>(null);
     readonly positionStations = input<StationDetailsDto[]>([]);
     readonly positionTripClasses = input<TripClassDetailsDto[]>([]);
