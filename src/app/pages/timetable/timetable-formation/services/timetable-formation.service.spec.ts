@@ -193,6 +193,23 @@ describe('Service: TimetableFormation', () => {
         expect(operationService.findOneWithTrips).toHaveBeenCalledTimes(1);
     });
 
+    it('明日の運用が休車の 100 なら明日は選べない', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockImplementation(
+            ({ searchTime }: { searchTime?: string }) =>
+                of({
+                    expectedSighting: {
+                        operation: searchTime
+                            ? { operationId: 'op-100', operationNumber: '100' }
+                            : { operationId: 'op-now', operationNumber: '55' },
+                    },
+                }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.tomorrowOperationId()).toBeNull();
+        expect(store.tomorrowOperationNumber()).toBeNull();
+        expect(store.canSelectTomorrow()).toBe(false);
+    });
+
     it('明日の運用が返らなければ canSelectTomorrow は false', async () => {
         await run('2026-11-11', 'today');
         expect(store.tomorrowOperationId()).toBeNull();
@@ -224,6 +241,26 @@ describe('Service: TimetableFormation', () => {
             expect.objectContaining({ forceReload: true }),
         );
         expect(calendarService.findOneBySpecificDate).not.toHaveBeenCalled();
+    });
+
+    it('refetchSightings で最初の自分の目撃が届いたら firstBasis を sighting にする', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({ expectedSighting: { operation: { operationId: 'op-a' } } }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.firstBasis()).toBe('circulated');
+        sightingService.findManyBySpecificPeriod.mockReturnValue(
+            of([
+                {
+                    operationSightingId: 's1',
+                    formationId: 'f1',
+                    operationId: 'op-a',
+                    sightingTime: '2026-11-11T09:06:00+09:00',
+                },
+            ]),
+        );
+        await lastValueFrom(service.refetchSightings());
+        expect(store.firstBasis()).toBe('sighting');
     });
 
     it('fetchCurrentPosition は運用の id で位置を取る', async () => {

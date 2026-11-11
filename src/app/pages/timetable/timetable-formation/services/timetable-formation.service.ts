@@ -26,11 +26,24 @@ const NO_CROSS_SECTION: CrossSectionResult = {
     carriedOver: false,
 };
 
+/** 休車の運用番号。列車を持たない */
+const RESTING_OPERATION_NUMBER = '100';
+
 /** 'yyyy-MM-dd' の翌日 */
 function nextDate(date: string): string {
     const d = new Date(`${date}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() + 1);
     return d.toISOString().slice(0, 10);
+}
+
+/** 編成の、無効にされていない目撃があるか */
+function hasOwnValidSighting(
+    sightings: OperationSightingDetailsDto[],
+    formationId: string,
+): boolean {
+    return sightings.some(
+        (s) => s.formationId === formationId && !s.invalidation,
+    );
 }
 
 @Injectable()
@@ -84,13 +97,19 @@ export class TimetableFormationService {
                               forceReload,
                           })
                           .pipe(catchError(() => fail([]))),
-            // 今日の画面だけ、明日が選べるかを調べる
+            // 今日の画面だけ、明日が選べるかを調べる。休車の 100 は順送りで決まらないので明日は無い
             tomorrow:
                 dateKind === 'today'
                     ? this.#crossSection(
                           formationNumber,
                           `${nextDate(date)}T12:00:00+09:00`,
                           forceReload,
+                      ).pipe(
+                          map((cs) =>
+                              cs.operationNumber === RESTING_OPERATION_NUMBER
+                                  ? NO_CROSS_SECTION
+                                  : cs,
+                          ),
                       )
                     : of(NO_CROSS_SECTION),
             stations: this.#store.stations().length
@@ -119,10 +138,9 @@ export class TimetableFormationService {
                     this.#store.setLoaded(true);
                     return of(undefined);
                 }
-                const hasOwnSighting = r.sightings.some(
-                    (s) =>
-                        s.formationId === formation.formationId &&
-                        !s.invalidation,
+                const hasOwnSighting = hasOwnValidSighting(
+                    r.sightings,
+                    formation.formationId,
                 );
                 const first$: Observable<CrossSectionResult> =
                     dateKind === 'tomorrow'
@@ -202,6 +220,10 @@ export class TimetableFormationService {
                 switchMap((sightings) => {
                     if (!latest()) return of(undefined);
                     this.#store.setSightings(sightings);
+                    // 最初の自分の目撃が届いたら、最初の運用の決め手は目撃になる
+                    if (hasOwnValidSighting(sightings, formation.formationId)) {
+                        this.#store.setFirstBasis('sighting');
+                    }
                     return this.#fetchMissingTrips(
                         latest,
                         new Set(Object.keys(this.#store.tripsByOperationId())),
