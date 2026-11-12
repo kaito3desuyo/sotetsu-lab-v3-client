@@ -265,7 +265,6 @@ describe('OperationRealTimeStore', () => {
                 'operations',
                 'itineraryLinks',
                 'formations',
-                'operationGroups',
                 'operationSightingTimeCrossSections',
                 'formationSightingTimeCrossSections',
                 'operationSightingHistories',

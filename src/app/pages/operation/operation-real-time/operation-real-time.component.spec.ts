@@ -190,7 +190,6 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         jest.useFakeTimers();
         const ok = () => jest.fn(() => of(undefined));
         service = {
-            fetchOperationGroups: ok(),
             fetchRoutes: ok(),
             fetchStations: ok(),
             fetchTripClasses: ok(),
@@ -338,7 +337,6 @@ describe('OperationRealTimeComponent の目撃募集の札', () => {
         isViewer.set(false);
         const ok = () => jest.fn(() => of(undefined));
         const service = {
-            fetchOperationGroups: ok(),
             fetchRoutes: ok(),
             fetchStations: ok(),
             fetchTripClasses: ok(),
@@ -538,7 +536,6 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         operations: [{ operationId: 'saved-operation' }] as never,
         itineraryLinks: [{ operationItineraryLinkId: 'saved-link' }] as never,
         formations: [{ formationId: 'saved-formation' }] as never,
-        operationGroups: [{ name: 'saved-group' }] as never,
         operationSightingTimeCrossSections: { '1': { a: 1 } } as never,
         formationSightingTimeCrossSections: { '2': { a: 2 } } as never,
         operationSightingHistories: { '3': [] },
@@ -566,7 +563,6 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         restore.mockReset();
         const ok = () => jest.fn(() => of(undefined));
         service = {
-            fetchOperationGroups: ok(),
             fetchRoutes: ok(),
             fetchStations: ok(),
             fetchTripClasses: ok(),
@@ -785,7 +781,6 @@ describe('OperationRealTimeComponent の操作帯の要約（ストアの並べ�
                 {
                     provide: OperationRealTimeService,
                     useValue: {
-                        fetchOperationGroups: ok(),
                         fetchRoutes: ok(),
                         fetchStations: ok(),
                         fetchTripClasses: ok(),
@@ -855,7 +850,7 @@ describe('OperationRealTimeComponent の操作帯の要約（ストアの並べ�
 
 describe('OperationRealTimeComponent をサーバーで描くとき', () => {
     it('中身を取らず、引き継がない', async () => {
-        const fetchOperationGroups = jest.fn(() => of(undefined));
+        const fetchRoutes = jest.fn(() => of(undefined));
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeComponent],
             providers: [
@@ -864,7 +859,7 @@ describe('OperationRealTimeComponent をサーバーで描くとき', () => {
                 { provide: PLATFORM_ID, useValue: 'server' },
                 {
                     provide: OperationRealTimeService,
-                    useValue: { fetchOperationGroups },
+                    useValue: { fetchRoutes },
                 },
                 {
                     provide: SocketService,
@@ -884,7 +879,7 @@ describe('OperationRealTimeComponent をサーバーで描くとき', () => {
 
         const fixture = TestBed.createComponent(OperationRealTimeComponent);
 
-        expect(fetchOperationGroups).not.toHaveBeenCalled();
+        expect(fetchRoutes).not.toHaveBeenCalled();
         expect(fixture.nativeElement).toHaveAttribute('ngskiphydration');
     });
 });

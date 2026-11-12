@@ -146,15 +146,6 @@ export class OperationRealTimeService {
             );
     }
 
-    fetchOperationGroups(params?: { forceReload?: boolean }): Observable<void> {
-        return this.#operationService.findManyGroups(params).pipe(
-            tap((data) => {
-                this.#store.setOperationGroups(data);
-            }),
-            map(() => undefined),
-        );
-    }
-
     fetchFormations(): Observable<void> {
         const generateBaseDate: (unixtime: number) => string = flow(
             (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),

@@ -187,12 +187,6 @@ export class OperationRealTimeComponent {
         const hasFetchedBefore = this.#store.hasFetchedOperations();
         this.#store.enableLoading();
         try {
-            // 運用群は他フェッチに依存しないため最初に取得する。
-            // 旧実装は目撃・在線の大量リクエストの後（チェーン末尾）だったため、
-            // チェーン途中の 1 失敗や離脱で群チップが「休」のみに退化していた（98 §G2 A3）
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchOperationGroups(),
-            );
             await lastValueFrom(this.#operationRealTimeService.fetchRoutes());
             await lastValueFrom(this.#operationRealTimeService.fetchStations());
             await lastValueFrom(

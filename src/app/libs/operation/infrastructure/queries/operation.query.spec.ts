@@ -148,21 +148,15 @@ describe('OperationQuery', () => {
         controller.verify();
     });
 
-    it("現在位置は目撃の窓（requestCache('sighting')）で取り、列車情報を書いても reload にしない。運用群には cache を付けない", () => {
+    it("現在位置は目撃の窓（requestCache('sighting')）で取り、列車情報を書いても reload にしない", () => {
         const { query, controller, invalidator } = setup();
         invalidator.invalidate('timetable');
 
         query.findOneWithCurrentPosition({ operationId: 'op-1' }).subscribe();
-        query.findManyGroups().subscribe();
 
         const reqs = controller.match(() => true);
-        expect(reqs.map((r) => r.request.cache)).toEqual([
-            'default',
-            undefined,
-        ]);
-        reqs.forEach((r) =>
-            r.flush(r.request.url.endsWith('/groups') ? [] : {}),
-        );
+        expect(reqs.map((r) => r.request.cache)).toEqual(['default']);
+        reqs.forEach((r) => r.flush({}));
     });
 
     it('現在位置の応答の本文が null のときは、builder に通さず null を返す', () => {

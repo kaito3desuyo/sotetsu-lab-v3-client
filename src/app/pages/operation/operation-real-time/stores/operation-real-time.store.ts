@@ -19,7 +19,6 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationCurrentPositionDto } from 'src/app/libs/operation/usecase/dtos/operation-current-position.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
-import { OperationGroupDto } from 'src/app/libs/operation/usecase/dtos/operation-group.dto';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
@@ -43,7 +42,6 @@ type StoreProps = {
      */
     hasFetchedOperations: boolean;
     hasFetchedFormations: boolean;
-    operationGroups: OperationGroupDto[];
     selectedAgencyIds: string[];
     selectedGroupNames: string[];
     operationSightingTimeCrossSections: Record<
@@ -81,7 +79,6 @@ export type OperationRealTimeSnapshot = Pick<
     | 'operations'
     | 'itineraryLinks'
     | 'formations'
-    | 'operationGroups'
     | 'operationSightingTimeCrossSections'
     | 'formationSightingTimeCrossSections'
     | 'operationSightingHistories'
@@ -102,7 +99,6 @@ export const OperationRealTimeStore = signalStore(
         formations: [],
         hasFetchedOperations: false,
         hasFetchedFormations: false,
-        operationGroups: [],
         selectedAgencyIds: [],
         selectedGroupNames: [],
         operationSightingTimeCrossSections: {},
@@ -192,9 +188,6 @@ export const OperationRealTimeStore = signalStore(
         setFormations(formations: FormationDetailsDto[]): void {
             patchState(store, { formations, hasFetchedFormations: true });
         },
-        setOperationGroups(operationGroups: OperationGroupDto[]): void {
-            patchState(store, { operationGroups });
-        },
         setSelectedAgencyIds(agencyIds: string[]): void {
             patchState(store, { selectedAgencyIds: agencyIds });
         },
@@ -278,7 +271,6 @@ export const OperationRealTimeStore = signalStore(
                 operations: store.operations(),
                 itineraryLinks: store.itineraryLinks(),
                 formations: store.formations(),
-                operationGroups: store.operationGroups(),
                 operationSightingTimeCrossSections:
                     store.operationSightingTimeCrossSections(),
                 formationSightingTimeCrossSections:
@@ -308,7 +300,6 @@ export const OperationRealTimeStore = signalStore(
                 formations: data.formations,
                 hasFetchedOperations: true,
                 hasFetchedFormations: true,
-                operationGroups: data.operationGroups,
                 operationSightingTimeCrossSections:
                     data.operationSightingTimeCrossSections,
                 formationSightingTimeCrossSections:
