@@ -24,6 +24,7 @@ import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-fa
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
@@ -85,6 +86,10 @@ export class TimetableFormationComponent {
     readonly #postDialog = inject(OperationPostDialogService);
     readonly #notification = inject(NotificationService);
     readonly #agencies = inject(AgencyListState).agencies;
+    protected readonly agencies = this.#agencies;
+    /** 編成番号の欄の候補（今日の編成。会社の順・番号順） */
+    protected readonly formationOptions = inject(TodaysFormationListState)
+        .todaysFormationsSorted;
     readonly #routeStations = inject(RouteStationListState).routeStations;
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
 

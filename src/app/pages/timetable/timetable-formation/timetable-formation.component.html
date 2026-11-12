@@ -20,6 +20,8 @@
     >
         <app-timetable-formation-controls
             [formationNumber]="formationNumber()"
+            [formations]="formationOptions()"
+            [agencies]="agencies()"
             [showStation]="view() !== 'loading' && !!storeFormation()"
             [stationGroups]="stationGroups()"
             [selectedStationId]="selectedStationId()"

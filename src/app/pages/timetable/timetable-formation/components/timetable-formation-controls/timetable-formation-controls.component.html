@@ -1,16 +1,31 @@
 <div class="tw-flex tw-flex-col tw-gap-4" data-testid="formation-controls">
-    <mat-form-field class="tw-w-32" subscriptSizing="dynamic">
+    <mat-form-field subscriptSizing="dynamic">
         <mat-label>編成番号</mat-label>
         <input
             matInput
             type="text"
-            inputmode="numeric"
             autocomplete="off"
             data-testid="formation-number-input"
             [value]="formationNumber() ?? ''"
-            (change)="onInput($event)"
-            (keydown.enter)="onInput($event)"
+            [matAutocomplete]="formationAuto"
+            #trigger="matAutocompleteTrigger"
+            (input)="onQuery($event)"
+            (focus)="query.set('')"
+            (keydown.enter)="onEnter($event, trigger)"
         />
+        <mat-icon matSuffix class="tw-text-muted">arrow_drop_down</mat-icon>
+        <mat-autocomplete
+            #formationAuto="matAutocomplete"
+            (optionSelected)="formationNumberSubmit.emit($event.option.value)"
+        >
+            @for (group of groups(); track group.label) {
+                <mat-optgroup [label]="group.label">
+                    @for (number of group.formationNumbers; track number) {
+                        <mat-option [value]="number">{{ number }}</mat-option>
+                    }
+                </mat-optgroup>
+            }
+        </mat-autocomplete>
     </mat-form-field>
 
     @if (showStation()) {
