@@ -12,36 +12,59 @@
 <main
     class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <app-timetable-formation-header
-        [formationNumber]="formationNumber()"
-        [formation]="view() === 'loading' ? null : storeFormation()"
-        [annotation]="annotation()"
-        [sightings]="sightings()"
-        [currentOperationNumber]="currentOperationNumber()"
-        [currentBasisLabel]="currentBasisLabel()"
-        [currentInferred]="currentInferred()"
-        [operationChain]="operationChain()"
-        [position]="position()"
-        [positionStations]="stations()"
-        [positionTripClasses]="tripClasses()"
-        [positionLinks]="links()"
-        [calendarId]="calendarId()"
-        [tomorrowOperationNumber]="tomorrowOperationNumber()"
-        [tomorrowBlocked]="tomorrowBlocked()"
-        [stationGroups]="stationGroups()"
-        [selectedStationId]="selectedStationId()"
-        [selectedStationName]="selectedStationName()"
-        [date]="date()"
-        [dateKind]="dateKind()"
-        [maxDate]="maxDate()"
-        [canGoNext]="canGoNext()"
-        (formationNumberSubmit)="onFormationSubmit($event)"
-        (stationChange)="onStationChange($event)"
-        (dateChange)="onDateChange($event)"
-        (shift)="onShift($event)"
-    ></app-timetable-formation-header>
+    <app-control-band
+        [summary]="bandSummary()"
+        [filterActive]="selectedStationId() !== null"
+        [clearable]="true"
+        (clear)="onStationChange(null)"
+    >
+        <app-timetable-formation-controls
+            [formationNumber]="formationNumber()"
+            [showStation]="view() !== 'loading' && !!storeFormation()"
+            [stationGroups]="stationGroups()"
+            [selectedStationId]="selectedStationId()"
+            [selectedStationName]="selectedStationName()"
+            [date]="date()"
+            [dateKind]="dateKind()"
+            [maxDate]="maxDate()"
+            [canGoNext]="canGoNext()"
+            [tomorrowBlocked]="tomorrowBlocked()"
+            (formationNumberSubmit)="onFormationSubmit($event)"
+            (stationChange)="onStationChange($event)"
+            (dateChange)="onDateChange($event)"
+            (shift)="onShift($event)"
+        ></app-timetable-formation-controls>
+    </app-control-band>
+
+    @if (view() !== 'loading' && storeFormation()) {
+        <app-timetable-formation-header
+            [formationNumber]="formationNumber()"
+            [formation]="storeFormation()"
+            [annotation]="annotation()"
+            [sightings]="sightings()"
+            [currentOperationNumber]="currentOperationNumber()"
+            [currentBasisLabel]="currentBasisLabel()"
+            [currentInferred]="currentInferred()"
+            [operationChain]="operationChain()"
+            [position]="position()"
+            [positionStations]="stations()"
+            [positionTripClasses]="tripClasses()"
+            [positionLinks]="links()"
+            [calendarId]="calendarId()"
+            [tomorrowOperationNumber]="tomorrowOperationNumber()"
+            [dateKind]="dateKind()"
+        ></app-timetable-formation-header>
+    }
 
     @switch (view()) {
+        @case ('noNumber') {
+            <app-empty-state
+                icon="train"
+                message="編成番号を入れてください"
+                actionLabel="編成番号を入れる"
+                (actionClick)="band().open.set(true)"
+            ></app-empty-state>
+        }
         @case ('error') {
             <app-empty-state
                 icon="error_outline"

@@ -67,18 +67,4 @@ describe('TimetableFormationHeaderComponent', () => {
         );
         expect(chain?.textContent?.replace(/\s+/g, ' ')).toContain('16K → 15K');
     });
-
-    it('編成番号を打つと、その値を出力する', () => {
-        const fixture = create({ formationNumber: '8713' });
-        const emitted: string[] = [];
-        fixture.componentInstance.formationNumberSubmit.subscribe((v) =>
-            emitted.push(v),
-        );
-        const input = fixture.nativeElement.querySelector(
-            '[data-testid="formation-number-input"]',
-        ) as HTMLInputElement;
-        input.value = '8714';
-        input.dispatchEvent(new Event('change'));
-        expect(emitted).toEqual(['8714']);
-    });
 });

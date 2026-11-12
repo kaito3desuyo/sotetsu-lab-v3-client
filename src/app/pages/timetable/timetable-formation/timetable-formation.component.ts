@@ -9,6 +9,7 @@ import {
     inject,
     signal,
     untracked,
+    viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -23,10 +24,12 @@ import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-fa
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
+import { TimetableFormationControlsComponent } from './components/timetable-formation-controls/timetable-formation-controls.component';
 import { TimetableFormationHeaderComponent } from './components/timetable-formation-header/timetable-formation-header.component';
 import { TimetableFormationStationListComponent } from './components/timetable-formation-station-list/timetable-formation-station-list.component';
 import { TimetableFormationTripListComponent } from './components/timetable-formation-trip-list/timetable-formation-trip-list.component';
@@ -41,6 +44,7 @@ import {
     formationBasisLabel,
     isInferredBasis,
 } from './utils/formation-display.util';
+import { formatFormationBandSummary } from './utils/formation-band-summary.util';
 import { computeProgress } from './utils/formation-progress.util';
 import { filterByStation } from './utils/formation-station-filter.util';
 
@@ -63,7 +67,9 @@ function shiftDate(date: string, days: number): string | null {
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        ControlBandComponent,
         EmptyStateComponent,
+        TimetableFormationControlsComponent,
         TimetableFormationHeaderComponent,
         TimetableFormationStationListComponent,
         TimetableFormationTripListComponent,
@@ -227,8 +233,20 @@ export class TimetableFormationComponent {
         return row?.kind === 'trip' && !row.estimated ? row.operationId : null;
     });
 
+    protected readonly band = viewChild.required(ControlBandComponent);
+
+    protected readonly bandSummary = computed(() =>
+        formatFormationBandSummary({
+            formationNumber: this.formationNumber(),
+            date: this.date(),
+            dateKind: this.dateKind(),
+            stationName: this.selectedStationName(),
+        }),
+    );
+
     protected readonly view = computed(() => {
         const store = this.#store;
+        if (!this.formationNumber()) return 'noNumber';
         if (!this.ready() || !store.loaded()) return 'loading';
         if (store.loadError()) return 'error';
         if (!store.formation()) return 'notFound';

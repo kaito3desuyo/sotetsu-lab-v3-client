@@ -2,26 +2,12 @@
     class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4 md:tw-max-w-[48rem]"
     data-testid="formation-header"
 >
-    <div class="tw-flex tw-flex-row tw-items-end tw-gap-3">
-        <mat-form-field class="tw-w-32" subscriptSizing="dynamic">
-            <mat-label>編成番号</mat-label>
-            <input
-                matInput
-                type="text"
-                inputmode="numeric"
-                autocomplete="off"
-                data-testid="formation-number-input"
-                [value]="formationNumber() ?? ''"
-                (change)="onInput($event)"
-                (keydown.enter)="onInput($event)"
-            />
-        </mat-form-field>
-        @if (formation()) {
-            <p class="tw-m-0 tw-pb-2 tw-text-sm tw-text-muted">
-                {{ annotation() }}
-            </p>
-        }
-    </div>
+    <p class="tw-m-0 tw-flex tw-flex-row tw-items-baseline tw-gap-3">
+        <span class="tw-text-xl tw-font-bold tw-tabular-nums">{{
+            formationNumber()
+        }}</span>
+        <span class="tw-text-sm tw-text-muted">{{ annotation() }}</span>
+    </p>
     @if (formation()?.formationDescription; as description) {
         <p class="tw-m-0 tw-text-xs tw-text-muted">{{ description }}</p>
     }
@@ -121,80 +107,5 @@
                 <span class="tw-text-xs tw-text-muted">（順送り）</span>
             </p>
         }
-
-        <mat-form-field subscriptSizing="dynamic">
-            <mat-label>駅で絞る</mat-label>
-            <mat-select
-                [value]="selectedStationId() ?? ''"
-                (valueChange)="stationChange.emit($event || null)"
-                appLazyOptions
-                #lazyStation="appLazyOptions"
-            >
-                <mat-option value="">絞り込まない</mat-option>
-                @if (lazyStation.ready()) {
-                    @for (group of stationGroups(); track group.routeId) {
-                        <mat-optgroup [label]="group.label">
-                            @for (
-                                station of group.stations;
-                                track station.stationId
-                            ) {
-                                <mat-option [value]="station.stationId">{{
-                                    station.stationName
-                                }}</mat-option>
-                            }
-                        </mat-optgroup>
-                    }
-                } @else if (selectedStationId()) {
-                    <mat-option [value]="selectedStationId()">{{
-                        selectedStationName()
-                    }}</mat-option>
-                }
-            </mat-select>
-        </mat-form-field>
     }
-
-    <div class="tw-flex tw-flex-col tw-gap-1">
-        <div class="tw-flex tw-flex-row tw-items-center tw-gap-1">
-            <button
-                mat-icon-button
-                type="button"
-                aria-label="前の日"
-                data-testid="prev-day"
-                (click)="shift.emit(-1)"
-            >
-                <mat-icon>chevron_left</mat-icon>
-            </button>
-            <label
-                class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-text-xs tw-text-muted"
-            >
-                日付（{{ dateKindLabel() }}）
-                <input
-                    type="date"
-                    class="tw-rounded tw-border tw-border-solid tw-border-rule tw-p-2 tw-text-base tw-text-ink [font-family:inherit]"
-                    data-testid="date-input"
-                    [value]="date() ?? ''"
-                    [max]="maxDate() ?? ''"
-                    (change)="onDate($event)"
-                />
-            </label>
-            <button
-                mat-icon-button
-                type="button"
-                aria-label="次の日"
-                data-testid="next-day"
-                [disabled]="!canGoNext()"
-                (click)="shift.emit(1)"
-            >
-                <mat-icon>chevron_right</mat-icon>
-            </button>
-        </div>
-        @if (tomorrowBlocked()) {
-            <p
-                class="tw-m-0 tw-text-xs tw-text-muted"
-                data-testid="tomorrow-blocked"
-            >
-                順送りで明日の運用が決まらないので、明日は選べません。
-            </p>
-        }
-    </div>
 </section>

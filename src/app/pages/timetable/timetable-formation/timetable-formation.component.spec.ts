@@ -227,6 +227,36 @@ describe('TimetableFormationComponent', () => {
         });
     });
 
+    describe('操作帯', () => {
+        it('操作部は操作帯に載せ、要約の行に編成と日付を出す', () => {
+            const { fixture } = setup({
+                params: { formation_number: '8713', date: '2026-11-11' },
+            });
+            fixture.detectChanges();
+            const band = q(fixture, 'app-control-band');
+            expect(band).not.toBeNull();
+            expect(
+                band?.querySelector('[data-testid="formation-number-input"]'),
+            ).not.toBeNull();
+            expect(
+                q(fixture, '[data-testid="control-band-summary"]')?.textContent,
+            ).toBe('8713 11/11（今日） 絞り込み：なし');
+        });
+
+        it('編成番号が無いときは、入れるボタンで操作帯を開く', () => {
+            const { fixture } = setup({ params: {} });
+            fixture.detectChanges();
+            expect(text(fixture)).toContain('編成番号を入れてください');
+            q<HTMLButtonElement>(fixture, 'app-empty-state button')?.click();
+            fixture.detectChanges();
+            expect(
+                q(fixture, '[data-testid="control-band-toggle"]')?.getAttribute(
+                    'aria-expanded',
+                ),
+            ).toBe('true');
+        });
+    });
+
     describe('日付の操作', () => {
         const nextButton = (f: ComponentFixture<unknown>) =>
             q<HTMLButtonElement>(f, '[data-testid="next-day"]');
