@@ -94,6 +94,46 @@ describe('OperationSightingService（投稿者ごと・新着・まとめての�
     });
 
     describe('取得', () => {
+        it('編成の time-cross-section に searchTime を付けると ?searchTime= でリクエストする', () => {
+            const { service, controller } = setup();
+            const searchTime = '2026-11-12T12:00:00+09:00';
+
+            service
+                .findOneTimeCrossSectionByFormationNumber({
+                    formationNumber: '8713',
+                    searchTime,
+                })
+                .subscribe();
+            const req = controller.expectOne(
+                (r) =>
+                    r.url ===
+                    `${base}/time-cross-section/formation-number/8713`,
+            );
+            expect(req.request.params.get('searchTime')).toBe(searchTime);
+            req.flush(null);
+        });
+
+        it('編成の time-cross-section は searchTime の有無で別のキャッシュになる', () => {
+            const { service, controller } = setup();
+            const url = `${base}/time-cross-section/formation-number/8713`;
+
+            service
+                .findOneTimeCrossSectionByFormationNumber({
+                    formationNumber: '8713',
+                })
+                .subscribe();
+            service
+                .findOneTimeCrossSectionByFormationNumber({
+                    formationNumber: '8713',
+                    searchTime: '2026-11-12T12:00:00+09:00',
+                })
+                .subscribe();
+            const reqs = controller.match((r) => r.url === url);
+            expect(reqs).toHaveLength(2);
+            expect(reqs[0].request.params.has('searchTime')).toBe(false);
+            reqs.forEach((r) => r.flush(null));
+        });
+
         it('findManyByUserId は limit と before を渡し、無ければ付けない', () => {
             const { service, controller } = setup();
             let out: unknown;

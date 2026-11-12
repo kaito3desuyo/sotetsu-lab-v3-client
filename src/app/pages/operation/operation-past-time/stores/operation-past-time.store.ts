@@ -11,17 +11,14 @@ import {
 import {
     addDays,
     format,
-    getHours,
     parse,
-    parseISO,
     setHours,
     setMilliseconds,
     setMinutes,
     setSeconds,
-    subDays,
 } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import { flow, groupBy, isString } from 'es-toolkit';
+import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
@@ -101,15 +98,9 @@ function groupSightingsByFormationAndDate(
         (entries) =>
             entries.map(([formationId, sightingsOfFormation]) => [
                 formationId,
-                groupBy(sightingsOfFormation, (o) => {
-                    const date = toZonedTime(
-                        parseISO(o.sightingTime),
-                        'Asia/Tokyo',
-                    );
-                    const adjustedDate =
-                        getHours(date) < 4 ? subDays(date, 1) : date;
-                    return format(adjustedDate, 'yyyy-MM-dd');
-                }),
+                groupBy(sightingsOfFormation, (o) =>
+                    toRailwayDateKey(o.sightingTime),
+                ),
             ]),
         (arr): OperationSightingsGroupedByDate =>
             arr.reduce((base, [formationId, sightingsOfDate]) => {

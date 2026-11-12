@@ -1,4 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 
 const LIBRARY_VEHICLE_DESCRIPTION =
@@ -9,6 +10,7 @@ const LIBRARY_VEHICLE_DESCRIPTION =
     templateUrl: './library-vehicle.component.html',
     styleUrl: './library-vehicle.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
+    imports: [RouterLink],
 })
 export class LibraryVehicleComponent {
     constructor() {

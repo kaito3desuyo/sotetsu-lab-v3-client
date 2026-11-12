@@ -49,6 +49,13 @@ export const PAGE_HELP_TABLE: Readonly<Record<string, PageHelp>> = {
             '時刻（分）の下に運用番号と入っている編成が、右に種別・列車番号・行先が出ます。',
         ],
     },
+    '/timetable/formation': {
+        lines: [
+            '1 つの編成がその日に入る列車と、各駅の時刻を並べた時刻表です。',
+            '上の帯を開いて、編成番号と日付を選びます。駅を選ぶと、その駅を通る列車だけに絞れます。',
+            '? の付いた運用は、順送りか同日引き継ぎからの推測です。「推定」は、目撃と目撃の間の列車です。',
+        ],
+    },
     '/timetable/add': TIMETABLE_EDIT,
     '/timetable/update': TIMETABLE_EDIT,
     '/timetable/copy': TIMETABLE_EDIT,

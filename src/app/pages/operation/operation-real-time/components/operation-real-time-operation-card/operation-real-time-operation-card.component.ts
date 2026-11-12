@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import {
     ChangeDetectionStrategy,
@@ -41,6 +42,7 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         MatIconModule,
         MatTooltipModule,
         OperationNumberLinkComponent,
+        RouterLink,
         DateFnsPipe,
         FindByIdPipe,
         OperationNumberColorPipe,

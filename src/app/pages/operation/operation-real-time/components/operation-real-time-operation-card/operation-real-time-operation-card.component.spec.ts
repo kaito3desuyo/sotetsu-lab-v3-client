@@ -1,5 +1,6 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -23,6 +24,7 @@ describe('OperationRealTimeOperationCardComponent', () => {
         await TestBed.configureTestingModule({
             imports: [OperationRealTimeOperationCardComponent],
             providers: [
+                provideRouter([]),
                 { provide: OperationPostDialogService, useValue: { open } },
             ],
         })
@@ -55,6 +57,37 @@ describe('OperationRealTimeOperationCardComponent', () => {
                 ? { formation: { formationId } }
                 : undefined,
         }) as OperationSightingTimeCrossSectionDto;
+
+    it('編成番号は編成別時刻表へのリンクになる', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            expectedSighting: { formation: { formationNumber: '8713' } },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=8713"]',
+        );
+        expect(link?.textContent?.trim()).toBe('8713');
+    });
+
+    it('昨日の目撃の下線は編成番号のリンクで消さない', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: {
+                sightingTime: new Date(Date.now() - 86_400_000).toISOString(),
+            },
+            expectedSighting: { formation: { formationNumber: '8713' } },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=8713"]',
+        );
+        // 下線は親の span が持つ。リンク側は継ぐだけで、自分では下線を足さず消しもしない
+        expect(link?.parentElement?.classList).toContain('tw-underline');
+        expect(link?.classList).toContain('[text-decoration:inherit]');
+        expect(link?.classList).not.toContain('tw-no-underline');
+        expect(link?.classList).not.toContain('tw-underline');
+    });
 
     it('履歴は新しい順に並べる', () => {
         fixture.componentRef.setInput('histories', [

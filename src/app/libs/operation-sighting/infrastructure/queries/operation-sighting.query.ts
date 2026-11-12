@@ -185,18 +185,25 @@ export class OperationSightingQuery {
 
     findOneTimeCrossSectionByFormationNumber(params: {
         formationNumber: string;
+        searchTime?: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
-        const { formationNumber, forceReload } = params;
+        const { formationNumber, searchTime, forceReload } = params;
 
         return this.#cache
             .get({
                 name: 'findOneTimeCrossSectionByFormationNumber',
-                params: { formationNumber },
+                params: { formationNumber, searchTime },
                 fetch: () =>
                     this.#http.get<OperationSightingTimeCrossSectionModel>(
                         `${this.#v3ApiUrl}/time-cross-section/formation-number/${formationNumber}`,
                         {
+                            params: new HttpParams({
+                                fromObject: omitBy(
+                                    { searchTime },
+                                    (v) => v === undefined,
+                                ),
+                            }),
                             observe: 'response',
                             cache: this.#invalidator.requestCache('sighting'),
                         },

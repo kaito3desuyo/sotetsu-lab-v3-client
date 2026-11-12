@@ -1,0 +1,156 @@
+<ol
+    class="tw-m-0 tw-list-none tw-overflow-hidden tw-rounded-card tw-bg-white tw-p-0"
+    data-testid="trip-list"
+>
+    @for (row of rows(); track $index; let i = $index) {
+        @switch (row.kind) {
+            @case ('trip') {
+                <li
+                    class="tw-border-0 tw-border-t tw-border-solid tw-border-rule"
+                    [class.tw-opacity-50]="states()[i] === 'past'"
+                    [class.tw-bg-accent-50]="states()[i] === 'running'"
+                    [attr.data-state]="states()[i]"
+                >
+                    <div
+                        class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-px-3 tw-py-2"
+                    >
+                        <app-trip-label
+                            class="tw-font-bold tw-text-ink"
+                            chipSize="sm"
+                            [tripClassName]="
+                                row.trip.trip?.tripClass?.tripClassName
+                            "
+                            [tripClassColor]="
+                                row.trip.trip?.tripClass?.tripClassColor
+                            "
+                            [tripNumber]="row.trip.trip?.tripNumber"
+                            [link]="link(row)"
+                        ></app-trip-label>
+                        <button
+                            type="button"
+                            class="tw-flex tw-min-w-0 tw-flex-1 tw-cursor-pointer tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-1 tw-border-0 tw-p-0 tw-text-left tw-text-sm tw-text-ink [background-color:transparent] [font-family:inherit]"
+                            [attr.aria-expanded]="isExpanded(row)"
+                            (click)="toggle(row)"
+                        >
+                            <span class="tw-tabular-nums"
+                                >{{ name(row.trip.startStationId) }}
+                                {{ startClock(row) }}</span
+                            >
+                            <span>→</span>
+                            <span class="tw-tabular-nums"
+                                >{{ name(row.trip.endStationId) }}
+                                {{ endClock(row) }}</span
+                            >
+                            @if (states()[i] === 'running') {
+                                <span
+                                    class="tw-text-xs tw-font-bold"
+                                    data-testid="running-label"
+                                    >走行中</span
+                                >
+                            }
+                            @if (row.estimated) {
+                                <span
+                                    class="tw-text-xs tw-text-muted"
+                                    data-testid="estimated-label"
+                                    >推定</span
+                                >
+                            }
+                        </button>
+                        @if (row.carriedOver) {
+                            <app-operation-number-tag
+                                [operationNumber]="row.operationNumber"
+                                [inferred]="true"
+                            ></app-operation-number-tag>
+                        }
+                        <mat-icon
+                            class="tw-shrink-0 tw-text-muted"
+                            aria-hidden="true"
+                            >{{
+                                isExpanded(row) ? 'expand_less' : 'expand_more'
+                            }}</mat-icon
+                        >
+                    </div>
+                    @if (isExpanded(row)) {
+                        <ul
+                            class="tw-m-0 tw-list-none tw-bg-paper-2 tw-px-3 tw-py-2 tw-text-xs"
+                            data-testid="trip-times"
+                        >
+                            @for (time of times(row); track time.timeId) {
+                                <li
+                                    class="tw-flex tw-flex-row tw-gap-2 tw-py-0.5"
+                                >
+                                    <span class="tw-min-w-0 tw-flex-1">{{
+                                        name(time.stationId)
+                                    }}</span>
+                                    @if (passing(time)) {
+                                        <span class="tw-text-muted">通過</span>
+                                    } @else {
+                                        <span class="tw-tabular-nums">{{
+                                            clock(time)
+                                        }}</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </li>
+            }
+            @case ('depot') {
+                <li
+                    class="tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                >
+                    {{ row.label === 'out' ? '○' : '△' }}
+                    {{ name(row.stationId) }} {{ row.time }}
+                    {{ row.label === 'out' ? '出庫' : '入庫' }}
+                </li>
+            }
+            @case ('transfer') {
+                <li
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                >
+                    <span>□ {{ name(row.stationId) }} で乗り移り</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.from"
+                    ></app-operation-number-tag>
+                    <span>→</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.to"
+                    ></app-operation-number-tag>
+                </li>
+            }
+            @case ('swap') {
+                <li
+                    class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-bg-paper-2 tw-px-3 tw-py-1 tw-text-xs tw-text-muted"
+                >
+                    <span>{{ sightingClock(row.sightingTime) }} の目撃で</span>
+                    <app-operation-number-tag
+                        [operationNumber]="row.toOperationNumber"
+                    ></app-operation-number-tag>
+                    <span>に変わった</span>
+                </li>
+            }
+            @case ('unknown') {
+                <li
+                    class="tw-flex tw-flex-col tw-gap-2 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-3 tw-text-sm"
+                    data-testid="unknown-row"
+                >
+                    <p class="tw-m-0">
+                        {{ sightingClock(row.evictedBy.sightingTime) }} に
+                        {{ row.evictedBy.formationNumber }} が
+                        {{ row.lastOperationNumber }} で目撃されるまでは
+                        {{ row.lastOperationNumber }}
+                        でした。その後の運用は分かりません。
+                    </p>
+                    <button
+                        type="button"
+                        class="tw-w-fit tw-cursor-pointer tw-border-0 tw-p-0 tw-text-sm tw-text-accent-ink tw-underline [background-color:transparent] [font-family:inherit]"
+                        data-testid="post-link"
+                        (click)="postRequested.emit(row.lastOperationNumber)"
+                    >
+                        目撃を投稿する
+                    </button>
+                </li>
+            }
+        }
+    }
+</ol>

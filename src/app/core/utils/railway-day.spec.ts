@@ -2,6 +2,7 @@ import {
     getRailwayDate,
     toAbsoluteTime,
     toDisplayTime,
+    toRailwayDateKey,
     toServiceSeconds,
 } from './railway-day';
 
@@ -130,5 +131,15 @@ describe('toServiceSeconds', () => {
     it('時刻が無ければ NaN（比較はどれも false になる）', () => {
         expect(toServiceSeconds(1, null)).toBeNaN();
         expect(toServiceSeconds(1, undefined)).toBeNaN();
+    });
+});
+
+describe('toRailwayDateKey', () => {
+    it('日本時間の翌 3:59 はその日の営業日', () => {
+        expect(toRailwayDateKey('2026-11-11T18:59:00Z')).toBe('2026-11-11');
+    });
+
+    it('日本時間の翌 4:00 は翌日の営業日', () => {
+        expect(toRailwayDateKey('2026-11-11T19:00:00Z')).toBe('2026-11-12');
     });
 });

@@ -66,6 +66,7 @@ export class OperationSightingService {
 
     findOneTimeCrossSectionByFormationNumber(params: {
         formationNumber: string;
+        searchTime?: string;
         forceReload?: boolean;
     }): Observable<OperationSightingTimeCrossSectionDto> {
         return this.#operationSightingQuery.findOneTimeCrossSectionByFormationNumber(

@@ -1,0 +1,111 @@
+<section
+    class="tw-flex tw-flex-col tw-gap-3 tw-rounded-card tw-bg-white tw-p-4 md:tw-max-w-[48rem]"
+    data-testid="formation-header"
+>
+    <p class="tw-m-0 tw-flex tw-flex-row tw-items-baseline tw-gap-3">
+        <span class="tw-text-xl tw-font-bold tw-tabular-nums">{{
+            formationNumber()
+        }}</span>
+        <span class="tw-text-sm tw-text-muted">{{ annotation() }}</span>
+    </p>
+    @if (formation()?.formationDescription; as description) {
+        <p class="tw-m-0 tw-text-xs tw-text-muted">{{ description }}</p>
+    }
+
+    @if (formation()) {
+        @if (sightings().length > 0) {
+            <p
+                class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-1 tw-text-sm"
+            >
+                <span class="tw-text-xs tw-text-muted">{{
+                    sightingHeading()
+                }}</span>
+                @for (s of sightings(); track $index; let last = $last) {
+                    <span class="tw-tabular-nums">{{ s.time }}</span>
+                    <app-operation-number-tag
+                        [operationNumber]="s.operationNumber"
+                    ></app-operation-number-tag>
+                    <span>で目撃</span>
+                    @if (!last) {
+                        <span class="tw-text-muted">→</span>
+                    }
+                }
+            </p>
+        }
+
+        @if (currentOperationNumber(); as number) {
+            <p
+                class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
+            >
+                <span class="tw-text-xs tw-text-muted">{{
+                    operationHeading()
+                }}</span>
+                @if (operationChain().length > 1) {
+                    <span
+                        class="tw-flex tw-flex-wrap tw-items-center tw-gap-1"
+                        data-testid="operation-chain"
+                    >
+                        @for (
+                            item of operationChain();
+                            track $index;
+                            let last = $last
+                        ) {
+                            <app-operation-number-tag
+                                [operationNumber]="item.operationNumber"
+                                [inferred]="item.inferred"
+                            ></app-operation-number-tag>
+                            @if (!last) {
+                                <span class="tw-text-muted">→</span>
+                            }
+                        }
+                    </span>
+                } @else {
+                    <app-operation-number-tag
+                        [operationNumber]="number"
+                        [inferred]="currentInferred()"
+                    ></app-operation-number-tag>
+                }
+                @if (currentBasisLabel(); as basis) {
+                    <span
+                        class="tw-text-xs tw-text-muted"
+                        data-testid="basis-label"
+                        >（{{ basis }}）</span
+                    >
+                }
+            </p>
+        } @else if (currentBasisLabel(); as basis) {
+            <p class="tw-m-0 tw-text-sm">
+                <span class="tw-text-xs tw-text-muted">{{
+                    operationHeading()
+                }}</span>
+                {{ basis }}
+            </p>
+        }
+
+        @if (position(); as pos) {
+            <div class="tw-text-sm" data-testid="current-position">
+                <span class="tw-text-xs tw-text-muted">いま</span>
+                <app-trip-position
+                    [position]="pos"
+                    [stations]="positionStations()"
+                    [tripClasses]="positionTripClasses()"
+                    [calendarId]="calendarId()"
+                    [links]="positionLinks()"
+                ></app-trip-position>
+            </div>
+        }
+
+        @if (tomorrowOperationNumber(); as tomorrow) {
+            <p
+                class="tw-m-0 tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-text-sm"
+            >
+                <span class="tw-text-xs tw-text-muted">明日の見込み</span>
+                <app-operation-number-tag
+                    [operationNumber]="tomorrow"
+                    [inferred]="true"
+                ></app-operation-number-tag>
+                <span class="tw-text-xs tw-text-muted">（順送り?）</span>
+            </p>
+        }
+    }
+</section>

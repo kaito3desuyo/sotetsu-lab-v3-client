@@ -1,0 +1,390 @@
+import { inject, Injectable } from '@angular/core';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { FormationService } from 'src/app/libs/formation/usecase/formation.service';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
+import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
+import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
+import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
+import { StationService } from 'src/app/libs/station/usecase/station.service';
+import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
+import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
+import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
+import {
+    FormationDateKind,
+    TimetableFormationStore,
+} from '../stores/timetable-formation.store';
+import { missingOperationIds } from '../utils/formation-day.util';
+import { selectFormationOnDate } from '../utils/select-formation.util';
+
+type CrossSectionResult = {
+    operationId: string | null;
+    operationNumber: string | null;
+    carriedOver: boolean;
+};
+const NO_CROSS_SECTION: CrossSectionResult = {
+    operationId: null,
+    operationNumber: null,
+    carriedOver: false,
+};
+
+/** 休車の運用番号。列車を持たない */
+const RESTING_OPERATION_NUMBER = '100';
+
+/** 'yyyy-MM-dd' の翌日 */
+function nextDate(date: string): string {
+    const d = new Date(`${date}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+}
+
+/** 編成の、無効にされていない目撃があるか */
+function hasOwnValidSighting(
+    sightings: OperationSightingDetailsDto[],
+    formationId: string,
+): boolean {
+    return sightings.some(
+        (s) => s.formationId === formationId && !s.invalidation,
+    );
+}
+
+@Injectable()
+export class TimetableFormationService {
+    readonly #calendarService = inject(CalendarService);
+    readonly #formationService = inject(FormationService);
+    readonly #stationService = inject(StationService);
+    readonly #operationService = inject(OperationService);
+    readonly #operationSightingService = inject(OperationSightingService);
+    readonly #tripBlockService = inject(TripBlockService);
+    readonly #store = inject(TimetableFormationStore);
+    /** 列車ごとの各駅の時刻。運用の列車の api は時刻を返さないので trip-block から補う */
+    #timesByTripId = new Map<string, TimeDetailsDto[]>();
+
+    /**
+     * 編成の 1 日分（目撃・最初の運用・乗り移り・運用の列車）を取ってストアへ入れる。
+     * 編成やダイヤが無くてもエラーにせず、notFound / noCalendar で表す。
+     * date は営業日 'yyyy-MM-dd'。今日・明日は呼び出し側が dateKind で決める。
+     */
+    fetchDay(params: {
+        formationNumber: string;
+        date: string;
+        dateKind: FormationDateKind;
+        forceReload?: boolean;
+    }): Observable<void> {
+        const { formationNumber, date, dateKind, forceReload } = params;
+        const seq = this.#store.nextFetchSeq();
+        this.#store.startDay({ formationNumber, date, dateKind });
+        this.#store.enableLoading();
+        const latest = (): boolean => this.#store.isLatestFetch(seq);
+        // 取得の失敗は「ダイヤ無し」「編成無し」でなく loadError で表す
+        let failed = false;
+        const fail = <T>(fallback: T): Observable<T> => {
+            failed = true;
+            return of(fallback);
+        };
+
+        return forkJoin({
+            calendar: this.#calendarService
+                .findOneBySpecificDate({ date, forceReload })
+                .pipe(catchError(() => fail(null))),
+            formations: this.#formationService
+                .findManyBySpecificDate({ date, forceReload })
+                .pipe(catchError(() => fail([]))),
+            // 明日の目撃は無い。api は date から翌日 4 時までを返す（過去の画面と同じ渡し方）
+            sightings:
+                dateKind === 'tomorrow'
+                    ? of<OperationSightingDetailsDto[]>([])
+                    : this.#operationSightingService
+                          .findManyBySpecificPeriod({
+                              from: date,
+                              to: date,
+                              includeCarriedOver: true,
+                              forceReload,
+                          })
+                          .pipe(catchError(() => fail([]))),
+            // 今日の画面だけ、明日が選べるかを調べる。休車の 100 は順送りで決まらないので明日は無い
+            tomorrow:
+                dateKind === 'today'
+                    ? this.#crossSection(
+                          formationNumber,
+                          `${nextDate(date)}T12:00:00+09:00`,
+                          forceReload,
+                      ).pipe(
+                          map((cs) =>
+                              cs.operationNumber === RESTING_OPERATION_NUMBER
+                                  ? NO_CROSS_SECTION
+                                  : cs,
+                          ),
+                      )
+                    : of(NO_CROSS_SECTION),
+            stations: this.#store.stations().length
+                ? of(null)
+                : this.#stationService
+                      .findMany({})
+                      .pipe(catchError(() => of(null))),
+        }).pipe(
+            switchMap((r) => {
+                if (!latest()) return of(undefined);
+                if (r.stations) this.#store.setStations(r.stations);
+                const formation = selectFormationOnDate(
+                    r.formations,
+                    formationNumber,
+                    date,
+                );
+                this.#store.setLoadError(failed);
+                this.#store.setCalendar(r.calendar ?? null);
+                this.#store.setFormation(formation);
+                this.#store.setSightings(r.sightings);
+                this.#store.setTomorrowOperationId(r.tomorrow.operationId);
+                this.#store.setTomorrowOperationNumber(
+                    r.tomorrow.operationNumber,
+                );
+                if (!formation || !r.calendar) {
+                    this.#store.setLoaded(true);
+                    return of(undefined);
+                }
+                const hasOwnSighting = hasOwnValidSighting(
+                    r.sightings,
+                    formation.formationId,
+                );
+                const first$: Observable<CrossSectionResult> =
+                    dateKind === 'tomorrow'
+                        ? this.#crossSection(
+                              formationNumber,
+                              `${date}T12:00:00+09:00`,
+                              forceReload,
+                          )
+                        : dateKind !== 'today' || hasOwnSighting
+                          ? of(NO_CROSS_SECTION)
+                          : this.#crossSection(
+                                formationNumber,
+                                undefined,
+                                forceReload,
+                            );
+                return forkJoin({
+                    first: first$,
+                    times: this.#fetchTimesByTripId(
+                        r.calendar.calendarId,
+                        forceReload,
+                    ).pipe(catchError(() => fail(new Map()))),
+                    links: this.#operationService
+                        .findManyItineraryLinks({
+                            calendarId: r.calendar.calendarId,
+                            forceReload,
+                        })
+                        .pipe(catchError(() => fail([]))),
+                }).pipe(
+                    switchMap(({ first, links, times }) => {
+                        if (!latest()) return of(undefined);
+                        this.#timesByTripId = times;
+                        this.#store.setFirstOperationId(first.operationId);
+                        this.#store.setFirstBasis(
+                            hasOwnSighting
+                                ? 'sighting'
+                                : first.carriedOver
+                                  ? 'carried-over'
+                                  : first.operationId
+                                    ? 'circulated'
+                                    : 'unknown',
+                        );
+                        this.#store.setLinks(links);
+                        return this.#fetchMissingTrips(
+                            latest,
+                            new Set<string>(),
+                            forceReload,
+                            () => {
+                                failed = true;
+                            },
+                        );
+                    }),
+                    tap(() => {
+                        if (!latest()) return;
+                        this.#store.setLoadError(failed);
+                        this.#store.setLoaded(true);
+                    }),
+                );
+            }),
+            map(() => undefined),
+            finalize(() => this.#store.disableLoading()),
+        );
+    }
+
+    /** socket 用。今日だけ、目撃だけを取り直す（足りない運用の列車は取り足す） */
+    refetchSightings(): Observable<void> {
+        const date = this.#store.date();
+        const formation = this.#store.formation();
+        if (this.#store.dateKind() !== 'today' || !date || !formation) {
+            return of(undefined);
+        }
+        const seq = this.#store.currentFetchSeq();
+        const latest = (): boolean => this.#store.isLatestFetch(seq);
+
+        return this.#operationSightingService
+            .findManyBySpecificPeriod({
+                from: date,
+                to: date,
+                includeCarriedOver: true,
+                forceReload: true,
+            })
+            .pipe(
+                switchMap((sightings) => {
+                    if (!latest()) return of(undefined);
+                    this.#store.setSightings(sightings);
+                    // 最初の自分の目撃が届いたら、最初の運用の決め手は目撃になる
+                    if (hasOwnValidSighting(sightings, formation.formationId)) {
+                        this.#store.setFirstBasis('sighting');
+                    }
+                    return this.#fetchMissingTrips(
+                        latest,
+                        new Set(Object.keys(this.#store.tripsByOperationId())),
+                        true,
+                    );
+                }),
+                map(() => undefined),
+                // 取り直しの失敗は表示中の中身を残す
+                catchError(() => of(undefined)),
+            );
+    }
+
+    /** いまの位置（今日だけ）。どの運用か（走っている列車の運用）は呼び出し側が決めて渡す */
+    fetchCurrentPosition(operationId: string): Observable<void> {
+        if (this.#store.dateKind() !== 'today') {
+            this.#store.setCurrentPosition(null);
+            return of(undefined);
+        }
+        const seq = this.#store.currentFetchSeq();
+        return this.#operationService
+            .findOneWithCurrentPosition({ operationId, forceReload: true })
+            .pipe(
+                catchError(() => of(null)),
+                tap((position) => {
+                    if (this.#store.isLatestFetch(seq)) {
+                        this.#store.setCurrentPosition(position ?? null);
+                    }
+                }),
+                map(() => undefined),
+            );
+    }
+
+    /** その日のダイヤの全列車の時刻を、列車 id ごとに stopSequence 順で */
+    #fetchTimesByTripId(
+        calendarId: string,
+        forceReload: boolean | undefined,
+    ): Observable<Map<string, TimeDetailsDto[]>> {
+        return this.#tripBlockService
+            .findManyByCalendarId({
+                calendarId,
+                fields: TRIP_BLOCK_TIMELINE_FIELDS,
+                forceReload,
+            })
+            .pipe(
+                map((byDirection) => {
+                    const result = new Map<string, TimeDetailsDto[]>();
+                    for (const blocks of Object.values(byDirection)) {
+                        for (const block of blocks) {
+                            for (const trip of block.trips ?? []) {
+                                result.set(
+                                    trip.tripId,
+                                    [...(trip.times ?? [])].sort(
+                                        (a, b) =>
+                                            (a.stopSequence ?? 0) -
+                                            (b.stopSequence ?? 0),
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                    return result;
+                }),
+            );
+    }
+
+    /** 運用の各列車に、trip-block から取った時刻を付ける */
+    #attachTimes(dto: OperationTripsDto): OperationTripsDto {
+        return {
+            ...dto,
+            trips: dto.trips.map((tol) => {
+                const tripId = tol.tripId ?? tol.trip?.tripId;
+                const times = tripId
+                    ? this.#timesByTripId.get(tripId)
+                    : undefined;
+                if (!times || !tripId) return tol;
+                return { ...tol, trip: { ...tol.trip, tripId, times } };
+            }),
+        };
+    }
+
+    /** time-cross-section の予想の運用 id と、引き継ぎの目撃かどうか。無い・失敗は運用なし */
+    #crossSection(
+        formationNumber: string,
+        searchTime: string | undefined,
+        forceReload: boolean | undefined,
+    ): Observable<CrossSectionResult> {
+        return this.#operationSightingService
+            .findOneTimeCrossSectionByFormationNumber({
+                formationNumber,
+                searchTime,
+                forceReload,
+            })
+            .pipe(
+                map((cs) => ({
+                    operationId:
+                        cs?.expectedSighting?.operation?.operationId ?? null,
+                    operationNumber:
+                        cs?.expectedSighting?.operation?.operationNumber ??
+                        null,
+                    carriedOver: !!cs?.sightedAsOperation,
+                })),
+                catchError(() => of(NO_CROSS_SECTION)),
+            );
+    }
+
+    /**
+     * たどるのに要る運用の列車を、足りなくなくなるまで取る。
+     * 一度頼んだ id は二度頼まない（api が返さない運用で止まらなくなるのを防ぐ）。
+     */
+    #fetchMissingTrips(
+        latest: () => boolean,
+        requested: Set<string>,
+        forceReload: boolean | undefined,
+        onError?: () => void,
+    ): Observable<void> {
+        const input = this.#store.dayInput();
+        if (!input || !latest()) return of(undefined);
+        const ids = missingOperationIds(input).filter(
+            (id) => !requested.has(id),
+        );
+        if (ids.length === 0) return of(undefined);
+        ids.forEach((id) => requested.add(id));
+
+        return forkJoin(
+            ids.map((operationId) =>
+                this.#operationService
+                    .findOneWithTrips({ operationId, forceReload })
+                    .pipe(
+                        map((dto) => ({ operationId, dto })),
+                        catchError(() => {
+                            onError?.();
+                            return of({ operationId, dto: null });
+                        }),
+                    ),
+            ),
+        ).pipe(
+            switchMap((results) => {
+                if (!latest()) return of(undefined);
+                const got: Record<string, OperationTripsDto> = {};
+                for (const { operationId, dto } of results) {
+                    if (dto) got[operationId] = this.#attachTimes(dto);
+                }
+                this.#store.addTrips(got);
+                return this.#fetchMissingTrips(
+                    latest,
+                    requested,
+                    forceReload,
+                    onError,
+                );
+            }),
+        );
+    }
+}
