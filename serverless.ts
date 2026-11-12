@@ -40,10 +40,13 @@ const lambdaWebAdapterLayerArn =
 
 // ssr=on のとき、既定の振り分けを SSR の Lambda に向ける。ssr=off のときは S3 の殻（spa-routing 経由）に戻す。
 // ${param:ssr} は osls が文字列として解くので、TypeScript の中では読めない。そこで CloudFormation の Conditions で切り替える
+const securityHeadersPolicy = { Ref: 'SecurityHeadersPolicy' };
+
 const s3Behavior = {
     TargetOriginId: s3OriginId,
     // Managed-CachingOptimized
     CachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
+    ResponseHeadersPolicyId: securityHeadersPolicy,
     ViewerProtocolPolicy: 'redirect-to-https',
     AllowedMethods: ['GET', 'HEAD'],
     CachedMethods: ['GET', 'HEAD'],
@@ -259,6 +262,34 @@ const serverlessConfiguration: AWS = {
                     },
                 },
             },
+            // 全部の振る舞いに付ける応答ヘッダー。HSTS は一度付けると戻しにくいので、max-age を 1 日から始めて上げる。
+            // サブドメイン（api.・ws.）には広げず、preload も付けない。CSP はまだ付けない
+            SecurityHeadersPolicy: {
+                Type: 'AWS::CloudFront::ResponseHeadersPolicy',
+                Properties: {
+                    ResponseHeadersPolicyConfig: {
+                        Name: '${param:prefix}-security-headers-policy',
+                        SecurityHeadersConfig: {
+                            StrictTransportSecurity: {
+                                AccessControlMaxAgeSec: 86400,
+                                IncludeSubdomains: false,
+                                Preload: false,
+                                Override: true,
+                            },
+                            ContentTypeOptions: { Override: true },
+                            FrameOptions: {
+                                FrameOption: 'SAMEORIGIN',
+                                Override: true,
+                            },
+                            ReferrerPolicy: {
+                                ReferrerPolicy:
+                                    'strict-origin-when-cross-origin',
+                                Override: true,
+                            },
+                        },
+                    },
+                },
+            },
             WebSpaRoutingFunction: {
                 Type: 'AWS::CloudFront::Function',
                 Properties: {
@@ -381,6 +412,8 @@ const serverlessConfiguration: AWS = {
                                 {
                                     TargetOriginId: ssrOriginId,
                                     CachePolicyId: { Ref: 'SsrCachePolicy' },
+                                    ResponseHeadersPolicyId:
+                                        securityHeadersPolicy,
                                     ViewerProtocolPolicy: 'redirect-to-https',
                                     AllowedMethods: ['GET', 'HEAD'],
                                     CachedMethods: ['GET', 'HEAD'],
@@ -412,6 +445,7 @@ const serverlessConfiguration: AWS = {
                                 // Managed-AllViewerExceptHostHeader（本番の実物に合わせる）
                                 OriginRequestPolicyId:
                                     'b689b0a8-53d0-40ab-baf2-68738e2966ac',
+                                ResponseHeadersPolicyId: securityHeadersPolicy,
                                 ViewerProtocolPolicy: 'redirect-to-https',
                                 AllowedMethods: [
                                     'GET',
