@@ -17,13 +17,10 @@ import { OperationCurrentPositionDto } from '../../usecase/dtos/operation-curren
 import { OperationDetailsDto } from '../../usecase/dtos/operation-details.dto';
 import { NextSegmentCandidateDto } from '../../usecase/dtos/next-segment-candidate.dto';
 import { OperationItineraryLinkDto } from '../../usecase/dtos/operation-itinerary-link.dto';
-import { OperationGroupDto } from '../../usecase/dtos/operation-group.dto';
 import { OperationTripsDto } from '../../usecase/dtos/operation-trips.dto';
 import { OperationDtoBuilder } from '../builders/operation.dto.builder';
 import { OperationCurrentPositionDtoBuilder } from '../builders/operation-current-position.dto.builder';
-import { OperationGroupDtoBuilder } from '../builders/operation-group.dto.builder';
 import { OperationCurrentPositionModel } from '../models/operation-current-position.model';
-import { OperationGroupModel } from '../models/operation-group.model';
 import { OperationTripsModel } from '../models/operation-trips.model';
 import { OperationModel } from '../models/operation.model';
 
@@ -259,29 +256,6 @@ export class OperationQuery {
                         TripOperationListDtoBuilder.buildFromModel(o),
                     ),
                 })),
-            );
-    }
-
-    findManyGroups(params?: {
-        forceReload?: boolean;
-    }): Observable<OperationGroupDto[]> {
-        const { forceReload } = params ?? {};
-
-        return this.#cache
-            .get({
-                name: 'findManyGroups',
-                params: {},
-                fetch: () =>
-                    this.#http.get<OperationGroupModel[]>(
-                        `${this.#v3ApiUrl}/groups`,
-                        { observe: 'response' },
-                    ),
-                forceReload,
-            })
-            .pipe(
-                map((res) =>
-                    OperationGroupDtoBuilder.buildFromModels(res.body),
-                ),
             );
     }
 
