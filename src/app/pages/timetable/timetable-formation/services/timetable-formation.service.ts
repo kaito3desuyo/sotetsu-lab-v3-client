@@ -116,6 +116,8 @@ export class TimetableFormationService {
                                   ? NO_CROSS_SECTION
                                   : cs,
                           ),
+                          // 明日を選べるかの下調べなので、失敗しても明日を出さないだけにする
+                          catchError(() => of(NO_CROSS_SECTION)),
                       )
                     : of(NO_CROSS_SECTION),
             stations: this.#store.stations().length
@@ -148,20 +150,21 @@ export class TimetableFormationService {
                     r.sightings,
                     formation.formationId,
                 );
+                // 最初の運用が取れなければ全部「不明」になるので、失敗は loadError にする
                 const first$: Observable<CrossSectionResult> =
                     dateKind === 'tomorrow'
                         ? this.#crossSection(
                               formationNumber,
                               `${date}T12:00:00+09:00`,
                               forceReload,
-                          )
+                          ).pipe(catchError(() => fail(NO_CROSS_SECTION)))
                         : dateKind !== 'today' || hasOwnSighting
                           ? of(NO_CROSS_SECTION)
                           : this.#crossSection(
                                 formationNumber,
                                 undefined,
                                 forceReload,
-                            );
+                            ).pipe(catchError(() => fail(NO_CROSS_SECTION)));
                 return forkJoin({
                     first: first$,
                     times: this.#fetchTimesByTripId(
@@ -315,7 +318,7 @@ export class TimetableFormationService {
         };
     }
 
-    /** time-cross-section の予想の運用 id と、引き継ぎの目撃かどうか。無い・失敗は運用なし */
+    /** time-cross-section の予想の運用 id と、引き継ぎの目撃かどうか。無いときは運用なし。失敗の扱いは呼ぶ側が決める */
     #crossSection(
         formationNumber: string,
         searchTime: string | undefined,
@@ -336,7 +339,6 @@ export class TimetableFormationService {
                         null,
                     carriedOver: !!cs?.sightedAsOperation,
                 })),
-                catchError(() => of(NO_CROSS_SECTION)),
             );
     }
 
