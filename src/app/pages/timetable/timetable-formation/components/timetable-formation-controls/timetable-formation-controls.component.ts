@@ -75,11 +75,26 @@ export class TimetableFormationControlsComponent {
             case 'today':
                 return '今日';
             case 'tomorrow':
-                return '明日（見込み）';
+                return '明日・見込み';
             default:
                 return '過去の日';
         }
     });
+
+    /** 全部の候補を出し、今の番号を選んだ状態にする（打てば置き換わる。セレクトボックスと同じ） */
+    protected onFocus(input: HTMLInputElement): void {
+        this.query.set('');
+        input.select();
+    }
+
+    /**
+     * 欄を離れたら、欄を今の編成番号に戻す。候補を選ばずに離れると打ちかけの文字が残り、
+     * 要約やカードの番号と食い違うため。選んだときは移った先の番号が [value] で入り直す。
+     * 一覧を閉じたとき（closed）では戻さない。候補が 0 件になると打っている途中でも閉じるため。
+     */
+    protected onBlur(input: HTMLInputElement): void {
+        input.value = this.formationNumber() ?? '';
+    }
 
     protected onQuery(event: Event): void {
         this.query.set((event.target as HTMLInputElement).value);

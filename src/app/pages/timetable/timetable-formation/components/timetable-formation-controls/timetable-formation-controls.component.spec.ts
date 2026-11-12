@@ -93,6 +93,41 @@ describe('TimetableFormationControlsComponent', () => {
         expect(emitted).toEqual(['9999']);
     });
 
+    it('候補を選ばずに欄を離れたら、欄を今の編成番号に戻す', () => {
+        const fixture = create({
+            formationNumber: '8713',
+            formations: FORMATIONS,
+            agencies: AGENCIES,
+        });
+        const input = q(
+            fixture,
+            '[data-testid="formation-number-input"]',
+        ) as HTMLInputElement;
+        input.dispatchEvent(new Event('focusin'));
+        input.value = '871';
+        input.dispatchEvent(new Event('input'));
+        fixture.detectChanges();
+        input.dispatchEvent(new Event('blur'));
+        fixture.detectChanges();
+        expect(input.value).toBe('8713');
+    });
+
+    it('欄に入ると今の番号を選んだ状態にし、打てば置き換わるようにする', () => {
+        const fixture = create({ formationNumber: '8713' });
+        const input = q(
+            fixture,
+            '[data-testid="formation-number-input"]',
+        ) as HTMLInputElement;
+        input.dispatchEvent(new Event('focus'));
+        expect(input.selectionStart).toBe(0);
+        expect(input.selectionEnd).toBe(4);
+    });
+
+    it('明日の日付の欄は「明日・見込み」と書く', () => {
+        const fixture = create({ dateKind: 'tomorrow' });
+        expect(fixture.nativeElement).toHaveTextContent('日付（明日・見込み）');
+    });
+
     it('編成が見つかるまでは駅の欄を出さない', () => {
         const hidden = create({ formationNumber: '8713', showStation: false });
         expect(hidden.nativeElement).not.toHaveTextContent('駅で絞る');

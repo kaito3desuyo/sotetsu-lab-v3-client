@@ -243,6 +243,26 @@ describe('TimetableFormationComponent', () => {
             ).toBe('8713 11/11（今日） 絞り込み：なし');
         });
 
+        it('編成を開いたあと番号の無い URL へ移っても、前の編成のカード・駅の欄・解除を出さない', () => {
+            const { fixture, store, paramMap$ } = setup({
+                params: { formation_number: '8713', date: '2026-11-11' },
+            });
+            store.setSelectedStationId('st1');
+            fixture.detectChanges();
+            expect(
+                q(fixture, '[data-testid="formation-header"]'),
+            ).not.toBeNull();
+            expect(
+                q(fixture, '[data-testid="control-band-clear"]'),
+            ).not.toBeNull();
+
+            paramMap$.next(convertToParamMap({}));
+            fixture.detectChanges();
+            expect(q(fixture, '[data-testid="formation-header"]')).toBeNull();
+            expect(q(fixture, '[data-testid="control-band-clear"]')).toBeNull();
+            expect(text(fixture)).not.toContain('駅で絞る');
+        });
+
         it('編成番号が無いときは、入れるボタンで操作帯を開く', () => {
             const { fixture } = setup({ params: {} });
             fixture.detectChanges();

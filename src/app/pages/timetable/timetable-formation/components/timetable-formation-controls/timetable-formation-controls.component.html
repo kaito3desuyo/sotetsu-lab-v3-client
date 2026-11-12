@@ -9,8 +9,10 @@
             [value]="formationNumber() ?? ''"
             [matAutocomplete]="formationAuto"
             #trigger="matAutocompleteTrigger"
+            #numberInput
             (input)="onQuery($event)"
-            (focus)="query.set('')"
+            (focus)="onFocus(numberInput)"
+            (blur)="onBlur(numberInput)"
             (keydown.enter)="onEnter($event, trigger)"
         />
         <mat-icon matSuffix class="tw-text-muted">arrow_drop_down</mat-icon>

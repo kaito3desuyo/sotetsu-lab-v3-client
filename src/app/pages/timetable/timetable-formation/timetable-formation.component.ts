@@ -240,6 +240,14 @@ export class TimetableFormationComponent {
 
     protected readonly band = viewChild.required(ControlBandComponent);
 
+    /**
+     * 編成のカード・駅の欄・絞り込みの印を出してよいか。ストアには前の編成の中身と駅が残るので、
+     * URL の編成・日と合っていて、編成が見つかったときだけ出す。
+     */
+    protected readonly showDay = computed(
+        () => this.ready() && this.#store.loaded() && !!this.#store.formation(),
+    );
+
     protected readonly bandSummary = computed(() =>
         formatFormationBandSummary({
             formationNumber: this.formationNumber(),

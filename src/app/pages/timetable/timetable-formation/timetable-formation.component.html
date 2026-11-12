@@ -14,7 +14,7 @@
 >
     <app-control-band
         [summary]="bandSummary()"
-        [filterActive]="selectedStationId() !== null"
+        [filterActive]="showDay() && selectedStationId() !== null"
         [clearable]="true"
         (clear)="onStationChange(null)"
     >
@@ -22,7 +22,7 @@
             [formationNumber]="formationNumber()"
             [formations]="formationOptions()"
             [agencies]="agencies()"
-            [showStation]="view() !== 'loading' && !!storeFormation()"
+            [showStation]="showDay()"
             [stationGroups]="stationGroups()"
             [selectedStationId]="selectedStationId()"
             [selectedStationName]="selectedStationName()"
@@ -38,7 +38,7 @@
         ></app-timetable-formation-controls>
     </app-control-band>
 
-    @if (view() !== 'loading' && storeFormation()) {
+    @if (showDay()) {
         <app-timetable-formation-header
             [formationNumber]="formationNumber()"
             [formation]="storeFormation()"
