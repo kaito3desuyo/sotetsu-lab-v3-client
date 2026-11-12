@@ -311,15 +311,13 @@ describe('TimetableFormationComponent', () => {
     });
 
     describe('文言', () => {
-        it('編成が無い日は「この日に有効な編成にありません」を出す', () => {
+        it('編成が無い日は「この日の編成に … はありません」を出す', () => {
             const { fixture } = setup({
                 params: { formation_number: '8713', date: '2026-11-01' },
                 state: { formation: null },
             });
             fixture.detectChanges();
-            expect(text(fixture)).toContain(
-                '8713 はこの日に有効な編成にありません',
-            );
+            expect(text(fixture)).toContain('この日の編成に 8713 はありません');
         });
 
         it('ダイヤが無い日は「この日のダイヤはありません」を出す', () => {

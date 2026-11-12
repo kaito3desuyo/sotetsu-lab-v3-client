@@ -136,7 +136,7 @@ describe('TimetableFormationTripListComponent', () => {
             },
         ]);
         expect(text(fixture).replace(/\s+/g, ' ')).toContain(
-            '最後に分かっているのは 55（15:20 に 8711 が 55 で目撃されるまで）',
+            '15:20 に 8711 が 55 で目撃されるまでは 55 でした。その後の運用は分かりません。',
         );
         const emitted: string[] = [];
         fixture.componentInstance.postRequested.subscribe((v) =>

@@ -135,11 +135,11 @@
                     data-testid="unknown-row"
                 >
                     <p class="tw-m-0">
-                        最後に分かっているのは {{ row.lastOperationNumber }}（{{
-                            sightingClock(row.evictedBy.sightingTime)
-                        }}
-                        に {{ row.evictedBy.formationNumber }} が
-                        {{ row.lastOperationNumber }} で目撃されるまで）
+                        {{ sightingClock(row.evictedBy.sightingTime) }} に
+                        {{ row.evictedBy.formationNumber }} が
+                        {{ row.lastOperationNumber }} で目撃されるまでは
+                        {{ row.lastOperationNumber }}
+                        でした。その後の運用は分かりません。
                     </p>
                     <button
                         type="button"
