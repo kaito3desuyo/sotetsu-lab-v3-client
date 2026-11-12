@@ -95,9 +95,9 @@ describe('TimetableFormationControlsComponent', () => {
 
     it('編成が見つかるまでは駅の欄を出さない', () => {
         const hidden = create({ formationNumber: '8713', showStation: false });
-        expect(hidden.nativeElement.textContent).not.toContain('駅で絞る');
+        expect(hidden.nativeElement).not.toHaveTextContent('駅で絞る');
         TestBed.resetTestingModule();
         const shown = create({ formationNumber: '8713', showStation: true });
-        expect(shown.nativeElement.textContent).toContain('駅で絞る');
+        expect(shown.nativeElement).toHaveTextContent('駅で絞る');
     });
 });
