@@ -107,7 +107,7 @@ function run(
     });
 }
 
-const AT = new Date(2026, 10, 10, 7, 10, 0);
+const AT = new Date('2026-11-10T07:10:00+09:00');
 
 describe('buildPickableTrains', () => {
     it('その駅に時刻のある列車のうち、at の前後の幅に入るものを時刻順に返す', () => {
@@ -130,7 +130,7 @@ describe('buildPickableTrains', () => {
             false,
             false,
         ]);
-        expect(result[0].time).toEqual(new Date(2026, 10, 10, 7, 8, 0));
+        expect(result[0].time).toEqual(new Date('2026-11-10T07:08:00+09:00'));
     });
 
     it('幅の両端（at - before ちょうど・at + after ちょうど）を含む', () => {
@@ -191,7 +191,7 @@ describe('buildPickableTrains', () => {
         const [row, other] = run(blocks(t, through), AT);
 
         expect(row.isArrivalOnly).toBe(true);
-        expect(row.time).toEqual(new Date(2026, 10, 10, 7, 12, 0));
+        expect(row.time).toEqual(new Date('2026-11-10T07:12:00+09:00'));
         expect(row.destinationName).toBe('二俣川');
         expect(other.isArrivalOnly).toBe(false);
     });
@@ -259,13 +259,13 @@ describe('buildPickableTrains', () => {
         const day1 = run(blocks(departing('1', '07:12:00')), AT);
         expect(day1[0].displayTime).toBe('07:12');
 
-        const at = new Date(2026, 10, 11, 0, 32, 0); // 営業日 11/10 の 24:32
+        const at = new Date('2026-11-11T00:32:00+09:00'); // 営業日 11/10 の 24:32
         const day2 = run(blocks(departing('2', '00:30:00', {}, 2)), at);
         expect(day2[0].displayTime).toBe('24:30');
     });
 
     it('3:50 に開くと前日の営業日の days=2 の 03:40〜04:00 を出す', () => {
-        const at = new Date(2026, 10, 11, 3, 50, 0);
+        const at = new Date('2026-11-11T03:50:00+09:00');
 
         const result = run(
             blocks(
@@ -281,7 +281,7 @@ describe('buildPickableTrains', () => {
     });
 
     it('4:05 に開くと当日の営業日の days=1 の 03:55〜04:15 を出す', () => {
-        const at = new Date(2026, 10, 11, 4, 5, 0);
+        const at = new Date('2026-11-11T04:05:00+09:00');
 
         const result = run(
             blocks(

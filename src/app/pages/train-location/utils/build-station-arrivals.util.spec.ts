@@ -78,7 +78,7 @@ function run(
 }
 
 // 2026-09-26 10:00（営業日当日）
-const AT = new Date(2026, 8, 26, 10, 0, 0);
+const AT = new Date('2026-09-26T10:00:00+09:00');
 
 describe('buildStationArrivals', () => {
     it('停車する列車は着時刻（無ければ発時刻）で、あと何分を出す', () => {
@@ -438,7 +438,7 @@ describe('buildStationArrivals', () => {
         const byId = (id: string) => rows.find((r) => r.tripId === id);
 
         expect(byId('1')?.departureTime).toEqual(
-            new Date(2026, 8, 26, 10, 6, 0),
+            new Date('2026-09-26T10:06:00+09:00'),
         );
         expect(byId('2')?.departureTime).toBeUndefined();
         expect(byId('3')?.departureTime).toBeUndefined();
@@ -481,7 +481,7 @@ describe('buildStationArrivals', () => {
             AT,
         ).outbound;
 
-        expect(row.departureTime).toEqual(new Date(2026, 8, 26, 10, 7, 0));
+        expect(row.departureTime).toEqual(new Date('2026-09-26T10:07:00+09:00'));
     });
 
     it('いま停車中（着 <= at < 発）の列車は isStopped で 0 分', () => {
@@ -525,7 +525,7 @@ describe('buildStationArrivals', () => {
     });
 
     it('24 時を越える列車（days = 2）は翌日の時刻として扱う', () => {
-        const late = new Date(2026, 8, 27, 0, 10, 0); // 営業日 9/26 の 24:10
+        const late = new Date('2026-09-27T00:10:00+09:00'); // 営業日 9/26 の 24:10
         const t = trip('1', 1, [
             time({
                 stationId: 'A',

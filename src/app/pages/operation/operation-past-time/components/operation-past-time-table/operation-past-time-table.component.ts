@@ -5,7 +5,8 @@ import {
     inject,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { format, subDays, subHours } from 'date-fns';
+import { format, parseISO, subDays } from 'date-fns';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
@@ -187,7 +188,7 @@ export class OperationPastTimeTableComponent {
      * （0〜4 時に押すと、まだ何も無い暦の翌日が最後の列になっていた）。
      */
     onDefaultSearch(): void {
-        const operatingDay = subHours(new Date(), 4);
+        const operatingDay = parseISO(railwayDateKey());
         const referenceDate = format(subDays(operatingDay, 6), 'yyyy-MM-dd');
         this.#router.navigate([
             'operation',

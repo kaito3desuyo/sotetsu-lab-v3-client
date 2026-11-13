@@ -1,7 +1,7 @@
-import { addDays, getHours, parse, subDays } from 'date-fns';
+import { railwayTimeToInstant } from 'src/app/core/utils/railway-day';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 
-/** 今の submit と同じ換算（4 時の境目）。currentTime なら now をそのまま ISO に */
+/** 指定時刻を日本時間の営業日（4 時の境目）の時点にする。currentTime なら now をそのまま ISO に */
 export function toSightingTimeIso(params: {
     timeSetting: 'currentTime' | 'specifiedTime';
     sightingTime: string;
@@ -10,14 +10,8 @@ export function toSightingTimeIso(params: {
     const { timeSetting, sightingTime, now } = params;
     if (timeSetting !== 'specifiedTime') return now.toISOString();
 
-    const parsedSightingTime = parse(sightingTime, 'HH:mm', now);
-    const isLateNight = getHours(now) < 4;
-
-    const adjustedSightingTime = isLateNight
-        ? subDays(parsedSightingTime, getHours(parsedSightingTime) >= 4 ? 1 : 0)
-        : addDays(parsedSightingTime, getHours(parsedSightingTime) < 4 ? 1 : 0);
-
-    return adjustedSightingTime.toISOString();
+    const [hours, minutes] = sightingTime.split(':').map(Number);
+    return railwayTimeToInstant(now, hours, minutes).toISOString();
 }
 
 export type SightingBlockReason = 'future_time' | 'operation_not_found';

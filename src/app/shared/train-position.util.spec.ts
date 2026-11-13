@@ -24,8 +24,25 @@ function tripBlock(trips: TripDetailsDto[]): TripBlockDetailsDto {
 const AXIS_ABC = [station('A'), station('B'), station('C')];
 
 describe('estimatePositions', () => {
+    it('端末の時刻帯によらず日本時間で位置を出す（JST 10:30 は 10:25 発 10:35 着の区間を走行中）', () => {
+        const at = new Date('2026-11-13T01:30:00Z');
+        const tripBlocks = [
+            tripBlock([
+                trip('T1', [
+                    time({ stationId: 'A', stopSequence: 1, departureTime: '10:25:00' }),
+                    time({ stationId: 'B', stopSequence: 2, arrivalTime: '10:35:00' }),
+                ]),
+            ]),
+        ];
+
+        const result = estimatePositions(tripBlocks, AXIS_ABC, at);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].tripId).toBe('T1');
+    });
+
     it('発時刻ちょうどは駅間（progress=0）と判定する（境界値）', () => {
-        const at = new Date(2026, 6, 4, 8, 0, 0);
+        const at = new Date('2026-07-04T08:00:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -43,7 +60,7 @@ describe('estimatePositions', () => {
     });
 
     it('着時刻ちょうどは停車中と判定する（境界値）', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -65,7 +82,7 @@ describe('estimatePositions', () => {
     });
 
     it('0 秒停車（着=発）は stopped にならず次区間の between(progress=0) に吸収される', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -90,7 +107,7 @@ describe('estimatePositions', () => {
 
     it('24 時超え（days は 1-based。当日=1 / 翌日分=2）を跨いだ駅間を正しく補間する', () => {
         // 2026-07-04 23:50 発（営業日当日=day 1）→ 2026-07-05 00:10（=24:10・翌日分=day 2）着 を 23:55 時点で見る
-        const at = new Date(2026, 6, 4, 23, 55, 0);
+        const at = new Date('2026-07-04T23:55:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -121,7 +138,7 @@ describe('estimatePositions', () => {
     it('4 時境界: 深夜 0:30 は前日ダイヤの 24:30 として算出される', () => {
         // wall-clock は 2026-07-05 00:30。鉄道日的には前日(2026-07-04)の営業日が継続中で、
         // 当該 trip の時刻は翌日分(day 2) '00:20:00'(=24:20) / '00:40:00'(=24:40) として記録されている。
-        const at = new Date(2026, 6, 5, 0, 30, 0);
+        const at = new Date('2026-07-05T00:30:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -149,7 +166,7 @@ describe('estimatePositions', () => {
     });
 
     it('通過駅（駅軸に存在しない駅）を挟む区間は前後の停車駅で内分する', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const axisWithoutB = [station('A'), station('C')];
         const tripBlocks = [
             tripBlock([
@@ -175,7 +192,7 @@ describe('estimatePositions', () => {
     });
 
     it('通過駅（発着時刻が両方欠落）を挟む区間も前後の停車駅で内分する', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -194,7 +211,7 @@ describe('estimatePositions', () => {
     });
 
     it('未出発（at < 最初の発時刻）は結果に含めない（境界値: 発時刻の1秒前）', () => {
-        const at = new Date(2026, 6, 4, 7, 59, 59);
+        const at = new Date('2026-07-04T07:59:59+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -208,7 +225,7 @@ describe('estimatePositions', () => {
     });
 
     it('到着済（最後の着時刻 ≤ at）は結果に含めない（境界値: 着時刻ちょうど）', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -236,10 +253,10 @@ describe('estimatePositions', () => {
             ]),
         ];
 
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 12, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:12:00+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'B' },
         ]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 14, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:14:00+09:00'))).toEqual([
             { type: 'between', tripId: 'T2', fromStationId: 'B', toStationId: 'C', progress: 0 },
         ]);
     });
@@ -293,13 +310,13 @@ describe('estimatePositions', () => {
 
         it('前の列車が着いてから発時刻までは、これから発つ列車を折返しとして出す', () => {
             expect(
-                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0)),
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date('2026-07-04T08:10:00+09:00')),
             ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', stoppedReason: 'turnaround' }]);
             expect(
-                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 17, 59)),
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date('2026-07-04T08:17:59+09:00')),
             ).toEqual([{ type: 'stopped', tripId: 'T2', stationId: 'C', stoppedReason: 'turnaround' }]);
             expect(
-                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 18, 0)),
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date('2026-07-04T08:18:00+09:00')),
             ).toEqual([
                 { type: 'between', tripId: 'T2', fromStationId: 'C', toStationId: 'A', progress: 0 },
             ]);
@@ -307,7 +324,7 @@ describe('estimatePositions', () => {
 
         it('前の列車が着く前は出さない', () => {
             expect(
-                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date(2026, 6, 4, 8, 9, 59)),
+                estimatePositions(turnaroundBlocks(), AXIS_ABC, new Date('2026-07-04T08:09:59+09:00')),
             ).toEqual([
                 expect.objectContaining({ type: 'between', tripId: 'T1' }),
             ]);
@@ -340,7 +357,7 @@ describe('estimatePositions', () => {
                     ...ends,
                 };
             }
-            const at = new Date(2026, 6, 4, 8, 12, 0);
+            const at = new Date('2026-07-04T08:12:00+09:00');
 
             it('前の列車が別の運用へ移る（決まり 2 の next）なら、発つ列車を折返しとして出さない', () => {
                 expect(
@@ -363,7 +380,7 @@ describe('estimatePositions', () => {
                 const positions = estimatePositions(
                     turnaroundBlocks(),
                     AXIS_ABC,
-                    new Date(2026, 6, 4, 8, 20, 0),
+                    new Date('2026-07-04T08:20:00+09:00'),
                     links,
                 );
                 expect(positions).toHaveLength(1);
@@ -386,7 +403,7 @@ describe('estimatePositions', () => {
 
         it('運用が違えば出さない', () => {
             expect(
-                estimatePositions(turnaroundBlocks('O2'), AXIS_ABC, new Date(2026, 6, 4, 8, 12, 0)),
+                estimatePositions(turnaroundBlocks('O2'), AXIS_ABC, new Date('2026-07-04T08:12:00+09:00')),
             ).toEqual([]);
         });
 
@@ -395,14 +412,14 @@ describe('estimatePositions', () => {
                 estimatePositions(
                     turnaroundBlocks('O1', { depotIn: true }),
                     AXIS_ABC,
-                    new Date(2026, 6, 4, 8, 12, 0),
+                    new Date('2026-07-04T08:12:00+09:00'),
                 ),
             ).toEqual([{ type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' }]);
             expect(
                 estimatePositions(
                     turnaroundBlocks('O1', { depotIn: true }),
                     AXIS_ABC,
-                    new Date(2026, 6, 4, 8, 14, 0),
+                    new Date('2026-07-04T08:14:00+09:00'),
                 ),
             ).toEqual([]);
         });
@@ -412,7 +429,7 @@ describe('estimatePositions', () => {
                 estimatePositions(
                     turnaroundBlocks('O1', {}, { depotOut: true }),
                     AXIS_ABC,
-                    new Date(2026, 6, 4, 8, 12, 0),
+                    new Date('2026-07-04T08:12:00+09:00'),
                 ),
             ).toEqual([]);
         });
@@ -431,14 +448,14 @@ describe('estimatePositions', () => {
             ]),
         ];
 
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 56, 59))).toEqual([]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 57, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T07:56:59+09:00'))).toEqual([]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T07:57:00+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'A', stoppedReason: 'depotOut' },
         ]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 59, 59))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T07:59:59+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'A', stoppedReason: 'depotOut' },
         ]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 0, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:00:00+09:00'))).toEqual([
             { type: 'between', tripId: 'T1', fromStationId: 'A', toStationId: 'C', progress: 0 },
         ]);
     });
@@ -456,13 +473,13 @@ describe('estimatePositions', () => {
             ]),
         ];
 
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 10, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:10:00+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' },
         ]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 12, 59))).toEqual([
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:12:59+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'C', stoppedReason: 'depotIn' },
         ]);
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 8, 13, 0))).toEqual([]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T08:13:00+09:00'))).toEqual([]);
     });
 
     it('出庫しない列車は、発時刻の前には出さない', () => {
@@ -475,7 +492,7 @@ describe('estimatePositions', () => {
             ]),
         ];
 
-        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date(2026, 6, 4, 7, 58, 0))).toEqual([]);
+        expect(estimatePositions(tripBlocks, AXIS_ABC, new Date('2026-07-04T07:58:00+09:00'))).toEqual([]);
     });
 
     it('駅軸の最後の停車駅から他線へ直通する列車は、そこを発つまで停車中として残す', () => {
@@ -491,15 +508,15 @@ describe('estimatePositions', () => {
             ]),
         ];
 
-        expect(estimatePositions(tripBlocks, axisAB, new Date(2026, 6, 4, 8, 11, 0))).toEqual([
+        expect(estimatePositions(tripBlocks, axisAB, new Date('2026-07-04T08:11:00+09:00'))).toEqual([
             { type: 'stopped', tripId: 'T1', stationId: 'B' },
         ]);
         // 発ったあとは他線に入るので図から消える
-        expect(estimatePositions(tripBlocks, axisAB, new Date(2026, 6, 4, 8, 12, 0))).toEqual([]);
+        expect(estimatePositions(tripBlocks, axisAB, new Date('2026-07-04T08:12:00+09:00'))).toEqual([]);
     });
 
     it('複数 tripBlock・複数 trip を横断し、該当するものだけを結果にまとめる', () => {
-        const at = new Date(2026, 6, 4, 8, 5, 0);
+        const at = new Date('2026-07-04T08:05:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -534,7 +551,7 @@ describe('estimatePositions', () => {
     });
 
     it('駅軸に存在する停車点が1点以下の trip は結果に含めない', () => {
-        const at = new Date(2026, 6, 4, 8, 5, 0);
+        const at = new Date('2026-07-04T08:05:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [
@@ -547,7 +564,7 @@ describe('estimatePositions', () => {
     });
 
     it('発着とも null の通過駅を含んでもクラッシュせず、前後駅間の補間に吸収される（実データ回帰）', () => {
-        const at = new Date(2026, 6, 4, 8, 10, 0);
+        const at = new Date('2026-07-04T08:10:00+09:00');
         const tripBlocks = [
             tripBlock([
                 trip('T1', [

@@ -1,6 +1,5 @@
 import { parseISO } from 'date-fns';
-import { format, toZonedTime } from 'date-fns-tz';
-import { toDisplayTime } from 'src/app/core/utils/railway-day';
+import { formatJst, toDisplayTime } from 'src/app/core/utils/railway-day';
 import { FormationDayBasis } from './formation-day.util';
 
 /** 運用の決め手の呼び名（R4） */
@@ -34,9 +33,7 @@ export function formatClock(
 /** ISO の時刻を日本時間の 'HH:mm' にする */
 export function formatSightingClock(iso: string | undefined): string {
     if (!iso) return '';
-    return format(toZonedTime(parseISO(iso), 'Asia/Tokyo'), 'HH:mm', {
-        timeZone: 'Asia/Tokyo',
-    });
+    return formatJst(parseISO(iso), 'HH:mm');
 }
 
 /** 運用番号のチップのリンク先（運用行路図）。運用 ID が分からなければリンクにしない */

@@ -1,10 +1,10 @@
 import { pastTimeCacheHints } from './past-time-cache-hints.util';
 
 describe('pastTimeCacheHints', () => {
-    // 2026-10-24 12:00（鉄道の日付も 10-24）
-    const noon = new Date(2026, 9, 24, 12, 0);
-    // 2026-10-25 02:00（鉄道の日付はまだ 10-24）
-    const lateNight = new Date(2026, 9, 25, 2, 0);
+    // 日本時間 2026-10-24 12:00（鉄道の日付も 10-24）
+    const noon = new Date('2026-10-24T03:00:00Z');
+    // 日本時間 2026-10-25 02:00（鉄道の日付はまだ 10-24）
+    const lateNight = new Date('2026-10-24T17:00:00Z');
 
     it('日付が無い（検索前）は長く置き、タグは無い', () => {
         expect(pastTimeCacheHints([], noon)).toEqual({
@@ -37,5 +37,12 @@ describe('pastTimeCacheHints', () => {
         expect(pastTimeCacheHints(['2026-10-23'], lateNight).policy).toBe(
             'long',
         );
+    });
+
+    it('端末の時刻帯によらず、日本時間の営業日を今日とする', () => {
+        const now = new Date('2026-11-13T01:30:00Z');
+
+        expect(pastTimeCacheHints(['2026-11-13'], now).policy).toBe('short');
+        expect(pastTimeCacheHints(['2026-11-12'], now).policy).toBe('long');
     });
 });

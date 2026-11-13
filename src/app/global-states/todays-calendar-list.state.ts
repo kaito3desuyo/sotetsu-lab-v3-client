@@ -12,11 +12,10 @@ import {
     setAllEntities,
     withEntities,
 } from '@ngrx/signals/entities';
-import { format } from 'date-fns';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { withAppDevtools } from '../core/store-features/with-app-devtools';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { CalendarService } from '../libs/calendar/usecase/calendar.service';
 import { CalendarDetailsDto } from '../libs/calendar/usecase/dtos/calendar-details.dto';
 
@@ -47,14 +46,13 @@ export const TodaysCalendarListState = signalStore(
             isForToday(now: Date = new Date()): boolean {
                 const fetchedDate = store.fetchedDate();
                 return (
-                    fetchedDate === null ||
-                    fetchedDate === format(getRailwayDate(now), 'yyyy-MM-dd')
+                    fetchedDate === null || fetchedDate === railwayDateKey(now)
                 );
             },
             /** now の営業日の一覧を取り終えたと記録する（取り直しが全部成功したあとに呼ぶ） */
             markFetched(now: Date = new Date()): void {
                 patchState(store, {
-                    fetchedDate: format(getRailwayDate(now), 'yyyy-MM-dd'),
+                    fetchedDate: railwayDateKey(now),
                 });
             },
             /**
@@ -62,7 +60,7 @@ export const TodaysCalendarListState = signalStore(
              * 全部成功してから markFetched するため）
              */
             fetch(options: { recordDate?: boolean } = {}): Observable<void> {
-                const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+                const date = railwayDateKey();
                 return calendarService.findOneBySpecificDate({ date }).pipe(
                     tap((data: CalendarDetailsDto) => {
                         patchState(

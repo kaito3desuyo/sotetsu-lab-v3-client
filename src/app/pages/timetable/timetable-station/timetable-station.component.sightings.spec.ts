@@ -6,7 +6,6 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { format } from 'date-fns';
 import localForage from 'localforage';
 import { Observable, Subject, of } from 'rxjs';
 
@@ -15,7 +14,7 @@ import {
     OfflineSnapshots,
 } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { TimetableStationService } from './services/timetable-station.service';
@@ -36,7 +35,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
     const crossSection = {
         operationNumber: '51',
     } as unknown as OperationSightingTimeCrossSectionDto;
-    const today = () => format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+    const today = () => railwayDateKey();
     const conditions = (date: string) => ({
         calendarId: '00000000-0000-4000-8000-000000000001',
         stationId: 'st-1',

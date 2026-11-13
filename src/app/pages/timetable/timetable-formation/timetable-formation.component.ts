@@ -19,7 +19,7 @@ import { filter, lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { notifyNavigationFailure } from 'src/app/core/utils/notify-navigation-failure';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
@@ -98,7 +98,7 @@ export class TimetableFormationComponent {
     readonly formationNumber = signal<string | null>(null);
     readonly date = signal<string | null>(null);
 
-    readonly today = computed(() => dateKey(getRailwayDate(this.now())));
+    readonly today = computed(() => railwayDateKey(this.now()));
     readonly tomorrow = computed(() => shiftDate(this.today(), 1));
 
     protected readonly isLoading = this.#store.isLoading;

@@ -23,9 +23,9 @@ type StoreState = Record<string, unknown>;
 const FORMATION = { formationId: 'f1', formationNumber: '8713' } as never;
 const CALENDAR = { calendarId: 'c1' } as never;
 
-/** getRailwayDate は端末の時刻で 4 時区切りを見るので、端末の時刻で組む */
+/** 営業日は日本時間で 4 時区切りなので、日本時間（UTC+9）の時刻で組む */
 const at = (hour: number, minute = 0, day = 11): Date =>
-    new Date(2026, 10, day, hour, minute);
+    new Date(Date.UTC(2026, 10, day, hour - 9, minute));
 
 const ONLY_DATE = [
     'hrtime',

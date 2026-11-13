@@ -50,15 +50,19 @@ describe('toTimeInputValue / fromTimeInputValue', () => {
 });
 
 describe('toDateWithTime', () => {
-    it('anchor の日付部分を保ったまま時分を上書きする', () => {
-        const anchor = new Date(2026, 6, 4, 23, 59, 59);
-        const result = toDateWithTime(anchor, { hours: 7, minutes: 30 });
+    it('anchor の日本時間の日付に指定の時分（日本時間）を組み合わせる', () => {
+        const result = toDateWithTime(new Date('2026-11-12T17:00:00Z'), {
+            hours: 1,
+            minutes: 0,
+        });
+        expect(result.toISOString()).toBe('2026-11-12T16:00:00.000Z');
+    });
 
-        expect(result.getFullYear()).toBe(2026);
-        expect(result.getMonth()).toBe(6);
-        expect(result.getDate()).toBe(4);
-        expect(result.getHours()).toBe(7);
-        expect(result.getMinutes()).toBe(30);
-        expect(result.getSeconds()).toBe(0);
+    it('端末の時刻帯に依らず日本時間の日付を使う（JST 23:59 の anchor）', () => {
+        const result = toDateWithTime(new Date('2026-07-04T14:59:59Z'), {
+            hours: 7,
+            minutes: 30,
+        });
+        expect(result.toISOString()).toBe('2026-07-03T22:30:00.000Z');
     });
 });

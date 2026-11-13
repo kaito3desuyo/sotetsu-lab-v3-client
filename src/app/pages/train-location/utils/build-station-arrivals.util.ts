@@ -1,5 +1,4 @@
-import { format } from 'date-fns';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { formatJst, railwayDayStart } from 'src/app/core/utils/railway-day';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
@@ -105,7 +104,7 @@ function buildOffAxisWhereText(
         const originName = origin.stationId
             ? (input.stationNameById.get(origin.stationId) ?? '')
             : '';
-        return `${originName} ${format(originDeparture, 'HH:mm')} 発`;
+        return `${originName} ${formatJst(originDeparture, 'HH:mm')} 発`;
     }
 
     let current = 0;
@@ -275,7 +274,7 @@ function buildArrival(
 export function buildStationArrivals(
     input: BuildStationArrivalsInput,
 ): StationArrivals {
-    const base = getRailwayDate(input.at);
+    const base = railwayDayStart(input.at);
     const positionByTripId = new Map(input.positions.map((p) => [p.tripId, p]));
     const continuations = findContinuations(input.tripBlocks);
     const continuedTripIds = new Set(

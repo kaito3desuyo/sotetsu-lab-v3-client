@@ -188,7 +188,9 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('onDefaultSearch: 直近 7 日間（6 日前を基準日に 7 日間）で検索する', () => {
-        jest.useFakeTimers().setSystemTime(new Date(2026, 8, 24, 12, 0));
+        jest.useFakeTimers().setSystemTime(
+            new Date('2026-09-24T12:00:00+09:00'),
+        );
         const navigate = jest
             .spyOn(TestBed.inject(Router), 'navigate')
             .mockResolvedValue(true);
@@ -204,7 +206,9 @@ describe('OperationPastTimeTableComponent', () => {
     });
 
     it('onDefaultSearch: 4 時前は前日を「本日」として数える（運行日）', () => {
-        jest.useFakeTimers().setSystemTime(new Date(2026, 8, 24, 0, 37));
+        jest.useFakeTimers().setSystemTime(
+            new Date('2026-09-24T00:37:00+09:00'),
+        );
         const navigate = jest
             .spyOn(TestBed.inject(Router), 'navigate')
             .mockResolvedValue(true);

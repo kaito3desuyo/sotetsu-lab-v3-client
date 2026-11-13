@@ -4,8 +4,10 @@ import {
     buildStandardRunMinutes,
     estimatePassingStops,
 } from './estimate-passing-times.util';
+import { railwayDayStart } from 'src/app/core/utils/railway-day';
 
-const base = new Date(2026, 6, 20, 0, 0, 0, 0);
+// 2026-07-20（日本時間）の 0:00 の時点
+const base = railwayDayStart(new Date('2026-07-20T03:00:00Z'));
 
 function time(params: {
     stationId: string;
@@ -164,5 +166,27 @@ describe('estimatePassingStops', () => {
         });
 
         expect(b.arrivalTime).toBe('07:03:00');
+    });
+
+    it('日本時間の 10:00 発・10:06 着の間の駅は 10:03:00・days 1 になる', () => {
+        const [m] = estimatePassingStops({
+            from: time({
+                stationId: 'A',
+                stopSequence: 1,
+                departureTime: '10:00:00',
+            }),
+            to: time({
+                stationId: 'C',
+                stopSequence: 3,
+                arrivalTime: '10:06:00',
+            }),
+            between: [time({ stationId: 'B', stopSequence: 2 })],
+            standardRunMinutes: new Map(),
+            base,
+        });
+
+        expect(m.arrivalTime).toBe('10:03:00');
+        expect(m.arrivalDays).toBe(1);
+        expect(m.departureDays).toBe(1);
     });
 });

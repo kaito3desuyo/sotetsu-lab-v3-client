@@ -16,8 +16,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
-import { isAfter, parse } from 'date-fns';
+import { isAfter } from 'date-fns';
 import { isEqual } from 'es-toolkit';
+import { jstMidnightOf } from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
@@ -144,8 +145,7 @@ export class TimetableAllLineTableComponent {
 
     readonly isFeatureDate = computed(() => {
         const date = this.calendar()?.startDate;
-        return (
-            !!date && isAfter(new Date(), parse(date, 'yyyy-MM-dd', new Date()))
-        );
+        // 改正日の日本時間 0 時を過ぎたか（端末の時刻帯に依らない）
+        return !!date && isAfter(new Date(), jstMidnightOf(date));
     });
 }

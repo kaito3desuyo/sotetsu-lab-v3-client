@@ -14,7 +14,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
-import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -26,7 +25,7 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -345,10 +344,7 @@ export class TimetableStationComponent {
                     await this.#saveOrRestoreSightings({
                         conditions: {
                             ...conditions,
-                            date: format(
-                                getRailwayDate(new Date()),
-                                'yyyy-MM-dd',
-                            ),
+                            date: railwayDateKey(),
                         },
                         fetched: sightingsFetched,
                     });
@@ -378,7 +374,7 @@ export class TimetableStationComponent {
             calendarId: this.#store.calendarId(),
             stationId: this.#store.stationId(),
             tripDirection: this.#store.tripDirection(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         this.#store.enableLoading();
         try {

@@ -1,17 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import {
-    format,
-    getHours,
-    setHours,
-    setMilliseconds,
-    setMinutes,
-    setSeconds,
-    subDays,
-} from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-import { flow } from 'es-toolkit';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -83,16 +73,7 @@ export class OperationRealTimeService {
     }
 
     fetchCalendar(): Observable<void> {
-        const generateBaseDate: (unixtime: number) => string = flow(
-            (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
-            (date: Date) => (getHours(date) < 4 ? subDays(date, 1) : date),
-            (date: Date) => setHours(date, 4),
-            (date: Date) => setMinutes(date, 0),
-            (date: Date) => setSeconds(date, 0),
-            (date: Date) => setMilliseconds(date, 0),
-            (date: Date) => format(date, 'yyyy-MM-dd'),
-        );
-        const date = generateBaseDate(Date.now());
+        const date = railwayDateKey();
 
         return this.#calendarService
             .findOneBySpecificDate({
@@ -147,16 +128,7 @@ export class OperationRealTimeService {
     }
 
     fetchFormations(): Observable<void> {
-        const generateBaseDate: (unixtime: number) => string = flow(
-            (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
-            (date: Date) => (getHours(date) < 4 ? subDays(date, 1) : date),
-            (date: Date) => setHours(date, 4),
-            (date: Date) => setMinutes(date, 0),
-            (date: Date) => setSeconds(date, 0),
-            (date: Date) => setMilliseconds(date, 0),
-            (date: Date) => format(date, 'yyyy-MM-dd'),
-        );
-        const date = generateBaseDate(Date.now());
+        const date = railwayDateKey();
 
         return this.#formationService
             .findManyBySpecificPeriod({
@@ -244,17 +216,7 @@ export class OperationRealTimeService {
         const operations = this.#store.sortedOperations();
         const formations = this.#store.sortedFormations();
 
-        const generateBaseDate: (unixtime: number) => string = flow(
-            (unixtime: number) => toZonedTime(unixtime, 'Asia/Tokyo'),
-            (date: Date) => (getHours(date) < 4 ? subDays(date, 1) : date),
-            (date: Date) => setHours(date, 4),
-            (date: Date) => setMinutes(date, 0),
-            (date: Date) => setSeconds(date, 0),
-            (date: Date) => setMilliseconds(date, 0),
-            (date: Date) => format(date, 'yyyy-MM-dd'),
-        );
-
-        const date = generateBaseDate(Date.now());
+        const date = railwayDateKey();
 
         return this.#operationSightingService
             .findManyBySpecificPeriod({

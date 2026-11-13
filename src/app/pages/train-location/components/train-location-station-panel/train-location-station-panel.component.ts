@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { RouterLink } from '@angular/router';
-import { format } from 'date-fns';
+import { formatJst } from 'src/app/core/utils/railway-day';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import {
@@ -80,13 +80,15 @@ export class TrainLocationStationPanelComponent {
     }
 
     timeLabel(arrival: StationArrival): string {
-        return format(arrival.time, 'HH:mm') + (arrival.isPassing ? '頃' : '');
+        return (
+            formatJst(arrival.time, 'HH:mm') + (arrival.isPassing ? '頃' : '')
+        );
     }
 
     /** あと何分ラベル（Math.floor）が「2分」以下になる行は淡い accent の地にする */
     departureLabel(arrival: StationArrival): string {
         return arrival.departureTime
-            ? format(arrival.departureTime, 'HH:mm')
+            ? formatJst(arrival.departureTime, 'HH:mm')
             : '';
     }
 

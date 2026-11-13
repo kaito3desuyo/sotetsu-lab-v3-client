@@ -1,4 +1,4 @@
-import { getRailwayDate, toDisplayTime } from 'src/app/core/utils/railway-day';
+import { railwayDayStart, toDisplayTime } from 'src/app/core/utils/railway-day';
 import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import {
@@ -68,7 +68,7 @@ export function buildPickableTrains(input: {
     stationNameById: ReadonlyMap<string, string>;
 }): PickableTrain[] {
     const { tripBlocks, stationId, at, direction, stationNameById } = input;
-    const base = getRailwayDate(at);
+    const base = railwayDayStart(at);
     const from = at.getTime() - input.minutesBefore * MINUTE_MS;
     const to = at.getTime() + input.minutesAfter * MINUTE_MS;
 

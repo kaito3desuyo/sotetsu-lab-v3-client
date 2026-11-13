@@ -11,10 +11,9 @@ import {
     setAllEntities,
     withEntities,
 } from '@ngrx/signals/entities';
-import { format } from 'date-fns';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { FormationDetailsDto } from '../libs/formation/usecase/dtos/formation-details.dto';
 import { FormationService } from '../libs/formation/usecase/formation.service';
@@ -69,7 +68,7 @@ export const TodaysFormationListState = signalStore(
             fetch(): Observable<void> {
                 return formationService
                     .findManyBySpecificDate({
-                        date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+                        date: railwayDateKey(),
                     })
                     .pipe(
                         tap((data: FormationDetailsDto[]) => {

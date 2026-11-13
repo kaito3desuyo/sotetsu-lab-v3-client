@@ -1,4 +1,7 @@
-import { toAbsoluteTime } from 'src/app/core/utils/railway-day';
+import {
+    railwayDayStart,
+    toAbsoluteTime,
+} from 'src/app/core/utils/railway-day';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { StationAxis } from 'src/app/shared/diagram-scale';
@@ -1217,12 +1220,12 @@ describe('buildTripDiagramLine: 合流点(西谷)を跨ぐ列車の経由判定�
 
 describe('resolveArrival / resolveDeparture（toAbsoluteTime と同じ結果）', () => {
     it.each([
-        [new Date(2026, 6, 20), 1, '07:05:30'],
-        [new Date(2026, 6, 20), 2, '00:30:00'],
-        [new Date(2026, 6, 31), 2, '01:25:00'],
-        [new Date(2026, 11, 31), 2, '00:00:00'],
-        [new Date(2026, 2, 8, 13, 45), 1, '23:59:59'],
-    ])('%s の days=%i %s', (base, days, time) => {
+        ['2026-07-20T01:00:00Z', 1, '07:05:30'],
+        ['2026-07-20T01:00:00Z', 2, '00:30:00'],
+        ['2026-07-31T01:00:00Z', 2, '01:25:00'],
+        ['2026-12-31T01:00:00Z', 2, '00:00:00'],
+    ])('%s の営業日 days=%i %s', (baseIso, days, time) => {
+        const base = railwayDayStart(new Date(baseIso));
         const expected = toAbsoluteTime(base, days - 1, time).getTime();
         const stop = {
             timeId: 'x',

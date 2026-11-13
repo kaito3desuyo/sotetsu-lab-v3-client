@@ -136,3 +136,39 @@ describe('TimetableAllLineTableComponent の編集操作', () => {
         expect(tag).toHaveClass('!tw-text-[13px]');
     });
 });
+
+describe('TimetableAllLineTableComponent の isFeatureDate', () => {
+    let fixture: ComponentFixture<TimetableAllLineTableComponent>;
+
+    beforeEach(async () => {
+        jest.useFakeTimers();
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineTableComponent],
+            providers: [provideRouter([]), provideNoopAnimations()],
+        })
+            .overrideComponent(TimetableAllLineTableComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+
+        fixture = TestBed.createComponent(TimetableAllLineTableComponent);
+        fixture.componentRef.setInput('calendar', {
+            calendarId: 'c1',
+            startDate: '2026-11-14',
+        });
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('改正日の日本時間 0 時より前は false', () => {
+        jest.setSystemTime(new Date('2026-11-13T14:59:00Z'));
+        expect(fixture.componentInstance.isFeatureDate()).toBe(false);
+    });
+
+    it('改正日の日本時間 0 時を過ぎたら true', () => {
+        jest.setSystemTime(new Date('2026-11-13T15:01:00Z'));
+        expect(fixture.componentInstance.isFeatureDate()).toBe(true);
+    });
+});

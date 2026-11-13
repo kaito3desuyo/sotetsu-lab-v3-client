@@ -11,9 +11,12 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import {
+    formatJst,
+    railwayClock,
+    railwayDateKey,
+} from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
@@ -252,10 +255,12 @@ export class TrainLocationComponent {
             : undefined,
     );
 
-    readonly clockText = computed(() => format(this.at(), 'HH:mm:ss'));
+    readonly clockText = computed(() => formatJst(this.at(), 'HH:mm:ss'));
     readonly timeInputValue = computed(() => {
         const parsed = parseTimeParam(this.specifiedTime());
-        return parsed ? toTimeInputValue(parsed) : format(new Date(), 'HH:mm');
+        return parsed
+            ? toTimeInputValue(parsed)
+            : formatJst(new Date(), 'HH:mm');
     });
 
     /** 細帯の要約に出す路線名（選択中路線を #routeStations から引く） */
@@ -561,7 +566,7 @@ export class TrainLocationComponent {
         const conditions = {
             calendarId: this.#store.calendarId(),
             routeId: this.#store.selectedRouteId(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         let fetched: boolean;
         try {
@@ -606,7 +611,7 @@ export class TrainLocationComponent {
         const conditions = {
             calendarId: this.#store.calendarId(),
             routeId: this.#store.selectedRouteId(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         this.#store.enableLoading();
         try {
@@ -656,10 +661,8 @@ export class TrainLocationComponent {
 
     onModeChange(mode: TrainLocationMode): void {
         if (mode === 'specified') {
-            const timeValue = formatTimeParam({
-                hours: this.at().getHours(),
-                minutes: this.at().getMinutes(),
-            });
+            const { hours, minutes } = railwayClock(this.at());
+            const timeValue = formatTimeParam({ hours, minutes });
             this.#navigate({
                 time: timeValue,
                 calendar_id:

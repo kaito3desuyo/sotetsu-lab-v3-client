@@ -71,6 +71,21 @@ describe('DashboardStatusCardComponent', () => {
         expect(fixture.nativeElement).toHaveTextContent('2026/3/14改正');
     });
 
+    it('日付ラベルと時計は日本時間で出す（端末の時刻帯によらない）', () => {
+        jest.useFakeTimers({ now: new Date('2026-11-13T01:30:00Z') });
+        try {
+            const timed = TestBed.createComponent(DashboardStatusCardComponent);
+            timed.detectChanges();
+
+            expect(timed.nativeElement).toHaveTextContent(
+                '2026年11月13日（金）',
+            );
+            expect(timed.nativeElement).toHaveTextContent('10:30');
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
     it('ロード完了後は実数値を表示する', () => {
         store.setRunningTripCount(42);
         store.setSightingCountToday(7);

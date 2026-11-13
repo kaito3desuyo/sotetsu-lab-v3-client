@@ -14,6 +14,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
+import { formatJst } from 'src/app/core/utils/railway-day';
 import { TrainLocationComponent } from './train-location.component';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
@@ -100,8 +101,7 @@ describe('TrainLocationComponent', () => {
         fixture.detectChanges();
 
         const at = component.at();
-        expect(at.getHours()).toBe(7);
-        expect(at.getMinutes()).toBe(30);
+        expect(formatJst(at, 'HH:mm')).toBe('07:30');
     });
 
     it('rows(): 初期状態（データ無し）でも例外を投げない', () => {
@@ -208,6 +208,34 @@ describe('TrainLocationComponent', () => {
             clockText: string;
         };
         expect(controller.clockText).toMatch(/\d{2}:\d{2}:\d{2}/);
+    });
+
+    it('時計と指定時刻への切り替えは、端末の時差によらず日本時間で出す', () => {
+        jest.useFakeTimers({ now: new Date('2026-11-13T01:30:00Z') });
+        try {
+            fixture = TestBed.createComponent(TrainLocationComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+            const controller = (
+                fixture.nativeElement as HTMLElement
+            ).querySelector('app-train-location-controller') as unknown as {
+                clockText: string;
+            };
+            expect(controller.clockText).toMatch(/^10:30:\d{2}$/);
+
+            const router = TestBed.inject(Router);
+            const navigate = jest
+                .spyOn(router, 'navigate')
+                .mockResolvedValue(true);
+            component.onModeChange('specified');
+
+            expect(navigate).toHaveBeenCalledWith([
+                '/train-location',
+                expect.objectContaining({ time: '1030' }),
+            ]);
+        } finally {
+            jest.useRealTimers();
+        }
     });
 
     it('onStationSelect: 駅を URL に載せ、路線ごとに覚える', () => {
@@ -469,7 +497,7 @@ describe('TrainLocationComponent の再訪', () => {
     });
 
     it('取り終えた後、時計が進んでも、目撃の取り足しが走っても、骨組みには戻らない', async () => {
-        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00') });
+        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00+09:00') });
         try {
             const missingSightings = jest.fn(() => of(undefined));
             const service = TestBed.inject(TrainLocationService) as {
@@ -696,7 +724,7 @@ describe('TrainLocationComponent の投稿後の取り直し', () => {
 
     beforeEach(() => {
         jest.useFakeTimers({
-            now: new Date('2026-10-22T09:10:00'),
+            now: new Date('2026-10-22T09:10:00+09:00'),
             doNotFake: ['queueMicrotask', 'nextTick'],
         });
     });

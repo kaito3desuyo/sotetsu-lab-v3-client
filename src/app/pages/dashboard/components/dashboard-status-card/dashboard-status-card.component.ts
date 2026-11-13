@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { formatJst, railwayDateKey } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { DashboardStore } from '../../stores/dashboard.store';
@@ -36,11 +36,11 @@ export class DashboardStatusCardComponent {
     readonly #now = signal(new Date());
 
     readonly businessDateLabel = computed(() =>
-        format(getRailwayDate(this.#now()), 'yyyy年M月d日（E）', {
+        format(parseISO(railwayDateKey(this.#now())), 'yyyy年M月d日（E）', {
             locale: ja,
         }),
     );
-    readonly clockLabel = computed(() => format(this.#now(), 'HH:mm'));
+    readonly clockLabel = computed(() => formatJst(this.#now(), 'HH:mm'));
 
     /** 適用ダイヤの改正日（例: 2026/3/14改正。docs/design.md 時刻と日付の書き方）。mockup-11 でダイヤ名の隣に小さく表示。 */
     readonly revisionLabel = computed(() => {

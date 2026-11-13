@@ -1,4 +1,7 @@
-import { getRailwayDate, toAbsoluteTime } from 'src/app/core/utils/railway-day';
+import {
+    railwayDayStart,
+    toAbsoluteTime,
+} from 'src/app/core/utils/railway-day';
 import { OperationItineraryLinkDto } from 'src/app/libs/operation/usecase/dtos/operation-itinerary-link.dto';
 import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { RouteStationDto } from 'src/app/libs/route/usecase/dtos/route-stations.dto';
@@ -49,7 +52,7 @@ export type TrainPosition =
 /**
  * trip times の days は **1-based**（day 1 = 運行の営業日当日、day 2 = 24 時超えの翌日分）で
  * 実データが格納されている。toAbsoluteTime は 0 始まりの日オフセットを取るため、-1 して渡す
- * （営業日 = getRailwayDate(at) の 0 時基準に一致させる）。欠落時は day 1（オフセット 0）とみなす。
+ * （営業日 = railwayDayStart(at) の 0 時基準に一致させる）。欠落時は day 1（オフセット 0）とみなす。
  */
 function dayOffset(days: number | null | undefined): number {
     return (days ?? 1) - 1;
@@ -345,7 +348,7 @@ export function estimatePositions(
             .map((s) => s.stationId)
             .filter((id): id is string => id !== undefined),
     );
-    const base = getRailwayDate(at);
+    const base = railwayDayStart(at);
     const continuations = findContinuations(tripBlocks);
     const turnarounds = findTurnarounds(tripBlocks, links);
 
