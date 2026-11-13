@@ -11,7 +11,7 @@ function arrival(o: Partial<StationArrival>): StationArrival {
     return {
         tripId: 't',
         direction: 'inbound',
-        time: new Date(2026, 8, 26, 10, 4),
+        time: new Date('2026-09-26T01:04:00Z'),
         minutesUntil: 4.1,
         isPassing: false,
         isTerminal: false,
@@ -271,7 +271,9 @@ describe('TrainLocationStationPanelComponent', () => {
         fixture.componentRef.setInput('stationId', 'C');
         fixture.componentRef.setInput('stationName', '二俣川');
         fixture.componentRef.setInput('arrivals', {
-            inbound: [arrival({ departureTime: new Date(2026, 8, 26, 10, 6) })],
+            inbound: [
+                arrival({ departureTime: new Date('2026-09-26T01:06:00Z') }),
+            ],
             outbound: [arrival({ tripId: 'x', direction: 'outbound' })],
         });
         fixture.detectChanges();
@@ -459,5 +461,24 @@ describe('TrainLocationStationPanelComponent', () => {
                 operationNumber: '30K',
             });
         });
+    });
+
+    it('時刻は端末の時差によらず日本時間で出す', () => {
+        fixture.componentRef.setInput('stationId', 'C');
+        fixture.componentRef.setInput('stationName', '二俣川');
+        fixture.componentRef.setInput('arrivals', {
+            inbound: [
+                arrival({
+                    time: new Date('2026-11-13T01:25:00Z'),
+                    departureTime: new Date('2026-11-13T01:27:00Z'),
+                }),
+            ],
+            outbound: [],
+        });
+        fixture.detectChanges();
+
+        const text = el().textContent ?? '';
+        expect(text).toContain('10:25');
+        expect(text).toContain('10:27');
     });
 });

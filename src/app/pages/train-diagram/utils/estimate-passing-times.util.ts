@@ -120,8 +120,8 @@ export function estimatePassingStops(params: {
     const filled = weights.map((w) => w ?? fallback);
     const totalWeight = filled.reduce((sum, w) => sum + w, 0);
 
-    const dayStart = new Date(base);
-    dayStart.setHours(0, 0, 0, 0);
+    // base は営業日の日本時間 0:00 の時点なので、そのまま日の起点にする
+    const dayStart = base;
 
     const estimated: TimeDetailsDto[] = [];
     let cumulative = 0;
