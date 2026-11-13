@@ -16,7 +16,10 @@ describe('EmptyStateComponent', () => {
     });
 
     it('should create', () => {
-        fixture.componentRef.setInput('message', 'この条件の列車情報はありません');
+        fixture.componentRef.setInput(
+            'message',
+            'この条件の列車情報はありません',
+        );
         fixture.detectChanges();
         expect(component).toBeTruthy();
     });
@@ -65,9 +68,9 @@ describe('EmptyStateComponent', () => {
 
         const buttonEl = fixture.debugElement.query(By.css('button'));
         expect(buttonEl).not.toBeNull();
-        expect(
-            (buttonEl.nativeElement.textContent as string).trim(),
-        ).toContain('下り時刻表を表示する');
+        expect((buttonEl.nativeElement.textContent as string).trim()).toContain(
+            '下り時刻表を表示する',
+        );
     });
 
     it('ボタンをクリックすると actionClick が発火する', () => {
@@ -82,5 +85,15 @@ describe('EmptyStateComponent', () => {
         buttonEl.nativeElement.click();
 
         expect(emitted).toBe(true);
+    });
+
+    // docs/design.md 空状態の置き場: 地の上にじかに置かず、白いカードの中に出す
+    it('白いカード（角丸 8px・白地）として描く', () => {
+        fixture.componentRef.setInput('message', 'メッセージ');
+        fixture.detectChanges();
+
+        const host: HTMLElement = fixture.nativeElement;
+        expect(host.classList).toContain('tw-rounded-card');
+        expect(host.classList).toContain('tw-bg-white');
     });
 });

@@ -29,4 +29,22 @@ describe('NotFoundComponent', () => {
 
         expect(navigate).toHaveBeenCalledWith(['/']);
     });
+
+    it('ほかのページと同じ余白の main に置く', () => {
+        const fixture = TestBed.createComponent(NotFoundComponent);
+        fixture.detectChanges();
+
+        const main: HTMLElement = fixture.nativeElement.querySelector('main');
+        for (const c of [
+            'tw-flex',
+            'tw-flex-col',
+            'tw-gap-4',
+            'tw-p-4',
+            'md:tw-p-6',
+            'lg:tw-p-8',
+            'xl:tw-p-16',
+        ]) {
+            expect(main.classList).toContain(c);
+        }
+    });
 });

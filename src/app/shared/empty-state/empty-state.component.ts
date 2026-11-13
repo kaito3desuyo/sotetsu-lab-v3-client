@@ -23,7 +23,8 @@ import { AppButtonComponent } from '../app-button/app-button.component';
     styleUrl: './empty-state.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatIconModule, AppButtonComponent],
-    host: { class: 'tw-block' },
+    // 地の上にじかに置かず白いカードとして出す（docs/design.md 空状態の置き場）。カードの中に置いても白の上の白で見た目は変わらない
+    host: { class: 'tw-block tw-rounded-card tw-bg-white' },
 })
 export class EmptyStateComponent {
     readonly icon = input<string>(undefined);
