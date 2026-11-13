@@ -1,7 +1,8 @@
-<div
-    class="tw-mx-auto tw-flex tw-max-w-md tw-flex-col tw-gap-4 tw-px-4 tw-py-8"
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <mat-card>
+    <!-- 影の付く mat-card をやめ、ほかのページと同じ白いカードにする（docs/design.md 面の掟） -->
+    <div class="tw-mx-auto tw-w-full tw-max-w-md tw-rounded-card tw-bg-white">
         <form
             class="tw-flex tw-flex-col tw-gap-4 tw-p-6"
             [formGroup]="form"
@@ -85,5 +86,5 @@
                 >
             </div>
         </form>
-    </mat-card>
-</div>
+    </div>
+</main>

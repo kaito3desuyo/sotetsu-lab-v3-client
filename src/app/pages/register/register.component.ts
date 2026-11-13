@@ -11,7 +11,6 @@ import {
     Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -31,7 +30,6 @@ import { UserService } from 'src/app/libs/user/usecase/user.service';
     imports: [
         ReactiveFormsModule,
         RouterLink,
-        MatCardModule,
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
