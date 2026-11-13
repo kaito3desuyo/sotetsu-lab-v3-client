@@ -135,6 +135,28 @@ body {
     background-color: var(--color-paper-2);
 }
 
+// 読むページ（使い方・用語集・利用規約・プライバシーポリシー）の本文と見出し（docs/design.md Typography「見出しの階段」）。
+// 以前は mat-typography の 14px の本文と 20px・400 の見出しで、本文 16px の下限を割り、h3 が本文と見分けにくかった
+.app-prose {
+    font-size: 16px;
+    line-height: 1.75;
+
+    h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 28px;
+        font-weight: 700;
+    }
+
+    h3,
+    h4 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+        font-weight: 700;
+    }
+}
+
 .mat-sidenav {
     width: 250px;
 }

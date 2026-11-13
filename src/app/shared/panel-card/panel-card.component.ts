@@ -42,9 +42,7 @@ export function providePanelCardEmbedded(): Provider {
     template: `
         <section [class]="sectionClass">
             @if (!embedded) {
-                <h2
-                    class="tw-m-0 -tw-mb-2 tw-text-base tw-font-bold tw-text-ink"
-                >
+                <h2 class="tw-m-0 -tw-mb-2 tw-text-lg tw-font-bold tw-text-ink">
                     {{ heading() }}
                 </h2>
             }

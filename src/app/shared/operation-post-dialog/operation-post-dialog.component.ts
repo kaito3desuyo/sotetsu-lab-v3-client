@@ -26,7 +26,7 @@ export interface OperationPostDialogData {
             <header
                 class="tw-flex tw-flex-row tw-items-center tw-justify-between"
             >
-                <h2 class="mat-h2 !tw-m-0" [id]="titleId">
+                <h2 class="tw-m-0 tw-text-lg tw-font-bold" [id]="titleId">
                     運用情報を投稿する
                 </h2>
                 <button
