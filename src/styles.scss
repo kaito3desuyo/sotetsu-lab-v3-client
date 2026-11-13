@@ -135,6 +135,15 @@ body {
     background-color: var(--color-paper-2);
 }
 
+// 文の中のリンクと補助の導線（docs/design.md CTA voice Tertiary）。紺の字に下線。
+// 以前は読むページがブラウザ既定の青、運用表の「行路図を見る ›」が下線なしの黒だった
+.app-link,
+.app-prose a {
+    color: var(--color-structure);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+}
+
 // 読むページ（使い方・用語集・利用規約・プライバシーポリシー）の本文と見出し（docs/design.md Typography「見出しの階段」）。
 // 以前は mat-typography の 14px の本文と 20px・400 の見出しで、本文 16px の下限を割り、h3 が本文と見分けにくかった
 .app-prose {

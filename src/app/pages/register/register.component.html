@@ -148,9 +148,9 @@
                 </button>
             </div>
             <p class="tw-m-0 tw-text-center tw-text-xs">
-                登録すると、<a routerLink="/privacy-policy"
+                登録すると、<a class="app-link" routerLink="/privacy-policy"
                     >プライバシーポリシー</a
-                >と<a routerLink="/disclaimer">免責事項</a
+                >と<a class="app-link" routerLink="/disclaimer">免責事項</a
                 >に同意したものとみなします。
             </p>
             <div
@@ -158,7 +158,7 @@
             >
                 <span>すでにアカウントをお持ちの方は</span>
                 <a
-                    mat-button
+                    class="app-link"
                     routerLink="/login"
                     [queryParams]="{ return_to: returnToParam }"
                     >ログイン</a
