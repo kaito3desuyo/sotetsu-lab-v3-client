@@ -63,16 +63,15 @@
             </button>
         }
 
-        <mat-button-toggle-group
-            class="tw-whitespace-nowrap"
-            [value]="directionFilter()"
-            (change)="directionFilterChange.emit($event.value)"
+        <!-- 上り/下りの切り替えは共通の app-segment-toggle（docs/design.md 操作カード）。
+             全幅の部品なので、この行では幅を決めて並べる -->
+        <app-segment-toggle
+            class="!tw-w-52"
             aria-label="方向"
-        >
-            <mat-button-toggle value="up">上り</mat-button-toggle>
-            <mat-button-toggle value="down">下り</mat-button-toggle>
-            <mat-button-toggle value="both">両方</mat-button-toggle>
-        </mat-button-toggle-group>
+            [options]="directionOptions"
+            [value]="directionFilter()"
+            (valueChange)="onDirectionChange($event)"
+        ></app-segment-toggle>
 
         <span class="tw-inline-flex tw-items-center tw-whitespace-nowrap">
             <button

@@ -7,7 +7,6 @@ import {
     output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectChange, MatSelectModule } from '@angular/material/select';
@@ -30,6 +29,8 @@ import {
     formatHourLabel,
 } from '../../utils/diagram-timeline.util';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
+import { SegmentToggleComponent } from 'src/app/shared/segment-toggle/segment-toggle.component';
+import { SegmentToggleOption } from 'src/app/shared/segment-toggle/segment-toggle-option.type';
 
 /**
  * N1 ダイヤグラムの操作部（5.7）: 畳まない 2 行の表示設定（列車位置情報と同じ・
@@ -52,7 +53,7 @@ import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.d
     imports: [
         MatFormFieldModule,
         MatSelectModule,
-        MatButtonToggleModule,
+        SegmentToggleComponent,
         MatButtonModule,
         MatIconModule,
         MatTooltipModule,
@@ -78,6 +79,16 @@ export class TrainDiagramControllerComponent {
     readonly zoomStep = output<1 | -1>();
 
     readonly jumpHours = DIAGRAM_JUMP_HOURS;
+
+    readonly directionOptions: readonly SegmentToggleOption[] = [
+        { value: 'up', label: '上り' },
+        { value: 'down', label: '下り' },
+        { value: 'both', label: '両方' },
+    ];
+
+    onDirectionChange(value: FilterChipValue): void {
+        this.directionFilterChange.emit(value as DiagramDirectionFilter);
+    }
 
     readonly calendars = this.#calendarListState.calendars;
     readonly routes = this.#routeStationListState.routeStations;

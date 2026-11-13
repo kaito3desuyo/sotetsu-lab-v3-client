@@ -163,11 +163,25 @@ describe('TrainDiagramControllerComponent', () => {
         expect(calendarField.className).toContain('sm:tw-flex-none');
     });
 
+    // 上り/下りの切り替えは app-segment-toggle（docs/design.md 操作カード）
+    it('方向の切り替えは共通の app-segment-toggle で、上り・下り・両方の順', () => {
+        const toggle = fixture.nativeElement.querySelector(
+            'app-segment-toggle',
+        ) as HTMLElement;
+        expect(toggle).not.toBeNull();
+        expect(
+            Array.from(toggle.querySelectorAll('mat-button-toggle')).map((t) =>
+                t.textContent?.trim(),
+            ),
+        ).toEqual(['上り', '下り', '両方']);
+    });
+
     it('方向のトグルで directionFilterChange を emit する', () => {
         const spy = jest.spyOn(component.directionFilterChange, 'emit');
         // 上り・下り・両方の順で並ぶ最初のトグル（上り）を押す
-        const upToggle: HTMLElement =
-            fixture.nativeElement.querySelectorAll('mat-button-toggle')[0];
+        const upToggle: HTMLElement = fixture.nativeElement.querySelectorAll(
+            'app-segment-toggle mat-button-toggle',
+        )[0];
         upToggle
             .querySelector('button')
             ?.dispatchEvent(new MouseEvent('click'));
