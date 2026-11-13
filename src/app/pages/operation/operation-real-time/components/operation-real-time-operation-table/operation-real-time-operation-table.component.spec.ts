@@ -137,6 +137,16 @@ describe('OperationRealTimeOperationTableComponent', () => {
         expect(numbers()).toEqual(['12', '51']);
     });
 
+    it('2 列は 1536px から（編成順の一覧とそろえる）', () => {
+        const card = (fixture.nativeElement as HTMLElement).querySelector(
+            'app-operation-real-time-operation-card',
+        );
+        const classes = card!.parentElement!.classList;
+
+        expect(classes.contains('2xl:tw-grid-cols-2')).toBe(true);
+        expect(classes.contains('xl:tw-grid-cols-2')).toBe(false);
+    });
+
     it('運用群は運用番号で、会社は予想編成の所属会社で絞り込む', () => {
         store.setSelectedGroupNames(['5群']);
         expect(numbers()).toEqual(['51']);

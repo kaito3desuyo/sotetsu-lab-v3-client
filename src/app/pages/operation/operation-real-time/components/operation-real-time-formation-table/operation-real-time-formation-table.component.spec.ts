@@ -134,6 +134,16 @@ describe('OperationRealTimeFormationTableComponent', () => {
         expect(numbers()).toEqual(['5101', '10701', '10702']);
     });
 
+    it('2 列は 1536px から（1280px の 2 列ではカードが 269px で投稿ボタンがはみ出す）', () => {
+        const card = (fixture.nativeElement as HTMLElement).querySelector(
+            'app-operation-real-time-formation-card',
+        );
+        const classes = card!.parentElement!.classList;
+
+        expect(classes.contains('2xl:tw-grid-cols-2')).toBe(true);
+        expect(classes.contains('xl:tw-grid-cols-2')).toBe(false);
+    });
+
     it('会社で絞り込む', () => {
         store.setSelectedAgencyIds(['sotetsu']);
 
