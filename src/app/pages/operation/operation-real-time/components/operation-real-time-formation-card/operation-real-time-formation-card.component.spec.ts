@@ -151,9 +151,9 @@ describe('OperationRealTimeFormationCardComponent', () => {
             fixture.detectChanges();
 
             expect(placeholder()).not.toBeNull();
-            expect(
-                (fixture.nativeElement as HTMLElement).textContent,
-            ).toContain('現在位置');
+            expect(fixture.nativeElement as HTMLElement).toHaveTextContent(
+                '現在位置',
+            );
         });
 
         it('現在位置を表示しない設定なら描かない', () => {
