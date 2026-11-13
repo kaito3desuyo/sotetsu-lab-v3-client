@@ -209,7 +209,7 @@ describe('OperationRealTimeStore', () => {
     it('currentPositionsThatShouldUpdate は呼ぶたびに今の時刻で判定する', () => {
         jest.useFakeTimers();
         try {
-            jest.setSystemTime(new Date('2026-10-27T10:00:00'));
+            jest.setSystemTime(new Date('2026-10-27T10:00:00+09:00'));
             const store = TestBed.inject(OperationRealTimeStore);
             // 出庫前（次の始発が 10:30）
             store.setCurrentPosition('11', {
@@ -226,9 +226,34 @@ describe('OperationRealTimeStore', () => {
 
             expect(store.currentPositionsThatShouldUpdate()).toHaveLength(0);
 
-            jest.setSystemTime(new Date('2026-10-27T10:31:00'));
+            jest.setSystemTime(new Date('2026-10-27T10:31:00+09:00'));
 
             expect(store.currentPositionsThatShouldUpdate()).toHaveLength(1);
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('currentPositionsThatShouldUpdate は端末の時刻帯によらず日本時間で判定する', () => {
+        jest.useFakeTimers();
+        try {
+            // JST 10:30
+            jest.setSystemTime(new Date('2026-10-27T01:30:00Z'));
+            const store = TestBed.inject(OperationRealTimeStore);
+            const position = (departureTime: string, id: string) =>
+                ({
+                    prev: null,
+                    current: null,
+                    next: { startTime: { departureDays: 1, departureTime } },
+                    operation: { operationId: id, operationNumber: id },
+                }) as never;
+            store.setCurrentPosition('a', position('10:29:00', 'a'));
+            store.setCurrentPosition('b', position('10:31:00', 'b'));
+
+            const result = store.currentPositionsThatShouldUpdate();
+
+            expect(result).toHaveLength(1);
+            expect(result[0].operation.operationId).toBe('a');
         } finally {
             jest.useRealTimers();
         }

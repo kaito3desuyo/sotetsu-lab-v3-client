@@ -469,7 +469,7 @@ describe('TrainLocationComponent の再訪', () => {
     });
 
     it('取り終えた後、時計が進んでも、目撃の取り足しが走っても、骨組みには戻らない', async () => {
-        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00') });
+        jest.useFakeTimers({ now: new Date('2026-10-22T09:10:00+09:00') });
         try {
             const missingSightings = jest.fn(() => of(undefined));
             const service = TestBed.inject(TrainLocationService) as {
@@ -696,7 +696,7 @@ describe('TrainLocationComponent の投稿後の取り直し', () => {
 
     beforeEach(() => {
         jest.useFakeTimers({
-            now: new Date('2026-10-22T09:10:00'),
+            now: new Date('2026-10-22T09:10:00+09:00'),
             doNotFake: ['queueMicrotask', 'nextTick'],
         });
     });

@@ -21,7 +21,10 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { getRailwayDate, railwayDateKey } from 'src/app/core/utils/railway-day';
+import {
+    railwayDateKey,
+    railwayDayStart,
+} from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
@@ -661,7 +664,7 @@ export class TrainDiagramComponent {
         const axisStationIds = this.#axisStationIds();
         const stationNameById = this.#stationNameById();
         const standardRunMinutes = this.#standardRunMinutes();
-        const base = getRailwayDate(new Date());
+        const base = railwayDayStart(new Date());
         return this.#chains().flatMap((chain) =>
             buildChainDiagramLines({
                 trips: chain,

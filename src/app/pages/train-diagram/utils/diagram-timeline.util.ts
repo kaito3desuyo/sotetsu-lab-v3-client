@@ -1,8 +1,13 @@
+import {
+    RAILWAY_DAY_BOUNDARY_HOUR,
+    railwayClock,
+} from 'src/app/core/utils/railway-day';
+
 /**
  * 列車ダイヤグラムの横軸（1 日ぶん 4:00〜26:00）と縮尺・URL の `time` を扱う純関数群。
  * 横位置の単位は「営業日の 4 時からの分」。24 時超え（翌 0〜2 時）は 1200〜1320 分になる。
  */
-export const DIAGRAM_START_HOUR = 4;
+export const DIAGRAM_START_HOUR = RAILWAY_DAY_BOUNDARY_HOUR;
 export const DIAGRAM_END_HOUR = 26;
 export const DIAGRAM_TOTAL_MINUTES =
     (DIAGRAM_END_HOUR - DIAGRAM_START_HOUR) * 60;
@@ -51,9 +56,9 @@ export function nextZoomStep(current: number, direction: 1 | -1): number {
 }
 
 export function railwayMinuteOfDay(now: Date): number {
-    const hour = now.getHours();
-    const railwayHour = hour < DIAGRAM_START_HOUR ? hour + 24 : hour;
-    return (railwayHour - DIAGRAM_START_HOUR) * 60 + now.getMinutes();
+    const { hours, minutes } = railwayClock(now);
+    const railwayHour = hours < DIAGRAM_START_HOUR ? hours + 24 : hours;
+    return (railwayHour - DIAGRAM_START_HOUR) * 60 + minutes;
 }
 
 export function defaultStartMinute(now: Date): number {

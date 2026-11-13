@@ -19,15 +19,33 @@ describe('diagram-timeline.util', () => {
     });
 
     it('railwayMinuteOfDay: 4 時からの分。0〜3 時は 24〜27 時として数える', () => {
-        expect(railwayMinuteOfDay(new Date(2026, 8, 26, 4, 0))).toBe(0);
-        expect(railwayMinuteOfDay(new Date(2026, 8, 26, 18, 30))).toBe(870);
-        expect(railwayMinuteOfDay(new Date(2026, 8, 27, 1, 15))).toBe(1275);
+        expect(railwayMinuteOfDay(new Date('2026-09-26T04:00:00+09:00'))).toBe(
+            0,
+        );
+        expect(railwayMinuteOfDay(new Date('2026-09-26T18:30:00+09:00'))).toBe(
+            870,
+        );
+        expect(railwayMinuteOfDay(new Date('2026-09-27T01:15:00+09:00'))).toBe(
+            1275,
+        );
+    });
+
+    it('railwayMinuteOfDay: 端末の時刻帯によらず日本時間で数える（JST 2:00 は 1320 分）', () => {
+        expect(railwayMinuteOfDay(new Date('2026-11-12T17:00:00Z'))).toBe(
+            (26 - 4) * 60,
+        );
     });
 
     it('defaultStartMinute: 今の 30 分前。0〜1260 分（4:00〜25:00）に収める', () => {
-        expect(defaultStartMinute(new Date(2026, 8, 26, 18, 30))).toBe(840);
-        expect(defaultStartMinute(new Date(2026, 8, 26, 4, 10))).toBe(0);
-        expect(defaultStartMinute(new Date(2026, 8, 27, 1, 50))).toBe(1260);
+        expect(defaultStartMinute(new Date('2026-09-26T18:30:00+09:00'))).toBe(
+            840,
+        );
+        expect(defaultStartMinute(new Date('2026-09-26T04:10:00+09:00'))).toBe(
+            0,
+        );
+        expect(defaultStartMinute(new Date('2026-09-27T01:50:00+09:00'))).toBe(
+            1260,
+        );
     });
 
     it('parseTimeParam: HHmm を 4 時からの分に。範囲外・不正は undefined', () => {

@@ -8,11 +8,14 @@ import {
     withMethods,
     withState,
 } from '@ngrx/signals';
-import { addDays, getHours, parse } from 'date-fns';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { withSettingsStorage } from 'src/app/core/store-features/with-settings-storage';
 import { generateOperationSortNumber } from 'src/app/core/utils/generate-operation-sort-number';
+import {
+    railwayDayStart,
+    toAbsoluteTime,
+} from 'src/app/core/utils/railway-day';
 import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -348,11 +351,9 @@ export const OperationRealTimeStore = signalStore(
         currentPositionsThatShouldUpdate(): OperationCurrentPositionDto[] {
             const currentPositions = store.currentPositions();
             const now = new Date();
+            const base = railwayDayStart(now);
             const target = (days: number, time: string) =>
-                addDays(
-                    parse(time, 'HH:mm:ss', now),
-                    days - (getHours(now) < 4 ? 1 : 0) - 1,
-                );
+                toAbsoluteTime(base, days - 1, time);
 
             return Object.values(currentPositions)
                 .filter((position) => !!position)
