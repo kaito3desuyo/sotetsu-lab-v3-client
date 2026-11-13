@@ -54,6 +54,8 @@
             [positionLinks]="links()"
             [calendarId]="calendarId()"
             [tomorrowOperationNumber]="tomorrowOperationNumber()"
+            [tomorrowOperationId]="tomorrowOperationId()"
+            [operationIdByNumber]="operationIdByNumber()"
             [dateKind]="dateKind()"
         ></app-timetable-formation-header>
     }
@@ -111,6 +113,8 @@
                 [states]="progress().states"
                 [stationNames]="stationNames()"
                 [calendarId]="calendarId()"
+                [operationIdByNumber]="operationIdByNumber()"
+                [date]="date()"
                 (postRequested)="onPostRequested($event)"
             ></app-timetable-formation-trip-list>
         }

@@ -19,6 +19,7 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
     template: `
         <button
             mat-stroked-button
+            class="app-button app-button-secondary"
             type="button"
             [disabled]="disabled()"
             (click)="onClick()"

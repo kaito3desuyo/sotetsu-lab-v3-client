@@ -21,7 +21,11 @@ import { OperationNumberTagContextMenu } from './operation-number-tag-context-me
  * 行路図等へのリンクは任意（`link` 未指定時はタグのみ表示）。
  * 運用番号 100 は休車なので「休」と出し、リンクも張らない（行路図が無い。
  * real-time の編成順カードと同じ扱い。ユーザー指摘 2026-09-24）。
- * 形状は角型固定（丸型に固定しない方針 = 20-design-ui.md §1）。
+ * 形状は角型固定（丸型に固定しない方針 = 20-design-ui.md §1）。字は 14px・普通の字。
+ * 高さは固定せず、字の大きさに比例する余白（14px の字で上下 4px・左右 8px）と 16/14 倍の行で決める
+ * （14px なら 24px）。字の大きさは host の tw-text-sm で、地図のカードのような狭い所は
+ * 置き場が !tw-text-* で上書きする。
+ * 運用番号のチップはこの部品だけを使う（docs/design.md 運用番号のチップ・2026-11-13）。
  *
  * `contextMenus` 指定時、右クリック（デスクトップ）/ 長押し（モバイル）でコンテキスト
  * メニューを開ける（20-design-ui.md §5.12）。`contextmenu` DOM イベントはタッチでは
@@ -43,15 +47,20 @@ import { OperationNumberTagContextMenu } from './operation-number-tag-context-me
         MatMenuModule,
         MatIconModule,
     ],
-    host: { class: 'tw-inline-block' },
+    host: { class: 'tw-inline-block tw-text-sm' },
 })
 export class OperationNumberTagComponent {
     readonly operationNumber = input.required<string>();
-    readonly link = input<string[]>(undefined);
+    readonly link = input<readonly unknown[] | undefined>(undefined);
     readonly borderEnabled = input<boolean>(false);
     readonly borderColor = input<string>(undefined);
     readonly contextMenus = input<OperationNumberTagContextMenu[]>(undefined);
     readonly longPressMs = input<number>(500);
+    /**
+     * 字の太さと下線。既定は普通の字。鮮度を示す所だけ bold（本日中に目撃）・underline（前日）を渡す
+     * （docs/design.md 運用番号のチップ。常に太字にすると、リアルタイム運用情報の「本日中」と同じ見た目になる）
+     */
+    readonly textStyle = input<'normal' | 'bold' | 'underline'>('normal');
     /** 車両のつながりから推測した運用。運番の後ろに「?」を付ける（ユーザー判断 2026-10-19。斜線は撤回） */
     readonly inferred = input<boolean>(false);
 

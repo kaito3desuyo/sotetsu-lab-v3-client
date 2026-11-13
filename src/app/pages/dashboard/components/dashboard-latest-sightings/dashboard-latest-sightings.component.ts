@@ -8,13 +8,13 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { DashboardStore } from '../../stores/dashboard.store';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * 「最新の目撃情報」直近 3 件（N3）。
@@ -33,9 +33,9 @@ import { DashboardStore } from '../../stores/dashboard.store';
     templateUrl: './dashboard-latest-sightings.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         DateFnsPipe,
-        OperationNumberColorPipe,
-        OperationNumberLinkComponent,
+        OperationNumberTagComponent,
         SkeletonBarComponent,
         TripPositionComponent,
     ],

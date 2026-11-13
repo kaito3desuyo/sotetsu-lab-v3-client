@@ -89,8 +89,10 @@
                     class="tw-text-xs tw-tabular-nums tw-leading-tight tw-text-muted"
                 >
                     @if (currentFormationNumber) {
-                        {{ currentFormationNumber
-                        }}{{ currentFormationDayCount !== 0 ? '?' : '' }}
+                        <app-formation-number-link
+                            [formationNumber]="currentFormationNumber"
+                        ></app-formation-number-link
+                        >{{ currentFormationDayCount !== 0 ? '?' : '' }}
                     } @else {
                         不明
                     }

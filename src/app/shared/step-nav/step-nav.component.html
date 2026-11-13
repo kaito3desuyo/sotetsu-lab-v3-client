@@ -5,6 +5,7 @@
         @for (target of prev(); track target.id) {
             <button
                 mat-stroked-button
+                class="app-button app-button-secondary"
                 type="button"
                 (click)="step.emit(target)"
             >
@@ -19,6 +20,7 @@
         @for (target of next(); track target.id) {
             <button
                 mat-stroked-button
+                class="app-button app-button-secondary"
                 type="button"
                 (click)="step.emit(target)"
             >

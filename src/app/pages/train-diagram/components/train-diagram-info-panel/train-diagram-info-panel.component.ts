@@ -12,10 +12,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-selected-trip-info.interface';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * N1 ダイヤグラムのタップ情報パネル（5.7・07-03 追加）。
@@ -33,12 +34,13 @@ import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-sel
     styleUrl: './train-diagram-info-panel.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatButtonModule,
         MatIconModule,
         TripLabelComponent,
         DateFnsPipe,
-        OperationNumberColorPipe,
+        OperationNumberTagComponent,
     ],
     host: {
         class: 'tw-fixed tw-inset-x-0 tw-bottom-0 tw-z-30 tw-block tw-rounded-t-xl tw-border tw-border-solid tw-border-grey-200 tw-bg-white tw-shadow-lg lg:tw-inset-x-auto lg:tw-bottom-4 lg:tw-right-4 lg:tw-w-[22rem] lg:tw-rounded-card',

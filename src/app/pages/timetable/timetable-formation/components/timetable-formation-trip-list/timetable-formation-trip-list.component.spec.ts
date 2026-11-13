@@ -74,8 +74,8 @@ const text = (f: ComponentFixture<unknown>): string =>
 describe('TimetableFormationTripListComponent', () => {
     it('始発と終着の駅名と時刻を出し、走っている列車に印を付ける', () => {
         const fixture = create([trip()], ['running']);
-        expect(text(fixture)).toContain('いずみ野 7:07');
-        expect(text(fixture)).toContain('湘南台 7:14');
+        expect(text(fixture)).toContain('いずみ野 07:07');
+        expect(text(fixture)).toContain('湘南台 07:14');
         expect(text(fixture)).toContain('走行中');
     });
 
@@ -115,7 +115,7 @@ describe('TimetableFormationTripListComponent', () => {
         el.querySelector<HTMLButtonElement>('li button')?.click();
         fixture.detectChanges();
         const times = el.querySelector('[data-testid="trip-times"]');
-        expect(times?.textContent).toContain('7:07');
+        expect(times?.textContent).toContain('07:07');
         expect(times?.textContent).toContain('通過');
     });
 
@@ -148,9 +148,62 @@ describe('TimetableFormationTripListComponent', () => {
         expect(emitted).toEqual(['55']);
     });
 
+    it('運用番号のチップは行路図へのリンク（列車の行は行の運用 ID、乗り移り・交換は番号から引く）', () => {
+        const fixture = create([
+            trip({ carriedOver: true, operationId: 'op-55' }),
+            { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
+            {
+                kind: 'swap',
+                sightingTime: '2026-11-11T15:40:00+09:00',
+                toOperationNumber: '59',
+            },
+        ]);
+        fixture.componentRef.setInput('operationIdByNumber', {
+            '16K': 'op-16K',
+            '15K': 'op-15K',
+        });
+        fixture.detectChanges();
+        const hrefs = Array.from(
+            (fixture.nativeElement as HTMLElement).querySelectorAll(
+                'app-operation-number-tag a',
+            ),
+        ).map((a) => a.getAttribute('href'));
+
+        // 59 は運用 ID が分からないのでリンクにしない
+        expect(hrefs).toEqual([
+            '/operation/route-diagram;operation_id=op-55',
+            '/operation/route-diagram;operation_id=op-16K',
+            '/operation/route-diagram;operation_id=op-15K',
+        ]);
+    });
+
+    it('unknown の行の、ほかの編成の番号はその日の編成別時刻表へのリンク', () => {
+        const fixture = create([
+            {
+                kind: 'unknown',
+                lastOperationNumber: '55',
+                evictedBy: {
+                    formationNumber: '8711',
+                    sightingTime: '2026-11-11T15:20:00+09:00',
+                },
+            },
+        ]);
+        fixture.componentRef.setInput('date', '2026-11-11');
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'a[href*="/timetable/formation"]',
+            ),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=8711;date=2026-11-11',
+        );
+    });
+
     it('入出庫・乗り移り・車両交換の帯を出す', () => {
         const fixture = create([
-            { kind: 'depot', label: 'out', stationId: 'a', time: '7:07' },
+            { kind: 'depot', label: 'out', stationId: 'a', time: '07:07' },
             { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
             {
                 kind: 'swap',
@@ -160,7 +213,7 @@ describe('TimetableFormationTripListComponent', () => {
             { kind: 'depot', label: 'in', stationId: 'b', time: '21:17' },
         ]);
         const t = text(fixture).replace(/\s+/g, ' ');
-        expect(t).toContain('○ いずみ野 7:07 出庫');
+        expect(t).toContain('○ いずみ野 07:07 出庫');
         expect(t).toContain('湘南台 で乗り移り');
         expect(t).toContain('15:40 の目撃で');
         expect(t).toContain('△ 湘南台 21:17 入庫');

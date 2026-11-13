@@ -339,6 +339,19 @@ describe('ModerationUserComponent', () => {
         expect(byId('ban-button')).not.toHaveTextContent('BAN を解く');
     });
 
+    it('目撃の表の編成は、目撃の日の編成別時刻表へのリンクになる', async () => {
+        await render({ sightings: [sighting('s1')] });
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'a[href*="/timetable/formation"]',
+            ),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=12101;date=2026-11-02',
+        );
+    });
+
     it('目撃を取り、まだ有効なものを全部選ぶと件数がボタンに出る（無効の行は選ばれない）', async () => {
         await render({
             sightings: [

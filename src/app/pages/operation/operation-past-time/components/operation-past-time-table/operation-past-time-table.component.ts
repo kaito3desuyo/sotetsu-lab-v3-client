@@ -23,6 +23,7 @@ import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
 import { matchesAgencyFilter } from '../../utils/operation-past-time-filter.util';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
 
@@ -32,6 +33,7 @@ const INVALIDATED_BORDER_COLOR = 'rgb(183, 28, 28)';
     styleUrl: './operation-past-time-table.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         OperationNumberTagComponent,
         DateFnsPipe,
         FindByIdPipe,

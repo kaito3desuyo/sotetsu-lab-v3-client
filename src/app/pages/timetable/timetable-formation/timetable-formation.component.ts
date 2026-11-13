@@ -212,6 +212,13 @@ export class TimetableFormationComponent {
             ? this.#store.tomorrowOperationNumber()
             : null,
     );
+    protected readonly tomorrowOperationId = computed(() =>
+        this.tomorrowOperationNumber()
+            ? this.#store.tomorrowOperationId()
+            : null,
+    );
+    /** 運用番号 → 運用 ID。チップを行路図へのリンクにする */
+    protected readonly operationIdByNumber = this.#store.operationIdByNumber;
     protected readonly tomorrowBlocked = computed(() => {
         if (!this.ready() || !this.#store.loaded() || this.#store.loadError()) {
             return false;

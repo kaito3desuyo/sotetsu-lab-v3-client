@@ -46,13 +46,13 @@ export function toAbsoluteTime(base: Date, days: number, time: string): Date {
 }
 
 /**
- * 24 時超え表記の文字列を生成する（例: days=1, "00:30:00" → "24:30"）。
+ * 24 時超え表記の `HH:mm` を生成する（例: days=1, "00:30:00" → "24:30"・days=0, "09:05:00" → "09:05"）。
  */
 export function toDisplayTime(days: number, time: string): string {
     const { hours, minutes } = parseHms(time);
     const totalHours = days * 24 + hours;
     const paddedMinutes = String(minutes).padStart(2, '0');
-    return `${totalHours}:${paddedMinutes}`;
+    return `${String(totalHours).padStart(2, '0')}:${paddedMinutes}`;
 }
 
 /**

@@ -119,6 +119,49 @@ describe('OperationPastTimeTableComponent', () => {
         ).toBeNull();
     });
 
+    it('表の見出しの日付はゼロで埋めない（11/7）', () => {
+        const store = TestBed.inject(OperationPastTimeStore);
+        store.setReferenceDate('2026-11-07');
+        store.setDays(1);
+        store.setCalendars([
+            {
+                date: '2026-11-07',
+                calendar: { calendarName: '土休日' } as never,
+            },
+        ]);
+        store.setHasFetchedPastTime(true);
+        fixture.detectChanges();
+
+        const th = (fixture.nativeElement as HTMLElement).querySelectorAll(
+            'th',
+        )[1];
+        expect(th).toHaveTextContent('11/7');
+        expect(th).not.toHaveTextContent('11/07');
+    });
+
+    it('行見出しの編成番号は編成別時刻表へのリンク（行は 1 日の記録でないので日付は付けない）・高さはタグの 24px', () => {
+        const store = TestBed.inject(OperationPastTimeStore);
+        store.setReferenceDate('2026-11-07');
+        store.setDays(1);
+        store.setCalendars([
+            {
+                date: '2026-11-07',
+                calendar: { calendarName: '土休日' } as never,
+            },
+        ]);
+        store.setHasFetchedPastTime(true);
+        fixture.detectChanges();
+
+        const th = (fixture.nativeElement as HTMLElement).querySelector(
+            'tbody th',
+        ) as HTMLElement;
+        expect(th.querySelector('a')).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=8708',
+        );
+        expect(th.classList).toContain('tw-leading-[24px]');
+    });
+
     it('取り終えて 0 件なら空表示を出す', () => {
         TestBed.inject(OperationPastTimeStore).setFormations([]);
         TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');

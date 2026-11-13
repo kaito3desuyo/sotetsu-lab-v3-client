@@ -1,12 +1,13 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeFormationCardComponent } from './operation-real-time-formation-card.component';
 
@@ -32,7 +33,7 @@ describe('OperationRealTimeFormationCardComponent', () => {
             .overrideComponent(OperationRealTimeFormationCardComponent, {
                 remove: {
                     imports: [
-                        OperationNumberLinkComponent,
+                        OperationNumberTagComponent,
                         TripPositionComponent,
                     ],
                 },
@@ -66,6 +67,32 @@ describe('OperationRealTimeFormationCardComponent', () => {
             'a[href="/timetable/formation;formation_number=10701"]',
         );
         expect(link?.textContent?.trim()).toBe('10701');
+    });
+
+    it('運用番号は共通のチップで出し、本日中の目撃なら太字・「?」なし・行路図へのリンク', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: {
+                operationSightingId: 's-1',
+                sightingTime: new Date().toISOString(),
+            },
+            expectedSighting: {
+                operation: { operationId: 'op-12', operationNumber: '12' },
+            },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const tag = fixture.debugElement.query(
+            By.css('app-operation-number-tag'),
+        );
+        expect(tag).not.toBeNull();
+        expect(tag.properties['operationNumber']).toBe('12');
+        expect(tag.properties['textStyle']).toBe('bold');
+        expect(tag.properties['inferred']).toBe(false);
+        expect(tag.properties['link']).toEqual([
+            '/operation',
+            'route-diagram',
+            { operation_id: 'op-12' },
+        ]);
     });
 
     it('予想運用があれば最新の目撃を履歴から除き、残りが無ければ履歴を出さない', () => {

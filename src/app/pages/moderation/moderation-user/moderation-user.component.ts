@@ -34,6 +34,7 @@ import {
     ModerationUserStore,
 } from './stores/moderation-user.store';
 import { buildInvalidateResultMessage } from './utils/invalidate-result-message.util';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 const ROLE_LABELS: Record<string, string> = {
     viewer: '閲覧者',
@@ -50,6 +51,7 @@ const UUID_PATTERN =
     templateUrl: './moderation-user.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatButtonModule,
         MatCheckboxModule,

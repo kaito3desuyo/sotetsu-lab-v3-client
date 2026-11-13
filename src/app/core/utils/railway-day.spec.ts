@@ -88,12 +88,12 @@ describe('toDisplayTime', () => {
         expect(toDisplayTime(1, '00:30:00')).toBe('24:30');
     });
 
-    it('days=0 の通常時刻はそのまま "H:mm" になる', () => {
-        expect(toDisplayTime(0, '09:05:00')).toBe('9:05');
+    it('days=0 の通常時刻は時もゼロで埋めて "HH:mm" になる（docs/design.md 時刻と日付の書き方）', () => {
+        expect(toDisplayTime(0, '09:05:00')).toBe('09:05');
     });
 
-    it('days=0・0時ちょうどは "0:00" になる', () => {
-        expect(toDisplayTime(0, '00:00:00')).toBe('0:00');
+    it('days=0・0時ちょうどは "00:00" になる', () => {
+        expect(toDisplayTime(0, '00:00:00')).toBe('00:00');
     });
 
     it('days=1・23:59:00 は "47:59" になる（深夜帯の日またぎ）', () => {
@@ -105,7 +105,7 @@ describe('toDisplayTime', () => {
     });
 
     it('分が1桁でも2桁ゼロ埋めされる', () => {
-        expect(toDisplayTime(0, '05:03:00')).toBe('5:03');
+        expect(toDisplayTime(0, '05:03:00')).toBe('05:03');
     });
 });
 

@@ -35,6 +35,54 @@ describe('OperationNumberTagComponent', () => {
         expect(getTagEl().textContent.trim()).toBe('1001');
     });
 
+    describe('見た目（docs/design.md 運用番号のチップ）', () => {
+        it('高さは固定せず上下 4px の余白で決める。14px・普通の字・左右 8px・角丸 4px', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.detectChanges();
+
+            const cls = getTagEl().classList;
+            expect(cls).not.toContain('tw-h-6');
+            expect(cls).toContain('tw-py-[0.2857em]');
+            expect(cls).toContain('tw-px-[0.5714em]');
+            // 字の大きさは部品の外側（host）で決め、置き場が !tw-text-* で上書きできる
+            expect(cls).not.toContain('tw-text-sm');
+            expect(fixture.nativeElement as HTMLElement).toHaveClass(
+                'tw-text-sm',
+            );
+            expect(cls).toContain('tw-font-normal');
+
+            expect(cls).toContain('tw-rounded');
+            expect(cls).not.toContain('tw-font-bold');
+        });
+
+        it('リンクのときも同じ寸法・普通の字で、下線は引かない', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('link', ['/operation']);
+            fixture.detectChanges();
+
+            const cls = getTagEl().classList;
+            expect(cls).toContain('tw-py-[0.2857em]');
+            expect(cls).toContain('tw-px-[0.5714em]');
+            expect(cls).toContain('tw-font-normal');
+            expect(cls).toContain('tw-no-underline');
+        });
+
+        it('textStyle bold は太字（本日中に目撃）、underline は下線（前日）', () => {
+            fixture.componentRef.setInput('operationNumber', '1001');
+            fixture.componentRef.setInput('link', ['/operation']);
+            fixture.componentRef.setInput('textStyle', 'bold');
+            fixture.detectChanges();
+            expect(getTagEl().classList).toContain('tw-font-bold');
+            expect(getTagEl().classList).not.toContain('tw-font-normal');
+
+            fixture.componentRef.setInput('textStyle', 'underline');
+            fixture.detectChanges();
+            expect(getTagEl().classList).toContain('tw-underline');
+            expect(getTagEl().classList).not.toContain('tw-no-underline');
+            expect(getTagEl().classList).toContain('tw-font-normal');
+        });
+    });
+
     it('先頭 1 の運用番号は赤系の群色背景になる', () => {
         fixture.componentRef.setInput('operationNumber', '1001');
         fixture.detectChanges();

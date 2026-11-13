@@ -2,7 +2,11 @@
      同じ行に並ぶ枠なしのタグと縦位置がずれる（過去の運用情報の無効化表示。2026-09-24） -->
 @if (link() && !isRetired()) {
     <a
-        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black tw-no-underline"
+        class="tw-box-border tw-inline-flex tw-items-center tw-justify-center tw-rounded tw-px-[0.5714em] tw-py-[0.2857em] tw-leading-[1.142857] tw-text-black"
+        [class.tw-font-bold]="textStyle() === 'bold'"
+        [class.tw-font-normal]="textStyle() !== 'bold'"
+        [class.tw-underline]="textStyle() === 'underline'"
+        [class.tw-no-underline]="textStyle() !== 'underline'"
         [style.background-color]="operationNumber() | operationNumberColor"
         [style.box-shadow]="
             borderEnabled() ? 'inset 0 0 0 1px ' + borderColor() : null
@@ -20,7 +24,10 @@
 } @else {
     <span
         [attr.title]="isRetired() ? '休車（運用番号 100）' : null"
-        class="tw-inline-block tw-rounded tw-px-2 tw-py-0.5 tw-text-center tw-text-sm tw-font-bold tw-leading-tight tw-text-black"
+        class="tw-box-border tw-inline-flex tw-items-center tw-justify-center tw-rounded tw-px-[0.5714em] tw-py-[0.2857em] tw-leading-[1.142857] tw-text-black"
+        [class.tw-font-bold]="textStyle() === 'bold'"
+        [class.tw-font-normal]="textStyle() !== 'bold'"
+        [class.tw-underline]="textStyle() === 'underline'"
         [style.background-color]="operationNumber() | operationNumberColor"
         [style.box-shadow]="
             borderEnabled() ? 'inset 0 0 0 1px ' + borderColor() : null
@@ -50,7 +57,11 @@
 
 <mat-menu #menu="matMenu">
     @for (item of contextMenus() ?? []; track $index) {
-        <button mat-menu-item [disabled]="item.disabled" (click)="item.onClick()">
+        <button
+            mat-menu-item
+            [disabled]="item.disabled"
+            (click)="item.onClick()"
+        >
             <mat-icon>{{ item.icon }}</mat-icon>
             <span>{{ item.text }}</span>
         </button>

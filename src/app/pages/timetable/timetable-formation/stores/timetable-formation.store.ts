@@ -126,6 +126,25 @@ export const TimetableFormationStore = signalStore(
                     return input ? buildFormationDay(input) : [];
                 }),
                 todaysSightings,
+                /**
+                 * 運用番号 → 運用 ID（その日の列車と目撃から）。ヘッダーと乗り移りの行のチップは番号しか持たないので、
+                 * これで行路図へのリンクにする（docs/design.md 運用番号のチップ）
+                 */
+                operationIdByNumber: computed(() => {
+                    const map: Record<string, string> = {};
+                    for (const s of sightings()) {
+                        const number = s.operation?.operationNumber;
+                        if (number && s.operationId)
+                            map[number] = s.operationId;
+                    }
+                    for (const [id, dto] of Object.entries(
+                        tripsByOperationId(),
+                    )) {
+                        const number = dto?.operation?.operationNumber;
+                        if (number) map[number] = id;
+                    }
+                    return map;
+                }),
                 canSelectTomorrow: computed(
                     () => dateKind() === 'today' && !!tomorrowOperationId(),
                 ),

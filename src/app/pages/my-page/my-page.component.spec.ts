@@ -168,6 +168,12 @@ describe('MyPageComponent', () => {
         expect(row).toHaveTextContent('11/2 19:00:05');
         expect(row).toHaveTextContent('12K');
         expect(row).toHaveTextContent('9703');
+        expect(
+            row.querySelector('a[href*="/timetable/formation"]'),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=9703;date=2026-11-02',
+        );
     });
 
     it('0 件なら「まだ投稿がありません」とリアルタイムへのリンク', async () => {

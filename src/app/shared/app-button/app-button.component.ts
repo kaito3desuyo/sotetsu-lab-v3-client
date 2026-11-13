@@ -1,5 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    input,
+    output,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 
 /**
@@ -13,7 +18,6 @@ import { MatButtonModule } from '@angular/material/button';
 @Component({
     selector: 'app-button',
     templateUrl: './app-button.component.html',
-    styleUrl: './app-button.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatButtonModule, NgTemplateOutlet],
     // 内容幅のボタンは横並びの中で縮ませない（ラベルが潰れるため）

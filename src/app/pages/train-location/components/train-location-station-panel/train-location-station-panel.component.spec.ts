@@ -120,7 +120,7 @@ describe('TrainLocationStationPanelComponent', () => {
         fixture.detectChanges();
 
         const tag = el().querySelector(
-            '[data-operation-number]',
+            '[data-operation-number] a, [data-operation-number] span',
         ) as HTMLElement;
         expect(tag.textContent?.trim()).toBe('30K');
         expect(el()).not.toHaveTextContent(/運用/);
@@ -142,15 +142,32 @@ describe('TrainLocationStationPanelComponent', () => {
         });
         fixture.detectChanges();
 
-        const links = el().querySelectorAll('a[data-operation-number]');
+        const links = el().querySelectorAll('[data-operation-number] a');
         expect(links).toHaveLength(1);
         expect(links[0]).toHaveAttribute(
             'href',
             '/operation/route-diagram;operation_id=op-30k',
         );
         expect(
-            el().querySelectorAll('span[data-operation-number]'),
+            el().querySelectorAll('[data-operation-number] > span'),
         ).toHaveLength(1);
+    });
+
+    it('編成番号は編成別時刻表へのリンク（今の見込みなので日付は付けない）', () => {
+        fixture.componentRef.setInput('stationId', 'C');
+        fixture.componentRef.setInput('stationName', '二俣川');
+        fixture.componentRef.setInput('arrivals', {
+            inbound: [arrival({})],
+            outbound: [],
+        });
+        fixture.detectChanges();
+
+        expect(
+            el().querySelector('a[href*="/timetable/formation"]'),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=20104',
+        );
     });
 
     it('種別が変わる駅を選んでいるときは 2 段: 上の段に変更前「各停 7416 →」、主の段に変更後', () => {

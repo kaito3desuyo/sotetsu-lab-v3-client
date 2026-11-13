@@ -6,7 +6,7 @@ export interface PickableTrain {
     direction: 'inbound' | 'outbound';
     /** その駅の時刻。発があれば発、無ければ着（当駅止まり） */
     time: Date;
-    /** 表示用。`toDisplayTime(days - 1, time)`（days は 1 始まり）で '7:12'・'24:30' */
+    /** 表示用。`toDisplayTime(days - 1, time)`（days は 1 始まり）で '07:12'・'24:30' */
     displayTime: string;
     /** 当駅止まり（発が無く着だけ） */
     isArrivalOnly: boolean;

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
@@ -22,6 +22,7 @@ import {
     readStationPanelOpen,
     writeStationPanelOpen,
 } from '../../utils/train-location-storage.util';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * 駅の欄: 選んだ駅に次に来る列車を上り・下りに分けて出す（spec「駅の欄」）。
@@ -32,12 +33,13 @@ import {
     templateUrl: './train-location-station-panel.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatButtonModule,
         MatIconModule,
         TripLabelComponent,
         NgTemplateOutlet,
-        OperationNumberColorPipe,
+        OperationNumberTagComponent,
     ],
     host: { class: 'tw-block' },
 })

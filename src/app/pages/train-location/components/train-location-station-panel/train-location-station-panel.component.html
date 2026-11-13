@@ -160,35 +160,26 @@
                         class="tw-inline-flex tw-flex-wrap tw-gap-x-1 tw-text-xs tw-text-muted"
                     >
                         @if (row.operationNumber) {
-                            <!-- 運用番号は運用群の色。運用 ID があれば運用行路図へのリンク -->
+                            <!-- 運用番号は共通のチップ（docs/design.md 運用番号のチップ）。
+                                 運用 ID があれば運用行路図へのリンク -->
                             <span class="tw-whitespace-nowrap"
                                 >・
-                                @if (row.operationId) {
-                                    <a
-                                        data-operation-number
-                                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink tw-no-underline"
-                                        [style.background-color]="
-                                            row.operationNumber
-                                                | operationNumberColor
-                                        "
-                                        [routerLink]="[
-                                            '/operation',
-                                            'route-diagram',
-                                            { operation_id: row.operationId },
-                                        ]"
-                                        >{{ row.operationNumber }}</a
-                                    >
-                                } @else {
-                                    <span
-                                        data-operation-number
-                                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink"
-                                        [style.background-color]="
-                                            row.operationNumber
-                                                | operationNumberColor
-                                        "
-                                        >{{ row.operationNumber }}</span
-                                    >
-                                }
+                                <app-operation-number-tag
+                                    data-operation-number
+                                    [operationNumber]="row.operationNumber"
+                                    [link]="
+                                        row.operationId
+                                            ? [
+                                                  '/operation',
+                                                  'route-diagram',
+                                                  {
+                                                      operation_id:
+                                                          row.operationId,
+                                                  },
+                                              ]
+                                            : undefined
+                                    "
+                                ></app-operation-number-tag>
                             </span>
                         }
                         @if (row.formationNumber) {
@@ -197,10 +188,11 @@
                                     row.formationAgencyName
                                         ? row.formationAgencyName + ' '
                                         : ''
-                                }}<b class="tw-text-ink">{{
-                                    row.formationNumber
-                                }}</b></span
-                            >
+                                }}<b class="tw-text-ink"
+                                    ><app-formation-number-link
+                                        [formationNumber]="row.formationNumber"
+                                    ></app-formation-number-link></b
+                            ></span>
                         }
                     </span>
                 </div>

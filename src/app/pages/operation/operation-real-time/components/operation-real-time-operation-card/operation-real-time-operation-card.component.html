@@ -27,15 +27,14 @@
     <div
         class="tw-col-start-1 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
     >
-        <app-operation-number-link
-            [text]="operation().operationNumber"
-            [bgColor]="operation().operationNumber | operationNumberColor"
+        <app-operation-number-tag
+            [operationNumber]="operation().operationNumber"
             [link]="[
                 '/operation',
                 'route-diagram',
                 { operation_id: operation().operationId },
             ]"
-        ></app-operation-number-link>
+        ></app-operation-number-tag>
     </div>
 
     <!-- 上段中央: 編成番号・所属会社/形式。
@@ -68,9 +67,7 @@
                     }}
                 </span>
                 @if (formationAnnotation()) {
-                    <span
-                        class="tw-whitespace-nowrap tw-text-xs tw-text-grey-600"
-                    >
+                    <span class="tw-whitespace-nowrap tw-text-xs tw-text-muted">
                         {{ formationAnnotation() }}
                     </span>
                 }
@@ -87,7 +84,7 @@
                 ></span>
             </span>
         } @else {
-            <span class="tw-text-base tw-text-grey-600">不明</span>
+            <span class="tw-text-base tw-text-muted">不明</span>
         }
     </div>
 
@@ -123,7 +120,7 @@
                                     history.sightingTime
                                         | dateFns
                                             : {
-                                                  format: '目撃：yyyy/MM/dd HH:mm:ss',
+                                                  format: '目撃：yyyy/M/d HH:mm:ss',
                                                   parseISO: true,
                                               }
                                 "
@@ -133,7 +130,7 @@
                                 >
                                     arrow_back
                                 </mat-icon>
-                                <span class="tw-text-xs tw-text-grey-600">
+                                <span class="tw-text-xs tw-text-muted">
                                     {{
                                         history.formationId
                                             | findById
@@ -160,7 +157,7 @@
                                         history.sightingTime
                                             | dateFns
                                                 : {
-                                                      format: 'MM/dd HH:mm',
+                                                      format: 'M/d HH:mm',
                                                       parseISO: true,
                                                   }
                                     }}
@@ -234,7 +231,7 @@
                         sightingTime
                             | dateFns
                                 : {
-                                      format: 'MM/dd HH:mm',
+                                      format: 'M/d HH:mm',
                                       parseISO: true,
                                   }
                     }}
@@ -245,7 +242,7 @@
                     aria-label="目撃時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
         <div
@@ -269,7 +266,7 @@
                         updatedAt
                             | dateFns
                                 : {
-                                      format: 'MM/dd HH:mm',
+                                      format: 'M/d HH:mm',
                                       parseISO: true,
                                   }
                     }}
@@ -280,7 +277,7 @@
                     aria-label="更新時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
     </div>
@@ -295,7 +292,7 @@
             mat-icon-button
             type="button"
             data-testid="row-post"
-            class="tw--my-1.5 !tw-text-grey-600"
+            class="tw--my-1.5 !tw-text-muted"
             [attr.aria-label]="operation().operationNumber + '運用を投稿する'"
             (click)="openPost()"
         >

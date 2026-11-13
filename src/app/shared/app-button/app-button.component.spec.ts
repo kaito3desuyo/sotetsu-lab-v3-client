@@ -6,9 +6,7 @@ import { AppButtonComponent } from './app-button.component';
 @Component({
     imports: [AppButtonComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
-        <app-button [variant]="variant()">{{ label() }}</app-button>
-    `,
+    template: ` <app-button [variant]="variant()">{{ label() }}</app-button> `,
 })
 class HostComponent {
     readonly variant = signal<'primary' | 'secondary'>('primary');
@@ -38,7 +36,7 @@ describe('AppButtonComponent', () => {
     });
 
     // Material ラップ差し替えに伴い、色は mat-flat-button/mat-stroked-button の
-    // 構造クラス（app-button.component.scss で上書き）で表現するため、
+    // 構造クラス（src/styles.scss の .app-button-* で上書き）で表現するため、
     // Tailwind の色クラスでなく本コンポーネント固有のバリアントクラスと
     // Material の構造クラスが付与されていることを確認する（正当な追随修正）
     it('既定（primary）は mat-flat-button によるオレンジ塗り全幅ボタンになる（98 G0-4）', () => {

@@ -36,6 +36,43 @@ describe('TimetableFormationHeaderComponent', () => {
         expect(t).toContain('15:40 59 で目撃');
     });
 
+    it('運用番号のチップは行路図へのリンク。明日の見込みは明日の運用 ID で開く', () => {
+        const fixture = create({
+            formationNumber: '8713',
+            formation: { formationId: 'f', formationNumber: '8713' },
+            sightings: [{ time: '09:06', operationNumber: '55' }],
+            currentOperationNumber: '59',
+            operationIdByNumber: { '55': 'op-55', '59': 'op-59' },
+            tomorrowOperationNumber: '60',
+            tomorrowOperationId: 'op-60-tomorrow',
+        });
+        const hrefs = Array.from(
+            (fixture.nativeElement as HTMLElement).querySelectorAll(
+                'app-operation-number-tag a',
+            ),
+        ).map((a) => a.getAttribute('href'));
+
+        expect(hrefs).toEqual([
+            '/operation/route-diagram;operation_id=op-55',
+            '/operation/route-diagram;operation_id=op-59',
+            '/operation/route-diagram;operation_id=op-60-tomorrow',
+        ]);
+    });
+
+    it('運用 ID が分からないチップはリンクにしない', () => {
+        const fixture = create({
+            formationNumber: '8713',
+            formation: { formationId: 'f', formationNumber: '8713' },
+            currentOperationNumber: '59',
+        });
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-operation-number-tag a',
+            ),
+        ).toBeNull();
+    });
+
     it('いまの運用に根拠を添え、「?」を付ける', () => {
         const fixture = create({
             formation: { formationId: 'f' },

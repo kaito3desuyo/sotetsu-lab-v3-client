@@ -15,12 +15,14 @@ import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.compo
 import { formatTokyoDateTime } from '../utils/format-tokyo-date-time.util';
 import { ModerationRecentService } from './services/moderation-recent.service';
 import { ModerationRecentStore } from './stores/moderation-recent.store';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 @Component({
     selector: 'app-moderation-recent',
     templateUrl: './moderation-recent.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatTableModule,
         AppButtonComponent,

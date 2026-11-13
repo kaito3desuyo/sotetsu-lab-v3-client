@@ -81,7 +81,7 @@
                                         calendar.date
                                             | dateFns
                                                 : {
-                                                      format: 'MM/dd',
+                                                      format: 'M/d',
                                                       parseFormat: 'yyyy-MM-dd',
                                                   }
                                     }}
@@ -102,11 +102,15 @@
                     ) {
                         <tr>
                             <!-- 行が折り返しで高くなっても、編成番号は 1 段目のタグと並べる。
-                                 行の高さはタグの段（22px）に合わせる -->
+                                 行の高さはタグの段（24px）に合わせる -->
                             <th
-                                class="tw-sticky tw-left-0 tw-z-10 tw-whitespace-nowrap tw-align-top tw-tabular-nums tw-leading-[22px]"
+                                class="tw-sticky tw-left-0 tw-z-10 tw-whitespace-nowrap tw-align-top tw-tabular-nums tw-leading-[24px]"
                             >
-                                {{ formation.formationNumber }}
+                                <app-formation-number-link
+                                    [formationNumber]="
+                                        formation.formationNumber
+                                    "
+                                ></app-formation-number-link>
                             </th>
                             @for (
                                 calendar of calendars();
@@ -147,11 +151,11 @@
                                                 @let borderEnabled =
                                                     sighting.invalidation !==
                                                     null;
-                                                <!-- 段の高さは 22px に丸める。タグの実寸 21.5px のままだと
+                                                <!-- 段の高さはタグと同じ 24px。以前はタグの実寸 21.5px のままだと
                                                      行の高さが端数になり、sticky な編成の列で下罫が
-                                                     ところどころ消えた（390px で実測） -->
+                                                     ところどころ消えたので 22px に丸めていた（390px で実測）。タグは 2026-11-13 に 24px ちょうどにした -->
                                                 <span
-                                                    class="tw-inline-flex tw-h-[22px] tw-items-center"
+                                                    class="tw-inline-flex tw-h-6 tw-items-center"
                                                 >
                                                     @if (!first) {
                                                         <span

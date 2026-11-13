@@ -32,17 +32,14 @@
                     class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-center tw-gap-x-3 tw-gap-y-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-py-2 tw-text-ink first:tw-border-t-0"
                 >
                     @if (item.operationNumber) {
-                        <app-operation-number-link
-                            [text]="item.operationNumber"
-                            [bgColor]="
-                                item.operationNumber | operationNumberColor
-                            "
+                        <app-operation-number-tag
+                            [operationNumber]="item.operationNumber"
                             [link]="[
                                 '/operation',
                                 'route-diagram',
                                 { operation_id: item.sighting.operationId },
                             ]"
-                        ></app-operation-number-link>
+                        ></app-operation-number-tag>
                     } @else {
                         <span class="tw-text-sm tw-text-muted">不明</span>
                     }
@@ -55,7 +52,11 @@
                         <span
                             class="tw-text-sm tw-font-bold tw-tabular-nums tw-leading-tight"
                         >
-                            {{ item.formationNumber ?? '不明' }}
+                            <app-formation-number-link
+                                [formationNumber]="
+                                    item.formationNumber ?? '不明'
+                                "
+                            ></app-formation-number-link>
                         </span>
                         @if (item.formationAnnotation) {
                             <span class="tw-text-xs tw-text-muted">

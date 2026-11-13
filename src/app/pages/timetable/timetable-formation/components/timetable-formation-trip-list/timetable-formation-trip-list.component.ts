@@ -13,9 +13,11 @@ import { FormationDayRow } from '../../utils/formation-day.util';
 import {
     formatClock,
     formatSightingClock,
+    routeDiagramLink,
 } from '../../utils/formation-display.util';
 import { FormationRowProgress } from '../../utils/formation-progress.util';
 import { isPassing } from '../../utils/formation-station-filter.util';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 type TripRow = Extract<FormationDayRow, { kind: 'trip' }>;
 
@@ -24,7 +26,12 @@ type TripRow = Extract<FormationDayRow, { kind: 'trip' }>;
     selector: 'app-timetable-formation-trip-list',
     templateUrl: './timetable-formation-trip-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [MatIconModule, OperationNumberTagComponent, TripLabelComponent],
+    imports: [
+        FormationNumberLinkComponent,
+        MatIconModule,
+        OperationNumberTagComponent,
+        TripLabelComponent,
+    ],
     host: { class: 'tw-block' },
 })
 export class TimetableFormationTripListComponent {
@@ -33,6 +40,11 @@ export class TimetableFormationTripListComponent {
     readonly states = input<FormationRowProgress[]>([]);
     readonly stationNames = input<Record<string, string>>({});
     readonly calendarId = input<string | undefined>(undefined);
+    /** 見ている日 'yyyy-MM-dd'。ほかの編成の番号をその日の編成別時刻表へのリンクにする */
+    readonly date = input<string | null>(null);
+    /** 運用番号 → 運用 ID（乗り移り・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
+    readonly operationIdByNumber = input<Record<string, string>>({});
+    protected readonly routeDiagramLink = routeDiagramLink;
     /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す */
     readonly postRequested = output<string>();
 

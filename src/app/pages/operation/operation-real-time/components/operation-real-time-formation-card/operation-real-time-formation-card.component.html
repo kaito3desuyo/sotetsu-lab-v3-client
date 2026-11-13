@@ -42,7 +42,7 @@
             >
         </span>
         @if (formationAnnotation()) {
-            <span class="tw-text-xs tw-leading-tight tw-text-grey-600">
+            <span class="tw-text-xs tw-leading-tight tw-text-muted">
                 {{ formationAnnotation() }}
             </span>
         }
@@ -53,13 +53,9 @@
         class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
     >
         @if (expectedSightingOperationVm) {
-            <app-operation-number-link
-                [text]="
-                    (expectedSightingOperationVm.operationNumber === '100'
-                        ? '休'
-                        : expectedSightingOperationVm.operationNumber) +
-                    (dayCount !== 0 || isInferred() ? '?' : '')
-                "
+            <app-operation-number-tag
+                [operationNumber]="expectedSightingOperationVm.operationNumber"
+                [inferred]="dayCount !== 0 || isInferred()"
                 [textStyle]="
                     dayCount === 0
                         ? 'bold'
@@ -67,23 +63,14 @@
                           ? 'underline'
                           : 'normal'
                 "
-                [bgColor]="
-                    expectedSightingOperationVm.operationNumber
-                        | operationNumberColor
-                "
-                [link]="
-                    expectedSightingOperationVm.operationNumber === '100'
-                        ? undefined
-                        : [
-                              '/operation',
-                              'route-diagram',
-                              {
-                                  operation_id:
-                                      expectedSightingOperationVm.operationId,
-                              },
-                          ]
-                "
-            ></app-operation-number-link>
+                [link]="[
+                    '/operation',
+                    'route-diagram',
+                    {
+                        operation_id: expectedSightingOperationVm.operationId,
+                    },
+                ]"
+            ></app-operation-number-tag>
         } @else if (isSightingLoading()) {
             <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
             <span
@@ -96,7 +83,7 @@
                 ></span>
             </span>
         } @else {
-            <span class="tw-text-sm tw-text-grey-600">不明</span>
+            <span class="tw-text-sm tw-text-muted">不明</span>
         }
     </div>
 
@@ -141,7 +128,7 @@
                                     history.sightingTime
                                         | dateFns
                                             : {
-                                                  format: '目撃：yyyy/MM/dd HH:mm:ss',
+                                                  format: '目撃：yyyy/M/d HH:mm:ss',
                                                   parseISO: true,
                                               }
                                 "
@@ -151,7 +138,7 @@
                                 >
                                     arrow_back
                                 </mat-icon>
-                                <span class="tw-text-xs tw-text-grey-600">
+                                <span class="tw-text-xs tw-text-muted">
                                     {{
                                         historyOperationNumber !== '100'
                                             ? historyOperationNumber
@@ -172,7 +159,7 @@
                                         history.sightingTime
                                             | dateFns
                                                 : {
-                                                      format: 'MM/dd HH:mm',
+                                                      format: 'M/d HH:mm',
                                                       parseISO: true,
                                                   }
                                     }}
@@ -244,7 +231,7 @@
                         sightingTime
                             | dateFns
                                 : {
-                                      format: 'MM/dd HH:mm',
+                                      format: 'M/d HH:mm',
                                       parseISO: true,
                                   }
                     }}
@@ -255,7 +242,7 @@
                     aria-label="目撃時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
         <div
@@ -279,7 +266,7 @@
                         updatedAt
                             | dateFns
                                 : {
-                                      format: 'MM/dd HH:mm',
+                                      format: 'M/d HH:mm',
                                       parseISO: true,
                                   }
                     }}
@@ -290,7 +277,7 @@
                     aria-label="更新時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
     </div>
@@ -305,7 +292,7 @@
             mat-icon-button
             type="button"
             data-testid="row-post"
-            class="tw--my-1.5 !tw-text-grey-600"
+            class="tw--my-1.5 !tw-text-muted"
             [attr.aria-label]="formation().formationNumber + '編成を投稿する'"
             (click)="openPost()"
         >

@@ -12,7 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { FindByIdPipe } from 'src/app/core/pipes/find-by-id.pipe';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-details.dto';
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
@@ -22,7 +21,7 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
@@ -41,11 +40,10 @@ import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-d
         MatButtonModule,
         MatIconModule,
         MatTooltipModule,
-        OperationNumberLinkComponent,
+        OperationNumberTagComponent,
         RouterLink,
         DateFnsPipe,
         FindByIdPipe,
-        OperationNumberColorPipe,
         OperationRealTimeDayCountPipe,
         TripPositionComponent,
     ],
