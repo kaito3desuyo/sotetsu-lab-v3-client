@@ -482,27 +482,16 @@ function parseSeconds(time: string): number {
     return seconds;
 }
 
-/** 「base の days 日後の 0 時」の ms。鍵は base の ms + days（days は 0〜2 程度の整数）。 */
-const dayStartMsByKey = new Map<number, number>();
-
 /**
- * core の toAbsoluteTime（date-fns の startOfDay → addDays → addSeconds）と同じ結果を、
- * Date を 1 個しか作らずに返す。線の計算では 1 回の描き直しで数万回呼ばれるため
- * （task-23 の実測で再計算時間の約 1/4）。0 時は地方時の日付で作るので、夏時間の
- * ある地域でも addDays と同じになる。
+ * core の toAbsoluteTime（base + days 日 + time をミリ秒で足す）と同じ結果を返す。
+ * 線の計算では 1 回の描き直しで数万回呼ばれるため、time の秒数を覚えて Date を 1 個だけ作る
+ * （task-23 の実測で再計算時間の約 1/4）。base は railwayDayStart() の値で、日本時間は
+ * 夏時間が無いので 1 日は 24 時間として足せる。
  */
 function toAbsoluteTimeFast(base: Date, days: number, time: string): Date {
-    const key = base.getTime() + days;
-    let dayStartMs = dayStartMsByKey.get(key);
-    if (dayStartMs === undefined) {
-        dayStartMs = new Date(
-            base.getFullYear(),
-            base.getMonth(),
-            base.getDate() + days,
-        ).getTime();
-        dayStartMsByKey.set(key, dayStartMs);
-    }
-    return new Date(dayStartMs + parseSeconds(time) * 1000);
+    return new Date(
+        base.getTime() + days * 86_400_000 + parseSeconds(time) * 1000,
+    );
 }
 
 export function resolveArrival(
