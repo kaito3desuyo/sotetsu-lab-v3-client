@@ -114,4 +114,25 @@ describe('TimetableAllLineTableComponent の編集操作', () => {
 
         expect(fixture.nativeElement.querySelector('tfoot')).toBeNull();
     });
+    // 見出しの段は 24px ちょうど（下の罫線 1px を含む）で sticky の位置を決めている。
+    // 14px の字のチップは 24px あり段を押し広げるので、ここだけ字を 13px にする（docs/design.md）
+    it('見出しの運用番号のチップは字を 13px にして段に収める', () => {
+        fixture.componentRef.setInput('trips', [
+            {
+                ...trip,
+                tripOperationLists: [
+                    {
+                        operationId: 'op-1',
+                        operation: { operationNumber: '54' },
+                    },
+                ],
+            },
+        ]);
+        fixture.detectChanges();
+
+        const tag = (fixture.nativeElement as HTMLElement).querySelector(
+            'thead app-operation-number-tag',
+        );
+        expect(tag).toHaveClass('!tw-text-[13px]');
+    });
 });

@@ -79,7 +79,9 @@
                                         class="tw-sticky tw-top-6 tw-z-20 tw-w-[40px] tw-min-w-[40px] tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule tw-bg-white tw-p-0"
                                     >
                                         @if (trip.tripOperationLists.length) {
+                                            <!-- 段は罫線込みで 24px ちょうど。14px の字のチップ（24px）は収まらないので 13px にする -->
                                             <app-operation-number-tag
+                                                class="!tw-text-[13px]"
                                                 [operationNumber]="
                                                     trip.tripOperationLists[0]
                                                         .operation
