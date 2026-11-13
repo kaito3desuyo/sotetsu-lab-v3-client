@@ -38,12 +38,18 @@ const ssrOriginId = 'Sotetsu Lab v3 SSR Lambda Function URL';
 const lambdaWebAdapterLayerArn =
     'arn:aws:lambda:ap-northeast-1:753240598075:layer:LambdaAdapterLayerArm64:30';
 
+// 全部の振る舞いに付ける応答ヘッダー。AWS 管理の Managed-SecurityHeadersPolicy
+// （HSTS 1 年・nosniff・SAMEORIGIN・strict-origin-when-cross-origin・X-XSS-Protection。
+// HSTS はサブドメインに広げず preload も無い。nosniff 以外はオリジンが付けていればそちらを使う）
+const securityHeadersPolicy = '67f7725c-6f97-4210-82d7-5512b31e9d03';
+
 // ssr=on のとき、既定の振り分けを SSR の Lambda に向ける。ssr=off のときは S3 の殻（spa-routing 経由）に戻す。
 // ${param:ssr} は osls が文字列として解くので、TypeScript の中では読めない。そこで CloudFormation の Conditions で切り替える
 const s3Behavior = {
     TargetOriginId: s3OriginId,
     // Managed-CachingOptimized
     CachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6',
+    ResponseHeadersPolicyId: securityHeadersPolicy,
     ViewerProtocolPolicy: 'redirect-to-https',
     AllowedMethods: ['GET', 'HEAD'],
     CachedMethods: ['GET', 'HEAD'],
@@ -381,6 +387,8 @@ const serverlessConfiguration: AWS = {
                                 {
                                     TargetOriginId: ssrOriginId,
                                     CachePolicyId: { Ref: 'SsrCachePolicy' },
+                                    ResponseHeadersPolicyId:
+                                        securityHeadersPolicy,
                                     ViewerProtocolPolicy: 'redirect-to-https',
                                     AllowedMethods: ['GET', 'HEAD'],
                                     CachedMethods: ['GET', 'HEAD'],
@@ -412,6 +420,7 @@ const serverlessConfiguration: AWS = {
                                 // Managed-AllViewerExceptHostHeader（本番の実物に合わせる）
                                 OriginRequestPolicyId:
                                     'b689b0a8-53d0-40ab-baf2-68738e2966ac',
+                                ResponseHeadersPolicyId: securityHeadersPolicy,
                                 ViewerProtocolPolicy: 'redirect-to-https',
                                 AllowedMethods: [
                                     'GET',
