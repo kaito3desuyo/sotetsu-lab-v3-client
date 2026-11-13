@@ -1,6 +1,5 @@
 import {
     formatJst,
-    getRailwayDate,
     jstDateTimeOf,
     railwayClock,
     railwayDateKey,
@@ -11,51 +10,6 @@ import {
     toRailwayDateKey,
     toServiceSeconds,
 } from './railway-day';
-
-describe('getRailwayDate', () => {
-    it('3:59 は前日の営業日になる', () => {
-        const now = new Date(2026, 6, 4, 3, 59, 59);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 3, 0, 0, 0, 0));
-    });
-
-    it('4:00 は当日の営業日になる（境界値）', () => {
-        const now = new Date(2026, 6, 4, 4, 0, 0);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 4, 0, 0, 0, 0));
-    });
-
-    it('3:59 と 4:00 の1分差で営業日が切り替わる', () => {
-        const before = getRailwayDate(new Date(2026, 6, 4, 3, 59, 0));
-        const after = getRailwayDate(new Date(2026, 6, 4, 4, 0, 0));
-        expect(before).toEqual(new Date(2026, 6, 3, 0, 0, 0, 0));
-        expect(after).toEqual(new Date(2026, 6, 4, 0, 0, 0, 0));
-    });
-
-    it('0時ちょうどは前日の営業日になる', () => {
-        const now = new Date(2026, 6, 4, 0, 0, 0);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 3, 0, 0, 0, 0));
-    });
-
-    it('深夜帯（2:30）は前日の営業日になる', () => {
-        const now = new Date(2026, 6, 4, 2, 30, 0);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 3, 0, 0, 0, 0));
-    });
-
-    it('日中の時刻は当日の営業日になる', () => {
-        const now = new Date(2026, 6, 4, 15, 30, 0);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 4, 0, 0, 0, 0));
-    });
-
-    it('23:59 は当日の営業日になる', () => {
-        const now = new Date(2026, 6, 4, 23, 59, 59);
-        const result = getRailwayDate(now);
-        expect(result).toEqual(new Date(2026, 6, 4, 0, 0, 0, 0));
-    });
-});
 
 describe('toAbsoluteTime', () => {
     // base は railwayDayStart() の値（日本時間 2026-07-04 0 時 = 2026-07-03T15:00:00Z）

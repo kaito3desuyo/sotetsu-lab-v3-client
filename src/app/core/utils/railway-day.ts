@@ -1,4 +1,4 @@
-import { parseISO, startOfDay, subDays } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 /** 鉄道日を決める時刻帯（端末の時刻帯には頼らない） */
@@ -80,17 +80,6 @@ function parseHms(time: string): {
 } {
     const [hours, minutes, seconds] = time.split(':').map(Number);
     return { hours, minutes, seconds };
-}
-
-/**
- * 指定日時が属する鉄道営業日の 0 時（Date）を返す。
- * 4 時より前（0:00〜3:59）は前日の営業日として扱う。
- */
-export function getRailwayDate(now: Date): Date {
-    const startOfNow = startOfDay(now);
-    return now.getHours() < RAILWAY_DAY_BOUNDARY_HOUR
-        ? subDays(startOfNow, 1)
-        : startOfNow;
 }
 
 /**

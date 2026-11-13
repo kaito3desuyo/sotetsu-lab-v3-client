@@ -5,8 +5,15 @@ import {
 } from './sighting-precheck.util';
 
 describe('toSightingTimeIso', () => {
+    const specified = (sightingTime: string, now: string) =>
+        toSightingTimeIso({
+            timeSetting: 'specifiedTime',
+            sightingTime,
+            now: new Date(now),
+        });
+
     it('currentTime は now の ISO', () => {
-        const now = new Date(2026, 10, 10, 10, 0);
+        const now = new Date('2026-11-10T01:00:00Z');
         expect(
             toSightingTimeIso({
                 timeSetting: 'currentTime',
@@ -16,58 +23,51 @@ describe('toSightingTimeIso', () => {
         ).toBe(now.toISOString());
     });
 
+    it('specifiedTime 日本時間 10:30 に 10:00 を打つと当日 10:00（日本時間）', () => {
+        expect(specified('10:00', '2026-11-13T01:30:00Z')).toBe(
+            '2026-11-13T01:00:00.000Z',
+        );
+    });
+
     it('specifiedTime 10:00 に 09:30 を打つと当日 09:30', () => {
-        const now = new Date(2026, 10, 10, 10, 0);
-        expect(
-            toSightingTimeIso({
-                timeSetting: 'specifiedTime',
-                sightingTime: '09:30',
-                now,
-            }),
-        ).toBe(new Date(2026, 10, 10, 9, 30).toISOString());
+        expect(specified('09:30', '2026-11-10T01:00:00Z')).toBe(
+            '2026-11-10T00:30:00.000Z',
+        );
     });
 
     it('specifiedTime 10:00 に 03:50 を打つと翌日 03:50（営業日の終わり）', () => {
-        const now = new Date(2026, 10, 10, 10, 0);
-        expect(
-            toSightingTimeIso({
-                timeSetting: 'specifiedTime',
-                sightingTime: '03:50',
-                now,
-            }),
-        ).toBe(new Date(2026, 10, 11, 3, 50).toISOString());
+        expect(specified('03:50', '2026-11-10T01:00:00Z')).toBe(
+            '2026-11-10T18:50:00.000Z',
+        );
     });
 
     it('specifiedTime 02:00 に 23:30 を打つと前日 23:30', () => {
-        const now = new Date(2026, 10, 10, 2, 0);
-        expect(
-            toSightingTimeIso({
-                timeSetting: 'specifiedTime',
-                sightingTime: '23:30',
-                now,
-            }),
-        ).toBe(new Date(2026, 10, 9, 23, 30).toISOString());
+        expect(specified('23:30', '2026-11-12T17:00:00Z')).toBe(
+            '2026-11-12T14:30:00.000Z',
+        );
+    });
+
+    it('specifiedTime 02:00 に 01:00 を打つと同じ日の 01:00', () => {
+        expect(specified('01:00', '2026-11-12T17:00:00Z')).toBe(
+            '2026-11-12T16:00:00.000Z',
+        );
     });
 });
 
 describe('toSightingTimeIso の 4 時の境目', () => {
-    const iso = (now: Date) =>
+    const iso = (now: string) =>
         toSightingTimeIso({
             timeSetting: 'specifiedTime',
             sightingTime: '04:00',
-            now,
+            now: new Date(now),
         });
 
     it('now が 03:59 のとき 04:00 は前の営業日の 04:00（前日）', () => {
-        expect(iso(new Date(2026, 10, 10, 3, 59))).toBe(
-            new Date(2026, 10, 9, 4, 0).toISOString(),
-        );
+        expect(iso('2026-11-09T18:59:00Z')).toBe('2026-11-08T19:00:00.000Z');
     });
 
     it('now が 04:00 のとき 04:00 は当日の 04:00', () => {
-        expect(iso(new Date(2026, 10, 10, 4, 0))).toBe(
-            new Date(2026, 10, 10, 4, 0).toISOString(),
-        );
+        expect(iso('2026-11-09T19:00:00Z')).toBe('2026-11-09T19:00:00.000Z');
     });
 });
 
