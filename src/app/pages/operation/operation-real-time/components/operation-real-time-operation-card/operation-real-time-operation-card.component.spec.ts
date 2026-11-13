@@ -177,4 +177,38 @@ describe('OperationRealTimeOperationCardComponent', () => {
             operationNumber: component.operation().operationNumber,
         });
     });
+
+    describe('読み込み中の「現在位置」の段（届いたときにカードが伸びて下がずれないように）', () => {
+        const placeholder = () =>
+            (fixture.nativeElement as HTMLElement).querySelector(
+                '[aria-label="現在位置を取得中"]',
+            );
+
+        it('取得中で現在位置を表示する設定なら、見出しと骨組みを 1 行ぶん描く', () => {
+            fixture.componentRef.setInput('isVisibleCurrentPosition', true);
+            fixture.componentRef.setInput('isSightingLoading', true);
+            fixture.detectChanges();
+
+            expect(placeholder()).not.toBeNull();
+            expect(
+                (fixture.nativeElement as HTMLElement).textContent,
+            ).toContain('現在位置');
+        });
+
+        it('現在位置を表示しない設定なら描かない', () => {
+            fixture.componentRef.setInput('isVisibleCurrentPosition', false);
+            fixture.componentRef.setInput('isSightingLoading', true);
+            fixture.detectChanges();
+
+            expect(placeholder()).toBeNull();
+        });
+
+        it('取得が済んだら描かない', () => {
+            fixture.componentRef.setInput('isVisibleCurrentPosition', true);
+            fixture.componentRef.setInput('isSightingLoading', false);
+            fixture.detectChanges();
+
+            expect(placeholder()).toBeNull();
+        });
+    });
 });
