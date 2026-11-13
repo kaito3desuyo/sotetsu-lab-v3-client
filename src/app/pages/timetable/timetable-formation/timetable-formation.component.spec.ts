@@ -278,31 +278,41 @@ describe('TimetableFormationComponent', () => {
     });
 
     describe('日付の操作', () => {
+        // 前後の日は名前付きのボタン（app-step-nav。docs/design.md「前後へ送る」）。送れない向きのボタンは出さない
+        const stepButton = (
+            f: ComponentFixture<unknown>,
+            icon: 'chevron_left' | 'chevron_right',
+        ) =>
+            Array.from(
+                (
+                    f.nativeElement as HTMLElement
+                ).querySelectorAll<HTMLButtonElement>('app-step-nav button'),
+            ).find((b) => b.textContent?.includes(icon));
         const nextButton = (f: ComponentFixture<unknown>) =>
-            q<HTMLButtonElement>(f, '[data-testid="next-day"]');
+            stepButton(f, 'chevron_right');
 
-        it('明後日へ進むボタンは押せない', () => {
+        it('明後日へ進むボタンは出さない', () => {
             const { fixture } = setup({
                 params: { formation_number: '8713', date: '2026-11-12' },
             });
             fixture.detectChanges();
-            expect(nextButton(fixture)?.disabled).toBe(true);
+            expect(nextButton(fixture)).toBeUndefined();
         });
 
-        it('明日を選べるときだけ、今日の次の日ボタンが押せる', () => {
+        it('明日を選べるときだけ、今日の次の日ボタンを日付の名前で出す', () => {
             const blocked = setup({
                 params: { formation_number: '8713', date: '2026-11-11' },
                 state: { tomorrowOperationId: null },
             });
             blocked.fixture.detectChanges();
-            expect(nextButton(blocked.fixture)?.disabled).toBe(true);
+            expect(nextButton(blocked.fixture)).toBeUndefined();
             TestBed.resetTestingModule();
             const open = setup({
                 params: { formation_number: '8713', date: '2026-11-11' },
                 state: { tomorrowOperationId: 'op56' },
             });
             open.fixture.detectChanges();
-            expect(nextButton(open.fixture)?.disabled).toBe(false);
+            expect(nextButton(open.fixture)?.textContent).toContain('11/12');
         });
 
         it('明日を選べないときは理由が出る', () => {
@@ -321,7 +331,9 @@ describe('TimetableFormationComponent', () => {
                 params: { formation_number: '8713', date: '2026-11-11' },
             });
             fixture.detectChanges();
-            q<HTMLButtonElement>(fixture, '[data-testid="prev-day"]')?.click();
+            const prev = stepButton(fixture, 'chevron_left');
+            expect(prev?.textContent).toContain('11/10');
+            prev?.click();
             expect(navigate).toHaveBeenCalledWith([
                 'timetable',
                 'formation',
