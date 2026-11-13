@@ -1555,6 +1555,9 @@ focus on paper           5.76   focus-on-dark on navy 9.50
     `class="app-button app-button-primary|secondary"` を付ける。素の Material の色（`color="primary"` の紺塗り・
     `mat-raised-button` の影・1px 灰の枠）は使わない。`mat-stroked-button` に class を付け忘れると
     `button-voice.spec.ts` が落ちる（2026-11-13）
+-   リアルタイム運用情報の右下に浮く「投稿する」（`mat-fab extended`・`color="primary"`）は例外で、紺地・白い字・
+    丸形・影付きのままにする。浮いている物なので影を許し、画面の中のオレンジの主ボタン（検索など）と競わせない
+    （ユーザー判断 2026-11-13）
 
 **素の `<a>` をナビゲーション導線として裸で使わない**（現状サイドナビと検索カードがブラウザ既定の
 青下線リンクのまま。audit C5 / M6）。（検索カードはトップだけになった・2026-10-22）
