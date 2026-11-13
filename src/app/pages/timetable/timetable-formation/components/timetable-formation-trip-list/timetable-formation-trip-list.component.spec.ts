@@ -103,6 +103,20 @@ describe('TimetableFormationTripListComponent', () => {
         expect(buttons[1]).toHaveAttribute('aria-expanded', 'true');
     });
 
+    // 半透明にすると muted より薄い字になり、種別の色も薄れる（Fable のレビュー A6）。字だけを muted にする
+    it('過ぎた列車は字を muted にし、行を半透明にしない', () => {
+        const fixture = create([trip(), trip()], ['past', 'future']);
+        const rows = (fixture.nativeElement as HTMLElement).querySelectorAll(
+            'li[data-state]',
+        );
+        expect(rows[0].classList).toContain('tw-text-muted');
+        expect(rows[0].classList).not.toContain('tw-opacity-50');
+        expect(rows[1].classList).not.toContain('tw-text-muted');
+        expect(
+            rows[0].querySelector('button[aria-expanded]')?.classList,
+        ).not.toContain('tw-text-ink');
+    });
+
     it('推定の列車に「推定」を出す', () => {
         const fixture = create([trip({ estimated: true })], ['past']);
         expect(text(fixture)).toContain('推定');
