@@ -36,15 +36,21 @@ describe('OperationNumberTagComponent', () => {
     });
 
     describe('見た目（docs/design.md 運用番号のチップ）', () => {
-        it('高さ 24px・14px・普通の字・左右 8px・角丸 4px', () => {
+        it('高さは固定せず上下 4px の余白で決める。14px・普通の字・左右 8px・角丸 4px', () => {
             fixture.componentRef.setInput('operationNumber', '1001');
             fixture.detectChanges();
 
             const cls = getTagEl().classList;
-            expect(cls).toContain('tw-h-6');
-            expect(cls).toContain('tw-text-sm');
+            expect(cls).not.toContain('tw-h-6');
+            expect(cls).toContain('tw-py-[0.2857em]');
+            expect(cls).toContain('tw-px-[0.5714em]');
+            // 字の大きさは部品の外側（host）で決め、置き場が !tw-text-* で上書きできる
+            expect(cls).not.toContain('tw-text-sm');
+            expect(fixture.nativeElement as HTMLElement).toHaveClass(
+                'tw-text-sm',
+            );
             expect(cls).toContain('tw-font-normal');
-            expect(cls).toContain('tw-px-2');
+
             expect(cls).toContain('tw-rounded');
             expect(cls).not.toContain('tw-font-bold');
         });
@@ -55,7 +61,8 @@ describe('OperationNumberTagComponent', () => {
             fixture.detectChanges();
 
             const cls = getTagEl().classList;
-            expect(cls).toContain('tw-h-6');
+            expect(cls).toContain('tw-py-[0.2857em]');
+            expect(cls).toContain('tw-px-[0.5714em]');
             expect(cls).toContain('tw-font-normal');
             expect(cls).toContain('tw-no-underline');
         });

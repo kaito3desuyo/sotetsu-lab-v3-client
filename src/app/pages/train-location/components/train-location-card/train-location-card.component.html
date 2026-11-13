@@ -9,7 +9,10 @@
         class="tw-absolute tw-inset-0 tw-rounded"
         [routerLink]="card().detailLink"
         [attr.aria-label]="
-            card().tripNumber + ' ' + card().destinationName + '行の時刻表を見る'
+            card().tripNumber +
+            ' ' +
+            card().destinationName +
+            '行の時刻表を見る'
         "
     ></a>
     <!-- 上段（モック09準拠）: 種別バッジ+行き先（左寄せ）+ 運用番号（右端。実装の補足情報として維持） -->
@@ -26,31 +29,23 @@
                 >{{ card().destinationName }} 行</span
             >
         </span>
-        <!-- 運用番号の地は運用群の色（リアルタイム運用情報・運用表と同じ operationNumberColor）。
-             運用 ID があれば運用行路図へのリンク（駅別時刻表などと同じ行き先） -->
-        @if (card().operationNumber && card().operationId) {
-            <a
+        <!-- 運用番号は共通のチップ（docs/design.md 運用番号のチップ）。カードが狭いので字だけ 10px にする。
+             運用 ID があれば運用行路図へのリンク。面のリンクより上に出すため tw-relative -->
+        @if (card().operationNumber) {
+            <app-operation-number-tag
                 data-operation-number
-                class="tw-relative tw-shrink-0 tw-rounded tw-px-1 tw-text-[10px] tw-font-bold tw-text-ink tw-no-underline"
-                [style.background-color]="
-                    card().operationNumber | operationNumberColor
+                class="tw-relative tw-shrink-0 !tw-text-[10px]"
+                [operationNumber]="card().operationNumber"
+                [link]="
+                    card().operationId
+                        ? [
+                              '/operation',
+                              'route-diagram',
+                              { operation_id: card().operationId },
+                          ]
+                        : undefined
                 "
-                [routerLink]="[
-                    '/operation',
-                    'route-diagram',
-                    { operation_id: card().operationId },
-                ]"
-                >{{ card().operationNumber }}</a
-            >
-        } @else if (card().operationNumber) {
-            <span
-                data-operation-number
-                class="tw-shrink-0 tw-rounded tw-px-1 tw-text-[10px] tw-font-bold tw-text-ink"
-                [style.background-color]="
-                    card().operationNumber | operationNumberColor
-                "
-                >{{ card().operationNumber }}</span
-            >
+            ></app-operation-number-tag>
         }
     </span>
 
@@ -78,7 +73,11 @@
                         >{{ card().formationAgencyName }}
                     </span>
                 }
-                <span>{{ card().formationNumber }}</span>
+                <!-- 編成別時刻表へのリンク（docs/design.md 編成番号）。面のリンクより上に出すため tw-relative -->
+                <app-formation-number-link
+                    class="tw-relative"
+                    [formationNumber]="card().formationNumber"
+                ></app-formation-number-link>
             </span>
         }
     </span>

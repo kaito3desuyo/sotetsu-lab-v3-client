@@ -108,7 +108,7 @@ describe('TrainLocationCardComponent', () => {
         fixture.detectChanges();
 
         const tag = fixture.nativeElement.querySelector(
-            '[data-operation-number]',
+            '[data-operation-number] span',
         ) as HTMLElement;
         expect(tag.textContent?.trim()).toBe('54');
         expect(fixture.nativeElement).not.toHaveTextContent(/運用/);
@@ -221,14 +221,15 @@ describe('TrainLocationCardComponent', () => {
         );
         fixture.detectChanges();
 
-        const tag = fixture.nativeElement.querySelector(
-            'a[data-operation-number]',
-        ) as HTMLAnchorElement;
+        const host = fixture.nativeElement.querySelector(
+            'app-operation-number-tag[data-operation-number]',
+        ) as HTMLElement;
+        const tag = host.querySelector('a') as HTMLAnchorElement;
         expect(tag).toHaveAttribute(
             'href',
             '/operation/route-diagram;operation_id=op-1',
         );
-        expect(tag.className).toContain('tw-relative');
+        expect(host.className).toContain('tw-relative');
         // リンクの中にリンクを入れない
         expect(tag.closest('a[data-card-link]')).toBeNull();
     });
@@ -238,10 +239,46 @@ describe('TrainLocationCardComponent', () => {
         fixture.detectChanges();
 
         expect(
-            fixture.nativeElement.querySelector('a[data-operation-number]'),
+            fixture.nativeElement.querySelector('[data-operation-number] a'),
         ).toBeNull();
         expect(
-            fixture.nativeElement.querySelector('span[data-operation-number]'),
+            fixture.nativeElement.querySelector('[data-operation-number] span'),
         ).not.toBeNull();
+    });
+
+    // 運用番号のチップは共通部品（docs/design.md 運用番号のチップ）。カードが狭いので字だけ 10px に上書きする
+    it('運用番号は共通のチップで、普通の字・10px', () => {
+        fixture.componentRef.setInput(
+            'card',
+            card({ operationNumber: '54', operationId: 'op-1' }),
+        );
+        fixture.detectChanges();
+
+        const host = fixture.nativeElement.querySelector(
+            'app-operation-number-tag[data-operation-number]',
+        ) as HTMLElement;
+        expect(host).not.toBeNull();
+        expect(host).toHaveClass('!tw-text-[10px]');
+        expect(host.querySelector('a')).toHaveClass('tw-font-normal');
+    });
+
+    it('編成番号は編成別時刻表へのリンク（カードの面のリンクより上に重ねる）', () => {
+        fixture.componentRef.setInput(
+            'card',
+            card({ formationNumber: '10708' }),
+        );
+        fixture.detectChanges();
+
+        const link = fixture.nativeElement.querySelector(
+            'a[href*="/timetable/formation"]',
+        ) as HTMLAnchorElement;
+        expect(link).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=10708',
+        );
+        expect(link.closest('a[data-card-link]')).toBeNull();
+        expect(
+            link.closest('app-formation-number-link') as HTMLElement,
+        ).toHaveClass('tw-relative');
     });
 });
