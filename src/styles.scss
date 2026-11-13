@@ -180,6 +180,27 @@ body {
     border-radius: unset !important;
 }
 
+// 重なって出る物（ダイアログ・下から出るシート）の角丸はカードと同じ 8px（docs/design.md 面の掟）。
+// 重なる物なので影は Material のまま残す。
+html {
+    @include mat.dialog-overrides(
+        (
+            container-shape: 8px,
+        )
+    );
+    @include mat.bottom-sheet-overrides(
+        (
+            container-shape: 8px,
+        )
+    );
+}
+
+// Material はスマホ幅のシートに角丸の class を付けないので、上の 2 隅は自前で丸める
+.mat-bottom-sheet-container {
+    border-top-left-radius: var(--mat-bottom-sheet-container-shape);
+    border-top-right-radius: var(--mat-bottom-sheet-container-shape);
+}
+
 @media (max-width: 599px) {
     .mat-sidenav-content {
         height: calc(100vh - 56px) !important;
