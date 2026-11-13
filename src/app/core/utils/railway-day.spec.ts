@@ -1,6 +1,7 @@
 import {
     formatJst,
     jstDateTimeOf,
+    jstMidnightOf,
     railwayClock,
     railwayDateKey,
     railwayDayStart,
@@ -159,6 +160,12 @@ describe('日本時間で決める（端末の時刻帯に頼らない）', () =
     it('formatJst は日本時間で書く', () => {
         expect(formatJst(new Date('2026-11-13T01:30:00Z'), 'HH:mm')).toBe(
             '10:30',
+        );
+    });
+
+    it('jstMidnightOf は日本時間の 0 時の時点を返す', () => {
+        expect(jstMidnightOf('2026-11-14').toISOString()).toBe(
+            '2026-11-13T15:00:00.000Z',
         );
     });
 });

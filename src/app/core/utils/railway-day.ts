@@ -28,9 +28,14 @@ export function railwayDateKey(at: Date = new Date()): string {
     );
 }
 
+/** 'yyyy-MM-dd' の日の日本時間 0 時の時点。 */
+export function jstMidnightOf(dateKey: string): Date {
+    return fromZonedTime(`${dateKey}T00:00:00`, RAILWAY_TIME_ZONE);
+}
+
 /** その営業日の日本時間 0 時の時点。 */
 export function railwayDayStart(at: Date): Date {
-    return fromZonedTime(`${railwayDateKey(at)}T00:00:00`, RAILWAY_TIME_ZONE);
+    return jstMidnightOf(railwayDateKey(at));
 }
 
 /** 日本時間の時（0〜23）と分。 */
