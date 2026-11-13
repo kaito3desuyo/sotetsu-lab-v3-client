@@ -13,10 +13,11 @@
     ></app-empty-state>
 } @else {
     <!-- 帳票: 1 枚の白地を罫線で区切る（docs/design.md 面の掟の例外・2026-10-06）。
-         作りは運用順の一覧と同じ -->
+         作りは運用順の一覧と同じ。2 列は 2xl（1536px〜）から。左の列が 72px 固定のため、
+         1280px の 2 列（カード 269px）では投稿ボタンが右へはみ出していた（本番で 126 枚中 89 枚・2026-11-13） -->
     <div class="tw-overflow-hidden tw-rounded-card tw-bg-white">
         <div
-            class="-tw-mb-px -tw-mr-px tw-grid tw-grid-cols-1 xl:tw-grid-cols-2"
+            class="-tw-mb-px -tw-mr-px tw-grid tw-grid-cols-1 2xl:tw-grid-cols-2"
         >
             @for (
                 formation of filteredFormations();
