@@ -92,21 +92,8 @@
              「帯は全幅・カードは余白あり」を両立させる。この要素は md 未満でしか
              作らないので、打ち消す値は tw-p-4 の 16px 固定でよい。 -->
         <div class="tw-mx-[-16px]">
-            <mat-tab-group>
+            <mat-tab-group (selectedIndexChange)="onMobileTabChange($event)">
                 <mat-tab label="運用順">
-                    <!-- 目撃募集の札（2026-11 B3）。押すと運用順を募集中だけに絞る。保存しない。
-                         0 件・viewer では行ごと描かない -->
-                    @if (showCallChip()) {
-                        <div
-                            class="tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2"
-                        >
-                            <app-operation-real-time-sighting-call
-                                [count]="callOperations().length"
-                                [active]="callFilterActive()"
-                                (toggled)="onToggleCallFilter()"
-                            ></app-operation-real-time-sighting-call>
-                        </div>
-                    }
                     <div class="tw-px-4 tw-pt-3">
                         <app-operation-real-time-operation-table
                             [limitToOperationNumbers]="callOperationNumbers()"
@@ -120,6 +107,18 @@
                 </mat-tab>
             </mat-tab-group>
         </div>
+        <!-- 目撃募集の札（2026-11 B3）。押すと運用順を募集中だけに絞る。保存しない。
+             左下に浮かせ、縦の中心を右下の投稿ボタン（下から 16px・高さ 48px）にそろえる。
+             以前はタブの下に白い帯を足していて、目撃が届いてから帯が入るぶん一覧が下がっていた（2026-11-13）。
+             0 件・viewer・編成順のタブでは描かない -->
+        @if (showCallChip() && mobileTabIndex() === 0) {
+            <app-operation-real-time-sighting-call
+                class="!tw-fixed tw-bottom-6 tw-left-4 tw-z-40 tw-rounded-full tw-shadow-md"
+                [count]="callOperations().length"
+                [active]="callFilterActive()"
+                (toggled)="onToggleCallFilter()"
+            ></app-operation-real-time-sighting-call>
+        }
     }
     <!-- 投稿は右下の固定ボタンからダイアログで（ユーザー指示 2026-10-22「投稿までの手数を少なくしたい」）。
          ボタンの分の余白は main の下の padding で取る（空の div は main > :empty の規則で消える） -->
