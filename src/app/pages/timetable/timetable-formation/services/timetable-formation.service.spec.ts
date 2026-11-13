@@ -300,6 +300,42 @@ describe('Service: TimetableFormation', () => {
         expect(store.notFound()).toBe(false);
     });
 
+    it('今日の最初の運用（time-cross-section）の取得に失敗したら loadError で「不明」にしない', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockImplementation(
+            ({ searchTime }: { searchTime?: string }) =>
+                searchTime
+                    ? of({ expectedSighting: null })
+                    : throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+    });
+
+    it('明日の運用の取得に失敗したら loadError', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-12', 'tomorrow');
+        expect(store.loadError()).toBe(true);
+    });
+
+    it('今日の画面で明日を選べるかの取得だけが失敗しても、loadError にせず明日を出さない', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockImplementation(
+            ({ searchTime }: { searchTime?: string }) =>
+                searchTime
+                    ? throwError(() => new Error('x'))
+                    : of({
+                          expectedSighting: {
+                              operation: { operationId: 'op-now' },
+                          },
+                      }),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(false);
+        expect(store.canSelectTomorrow()).toBe(false);
+        expect(store.firstOperationId()).toBe('op-now');
+    });
+
     it('目撃の取得に失敗したら loadError', async () => {
         sightingService.findManyBySpecificPeriod.mockReturnValue(
             throwError(() => new Error('x')),
