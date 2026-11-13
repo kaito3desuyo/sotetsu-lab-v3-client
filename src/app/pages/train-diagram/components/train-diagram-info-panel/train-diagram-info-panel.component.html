@@ -42,8 +42,7 @@
                             [formationNumber]="info().formationNumber"
                             (click)="closed.emit()"
                         ></app-formation-number-link></b
-                ></span
-                >
+                ></span>
             }
             @if (info().sightingTime; as sightingTime) {
                 <span class="tw-whitespace-nowrap"
@@ -81,6 +80,7 @@
             <button
                 type="button"
                 mat-stroked-button
+                class="app-button app-button-secondary"
                 aria-label="この運用で投稿"
                 (click)="openPost()"
             >

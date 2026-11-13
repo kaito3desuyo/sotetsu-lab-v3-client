@@ -1544,11 +1544,17 @@ focus on paper           5.76   focus-on-dark on navy 9.50
 
 ## CTA voice
 
-| 役割      | 見た目                                                                     | 使う場面                                   |
-| --------- | -------------------------------------------------------------------------- | ------------------------------------------ |
-| Primary   | `--color-accent` 塗り + `--color-accent-ink` 文字 + radius 6px             | 画面の主目的（検索・投稿）。**1画面に1つ** |
-| Secondary | `--color-paper` 地 + `--color-structure` 2px 枠 + `--color-structure` 文字 | 副次操作                                   |
-| Tertiary  | 文字のみ + `--color-accent-deep` の下線                                    | 画面遷移を伴う補助導線                     |
+| 役割      | 見た目                                                                                  | 使う場面                                   |
+| --------- | --------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Primary   | `--color-accent` 塗り + `--color-accent-ink` 文字・太字 + radius 4px                    | 画面の主目的（検索・投稿）。**1画面に1つ** |
+| Secondary | `--color-control`（白）地 + `--color-structure` 2px 枠 + `--color-structure` 文字・太字 | 副次操作                                   |
+| Tertiary  | 文字のみ + `--color-accent-deep` の下線                                                 | 画面遷移を伴う補助導線                     |
+
+-   見た目は `src/styles.scss` の `.app-button` / `.app-button-primary` / `.app-button-secondary` にある。
+    `<button>` は `app-button`、リンクのボタンや部品の中のボタンは `mat-flat-button`（主）・`mat-stroked-button`（副）に
+    `class="app-button app-button-primary|secondary"` を付ける。素の Material の色（`color="primary"` の紺塗り・
+    `mat-raised-button` の影・1px 灰の枠）は使わない。`mat-stroked-button` に class を付け忘れると
+    `button-voice.spec.ts` が落ちる（2026-11-13）
 
 **素の `<a>` をナビゲーション導線として裸で使わない**（現状サイドナビと検索カードがブラウザ既定の
 青下線リンクのまま。audit C5 / M6）。（検索カードはトップだけになった・2026-10-22）
