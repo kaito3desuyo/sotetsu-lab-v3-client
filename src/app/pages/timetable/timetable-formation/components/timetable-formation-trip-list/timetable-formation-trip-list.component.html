@@ -60,6 +60,7 @@
                             <app-operation-number-tag
                                 [operationNumber]="row.operationNumber"
                                 [inferred]="true"
+                                [link]="routeDiagramLink(row.operationId)"
                             ></app-operation-number-tag>
                         }
                         <mat-icon
@@ -111,10 +112,14 @@
                     <span>□ {{ name(row.stationId) }} で乗り移り</span>
                     <app-operation-number-tag
                         [operationNumber]="row.from"
+                        [link]="
+                            routeDiagramLink(operationIdByNumber()[row.from])
+                        "
                     ></app-operation-number-tag>
                     <span>→</span>
                     <app-operation-number-tag
                         [operationNumber]="row.to"
+                        [link]="routeDiagramLink(operationIdByNumber()[row.to])"
                     ></app-operation-number-tag>
                 </li>
             }
@@ -125,6 +130,11 @@
                     <span>{{ sightingClock(row.sightingTime) }} の目撃で</span>
                     <app-operation-number-tag
                         [operationNumber]="row.toOperationNumber"
+                        [link]="
+                            routeDiagramLink(
+                                operationIdByNumber()[row.toOperationNumber]
+                            )
+                        "
                     ></app-operation-number-tag>
                     <span>に変わった</span>
                 </li>

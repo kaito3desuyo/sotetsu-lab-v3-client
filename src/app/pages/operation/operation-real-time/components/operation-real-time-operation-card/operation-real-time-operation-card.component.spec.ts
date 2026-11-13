@@ -7,7 +7,7 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeOperationCardComponent } from './operation-real-time-operation-card.component';
 
@@ -33,7 +33,7 @@ describe('OperationRealTimeOperationCardComponent', () => {
             .overrideComponent(OperationRealTimeOperationCardComponent, {
                 remove: {
                     imports: [
-                        OperationNumberLinkComponent,
+                        OperationNumberTagComponent,
                         TripPositionComponent,
                     ],
                 },

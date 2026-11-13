@@ -24,6 +24,11 @@
                     <span class="tw-tabular-nums">{{ s.time }}</span>
                     <app-operation-number-tag
                         [operationNumber]="s.operationNumber"
+                        [link]="
+                            routeDiagramLink(
+                                operationIdByNumber()[s.operationNumber]
+                            )
+                        "
                     ></app-operation-number-tag>
                     <span>で目撃</span>
                     @if (!last) {
@@ -52,6 +57,13 @@
                         ) {
                             <app-operation-number-tag
                                 [operationNumber]="item.operationNumber"
+                                [link]="
+                                    routeDiagramLink(
+                                        operationIdByNumber()[
+                                            item.operationNumber
+                                        ]
+                                    )
+                                "
                                 [inferred]="item.inferred"
                             ></app-operation-number-tag>
                             @if (!last) {
@@ -62,6 +74,7 @@
                 } @else {
                     <app-operation-number-tag
                         [operationNumber]="number"
+                        [link]="routeDiagramLink(operationIdByNumber()[number])"
                         [inferred]="currentInferred()"
                     ></app-operation-number-tag>
                 }
@@ -102,6 +115,7 @@
                 <span class="tw-text-xs tw-text-muted">明日の見込み</span>
                 <app-operation-number-tag
                     [operationNumber]="tomorrow"
+                    [link]="routeDiagramLink(tomorrowOperationId())"
                     [inferred]="true"
                 ></app-operation-number-tag>
                 <span class="tw-text-xs tw-text-muted">（順送り?）</span>

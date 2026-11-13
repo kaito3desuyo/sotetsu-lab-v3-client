@@ -15,6 +15,25 @@ describe('Store: TimetableFormation', () => {
         expect(store.currentFetchSeq()).toBe(b);
     });
 
+    it('operationIdByNumber は、その日の列車と目撃から運用番号で運用 ID を引く（チップを行路図へのリンクにするため）', () => {
+        store.addTrips({
+            'op-12': { operation: { operationNumber: '12' } },
+        } as never);
+        store.setSightings([
+            {
+                operationSightingId: 's1',
+                operationId: 'op-31K',
+                operation: { operationNumber: '31K' },
+            },
+            { operationSightingId: 's2', operationId: 'op-x' },
+        ] as never);
+
+        expect(store.operationIdByNumber()).toEqual({
+            '12': 'op-12',
+            '31K': 'op-31K',
+        });
+    });
+
     it('取得前は notFound / noCalendar を立てない', () => {
         expect(store.notFound()).toBe(false);
         expect(store.noCalendar()).toBe(false);

@@ -119,12 +119,9 @@
                             <span class="tw-whitespace-nowrap tw-text-sm">
                                 {{ formatTime(row.sightingTime) }}
                             </span>
-                            <app-operation-number-link
-                                [text]="row.operationNumber"
-                                [bgColor]="
-                                    row.operationNumber | operationNumberColor
-                                "
-                            ></app-operation-number-link>
+                            <app-operation-number-tag
+                                [operationNumber]="row.operationNumber"
+                            ></app-operation-number-tag>
                             <span class="tw-whitespace-nowrap tw-text-sm">
                                 {{ row.formationNumber }}
                             </span>

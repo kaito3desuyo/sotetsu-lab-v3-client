@@ -13,6 +13,7 @@ import { FormationDayRow } from '../../utils/formation-day.util';
 import {
     formatClock,
     formatSightingClock,
+    routeDiagramLink,
 } from '../../utils/formation-display.util';
 import { FormationRowProgress } from '../../utils/formation-progress.util';
 import { isPassing } from '../../utils/formation-station-filter.util';
@@ -33,6 +34,9 @@ export class TimetableFormationTripListComponent {
     readonly states = input<FormationRowProgress[]>([]);
     readonly stationNames = input<Record<string, string>>({});
     readonly calendarId = input<string | undefined>(undefined);
+    /** 運用番号 → 運用 ID（乗り移り・交換の行のチップを行路図へのリンクにする。ストアの operationIdByNumber） */
+    readonly operationIdByNumber = input<Record<string, string>>({});
+    protected readonly routeDiagramLink = routeDiagramLink;
     /** 「不明」の行から投稿へ進む。最後に分かっている運用番号を渡す */
     readonly postRequested = output<string>();
 

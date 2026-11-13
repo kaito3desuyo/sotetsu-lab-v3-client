@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
@@ -37,7 +37,7 @@ import {
         MatIconModule,
         TripLabelComponent,
         NgTemplateOutlet,
-        OperationNumberColorPipe,
+        OperationNumberTagComponent,
     ],
     host: { class: 'tw-block' },
 })

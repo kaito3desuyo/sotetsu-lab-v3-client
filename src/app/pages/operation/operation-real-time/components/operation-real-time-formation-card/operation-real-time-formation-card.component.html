@@ -53,13 +53,9 @@
         class="tw-col-start-2 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
     >
         @if (expectedSightingOperationVm) {
-            <app-operation-number-link
-                [text]="
-                    (expectedSightingOperationVm.operationNumber === '100'
-                        ? '休'
-                        : expectedSightingOperationVm.operationNumber) +
-                    (dayCount !== 0 || isInferred() ? '?' : '')
-                "
+            <app-operation-number-tag
+                [operationNumber]="expectedSightingOperationVm.operationNumber"
+                [inferred]="dayCount !== 0 || isInferred()"
                 [textStyle]="
                     dayCount === 0
                         ? 'bold'
@@ -67,23 +63,14 @@
                           ? 'underline'
                           : 'normal'
                 "
-                [bgColor]="
-                    expectedSightingOperationVm.operationNumber
-                        | operationNumberColor
-                "
-                [link]="
-                    expectedSightingOperationVm.operationNumber === '100'
-                        ? undefined
-                        : [
-                              '/operation',
-                              'route-diagram',
-                              {
-                                  operation_id:
-                                      expectedSightingOperationVm.operationId,
-                              },
-                          ]
-                "
-            ></app-operation-number-link>
+                [link]="[
+                    '/operation',
+                    'route-diagram',
+                    {
+                        operation_id: expectedSightingOperationVm.operationId,
+                    },
+                ]"
+            ></app-operation-number-tag>
         } @else if (isSightingLoading()) {
             <!-- 取得中は「不明」という確定値を出さない（audit M4） -->
             <span

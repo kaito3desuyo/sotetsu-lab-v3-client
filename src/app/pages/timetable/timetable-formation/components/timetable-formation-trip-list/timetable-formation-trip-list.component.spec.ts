@@ -148,6 +148,35 @@ describe('TimetableFormationTripListComponent', () => {
         expect(emitted).toEqual(['55']);
     });
 
+    it('運用番号のチップは行路図へのリンク（列車の行は行の運用 ID、乗り移り・交換は番号から引く）', () => {
+        const fixture = create([
+            trip({ carriedOver: true, operationId: 'op-55' }),
+            { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
+            {
+                kind: 'swap',
+                sightingTime: '2026-11-11T15:40:00+09:00',
+                toOperationNumber: '59',
+            },
+        ]);
+        fixture.componentRef.setInput('operationIdByNumber', {
+            '16K': 'op-16K',
+            '15K': 'op-15K',
+        });
+        fixture.detectChanges();
+        const hrefs = Array.from(
+            (fixture.nativeElement as HTMLElement).querySelectorAll(
+                'app-operation-number-tag a',
+            ),
+        ).map((a) => a.getAttribute('href'));
+
+        // 59 は運用 ID が分からないのでリンクにしない
+        expect(hrefs).toEqual([
+            '/operation/route-diagram;operation_id=op-55',
+            '/operation/route-diagram;operation_id=op-16K',
+            '/operation/route-diagram;operation_id=op-15K',
+        ]);
+    });
+
     it('入出庫・乗り移り・車両交換の帯を出す', () => {
         const fixture = create([
             { kind: 'depot', label: 'out', stationId: 'a', time: '07:07' },

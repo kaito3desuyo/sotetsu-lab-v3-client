@@ -38,3 +38,12 @@ export function formatSightingClock(iso: string | undefined): string {
         timeZone: 'Asia/Tokyo',
     });
 }
+
+/** 運用番号のチップのリンク先（運用行路図）。運用 ID が分からなければリンクにしない */
+export function routeDiagramLink(
+    operationId: string | null | undefined,
+): readonly unknown[] | undefined {
+    return operationId
+        ? ['/operation', 'route-diagram', { operation_id: operationId }]
+        : undefined;
+}

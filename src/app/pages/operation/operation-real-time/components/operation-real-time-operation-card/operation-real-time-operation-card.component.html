@@ -27,15 +27,14 @@
     <div
         class="tw-col-start-1 tw-row-start-1 tw-flex tw-min-h-9 tw-items-center tw-self-start"
     >
-        <app-operation-number-link
-            [text]="operation().operationNumber"
-            [bgColor]="operation().operationNumber | operationNumberColor"
+        <app-operation-number-tag
+            [operationNumber]="operation().operationNumber"
             [link]="[
                 '/operation',
                 'route-diagram',
                 { operation_id: operation().operationId },
             ]"
-        ></app-operation-number-link>
+        ></app-operation-number-tag>
     </div>
 
     <!-- 上段中央: 編成番号・所属会社/形式。

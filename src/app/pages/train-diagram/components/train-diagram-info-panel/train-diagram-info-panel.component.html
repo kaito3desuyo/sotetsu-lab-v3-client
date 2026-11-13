@@ -17,32 +17,22 @@
             class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-1 tw-text-sm tw-text-muted"
         >
             @if (info().operationNumber) {
-                <!-- 運用番号は運用群の色。運用 ID があれば運用行路図へのリンク（列車位置情報と同じ） -->
-                @if (info().operationId) {
-                    <a
-                        data-operation-number
-                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink tw-no-underline"
-                        [style.background-color]="
-                            info().operationNumber | operationNumberColor
-                        "
-                        [routerLink]="[
-                            '/operation',
-                            'route-diagram',
-                            { operation_id: info().operationId },
-                        ]"
-                        (click)="closed.emit()"
-                        >{{ info().operationNumber }}</a
-                    >
-                } @else {
-                    <span
-                        data-operation-number
-                        class="tw-rounded tw-px-1 tw-font-bold tw-text-ink"
-                        [style.background-color]="
-                            info().operationNumber | operationNumberColor
-                        "
-                        >{{ info().operationNumber }}</span
-                    >
-                }
+                <!-- 運用番号は共通のチップ（docs/design.md 運用番号のチップ）。運用 ID があれば
+                     運用行路図へのリンク（列車位置情報と同じ）。押したらパネルを閉じる -->
+                <app-operation-number-tag
+                    data-operation-number
+                    [operationNumber]="info().operationNumber ?? ''"
+                    [link]="
+                        info().operationId
+                            ? [
+                                  '/operation',
+                                  'route-diagram',
+                                  { operation_id: info().operationId },
+                              ]
+                            : undefined
+                    "
+                    (click)="info().operationId && closed.emit()"
+                ></app-operation-number-tag>
             }
             @if (info().formationNumber) {
                 <span class="tw-whitespace-nowrap"

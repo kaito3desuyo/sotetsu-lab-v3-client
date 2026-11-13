@@ -13,6 +13,7 @@ import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { FormationDateKind } from '../../stores/timetable-formation.store';
 import { FormationOperationChainItem } from '../../utils/formation-day.util';
+import { routeDiagramLink } from '../../utils/formation-display.util';
 
 export interface FormationHeaderSighting {
     /** 'HH:mm' */
@@ -50,6 +51,11 @@ export class TimetableFormationHeaderComponent {
     readonly calendarId = input<string | undefined>(undefined);
     /** 明日の見込みの運用番号。今日で明日を選べるときだけ親が渡す */
     readonly tomorrowOperationNumber = input<string | null>(null);
+    /** 明日の見込みの運用 ID（明日の暦の運用なので、今日の番号の対応とは別に受ける） */
+    readonly tomorrowOperationId = input<string | null>(null);
+    /** 運用番号 → 運用 ID（チップを行路図へのリンクにする。ストアの operationIdByNumber） */
+    readonly operationIdByNumber = input<Record<string, string>>({});
+    protected readonly routeDiagramLink = routeDiagramLink;
     readonly dateKind = input<FormationDateKind>('today');
 
     protected readonly operationHeading = computed(() =>

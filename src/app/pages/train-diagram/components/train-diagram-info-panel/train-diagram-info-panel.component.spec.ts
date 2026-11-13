@@ -51,7 +51,7 @@ describe('TrainDiagramInfoPanelComponent', () => {
         });
         fixture.detectChanges();
         const link: HTMLAnchorElement = fixture.nativeElement.querySelector(
-            'a[data-operation-number]',
+            '[data-operation-number] a',
         );
         expect(link.textContent?.trim()).toBe('71');
         expect(link).toHaveAttribute(

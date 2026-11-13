@@ -2,11 +2,10 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { SightingCorroboration } from 'src/app/libs/operation-sighting/usecase/dtos/my-operation-sighting.dto';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
-import { OperationNumberLinkComponent } from 'src/app/shared/operation-number-link/operation-number-link.component';
+import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { formatTokyoDateTime } from '../moderation/utils/format-tokyo-date-time.util';
 import { MyPageService } from './services/my-page.service';
@@ -32,8 +31,7 @@ export const CORROBORATION_LABELS: Record<
         RouterLink,
         AppButtonComponent,
         EmptyStateComponent,
-        OperationNumberColorPipe,
-        OperationNumberLinkComponent,
+        OperationNumberTagComponent,
         SkeletonBarComponent,
     ],
 })
