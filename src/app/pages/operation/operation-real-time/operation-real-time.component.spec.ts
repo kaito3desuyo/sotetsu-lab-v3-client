@@ -424,21 +424,30 @@ describe('OperationRealTimeComponent の目撃募集の札', () => {
         expect(callOperations()).toEqual(['12K', '52K']);
     });
 
-    it('札は運用順のタブの先頭に、件数と絞りの状態を渡して置く', () => {
-        const row = chip().nativeElement.parentElement as HTMLElement;
+    it('スマホでは札を画面の左下に浮かせ、件数と絞りの状態を渡す（行を足さない）', () => {
+        const el = chip().nativeElement as HTMLElement;
 
-        expect(chip()).not.toBeNull();
         expect(chipInputs()).toEqual(
             expect.objectContaining({ count: 2, active: false }),
         );
-        // 白帯は無く、札は main の直下には置かない
-        expect(row.tagName.toLowerCase()).not.toBe('main');
-        expect(row.className).toContain('tw-bg-white');
+        // 白い帯の行に入れない。後から現れても一覧を押し下げない（CLS）
+        expect(el.className).toContain('!tw-fixed');
+        expect(el.parentElement?.className ?? '').not.toContain('tw-bg-white');
         expect(
             (fixture.nativeElement as HTMLElement).querySelectorAll(
                 'app-operation-real-time-sighting-call',
             ).length,
         ).toBe(1);
+    });
+
+    it('スマホで編成順のタブを開いている間は札を出さない（札が絞るのは運用順）', () => {
+        fixture.componentInstance.onMobileTabChange(1);
+        fixture.detectChanges();
+        expect(chip()).toBeNull();
+
+        fixture.componentInstance.onMobileTabChange(0);
+        fixture.detectChanges();
+        expect(chip()).not.toBeNull();
     });
 
     it('0 件なら札を描かない', () => {

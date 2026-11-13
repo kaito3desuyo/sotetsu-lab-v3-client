@@ -8,6 +8,7 @@ import {
     inject,
     linkedSignal,
     PLATFORM_ID,
+    signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -163,6 +164,13 @@ export class OperationRealTimeComponent {
 
     onToggleCallFilter(): void {
         this.callOnly.update((on) => !on);
+    }
+
+    /** スマホのタブ（0: 運用順・1: 編成順）。目撃募集の札は運用順を絞るので、運用順のときだけ出す */
+    readonly mobileTabIndex = signal(0);
+
+    onMobileTabChange(index: number): void {
+        this.mobileTabIndex.set(index);
     }
 
     onClearFilter(): void {
