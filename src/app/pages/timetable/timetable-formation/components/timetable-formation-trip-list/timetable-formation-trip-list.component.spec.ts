@@ -177,6 +177,30 @@ describe('TimetableFormationTripListComponent', () => {
         ]);
     });
 
+    it('unknown の行の、ほかの編成の番号はその日の編成別時刻表へのリンク', () => {
+        const fixture = create([
+            {
+                kind: 'unknown',
+                lastOperationNumber: '55',
+                evictedBy: {
+                    formationNumber: '8711',
+                    sightingTime: '2026-11-11T15:20:00+09:00',
+                },
+            },
+        ]);
+        fixture.componentRef.setInput('date', '2026-11-11');
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'a[href*="/timetable/formation"]',
+            ),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=8711;date=2026-11-11',
+        );
+    });
+
     it('入出庫・乗り移り・車両交換の帯を出す', () => {
         const fixture = create([
             { kind: 'depot', label: 'out', stationId: 'a', time: '07:07' },

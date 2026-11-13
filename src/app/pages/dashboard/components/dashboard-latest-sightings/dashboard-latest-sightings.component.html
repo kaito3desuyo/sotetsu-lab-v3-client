@@ -52,7 +52,11 @@
                         <span
                             class="tw-text-sm tw-font-bold tw-tabular-nums tw-leading-tight"
                         >
-                            {{ item.formationNumber ?? '不明' }}
+                            <app-formation-number-link
+                                [formationNumber]="
+                                    item.formationNumber ?? '不明'
+                                "
+                            ></app-formation-number-link>
                         </span>
                         @if (item.formationAnnotation) {
                             <span class="tw-text-xs tw-text-muted">

@@ -31,9 +31,11 @@ describe('LibraryVehicleComponent', () => {
         expect(links).toHaveLength(47);
         expect(
             root.querySelector(
-                'td.right-controller > a[href="/timetable/formation;formation_number=8713"]',
+                'td.right-controller a[href="/timetable/formation;formation_number=8713"]',
             ),
         ).not.toBeNull();
+        // 印は列車番号と同じ下線（docs/design.md 編成番号）
+        expect(links[0].classList).toContain('tw-underline');
         // 廃車済みの編成はリンクにしない
         expect(
             root.querySelector('a[href$="formation_number=8701"]'),

@@ -86,6 +86,17 @@ describe('ModerationRecentComponent', () => {
         expect(cells).toContain('12101');
     });
 
+    it('編成は目撃の日の編成別時刻表へのリンクになる', async () => {
+        await render([sighting('s1')]);
+
+        expect(
+            el().querySelector('a[href*="/timetable/formation"]'),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=12101;date=2026-11-02',
+        );
+    });
+
     it('投稿者の名前は投稿者のページへのリンクになる', async () => {
         await render([sighting('s1', { author: author() })]);
 
@@ -98,7 +109,7 @@ describe('ModerationRecentComponent', () => {
 
         const row = el().querySelectorAll('tbody tr')[0];
         expect(row).toHaveTextContent('ゲスト');
-        expect(row.querySelector('a')).toBeNull();
+        expect(row.querySelector('.mat-column-author a')).toBeNull();
     });
 
     it('newAccount と burst の印が出て、無ければ出ない', async () => {

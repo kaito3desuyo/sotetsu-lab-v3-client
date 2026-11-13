@@ -83,7 +83,10 @@
                         *matCellDef="let row"
                         class="tw-whitespace-nowrap"
                     >
-                        {{ row.formationNumber }}
+                        <app-formation-number-link
+                            [formationNumber]="row.formationNumber"
+                            [at]="row.sightingTime"
+                        ></app-formation-number-link>
                     </td>
                 </ng-container>
 

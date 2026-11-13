@@ -16,6 +16,7 @@ import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-selected-trip-info.interface';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * N1 ダイヤグラムのタップ情報パネル（5.7・07-03 追加）。
@@ -33,6 +34,7 @@ import { TrainDiagramSelectedTripInfo } from '../../interfaces/train-diagram-sel
     styleUrl: './train-diagram-info-panel.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatButtonModule,
         MatIconModule,

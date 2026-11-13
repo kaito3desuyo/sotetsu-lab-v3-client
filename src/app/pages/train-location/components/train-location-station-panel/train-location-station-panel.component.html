@@ -188,10 +188,11 @@
                                     row.formationAgencyName
                                         ? row.formationAgencyName + ' '
                                         : ''
-                                }}<b class="tw-text-ink">{{
-                                    row.formationNumber
-                                }}</b></span
-                            >
+                                }}<b class="tw-text-ink"
+                                    ><app-formation-number-link
+                                        [formationNumber]="row.formationNumber"
+                                    ></app-formation-number-link></b
+                            ></span>
                         }
                     </span>
                 </div>

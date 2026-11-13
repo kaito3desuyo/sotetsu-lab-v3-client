@@ -10,6 +10,7 @@ import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.compo
 import { formatTokyoDateTime } from '../moderation/utils/format-tokyo-date-time.util';
 import { MyPageService } from './services/my-page.service';
 import { MyPageStore } from './stores/my-page.store';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /** 裏付けの言葉と字の色。conflicting は間違いと断じないので色を付けない */
 export const CORROBORATION_LABELS: Record<
@@ -28,6 +29,7 @@ export const CORROBORATION_LABELS: Record<
     templateUrl: './my-page.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         AppButtonComponent,
         EmptyStateComponent,

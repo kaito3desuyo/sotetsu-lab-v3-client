@@ -22,6 +22,7 @@ import {
     readStationPanelOpen,
     writeStationPanelOpen,
 } from '../../utils/train-location-storage.util';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * 駅の欄: 選んだ駅に次に来る列車を上り・下りに分けて出す（spec「駅の欄」）。
@@ -32,6 +33,7 @@ import {
     templateUrl: './train-location-station-panel.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         RouterLink,
         MatButtonModule,
         MatIconModule,

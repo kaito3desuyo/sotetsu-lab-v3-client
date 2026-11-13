@@ -23,6 +23,7 @@ import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { TimetableStationFindLastStopStationPipe } from '../../pipes/timetable-station-find-last-stop-station.pipe';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * 駅別時刻表: 1 列車分のセル（mockup-01 準拠のカード型）。
@@ -38,6 +39,7 @@ import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../../pipes/t
     templateUrl: './timetable-station-trip-cell.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         MatButtonModule,
         MatIconModule,
         FindByIdPipe,

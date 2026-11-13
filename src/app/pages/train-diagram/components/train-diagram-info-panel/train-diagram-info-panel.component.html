@@ -37,9 +37,12 @@
             @if (info().formationNumber) {
                 <span class="tw-whitespace-nowrap"
                     >編成
-                    <b class="tw-text-ink">{{
-                        info().formationNumber
-                    }}</b></span
+                    <b class="tw-text-ink"
+                        ><app-formation-number-link
+                            [formationNumber]="info().formationNumber"
+                            (click)="closed.emit()"
+                        ></app-formation-number-link></b
+                ></span
                 >
             }
             @if (info().sightingTime; as sightingTime) {

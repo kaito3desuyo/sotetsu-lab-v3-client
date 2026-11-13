@@ -194,6 +194,15 @@ describe('TimetableStationTripCellComponent', () => {
 
         expect(text).toContain('10708');
         expect(text).not.toContain('不明');
+        // 今日の見込みなので日付は付けない
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'a[href*="/timetable/formation"]',
+            ),
+        ).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=10708',
+        );
     });
 
     // 目撃の無い編成は推測なので「?」を付ける。目撃が無いと日数は NaN になり、

@@ -146,7 +146,11 @@
                 >
                     <p class="tw-m-0">
                         {{ sightingClock(row.evictedBy.sightingTime) }} に
-                        {{ row.evictedBy.formationNumber }} が
+                        <app-formation-number-link
+                            [formationNumber]="row.evictedBy.formationNumber"
+                            [date]="date()"
+                        ></app-formation-number-link>
+                        が
                         {{ row.lastOperationNumber }} で目撃されるまでは
                         {{ row.lastOperationNumber }}
                         でした。その後の運用は分かりません。

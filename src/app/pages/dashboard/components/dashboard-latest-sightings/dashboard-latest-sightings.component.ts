@@ -14,6 +14,7 @@ import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { DashboardStore } from '../../stores/dashboard.store';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 
 /**
  * 「最新の目撃情報」直近 3 件（N3）。
@@ -32,6 +33,7 @@ import { DashboardStore } from '../../stores/dashboard.store';
     templateUrl: './dashboard-latest-sightings.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
+        FormationNumberLinkComponent,
         DateFnsPipe,
         OperationNumberTagComponent,
         SkeletonBarComponent,

@@ -24,7 +24,8 @@ describe('TrainDiagramInfoPanelComponent', () => {
         await TestBed.configureTestingModule({
             imports: [TrainDiagramInfoPanelComponent],
             providers: [
-                provideRouter([]),
+                // リンクを押すテストで移り先が無いと落ちるので、何にでも合うルートを置く
+                provideRouter([{ path: '**', children: [] }]),
                 { provide: OperationPostDialogService, useValue: { open } },
             ],
         })
@@ -64,6 +65,26 @@ describe('TrainDiagramInfoPanelComponent', () => {
         // eslint-disable-next-line jest-dom/prefer-to-have-style
         expect(link.style.backgroundColor).not.toBe('');
         expect(fixture.nativeElement).not.toHaveTextContent(/運用/);
+    });
+
+    it('編成番号は編成別時刻表へのリンクで、押したらパネルを閉じる', () => {
+        fixture.componentRef.setInput('info', {
+            ...baseInfo,
+            formationNumber: '10701',
+        });
+        fixture.detectChanges();
+        let closed = 0;
+        component.closed.subscribe(() => closed++);
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href*="/timetable/formation"]',
+        ) as HTMLAnchorElement;
+        expect(link).toHaveAttribute(
+            'href',
+            '/timetable/formation;formation_number=10701',
+        );
+        link.click();
+        expect(closed).toBe(1);
     });
 
     it('全線時刻表へのリンクの字は「全線時刻表で見る ›」', () => {

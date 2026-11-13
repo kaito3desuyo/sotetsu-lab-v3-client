@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-link/formation-number-link.component';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 
 const LIBRARY_VEHICLE_DESCRIPTION =
@@ -10,7 +10,7 @@ const LIBRARY_VEHICLE_DESCRIPTION =
     templateUrl: './library-vehicle.component.html',
     styleUrl: './library-vehicle.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    imports: [RouterLink],
+    imports: [FormationNumberLinkComponent],
 })
 export class LibraryVehicleComponent {
     constructor() {
