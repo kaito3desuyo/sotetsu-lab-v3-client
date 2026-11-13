@@ -38,10 +38,13 @@ const ssrOriginId = 'Sotetsu Lab v3 SSR Lambda Function URL';
 const lambdaWebAdapterLayerArn =
     'arn:aws:lambda:ap-northeast-1:753240598075:layer:LambdaAdapterLayerArm64:30';
 
+// 全部の振る舞いに付ける応答ヘッダー。AWS 管理の Managed-SecurityHeadersPolicy
+// （HSTS 1 年・nosniff・SAMEORIGIN・strict-origin-when-cross-origin・X-XSS-Protection。
+// HSTS はサブドメインに広げず preload も無い。nosniff 以外はオリジンが付けていればそちらを使う）
+const securityHeadersPolicy = '67f7725c-6f97-4210-82d7-5512b31e9d03';
+
 // ssr=on のとき、既定の振り分けを SSR の Lambda に向ける。ssr=off のときは S3 の殻（spa-routing 経由）に戻す。
 // ${param:ssr} は osls が文字列として解くので、TypeScript の中では読めない。そこで CloudFormation の Conditions で切り替える
-const securityHeadersPolicy = { Ref: 'SecurityHeadersPolicy' };
-
 const s3Behavior = {
     TargetOriginId: s3OriginId,
     // Managed-CachingOptimized
@@ -258,34 +261,6 @@ const serverlessConfiguration: AWS = {
                             HeadersConfig: { HeaderBehavior: 'none' },
                             // クエリは鍵にも Lambda にも入れない。SSR のページはクエリを読まず、fbclid・utm_* で鍵が割れて毎回描き直すため（spec 8 章・2026-10-28）
                             QueryStringsConfig: { QueryStringBehavior: 'none' },
-                        },
-                    },
-                },
-            },
-            // 全部の振る舞いに付ける応答ヘッダー。HSTS は一度付けると戻しにくいので、max-age を 1 日から始めて上げる。
-            // サブドメイン（api.・ws.）には広げず、preload も付けない。CSP はまだ付けない
-            SecurityHeadersPolicy: {
-                Type: 'AWS::CloudFront::ResponseHeadersPolicy',
-                Properties: {
-                    ResponseHeadersPolicyConfig: {
-                        Name: '${param:prefix}-security-headers-policy',
-                        SecurityHeadersConfig: {
-                            StrictTransportSecurity: {
-                                AccessControlMaxAgeSec: 86400,
-                                IncludeSubdomains: false,
-                                Preload: false,
-                                Override: true,
-                            },
-                            ContentTypeOptions: { Override: true },
-                            FrameOptions: {
-                                FrameOption: 'SAMEORIGIN',
-                                Override: true,
-                            },
-                            ReferrerPolicy: {
-                                ReferrerPolicy:
-                                    'strict-origin-when-cross-origin',
-                                Override: true,
-                            },
                         },
                     },
                 },
