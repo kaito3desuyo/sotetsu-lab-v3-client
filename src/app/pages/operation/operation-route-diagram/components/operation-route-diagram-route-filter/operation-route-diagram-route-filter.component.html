@@ -13,7 +13,7 @@
     >
         <ng-content select="[bandLead]"></ng-content>
         @if (isAwaitingOperationTrips() || routeOptions().length > 0) {
-            <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-grey-600">
+            <p class="tw-m-0 tw-mb-2 tw-text-xs tw-text-muted">
                 路線で絞り込み
             </p>
             @if (isAwaitingOperationTrips()) {

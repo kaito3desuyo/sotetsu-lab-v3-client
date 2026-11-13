@@ -35,7 +35,9 @@
     </header>
 
     @if (linkLabels().from; as from) {
-        <p class="link-from tw-m-0 tw-px-4 tw-pt-2 tw-text-center tw-text-xs tw-text-grey-600">
+        <p
+            class="link-from tw-m-0 tw-px-4 tw-pt-2 tw-text-center tw-text-xs tw-text-muted"
+        >
             {{ from }}
         </p>
     }
@@ -45,14 +47,14 @@
             @if (row.kind === 'trip') {
                 @if (linkLabels().midTrip[row.tripId]?.from; as midFrom) {
                     <p
-                        class="link-mid-trip-from tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-grey-600"
+                        class="link-mid-trip-from tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
                     >
                         {{ midFrom }}
                     </p>
                 }
                 <div
                     class="op-row tw-grid tw-min-h-8 tw-items-center tw-gap-x-[3px]"
-                    [class.tw-text-grey-500]="row.isDeadhead"
+                    [class.tw-text-muted]="row.isDeadhead"
                     [attr.data-direction]="row.tripDirection"
                 >
                     <ng-container
@@ -101,7 +103,7 @@
                             [appFitWidthReserve]="24"
                             class="tw-shrink-0 tw-font-bold [&>*]:tw-shrink-0"
                             [class.tw-text-ink]="!row.isDeadhead"
-                            [class.tw-text-grey-500]="row.isDeadhead"
+                            [class.tw-text-muted]="row.isDeadhead"
                             [tripClassName]="row.tripClassName"
                             [tripClassColor]="
                                 row.isDeadhead ? null : row.tripClassColor
@@ -150,7 +152,7 @@
                 </div>
                 @if (linkLabels().midTrip[row.tripId]?.to; as midTo) {
                     <p
-                        class="link-mid-trip-to tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-grey-600"
+                        class="link-mid-trip-to tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
                     >
                         {{ midTo }}
                     </p>
@@ -181,7 +183,7 @@
     </div>
     @if (linkLabels().to; as to) {
         <p
-            class="link-to tw-m-0 tw-px-4 tw-pb-2 tw-text-center tw-text-xs tw-text-grey-600"
+            class="link-to tw-m-0 tw-px-4 tw-pb-2 tw-text-center tw-text-xs tw-text-muted"
         >
             {{ to }}
         </p>

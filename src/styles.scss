@@ -124,6 +124,9 @@ body {
     margin: 0;
     font-family: $sotetsu-lab-v3-client-font-family;
     font-feature-settings: 'pkna';
+    // 本文の色は --color-ink（docs/design.md Theme）。以前は Material 既定の黒（#000）で、
+    // tw-text-ink を付けた所だけ紺寄りになり、同じ編成番号がページで違う色に見えた（2026-11-13）
+    color: var(--color-ink);
 
     // カードの境界は影ではなく**面の明度差**で作る（ユーザー判断 2026-08-22）。
     // 以前はページもカードも #ffffff で、影だけが唯一の境界だった。

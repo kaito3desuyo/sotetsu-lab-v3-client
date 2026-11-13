@@ -104,7 +104,7 @@
                  届く前もボタンの高さ（36px）を取っておき、届いたときに図を押し下げない -->
             @if (searchOperationId()) {
                 <div class="tw-flex tw-flex-col tw-gap-2">
-                    <p class="tw-m-0 tw-text-xs tw-text-grey-600">前後の運用</p>
+                    <p class="tw-m-0 tw-text-xs tw-text-muted">前後の運用</p>
                     <div class="tw-min-h-[36px]">
                         <app-step-nav
                             [prev]="neighborOperations().prev"

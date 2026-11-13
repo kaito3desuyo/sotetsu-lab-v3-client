@@ -67,9 +67,7 @@
                     }}
                 </span>
                 @if (formationAnnotation()) {
-                    <span
-                        class="tw-whitespace-nowrap tw-text-xs tw-text-grey-600"
-                    >
+                    <span class="tw-whitespace-nowrap tw-text-xs tw-text-muted">
                         {{ formationAnnotation() }}
                     </span>
                 }
@@ -86,7 +84,7 @@
                 ></span>
             </span>
         } @else {
-            <span class="tw-text-base tw-text-grey-600">不明</span>
+            <span class="tw-text-base tw-text-muted">不明</span>
         }
     </div>
 
@@ -132,7 +130,7 @@
                                 >
                                     arrow_back
                                 </mat-icon>
-                                <span class="tw-text-xs tw-text-grey-600">
+                                <span class="tw-text-xs tw-text-muted">
                                     {{
                                         history.formationId
                                             | findById
@@ -244,7 +242,7 @@
                     aria-label="目撃時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
         <div
@@ -279,7 +277,7 @@
                     aria-label="更新時刻を取得中"
                 ></span>
             } @else {
-                <span class="tw-text-xs tw-text-grey-600">不明</span>
+                <span class="tw-text-xs tw-text-muted">不明</span>
             }
         </div>
     </div>
@@ -294,7 +292,7 @@
             mat-icon-button
             type="button"
             data-testid="row-post"
-            class="tw--my-1.5 !tw-text-grey-600"
+            class="tw--my-1.5 !tw-text-muted"
             [attr.aria-label]="operation().operationNumber + '運用を投稿する'"
             (click)="openPost()"
         >

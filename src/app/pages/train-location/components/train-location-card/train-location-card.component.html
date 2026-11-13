@@ -2,7 +2,7 @@
      リンクの中にリンクを入れず、面全体を覆う透明なリンクの上に運用番号のリンクを重ねる -->
 <div
     data-card
-    class="tw-relative tw-box-border tw-flex tw-w-40 tw-max-w-full tw-flex-col tw-gap-0.5 tw-rounded tw-border tw-border-solid tw-border-rule tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-grey-900"
+    class="tw-relative tw-box-border tw-flex tw-w-40 tw-max-w-full tw-flex-col tw-gap-0.5 tw-rounded tw-border tw-border-solid tw-border-rule tw-bg-white tw-px-2 tw-py-1 tw-text-xs tw-leading-tight tw-text-ink"
 >
     <a
         data-card-link
@@ -52,7 +52,7 @@
     <!-- 下段（モック09準拠）: 列車番号+進行方向矢印（停車中は矢印の代わりに「停車中」、折返し・入庫・出庫は「折返し」「入庫中」「出庫中」）（左）
          + 充当編成番号・所属会社（右端。実装の補足情報として維持） -->
     <span
-        class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-1 tw-text-grey-600"
+        class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-1 tw-text-muted"
     >
         <span class="tw-flex tw-shrink-0 tw-items-center tw-gap-1">
             <span>{{ card().tripNumber }}</span>
@@ -67,9 +67,9 @@
             }
         </span>
         @if (card().formationNumber) {
-            <span class="tw-truncate tw-font-bold tw-text-grey-900">
+            <span class="tw-truncate tw-font-bold tw-text-ink">
                 @if (card().formationAgencyName) {
-                    <span class="tw-font-normal tw-text-grey-500"
+                    <span class="tw-font-normal tw-text-muted"
                         >{{ card().formationAgencyName }}
                     </span>
                 }

@@ -142,7 +142,7 @@ describe('TrainLocationCardComponent', () => {
 
         expect(
             fixture.nativeElement.querySelector(
-                'span.tw-truncate.tw-font-bold.tw-text-grey-900',
+                'span.tw-truncate.tw-font-bold.tw-text-ink',
             ),
         ).toBeNull();
     });
@@ -157,7 +157,7 @@ describe('TrainLocationCardComponent', () => {
         expect(fixture.nativeElement).toHaveTextContent(/9999/);
         expect(
             fixture.nativeElement.querySelector(
-                'span.tw-truncate.tw-font-bold.tw-text-grey-900',
+                'span.tw-truncate.tw-font-bold.tw-text-ink',
             ),
         ).not.toBeNull();
     });

@@ -21,7 +21,7 @@
                          横スクロール 1 行（全線時刻表）では段を分けると縦に伸びるので、
                          見出しを行の中に差し込み、2 社目からは左に間を空けて切れ目を示す -->
                     <span
-                        class="tw-pl-2 tw-text-xs tw-font-bold tw-text-grey-600"
+                        class="tw-pl-2 tw-text-xs tw-font-bold tw-text-muted"
                         [class.tw-mt-1]="!scrollMode()"
                         [class.tw-w-full]="!scrollMode()"
                         [class.tw-self-center]="scrollMode()"
@@ -51,7 +51,7 @@
          装飾のみ（クリック不可）なので pointer-events を切る -->
     @if (scrollMode() && canScrollLeft()) {
         <span
-            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-bg-gradient-to-r tw-from-white tw-pr-3 tw-text-xs tw-text-grey-500"
+            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-left-0 tw-flex tw-items-center tw-bg-gradient-to-r tw-from-white tw-pr-3 tw-text-xs tw-text-muted"
             aria-hidden="true"
         >
             ◀
@@ -59,7 +59,7 @@
     }
     @if (scrollMode() && canScrollRight()) {
         <span
-            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-bg-gradient-to-l tw-from-white tw-pl-3 tw-text-xs tw-text-grey-500"
+            class="filter-chips-arrow tw-to-transparent tw-pointer-events-none tw-absolute tw-inset-y-0 tw-right-0 tw-flex tw-items-center tw-bg-gradient-to-l tw-from-white tw-pl-3 tw-text-xs tw-text-muted"
             aria-hidden="true"
         >
             ▶
