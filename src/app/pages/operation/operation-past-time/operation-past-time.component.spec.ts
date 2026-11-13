@@ -222,6 +222,67 @@ describe('OperationPastTimeComponent のサーバー', () => {
     });
 });
 
+describe('OperationPastTimeComponent の URL の days', () => {
+    async function createWith(
+        days: string,
+    ): Promise<InstanceType<typeof OperationPastTimeStore>> {
+        await TestBed.configureTestingModule({
+            imports: [OperationPastTimeComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: {
+                        paramMap: of(
+                            convertToParamMap({
+                                reference_date: '2026-10-01',
+                                days,
+                            }),
+                        ),
+                    },
+                },
+                {
+                    provide: OperationPastTimeService,
+                    useValue: {
+                        fetchCalendarByDate: () => of(undefined),
+                        fetchFormations: () => of(undefined),
+                        fetchOperationsV3: () => of(undefined),
+                        fetchOperationSightingsV3: () => of(undefined),
+                    },
+                },
+            ],
+        })
+            .overrideComponent(OperationPastTimeComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        TestBed.createComponent(OperationPastTimeComponent);
+        return TestBed.inject(OperationPastTimeStore);
+    }
+
+    it('days=45 は 30 日分の日付で検索する', async () => {
+        const store = await createWith('45');
+        expect(store.days()).toBe(30);
+        expect(store.dates()).toHaveLength(30);
+    });
+
+    it('days=-3 はフォームの最小値になる', async () => {
+        const store = await createWith('-3');
+        expect(store.days()).toBe(0);
+        expect(store.dates()).toHaveLength(0);
+    });
+
+    it('days が数でないときもフォームの最小値になる', async () => {
+        const store = await createWith('abc');
+        expect(store.days()).toBe(0);
+    });
+
+    it('範囲内の days はそのまま使う', async () => {
+        const store = await createWith('7');
+        expect(store.days()).toBe(7);
+    });
+});
+
 describe('OperationPastTimeComponent の圏外の保存', () => {
     let fixture: ComponentFixture<OperationPastTimeComponent>;
     let fetchDataSpy: jest.SpyInstance;

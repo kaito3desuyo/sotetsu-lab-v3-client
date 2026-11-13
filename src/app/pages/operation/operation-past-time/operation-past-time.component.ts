@@ -22,6 +22,7 @@ import { OperationPastTimeTableComponent } from './components/operation-past-tim
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
+import { clampPastTimeDays } from './utils/past-time-days.util';
 import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
 
 @Component({
@@ -96,7 +97,7 @@ export class OperationPastTimeComponent {
                     paramMap.get('include_invalidated') ?? undefined;
 
                 this.#store.setReferenceDate(referenceDate);
-                this.#store.setDays(days && +days);
+                this.#store.setDays(days && clampPastTimeDays(days));
                 this.#store.setIncludeInvalidated(
                     includeInvalidated === 'true',
                 );
