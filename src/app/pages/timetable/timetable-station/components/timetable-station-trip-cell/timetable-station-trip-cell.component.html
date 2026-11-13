@@ -148,19 +148,16 @@
             </span>
 
             <!-- 投稿ボタン（M30）。1 行目の右端（ユーザー判断 2026-11-10・実測で最長の「通勤特急 3900 新宿三丁目」でも右に 40px 空く）。
-                 24px は 1 行目の高さと同じなのでセルの高さは変わらない -->
+                 24px は 1 行目の高さと同じなのでセルの高さは変わらない。見た目はほかのページと同じ muted・アイコン 24px（docs/design.md 操作カード） -->
             @if (hasPostButton) {
                 <button
                     type="button"
                     mat-icon-button
-                    class="tw-ml-auto !tw-size-6 tw-shrink-0 !tw-p-0"
+                    class="tw-ml-auto !tw-size-6 tw-shrink-0 !tw-p-0 !tw-text-muted"
                     aria-label="この運用で投稿"
                     (click)="openPost(operationNumber)"
                 >
-                    <mat-icon
-                        class="!tw-h-[18px] !tw-w-[18px] tw-text-[18px] tw-leading-[normal]"
-                        >edit_note</mat-icon
-                    >
+                    <mat-icon>edit_note</mat-icon>
                 </button>
             }
         </div>

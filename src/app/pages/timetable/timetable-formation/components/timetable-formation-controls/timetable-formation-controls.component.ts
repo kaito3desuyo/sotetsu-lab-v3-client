@@ -1,3 +1,4 @@
+import { addDays, format, parse } from 'date-fns';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -10,7 +11,6 @@ import {
     MatAutocompleteModule,
     MatAutocompleteTrigger,
 } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +19,8 @@ import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-detail
 import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { StationGroup } from 'src/app/shared/station-groups.util';
+import { StepNavComponent } from 'src/app/shared/step-nav/step-nav.component';
+import { StepTarget } from 'src/app/shared/step-nav/step-target.type';
 import { FormationDateKind } from '../../stores/timetable-formation.store';
 import { groupFormationOptions } from '../../utils/formation-options.util';
 
@@ -33,12 +35,12 @@ import { groupFormationOptions } from '../../utils/formation-options.util';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatAutocompleteModule,
-        MatButtonModule,
         MatFormFieldModule,
         MatIconModule,
         MatInputModule,
         MatSelectModule,
         LazyOptionsDirective,
+        StepNavComponent,
     ],
     host: { class: 'tw-block' },
 })
@@ -81,6 +83,23 @@ export class TimetableFormationControlsComponent {
         }
     });
 
+    /** 前後の日のボタン。名前は「11/12」の形。次の日へ送れないときは出さない */
+    protected readonly neighborDays = computed(
+        (): { prev: StepTarget[]; next: StepTarget[] } => {
+            const date = this.date();
+            if (!date) return { prev: [], next: [] };
+            const day = parse(date, 'yyyy-MM-dd', new Date());
+            const target = (delta: -1 | 1): StepTarget => ({
+                id: String(delta),
+                label: format(addDays(day, delta), 'M/d'),
+            });
+            return {
+                prev: [target(-1)],
+                next: this.canGoNext() ? [target(1)] : [],
+            };
+        },
+    );
+
     /** 全部の候補を出し、今の番号を選んだ状態にする（打てば置き換わる。セレクトボックスと同じ） */
     protected onFocus(input: HTMLInputElement): void {
         this.query.set('');
@@ -108,6 +127,10 @@ export class TimetableFormationControlsComponent {
             trigger.closePanel();
             this.formationNumberSubmit.emit(value);
         }
+    }
+
+    protected onStep(target: StepTarget): void {
+        this.shift.emit(target.id === '1' ? 1 : -1);
     }
 
     protected onDate(event: Event): void {

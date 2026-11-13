@@ -71,4 +71,25 @@ describe('TimetableFormationStationListComponent', () => {
     it('過去の日は済み・残りを出さない', () => {
         expect(render(summary, 'past')).not.toContain('残り');
     });
+
+    it('通り過ぎた行は字を muted にし、行を半透明にしない', () => {
+        TestBed.configureTestingModule({
+            imports: [TimetableFormationStationListComponent],
+            providers: [provideRouter([])],
+        });
+        const fixture = TestBed.createComponent(
+            TimetableFormationStationListComponent,
+        );
+        fixture.componentRef.setInput('summary', summary);
+        fixture.componentRef.setInput('stationName', '二俣川');
+        fixture.componentRef.setInput('stationNames', { e: '横浜' });
+        fixture.componentRef.setInput('dateKind', 'today');
+        fixture.detectChanges();
+        const rows = (fixture.nativeElement as HTMLElement).querySelectorAll(
+            'ol > li',
+        );
+        expect(rows[0].classList).toContain('tw-text-muted');
+        expect(rows[0].classList).not.toContain('tw-opacity-50');
+        expect(rows[1].classList).not.toContain('tw-text-muted');
+    });
 });

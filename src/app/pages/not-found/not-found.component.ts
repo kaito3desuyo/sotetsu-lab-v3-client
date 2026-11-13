@@ -8,7 +8,9 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
 @Component({
     selector: 'app-not-found',
     template: `
-        <main class="tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16">
+        <main
+            class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+        >
             <app-empty-state
                 icon="search_off"
                 message="ページが見つかりません"

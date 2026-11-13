@@ -30,10 +30,10 @@
     </app-control-band>
 
     <!-- 凡例は列車ダイヤグラムと同じく操作帯のすぐ下の白い全幅の帯（ユーザー判断 2026-10-06）。
-         操作帯の要約の行（40px＋罫線 1px）の下に貼り付く。main の gap 16px と横 gutter は
+         操作帯の要約の行（罫線込みで 40px）のすぐ下に貼り付く。main の gap 16px と横 gutter は
          負のマージンで打ち消し、中身で同じ gutter を戻す。ページの中の貼り付く物なので z-30（重なりの順） -->
     <app-operation-real-time-legend
-        class="tw-sticky tw-top-[calc(49px_+_var(--control-band-offset,0px))] tw-z-30 -tw-mx-4 -tw-mt-4 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2 md:tw-top-[calc(65px_+_var(--control-band-offset,0px))] md:-tw-mx-6 md:tw-px-6 lg:-tw-mx-8 lg:tw-px-8 xl:-tw-mx-16 xl:tw-px-16"
+        class="tw-sticky tw-top-[calc(48px_+_var(--control-band-offset,0px))] tw-z-30 -tw-mx-4 -tw-mt-4 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2 md:tw-top-[calc(64px_+_var(--control-band-offset,0px))] md:-tw-mx-6 md:tw-px-6 lg:-tw-mx-8 lg:tw-px-8 xl:-tw-mx-16 xl:tw-px-16"
     ></app-operation-real-time-legend>
 
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。

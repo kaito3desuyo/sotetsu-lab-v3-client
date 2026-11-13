@@ -51,4 +51,25 @@ describe('ボタンの見た目（docs/design.md CTA voice）', () => {
             expect(tag).not.toMatch(/color="primary"/);
         }
     });
+
+    // 行ごとの投稿ボタン（docs/design.md 操作カード）: アイコンだけのボタンで、どのページも muted・アイコン 24px
+    it('行ごとの投稿ボタン（edit_note のアイコンだけのボタン）は muted で、アイコンを縮めない', () => {
+        const buttons = templateFiles(APP_DIR).flatMap((file) =>
+            Array.from(
+                readFileSync(file, 'utf8').matchAll(
+                    /(<button\b[^>]*\smat-icon-button[^>]*>)\s*(<mat-icon\b[^>]*>)\s*edit_note/g,
+                ),
+            ).map((m) => ({
+                where: file.replace(APP_DIR, ''),
+                button: m[1],
+                icon: m[2],
+            })),
+        );
+
+        expect(buttons.length).toBeGreaterThanOrEqual(4);
+        for (const { where, button, icon } of buttons) {
+            expect(`${where}: ${button}`).toContain('!tw-text-muted');
+            expect(`${where}: ${icon}`).not.toMatch(/18px/);
+        }
+    });
 });

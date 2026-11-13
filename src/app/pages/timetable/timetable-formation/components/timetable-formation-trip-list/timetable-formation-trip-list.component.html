@@ -5,9 +5,10 @@
     @for (row of rows(); track $index; let i = $index) {
         @switch (row.kind) {
             @case ('trip') {
+                <!-- 過ぎた列車は字だけを muted にする。行を半透明にすると muted より薄くなり、種別の色も薄れた（Fable のレビュー A6） -->
                 <li
                     class="tw-border-0 tw-border-t tw-border-solid tw-border-rule"
-                    [class.tw-opacity-50]="states()[i] === 'past'"
+                    [class.tw-text-muted]="states()[i] === 'past'"
                     [class.tw-bg-accent-50]="states()[i] === 'running'"
                     [attr.data-state]="states()[i]"
                 >
@@ -15,7 +16,7 @@
                         class="tw-flex tw-flex-row tw-items-center tw-gap-2 tw-px-3 tw-py-2"
                     >
                         <app-trip-label
-                            class="tw-font-bold tw-text-ink"
+                            class="tw-font-bold"
                             chipSize="sm"
                             [tripClassName]="
                                 row.trip.trip?.tripClass?.tripClassName
@@ -28,7 +29,7 @@
                         ></app-trip-label>
                         <button
                             type="button"
-                            class="tw-flex tw-min-w-0 tw-flex-1 tw-cursor-pointer tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-1 tw-border-0 tw-p-0 tw-text-left tw-text-sm tw-text-ink [background-color:transparent] [font-family:inherit]"
+                            class="tw-flex tw-min-w-0 tw-flex-1 tw-cursor-pointer tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-1 tw-border-0 tw-p-0 tw-text-left tw-text-sm [background-color:transparent] [color:inherit] [font-family:inherit]"
                             [attr.aria-expanded]="isExpanded(row)"
                             (click)="toggle(row)"
                         >

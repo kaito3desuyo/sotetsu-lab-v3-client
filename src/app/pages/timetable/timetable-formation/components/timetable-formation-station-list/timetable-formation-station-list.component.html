@@ -28,13 +28,13 @@
             @for (visit of s.visits; track $index) {
                 <li
                     class="tw-flex tw-flex-row tw-flex-wrap tw-items-center tw-gap-x-2 tw-gap-y-0.5 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-px-3 tw-py-2 tw-text-sm"
-                    [class.tw-opacity-50]="visit.done"
+                    [class.tw-text-muted]="visit.done"
                 >
                     <span class="tw-w-8 tw-text-xs tw-text-muted">{{
                         direction(visit.trip)
                     }}</span>
                     <app-trip-label
-                        class="tw-font-bold tw-text-ink"
+                        class="tw-font-bold"
                         chipSize="sm"
                         [tripClassName]="
                             visit.trip.trip?.tripClass?.tripClassName

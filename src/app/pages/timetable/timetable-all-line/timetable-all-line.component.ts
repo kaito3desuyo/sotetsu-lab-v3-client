@@ -34,7 +34,6 @@ import { RouteStationListState } from 'src/app/global-states/route-station-list.
 import { UserState } from 'src/app/global-states/user.state';
 import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
-import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
@@ -43,6 +42,7 @@ import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.uti
 import { parseUuidParam } from 'src/app/shared/uuid-param.util';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
+import { formatTimetableAllLineSummaryLead } from './utils/timetable-all-line-summary.util';
 import { StickyDirectionToggleComponent } from 'src/app/shared/sticky-direction-toggle/sticky-direction-toggle.component';
 import { TodayCalendarButtonComponent } from 'src/app/shared/today-calendar-button/today-calendar-button.component';
 import { TimetableAllLineRouteFilterComponent } from './components/timetable-all-line-route-filter/timetable-all-line-route-filter.component';
@@ -118,15 +118,15 @@ export class TimetableAllLineComponent {
     readonly stationGroups = computed(() =>
         buildStationGroups(this.#routeStations(), this.#agencies()),
     );
-    /** 要約の頭に付ける「改正日 ダイヤ名 上り」 */
-    readonly summaryLead = computed(() => {
-        const calendar = this.calendar();
-        const tripDirection = this.tripDirection();
-        return joinSummaryParts([
-            calendar ? formatCalendarSummaryLabel(calendar) : null,
-            tripDirectionLabel.get(tripDirection as ETripDirection) ?? null,
-        ]);
-    });
+    /** 要約の頭に付ける「上り 改正日 ダイヤ名」 */
+    readonly summaryLead = computed(() =>
+        formatTimetableAllLineSummaryLead({
+            calendar: this.calendar(),
+            directionLabel: tripDirectionLabel.get(
+                this.tripDirection() as ETripDirection,
+            ),
+        }),
+    );
 
     /** 題名。方向とダイヤは取ったデータから作る */
     readonly pageTitle = computed(() => {

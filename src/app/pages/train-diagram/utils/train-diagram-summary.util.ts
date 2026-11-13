@@ -6,7 +6,7 @@ const DIRECTION_LABEL = {
     both: '上り・下り',
 } as const;
 
-/** 畳んだ 1 行の要約。例「本線 平日 下り」。 */
+/** 畳んだ 1 行の要約。例「本線 下り 平日」。選んだ主なもの（路線・方向）を先に、ダイヤを後に並べる（docs/design.md 操作帯） */
 export function formatTrainDiagramSummary(params: {
     routes: string;
     calendarName: string | null | undefined;
@@ -14,7 +14,7 @@ export function formatTrainDiagramSummary(params: {
 }): string {
     return joinSummaryParts([
         params.routes,
-        params.calendarName,
         DIRECTION_LABEL[params.direction],
+        params.calendarName,
     ]);
 }

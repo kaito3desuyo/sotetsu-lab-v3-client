@@ -135,6 +135,37 @@ body {
     background-color: var(--color-paper-2);
 }
 
+// 文の中のリンクと補助の導線（docs/design.md CTA voice Tertiary）。紺の字に下線。
+// 以前は読むページがブラウザ既定の青、運用表の「行路図を見る ›」が下線なしの黒だった
+.app-link,
+.app-prose a {
+    color: var(--color-structure);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+}
+
+// 読むページ（使い方・用語集・利用規約・プライバシーポリシー）の本文と見出し（docs/design.md Typography「見出しの階段」）。
+// 以前は mat-typography の 14px の本文と 20px・400 の見出しで、本文 16px の下限を割り、h3 が本文と見分けにくかった
+.app-prose {
+    font-size: 16px;
+    line-height: 1.75;
+
+    h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 28px;
+        font-weight: 700;
+    }
+
+    h3,
+    h4 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+        font-weight: 700;
+    }
+}
+
 .mat-sidenav {
     width: 250px;
 }
@@ -147,6 +178,27 @@ body {
 
 .mat-card {
     border-radius: unset !important;
+}
+
+// 重なって出る物（ダイアログ・下から出るシート）の角丸はカードと同じ 8px（docs/design.md 面の掟）。
+// 重なる物なので影は Material のまま残す。
+html {
+    @include mat.dialog-overrides(
+        (
+            container-shape: 8px,
+        )
+    );
+    @include mat.bottom-sheet-overrides(
+        (
+            container-shape: 8px,
+        )
+    );
+}
+
+// Material はスマホ幅のシートに角丸の class を付けないので、上の 2 隅は自前で丸める
+.mat-bottom-sheet-container {
+    border-top-left-radius: var(--mat-bottom-sheet-container-shape);
+    border-top-right-radius: var(--mat-bottom-sheet-container-shape);
 }
 
 @media (max-width: 599px) {

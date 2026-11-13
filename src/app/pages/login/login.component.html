@@ -1,13 +1,13 @@
-<div
-    class="tw-mx-auto tw-flex tw-max-w-md tw-flex-col tw-gap-4 tw-px-4 tw-py-8"
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
 >
-    <mat-card>
+    <!-- 影の付く mat-card をやめ、ほかのページと同じ白いカードにする（docs/design.md 面の掟） -->
+    <div class="tw-mx-auto tw-w-full tw-max-w-md tw-rounded-card tw-bg-white">
         <form
             class="tw-flex tw-flex-col tw-gap-4 tw-p-6"
             [formGroup]="form"
             (ngSubmit)="onClickSubmit()"
         >
-            <h2 class="tw-m-0 tw-text-2xl tw-font-normal">ログイン</h2>
             <div class="tw-flex tw-flex-col tw-gap-4">
                 <mat-form-field>
                     <mat-label>ユーザー名</mat-label>
@@ -79,12 +79,12 @@
             >
                 <span>アカウントをお持ちでない方は</span>
                 <a
-                    mat-button
+                    class="app-link"
                     routerLink="/register"
                     [queryParams]="{ return_to: returnToParam }"
                     >新規登録</a
                 >
             </div>
         </form>
-    </mat-card>
-</div>
+    </div>
+</main>

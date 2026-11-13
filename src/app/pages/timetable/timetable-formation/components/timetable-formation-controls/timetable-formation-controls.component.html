@@ -62,41 +62,26 @@
         </mat-form-field>
     }
 
+    <!-- 日付はほかの帯と同じ outline の欄、前後の日は名前付きのボタン（駅別時刻表の前後の駅と同じ。docs/design.md「前後へ送る」） -->
+    <mat-form-field subscriptSizing="dynamic">
+        <mat-label>日付（{{ dateKindLabel() }}）</mat-label>
+        <input
+            matInput
+            type="date"
+            data-testid="date-input"
+            [value]="date() ?? ''"
+            [max]="maxDate() ?? ''"
+            (change)="onDate($event)"
+        />
+    </mat-form-field>
+
     <div class="tw-flex tw-flex-col tw-gap-1">
-        <div class="tw-flex tw-flex-row tw-items-center tw-gap-1">
-            <button
-                mat-icon-button
-                type="button"
-                aria-label="前の日"
-                data-testid="prev-day"
-                (click)="shift.emit(-1)"
-            >
-                <mat-icon>chevron_left</mat-icon>
-            </button>
-            <label
-                class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-text-xs tw-text-muted"
-            >
-                日付（{{ dateKindLabel() }}）
-                <input
-                    type="date"
-                    class="tw-rounded tw-border tw-border-solid tw-border-rule tw-p-2 tw-text-base tw-text-ink [font-family:inherit]"
-                    data-testid="date-input"
-                    [value]="date() ?? ''"
-                    [max]="maxDate() ?? ''"
-                    (change)="onDate($event)"
-                />
-            </label>
-            <button
-                mat-icon-button
-                type="button"
-                aria-label="次の日"
-                data-testid="next-day"
-                [disabled]="!canGoNext()"
-                (click)="shift.emit(1)"
-            >
-                <mat-icon>chevron_right</mat-icon>
-            </button>
-        </div>
+        <p class="tw-m-0 tw-text-xs tw-text-muted">前後の日</p>
+        <app-step-nav
+            [prev]="neighborDays().prev"
+            [next]="neighborDays().next"
+            (step)="onStep($event)"
+        ></app-step-nav>
         @if (tomorrowBlocked()) {
             <p
                 class="tw-m-0 tw-text-xs tw-text-muted"

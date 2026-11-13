@@ -128,6 +128,35 @@ describe('TimetableFormationControlsComponent', () => {
         expect(fixture.nativeElement).toHaveTextContent('日付（明日・見込み）');
     });
 
+    // 帯の中の入力はほかの帯と同じ Material outline（docs/design.md 面の掟）
+    it('日付の欄は Material の入力欄にする', () => {
+        const fixture = create({ date: '2026-11-11' });
+        const input = q(fixture, '[data-testid="date-input"]');
+        expect(input?.closest('mat-form-field')).not.toBeNull();
+        expect(input?.hasAttribute('matinput')).toBe(true);
+    });
+
+    it('前後の日は日付の名前付きのボタンにし、送れない向きは出さない', () => {
+        const fixture = create({ date: '2026-11-11', canGoNext: false });
+        const shifts: number[] = [];
+        fixture.componentInstance.shift.subscribe((v) => shifts.push(v));
+        const buttons = (): HTMLButtonElement[] =>
+            Array.from(
+                fixture.nativeElement.querySelectorAll('app-step-nav button'),
+            );
+        expect(buttons().map((b) => b.textContent?.trim())).toEqual([
+            'chevron_left 11/10',
+        ]);
+        fixture.componentRef.setInput('canGoNext', true);
+        fixture.detectChanges();
+        expect(
+            buttons().map((b) => b.textContent?.replace(/\s+/g, ' ').trim()),
+        ).toEqual(['chevron_left 11/10', '11/12 chevron_right']);
+        buttons()[0].click();
+        buttons()[1].click();
+        expect(shifts).toEqual([-1, 1]);
+    });
+
     it('編成が見つかるまでは駅の欄を出さない', () => {
         const hidden = create({ formationNumber: '8713', showStation: false });
         expect(hidden.nativeElement).not.toHaveTextContent('駅で絞る');
