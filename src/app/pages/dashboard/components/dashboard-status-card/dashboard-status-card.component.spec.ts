@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { DashboardStore } from '../../stores/dashboard.store';
 import { DashboardStatusCardComponent } from './dashboard-status-card.component';
 
@@ -59,6 +60,15 @@ describe('DashboardStatusCardComponent', () => {
         store.setTodaysDayName(null);
         fixture.detectChanges();
         expect(fixture.nativeElement).not.toHaveTextContent('秋分の日');
+    });
+
+    it('改正日は他のページと同じ 2026/3/14改正 の書き方で出す', () => {
+        store.setTodaysCalendar({
+            startDate: '2026-03-14',
+        } as CalendarDetailsDto);
+        fixture.detectChanges();
+
+        expect(fixture.nativeElement).toHaveTextContent('2026/3/14改正');
     });
 
     it('ロード完了後は実数値を表示する', () => {

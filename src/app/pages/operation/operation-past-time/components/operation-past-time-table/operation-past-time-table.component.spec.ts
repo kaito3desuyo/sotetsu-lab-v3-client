@@ -119,6 +119,26 @@ describe('OperationPastTimeTableComponent', () => {
         ).toBeNull();
     });
 
+    it('表の見出しの日付はゼロで埋めない（11/7）', () => {
+        const store = TestBed.inject(OperationPastTimeStore);
+        store.setReferenceDate('2026-11-07');
+        store.setDays(1);
+        store.setCalendars([
+            {
+                date: '2026-11-07',
+                calendar: { calendarName: '土休日' } as never,
+            },
+        ]);
+        store.setHasFetchedPastTime(true);
+        fixture.detectChanges();
+
+        const th = (fixture.nativeElement as HTMLElement).querySelectorAll(
+            'th',
+        )[1];
+        expect(th).toHaveTextContent('11/7');
+        expect(th).not.toHaveTextContent('11/07');
+    });
+
     it('取り終えて 0 件なら空表示を出す', () => {
         TestBed.inject(OperationPastTimeStore).setFormations([]);
         TestBed.inject(OperationPastTimeStore).setReferenceDate('2026-07-01');

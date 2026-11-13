@@ -475,7 +475,7 @@ describe('buildFormationDay', () => {
             kind: 'depot',
             label: 'out',
             stationId: 's-e1-start',
-            time: '5:00',
+            time: '05:00',
         });
         expect(rows[7]).toEqual({
             kind: 'depot',

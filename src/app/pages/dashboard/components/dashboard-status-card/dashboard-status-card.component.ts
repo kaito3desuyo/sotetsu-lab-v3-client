@@ -42,13 +42,13 @@ export class DashboardStatusCardComponent {
     );
     readonly clockLabel = computed(() => format(this.#now(), 'HH:mm'));
 
-    /** 適用ダイヤの改正日（例: 2026.3.14改正）。mockup-11 でダイヤ名の隣に小さく表示。 */
+    /** 適用ダイヤの改正日（例: 2026/3/14改正。docs/design.md 時刻と日付の書き方）。mockup-11 でダイヤ名の隣に小さく表示。 */
     readonly revisionLabel = computed(() => {
         const startDate = this.todaysCalendar()?.startDate;
         if (!startDate) {
             return '';
         }
-        return format(parseISO(startDate), 'yyyy.M.d改正');
+        return format(parseISO(startDate), 'yyyy/M/d改正');
     });
 
     constructor() {

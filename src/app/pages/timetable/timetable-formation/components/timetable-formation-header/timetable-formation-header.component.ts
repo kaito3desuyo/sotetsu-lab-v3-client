@@ -15,7 +15,7 @@ import { FormationDateKind } from '../../stores/timetable-formation.store';
 import { FormationOperationChainItem } from '../../utils/formation-day.util';
 
 export interface FormationHeaderSighting {
-    /** 'H:mm' */
+    /** 'HH:mm' */
     time: string;
     operationNumber: string;
 }

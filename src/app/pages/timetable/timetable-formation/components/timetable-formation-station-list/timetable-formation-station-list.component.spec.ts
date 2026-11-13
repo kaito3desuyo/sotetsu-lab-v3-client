@@ -63,7 +63,7 @@ describe('TimetableFormationStationListComponent', () => {
 
     it('着時刻と発時刻と行先を出し、通過は時刻を出さず「通過」と出す', () => {
         const text = render(summary);
-        expect(text).toContain('7:34 着 7:37 発');
+        expect(text).toContain('07:34 着 07:37 発');
         expect(text).toContain('→ 横浜');
         expect(text).toContain('通過');
     });

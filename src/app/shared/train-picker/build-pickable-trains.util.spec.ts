@@ -255,9 +255,9 @@ describe('buildPickableTrains', () => {
         expect(run(blocks(t), AT)[0].tripClassColor).toBe('#8a8a8a');
     });
 
-    it('displayTime は days=1 の 07:12:00 で 7:12、days=2 の 00:30:00 で 24:30', () => {
+    it('displayTime は days=1 の 07:12:00 で 07:12、days=2 の 00:30:00 で 24:30', () => {
         const day1 = run(blocks(departing('1', '07:12:00')), AT);
-        expect(day1[0].displayTime).toBe('7:12');
+        expect(day1[0].displayTime).toBe('07:12');
 
         const at = new Date(2026, 10, 11, 0, 32, 0); // 営業日 11/10 の 24:32
         const day2 = run(blocks(departing('2', '00:30:00', {}, 2)), at);

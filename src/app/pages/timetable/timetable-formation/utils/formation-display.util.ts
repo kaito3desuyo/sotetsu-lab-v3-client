@@ -23,7 +23,7 @@ export const isInferredBasis = (basis: FormationDayBasis): boolean =>
 export const toZeroBasedDays = (days: number | null | undefined): number =>
     (days ?? 1) - 1;
 
-/** 'H:mm'（24 時超えはそのまま 25:10 のように出す）。時刻が無ければ空 */
+/** 'HH:mm'（24 時超えはそのまま 25:10 のように出す）。時刻が無ければ空 */
 export function formatClock(
     days: number | null | undefined,
     time: string | null | undefined,
@@ -31,10 +31,10 @@ export function formatClock(
     return time ? toDisplayTime(toZeroBasedDays(days), time) : '';
 }
 
-/** ISO の時刻を日本時間の 'H:mm' にする */
+/** ISO の時刻を日本時間の 'HH:mm' にする */
 export function formatSightingClock(iso: string | undefined): string {
     if (!iso) return '';
-    return format(toZonedTime(parseISO(iso), 'Asia/Tokyo'), 'H:mm', {
+    return format(toZonedTime(parseISO(iso), 'Asia/Tokyo'), 'HH:mm', {
         timeZone: 'Asia/Tokyo',
     });
 }

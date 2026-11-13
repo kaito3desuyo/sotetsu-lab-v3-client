@@ -74,8 +74,8 @@ const text = (f: ComponentFixture<unknown>): string =>
 describe('TimetableFormationTripListComponent', () => {
     it('始発と終着の駅名と時刻を出し、走っている列車に印を付ける', () => {
         const fixture = create([trip()], ['running']);
-        expect(text(fixture)).toContain('いずみ野 7:07');
-        expect(text(fixture)).toContain('湘南台 7:14');
+        expect(text(fixture)).toContain('いずみ野 07:07');
+        expect(text(fixture)).toContain('湘南台 07:14');
         expect(text(fixture)).toContain('走行中');
     });
 
@@ -115,7 +115,7 @@ describe('TimetableFormationTripListComponent', () => {
         el.querySelector<HTMLButtonElement>('li button')?.click();
         fixture.detectChanges();
         const times = el.querySelector('[data-testid="trip-times"]');
-        expect(times?.textContent).toContain('7:07');
+        expect(times?.textContent).toContain('07:07');
         expect(times?.textContent).toContain('通過');
     });
 
@@ -150,7 +150,7 @@ describe('TimetableFormationTripListComponent', () => {
 
     it('入出庫・乗り移り・車両交換の帯を出す', () => {
         const fixture = create([
-            { kind: 'depot', label: 'out', stationId: 'a', time: '7:07' },
+            { kind: 'depot', label: 'out', stationId: 'a', time: '07:07' },
             { kind: 'transfer', from: '16K', to: '15K', stationId: 'b' },
             {
                 kind: 'swap',
@@ -160,7 +160,7 @@ describe('TimetableFormationTripListComponent', () => {
             { kind: 'depot', label: 'in', stationId: 'b', time: '21:17' },
         ]);
         const t = text(fixture).replace(/\s+/g, ' ');
-        expect(t).toContain('○ いずみ野 7:07 出庫');
+        expect(t).toContain('○ いずみ野 07:07 出庫');
         expect(t).toContain('湘南台 で乗り移り');
         expect(t).toContain('15:40 の目撃で');
         expect(t).toContain('△ 湘南台 21:17 入庫');
