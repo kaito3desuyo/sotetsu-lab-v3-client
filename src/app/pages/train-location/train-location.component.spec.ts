@@ -14,6 +14,7 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
+import { formatJst } from 'src/app/core/utils/railway-day';
 import { TrainLocationComponent } from './train-location.component';
 import { TrainLocationService } from './services/train-location.service';
 import { TrainLocationStore } from './stores/train-location.store';
@@ -100,8 +101,7 @@ describe('TrainLocationComponent', () => {
         fixture.detectChanges();
 
         const at = component.at();
-        expect(at.getHours()).toBe(7);
-        expect(at.getMinutes()).toBe(30);
+        expect(formatJst(at, 'HH:mm')).toBe('07:30');
     });
 
     it('rows(): 初期状態（データ無し）でも例外を投げない', () => {

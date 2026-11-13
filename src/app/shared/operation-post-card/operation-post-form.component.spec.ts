@@ -239,21 +239,21 @@ describe('OperationPostFormComponent', () => {
     });
 
     it('4 時より前に、4 時以降の時刻を指定したら、前日のその時刻にする', async () => {
-        jest.useFakeTimers({ now: new Date(2026, 9, 9, 1, 0) });
+        jest.useFakeTimers({ now: new Date('2026-10-09T01:00:00+09:00') });
         fill('23:50');
 
         await submit();
 
-        expect(postedTime()).toEqual(new Date(2026, 9, 8, 23, 50));
+        expect(postedTime()).toEqual(new Date('2026-10-08T23:50:00+09:00'));
     });
 
     it('その日のうちの時刻はその日のまま', async () => {
-        jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+        jest.useFakeTimers({ now: new Date('2026-10-08T10:00:00+09:00') });
         fill('09:15');
 
         await submit();
 
-        expect(postedTime()).toEqual(new Date(2026, 9, 8, 9, 15));
+        expect(postedTime()).toEqual(new Date('2026-10-08T09:15:00+09:00'));
     });
 
     it('失敗したらその理由を出し、フォームは残す', async () => {
@@ -552,7 +552,7 @@ describe('OperationPostFormComponent', () => {
         });
 
         it('未来の時刻と運用番号の両方が当たると、両方の欄に出し、blocked の reason は未来の時刻', async () => {
-            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            jest.useFakeTimers({ now: new Date('2026-10-08T10:00:00+09:00') });
             setOperations(['1']);
             fill('11:00');
             sendEvent.mockClear();
@@ -577,7 +577,7 @@ describe('OperationPostFormComponent', () => {
         });
 
         it('precheckMessage は止めた理由の文言を返し、止めていなければ空', async () => {
-            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            jest.useFakeTimers({ now: new Date('2026-10-08T10:00:00+09:00') });
             setOperations(['1']);
             expect(component.precheckMessage('operationNumber')).toBe('');
             fill('11:00');
@@ -693,7 +693,7 @@ describe('OperationPostFormComponent', () => {
         });
 
         it('時刻指定で未来の時刻なら送らず、sightingTime に precheck エラーと sighting_submit_blocked', async () => {
-            jest.useFakeTimers({ now: new Date(2026, 9, 8, 10, 0) });
+            jest.useFakeTimers({ now: new Date('2026-10-08T10:00:00+09:00') });
             fill('11:00');
             sendEvent.mockClear();
 
