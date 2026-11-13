@@ -96,6 +96,36 @@ describe('maintenanceGuard', () => {
         );
         controller.verify();
     });
+
+    it('取れなかったら（回線が切れているなど）、メンテナンス中ではないとみなして通す', async () => {
+        const { controller } = setup();
+
+        const result = run();
+        controller
+            .expectOne(url)
+            .error(new ProgressEvent('error'), { status: 0 });
+
+        expect(await result).toBe(true);
+        controller.verify();
+    });
+
+    it('取れなかったときも、前に取れたときメンテナンス中なら /maintenance に飛ばす', async () => {
+        const { controller, router } = setup();
+
+        const first = run();
+        controller.expectOne(url).flush({ isMaintenance: true });
+        await first;
+        jest.advanceTimersByTime(5001);
+        const second = run();
+        controller
+            .expectOne(url)
+            .error(new ProgressEvent('error'), { status: 0 });
+
+        expect(router.serializeUrl((await second) as UrlTree)).toBe(
+            '/maintenance',
+        );
+        controller.verify();
+    });
 });
 
 describe('maintenanceGuard（サーバー）', () => {

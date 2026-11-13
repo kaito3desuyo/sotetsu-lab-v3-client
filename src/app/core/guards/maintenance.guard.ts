@@ -1,7 +1,7 @@
 import { isPlatformServer } from '@angular/common';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { Router, type CanActivateFn } from '@angular/router';
-import { lastValueFrom } from 'rxjs';
+import { catchError, lastValueFrom, of } from 'rxjs';
 import { ROUTE_CHECK_MAX_AGE_MS } from 'src/app/core/query-cache/route-check-max-age';
 import { MaintenanceState } from 'src/app/global-states/maintenance.state';
 
@@ -14,8 +14,13 @@ export const maintenanceGuard: CanActivateFn = async (route, state) => {
     const router = inject(Router);
     const maintenanceState = inject(MaintenanceState);
 
+    // 取れなければ前に取れた状態（まだ無ければメンテナンス中でない）のまま通す。
+    // /api/** は Service Worker の保存が 1 日しか持たず、回線が悪いとここだけで画面ごと止まっていた。
+    // データの API は Service Worker の保存から出せるし、メンテナンス中なら backend は応答を返せる
     await lastValueFrom(
-        maintenanceState.fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS }),
+        maintenanceState
+            .fetch({ maxAgeMs: ROUTE_CHECK_MAX_AGE_MS })
+            .pipe(catchError(() => of(undefined))),
     );
 
     const isMaintenance = maintenanceState.isMaintenance();
