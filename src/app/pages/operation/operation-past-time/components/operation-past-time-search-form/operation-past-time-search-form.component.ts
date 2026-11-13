@@ -16,7 +16,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Router } from '@angular/router';
-import { format, parse } from 'date-fns';
+import { format, parse, parseISO } from 'date-fns';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { ja } from 'date-fns/locale';
 import { omitBy } from 'es-toolkit';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
@@ -56,7 +57,7 @@ export class OperationPastTimeSearchFormComponent {
     readonly #router = inject(Router);
     readonly #fb = inject(FormBuilder);
 
-    readonly maxDate = new Date();
+    readonly maxDate = parseISO(railwayDateKey());
     readonly form: OperationPastTimeSearchForm = this.#fb.group({
         referenceDate: this.#fb.control<Date | null>(null, [
             Validators.required,

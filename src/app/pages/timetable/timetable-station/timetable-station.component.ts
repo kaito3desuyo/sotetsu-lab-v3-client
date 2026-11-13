@@ -26,7 +26,7 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -345,10 +345,7 @@ export class TimetableStationComponent {
                     await this.#saveOrRestoreSightings({
                         conditions: {
                             ...conditions,
-                            date: format(
-                                getRailwayDate(new Date()),
-                                'yyyy-MM-dd',
-                            ),
+                            date: railwayDateKey(),
                         },
                         fetched: sightingsFetched,
                     });
@@ -378,7 +375,7 @@ export class TimetableStationComponent {
             calendarId: this.#store.calendarId(),
             stationId: this.#store.stationId(),
             tripDirection: this.#store.tripDirection(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         this.#store.enableLoading();
         try {

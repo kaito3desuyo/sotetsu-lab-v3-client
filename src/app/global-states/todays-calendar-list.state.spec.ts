@@ -62,10 +62,10 @@ describe('TodaysCalendarListState', () => {
 
     it('鉄道日で今日の日付を渡す（4 時前は前日）。取るたびに今の時刻で決める', () => {
         findOneBySpecificDate.mockReturnValue(of(calendar('today')));
-        jest.useFakeTimers({ now: new Date(2026, 9, 27, 2, 0) });
+        jest.useFakeTimers({ now: new Date('2026-10-27T02:00:00+09:00') });
 
         store.fetch().subscribe();
-        jest.setSystemTime(new Date(2026, 9, 27, 5, 0));
+        jest.setSystemTime(new Date('2026-10-27T05:00:00+09:00'));
         store.fetch().subscribe();
 
         expect(findOneBySpecificDate.mock.calls).toEqual([
@@ -76,12 +76,16 @@ describe('TodaysCalendarListState', () => {
 
     it('取った営業日を覚え、4 時をまたいだら今日の一覧ではなくなる', () => {
         findOneBySpecificDate.mockReturnValue(of(calendar('today')));
-        jest.useFakeTimers({ now: new Date(2026, 10, 7, 10, 0) });
+        jest.useFakeTimers({ now: new Date('2026-11-07T10:00:00+09:00') });
         expect(store.isForToday()).toBe(true);
 
         store.fetch().subscribe();
 
-        expect(store.isForToday(new Date(2026, 10, 8, 3, 59))).toBe(true);
-        expect(store.isForToday(new Date(2026, 10, 8, 4, 0))).toBe(false);
+        expect(store.isForToday(new Date('2026-11-08T03:59:00+09:00'))).toBe(
+            true,
+        );
+        expect(store.isForToday(new Date('2026-11-08T04:00:00+09:00'))).toBe(
+            false,
+        );
     });
 });

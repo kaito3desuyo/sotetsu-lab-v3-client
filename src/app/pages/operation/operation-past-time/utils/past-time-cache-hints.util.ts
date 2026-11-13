@@ -3,7 +3,7 @@ import {
     sightingDateCacheTag,
     type CachePolicy,
 } from 'src/app/core/ssr/cache-control';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 
 /**
  * 過去の運用情報の HTML を CDN に置く長さとタグ（spec 6.2）。
@@ -15,7 +15,7 @@ export function pastTimeCacheHints(
     now: Date,
 ): { policy: CachePolicy; tags: string[] } {
     if (!dates.length) return { policy: 'long', tags: [] };
-    const today = format(getRailwayDate(now), 'yyyy-MM-dd');
+    const today = railwayDateKey(now);
     return {
         policy: dates.some((date) => date >= today) ? 'short' : 'long',
         tags: dates.map(sightingDateCacheTag),

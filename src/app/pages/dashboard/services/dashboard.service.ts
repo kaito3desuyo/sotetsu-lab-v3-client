@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { format } from 'date-fns';
 import { defer, forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
@@ -52,7 +52,7 @@ export class DashboardService {
      * 取れなくても画面の他の要素には影響しないので、失敗時は非表示にして継続する。
      */
     fetchTodaysDayName(): Observable<void> {
-        const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+        const date = railwayDateKey();
 
         return this.#calendarDateService
             .findMany({ from: date, to: date })
@@ -113,7 +113,7 @@ export class DashboardService {
 
     /** 本日（鉄道日）の目撃投稿数・最新3件を取得する。 */
     fetchTodaysSightings(): Observable<void> {
-        const date = format(getRailwayDate(new Date()), 'yyyy-MM-dd');
+        const date = railwayDateKey();
 
         return this.#operationSightingService
             .findManyBySpecificPeriod({ from: date, to: date })

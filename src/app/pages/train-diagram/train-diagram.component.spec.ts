@@ -11,7 +11,7 @@ import {
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -1628,7 +1628,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         const sightingConditions = () => ({
             calendarId: 'cal-today',
             routeIds: 'route-1,route-2',
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         });
 
         beforeEach(() => {

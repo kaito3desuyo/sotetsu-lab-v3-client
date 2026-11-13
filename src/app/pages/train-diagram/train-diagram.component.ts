@@ -21,7 +21,7 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { getRailwayDate, railwayDateKey } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
@@ -1176,7 +1176,7 @@ export class TrainDiagramComponent {
             const conditions = {
                 calendarId: this.#store.calendarId(),
                 routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
-                date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+                date: railwayDateKey(),
             };
             try {
                 await lastValueFrom(
@@ -1217,7 +1217,7 @@ export class TrainDiagramComponent {
         const conditions = {
             calendarId: this.#store.calendarId(),
             routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         this.#store.enableLoading();
         try {

@@ -13,7 +13,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { runIntervalInBrowser } from 'src/app/core/utils/run-interval-in-browser';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
@@ -561,7 +561,7 @@ export class TrainLocationComponent {
         const conditions = {
             calendarId: this.#store.calendarId(),
             routeId: this.#store.selectedRouteId(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         let fetched: boolean;
         try {
@@ -606,7 +606,7 @@ export class TrainLocationComponent {
         const conditions = {
             calendarId: this.#store.calendarId(),
             routeId: this.#store.selectedRouteId(),
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         };
         this.#store.enableLoading();
         try {

@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { format } from 'date-fns';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
-import { getRailwayDate } from 'src/app/core/utils/railway-day';
+import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainLocationService } from './services/train-location.service';
@@ -308,7 +308,7 @@ describe('TrainLocationComponent の圏外の保存', () => {
         const sightingConditions = () => ({
             calendarId: 'cal-1',
             routeId: 'route-1',
-            date: format(getRailwayDate(new Date()), 'yyyy-MM-dd'),
+            date: railwayDateKey(),
         });
 
         it('目撃が取れたら、日付つきで別の key に保存する', async () => {
