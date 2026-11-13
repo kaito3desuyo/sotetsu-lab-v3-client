@@ -1,7 +1,6 @@
 import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { format } from 'date-fns';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';

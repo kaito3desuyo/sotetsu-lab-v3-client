@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { format } from 'date-fns';
 import { defer, forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';

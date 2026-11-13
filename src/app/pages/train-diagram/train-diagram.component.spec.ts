@@ -9,7 +9,6 @@ import {
     withRouterConfig,
 } from '@angular/router';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
-import { format } from 'date-fns';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';

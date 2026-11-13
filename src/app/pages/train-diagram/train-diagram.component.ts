@@ -12,7 +12,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { isPlatformServer, Location } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';

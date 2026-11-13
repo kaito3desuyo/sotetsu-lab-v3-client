@@ -6,7 +6,6 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { format } from 'date-fns';
 import localForage from 'localforage';
 import { Observable, Subject, of } from 'rxjs';
 

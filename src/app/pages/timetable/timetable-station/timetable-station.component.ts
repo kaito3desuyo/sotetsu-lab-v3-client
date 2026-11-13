@@ -14,7 +14,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
-import { format } from 'date-fns';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
