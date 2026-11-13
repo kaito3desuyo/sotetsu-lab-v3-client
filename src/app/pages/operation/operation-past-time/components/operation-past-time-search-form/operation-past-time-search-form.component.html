@@ -32,8 +32,8 @@
                 <input
                     type="number"
                     matInput
-                    [min]="1"
-                    [max]="30"
+                    [min]="pastTimeDaysMin"
+                    [max]="pastTimeDaysMax"
                     formControlName="days"
                 />
                 <!-- 空のときはラベル「日数」が欄の中に座り、320px では後置の「日間」と

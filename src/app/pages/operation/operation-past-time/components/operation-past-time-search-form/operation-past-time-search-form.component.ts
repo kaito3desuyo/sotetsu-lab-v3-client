@@ -62,6 +62,8 @@ export class OperationPastTimeSearchFormComponent {
     readonly #fb = inject(FormBuilder);
 
     readonly maxDate = parseISO(railwayDateKey());
+    readonly pastTimeDaysMin = PAST_TIME_DAYS_MIN;
+    readonly pastTimeDaysMax = PAST_TIME_DAYS_MAX;
     readonly form: OperationPastTimeSearchForm = this.#fb.group({
         referenceDate: this.#fb.control<Date | null>(null, [
             Validators.required,

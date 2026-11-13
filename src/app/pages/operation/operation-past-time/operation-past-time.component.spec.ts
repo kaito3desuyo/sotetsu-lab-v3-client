@@ -268,13 +268,19 @@ describe('OperationPastTimeComponent の URL の days', () => {
 
     it('days=-3 はフォームの最小値になる', async () => {
         const store = await createWith('-3');
-        expect(store.days()).toBe(0);
-        expect(store.dates()).toHaveLength(0);
+        expect(store.days()).toBe(1);
+        expect(store.dates()).toHaveLength(1);
+    });
+
+    it('days=0 もフォームの最小値になる', async () => {
+        const store = await createWith('0');
+        expect(store.days()).toBe(1);
+        expect(store.dates()).toHaveLength(1);
     });
 
     it('days が数でないときもフォームの最小値になる', async () => {
         const store = await createWith('abc');
-        expect(store.days()).toBe(0);
+        expect(store.days()).toBe(1);
     });
 
     it('範囲内の days はそのまま使う', async () => {
