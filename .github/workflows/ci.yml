@@ -9,6 +9,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # 端末の時差に頼らないことを確かめるため、jest は UTC で回す
+    env:
+      TZ: UTC
 
     steps:
       - uses: actions/checkout@v4
