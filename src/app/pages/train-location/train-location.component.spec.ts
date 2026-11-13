@@ -210,6 +210,34 @@ describe('TrainLocationComponent', () => {
         expect(controller.clockText).toMatch(/\d{2}:\d{2}:\d{2}/);
     });
 
+    it('時計と指定時刻への切り替えは、端末の時差によらず日本時間で出す', () => {
+        jest.useFakeTimers({ now: new Date('2026-11-13T01:30:00Z') });
+        try {
+            fixture = TestBed.createComponent(TrainLocationComponent);
+            component = fixture.componentInstance;
+            fixture.detectChanges();
+            const controller = (
+                fixture.nativeElement as HTMLElement
+            ).querySelector('app-train-location-controller') as unknown as {
+                clockText: string;
+            };
+            expect(controller.clockText).toMatch(/^10:30:\d{2}$/);
+
+            const router = TestBed.inject(Router);
+            const navigate = jest
+                .spyOn(router, 'navigate')
+                .mockResolvedValue(true);
+            component.onModeChange('specified');
+
+            expect(navigate).toHaveBeenCalledWith([
+                '/train-location',
+                expect.objectContaining({ time: '1030' }),
+            ]);
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
     it('onStationSelect: 駅を URL に載せ、路線ごとに覚える', () => {
         const router = TestBed.inject(Router);
         const navigate = jest.spyOn(router, 'navigate').mockResolvedValue(true);

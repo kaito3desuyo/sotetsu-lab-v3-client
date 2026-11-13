@@ -379,7 +379,7 @@ export class OperationPostFormComponent {
                 agencyId,
                 formationOrVehicleNumber,
                 operationNumber,
-                sightingTime: convertedSightingTime, // 画面上ではローカル時間で入力させるため、UTCに変換して送る
+                sightingTime: convertedSightingTime, // 日本時間として入力された時刻を ISO（UTC）にして送る
             }),
         );
 

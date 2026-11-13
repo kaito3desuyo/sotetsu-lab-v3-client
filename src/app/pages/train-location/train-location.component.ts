@@ -661,10 +661,8 @@ export class TrainLocationComponent {
 
     onModeChange(mode: TrainLocationMode): void {
         if (mode === 'specified') {
-            const timeValue = formatTimeParam({
-                hours: railwayClock(this.at()).hours,
-                minutes: railwayClock(this.at()).minutes,
-            });
+            const { hours, minutes } = railwayClock(this.at());
+            const timeValue = formatTimeParam({ hours, minutes });
             this.#navigate({
                 time: timeValue,
                 calendar_id:
