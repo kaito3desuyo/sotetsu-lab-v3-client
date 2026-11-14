@@ -1,3 +1,11 @@
+<!-- 先頭に置き、Tab で最初にフォーカスしたときだけ左上に出る -->
+<a
+    href="#"
+    class="app-skip-link tw-sr-only focus:tw-not-sr-only focus:tw-fixed focus:tw-left-2 focus:tw-top-2 focus:tw-z-50 focus:tw-rounded-[8px] focus:tw-bg-white focus:tw-px-4 focus:tw-py-2 focus:tw-text-structure focus:tw-underline focus:tw-shadow-md"
+    (click)="onSkipToMain($event)"
+    >本文へ移動</a
+>
+
 <app-header
     class="tw-sticky tw-top-0 tw-z-30 tw-block tw-shadow-md"
     [pageTitle]="pageTitle()"
@@ -26,6 +34,6 @@
     ></div>
 }
 
-<div class="tw-relative tw-z-0 tw-h-full tw-w-full">
+<div #content class="tw-relative tw-z-0 tw-h-full tw-w-full">
     <router-outlet></router-outlet>
 </div>

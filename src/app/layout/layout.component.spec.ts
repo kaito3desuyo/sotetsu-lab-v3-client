@@ -1,7 +1,9 @@
 import '@testing-library/jest-dom';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Title } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { Router, RouterModule, provideRouter } from '@angular/router';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
@@ -11,6 +13,12 @@ import { LayoutComponent } from './layout.component';
 
 @Component({ changeDetection: ChangeDetectionStrategy.OnPush, template: '' })
 class DummyComponent {}
+
+@Component({
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    template: '<main>本文</main>',
+})
+class MainPageComponent {}
 
 @Component({
     selector: 'app-sidenav',
@@ -27,11 +35,14 @@ describe('LayoutComponent', () => {
     let component: LayoutComponent;
     let fixture: ComponentFixture<LayoutComponent>;
     let router: Router;
+    let announce: jest.Mock;
 
     beforeEach(async () => {
+        announce = jest.fn();
         await TestBed.configureTestingModule({
             imports: [LayoutComponent],
             providers: [
+                { provide: LiveAnnouncer, useValue: { announce } },
                 provideHttpClient(withXhr()),
                 provideAnimations(),
                 {
@@ -43,6 +54,8 @@ describe('LayoutComponent', () => {
                         path: '',
                         component: DummyComponent,
                     },
+                    { path: 'page-a', component: MainPageComponent },
+                    { path: 'page-b', component: MainPageComponent },
                     {
                         path: 'train-diagram',
                         component: DummyComponent,
@@ -175,6 +188,82 @@ describe('LayoutComponent', () => {
 
             expect(component.isOpen()).toBe(false);
             expect(document.activeElement).not.toBe(menuButton());
+        });
+    });
+
+    describe('本文へ移動とページ移動後のフォーカス', () => {
+        const main = (): HTMLElement =>
+            fixture.nativeElement.querySelector('main');
+
+        it('先頭（app-header より前）に「本文へ移動」のリンクがある', () => {
+            fixture.detectChanges();
+            const first = fixture.nativeElement.firstElementChild;
+
+            expect(first.tagName).toBe('A');
+            expect(first.textContent).toContain('本文へ移動');
+        });
+
+        it('「本文へ移動」を押すと main にフォーカスが移り、URL は変わらない', async () => {
+            fixture.detectChanges();
+            await router.navigate(['/page-a']);
+            fixture.detectChanges();
+            const url = router.url;
+            const link: HTMLAnchorElement =
+                fixture.nativeElement.querySelector('a.app-skip-link');
+            const event = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+            });
+
+            link.dispatchEvent(event);
+
+            expect(event.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(main());
+            expect(main()).toHaveAttribute('tabindex', '-1');
+            expect(router.url).toBe(url);
+        });
+
+        it('path が変わる NavigationEnd のあと main にフォーカスし、題を 1 回読み上げる', async () => {
+            fixture.detectChanges();
+            await router.navigate(['/page-a']); // 最初の移動
+            fixture.detectChanges();
+            announce.mockClear();
+            TestBed.inject(Title).setTitle('移動先の題');
+
+            await router.navigate(['/page-b']);
+            fixture.detectChanges();
+            await fixture.whenStable();
+
+            expect(document.activeElement).toBe(main());
+            expect(announce).toHaveBeenCalledTimes(1);
+            expect(announce).toHaveBeenCalledWith('移動先の題', 'polite');
+        });
+
+        it('matrix だけが変わる移動ではフォーカスも読み上げも起きない', async () => {
+            fixture.detectChanges();
+            await router.navigate(['/page-a']);
+            fixture.detectChanges();
+            announce.mockClear();
+            menuButton().focus();
+
+            await router.navigateByUrl('/page-a;calendar_id=B');
+            fixture.detectChanges();
+            await fixture.whenStable();
+
+            expect(document.activeElement).toBe(menuButton());
+            expect(announce).not.toHaveBeenCalled();
+        });
+
+        it('最初の NavigationEnd では動かない', async () => {
+            fixture.detectChanges();
+            menuButton().focus();
+
+            await router.navigate(['/page-a']);
+            fixture.detectChanges();
+            await fixture.whenStable();
+
+            expect(document.activeElement).toBe(menuButton());
+            expect(announce).not.toHaveBeenCalled();
         });
     });
 });

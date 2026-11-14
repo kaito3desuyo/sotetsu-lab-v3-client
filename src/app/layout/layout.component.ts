@@ -1,13 +1,17 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { isPlatformBrowser } from '@angular/common';
 import {
     afterNextRender,
     Component,
     ElementRef,
     inject,
     Injector,
+    PLATFORM_ID,
     signal,
     viewChild,
     ChangeDetectionStrategy,
 } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
     ActivatedRouteSnapshot,
@@ -17,6 +21,10 @@ import {
     RouterModule,
 } from '@angular/router';
 import { filter, map, tap } from 'rxjs/operators';
+import {
+    focusMainContent,
+    routePathKey,
+} from '../core/a11y/focus-main-content';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
@@ -35,6 +43,22 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
 export class LayoutComponent {
     readonly #router = inject(Router);
     readonly #injector = inject(Injector);
+    readonly #title = inject(Title);
+    readonly #liveAnnouncer = inject(LiveAnnouncer);
+    readonly #isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+    /**
+     * 直前に処理したページの path（matrix・query を除く）。null は「まだ最初の移動を見ていない」。
+     * 初回ナビゲーションは本コンポーネントの生成前に済むことが多いので、済んでいれば今の URL を入れておく。
+     */
+    #lastPathKey: string | null = this.#router.navigated
+        ? routePathKey(this.#router.parseUrl(this.#router.url))
+        : null;
+
+    private readonly contentRef = viewChild<unknown, ElementRef<HTMLElement>>(
+        'content',
+        { read: ElementRef },
+    );
 
     private readonly headerRef = viewChild(HeaderComponent);
     private readonly sidenavRef = viewChild<unknown, ElementRef<HTMLElement>>(
@@ -86,6 +110,21 @@ export class LayoutComponent {
                 takeUntilDestroyed(),
             )
             .subscribe();
+
+        this.#router.events
+            .pipe(
+                filter((ev) => ev instanceof NavigationEnd),
+                takeUntilDestroyed(),
+            )
+            .subscribe((ev) => {
+                this.#onPageChanged(ev.urlAfterRedirects);
+            });
+    }
+
+    /** 「本文へ移動」: URL は変えず、本文の main にフォーカスする */
+    onSkipToMain(event: Event): void {
+        event.preventDefault();
+        this.#focusMain();
     }
 
     async toggle(): Promise<void> {
@@ -131,6 +170,36 @@ export class LayoutComponent {
         this.isOpen.set(false);
         await wait(250);
         this.isVisibled.set(false);
+    }
+
+    #focusMain(): boolean {
+        const content = this.contentRef()?.nativeElement;
+        return !!content && focusMainContent(content);
+    }
+
+    /**
+     * ページを移った（path が変わった）ときだけ、本文へフォーカスして題を読み上げる。
+     * 操作帯の選び直し（matrix・query だけの変化）では動かさない。
+     */
+    #onPageChanged(url: string): void {
+        const key = routePathKey(this.#router.parseUrl(url));
+        const previous = this.#lastPathKey;
+        this.#lastPathKey = key;
+
+        if (previous === null || previous === key || !this.#isBrowser) {
+            return;
+        }
+
+        afterNextRender(
+            () => {
+                this.#focusMain();
+                void this.#liveAnnouncer.announce(
+                    this.#title.getTitle(),
+                    'polite',
+                );
+            },
+            { injector: this.#injector },
+        );
     }
 
     #focusFirstInSidenav(): void {
