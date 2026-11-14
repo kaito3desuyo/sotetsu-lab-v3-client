@@ -2,12 +2,18 @@
 export type UrlParam<T> =
     { kind: 'missing' } | { kind: 'invalid' } | { kind: 'ok'; value: T };
 
-/** null は missing、parse が null を返したら invalid */
+/**
+ * null は missing、parse が null を返したら invalid。
+ * 空の値（`time=` など）は既定では invalid。train-diagram・train-location だけが
+ * `emptyAsMissing: true` で「無い」として読む（空の値を今まで補っていたため。台帳の決め事）。
+ */
 export function readUrlParam<T>(
     raw: string | null,
     parse: (raw: string) => T | null,
+    options: { emptyAsMissing?: boolean } = {},
 ): UrlParam<T> {
     if (raw === null) return { kind: 'missing' };
+    if (raw === '' && options.emptyAsMissing) return { kind: 'missing' };
     const value = parse(raw);
     return value === null ? { kind: 'invalid' } : { kind: 'ok', value };
 }

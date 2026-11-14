@@ -14,6 +14,16 @@ describe('readUrlParam', () => {
         expect(readUrlParam(null, parseUuid)).toEqual({ kind: 'missing' });
     });
 
+    it('空の値は既定では invalid、emptyAsMissing なら missing', () => {
+        expect(readUrlParam('', parseUuid)).toEqual({ kind: 'invalid' });
+        expect(readUrlParam('', parseUuid, { emptyAsMissing: true })).toEqual({
+            kind: 'missing',
+        });
+        expect(
+            readUrlParam('abc', parseUuid, { emptyAsMissing: true }),
+        ).toEqual({ kind: 'invalid' });
+    });
+
     it('parse が null を返したら invalid', () => {
         expect(readUrlParam('abc', parseUuid)).toEqual({ kind: 'invalid' });
     });

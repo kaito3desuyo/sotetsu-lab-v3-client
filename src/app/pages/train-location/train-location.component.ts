@@ -31,7 +31,6 @@ import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-f
 import {
     parseUuid,
     readUrlParam,
-    UrlParam,
 } from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
@@ -71,18 +70,6 @@ import {
 import { formatTrainLocationSummary } from './utils/train-location-summary.util';
 
 const CURRENT_TIME_REFRESH_MS = 10_000;
-
-/**
- * URL の値を読む。空の値（`time=` など）は今まで「無い」として扱っていた（time・station_id）か、
- * 無いに近い扱いだった（route_id・calendar_id）ので、無いものとして読む。
- * 値があるのに読めないものだけが invalid（見つからない表示にする）。
- */
-function readParam<T>(
-    raw: string | null,
-    parse: (raw: string) => T | null,
-): UrlParam<T> {
-    return raw === '' ? { kind: 'missing' } : readUrlParam(raw, parse);
-}
 
 function parseTimeValue(raw: string): string | null {
     return parseTimeParam(raw) ? raw : null;
@@ -416,21 +403,25 @@ export class TrainLocationComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const routeIdParam = readParam(
+                const routeIdParam = readUrlParam(
                     paramMap.get('route_id'),
                     parseUuid,
+                    { emptyAsMissing: true },
                 );
-                const stationIdParam = readParam(
+                const stationIdParam = readUrlParam(
                     paramMap.get('station_id'),
                     parseUuid,
+                    { emptyAsMissing: true },
                 );
-                const timeParam = readParam(
+                const timeParam = readUrlParam(
                     paramMap.get('time'),
                     parseTimeValue,
+                    { emptyAsMissing: true },
                 );
-                const calendarIdParam = readParam(
+                const calendarIdParam = readUrlParam(
                     paramMap.get('calendar_id'),
                     parseUuid,
+                    { emptyAsMissing: true },
                 );
                 const routeId =
                     routeIdParam.kind === 'ok'

@@ -46,7 +46,6 @@ import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-f
 import {
     parseUuid,
     readUrlParam,
-    UrlParam,
 } from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
@@ -100,17 +99,6 @@ import { TurnbackLink } from './utils/layout-turnback-links.util';
 import { mergeSameDirectionContinuations } from './utils/merge-same-direction-continuations.util';
 import { formatTrainDiagramSummary } from './utils/train-diagram-summary.util';
 import { buildRouteOptions } from './utils/build-route-options.util';
-
-/**
- * URL の値を読む。空の値（`time=` など）は今まで「無い」として補っていたので、無いものとして読む。
- * 値があるのに読めないものだけが invalid（見つからない表示にする）。
- */
-function readParam<T>(
-    raw: string | null,
-    parse: (raw: string) => T | null,
-): UrlParam<T> {
-    return raw === '' ? { kind: 'missing' } : readUrlParam(raw, parse);
-}
 
 /** route_ids: カンマ区切りで、どの要素も UUID（空の要素は不正） */
 function parseRouteIds(raw: string): string[] | null {
@@ -934,25 +922,30 @@ export class TrainDiagramComponent {
             .subscribe((paramMap) => {
                 // Router を通った遷移では URL が正。書き換え分（#replaceViewParams）は捨てる。
                 this.#viewParamOverrides = {};
-                const calendarIdParam = readParam(
+                const calendarIdParam = readUrlParam(
                     paramMap.get('calendar_id'),
                     parseUuid,
+                    { emptyAsMissing: true },
                 );
-                const routeIdsParam = readParam(
+                const routeIdsParam = readUrlParam(
                     paramMap.get('route_ids'),
                     parseRouteIds,
+                    { emptyAsMissing: true },
                 );
-                const directionParam = readParam(
+                const directionParam = readUrlParam(
                     paramMap.get('direction'),
                     parseDirectionParam,
+                    { emptyAsMissing: true },
                 );
-                const timeParam = readParam(
+                const timeParam = readUrlParam(
                     paramMap.get('time'),
                     parseTimeMinute,
+                    { emptyAsMissing: true },
                 );
-                const windowParam = readParam(
+                const windowParam = readUrlParam(
                     paramMap.get('window'),
                     parseWindowMinute,
+                    { emptyAsMissing: true },
                 );
 
                 // 値があるのに不正、または路線の一覧に無い路線なら、見つからない表示にして取得しない
