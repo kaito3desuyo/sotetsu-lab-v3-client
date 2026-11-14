@@ -104,3 +104,16 @@ describe('SsrResponse', () => {
         expect(headers.get('Cache-Control')).toBe(CACHE_CONTROL.short);
     });
 });
+
+describe('SsrResponse.setStatus', () => {
+    it('RESPONSE_INIT の status を書く', () => {
+        const init: ResponseInit = { headers: new Headers() };
+        setup(init).setStatus(404);
+
+        expect(init.status).toBe(404);
+    });
+
+    it('ブラウザ（RESPONSE_INIT が無い）では何もしない', () => {
+        expect(() => setup(null).setStatus(404)).not.toThrow();
+    });
+});

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { pageResolver } from 'src/app/core/resolvers/page.resolver';
 
 export const NOT_FOUND_ROUTES: Routes = [
@@ -12,7 +13,7 @@ export const NOT_FOUND_ROUTES: Routes = [
             from: pageResolver(),
         },
         data: {
-            title: 'ページが見つかりません',
+            title: PageNotFound.title,
         },
     },
 ];

@@ -24,6 +24,12 @@ export class SsrResponse {
     #policy: CachePolicy | null = this.#routeDefaultPolicy();
     readonly #tags = new Set<string>();
 
+    /** 応答の状態コードを書く（見つからないページの 404 など）。ブラウザでは何もしない */
+    setStatus(status: number): void {
+        if (!this.#init) return;
+        this.#init.status = status;
+    }
+
     /** 置く長さを決める。短いほう（no-store が最も短い）を優先し、一度短くしたら長く戻さない */
     setCachePolicy(policy: CachePolicy): void {
         if (!this.#init) return;
