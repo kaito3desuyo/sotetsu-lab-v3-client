@@ -1249,6 +1249,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
 
 describe('TrainDiagramComponent の URL の値が不正なとき', () => {
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     const addCacheTags = jest.fn();
     const fetchTripClasses = jest.fn();
@@ -1284,7 +1285,7 @@ describe('TrainDiagramComponent の URL の値が不正なとき', () => {
                     provide: ActivatedRoute,
                     useValue: { paramMap: params$, snapshot: { params } },
                 },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 { provide: SsrResponse, useValue: { addCacheTags } },
                 {

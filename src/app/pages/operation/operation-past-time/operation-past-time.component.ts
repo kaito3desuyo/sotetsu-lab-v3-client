@@ -134,7 +134,10 @@ export class OperationPastTimeComponent {
                     this.#pageNotFound.mark();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 this.#store.setReferenceDate(
                     referenceDate.kind === 'ok'

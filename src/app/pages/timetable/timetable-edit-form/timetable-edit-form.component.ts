@@ -15,7 +15,6 @@ import { ActivatedRoute } from '@angular/router';
 import { forkJoin, lastValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
-import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -61,7 +60,6 @@ export class TimetableEditFormComponent {
     readonly #timetableEditFormService = inject(TimetableEditFormService);
     readonly #store = inject(TimetableEditFormStore);
     readonly #pageNotFound = inject(PageNotFound);
-    readonly #pageMeta = inject(PageMeta);
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedEditForm = this.#store.hasFetchedEditForm;
@@ -173,8 +171,7 @@ export class TimetableEditFormComponent {
     #unmarkNotFound(): void {
         if (!this.notFound()) return;
         this.notFound.set(false);
-        const title = this.#route.snapshot.data.title as string | undefined;
-        if (title) this.#pageMeta.setTitle(title);
+        this.#pageNotFound.clear();
     }
 
     async fetchData(): Promise<void> {

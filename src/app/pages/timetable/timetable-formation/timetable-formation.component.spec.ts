@@ -57,6 +57,7 @@ function setup(options: {
     });
     const socket$ = new Subject<unknown>();
     const mark = jest.fn();
+    const clear = jest.fn();
     const paramMap$ = new BehaviorSubject(convertToParamMap(options.params));
     const service = {
         fetchDay: jest.fn(),
@@ -71,7 +72,7 @@ function setup(options: {
             provideRouter([]),
             { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
             { provide: SocketService, useValue: { on: () => socket$ } },
-            { provide: PageNotFound, useValue: { mark } },
+            { provide: PageNotFound, useValue: { mark, clear } },
             { provide: NotificationService, useValue: { open: jest.fn() } },
             {
                 provide: OperationPostDialogService,
@@ -116,7 +117,16 @@ function setup(options: {
     const fixture: ComponentFixture<TimetableFormationComponent> =
         TestBed.createComponent(TimetableFormationComponent);
     fixture.detectChanges();
-    return { fixture, store, service, navigate, socket$, paramMap$, mark };
+    return {
+        fixture,
+        store,
+        service,
+        navigate,
+        socket$,
+        paramMap$,
+        mark,
+        clear,
+    };
 }
 
 const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
@@ -378,6 +388,41 @@ describe('TimetableFormationComponent', () => {
             expect(mark).toHaveBeenCalledTimes(1);
             expect(service.fetchDay).not.toHaveBeenCalled();
             expect(hasNotFound(fixture)).toBe(true);
+        });
+
+        it('読めない date から正しい URL へ戻ったら、見つからない題名を捨てる', () => {
+            const { fixture, mark, clear, paramMap$ } = setup({
+                params: { formation_number: '8713', date: 'undefined' },
+            });
+            fixture.detectChanges();
+            expect(mark).toHaveBeenCalledTimes(1);
+            expect(clear).not.toHaveBeenCalled();
+
+            paramMap$.next(
+                convertToParamMap({
+                    formation_number: '8713',
+                    date: '2026-11-11',
+                }),
+            );
+            fixture.detectChanges();
+
+            expect(clear).toHaveBeenCalledTimes(1);
+            expect(hasNotFound(fixture)).toBe(false);
+        });
+
+        it('見つかる URL のままなら、題名を捨てない', () => {
+            const { fixture, clear, paramMap$ } = setup({
+                params: { formation_number: '8713', date: '2026-11-11' },
+            });
+            paramMap$.next(
+                convertToParamMap({
+                    formation_number: '8714',
+                    date: '2026-11-11',
+                }),
+            );
+            fixture.detectChanges();
+
+            expect(clear).not.toHaveBeenCalled();
         });
 
         it('date が無い URL は、今までどおり今日を補う', () => {

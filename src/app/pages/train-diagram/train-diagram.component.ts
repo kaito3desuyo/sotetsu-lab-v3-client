@@ -976,7 +976,10 @@ export class TrainDiagramComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 const calendarId =
                     calendarIdParam.kind === 'ok'

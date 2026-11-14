@@ -67,6 +67,12 @@ export class PageMeta {
         this.#applyTitle(title);
     }
 
+    /** 詳しくした題名を捨て、ルート定義の題名に戻す（見つからない表示から戻るとき） */
+    clearDetailedTitle(): void {
+        this.#detailedTitle = null;
+        this.#applyTitle(this.#baseTitle);
+    }
+
     #applyTitle(title: string): void {
         const full = title ? `${title} - ${SITE_NAME}` : SITE_NAME;
         this.#title.setTitle(full);

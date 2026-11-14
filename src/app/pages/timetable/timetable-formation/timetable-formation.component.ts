@@ -317,7 +317,10 @@ export class TimetableFormationComponent {
                     this.#pageNotFound.mark();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
                 const date = dateParam.kind === 'ok' ? dateParam.value : null;
                 this.formationNumber.set(formationNumber);
                 // サーバーは今日を知らないので、補わず取得もしない

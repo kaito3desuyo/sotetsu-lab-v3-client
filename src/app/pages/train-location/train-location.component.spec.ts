@@ -629,6 +629,7 @@ describe('TrainLocationComponent をサーバーで描くとき', () => {
 describe('TrainLocationComponent をサーバーで描くとき（URL の値が不正）', () => {
     it('ブラウザと同じく見つからない表示にして 404 にし、中身を取らない', async () => {
         const mark = jest.fn();
+        const clear = jest.fn();
         const fetchTripBlocks = jest.fn(() => of(undefined));
         const params = { route_id: 'r1' };
         await TestBed.configureTestingModule({
@@ -636,7 +637,7 @@ describe('TrainLocationComponent をサーバーで描くとき（URL の値が�
             providers: [
                 provideRouter([]),
                 { provide: PLATFORM_ID, useValue: 'server' },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 {
                     provide: ActivatedRoute,
                     useValue: {
@@ -852,6 +853,7 @@ describe('TrainLocationComponent の URL の値が不正なとき', () => {
     const UNKNOWN = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 
     const mark = jest.fn();
+    const clear = jest.fn();
     const fetchTripClasses = jest.fn();
     const fetchTripBlocks = jest.fn();
     const fetchItineraryLinks = jest.fn();
@@ -898,7 +900,7 @@ describe('TrainLocationComponent の URL の値が不正なとき', () => {
                     provide: ActivatedRoute,
                     useValue: { paramMap: params$, snapshot: { params } },
                 },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 {
                     provide: TrainLocationService,
                     useValue: {
@@ -1001,6 +1003,29 @@ describe('TrainLocationComponent の URL の値が不正なとき', () => {
             expect(hasBand(fixture)).toBe(true);
         },
     );
+
+    it('不正な URL から正しい URL へ戻ったら、見つからない題名を捨てて表示を戻す', async () => {
+        const fixture = await create({ ...valid, station_id: 'undefined' });
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(clear).not.toHaveBeenCalled();
+
+        params$.next(convertToParamMap(valid));
+        await flush();
+        fixture.detectChanges();
+
+        expect(clear).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つかる URL どうしの移動では、題名を捨てない', async () => {
+        await create(valid);
+
+        params$.next(convertToParamMap({ ...valid, station_id: ST_2 }));
+        await flush();
+
+        expect(clear).not.toHaveBeenCalled();
+    });
 
     it('time が無くても、calendar_id が不正なら見つからない表示にする', async () => {
         const { time, ...rest } = valid;

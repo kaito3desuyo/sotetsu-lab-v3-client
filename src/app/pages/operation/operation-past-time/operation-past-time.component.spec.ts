@@ -235,6 +235,7 @@ describe('OperationPastTimeComponent のサーバー', () => {
 describe('OperationPastTimeComponent の URL の値', () => {
     const fetchCalendarByDate = jest.fn(() => of(undefined));
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
@@ -247,7 +248,7 @@ describe('OperationPastTimeComponent の URL の値', () => {
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: params$ } },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: OperationPastTimeService,

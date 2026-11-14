@@ -18,7 +18,6 @@ import {
 } from 'rxjs';
 
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
-import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
@@ -51,7 +50,7 @@ describe('TimetableEditFormComponent の URL の値', () => {
     let service: Record<string, jest.Mock>;
     let params$: BehaviorSubject<ParamMap>;
     let mark: jest.Mock;
-    let setTitle: jest.Mock;
+    let clear: jest.Mock;
     let store: InstanceType<typeof TimetableEditFormStore>;
     let fixture: ComponentFixture<TimetableEditFormComponent>;
 
@@ -75,7 +74,7 @@ describe('TimetableEditFormComponent の URL の値', () => {
             selectRoutesTraversedBy: jest.fn(),
         };
         mark = jest.fn();
-        setTitle = jest.fn();
+        clear = jest.fn();
         params$ = new BehaviorSubject<ParamMap>(convertToParamMap({}));
         TestBed.configureTestingModule({
             imports: [TimetableEditFormComponent],
@@ -89,8 +88,7 @@ describe('TimetableEditFormComponent の URL の値', () => {
                         snapshot: { data: { mode, title: ROUTE_TITLE } },
                     },
                 },
-                { provide: PageNotFound, useValue: { mark } },
-                { provide: PageMeta, useValue: { setTitle } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: TimetableEditFormService, useValue: service },
                 {
                     provide: ServiceListState,
@@ -200,7 +198,7 @@ describe('TimetableEditFormComponent の URL の値', () => {
             expect(store.hasFetchedEditForm()).toBe(true);
         });
 
-        it('不正な値から正しい値へ戻ったら、フォームを出して題名を戻す', async () => {
+        it('不正な値から正しい値へ戻ったら、フォームを出して見つからない題名を捨てる', async () => {
             await open({ calendar_id: 'undefined', trip_direction: '0' });
             expect(notFoundShown()).toBe(true);
 
@@ -212,7 +210,7 @@ describe('TimetableEditFormComponent の URL の値', () => {
 
             expect(notFoundShown()).toBe(false);
             expect(formShown()).toBe(true);
-            expect(setTitle).toHaveBeenLastCalledWith(ROUTE_TITLE);
+            expect(clear).toHaveBeenCalledTimes(1);
         });
 
         it('見つからない表示のときは下書きを消さず、復元の案内も出さない', async () => {

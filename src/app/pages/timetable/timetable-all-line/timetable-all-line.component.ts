@@ -181,7 +181,10 @@ export class TimetableAllLineComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 // 値が無いものは今までどおり扱う
                 const calendarId =

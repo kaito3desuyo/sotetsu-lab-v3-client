@@ -453,7 +453,10 @@ export class TrainLocationComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 if (isServer) return;
 

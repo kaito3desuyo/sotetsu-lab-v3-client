@@ -938,6 +938,7 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
     const OPERATION = '00000000-0000-4000-8000-0000000000a1';
     const OTHER_OPERATION = '00000000-0000-4000-8000-0000000000a2';
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     const fetchOperationTrips = jest.fn();
     const fetchStations = jest.fn();
@@ -956,7 +957,7 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: params$ } },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: OfflineSnapshots,

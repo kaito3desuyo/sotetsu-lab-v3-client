@@ -156,7 +156,10 @@ export class OperationTableComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 const urlCalendarId =
                     calendarIdParam.kind === 'ok'

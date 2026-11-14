@@ -266,7 +266,10 @@ export class TimetableStationComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 // 値が無いものは今までどおり補う
                 const rawCalendarId =

@@ -340,7 +340,10 @@ export class OperationRouteDiagramComponent {
                     this.#markNotFound();
                     return;
                 }
-                this.notFound.set(false);
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
 
                 const operationId =
                     operationIdParam.kind === 'ok'

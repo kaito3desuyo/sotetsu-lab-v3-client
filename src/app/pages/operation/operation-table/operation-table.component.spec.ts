@@ -872,6 +872,7 @@ describe('OperationTableComponent の URL の値', () => {
     const CALENDAR = '00000000-0000-4000-8000-000000000001';
     const OTHER_CALENDAR = '00000000-0000-4000-8000-000000000002';
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     const addCacheTags = jest.fn();
     const fetchCalendar = jest.fn();
@@ -904,7 +905,7 @@ describe('OperationTableComponent の URL の値', () => {
                     provide: ActivatedRoute,
                     useValue: { paramMap: params$ },
                 },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 { provide: SsrResponse, useValue: { addCacheTags } },
                 {

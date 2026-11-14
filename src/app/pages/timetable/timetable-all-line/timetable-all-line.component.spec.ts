@@ -278,6 +278,7 @@ describe('TimetableAllLineComponent の URL の値', () => {
     const CALENDAR = '00000000-0000-4000-8000-000000000001';
     const BLOCK = '00000000-0000-4000-8000-0000000000b1';
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     const fetchStations = jest.fn(() => of(undefined));
     let fetchTripBlocks: jest.Mock;
@@ -298,7 +299,7 @@ describe('TimetableAllLineComponent の URL の値', () => {
                     provide: ActivatedRoute,
                     useValue: { paramMap: params$, snapshot: { params } },
                 },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: TimetableAllLineService,

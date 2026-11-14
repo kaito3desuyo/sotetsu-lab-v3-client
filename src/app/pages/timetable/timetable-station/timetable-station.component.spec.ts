@@ -87,6 +87,7 @@ describe('TimetableStationComponent の URL の値', () => {
     const TODAY = '00000000-0000-4000-8000-0000000000dd';
 
     const mark = jest.fn();
+    const clear = jest.fn();
     const setTitle = jest.fn();
     const fetchCalendar = jest.fn((): Observable<boolean> => of(true));
     const fetchTrips = jest.fn(() => of(undefined));
@@ -104,7 +105,7 @@ describe('TimetableStationComponent の URL の値', () => {
             providers: [
                 provideRouter([]),
                 { provide: ActivatedRoute, useValue: { paramMap: params$ } },
-                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: RouteStationListState,
@@ -187,6 +188,35 @@ describe('TimetableStationComponent の URL の値', () => {
         expect(navigate).not.toHaveBeenCalled();
         expect(hasNotFound(fixture)).toBe(true);
         expect(hasBody(fixture)).toBe(false);
+    });
+
+    it('不正な URL から正しい URL へ戻ったら、見つからない題名を捨ててから、詳しい題名を入れ直す', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            station_id: STATION,
+            trip_direction: '0',
+        });
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(clear).not.toHaveBeenCalled();
+        setTitle.mockClear();
+
+        params$.next(
+            convertToParamMap({
+                calendar_id: CALENDAR,
+                station_id: STATION,
+                trip_direction: '0',
+            }),
+        );
+        await flush();
+        fixture.detectChanges();
+
+        expect(clear).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(false);
+        // effect の setTitle は clear より後（clear が詳しい題名を消さない）
+        expect(setTitle).toHaveBeenCalled();
+        expect(clear.mock.invocationCallOrder[0]).toBeLessThan(
+            setTitle.mock.invocationCallOrder[0],
+        );
     });
 
     it('駅の一覧が空のときは、駅の存在で決めない（読み込みの失敗と区別できない）', async () => {
