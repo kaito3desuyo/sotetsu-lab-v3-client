@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
@@ -20,8 +21,8 @@ describe('focusMainContent', () => {
         const main = container.querySelector('main') as HTMLElement;
 
         expect(focusMainContent(container)).toBe(true);
-        expect(main.getAttribute('tabindex')).toBe('-1');
-        expect(document.activeElement).toBe(main);
+        expect(main).toHaveAttribute('tabindex', '-1');
+        expect(main).toHaveFocus();
     });
 
     it('既に tabindex があれば変えない', () => {
@@ -29,8 +30,8 @@ describe('focusMainContent', () => {
         const main = container.querySelector('main') as HTMLElement;
 
         expect(focusMainContent(container)).toBe(true);
-        expect(main.getAttribute('tabindex')).toBe('0');
-        expect(document.activeElement).toBe(main);
+        expect(main).toHaveAttribute('tabindex', '0');
+        expect(main).toHaveFocus();
     });
 
     it('スクロールさせない（preventScroll）', () => {

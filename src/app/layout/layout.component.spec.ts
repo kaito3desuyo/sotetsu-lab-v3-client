@@ -137,7 +137,7 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await fixture.whenStable();
 
-            expect(document.activeElement).toBe(sidenav().querySelector('a'));
+            expect(sidenav().querySelector('a')).toHaveFocus();
         });
 
         it('Esc で閉じ、フォーカスがハンバーガーに戻る', async () => {
@@ -147,7 +147,7 @@ describe('LayoutComponent', () => {
 
             press('Escape');
             expect(component.isOpen()).toBe(false);
-            expect(document.activeElement).toBe(menuButton());
+            expect(menuButton()).toHaveFocus();
         });
 
         it('閉じているときの Esc は何もしない', () => {
@@ -159,7 +159,7 @@ describe('LayoutComponent', () => {
 
             expect(toggle).not.toHaveBeenCalled();
             expect(close).not.toHaveBeenCalled();
-            expect(document.activeElement).not.toBe(menuButton());
+            expect(menuButton()).not.toHaveFocus();
         });
 
         it('背景のクリックで閉じ、フォーカスがハンバーガーに戻る', async () => {
@@ -173,7 +173,7 @@ describe('LayoutComponent', () => {
             backdrop.click();
 
             expect(component.isOpen()).toBe(false);
-            expect(document.activeElement).toBe(menuButton());
+            expect(menuButton()).toHaveFocus();
         });
 
         it('NavigationEnd で閉じたときは、ハンバーガーにフォーカスを戻さない', async () => {
@@ -182,12 +182,12 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await fixture.whenStable();
             const link = sidenav().querySelector('a');
-            expect(document.activeElement).toBe(link);
+            expect(link).toHaveFocus();
 
             await router.navigate(['/train-diagram']);
 
             expect(component.isOpen()).toBe(false);
-            expect(document.activeElement).not.toBe(menuButton());
+            expect(menuButton()).not.toHaveFocus();
         });
     });
 
@@ -200,7 +200,7 @@ describe('LayoutComponent', () => {
             const first = fixture.nativeElement.firstElementChild;
 
             expect(first.tagName).toBe('A');
-            expect(first.textContent).toContain('本文へ移動');
+            expect(first).toHaveTextContent(/本文へ移動/);
         });
 
         it('「本文へ移動」を押すと main にフォーカスが移り、URL は変わらない', async () => {
@@ -218,7 +218,7 @@ describe('LayoutComponent', () => {
             link.dispatchEvent(event);
 
             expect(event.defaultPrevented).toBe(true);
-            expect(document.activeElement).toBe(main());
+            expect(main()).toHaveFocus();
             expect(main()).toHaveAttribute('tabindex', '-1');
             expect(router.url).toBe(url);
         });
@@ -234,7 +234,7 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await fixture.whenStable();
 
-            expect(document.activeElement).toBe(main());
+            expect(main()).toHaveFocus();
             expect(announce).toHaveBeenCalledTimes(1);
             expect(announce).toHaveBeenCalledWith('移動先の題', 'polite');
         });
@@ -250,7 +250,7 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await fixture.whenStable();
 
-            expect(document.activeElement).toBe(menuButton());
+            expect(menuButton()).toHaveFocus();
             expect(announce).not.toHaveBeenCalled();
         });
 
@@ -262,7 +262,7 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await fixture.whenStable();
 
-            expect(document.activeElement).toBe(menuButton());
+            expect(menuButton()).toHaveFocus();
             expect(announce).not.toHaveBeenCalled();
         });
     });
