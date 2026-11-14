@@ -252,7 +252,7 @@ function judge(entry, res, html) {
     }
     // undefined・null の値が href に混ざると、そのリンク先は不正な URL として 404 になる
     const badHrefs = [
-        ...html.matchAll(/href="([^"]*=(?:undefined|null)(?:[;&"][^"]*)?)"/g),
+        ...html.matchAll(/href="([^"]*=(?:undefined|null)(?:[;&][^"]*)?)"/g),
     ].map((m) => m[1]);
     if (badHrefs.length > 0) {
         problems.push(
