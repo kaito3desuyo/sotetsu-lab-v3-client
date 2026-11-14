@@ -45,7 +45,7 @@ import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.d
  * ルートコンポーネント→実ストア→実テーブル→実セルを実描画で通す。
  */
 const CAL = '00000000-0000-4000-8000-000000000001';
-const YOKOHAMA = 'st-yokohama';
+const YOKOHAMA = '00000000-0000-4000-8000-0000000000a3';
 
 const calendarDto = {
     calendarId: CAL,

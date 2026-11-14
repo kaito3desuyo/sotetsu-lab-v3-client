@@ -60,7 +60,8 @@ export class TimetableAllLineService {
         const tripBlocks$ = tripBlockId
             ? this.#tripBlockService
                   .findOneById({ id: tripBlockId })
-                  .pipe(map((tb) => [tb]))
+                  // api は無い ID に 404 でなく 200 と空の本文（null）を返す。空の配列にして呼び出し側が「無い」と分かるようにする
+                  .pipe(map((tb) => (tb ? [tb] : [])))
             : this.#tripBlockService.findManyByFilter({
                   calendarId,
                   tripDirection,

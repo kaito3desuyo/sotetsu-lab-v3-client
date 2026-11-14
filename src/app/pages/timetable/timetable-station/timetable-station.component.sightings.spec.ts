@@ -38,7 +38,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
     const today = () => railwayDateKey();
     const conditions = (date: string) => ({
         calendarId: '00000000-0000-4000-8000-000000000001',
-        stationId: 'st-1',
+        stationId: '00000000-0000-4000-8000-0000000000a1',
         tripDirection: 0,
         date,
     });
@@ -68,7 +68,8 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                             convertToParamMap({
                                 calendar_id:
                                     '00000000-0000-4000-8000-000000000001',
-                                station_id: 'st-1',
+                                station_id:
+                                    '00000000-0000-4000-8000-0000000000a1',
                                 trip_direction: '0',
                             }),
                         ),

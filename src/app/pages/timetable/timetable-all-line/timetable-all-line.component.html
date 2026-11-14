@@ -5,176 +5,193 @@
      表のカード（tw-flex-1）が残りを全部取り、縦横スクロールはカードの中の表の箱だけが受ける
      （2026-10-22 ユーザー指示でダイヤグラムと同じ作りにした）。左右と上の余白・帯の突き抜けは他ページと同じ
      gutter（16/24/32/64px）で、駅別時刻表と左右の位置をそろえる。下は画面の高さを惜しんで 16px だけ（2026-10-22） -->
-<main
-    class="tw-box-border tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-gap-4 tw-bg-paper-2 tw-px-4 tw-pb-4 tw-pt-4 md:tw-h-[calc(100dvh-64px)] md:tw-px-6 md:tw-pt-6 lg:tw-px-8 lg:tw-pt-8 xl:tw-px-16 xl:tw-pt-16"
->
-    <!-- 読み込み中の合図はトップバー直下のプログレスバー（ロック済みページと同じ）。
+@if (notFound()) {
+    <main
+        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+    >
+        <app-not-found-content></app-not-found-content>
+    </main>
+} @else {
+    <main
+        class="tw-box-border tw-flex tw-h-[calc(100dvh-48px)] tw-flex-col tw-gap-4 tw-bg-paper-2 tw-px-4 tw-pb-4 tw-pt-4 md:tw-h-[calc(100dvh-64px)] md:tw-px-6 md:tw-pt-6 lg:tw-px-8 lg:tw-pt-8 xl:tw-px-16 xl:tw-pt-16"
+    >
+        <!-- 読み込み中の合図はトップバー直下のプログレスバー（ロック済みページと同じ）。
          取る前は、路線の絞り込みはチップの形の骨組み、表は本物と同じ高さの骨組みを出す。
          以前は trip-blocks（数 MB）を取り終えるまで絞り込みと表を出さず、約 2 秒検索カードだけが見えて
          いて、届くと絞り込みと表がその上に入り検索カードを押し出していた（CLS 0.46・2026-10-22）。
          偽の「件数 0 / 0」を出さないのは前と同じ -->
-    @if (isLoading()) {
-        <div
-            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
-        >
-            <mat-progress-bar
-                color="accent"
-                mode="indeterminate"
-            ></mat-progress-bar>
-        </div>
-    }
+        @if (isLoading()) {
+            <div
+                class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+            >
+                <mat-progress-bar
+                    color="accent"
+                    mode="indeterminate"
+                ></mat-progress-bar>
+            </div>
+        }
 
-    <!-- 検索カードの中身（ダイヤ・駅）を帯に寄せた（2026-10-22）。上り下りは帯の下に置く -->
-    <app-timetable-all-line-route-filter
-        [alwaysVisible]="true"
-        [summaryLead]="summaryLead()"
-    >
-        <div
-            bandLead
-            class="tw-mb-4 tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[48rem]"
+        <!-- 検索カードの中身（ダイヤ・駅）を帯に寄せた（2026-10-22）。上り下りは帯の下に置く -->
+        <app-timetable-all-line-route-filter
+            [alwaysVisible]="true"
+            [summaryLead]="summaryLead()"
         >
-            <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
-                <mat-form-field
-                    class="tw-min-w-0 tw-flex-1"
-                    subscriptSizing="dynamic"
-                >
-                    <mat-label>ダイヤ</mat-label>
-                    <mat-select
-                        [value]="calendarId()"
-                        (valueChange)="onCalendarChange($event)"
-                        appLazyOptions
-                        #lazyCalendar="appLazyOptions"
+            <div
+                bandLead
+                class="tw-mb-4 tw-grid tw-grid-cols-1 tw-gap-x-2 tw-gap-y-4 sm:tw-grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:tw-max-w-[48rem]"
+            >
+                <div class="tw-flex tw-flex-row tw-items-center tw-gap-2">
+                    <mat-form-field
+                        class="tw-min-w-0 tw-flex-1"
+                        subscriptSizing="dynamic"
                     >
-                        @if (lazyCalendar.ready()) {
-                            @for (
-                                calendar of calendars();
-                                track calendar.calendarId
-                            ) {
-                                <mat-option [value]="calendar.calendarId">
+                        <mat-label>ダイヤ</mat-label>
+                        <mat-select
+                            [value]="calendarId()"
+                            (valueChange)="onCalendarChange($event)"
+                            appLazyOptions
+                            #lazyCalendar="appLazyOptions"
+                        >
+                            @if (lazyCalendar.ready()) {
+                                @for (
+                                    calendar of calendars();
+                                    track calendar.calendarId
+                                ) {
+                                    <mat-option [value]="calendar.calendarId">
+                                        {{
+                                            calendar.startDate
+                                                | dateFns
+                                                    : {
+                                                          format: 'yyyy/M/d改正',
+                                                          parseFormat:
+                                                              'yyyy-MM-dd',
+                                                      }
+                                        }}
+                                        {{ calendar.calendarName }}
+                                    </mat-option>
+                                }
+                            } @else if (calendar(); as selected) {
+                                <mat-option [value]="selected.calendarId">
                                     {{
-                                        calendar.startDate
+                                        selected.startDate
                                             | dateFns
                                                 : {
                                                       format: 'yyyy/M/d改正',
                                                       parseFormat: 'yyyy-MM-dd',
                                                   }
                                     }}
-                                    {{ calendar.calendarName }}
+                                    {{ selected.calendarName }}
                                 </mat-option>
                             }
-                        } @else if (calendar(); as selected) {
-                            <mat-option [value]="selected.calendarId">
-                                {{
-                                    selected.startDate
-                                        | dateFns
-                                            : {
-                                                  format: 'yyyy/M/d改正',
-                                                  parseFormat: 'yyyy-MM-dd',
-                                              }
-                                }}
-                                {{ selected.calendarName }}
-                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <app-today-calendar-button
+                        [calendarId]="calendarId()"
+                        (selectToday)="onCalendarChange($event)"
+                    ></app-today-calendar-button>
+                </div>
+                <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
+                    <mat-label>駅別時刻表へ移る</mat-label>
+                    <!-- ダイヤが無い間は選べない（calendar_id=null の URL に移らない） -->
+                    <mat-select
+                        placeholder="駅を選ぶ"
+                        [disabled]="!calendarId()"
+                        (valueChange)="onStationSelect($event)"
+                        appLazyOptions
+                        #lazyStation="appLazyOptions"
+                    >
+                        @if (lazyStation.ready()) {
+                            @for (
+                                group of stationGroups();
+                                track group.routeId
+                            ) {
+                                <mat-optgroup [label]="group.label">
+                                    @for (
+                                        station of group.stations;
+                                        track station.stationId
+                                    ) {
+                                        <mat-option [value]="station.stationId">
+                                            {{ station.stationName }}
+                                        </mat-option>
+                                    }
+                                </mat-optgroup>
+                            }
                         }
                     </mat-select>
                 </mat-form-field>
-                <app-today-calendar-button
-                    [calendarId]="calendarId()"
-                    (selectToday)="onCalendarChange($event)"
-                ></app-today-calendar-button>
             </div>
-            <mat-form-field class="tw-w-full" subscriptSizing="dynamic">
-                <mat-label>駅別時刻表へ移る</mat-label>
-                <!-- ダイヤが無い間は選べない（calendar_id=null の URL に移らない） -->
-                <mat-select
-                    placeholder="駅を選ぶ"
-                    [disabled]="!calendarId()"
-                    (valueChange)="onStationSelect($event)"
-                    appLazyOptions
-                    #lazyStation="appLazyOptions"
-                >
-                    @if (lazyStation.ready()) {
-                        @for (group of stationGroups(); track group.routeId) {
-                            <mat-optgroup [label]="group.label">
-                                @for (
-                                    station of group.stations;
-                                    track station.stationId
-                                ) {
-                                    <mat-option [value]="station.stationId">
-                                        {{ station.stationName }}
-                                    </mat-option>
-                                }
-                            </mat-optgroup>
-                        }
-                    }
-                </mat-select>
-            </mat-form-field>
+        </app-timetable-all-line-route-filter>
+
+        <!-- ページはスクロールしないので貼り付きは要らない -->
+        <div class="tw-shrink-0">
+            <app-sticky-direction-toggle
+                [value]="tripDirection()"
+                (valueChange)="onDirectionChange($event)"
+            ></app-sticky-direction-toggle>
         </div>
-    </app-timetable-all-line-route-filter>
 
-    <!-- ページはスクロールしないので貼り付きは要らない -->
-    <div class="tw-shrink-0">
-        <app-sticky-direction-toggle
-            [value]="tripDirection()"
-            (valueChange)="onDirectionChange($event)"
-        ></app-sticky-direction-toggle>
-    </div>
-
-    <!-- 表のカード: 高さは画面の残り。縦横スクロールはカードの中の表の箱 -->
-    <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
-        @if (isAwaitingTripBlocks()) {
-            <!-- 本物の表と同じ並び: ページ送り 48px・スクロールの箱（残りの高さ全部）。ダイヤの帯は 2026-10-22 に外した -->
-            <article
-                class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-clip tw-rounded-card tw-bg-white"
-                aria-label="読み込み中"
-                data-testid="all-line-table-skeleton"
-            >
-                <div
-                    class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-1 tw-px-4 tw-pb-4 tw-pt-1"
+        <!-- 表のカード: 高さは画面の残り。縦横スクロールはカードの中の表の箱 -->
+        <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
+            @if (isAwaitingTripBlocks()) {
+                <!-- 本物の表と同じ並び: ページ送り 48px・スクロールの箱（残りの高さ全部）。ダイヤの帯は 2026-10-22 に外した -->
+                <article
+                    class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-clip tw-rounded-card tw-bg-white"
+                    aria-label="読み込み中"
+                    data-testid="all-line-table-skeleton"
                 >
-                    <app-skeleton-bar
-                        class="tw-h-12 tw-w-64 tw-max-w-full tw-shrink-0 tw-self-end"
-                    ></app-skeleton-bar>
                     <div
-                        class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-2 tw-overflow-hidden"
+                        class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-1 tw-px-4 tw-pb-4 tw-pt-1"
                     >
-                        @for (row of skeletonRows; track row) {
-                            <div
-                                class="tw-flex tw-shrink-0 tw-flex-row tw-gap-2"
-                            >
-                                <app-skeleton-bar
-                                    class="tw-h-5 tw-w-[119px] tw-shrink-0"
-                                ></app-skeleton-bar>
-                                @for (column of skeletonColumns; track column) {
+                        <app-skeleton-bar
+                            class="tw-h-12 tw-w-64 tw-max-w-full tw-shrink-0 tw-self-end"
+                        ></app-skeleton-bar>
+                        <div
+                            class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-gap-2 tw-overflow-hidden"
+                        >
+                            @for (row of skeletonRows; track row) {
+                                <div
+                                    class="tw-flex tw-shrink-0 tw-flex-row tw-gap-2"
+                                >
                                     <app-skeleton-bar
-                                        class="tw-h-5 tw-w-8 tw-shrink-0"
+                                        class="tw-h-5 tw-w-[119px] tw-shrink-0"
                                     ></app-skeleton-bar>
-                                }
-                            </div>
-                        }
+                                    @for (
+                                        column of skeletonColumns;
+                                        track column
+                                    ) {
+                                        <app-skeleton-bar
+                                            class="tw-h-5 tw-w-8 tw-shrink-0"
+                                        ></app-skeleton-bar>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
-                </div>
-            </article>
-        } @else {
-            <app-timetable-all-line-table
-                class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col"
-                [canEdit]="canEdit()"
-                [calendar]="calendar()"
-                [tripDirection]="tripDirection()"
-                [stations]="stations()"
-                [trips]="trips()"
-                [pageSettings]="pageSettings()"
-                [viewModes]="viewModes()"
-                [bordersAfter]="bordersAfter()"
-                [endpoints]="endpoints()"
-                [previousTrips]="previousTrips()"
-                (page)="onPaged($event)"
-                (clickEditButton)="onClickedEditButton($event)"
-                (clickCopyButton)="onClickedCopyButton($event)"
-                (clickDeleteButton)="onClickedDeleteButton($event)"
-                (clickAddTripInGroup)="onClickedAddTripInGroup($event)"
-                (clickDeleteTripInGroup)="onClickedDeleteTripInGroup($event)"
-                (toggleDirection)="onToggleDirection()"
-            ></app-timetable-all-line-table>
-        }
-    </div>
-</main>
+                </article>
+            } @else {
+                <app-timetable-all-line-table
+                    class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col"
+                    [canEdit]="canEdit()"
+                    [calendar]="calendar()"
+                    [tripDirection]="tripDirection()"
+                    [stations]="stations()"
+                    [trips]="trips()"
+                    [pageSettings]="pageSettings()"
+                    [viewModes]="viewModes()"
+                    [bordersAfter]="bordersAfter()"
+                    [endpoints]="endpoints()"
+                    [previousTrips]="previousTrips()"
+                    (page)="onPaged($event)"
+                    (clickEditButton)="onClickedEditButton($event)"
+                    (clickCopyButton)="onClickedCopyButton($event)"
+                    (clickDeleteButton)="onClickedDeleteButton($event)"
+                    (clickAddTripInGroup)="onClickedAddTripInGroup($event)"
+                    (clickDeleteTripInGroup)="
+                        onClickedDeleteTripInGroup($event)
+                    "
+                    (toggleDirection)="onToggleDirection()"
+                ></app-timetable-all-line-table>
+            }
+        </div>
+    </main>
+}

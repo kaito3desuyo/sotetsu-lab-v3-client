@@ -11,6 +11,7 @@ import {
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
 import { BehaviorSubject, of, Subject } from 'rxjs';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
@@ -55,6 +56,7 @@ function setup(options: {
         doNotFake: [...ONLY_DATE],
     });
     const socket$ = new Subject<unknown>();
+    const mark = jest.fn();
     const paramMap$ = new BehaviorSubject(convertToParamMap(options.params));
     const service = {
         fetchDay: jest.fn(),
@@ -69,6 +71,7 @@ function setup(options: {
             provideRouter([]),
             { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
             { provide: SocketService, useValue: { on: () => socket$ } },
+            { provide: PageNotFound, useValue: { mark } },
             { provide: NotificationService, useValue: { open: jest.fn() } },
             {
                 provide: OperationPostDialogService,
@@ -113,8 +116,13 @@ function setup(options: {
     const fixture: ComponentFixture<TimetableFormationComponent> =
         TestBed.createComponent(TimetableFormationComponent);
     fixture.detectChanges();
-    return { fixture, store, service, navigate, socket$, paramMap$ };
+    return { fixture, store, service, navigate, socket$, paramMap$, mark };
 }
+
+const flush = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
+const hasNotFound = (f: ComponentFixture<unknown>): boolean =>
+    (f.nativeElement as HTMLElement).querySelector('app-not-found-content') !==
+    null;
 
 const text = (f: ComponentFixture<unknown>): string =>
     (f.nativeElement as HTMLElement).textContent ?? '';
@@ -168,16 +176,11 @@ describe('TimetableFormationComponent', () => {
             );
         });
 
-        it('読めない date と明後日より先の date は今日に置き換える', () => {
-            const a = setup({
-                params: { formation_number: '8713', date: 'undefined' },
-            });
-            expect(a.navigate).toHaveBeenCalledTimes(1);
-            TestBed.resetTestingModule();
-            const b = setup({
+        it('明後日より先の date は今日に置き換える', () => {
+            const { navigate, mark } = setup({
                 params: { formation_number: '8713', date: '2026-11-13' },
             });
-            expect(b.navigate).toHaveBeenCalledWith(
+            expect(navigate).toHaveBeenCalledWith(
                 [
                     'timetable',
                     'formation',
@@ -185,6 +188,7 @@ describe('TimetableFormationComponent', () => {
                 ],
                 { replaceUrl: true },
             );
+            expect(mark).not.toHaveBeenCalled();
         });
 
         it('formation_number を変えたら URL を書き直す', () => {
@@ -342,16 +346,107 @@ describe('TimetableFormationComponent', () => {
         });
     });
 
-    describe('文言', () => {
-        it('編成が無い日は「この日の編成に … はありません」を出す', () => {
-            const { fixture } = setup({
+    describe('見つからない', () => {
+        it.each(['undefined', '2026-02-30', '2026-1-1', '20261101', ''])(
+            '読めない date（%j）は見つからない表示にして、補いも取得もしない',
+            (date) => {
+                const { fixture, mark, navigate, service } = setup({
+                    params: { formation_number: '8713', date },
+                });
+                fixture.detectChanges();
+
+                expect(mark).toHaveBeenCalledTimes(1);
+                expect(navigate).not.toHaveBeenCalled();
+                expect(service.fetchDay).not.toHaveBeenCalled();
+                expect(hasNotFound(fixture)).toBe(true);
+                expect(q(fixture, 'app-control-band')).toBeNull();
+            },
+        );
+
+        it('サーバーでも、読めない date は見つからない表示にする', () => {
+            const { fixture, mark, service } = setup({
+                params: { formation_number: '8713', date: 'undefined' },
+                server: true,
+            });
+            fixture.detectChanges();
+
+            expect(mark).toHaveBeenCalledTimes(1);
+            expect(service.fetchDay).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(true);
+        });
+
+        it('date が無い URL は、今までどおり今日を補う', () => {
+            const { fixture, mark, navigate } = setup({
+                params: { formation_number: '8713' },
+            });
+            fixture.detectChanges();
+
+            expect(mark).not.toHaveBeenCalled();
+            expect(navigate).toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+        });
+
+        it('編成番号が無い URL は、今までどおり入力を促す', () => {
+            const { fixture, mark } = setup({
+                params: { date: '2026-11-11' },
+            });
+            fixture.detectChanges();
+
+            expect(mark).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+            expect(text(fixture)).toContain('編成番号を入れてください');
+        });
+
+        it('その日に編成が無いと api が返したら、取得のあとで見つからない表示にする', async () => {
+            const { fixture, mark } = setup({
                 params: { formation_number: '8713', date: '2026-11-01' },
                 state: { formation: null },
             });
+            await flush();
             fixture.detectChanges();
-            expect(text(fixture)).toContain('この日の編成に 8713 はありません');
+
+            expect(mark).toHaveBeenCalledTimes(1);
+            expect(hasNotFound(fixture)).toBe(true);
+            expect(q(fixture, 'app-control-band')).toBeNull();
+            expect(text(fixture)).not.toContain('この日の編成に');
         });
 
+        it('取得に失敗したときは、編成が無くても見つからない表示にせず、失敗の表示のまま', async () => {
+            const { fixture, mark } = setup({
+                params: { formation_number: '8713', date: '2026-11-01' },
+                state: { formation: null, loadError: true },
+            });
+            await flush();
+            fixture.detectChanges();
+
+            expect(mark).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+            expect(text(fixture)).toContain('読み込めませんでした');
+        });
+
+        it('見つからない表示から正しい URL へ移ると、本体に戻って取得する', async () => {
+            const { fixture, service, paramMap$ } = setup({
+                params: { formation_number: '8713', date: 'undefined' },
+            });
+            fixture.detectChanges();
+            expect(hasNotFound(fixture)).toBe(true);
+
+            paramMap$.next(
+                convertToParamMap({
+                    formation_number: '8713',
+                    date: '2026-11-01',
+                }),
+            );
+            await flush();
+            fixture.detectChanges();
+
+            expect(service.fetchDay).toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+            expect(q(fixture, 'app-control-band')).not.toBeNull();
+        });
+    });
+
+    describe('文言', () => {
         it('ダイヤが無い日は「この日のダイヤはありません」を出す', () => {
             const { fixture } = setup({
                 params: { formation_number: '8713', date: '2026-11-01' },

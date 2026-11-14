@@ -1,122 +1,122 @@
-@if (isLoading()) {
-    <div
-        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+@if (notFound()) {
+    <main
+        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
     >
-        <mat-progress-bar
-            color="accent"
-            mode="indeterminate"
-        ></mat-progress-bar>
-    </div>
-}
-
-<main
-    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
->
-    <app-control-band
-        [summary]="bandSummary()"
-        [filterActive]="showDay() && selectedStationId() !== null"
-        [clearable]="true"
-        (clear)="onStationChange(null)"
-    >
-        <app-timetable-formation-controls
-            [formationNumber]="formationNumber()"
-            [formations]="formationOptions()"
-            [agencies]="agencies()"
-            [showStation]="showDay()"
-            [stationGroups]="stationGroups()"
-            [selectedStationId]="selectedStationId()"
-            [selectedStationName]="selectedStationName()"
-            [date]="date()"
-            [dateKind]="dateKind()"
-            [maxDate]="maxDate()"
-            [canGoNext]="canGoNext()"
-            [tomorrowBlocked]="tomorrowBlocked()"
-            (formationNumberSubmit)="onFormationSubmit($event)"
-            (stationChange)="onStationChange($event)"
-            (dateChange)="onDateChange($event)"
-            (shift)="onShift($event)"
-        ></app-timetable-formation-controls>
-    </app-control-band>
-
-    @if (showDay()) {
-        <app-timetable-formation-header
-            [formationNumber]="formationNumber()"
-            [formation]="storeFormation()"
-            [annotation]="annotation()"
-            [sightings]="sightings()"
-            [currentOperationNumber]="currentOperationNumber()"
-            [currentBasisLabel]="currentBasisLabel()"
-            [currentInferred]="currentInferred()"
-            [operationChain]="operationChain()"
-            [position]="position()"
-            [positionStations]="stations()"
-            [positionTripClasses]="tripClasses()"
-            [positionLinks]="links()"
-            [calendarId]="calendarId()"
-            [tomorrowOperationNumber]="tomorrowOperationNumber()"
-            [tomorrowOperationId]="tomorrowOperationId()"
-            [operationIdByNumber]="operationIdByNumber()"
-            [dateKind]="dateKind()"
-        ></app-timetable-formation-header>
+        <app-not-found-content></app-not-found-content>
+    </main>
+} @else {
+    @if (isLoading()) {
+        <div
+            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
+        >
+            <mat-progress-bar
+                color="accent"
+                mode="indeterminate"
+            ></mat-progress-bar>
+        </div>
     }
 
-    @switch (view()) {
-        @case ('noNumber') {
-            <app-empty-state
-                icon="train"
-                message="編成番号を入れてください"
-                actionLabel="編成番号を入れる"
-                (actionClick)="band().open.set(true)"
-            ></app-empty-state>
-        }
-        @case ('error') {
-            <app-empty-state
-                icon="error_outline"
-                message="読み込めませんでした"
-                subtitle="通信の状態を確かめて、もう一度お試しください。"
-                actionLabel="再読み込み"
-                (actionClick)="reload()"
-            ></app-empty-state>
-        }
-        @case ('notFound') {
-            <app-empty-state
-                icon="info"
-                [message]="
-                    'この日の編成に ' + formationNumber() + ' はありません'
-                "
-            ></app-empty-state>
-        }
-        @case ('noCalendar') {
-            <app-empty-state
-                icon="info"
-                message="この日のダイヤはありません"
-            ></app-empty-state>
-        }
-        @case ('noSighting') {
-            <app-empty-state
-                icon="info"
-                message="この日の目撃はありません"
-            ></app-empty-state>
-        }
-        @case ('station') {
-            <app-timetable-formation-station-list
-                [summary]="stationSummary()"
-                [stationName]="selectedStationName() ?? ''"
-                [stationNames]="stationNames()"
-                [calendarId]="calendarId()"
-                [dateKind]="dateKind()"
-            ></app-timetable-formation-station-list>
-        }
-        @case ('trips') {
-            <app-timetable-formation-trip-list
-                [rows]="rows()"
-                [states]="progress().states"
-                [stationNames]="stationNames()"
-                [calendarId]="calendarId()"
-                [operationIdByNumber]="operationIdByNumber()"
+    <main
+        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+    >
+        <app-control-band
+            [summary]="bandSummary()"
+            [filterActive]="showDay() && selectedStationId() !== null"
+            [clearable]="true"
+            (clear)="onStationChange(null)"
+        >
+            <app-timetable-formation-controls
+                [formationNumber]="formationNumber()"
+                [formations]="formationOptions()"
+                [agencies]="agencies()"
+                [showStation]="showDay()"
+                [stationGroups]="stationGroups()"
+                [selectedStationId]="selectedStationId()"
+                [selectedStationName]="selectedStationName()"
                 [date]="date()"
-                (postRequested)="onPostRequested($event)"
-            ></app-timetable-formation-trip-list>
+                [dateKind]="dateKind()"
+                [maxDate]="maxDate()"
+                [canGoNext]="canGoNext()"
+                [tomorrowBlocked]="tomorrowBlocked()"
+                (formationNumberSubmit)="onFormationSubmit($event)"
+                (stationChange)="onStationChange($event)"
+                (dateChange)="onDateChange($event)"
+                (shift)="onShift($event)"
+            ></app-timetable-formation-controls>
+        </app-control-band>
+
+        @if (showDay()) {
+            <app-timetable-formation-header
+                [formationNumber]="formationNumber()"
+                [formation]="storeFormation()"
+                [annotation]="annotation()"
+                [sightings]="sightings()"
+                [currentOperationNumber]="currentOperationNumber()"
+                [currentBasisLabel]="currentBasisLabel()"
+                [currentInferred]="currentInferred()"
+                [operationChain]="operationChain()"
+                [position]="position()"
+                [positionStations]="stations()"
+                [positionTripClasses]="tripClasses()"
+                [positionLinks]="links()"
+                [calendarId]="calendarId()"
+                [tomorrowOperationNumber]="tomorrowOperationNumber()"
+                [tomorrowOperationId]="tomorrowOperationId()"
+                [operationIdByNumber]="operationIdByNumber()"
+                [dateKind]="dateKind()"
+            ></app-timetable-formation-header>
         }
-    }
-</main>
+
+        @switch (view()) {
+            @case ('noNumber') {
+                <app-empty-state
+                    icon="train"
+                    message="編成番号を入れてください"
+                    actionLabel="編成番号を入れる"
+                    (actionClick)="band().open.set(true)"
+                ></app-empty-state>
+            }
+            @case ('error') {
+                <app-empty-state
+                    icon="error_outline"
+                    message="読み込めませんでした"
+                    subtitle="通信の状態を確かめて、もう一度お試しください。"
+                    actionLabel="再読み込み"
+                    (actionClick)="reload()"
+                ></app-empty-state>
+            }
+            @case ('noCalendar') {
+                <app-empty-state
+                    icon="info"
+                    message="この日のダイヤはありません"
+                ></app-empty-state>
+            }
+            @case ('noSighting') {
+                <app-empty-state
+                    icon="info"
+                    message="この日の目撃はありません"
+                ></app-empty-state>
+            }
+            @case ('station') {
+                <app-timetable-formation-station-list
+                    [summary]="stationSummary()"
+                    [stationName]="selectedStationName() ?? ''"
+                    [stationNames]="stationNames()"
+                    [calendarId]="calendarId()"
+                    [dateKind]="dateKind()"
+                ></app-timetable-formation-station-list>
+            }
+            @case ('trips') {
+                <app-timetable-formation-trip-list
+                    [rows]="rows()"
+                    [states]="progress().states"
+                    [stationNames]="stationNames()"
+                    [calendarId]="calendarId()"
+                    [operationIdByNumber]="operationIdByNumber()"
+                    [date]="date()"
+                    (postRequested)="onPostRequested($event)"
+                ></app-timetable-formation-trip-list>
+            }
+        }
+    </main>
+}
