@@ -942,6 +942,7 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
     const fetchOperationTrips = jest.fn();
     const fetchStations = jest.fn();
     const fetchItineraryLinks = jest.fn();
+    const save = jest.fn(() => Promise.resolve());
     let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -957,6 +958,10 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
                 { provide: ActivatedRoute, useValue: { paramMap: params$ } },
                 { provide: PageNotFound, useValue: { mark } },
                 { provide: PageMeta, useValue: { setTitle } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save, restore: jest.fn() },
+                },
                 {
                     provide: OperationRouteDiagramService,
                     useValue: {
@@ -1016,6 +1021,24 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
             expect(hasBand(fixture)).toBe(true);
         },
     );
+
+    it('取得の途中で不正な URL へ移ると、前の取得が終わっても保存せず、見つからない表示は 1 回だけ', async () => {
+        const first$ = new Subject<boolean>();
+        fetchOperationTrips.mockReturnValueOnce(first$);
+        const fixture = await create({ operation_id: OPERATION });
+
+        params$.next(convertToParamMap({ operation_id: 'abc' }));
+        await flush();
+        expect(mark).toHaveBeenCalledTimes(1);
+        first$.next(true);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+    });
 
     it('正しい operation_id なら取得し、見つからない表示にしない', async () => {
         const fixture = await create({ operation_id: OPERATION });

@@ -1256,6 +1256,7 @@ describe('TrainDiagramComponent の URL の値が不正なとき', () => {
     const fetchItineraryLinks = jest.fn();
     const fetchNetworkStations = jest.fn();
     const fetchCalendar = jest.fn();
+    const save = jest.fn(() => Promise.resolve());
     const routeStations = signal<{ routeId: string; routeName: string }[]>([]);
     let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
     let navigate: jest.SpyInstance;
@@ -1302,7 +1303,7 @@ describe('TrainDiagramComponent の URL の値が不正なとき', () => {
                 { provide: NotificationService, useValue: { open: jest.fn() } },
                 {
                     provide: OfflineSnapshots,
-                    useValue: { save: jest.fn(), restore: jest.fn() },
+                    useValue: { save, restore: jest.fn() },
                 },
             ],
         })
@@ -1600,6 +1601,60 @@ describe('TrainDiagramComponent の URL の値が不正なとき', () => {
         expect(TestBed.inject(TrainDiagramStore).hasFetchedTrainDiagram()).toBe(
             true,
         );
+    });
+
+    it('取得の途中で値の無い URL へ移り、補いが同じダイヤへ戻るとき、取り直す（骨組みのままにならない）', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks.mockReturnValueOnce(first$);
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({ calendar_id: CAL_1 }));
+        await flush();
+        params$.next(convertToParamMap(valid));
+        await flush();
+        fixture.detectChanges();
+
+        expect(fetchTripBlocks).toHaveBeenCalledTimes(2);
+        expect(TestBed.inject(TrainDiagramStore).hasFetchedTrainDiagram()).toBe(
+            true,
+        );
+    });
+
+    it('取り終えたあとの同じ URL では、取り直さない', async () => {
+        await create(valid);
+
+        params$.next(convertToParamMap({ ...valid }));
+        await flush();
+
+        expect(fetchTripBlocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('見つからない表示のまま操作帯で方向を替えると、Router を通して URL を確かめ直す', async () => {
+        const fixture = await create({ ...valid, direction: 'sideways' });
+        expect(hasNotFound(fixture)).toBe(true);
+        navigate.mockImplementation(
+            async (commands: [string, Record<string, string>]) => {
+                params$.next(convertToParamMap(commands[1]));
+                return true;
+            },
+        );
+
+        fixture.componentInstance.onDirectionFilterChange('up');
+        await flush();
+        fixture.detectChanges();
+
+        expect(navigate).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(TestBed.inject(TrainDiagramStore).directionFilter()).toBe('up');
+    });
+
+    it('ダイヤが無いと分かったときは、圏外用の保存をしない', async () => {
+        fetchCalendar.mockReturnValue(of(false));
+        await create(valid);
+
+        expect(save).not.toHaveBeenCalled();
     });
 
     it('存在しないダイヤから正しいダイヤへ移ると、本体に戻る', async () => {

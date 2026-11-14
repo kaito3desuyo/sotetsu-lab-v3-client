@@ -184,8 +184,6 @@ export class TrainDiagramComponent {
 
     /** URL に値があるのに不正、または存在しないダイヤのとき true（本体の代わりに見つからない表示を出す） */
     readonly notFound = signal(false);
-    /** 前の取得を捨てたので、同じ条件の URL へ戻っても取り直す */
-    #refetchPending = false;
     readonly #store = inject(TrainDiagramStore);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #notificationService = inject(NotificationService);
@@ -921,7 +919,9 @@ export class TrainDiagramComponent {
         // 跳び直して表示位置の喪失を防ぐ。ダイヤを替える取得も骨組みを経由する。
         effect(() => {
             const chartHidden =
-                !this.hasFetchedTrainDiagram() || this.isEmpty();
+                this.notFound() ||
+                !this.hasFetchedTrainDiagram() ||
+                this.isEmpty();
             const wasChartHidden = this.#wasChartHidden;
             this.#wasChartHidden = chartHidden;
             if (wasChartHidden && !chartHidden) {
@@ -1006,7 +1006,7 @@ export class TrainDiagramComponent {
                 if (missingParams) {
                     // 取得を始めない遷移でも世代を進め、前の URL の遅れた取得の結果を捨てる
                     this.#store.nextFetchSeq();
-                    this.#refetchPending = true;
+                    this.#lastParamsKey = null;
                 }
 
                 // サーバーでは今日のダイヤ・今の時刻で補わない。骨組みのまま返し、ブラウザで補う（spec 13.2）
@@ -1041,10 +1041,7 @@ export class TrainDiagramComponent {
                 }
 
                 const paramsKey = `${calendarId}|${resolvedRouteIds.join(',')}|${directionFilter}`;
-                if (
-                    this.#lastParamsKey === paramsKey &&
-                    !this.#refetchPending
-                ) {
+                if (this.#lastParamsKey === paramsKey) {
                     return;
                 }
                 this.#lastParamsKey = paramsKey;
@@ -1073,8 +1070,7 @@ export class TrainDiagramComponent {
                 const refetchTripBlocks =
                     calendarChanged ||
                     !this.#firstLoadDone() ||
-                    this.#refetchPending;
-                this.#refetchPending = false;
+                    !this.#store.hasFetchedTrainDiagram();
                 this.fetchData({ refetchTripBlocks });
             });
     }
@@ -1084,7 +1080,6 @@ export class TrainDiagramComponent {
         this.#store.nextFetchSeq();
         // 同じ条件の URL へ戻ったとき、取り直す
         this.#lastParamsKey = null;
-        this.#refetchPending = true;
         this.notFound.set(true);
         this.#pageNotFound.mark();
     }
@@ -1443,6 +1438,11 @@ export class TrainDiagramComponent {
         route_ids?: string;
         direction?: DiagramDirectionFilter;
     }): void {
+        // 見つからない表示のときは Router を通し、URL の値を確かめ直す（replaceState では paramMap が動かない）
+        if (this.notFound()) {
+            this.#navigate(overrides);
+            return;
+        }
         this.#viewParamOverrides = {
             ...this.#viewParamOverrides,
             ...overrides,

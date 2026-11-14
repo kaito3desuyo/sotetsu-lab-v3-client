@@ -374,6 +374,8 @@ export class OperationRouteDiagramComponent {
     }
 
     #markNotFound(): void {
+        // 前の URL の取得が遅れて終わっても、保存や見つからない表示の決定に使わない
+        this.#store.nextFetchSeq();
         this.notFound.set(true);
         this.#pageNotFound.mark();
     }
