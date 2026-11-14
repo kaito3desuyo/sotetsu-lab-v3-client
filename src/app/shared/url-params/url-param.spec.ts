@@ -2,6 +2,7 @@ import {
     parseBooleanFlag,
     parseDateKey,
     parseIntInRange,
+    omitNullishParams,
     parseUuid,
     readUrlParam,
 } from './url-param';
@@ -73,5 +74,22 @@ describe('parseBooleanFlag', () => {
     });
     it.each(['TRUE', '1', ''])('%j は null', (raw) => {
         expect(parseBooleanFlag(raw)).toBeNull();
+    });
+});
+
+describe('omitNullishParams', () => {
+    it('matrix param の undefined・null を落とし、ほかはそのまま残す', () => {
+        expect(
+            omitNullishParams([
+                '/timetable',
+                'all-line',
+                {
+                    calendar_id: undefined,
+                    trip_direction: 0,
+                    trip_block_id: null,
+                    x: '',
+                },
+            ]),
+        ).toEqual(['/timetable', 'all-line', { trip_direction: 0, x: '' }]);
     });
 });

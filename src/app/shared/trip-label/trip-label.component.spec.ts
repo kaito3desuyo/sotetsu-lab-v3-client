@@ -33,6 +33,16 @@ describe('TripLabelComponent', () => {
         );
     });
 
+    it('link の値が undefined なら href にそのキーを出さない', () => {
+        const el = render([
+            '/timetable/all-line',
+            { calendar_id: undefined, trip_direction: 0 },
+        ]);
+        const href = el.querySelector('a')?.getAttribute('href') ?? '';
+        expect(href).not.toContain('calendar_id');
+        expect(href).not.toContain('undefined');
+    });
+
     it('link が無ければリンクにせず下線も引かない', () => {
         const el = render(undefined);
         expect(el.querySelector('a')).toBeNull();

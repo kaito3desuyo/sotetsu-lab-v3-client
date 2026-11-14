@@ -250,6 +250,15 @@ function judge(entry, res, html) {
             `expected 404 rendered, got ${res.status} rendered=${rendered}`,
         );
     }
+    // undefined・null の値が href に混ざると、そのリンク先は不正な URL として 404 になる
+    const badHrefs = [
+        ...html.matchAll(/href="([^"]*=(?:undefined|null)(?:[;&"][^"]*)?)"/g),
+    ].map((m) => m[1]);
+    if (badHrefs.length > 0) {
+        problems.push(
+            `href with =undefined/=null: ${[...new Set(badHrefs)].slice(0, 5).join(' ')}`,
+        );
+    }
     const cache = res.headers.get('cache-control');
     if (cache !== entry.cache) {
         problems.push(`cache-control: ${cache}`);

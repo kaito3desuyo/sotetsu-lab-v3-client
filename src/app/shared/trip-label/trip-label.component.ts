@@ -1,10 +1,12 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     input,
     output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { omitNullishParams } from '../url-params/url-param';
 import { TripClassChipComponent } from '../trip-class-chip/trip-class-chip.component';
 
 /**
@@ -23,7 +25,7 @@ import { TripClassChipComponent } from '../trip-class-chip/trip-class-chip.compo
             [label]="tripClassName()"
             [color]="tripClassColor()"
         ></app-trip-class-chip>
-        @if (link(); as link) {
+        @if (safeLink(); as link) {
             <a
                 data-trip-number
                 class="tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
@@ -49,6 +51,11 @@ export class TripLabelComponent {
     readonly tripNumber = input<string | null | undefined>();
     /** 全線時刻表への routerLink（例 ['/timetable/all-line', { calendar_id, trip_direction, trip_block_id }]） */
     readonly link = input<readonly unknown[] | null | undefined>();
+    /** undefined の値は "undefined" と書かれ 404 になるので、落としてから渡す */
+    protected readonly safeLink = computed(() => {
+        const link = this.link();
+        return link ? omitNullishParams(link) : null;
+    });
     readonly chipSize = input<'sm' | 'md'>('md');
 
     /** 列車番号のリンクを押したとき（情報パネルを閉じる等、親で処理を挟む用） */

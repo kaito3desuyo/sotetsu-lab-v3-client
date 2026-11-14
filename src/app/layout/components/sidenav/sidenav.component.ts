@@ -120,19 +120,32 @@ export class SidenavComponent {
         });
     });
 
+    /** 運用表へのリンク。ダイヤが無いときは calendar_id を付けない */
+    readonly operationTableLink = computed(() => {
+        const todaysCalendarId = this.todaysCalendarId();
+        return [
+            '/operation/table',
+            ...(todaysCalendarId ? [{ calendar_id: todaysCalendarId }] : []),
+        ];
+    });
+
     #generateTimetableLink(params: {
         todaysCalendarId: CalendarDetailsDto['calendarId'];
         selectedStationId: StationDetailsDto['stationId'];
         tripDirection: ETripDirection;
     }): [string, string, {}] {
         const { todaysCalendarId, selectedStationId, tripDirection } = params;
+        // ダイヤが無いとき calendar_id=undefined を出さない（不正な値として 404 になる）
+        const calendarParam = todaysCalendarId
+            ? { calendar_id: todaysCalendarId }
+            : {};
 
         if (selectedStationId) {
             return [
                 '/timetable',
                 'station',
                 {
-                    calendar_id: todaysCalendarId,
+                    ...calendarParam,
                     station_id: selectedStationId,
                     trip_direction: String(tripDirection),
                 },
@@ -142,7 +155,7 @@ export class SidenavComponent {
                 '/timetable',
                 'all-line',
                 {
-                    calendar_id: todaysCalendarId,
+                    ...calendarParam,
                     trip_direction: String(tripDirection),
                 },
             ];

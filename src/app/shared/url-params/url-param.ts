@@ -59,3 +59,21 @@ export function parseBooleanFlag(raw: string): boolean | null {
     if (raw === 'false') return false;
     return null;
 }
+
+/**
+ * routerLink の配列から、matrix param の undefined・null の値を落とす。
+ * Angular は undefined を "undefined" と書くので、そのまま渡すと不正な URL になる（404 になる）。
+ */
+export function omitNullishParams(
+    commands: readonly unknown[],
+): readonly unknown[] {
+    return commands.map((command) => {
+        if (command === null || typeof command !== 'object') return command;
+        if (Array.isArray(command)) return command;
+        return Object.fromEntries(
+            Object.entries(command).filter(
+                ([, value]) => value !== undefined && value !== null,
+            ),
+        );
+    });
+}
