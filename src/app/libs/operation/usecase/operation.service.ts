@@ -51,7 +51,7 @@ export class OperationService {
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
-    }): Observable<OperationTripsDto> {
+    }): Observable<OperationTripsDto | null> {
         return this.#operationQuery.findOneWithTrips(params);
     }
 

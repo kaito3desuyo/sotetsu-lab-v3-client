@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { lastValueFrom, of } from 'rxjs';
+import { lastValueFrom, of, throwError } from 'rxjs';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -16,6 +16,8 @@ describe('Service: OperationTable', () => {
         findOneWithTrips: jest.fn(),
     };
 
+    const calendarService = { findOne: jest.fn() };
+
     beforeEach(() => {
         jest.clearAllMocks();
         TestBed.configureTestingModule({
@@ -29,7 +31,7 @@ describe('Service: OperationTable', () => {
                         removeItem: () => Promise.resolve(),
                     },
                 },
-                { provide: CalendarService, useValue: {} },
+                { provide: CalendarService, useValue: calendarService },
                 { provide: OperationService, useValue: operationService },
                 { provide: StationService, useValue: {} },
                 { provide: TripClassService, useValue: {} },
@@ -84,6 +86,37 @@ describe('Service: OperationTable', () => {
             });
 
             expect(operationService.findManyWithTrips).not.toHaveBeenCalled();
+        },
+    ));
+
+    // api は無い ID に 404 でなく 200 と空の本文（null）を返す
+    it('ダイヤ: 取れたら true、api が null を返したら false（ストアは null にする）', inject(
+        [OperationTableService],
+        async (service: OperationTableService) => {
+            TestBed.inject(OperationTableStore).setCalendarId('cal-1');
+
+            calendarService.findOne.mockReturnValue(
+                of({ calendarId: 'cal-1' }),
+            );
+            expect(await lastValueFrom(service.fetchCalendar())).toBe(true);
+
+            calendarService.findOne.mockReturnValue(of(null));
+            expect(await lastValueFrom(service.fetchCalendar())).toBe(false);
+            expect(TestBed.inject(OperationTableStore).calendar()).toBeNull();
+        },
+    ));
+
+    it('ダイヤ: 失敗（5xx・通信の失敗）はエラーのまま流す', inject(
+        [OperationTableService],
+        async (service: OperationTableService) => {
+            TestBed.inject(OperationTableStore).setCalendarId('cal-1');
+            calendarService.findOne.mockReturnValue(
+                throwError(() => new Error('500')),
+            );
+
+            await expect(
+                lastValueFrom(service.fetchCalendar()),
+            ).rejects.toThrow('500');
         },
     ));
 });

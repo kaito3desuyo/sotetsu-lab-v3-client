@@ -227,10 +227,11 @@ export class OperationQuery {
             );
     }
 
+    /** api は無い ID に 404 でなく 200 と空の本文を返すので、そのときは null */
     findOneWithTrips(params: {
         operationId: string;
         forceReload?: boolean;
-    }): Observable<OperationTripsDto> {
+    }): Observable<OperationTripsDto | null> {
         const { operationId, forceReload } = params;
 
         return this.#cache
@@ -248,14 +249,18 @@ export class OperationQuery {
                 forceReload,
             })
             .pipe(
-                map((res) => ({
-                    operation: OperationDtoBuilder.buildFromModel(
-                        res.body.operation,
-                    ),
-                    trips: res.body.trips.map((o) =>
-                        TripOperationListDtoBuilder.buildFromModel(o),
-                    ),
-                })),
+                map((res) =>
+                    res.body
+                        ? {
+                              operation: OperationDtoBuilder.buildFromModel(
+                                  res.body.operation,
+                              ),
+                              trips: res.body.trips.map((o) =>
+                                  TripOperationListDtoBuilder.buildFromModel(o),
+                              ),
+                          }
+                        : null,
+                ),
             );
     }
 

@@ -10,11 +10,21 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    of,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
 
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
@@ -357,7 +367,10 @@ describe('OperationTableComponent の読み込み中', () => {
                     provide: ActivatedRoute,
                     useValue: {
                         paramMap: of(
-                            convertToParamMap({ calendar_id: 'cal-1' }),
+                            convertToParamMap({
+                                calendar_id:
+                                    '00000000-0000-4000-8000-000000000001',
+                            }),
                         ),
                     },
                 },
@@ -597,7 +610,7 @@ describe('OperationTableComponent のサーバー', () => {
     });
 
     it('サーバーではダイヤのタグを付ける', async () => {
-        await setup({ calendar_id: 'cal-1' }, [
+        await setup({ calendar_id: '00000000-0000-4000-8000-000000000001' }, [
             {
                 provide: SsrResponse,
                 useValue: { addCacheTags, setCachePolicy: jest.fn() },
@@ -606,7 +619,9 @@ describe('OperationTableComponent のサーバー', () => {
 
         TestBed.createComponent(OperationTableComponent);
 
-        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+        expect(addCacheTags).toHaveBeenCalledWith([
+            'calendar:00000000-0000-4000-8000-000000000001',
+        ]);
         expect(fetchCalendar).toHaveBeenCalled();
     });
 });
@@ -633,7 +648,7 @@ describe('OperationTableComponent の圏外の保存', () => {
     const itineraryLinks = [{ tripOperationListId: 'link-1' }] as never;
     const stations = [{ stationId: 'st-1' }] as never;
     const tripClasses = [{ tripClassId: 'class-1' }] as never;
-    const conditions = { calendarId: 'cal-1' };
+    const conditions = { calendarId: '00000000-0000-4000-8000-000000000001' };
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
     // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
@@ -660,7 +675,10 @@ describe('OperationTableComponent の圏外の保存', () => {
                     provide: ActivatedRoute,
                     useValue: {
                         paramMap: of(
-                            convertToParamMap({ calendar_id: 'cal-1' }),
+                            convertToParamMap({
+                                calendar_id:
+                                    '00000000-0000-4000-8000-000000000001',
+                            }),
                         ),
                     },
                 },
@@ -846,5 +864,238 @@ describe('OperationTableComponent の圏外の保存', () => {
 
         expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+});
+
+describe('OperationTableComponent の URL の値', () => {
+    const CALENDAR = '00000000-0000-4000-8000-000000000001';
+    const OTHER_CALENDAR = '00000000-0000-4000-8000-000000000002';
+    const mark = jest.fn();
+    const setTitle = jest.fn();
+    const addCacheTags = jest.fn();
+    const fetchCalendar = jest.fn();
+    const fetchOperationTrips = jest.fn();
+    const fetchStations = jest.fn();
+    const fetchTripClasses = jest.fn();
+    const fetchItineraryLinks = jest.fn();
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let navigate: jest.SpyInstance;
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    const calls = () => [
+        fetchCalendar,
+        fetchOperationTrips,
+        fetchStations,
+        fetchTripClasses,
+        fetchItineraryLinks,
+    ];
+
+    async function create(
+        params: Record<string, string>,
+    ): Promise<ComponentFixture<OperationTableComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
+        await TestBed.configureTestingModule({
+            imports: [OperationTableComponent],
+            providers: [
+                provideRouter([]),
+                deviceStorageStub,
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: params$ },
+                },
+                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageMeta, useValue: { setTitle } },
+                { provide: SsrResponse, useValue: { addCacheTags } },
+                {
+                    provide: OperationTableService,
+                    useValue: {
+                        fetchCalendar,
+                        fetchOperationTrips,
+                        fetchStations,
+                        fetchTripClasses,
+                        fetchItineraryLinks,
+                    },
+                },
+                {
+                    provide: CalendarListState,
+                    useValue: { calendars: signal([]) },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+            ],
+        })
+            .overrideComponent(OperationTableComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        setTodaysCalendars(['todays-calendar-id']);
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        const fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        await flush();
+        fixture.detectChanges();
+        return fixture;
+    }
+
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasBand = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-control-band') !== null;
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector(
+            '[data-testid="operation-table-skeleton"], .tw-grid',
+        ) !== null;
+
+    beforeEach(() => {
+        fetchCalendar.mockReturnValue(of(true));
+        fetchOperationTrips.mockReturnValue(of(undefined));
+        fetchStations.mockReturnValue(of(undefined));
+        fetchTripClasses.mockReturnValue(of(undefined));
+        fetchItineraryLinks.mockReturnValue(of(undefined));
+    });
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
+    it.each(['undefined', 'abc', 'cal-1'])(
+        'calendar_id=%s は見つからない表示にして、補いも取得もしない',
+        async (calendarId) => {
+            const fixture = await create({ calendar_id: calendarId });
+
+            expect(mark).toHaveBeenCalledTimes(1);
+            for (const call of calls()) expect(call).not.toHaveBeenCalled();
+            expect(navigate).not.toHaveBeenCalled();
+            expect(addCacheTags).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(true);
+            expect(hasBody(fixture)).toBe(false);
+            expect(hasBand(fixture)).toBe(true);
+        },
+    );
+
+    it('正しい calendar_id なら取得し、見つからない表示にしない', async () => {
+        const fixture = await create({ calendar_id: CALENDAR });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('calendar_id が無い URL は今までどおり今日のダイヤへ置き換える', async () => {
+        const fixture = await create({});
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(navigate).toHaveBeenCalledWith(
+            ['/operation/table', { calendar_id: 'todays-calendar-id' }],
+            { replaceUrl: true },
+        );
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('存在しないダイヤ（api が null を返す）は、取得のあとで見つからない表示にする', async () => {
+        fetchCalendar.mockReturnValue(of(false));
+        const fixture = await create({ calendar_id: CALENDAR });
+
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+        expect(hasBand(fixture)).toBe(true);
+        expect(TestBed.inject(OperationTableStore).isLoading()).toBe(false);
+    });
+
+    it('取得の失敗（5xx・通信の失敗）は見つからない表示にせず、今までどおり失敗として扱う', async () => {
+        fetchCalendar.mockReturnValue(throwError(() => new Error('500')));
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。本物の失敗だけ受け流す
+        const original = OperationTableComponent.prototype.fetchData;
+        jest.spyOn(
+            OperationTableComponent.prototype,
+            'fetchData',
+        ).mockImplementation(function (this: OperationTableComponent) {
+            return original.call(this).catch(() => undefined);
+        });
+        const fixture = await create({ calendar_id: CALENDAR });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(TestBed.inject(OperationTableStore).isLoading()).toBe(false);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockReturnValueOnce(first$).mockReturnValue(of(true));
+        const fixture = await create({ calendar_id: CALENDAR });
+
+        params$.next(convertToParamMap({ calendar_id: OTHER_CALENDAR }));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
+        const fixture = await create({ calendar_id: 'undefined' });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(convertToParamMap({ calendar_id: CALENDAR }));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('運用表'),
+        );
+    });
+
+    it('存在しないダイヤから正しいダイヤへ移ると、本体に戻る', async () => {
+        fetchCalendar.mockReturnValueOnce(of(false));
+        const fixture = await create({ calendar_id: CALENDAR });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(convertToParamMap({ calendar_id: OTHER_CALENDAR }));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('運用表'),
+        );
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({ calendar_id: 'undefined' });
+        setTitle.mockClear();
+        TestBed.inject(OperationTableStore).setCalendar({
+            calendarId: CALENDAR,
+            calendarName: '平日',
+            startDate: '2026-03-14',
+        } as never);
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({ calendar_id: 'undefined' });
+        TestBed.inject(OperationTableStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 });
