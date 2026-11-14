@@ -1,50 +1,46 @@
-@if (notFound()) {
-    <main
-        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+@if (isLoading() && !notFound()) {
+    <div
+        class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
     >
+        <mat-progress-bar
+            color="accent"
+            mode="indeterminate"
+        ></mat-progress-bar>
+    </div>
+}
+
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <app-control-band
+        [summary]="bandSummary()"
+        [filterActive]="showDay() && selectedStationId() !== null"
+        [clearable]="true"
+        (clear)="onStationChange(null)"
+    >
+        <app-timetable-formation-controls
+            [formationNumber]="formationNumber()"
+            [formations]="formationOptions()"
+            [agencies]="agencies()"
+            [showStation]="showDay()"
+            [stationGroups]="stationGroups()"
+            [selectedStationId]="selectedStationId()"
+            [selectedStationName]="selectedStationName()"
+            [date]="date()"
+            [dateKind]="dateKind()"
+            [maxDate]="maxDate()"
+            [canGoNext]="canGoNext()"
+            [tomorrowBlocked]="tomorrowBlocked()"
+            (formationNumberSubmit)="onFormationSubmit($event)"
+            (stationChange)="onStationChange($event)"
+            (dateChange)="onDateChange($event)"
+            (shift)="onShift($event)"
+        ></app-timetable-formation-controls>
+    </app-control-band>
+
+    @if (notFound()) {
         <app-not-found-content></app-not-found-content>
-    </main>
-} @else {
-    @if (isLoading()) {
-        <div
-            class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
-        >
-            <mat-progress-bar
-                color="accent"
-                mode="indeterminate"
-            ></mat-progress-bar>
-        </div>
-    }
-
-    <main
-        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
-    >
-        <app-control-band
-            [summary]="bandSummary()"
-            [filterActive]="showDay() && selectedStationId() !== null"
-            [clearable]="true"
-            (clear)="onStationChange(null)"
-        >
-            <app-timetable-formation-controls
-                [formationNumber]="formationNumber()"
-                [formations]="formationOptions()"
-                [agencies]="agencies()"
-                [showStation]="showDay()"
-                [stationGroups]="stationGroups()"
-                [selectedStationId]="selectedStationId()"
-                [selectedStationName]="selectedStationName()"
-                [date]="date()"
-                [dateKind]="dateKind()"
-                [maxDate]="maxDate()"
-                [canGoNext]="canGoNext()"
-                [tomorrowBlocked]="tomorrowBlocked()"
-                (formationNumberSubmit)="onFormationSubmit($event)"
-                (stationChange)="onStationChange($event)"
-                (dateChange)="onDateChange($event)"
-                (shift)="onShift($event)"
-            ></app-timetable-formation-controls>
-        </app-control-band>
-
+    } @else {
         @if (showDay()) {
             <app-timetable-formation-header
                 [formationNumber]="formationNumber()"
@@ -118,5 +114,5 @@
                 ></app-timetable-formation-trip-list>
             }
         }
-    </main>
-}
+    }
+</main>

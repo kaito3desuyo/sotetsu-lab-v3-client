@@ -359,7 +359,12 @@ describe('TimetableFormationComponent', () => {
                 expect(navigate).not.toHaveBeenCalled();
                 expect(service.fetchDay).not.toHaveBeenCalled();
                 expect(hasNotFound(fixture)).toBe(true);
-                expect(q(fixture, 'app-control-band')).toBeNull();
+                // 操作帯は残し、本体だけを見つからない表示に替える
+                expect(q(fixture, 'app-control-band')).not.toBeNull();
+                expect(q(fixture, 'app-timetable-formation-header')).toBeNull();
+                expect(
+                    q(fixture, 'app-timetable-formation-trip-list'),
+                ).toBeNull();
             },
         );
 
@@ -407,7 +412,9 @@ describe('TimetableFormationComponent', () => {
 
             expect(mark).toHaveBeenCalledTimes(1);
             expect(hasNotFound(fixture)).toBe(true);
-            expect(q(fixture, 'app-control-band')).toBeNull();
+            expect(q(fixture, 'app-control-band')).not.toBeNull();
+            expect(q(fixture, 'app-timetable-formation-header')).toBeNull();
+            expect(q(fixture, 'app-timetable-formation-trip-list')).toBeNull();
             expect(text(fixture)).not.toContain('この日の編成に');
         });
 

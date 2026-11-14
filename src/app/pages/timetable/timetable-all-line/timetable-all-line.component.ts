@@ -245,6 +245,8 @@ export class TimetableAllLineComponent {
             calendarId: this.#store.calendarId(),
             tripDirection: this.#store.tripDirection(),
         };
+        // 取得を始めたときの値で決める（待っている間に URL が替わっても、新しい URL を巻き込まない）
+        const requestedTripBlockId = this.#store.tripBlockId();
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -283,7 +285,7 @@ export class TimetableAllLineComponent {
             // （失敗は上で今までどおり扱っている）
             if (
                 this.#store.isLatestFetch(seq) &&
-                this.#store.tripBlockId() &&
+                requestedTripBlockId &&
                 this.#store.tripBlocks().length === 0
             ) {
                 this.#markNotFound();

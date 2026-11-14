@@ -3,6 +3,7 @@ import { firstValueFrom, of } from 'rxjs';
 
 import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TimetableAllLineStore } from '../stores/timetable-all-line.store';
 import { TimetableAllLineService } from './timetable-all-line.service';
@@ -44,7 +45,8 @@ describe('Service: TimetableAllLine の fetchTripBlocks', () => {
     it('trip_block_id の運行が無い（api が null を返す）ときは、空の配列を入れる', async () => {
         const store = TestBed.inject(TimetableAllLineStore);
         store.setTripBlockId('00000000-0000-4000-8000-0000000000b1');
-        store.setTripBlocks([{ tripBlockId: 'old' }] as never);
+        const previous: TripBlockDetailsDto = { tripBlockId: 'old' };
+        store.setTripBlocks([previous]);
         tripBlockService.findOneById.mockReturnValue(of(null));
 
         await firstValueFrom(

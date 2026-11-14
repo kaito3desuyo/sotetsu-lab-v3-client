@@ -33,6 +33,7 @@ import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
@@ -374,9 +375,11 @@ describe('TimetableAllLineComponent の URL の値', () => {
 
     it('値が全部正しければ取得し、見つからない表示にしない', async () => {
         fetchTripBlocks = jest.fn(() => {
-            TestBed.inject(TimetableAllLineStore).setTripBlocks([
-                { tripBlockId: BLOCK, trips: [] },
-            ] as never);
+            const found: TripBlockDetailsDto = {
+                tripBlockId: BLOCK,
+                trips: [],
+            };
+            TestBed.inject(TimetableAllLineStore).setTripBlocks([found]);
             return of(undefined);
         });
         const fixture = await create({
@@ -439,6 +442,32 @@ describe('TimetableAllLineComponent の URL の値', () => {
             trip_direction: '0',
             trip_block_id: BLOCK,
         });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks = jest
+            .fn()
+            .mockReturnValueOnce(first$)
+            .mockReturnValue(of(undefined));
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        params$.next(
+            convertToParamMap({ calendar_id: CALENDAR, trip_direction: '1' }),
+        );
+        await flush();
+        first$.next(undefined);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
 
         expect(mark).not.toHaveBeenCalled();
         expect(hasNotFound(fixture)).toBe(false);

@@ -294,6 +294,33 @@ describe('TimetableStationComponent の URL の値', () => {
         expect(hasBody(fixture)).toBe(true);
     });
 
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockImplementationOnce(() => first$);
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+            trip_direction: '0',
+        });
+
+        params$.next(
+            convertToParamMap({
+                calendar_id: CALENDAR,
+                station_id: STATION,
+                trip_direction: '1',
+            }),
+        );
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
     it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
         const fixture = await create({
             calendar_id: CALENDAR,
