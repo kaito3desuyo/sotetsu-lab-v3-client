@@ -16,6 +16,7 @@ import { lastValueFrom } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
 import { afterFirstRender } from 'src/app/core/ssr/first-render';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
@@ -41,6 +42,12 @@ import {
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import {
+    parseUuid,
+    readUrlParam,
+    UrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import { findContinuations } from 'src/app/shared/train-position.util';
@@ -94,6 +101,35 @@ import { mergeSameDirectionContinuations } from './utils/merge-same-direction-co
 import { formatTrainDiagramSummary } from './utils/train-diagram-summary.util';
 import { buildRouteOptions } from './utils/build-route-options.util';
 
+/**
+ * URL の値を読む。空の値（`time=` など）は今まで「無い」として補っていたので、無いものとして読む。
+ * 値があるのに読めないものだけが invalid（見つからない表示にする）。
+ */
+function readParam<T>(
+    raw: string | null,
+    parse: (raw: string) => T | null,
+): UrlParam<T> {
+    return raw === '' ? { kind: 'missing' } : readUrlParam(raw, parse);
+}
+
+/** route_ids: カンマ区切りで、どの要素も UUID（空の要素は不正） */
+function parseRouteIds(raw: string): string[] | null {
+    const ids = raw.split(',');
+    return ids.every((id) => parseUuid(id) !== null) ? ids : null;
+}
+
+function parseDirectionParam(raw: string): DiagramDirectionFilter | null {
+    return raw === 'up' || raw === 'down' || raw === 'both' ? raw : null;
+}
+
+function parseTimeMinute(raw: string): number | null {
+    return parseTimeParam(raw) ?? null;
+}
+
+function parseWindowMinute(raw: string): number | null {
+    return parseLegacyWindowParam(raw) ?? null;
+}
+
 const BODY_TOP_PADDING = 12;
 const BODY_BOTTOM_PADDING = 24;
 /**
@@ -128,6 +164,7 @@ const EMPTY_TRIP_ID_SET: ReadonlySet<string> = new Set();
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        NotFoundContentComponent,
         SkeletonBarComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
@@ -143,6 +180,12 @@ export class TrainDiagramComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しないダイヤのとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
+    /** 前の取得を捨てたので、同じ条件の URL へ戻っても取り直す */
+    #refetchPending = false;
     readonly #store = inject(TrainDiagramStore);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #notificationService = inject(NotificationService);
@@ -846,7 +889,11 @@ export class TrainDiagramComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         runIntervalInBrowser(1000, () => this.#now.set(new Date()));
 
@@ -887,36 +934,86 @@ export class TrainDiagramComponent {
             .subscribe((paramMap) => {
                 // Router を通った遷移では URL が正。書き換え分（#replaceViewParams）は捨てる。
                 this.#viewParamOverrides = {};
-                const calendarId =
-                    paramMap.get('calendar_id') ??
-                    this.#todaysCalendarListState.todaysCalendarId();
-
-                const routeIdsParam = paramMap.get('route_ids');
-                const resolvedRouteIds = routeIdsParam
-                    ? routeIdsParam.split(',').filter(Boolean)
-                    : this.#defaultRouteIds();
-                const directionFilter = this.#parseDirectionFilter(
+                const calendarIdParam = readParam(
+                    paramMap.get('calendar_id'),
+                    parseUuid,
+                );
+                const routeIdsParam = readParam(
+                    paramMap.get('route_ids'),
+                    parseRouteIds,
+                );
+                const directionParam = readParam(
                     paramMap.get('direction'),
+                    parseDirectionParam,
+                );
+                const timeParam = readParam(
+                    paramMap.get('time'),
+                    parseTimeMinute,
+                );
+                const windowParam = readParam(
+                    paramMap.get('window'),
+                    parseWindowMinute,
                 );
 
-                const timeParam = paramMap.get('time');
-                const windowParam = paramMap.get('window');
-                // M2: parseTimeParam が undefined を返す不正な time（例: `time=9999`）も
-                // 正規化の対象に含める（`!timeParam` だけでは truthy な不正値をすり抜ける）。
+                // 値があるのに不正、または路線の一覧に無い路線なら、見つからない表示にして取得しない
+                const knownRouteIds = new Set(
+                    this.#routeStations().map((route) => route.routeId),
+                );
+                if (
+                    [
+                        calendarIdParam,
+                        routeIdsParam,
+                        directionParam,
+                        timeParam,
+                        windowParam,
+                    ].some((param) => param.kind === 'invalid') ||
+                    (routeIdsParam.kind === 'ok' &&
+                        knownRouteIds.size > 0 &&
+                        routeIdsParam.value.some(
+                            (id) => !knownRouteIds.has(id),
+                        ))
+                ) {
+                    this.#markNotFound();
+                    return;
+                }
+                this.notFound.set(false);
+
+                const calendarId =
+                    calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
+                        : this.#todaysCalendarListState.todaysCalendarId();
+                const resolvedRouteIds =
+                    routeIdsParam.kind === 'ok'
+                        ? routeIdsParam.value
+                        : this.#defaultRouteIds();
+                const directionFilter =
+                    directionParam.kind === 'ok'
+                        ? directionParam.value
+                        : 'both';
+                // time → 古い window → 今の時刻 の順（window は time に置き換える）
+                const startMinute = (): number =>
+                    timeParam.kind === 'ok'
+                        ? timeParam.value
+                        : windowParam.kind === 'ok'
+                          ? windowParam.value
+                          : defaultStartMinute(new Date());
                 const missingParams =
-                    !paramMap.get('calendar_id') ||
-                    !routeIdsParam ||
-                    parseTimeParam(timeParam) === undefined ||
-                    !!windowParam;
+                    calendarIdParam.kind === 'missing' ||
+                    routeIdsParam.kind === 'missing' ||
+                    timeParam.kind === 'missing' ||
+                    windowParam.kind === 'ok';
+
+                if (missingParams) {
+                    // 取得を始めない遷移でも世代を進め、前の URL の遅れた取得の結果を捨てる
+                    this.#store.nextFetchSeq();
+                    this.#refetchPending = true;
+                }
 
                 // サーバーでは今日のダイヤ・今の時刻で補わない。骨組みのまま返し、ブラウザで補う（spec 13.2）
                 if (this.#isServer && missingParams) return;
 
                 if (missingParams && calendarId && resolvedRouteIds.length) {
-                    const minute =
-                        parseTimeParam(timeParam) ??
-                        parseLegacyWindowParam(windowParam) ??
-                        defaultStartMinute(new Date());
+                    const minute = startMinute();
                     // I2: window= の古いリンクを time= へ正規化する際、direction 等
                     // 既存の他パラメータを落とさない（window だけを time に差し替える）。
                     // snapshot.params ではなく今まさに来た paramMap から作る
@@ -944,7 +1041,10 @@ export class TrainDiagramComponent {
                 }
 
                 const paramsKey = `${calendarId}|${resolvedRouteIds.join(',')}|${directionFilter}`;
-                if (this.#lastParamsKey === paramsKey) {
+                if (
+                    this.#lastParamsKey === paramsKey &&
+                    !this.#refetchPending
+                ) {
                     return;
                 }
                 this.#lastParamsKey = paramsKey;
@@ -965,19 +1065,28 @@ export class TrainDiagramComponent {
                     // M2: 正規化を素通りした（=parseTimeParam が有効値を返す）はずの経路だが、
                     // 上の window 正規化と同じ優先順位（time → legacy window → 既定）で
                     // フォールバックし、`?? 0`（4:00 固定）による意図しないジャンプを防ぐ。
-                    const minute =
-                        parseTimeParam(timeParam) ??
-                        parseLegacyWindowParam(windowParam) ??
-                        defaultStartMinute(new Date());
+                    const minute = startMinute();
                     this.#leftMinute = minute;
                     this.#requestJump(minute, 'start');
                 }
 
-                this.fetchData({
-                    refetchTripBlocks:
-                        calendarChanged || !this.#firstLoadDone(),
-                });
+                const refetchTripBlocks =
+                    calendarChanged ||
+                    !this.#firstLoadDone() ||
+                    this.#refetchPending;
+                this.#refetchPending = false;
+                this.fetchData({ refetchTripBlocks });
             });
+    }
+
+    #markNotFound(): void {
+        // 取得を始めない遷移でも世代を進め、前の URL の遅れた取得の結果を捨てる
+        this.#store.nextFetchSeq();
+        // 同じ条件の URL へ戻ったとき、取り直す
+        this.#lastParamsKey = null;
+        this.#refetchPending = true;
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
     }
 
     /**
@@ -1025,6 +1134,8 @@ export class TrainDiagramComponent {
             // 運行は種別を貼り付けるので種別の後。路線網の駅はどちらにも依存しないので並行に取る
             const firstLoad = !this.#firstLoadDone();
             let hasFetchedItineraryLinks = true;
+            // api は無いダイヤに 404 でなく 200 と空の本文（null）を返す。取れて「無い」と分かったときだけ true
+            let calendarMissing = false;
             const fetchTripBlocks = async (): Promise<void> => {
                 if (firstLoad) {
                     await lastValueFrom(
@@ -1041,11 +1152,21 @@ export class TrainDiagramComponent {
                         lastValueFrom(
                             this.#timetableDiagramService.fetchItineraryLinks(),
                         ),
+                        // ダイヤの存在の確認。失敗は図の失敗にせず、無いと分かったときだけ使う
+                        lastValueFrom(
+                            this.#timetableDiagramService.fetchCalendar(),
+                        ),
                     ]);
-                    const rejected = results.find(
-                        (result): result is PromiseRejectedResult =>
-                            result.status === 'rejected',
-                    );
+                    const calendarResult = results[2];
+                    calendarMissing =
+                        calendarResult.status === 'fulfilled' &&
+                        calendarResult.value === false;
+                    const rejected = results
+                        .slice(0, 2)
+                        .find(
+                            (result): result is PromiseRejectedResult =>
+                                result.status === 'rejected',
+                        );
                     if (rejected) {
                         throw rejected.reason;
                     }
@@ -1088,12 +1209,17 @@ export class TrainDiagramComponent {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (
                 flags.refetchTripBlocks &&
+                !calendarMissing &&
                 hasFetchedItineraryLinks &&
                 this.#store.isLatestFetch(seq)
             ) {
                 void this.#store.saveOfflineSnapshot('main', conditions);
             }
             this.#firstLoadDone.set(true);
+            // 取得を始めたときのダイヤで決める。古い取得の結果では見つからない表示にしない
+            if (calendarMissing && this.#store.isLatestFetch(seq)) {
+                this.#markNotFound();
+            }
         } finally {
             this.#store.disableLoading();
             // 列車を取り直した取得のうち、いちばん新しいものだけが骨組みを消す

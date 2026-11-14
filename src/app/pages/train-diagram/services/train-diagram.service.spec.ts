@@ -2,6 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { ServiceService } from 'src/app/libs/service/usecase/service.service';
@@ -41,6 +42,7 @@ describe('Service: TrainDiagram', () => {
     let store: InstanceType<typeof TrainDiagramStore>;
     let serviceServiceMock: { findOneWithStations: jest.Mock };
     let tripBlockServiceMock: { findManyByCalendarId: jest.Mock };
+    let calendarServiceMock: { findOne: jest.Mock };
     let operationServiceMock: { findManyItineraryLinks: jest.Mock };
 
     beforeEach(() => {
@@ -60,6 +62,7 @@ describe('Service: TrainDiagram', () => {
                 .mockReturnValue(of({ 0: [representativeTrip], 1: [] })),
         };
 
+        calendarServiceMock = { findOne: jest.fn() };
         operationServiceMock = {
             findManyItineraryLinks: jest.fn().mockReturnValue(of([])),
         };
@@ -67,6 +70,7 @@ describe('Service: TrainDiagram', () => {
         TestBed.configureTestingModule({
             providers: [
                 TrainDiagramService,
+                { provide: CalendarService, useValue: calendarServiceMock },
                 { provide: OperationService, useValue: operationServiceMock },
                 { provide: ServiceService, useValue: serviceServiceMock },
                 {
@@ -89,6 +93,31 @@ describe('Service: TrainDiagram', () => {
 
         store = TestBed.inject(TrainDiagramStore);
         service = TestBed.inject(TrainDiagramService);
+    });
+
+    it('fetchCalendar: calendarId 未設定なら取りに行かず、あるとする', async () => {
+        store.setCalendarId(null);
+
+        expect(await firstValueFrom(service.fetchCalendar())).toBe(true);
+        expect(calendarServiceMock.findOne).not.toHaveBeenCalled();
+    });
+
+    it('fetchCalendar: あれば true・api が null を返したら false・失敗はエラーのまま', async () => {
+        store.setCalendarId('cal-1');
+        calendarServiceMock.findOne.mockReturnValueOnce(
+            of({ calendarId: 'cal-1' }),
+        );
+        expect(await firstValueFrom(service.fetchCalendar())).toBe(true);
+
+        calendarServiceMock.findOne.mockReturnValueOnce(of(null));
+        expect(await firstValueFrom(service.fetchCalendar())).toBe(false);
+
+        calendarServiceMock.findOne.mockReturnValueOnce(
+            throwError(() => new Error('500')),
+        );
+        await expect(firstValueFrom(service.fetchCalendar())).rejects.toThrow(
+            '500',
+        );
     });
 
     it('fetchTripBlocks: calendarId 未設定なら空をセットする', (done) => {
