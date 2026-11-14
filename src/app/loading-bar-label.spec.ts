@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
 /**
@@ -8,20 +8,19 @@ import { join } from 'path';
  */
 const APP_DIR = __dirname;
 
-const TEMPLATES = [
-    'shared/train-picker/train-picker.component.html',
-    'pages/dashboard/dashboard.component.html',
-    'pages/timetable/timetable-all-line/timetable-all-line.component.html',
-    'pages/timetable/timetable-station/timetable-station.component.html',
-    'pages/timetable/timetable-formation/timetable-formation.component.html',
-    'pages/operation/operation-table/operation-table.component.html',
-    'pages/operation/operation-route-diagram/operation-route-diagram.component.html',
-    'pages/operation/operation-real-time/operation-real-time.component.html',
-    'pages/train-diagram/train-diagram.component.html',
-    'pages/timetable/timetable-edit-form/timetable-edit-form.component.html',
-    'pages/train-location/train-location.component.html',
-    'pages/operation/operation-past-time/operation-past-time.component.html',
-];
+/** src/app 以下で mat-progress-bar を使うテンプレートをすべて集める（足し忘れを拾う） */
+function templateFiles(dir: string): string[] {
+    return readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) return templateFiles(path);
+        return /\.html$/.test(name) &&
+            readFileSync(path, 'utf8').includes('<mat-progress-bar')
+            ? [path.replace(APP_DIR + '/', '')]
+            : [];
+    });
+}
+
+const TEMPLATES = templateFiles(APP_DIR);
 
 /** `<mat-progress-bar` から `>` までの開きタグ */
 function progressBarTags(source: string): string[] {
@@ -31,6 +30,10 @@ function progressBarTags(source: string): string[] {
 }
 
 describe('読み込み中のバーの名前', () => {
+    it('mat-progress-bar を使うテンプレートを見つけている（12 か所）', () => {
+        expect(TEMPLATES.length).toBeGreaterThanOrEqual(12);
+    });
+
     it.each(TEMPLATES)(
         '%s の mat-progress-bar は「読み込み中」の名前を持つ',
         (file) => {

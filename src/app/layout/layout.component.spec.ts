@@ -144,10 +144,29 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await component.toggle();
             fixture.detectChanges();
+            await fixture.whenStable();
+            expect(sidenav().querySelector('a')).toHaveFocus();
 
             press('Escape');
             expect(component.isOpen()).toBe(false);
             expect(menuButton()).toHaveFocus();
+        });
+
+        it('Esc が処理済み（preventDefault 済み。セレクトやダイアログ）なら閉じない', async () => {
+            fixture.detectChanges();
+            await component.toggle();
+            fixture.detectChanges();
+            await fixture.whenStable();
+
+            const event = new KeyboardEvent('keydown', {
+                key: 'Escape',
+                cancelable: true,
+            });
+            event.preventDefault();
+            document.dispatchEvent(event);
+
+            expect(component.isOpen()).toBe(true);
+            expect(sidenav().querySelector('a')).toHaveFocus();
         });
 
         it('閉じているときの Esc は何もしない', () => {
@@ -166,6 +185,8 @@ describe('LayoutComponent', () => {
             fixture.detectChanges();
             await component.toggle();
             fixture.detectChanges();
+            await fixture.whenStable();
+            expect(sidenav().querySelector('a')).toHaveFocus();
 
             const backdrop: HTMLElement = fixture.nativeElement.querySelector(
                 'div.tw-fixed.tw-z-10',
@@ -264,6 +285,86 @@ describe('LayoutComponent', () => {
 
             expect(menuButton()).toHaveFocus();
             expect(announce).not.toHaveBeenCalled();
+        });
+
+        describe('サイドナビから移ったあとのフォーカス', () => {
+            const openSidenavAndFocusLink = async (): Promise<void> => {
+                await component.toggle();
+                fixture.detectChanges();
+                await fixture.whenStable();
+                expect(sidenav().querySelector('a')).toHaveFocus();
+            };
+
+            it('path が同じで matrix だけ違う移動（上り⇄下り）でも、main に移る', async () => {
+                fixture.detectChanges();
+                await router.navigateByUrl('/page-a;x=1');
+                fixture.detectChanges();
+                await openSidenavAndFocusLink();
+
+                await router.navigateByUrl('/page-a;x=2');
+                fixture.detectChanges();
+                await fixture.whenStable();
+
+                expect(main()).toHaveFocus();
+            });
+
+            it('NavigationCancel で閉じたときも、サイドナビの中に残らず main に移る', async () => {
+                fixture.detectChanges();
+                await router.navigateByUrl('/page-a');
+                fixture.detectChanges();
+                await openSidenavAndFocusLink();
+                const guarded = router.config;
+                router.resetConfig([
+                    ...guarded,
+                    {
+                        path: 'blocked',
+                        component: MainPageComponent,
+                        canActivate: [() => false],
+                    },
+                ]);
+
+                await router.navigateByUrl('/blocked');
+                fixture.detectChanges();
+                await fixture.whenStable();
+
+                expect(component.isOpen()).toBe(false);
+                expect(main()).toHaveFocus();
+            });
+
+            it('main が無ければハンバーガーへ移す', async () => {
+                fixture.detectChanges();
+                await openSidenavAndFocusLink();
+
+                await router.navigate(['/train-diagram']);
+                fixture.detectChanges();
+                await fixture.whenStable();
+
+                expect(menuButton()).toHaveFocus();
+            });
+        });
+
+        it('最初の表示（router.navigated が済み）では動かず、別の path への移動では動く', async () => {
+            await router.navigate(['/page-a']);
+            // beforeEach で作った分は購読が残るので壊してから、移動済みの状態で作り直す
+            fixture.destroy();
+            fixture = TestBed.createComponent(LayoutComponent);
+            document.body.appendChild(fixture.nativeElement);
+            fixture.detectChanges();
+            await fixture.whenStable();
+            menuButton().focus();
+            announce.mockClear();
+
+            await router.navigateByUrl('/page-a;calendar_id=B');
+            fixture.detectChanges();
+            await fixture.whenStable();
+            expect(menuButton()).toHaveFocus();
+            expect(announce).not.toHaveBeenCalled();
+
+            await router.navigate(['/page-b']);
+            fixture.detectChanges();
+            await fixture.whenStable();
+            expect(main()).toHaveFocus();
+            expect(announce).toHaveBeenCalledTimes(1);
         });
     });
 });
