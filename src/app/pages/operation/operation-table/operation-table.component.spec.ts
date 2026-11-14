@@ -27,6 +27,7 @@ import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationTableComponent } from './operation-table.component';
@@ -1079,11 +1080,12 @@ describe('OperationTableComponent の URL の値', () => {
     it('見つからない表示のとき、題名を上書きしない', async () => {
         await create({ calendar_id: 'undefined' });
         setTitle.mockClear();
-        TestBed.inject(OperationTableStore).setCalendar({
+        const calendar: CalendarDetailsDto = {
             calendarId: CALENDAR,
             calendarName: '平日',
             startDate: '2026-03-14',
-        } as never);
+        };
+        TestBed.inject(OperationTableStore).setCalendar(calendar);
         TestBed.tick();
 
         expect(setTitle).not.toHaveBeenCalled();

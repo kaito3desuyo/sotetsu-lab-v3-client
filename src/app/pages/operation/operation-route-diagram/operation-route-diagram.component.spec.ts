@@ -1093,6 +1093,23 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
         expect(hasBody(fixture)).toBe(true);
     });
 
+    it('運用番号を外した URL へ移ったあと、前の運用の「無い」が遅れて届いても見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchOperationTrips.mockReturnValueOnce(first$);
+        const fixture = await create({ operation_id: OPERATION });
+
+        params$.next(convertToParamMap({}));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
     it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
         const fixture = await create({ operation_id: 'undefined' });
         expect(hasNotFound(fixture)).toBe(true);
@@ -1126,10 +1143,13 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
     it('見つからない表示のとき、題名を上書きしない', async () => {
         await create({ operation_id: 'undefined' });
         setTitle.mockClear();
-        TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
+        const operationTrips: OperationTripsDto = {
             operation: { operationId: OPERATION, operationNumber: '11' },
             trips: [],
-        } as never);
+        };
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
+            operationTrips,
+        );
         TestBed.tick();
 
         expect(setTitle).not.toHaveBeenCalled();

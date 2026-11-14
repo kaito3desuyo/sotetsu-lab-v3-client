@@ -350,6 +350,8 @@ export class OperationRouteDiagramComponent {
                 this.#store.setOperationId(operationId);
                 // 運用番号を外したとき（ダイヤを替えて同じ番号が無かった）、前の運用の図を残さない（2026-10-22）
                 if (!operationId) this.#store.setOperationTrips(null);
+                // 値が無いときは取得しないが、前の運用の取得の結果（無い・保存）を捨てる
+                if (!operationId) this.#store.nextFetchSeq();
                 this.fetchData();
             });
     }
