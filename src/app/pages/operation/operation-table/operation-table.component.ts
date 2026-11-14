@@ -197,6 +197,8 @@ export class OperationTableComponent {
     }
 
     #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
         this.notFound.set(true);
         this.#pageNotFound.mark();
     }

@@ -159,6 +159,8 @@ describe('TimetableStationComponent の URL の値', () => {
     const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
     const hasNotFound = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasStationTable = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-timetable-station-table') !== null;
     const hasBody = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-control-band') !== null;
 
@@ -187,7 +189,8 @@ describe('TimetableStationComponent の URL の値', () => {
         expect(fetchTrips).not.toHaveBeenCalled();
         expect(navigate).not.toHaveBeenCalled();
         expect(hasNotFound(fixture)).toBe(true);
-        expect(hasBody(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true); // 操作帯は残す
+        expect(hasStationTable(fixture)).toBe(false);
     });
 
     it('不正な URL から正しい URL へ戻ったら、見つからない題名を捨ててから、詳しい題名を入れ直す', async () => {
@@ -297,7 +300,8 @@ describe('TimetableStationComponent の URL の値', () => {
 
         expect(mark).toHaveBeenCalledTimes(1);
         expect(hasNotFound(fixture)).toBe(true);
-        expect(hasBody(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true); // 操作帯は残す
+        expect(hasStationTable(fixture)).toBe(false);
     });
 
     it('ダイヤの取得の失敗（5xx・通信の失敗）は見つからない表示にせず、今までどおり失敗として扱う', async () => {
@@ -349,6 +353,27 @@ describe('TimetableStationComponent の URL の値', () => {
         expect(mark).not.toHaveBeenCalled();
         expect(hasNotFound(fixture)).toBe(false);
         expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示の操作帯でダイヤを選ぶと Router で遷移し、読み込みの帯は出さない', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: 'undefined',
+            trip_direction: '0',
+        });
+        navigate.mockClear();
+
+        fixture.componentInstance.onCalendarChange(
+            '99999999-2222-3333-4444-555555555555',
+        );
+
+        expect(navigate).toHaveBeenCalledTimes(1);
+        expect(JSON.stringify(navigate.mock.calls[0][0])).not.toContain(
+            'undefined',
+        );
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 
     it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {

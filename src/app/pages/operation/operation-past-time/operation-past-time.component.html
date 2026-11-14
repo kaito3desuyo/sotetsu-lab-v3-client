@@ -1,4 +1,4 @@
-@if (isLoading()) {
+@if (isLoading() && !notFound()) {
     <div
         class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
     >
@@ -9,32 +9,28 @@
     </div>
 }
 
-@if (notFound()) {
-    <main
-        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
-    >
-        <app-not-found-content></app-not-found-content>
-    </main>
-} @else {
-    <main
-        class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
-    >
-        <!-- ページ名はトップバーだけに出す（G0-5）。中身の無い header を置いていたため
+<main
+    class="tw-flex tw-flex-col tw-gap-4 tw-p-4 md:tw-p-6 lg:tw-p-8 xl:tw-p-16"
+>
+    <!-- ページ名はトップバーだけに出す（G0-5）。中身の無い header を置いていたため
              main の gap 16px がひとつ余分に空いていた。
              操作部はページ上端の全幅の白帯に載せる（列車ダイヤグラムと同じ・2026-10-05） -->
-        <app-control-band
-            [summary]="bandSummary()"
-            [filterActive]="filterActive()"
-            [clearable]="true"
-            (clear)="onClearFilter()"
-        >
-            <div class="tw-flex tw-flex-col tw-gap-4">
-                <app-operation-past-time-search-form></app-operation-past-time-search-form>
-                <app-operation-past-time-filter></app-operation-past-time-filter>
-            </div>
-        </app-control-band>
+    <app-control-band
+        [summary]="bandSummary()"
+        [filterActive]="filterActive()"
+        [clearable]="true"
+        (clear)="onClearFilter()"
+    >
+        <div class="tw-flex tw-flex-col tw-gap-4">
+            <app-operation-past-time-search-form></app-operation-past-time-search-form>
+            <app-operation-past-time-filter></app-operation-past-time-filter>
+        </div>
+    </app-control-band>
+    @if (notFound()) {
+        <app-not-found-content></app-not-found-content>
+    } @else {
         <div class="tw-flex tw-flex-col tw-gap-4">
             <app-operation-past-time-table></app-operation-past-time-table>
         </div>
-    </main>
-}
+    }
+</main>

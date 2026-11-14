@@ -345,6 +345,8 @@ describe('TimetableAllLineComponent の URL の値', () => {
     const hasNotFound = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-not-found-content') !== null;
     const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-timetable-all-line-table') !== null;
+    const hasBand = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-timetable-all-line-route-filter') !==
         null;
 
@@ -495,6 +497,58 @@ describe('TimetableAllLineComponent の URL の値', () => {
         expect(setTitle).toHaveBeenCalledWith(
             expect.stringContaining('全線時刻表'),
         );
+    });
+
+    it('見つからない表示でも操作帯は出し、本体の表だけを置き換える', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            trip_direction: '0',
+        });
+
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBand(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+    });
+
+    it('見つからない表示の操作帯でダイヤを選ぶと、不正な値を持ち越さず Router で遷移する', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: 'abc',
+        });
+        navigate.mockClear();
+
+        fixture.componentInstance.onCalendarChange(
+            '99999999-2222-3333-4444-555555555555',
+        );
+
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'all-line',
+            { calendar_id: '99999999-2222-3333-4444-555555555555' },
+        ]);
+    });
+
+    it('存在しない運行の取得が遅れて届く間に、値の無い URL へ移っても、見つからない表示にしない', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks = jest
+            .fn()
+            .mockReturnValueOnce(first$)
+            .mockReturnValue(of(undefined));
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        params$.next(convertToParamMap({}));
+        await flush();
+        first$.next(undefined);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
     });
 
     it('見つからない表示のとき、題名を上書きしない', async () => {

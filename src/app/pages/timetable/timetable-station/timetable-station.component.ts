@@ -34,7 +34,11 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
-import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
+import {
+    omitNullishParams,
+    parseUuid,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -336,6 +340,8 @@ export class TimetableStationComponent {
     }
 
     #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
         this.notFound.set(true);
         this.#pageNotFound.mark();
     }
@@ -488,25 +494,29 @@ export class TimetableStationComponent {
         if (stationId === ALL_LINE_OPTION) {
             this.#handleNavigationResult(
                 this.#router.navigate([
-                    'timetable',
-                    'all-line',
-                    {
-                        calendar_id: this.calendarId(),
-                        trip_direction: this.tripDirection(),
-                    },
+                    ...omitNullishParams([
+                        'timetable',
+                        'all-line',
+                        {
+                            calendar_id: this.calendarId(),
+                            trip_direction: this.tripDirection(),
+                        },
+                    ]),
                 ]),
             );
             return;
         }
         if (stationId === this.stationId()) return;
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: this.calendarId(),
-                station_id: stationId,
-                trip_direction: this.tripDirection(),
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: this.calendarId(),
+                    station_id: stationId,
+                    trip_direction: this.tripDirection(),
+                },
+            ]),
         ]);
         this.#handleNavigationResult(navigation);
     }
@@ -514,13 +524,15 @@ export class TimetableStationComponent {
     onCalendarChange(calendarId: string): void {
         if (calendarId === this.calendarId()) return;
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: calendarId,
-                station_id: this.stationId(),
-                trip_direction: this.tripDirection(),
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: calendarId,
+                    station_id: this.stationId(),
+                    trip_direction: this.tripDirection(),
+                },
+            ]),
         ]);
         this.#handleNavigationResult(navigation);
     }
@@ -534,13 +546,15 @@ export class TimetableStationComponent {
         if (tripDirection === this.tripDirection()) return;
 
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: this.calendarId(),
-                station_id: this.stationId(),
-                trip_direction: tripDirection,
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: this.calendarId(),
+                    station_id: this.stationId(),
+                    trip_direction: tripDirection,
+                },
+            ]),
         ]);
 
         this.#handleNavigationResult(navigation);

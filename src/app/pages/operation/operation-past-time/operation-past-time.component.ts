@@ -130,8 +130,7 @@ export class OperationPastTimeComponent {
                     days.kind === 'invalid' ||
                     includeInvalidated.kind === 'invalid'
                 ) {
-                    this.notFound.set(true);
-                    this.#pageNotFound.mark();
+                    this.#markNotFound();
                     return;
                 }
                 if (this.notFound()) {
@@ -162,6 +161,13 @@ export class OperationPastTimeComponent {
 
                 this.fetchData();
             });
+    }
+
+    #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
     }
 
     async fetchData(): Promise<void> {

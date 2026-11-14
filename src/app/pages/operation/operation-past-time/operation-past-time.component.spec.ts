@@ -273,6 +273,8 @@ describe('OperationPastTimeComponent の URL の値', () => {
     const hasNotFound = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-not-found-content') !== null;
     const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-operation-past-time-table') !== null;
+    const hasBand = (f: ComponentFixture<unknown>) =>
         f.nativeElement.querySelector('app-operation-past-time-search-form') !==
         null;
 
@@ -297,6 +299,17 @@ describe('OperationPastTimeComponent の URL の値', () => {
         expect(fetchCalendarByDate).not.toHaveBeenCalled();
         expect(hasNotFound(fixture)).toBe(true);
         expect(hasBody(fixture)).toBe(false);
+        expect(hasBand(fixture)).toBe(true);
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({ days: '45' });
+        TestBed.inject(OperationPastTimeStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 
     it('include_invalidated=false は通る', async () => {

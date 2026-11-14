@@ -40,7 +40,11 @@ import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
-import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
+import {
+    omitNullishParams,
+    parseUuid,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
@@ -234,12 +238,18 @@ export class TimetableAllLineComponent {
     }
 
     #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
         this.notFound.set(true);
         this.#pageNotFound.mark();
     }
 
     async fetchData(): Promise<void> {
-        if (!this.#store.calendarId()) return;
+        if (!this.#store.calendarId()) {
+            // 取得中の前の URL の結果が、値の無いこのページを見つからない表示にしないようにする
+            this.#store.nextFetchSeq();
+            return;
+        }
 
         const seq = this.#store.nextFetchSeq();
         this.#store.enableLoading();
@@ -325,11 +335,13 @@ export class TimetableAllLineComponent {
             this.#router.navigate([
                 'timetable',
                 'station',
-                {
-                    calendar_id: this.calendarId(),
-                    station_id: stationId,
-                    trip_direction: this.tripDirection(),
-                },
+                omitNullishParams([
+                    {
+                        calendar_id: this.calendarId(),
+                        station_id: stationId,
+                        trip_direction: this.tripDirection(),
+                    },
+                ])[0],
             ]),
             this.#notification,
         );
@@ -356,6 +368,19 @@ export class TimetableAllLineComponent {
     #paramsWithoutTripBlock(): Params {
         const params: Params = { ...this.#route.snapshot.params };
         delete params['trip_block_id'];
+        if (this.notFound()) {
+            // 見つからない表示から操作帯で戻れるよう、不正な値は持ち越さない
+            if (!parseUuid(String(params['calendar_id'] ?? ''))) {
+                delete params['calendar_id'];
+            }
+            if (
+                parseTripDirectionParam(
+                    String(params['trip_direction'] ?? ''),
+                ) === null
+            ) {
+                delete params['trip_direction'];
+            }
+        }
         return params;
     }
 
