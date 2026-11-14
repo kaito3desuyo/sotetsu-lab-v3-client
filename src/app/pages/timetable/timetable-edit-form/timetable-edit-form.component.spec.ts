@@ -2,7 +2,11 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import {
+    ActivatedRoute,
+    convertToParamMap,
+    provideRouter,
+} from '@angular/router';
 import { EMPTY, Observable, of, Subject, throwError } from 'rxjs';
 
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
@@ -53,10 +57,11 @@ describe('TimetableEditFormComponent', () => {
                     provide: ActivatedRoute,
                     useValue: {
                         paramMap: of(
-                            new Map([
-                                ['calendar_id', 'calendar-1'],
-                                ['trip_direction', '0'],
-                            ]),
+                            convertToParamMap({
+                                calendar_id:
+                                    '00000000-0000-4000-8000-000000000001',
+                                trip_direction: '0',
+                            }),
                         ),
                         snapshot: {
                             data: { mode: ETimetableEditFormMode.ADD },

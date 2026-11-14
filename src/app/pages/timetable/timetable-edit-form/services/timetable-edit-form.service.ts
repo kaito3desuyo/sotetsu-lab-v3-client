@@ -49,19 +49,23 @@ export class TimetableEditFormService {
 
     #submittedEvent$ = new Subject<void>();
 
-    fetchCalendar(): Observable<void> {
+    /**
+     * ダイヤを取ってストアへ入れる。api は無い ID に 404 でなく 200 と空の本文（null）を返すので、
+     * 取れたか（無いと分かったら false）を返す。失敗（5xx・通信の失敗）はエラーのまま流す。
+     */
+    fetchCalendar(): Observable<boolean> {
         const calendarId = this.#store.calendarId();
 
         // calendar 未指定では /v3/calendars/null を叩かない。
         if (!calendarId) {
-            return of(undefined);
+            return of(true);
         }
 
         return this.#calendarService.findOne({ calendarId }).pipe(
-            tap((data: CalendarDetailsDto) => {
-                this.#store.setCalendar(data);
+            tap((data: CalendarDetailsDto | null) => {
+                if (data) this.#store.setCalendar(data);
             }),
-            map(() => undefined),
+            map((data) => data !== null && data !== undefined),
         );
     }
 
@@ -138,17 +142,22 @@ export class TimetableEditFormService {
         );
     }
 
-    /** UPDATE モード: 編集対象の trip-block を固定 ID で取得する。 */
-    fetchTargetTripBlock(): Observable<void> {
+    /**
+     * UPDATE・COPY モード: 編集対象の trip-block を固定 ID で取得する。
+     * api は無い ID に 200 と空の本文（null）を返すので、取れたか（無いと分かったら false）を返す。
+     * 失敗（5xx・通信の失敗）はエラーのまま流す。ID が無いときは今までどおり空にして true。
+     */
+    fetchTargetTripBlock(): Observable<boolean> {
         const tripBlockId = this.#store.tripBlockId();
 
         if (!tripBlockId) {
             this.#store.setTargetTripBlock(null);
-            return of(undefined);
+            return of(true);
         }
 
         return this.#tripBlockService.findOneById({ id: tripBlockId }).pipe(
-            tap((tripBlock: TripBlockDetailsDto) => {
+            tap((tripBlock: TripBlockDetailsDto | null) => {
+                if (!tripBlock) return;
                 const firstTrip = tripBlock.trips?.[0];
                 if (firstTrip?.tripDirection !== undefined) {
                     this.#store.setTripDirection(
@@ -158,7 +167,7 @@ export class TimetableEditFormService {
                 this.#store.setTargetTripBlock(tripBlock);
                 this.#selectRoutesOf(tripBlock);
             }),
-            map(() => undefined),
+            map((tripBlock) => tripBlock !== null && tripBlock !== undefined),
         );
     }
 

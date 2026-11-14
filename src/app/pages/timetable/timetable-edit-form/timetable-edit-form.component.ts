@@ -14,6 +14,8 @@ import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, lastValueFrom, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { tryCatchAsync } from 'src/app/core/utils/error-handling';
@@ -21,7 +23,9 @@ import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CreateTripDto } from 'src/app/libs/trip/usecase/dtos/create-trip.dto';
 import { ReplaceTripDto } from 'src/app/libs/trip/usecase/dtos/replace-trip.dto';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
+import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
 import { FilterChipValue } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { TimetableEditFormDraftRestoreSnackBarComponent } from './components/timetable-edit-form-draft-restore-snack-bar/timetable-edit-form-draft-restore-snack-bar.component';
@@ -41,6 +45,7 @@ import { TimetableEditFormStore } from './stores/timetable-edit-form.store';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [
         MatProgressBarModule,
+        NotFoundContentComponent,
         SkeletonBarComponent,
         TimetableEditFormTripsComponent,
     ],
@@ -55,6 +60,8 @@ export class TimetableEditFormComponent {
     readonly #serviceListState = inject(ServiceListState);
     readonly #timetableEditFormService = inject(TimetableEditFormService);
     readonly #store = inject(TimetableEditFormStore);
+    readonly #pageNotFound = inject(PageNotFound);
+    readonly #pageMeta = inject(PageMeta);
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedEditForm = this.#store.hasFetchedEditForm;
@@ -86,6 +93,12 @@ export class TimetableEditFormComponent {
 
     readonly restoreTrips = signal<ITimetableEditFormTripValue[] | null>(null);
 
+    /**
+     * URL に値があるのに不正、または api が「無い」と返したダイヤ・列車のとき true
+     * （フォームの代わりに見つからない表示を出す）。ブラウザで描くページなので 404 は返せない
+     */
+    readonly notFound = signal(false);
+
     constructor() {
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前のフォームが一瞬出ないようにする
         this.#store.setHasFetchedEditForm(false);
@@ -95,11 +108,47 @@ export class TimetableEditFormComponent {
             .subscribe((paramMap) => {
                 const mode = this.#route.snapshot.data
                     .mode as ETimetableEditFormMode;
-                const calendarId = paramMap.get('calendar_id');
-                const tripDirection = parseTripDirectionParam(
-                    paramMap.get('trip_direction'),
+                const calendarIdParam = readUrlParam(
+                    paramMap.get('calendar_id'),
+                    parseUuid,
                 );
-                const tripBlockId = paramMap.get('trip_block_id');
+                const tripDirectionParam = readUrlParam(
+                    paramMap.get('trip_direction'),
+                    parseTripDirectionParam,
+                );
+                const tripBlockIdParam = readUrlParam(
+                    paramMap.get('trip_block_id'),
+                    parseUuid,
+                );
+
+                // 値があるのに不正（"undefined"・"abc" など）なら、見つからない表示にして取得しない。
+                // 下書き・設定は消さない。前の URL の取得の結果が今の URL に効かないよう世代を進める
+                if (
+                    calendarIdParam.kind === 'invalid' ||
+                    tripDirectionParam.kind === 'invalid' ||
+                    tripBlockIdParam.kind === 'invalid'
+                ) {
+                    this.#store.nextFetchSeq();
+                    this.#store.setMode(mode);
+                    this.#draftRestoreRef?.dismiss();
+                    this.#markNotFound();
+                    return;
+                }
+                this.#unmarkNotFound();
+
+                // 値が無いものは今までどおり（ダイヤ・向き・列車を決めないまま取得する）
+                const calendarId =
+                    calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
+                        : null;
+                const tripDirection =
+                    tripDirectionParam.kind === 'ok'
+                        ? tripDirectionParam.value
+                        : null;
+                const tripBlockId =
+                    tripBlockIdParam.kind === 'ok'
+                        ? tripBlockIdParam.value
+                        : null;
 
                 this.#store.resetForNewSession();
                 this.#store.setMode(mode);
@@ -115,6 +164,19 @@ export class TimetableEditFormComponent {
             });
     }
 
+    #markNotFound(): void {
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
+    }
+
+    /** 見つからない表示から戻るとき、mark() が入れた題名をルートの題名へ戻す */
+    #unmarkNotFound(): void {
+        if (!this.notFound()) return;
+        this.notFound.set(false);
+        const title = this.#route.snapshot.data.title as string | undefined;
+        if (title) this.#pageMeta.setTitle(title);
+    }
+
     async fetchData(): Promise<void> {
         const seq = this.#store.nextFetchSeq();
         this.#store.enableLoading();
@@ -122,7 +184,7 @@ export class TimetableEditFormComponent {
 
         try {
             // 5 本は互いに依存しないので同時に投げる
-            await lastValueFrom(
+            const [, , , , calendarFound] = await lastValueFrom(
                 forkJoin([
                     this.#timetableEditFormService.fetchStations(),
                     this.#timetableEditFormService.fetchRoutes(),
@@ -131,18 +193,35 @@ export class TimetableEditFormComponent {
                     this.#timetableEditFormService.fetchCalendar(),
                 ]),
             );
+            // 前の URL の取得なら、決めることも続きを取ることもしない
+            if (!this.#store.isLatestFetch(seq)) return;
+            // api が「無い」と返した（失敗ではない）ときだけ、見つからない表示にする
+            if (calendarFound === false) {
+                this.#markNotFound();
+                return;
+            }
 
             if (this.mode() === ETimetableEditFormMode.UPDATE) {
-                await lastValueFrom(
+                const found = await lastValueFrom(
                     this.#timetableEditFormService.fetchTargetTripBlock(),
                 );
+                if (!this.#store.isLatestFetch(seq)) return;
+                if (found === false) {
+                    this.#markNotFound();
+                    return;
+                }
             } else {
                 // COPY のコピー元は別のダイヤの列車でもよい。先に ID で取り、
                 // フォームに入れると同時に向きを決める（URL に向きは無い）。
                 if (this.mode() === ETimetableEditFormMode.COPY) {
-                    await lastValueFrom(
+                    const found = await lastValueFrom(
                         this.#timetableEditFormService.fetchTargetTripBlock(),
                     );
+                    if (!this.#store.isLatestFetch(seq)) return;
+                    if (found === false) {
+                        this.#markNotFound();
+                        return;
+                    }
                 }
                 // G9: ADD/COPY 両モードで「既存列車からコピー」を提供するため、
                 // コピー元候補（同一ダイヤ・同一方向の trip-block 一覧）を取得する。
@@ -158,6 +237,7 @@ export class TimetableEditFormComponent {
             }
         }
 
+        if (this.notFound() || !this.#store.isLatestFetch(seq)) return;
         this.#proposeDraftRestoreIfAny();
     }
 
@@ -214,10 +294,7 @@ export class TimetableEditFormComponent {
 
         this.#loading.open();
 
-        const result = await tryCatchAsync(
-            fn(trips),
-            (e) => e as FetchError,
-        );
+        const result = await tryCatchAsync(fn(trips), (e) => e as FetchError);
 
         this.#loading.close();
 
