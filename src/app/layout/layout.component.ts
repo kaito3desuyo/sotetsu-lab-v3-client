@@ -37,7 +37,7 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterModule, HeaderComponent, SidenavComponent],
     host: {
-        '(document:keydown.escape)': 'onEscape()',
+        '(document:keydown.escape)': 'onEscape($event)',
     },
 })
 export class LayoutComponent {
@@ -156,11 +156,22 @@ export class LayoutComponent {
             this.headerRef()?.focusMenuButton();
         }
 
+        if (reason === 'navigation' && this.#isBrowser) {
+            // 閉じる（inert になる）とサイドナビの中のフォーカスは行き場を失うので、描画のあとで本文へ移す
+            afterNextRender(() => this.#rescueFocus(), {
+                injector: this.#injector,
+            });
+        }
+
         await this.#hide();
     }
 
     /** 開いているときだけ Esc で閉じる（閉じているときはダイアログなどの Esc を邪魔しない） */
-    onEscape(): void {
+    onEscape(event: Event): void {
+        // セレクト・ダイアログ・シートが Esc を処理済み（preventDefault）なら、サイドナビは閉じない
+        if (event.defaultPrevented) {
+            return;
+        }
         if (this.isOpen()) {
             void this.close('escape');
         }
@@ -170,6 +181,19 @@ export class LayoutComponent {
         this.isOpen.set(false);
         await wait(250);
         this.isVisibled.set(false);
+    }
+
+    /** フォーカスがサイドナビの中か body にあれば、本文の main へ（無ければハンバーガーへ）移す */
+    #rescueFocus(): void {
+        const active = document.activeElement;
+        const inSidenav =
+            !!active && !!this.sidenavRef()?.nativeElement.contains(active);
+        if (active && active !== document.body && !inSidenav) {
+            return;
+        }
+        if (!this.#focusMain()) {
+            this.headerRef()?.focusMenuButton();
+        }
     }
 
     #focusMain(): boolean {
