@@ -5,9 +5,19 @@ import {
     convertToParamMap,
     provideRouter,
 } from '@angular/router';
-import { Observable, of, Subject, switchMap, throwError, timer } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    of,
+    Subject,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
 
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { OperationPastTimeComponent } from './operation-past-time.component';
 import { OperationPastTimeService } from './services/operation-past-time.service';
@@ -222,29 +232,27 @@ describe('OperationPastTimeComponent のサーバー', () => {
     });
 });
 
-describe('OperationPastTimeComponent の URL の days', () => {
-    async function createWith(
-        days: string,
-    ): Promise<InstanceType<typeof OperationPastTimeStore>> {
+describe('OperationPastTimeComponent の URL の値', () => {
+    const fetchCalendarByDate = jest.fn(() => of(undefined));
+    const mark = jest.fn();
+    const setTitle = jest.fn();
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+
+    async function create(
+        params: Record<string, string>,
+    ): Promise<ComponentFixture<OperationPastTimeComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
         await TestBed.configureTestingModule({
             imports: [OperationPastTimeComponent],
             providers: [
                 provideRouter([]),
-                {
-                    provide: ActivatedRoute,
-                    useValue: {
-                        paramMap: of(
-                            convertToParamMap({
-                                reference_date: '2026-10-01',
-                                days,
-                            }),
-                        ),
-                    },
-                },
+                { provide: ActivatedRoute, useValue: { paramMap: params$ } },
+                { provide: PageNotFound, useValue: { mark } },
+                { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: OperationPastTimeService,
                     useValue: {
-                        fetchCalendarByDate: () => of(undefined),
+                        fetchCalendarByDate,
                         fetchFormations: () => of(undefined),
                         fetchOperationsV3: () => of(undefined),
                         fetchOperationSightingsV3: () => of(undefined),
@@ -256,36 +264,98 @@ describe('OperationPastTimeComponent の URL の days', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
-        TestBed.createComponent(OperationPastTimeComponent);
-        return TestBed.inject(OperationPastTimeStore);
+        const fixture = TestBed.createComponent(OperationPastTimeComponent);
+        fixture.detectChanges();
+        return fixture;
     }
 
-    it('days=45 は 30 日分の日付で検索する', async () => {
-        const store = await createWith('45');
-        expect(store.days()).toBe(30);
-        expect(store.dates()).toHaveLength(30);
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-operation-past-time-search-form') !==
+        null;
+
+    afterEach(() => {
+        jest.clearAllMocks();
     });
 
-    it('days=-3 はフォームの最小値になる', async () => {
-        const store = await createWith('-3');
-        expect(store.days()).toBe(1);
-        expect(store.dates()).toHaveLength(1);
+    it.each([
+        { days: '45', reference_date: '2026-10-01' },
+        { days: '0', reference_date: '2026-10-01' },
+        { days: '-3', reference_date: '2026-10-01' },
+        { days: 'abc', reference_date: '2026-10-01' },
+        { days: '7.5', reference_date: '2026-10-01' },
+        { days: '07', reference_date: '2026-10-01' },
+        { days: '7', reference_date: '2026-02-30' },
+        { days: '7', reference_date: 'abc' },
+        { days: '7', reference_date: '2026-10-01', include_invalidated: '1' },
+    ])('%j は見つからない表示にして、取得しない', async (params) => {
+        const fixture = await create(params);
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(fetchCalendarByDate).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
     });
 
-    it('days=0 もフォームの最小値になる', async () => {
-        const store = await createWith('0');
-        expect(store.days()).toBe(1);
-        expect(store.dates()).toHaveLength(1);
+    it('include_invalidated=false は通る', async () => {
+        const fixture = await create({
+            days: '7',
+            reference_date: '2026-10-01',
+            include_invalidated: 'false',
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchCalendarByDate).toHaveBeenCalled();
+        expect(hasBody(fixture)).toBe(true);
     });
 
-    it('days が数でないときもフォームの最小値になる', async () => {
-        const store = await createWith('abc');
-        expect(store.days()).toBe(1);
-    });
+    it('範囲内の値は今までどおり検索する', async () => {
+        const fixture = await create({
+            days: '7',
+            reference_date: '2026-11-01',
+        });
+        const store = TestBed.inject(OperationPastTimeStore);
 
-    it('範囲内の days はそのまま使う', async () => {
-        const store = await createWith('7');
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchCalendarByDate).toHaveBeenCalled();
         expect(store.days()).toBe(7);
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('値が無い URL は今までどおり（検索しない初期状態）', async () => {
+        const fixture = await create({});
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って検索し題名も付け直す', async () => {
+        const fixture = await create({ days: '45' });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(
+            convertToParamMap({ days: '7', reference_date: '2026-10-01' }),
+        );
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchCalendarByDate).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('過去の運用情報'),
+        );
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({ days: '45' });
+        TestBed.inject(OperationPastTimeStore).setDays(5);
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
     });
 });
 

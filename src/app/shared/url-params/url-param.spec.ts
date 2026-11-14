@@ -49,12 +49,21 @@ describe('parseIntInRange', () => {
     it.each(['1', '30', '7'])('%s は通す', (raw) => {
         expect(parse(raw)).toBe(Number(raw));
     });
-    it.each(['0', '31', '-3', 'abc', '7.5', '', ' 7', '1e1', '07x'])(
-        '%j は null',
-        (raw) => {
-            expect(parse(raw)).toBeNull();
-        },
-    );
+    it.each([
+        '0',
+        '31',
+        '-3',
+        'abc',
+        '7.5',
+        '',
+        ' 7',
+        '1e1',
+        '07x',
+        '07',
+        '+7',
+    ])('%j は null', (raw) => {
+        expect(parse(raw)).toBeNull();
+    });
 });
 
 describe('parseBooleanFlag', () => {

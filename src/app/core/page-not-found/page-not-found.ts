@@ -15,6 +15,10 @@ export class PageNotFound {
     readonly #response = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
 
+    /**
+     * route の pageResolver が PageMeta.set した後に呼ぶこと。
+     * 見つからない間は、ページの題名の effect が動かないようにすること（題名を上書きしてしまう）。
+     */
     mark(): void {
         this.#response.setStatus(404);
         this.#response.setCachePolicy('short');

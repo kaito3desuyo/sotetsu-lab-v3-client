@@ -5,6 +5,7 @@ import {
     DestroyRef,
     effect,
     inject,
+    signal,
 } from '@angular/core';
 import { format, parse } from 'date-fns';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,6 +16,14 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import {
+    parseBooleanFlag,
+    parseDateKey,
+    parseIntInRange,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPastTimeFilterComponent } from './components/operation-past-time-filter/operation-past-time-filter.component';
 import { OperationPastTimeSearchFormComponent } from './components/operation-past-time-search-form/operation-past-time-search-form.component';
@@ -22,7 +31,10 @@ import { OperationPastTimeTableComponent } from './components/operation-past-tim
 import { OperationPastTimeService } from './services/operation-past-time.service';
 import { OperationPastTimeStore } from './stores/operation-past-time.store';
 import { formatPastTimeSummary } from './utils/operation-past-time-summary.util';
-import { clampPastTimeDays } from './utils/past-time-days.util';
+import {
+    PAST_TIME_DAYS_MAX,
+    PAST_TIME_DAYS_MIN,
+} from './utils/past-time-days.util';
 import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
 
 @Component({
@@ -32,6 +44,7 @@ import { pastTimeCacheHints } from './utils/past-time-cache-hints.util';
     imports: [
         MatProgressBarModule,
         ControlBandComponent,
+        NotFoundContentComponent,
         OperationPastTimeSearchFormComponent,
         OperationPastTimeFilterComponent,
         OperationPastTimeTableComponent,
@@ -45,6 +58,10 @@ export class OperationPastTimeComponent {
     readonly #ssrResponse = inject(SsrResponse);
     readonly #store = inject(OperationPastTimeStore);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正なとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
 
     readonly isLoading = this.#store.isLoading;
 
@@ -82,7 +99,11 @@ export class OperationPastTimeComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
         this.#store.setHasFetchedPastTime(false);
@@ -90,16 +111,42 @@ export class OperationPastTimeComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const referenceDate =
-                    paramMap.get('reference_date') ?? undefined;
-                const days = paramMap.get('days') ?? undefined;
-                const includeInvalidated =
-                    paramMap.get('include_invalidated') ?? undefined;
+                const referenceDate = readUrlParam(
+                    paramMap.get('reference_date'),
+                    parseDateKey,
+                );
+                const days = readUrlParam(
+                    paramMap.get('days'),
+                    parseIntInRange(PAST_TIME_DAYS_MIN, PAST_TIME_DAYS_MAX),
+                );
+                const includeInvalidated = readUrlParam(
+                    paramMap.get('include_invalidated'),
+                    parseBooleanFlag,
+                );
 
-                this.#store.setReferenceDate(referenceDate);
-                this.#store.setDays(days && clampPastTimeDays(days));
+                // 値があるのに不正なら、見つからない表示にして取得しない
+                if (
+                    referenceDate.kind === 'invalid' ||
+                    days.kind === 'invalid' ||
+                    includeInvalidated.kind === 'invalid'
+                ) {
+                    this.notFound.set(true);
+                    this.#pageNotFound.mark();
+                    return;
+                }
+                this.notFound.set(false);
+
+                this.#store.setReferenceDate(
+                    referenceDate.kind === 'ok'
+                        ? referenceDate.value
+                        : undefined,
+                );
+                this.#store.setDays(
+                    days.kind === 'ok' ? days.value : undefined,
+                );
                 this.#store.setIncludeInvalidated(
-                    includeInvalidated === 'true',
+                    includeInvalidated.kind === 'ok' &&
+                        includeInvalidated.value,
                 );
 
                 // サーバーで描くときの置き方。ブラウザでは何もしない（spec 6.2）

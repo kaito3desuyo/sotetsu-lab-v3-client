@@ -41,13 +41,13 @@ export function parseDateKey(raw: string): string | null {
         : null;
 }
 
-/** 10 進の整数（符号なしの数字だけ）で min 以上 max 以下を通す。`7.5`・`1e1`・` 7` は null */
+/** 10 進の整数（符号なし・先頭の 0 なし）で min 以上 max 以下を通す。`7.5`・`1e1`・` 7`・`07` は null（同じ値の別 URL を作らない） */
 export function parseIntInRange(
     min: number,
     max: number,
 ): (raw: string) => number | null {
     return (raw) => {
-        if (!/^\d+$/.test(raw)) return null;
+        if (!/^(0|[1-9]\d*)$/.test(raw)) return null;
         const value = Number(raw);
         return value >= min && value <= max ? value : null;
     };
