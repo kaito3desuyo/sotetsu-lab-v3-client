@@ -523,6 +523,9 @@ describe('TimetableFormationComponent', () => {
             });
             fixture.detectChanges();
             expect(text(fixture)).toContain('読み込めませんでした');
+            expect(q(fixture, 'h2')?.textContent).toContain(
+                '読み込めませんでした',
+            );
             expect(text(fixture)).toContain(
                 '通信の状態を確かめて、もう一度お試しください。',
             );

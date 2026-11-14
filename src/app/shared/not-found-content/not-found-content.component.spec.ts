@@ -19,6 +19,14 @@ describe('NotFoundContentComponent', () => {
         expect(text).toContain('トップへ戻る');
     });
 
+    it('見つからないことを h2 の見出しで出す', () => {
+        const fixture = TestBed.createComponent(NotFoundContentComponent);
+        fixture.detectChanges();
+
+        const h2: HTMLElement = fixture.nativeElement.querySelector('h2');
+        expect(h2?.textContent).toContain('ページが見つかりません');
+    });
+
     it('main を持たない', () => {
         const fixture = TestBed.createComponent(NotFoundContentComponent);
         fixture.detectChanges();
