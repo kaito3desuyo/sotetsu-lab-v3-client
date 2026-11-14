@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
@@ -16,6 +17,7 @@ export class TrainLocationService {
     readonly #routeService = inject(RouteService);
     readonly #tripClassService = inject(TripClassService);
     readonly #tripBlockService = inject(TripBlockService);
+    readonly #calendarService = inject(CalendarService);
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #operationService = inject(OperationService);
 
@@ -26,6 +28,24 @@ export class TrainLocationService {
             }),
             map(() => undefined),
         );
+    }
+
+    /**
+     * ダイヤがあるかを確かめる（URL の calendar_id が実在するか）。api は無い ID に 404 でなく
+     * 200 と空の本文（null）を返すので、無いと分かったら false を返す。失敗（5xx・通信の失敗）はエラーのまま流す。
+     */
+    fetchCalendar(): Observable<boolean> {
+        const calendarId = this.#store.calendarId();
+
+        if (!calendarId) {
+            return of(true);
+        }
+
+        return this.#calendarService
+            .findOne({ calendarId })
+            .pipe(
+                map((calendar) => calendar !== null && calendar !== undefined),
+            );
     }
 
     /**

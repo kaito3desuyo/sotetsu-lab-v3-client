@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { lastValueFrom, of } from 'rxjs';
+import { lastValueFrom, of, throwError } from 'rxjs';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
 import { RouteService } from 'src/app/libs/route/usecase/route.service';
@@ -10,11 +11,13 @@ import { TrainLocationService } from './train-location.service';
 
 describe('TrainLocationService（時刻断面をまとめて取る）', () => {
     const findMany = jest.fn();
+    const findOneCalendar = jest.fn();
     let service: TrainLocationService;
     let store: InstanceType<typeof TrainLocationStore>;
 
     beforeEach(() => {
         findMany.mockReset();
+        findOneCalendar.mockReset();
         TestBed.configureTestingModule({
             providers: [
                 TrainLocationService,
@@ -24,6 +27,10 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
                         findManyTimeCrossSectionsByOperationNumbers: findMany,
                     },
                 },
+                {
+                    provide: CalendarService,
+                    useValue: { findOne: findOneCalendar },
+                },
                 { provide: RouteService, useValue: {} },
                 { provide: TripClassService, useValue: {} },
                 { provide: TripBlockService, useValue: {} },
@@ -31,6 +38,27 @@ describe('TrainLocationService（時刻断面をまとめて取る）', () => {
         });
         service = TestBed.inject(TrainLocationService);
         store = TestBed.inject(TrainLocationStore);
+    });
+
+    it('fetchCalendar: calendarId 未設定なら取りに行かず、あるとする', async () => {
+        store.setCalendarId(null);
+
+        expect(await lastValueFrom(service.fetchCalendar())).toBe(true);
+        expect(findOneCalendar).not.toHaveBeenCalled();
+    });
+
+    it('fetchCalendar: あれば true・api が null を返したら false・失敗はエラーのまま', async () => {
+        store.setCalendarId('cal-1');
+        findOneCalendar.mockReturnValueOnce(of({ calendarId: 'cal-1' }));
+        expect(await lastValueFrom(service.fetchCalendar())).toBe(true);
+
+        findOneCalendar.mockReturnValueOnce(of(null));
+        expect(await lastValueFrom(service.fetchCalendar())).toBe(false);
+
+        findOneCalendar.mockReturnValueOnce(throwError(() => new Error('500')));
+        await expect(lastValueFrom(service.fetchCalendar())).rejects.toThrow(
+            '500',
+        );
     });
 
     it('まだ持っていない運用番号だけを 1 回で取り、番号ごとに store へ入れる', async () => {

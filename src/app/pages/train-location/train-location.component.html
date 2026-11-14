@@ -2,7 +2,7 @@
      図の上下の chrome は横 12px の inset。landmark は揃える。 -->
 <main class="tw-flex tw-h-full tw-flex-col tw-bg-paper-2">
     <!-- 読み込み中はプログレスバーだけ（ロック済みページと同じ。位置は運用表と同じヘッダーのすぐ下） -->
-    @if (isLoading()) {
+    @if (isLoading() && !notFound()) {
         <div
             class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
         >
@@ -28,7 +28,9 @@
     </app-control-band>
 
     <div class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-3">
-        @if (!hasFetchedTrainLocation()) {
+        @if (notFound()) {
+            <app-not-found-content></app-not-found-content>
+        } @else if (!hasFetchedTrainLocation()) {
             <!-- 取る前は本物と同じ格子で、駅のパネル（45px）と路線図のカード（画面 1 枚分）の骨組みを出す。
                  以前は本文が空でフッターが見えていて、届くと押し出されていた（CLS 0.13・2026-10-22）。
                  isLoading() で本文を消すのもやめた -->
