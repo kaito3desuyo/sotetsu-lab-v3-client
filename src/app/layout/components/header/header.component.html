@@ -2,10 +2,13 @@
     class="tw-flex tw-h-12 tw-flex-row tw-items-center tw-gap-2 tw-bg-primary-500 max-[359px]:tw-gap-1 tw-px-2 tw-text-white md:tw-h-16 md:tw-gap-4 md:tw-px-4"
 >
     <button
+        #menuButton
         mat-mini-fab
         (click)="clickButton.emit()"
         color="primary"
-        aria-label="メニューを開く"
+        aria-label="メニュー"
+        aria-controls="app-sidenav"
+        [attr.aria-expanded]="menuOpen()"
         class="!tw-shadow-none"
     >
         <mat-icon>menu</mat-icon>

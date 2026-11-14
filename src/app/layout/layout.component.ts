@@ -1,7 +1,11 @@
 import {
+    afterNextRender,
     Component,
+    ElementRef,
     inject,
+    Injector,
     signal,
+    viewChild,
     ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -24,9 +28,19 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     animations: layoutAnimations,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterModule, HeaderComponent, SidenavComponent],
+    host: {
+        '(document:keydown.escape)': 'onEscape()',
+    },
 })
 export class LayoutComponent {
     readonly #router = inject(Router);
+    readonly #injector = inject(Injector);
+
+    private readonly headerRef = viewChild(HeaderComponent);
+    private readonly sidenavRef = viewChild<unknown, ElementRef<HTMLElement>>(
+        'sidenav',
+        { read: ElementRef },
+    );
 
     readonly isOpen = signal<boolean>(false);
     readonly isVisibled = signal<boolean>(false);
@@ -67,7 +81,7 @@ export class LayoutComponent {
                             ev instanceof NavigationCancel),
                 ),
                 tap(() => {
-                    this.toggle();
+                    void this.close('navigation');
                 }),
                 takeUntilDestroyed(),
             )
@@ -81,11 +95,50 @@ export class LayoutComponent {
             this.isVisibled.set(next);
             await wait(0);
             this.isOpen.set(next);
+            // inert が外れる描画のあとで、サイドナビの先頭へフォーカスを移す
+            afterNextRender(() => this.#focusFirstInSidenav(), {
+                injector: this.#injector,
+            });
         } else {
-            this.isOpen.set(next);
-            await wait(250);
-            this.isVisibled.set(next);
+            await this.#hide();
         }
+    }
+
+    /**
+     * サイドナビを閉じる。Esc・背景のクリックで閉じたときは開いたボタンへフォーカスを戻す。
+     * ページ移動（navigation）で閉じたときは戻さない（移動後のフォーカスは本文が受ける）。
+     */
+    async close(reason: 'escape' | 'backdrop' | 'navigation'): Promise<void> {
+        if (!this.isVisibled()) {
+            return;
+        }
+
+        if (reason !== 'navigation') {
+            this.headerRef()?.focusMenuButton();
+        }
+
+        await this.#hide();
+    }
+
+    /** 開いているときだけ Esc で閉じる（閉じているときはダイアログなどの Esc を邪魔しない） */
+    onEscape(): void {
+        if (this.isOpen()) {
+            void this.close('escape');
+        }
+    }
+
+    async #hide(): Promise<void> {
+        this.isOpen.set(false);
+        await wait(250);
+        this.isVisibled.set(false);
+    }
+
+    #focusFirstInSidenav(): void {
+        const target =
+            this.sidenavRef()?.nativeElement.querySelector<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            );
+        target?.focus({ preventScroll: true });
     }
 
     /** ルートツリーを末端まで辿り、最も深い Route data.title を返す。 */

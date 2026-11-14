@@ -6,6 +6,8 @@ import {
     inject,
     input,
     output,
+    viewChild,
+    ElementRef,
 } from '@angular/core';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
@@ -64,7 +66,20 @@ export class HeaderComponent {
      */
     readonly pageTitle = input<string>('');
 
+    /** サイドナビが開いているか（ハンバーガーの aria-expanded に出す） */
+    readonly menuOpen = input<boolean>(false);
+
+    private readonly menuButtonRef = viewChild<
+        unknown,
+        ElementRef<HTMLButtonElement>
+    >('menuButton', { read: ElementRef });
+
     clickButton = output<void>();
+
+    /** サイドナビを Esc や背景のクリックで閉じたとき、開いたボタンへフォーカスを戻す */
+    focusMenuButton(): void {
+        this.menuButtonRef()?.nativeElement.focus();
+    }
 
     /**
      * ログイン・登録のページから別の側へ移るときは、そのページが持つ return_to を引き継ぐ
