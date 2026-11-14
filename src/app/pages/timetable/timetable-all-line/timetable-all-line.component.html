@@ -13,7 +13,7 @@
          以前は trip-blocks（数 MB）を取り終えるまで絞り込みと表を出さず、約 2 秒検索カードだけが見えて
          いて、届くと絞り込みと表がその上に入り検索カードを押し出していた（CLS 0.46・2026-10-22）。
          偽の「件数 0 / 0」を出さないのは前と同じ -->
-    @if (isLoading()) {
+    @if (isLoading() && !notFound()) {
         <div
             class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
         >
@@ -121,7 +121,9 @@
 
     <!-- 表のカード: 高さは画面の残り。縦横スクロールはカードの中の表の箱 -->
     <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
-        @if (isAwaitingTripBlocks()) {
+        @if (notFound()) {
+            <app-not-found-content></app-not-found-content>
+        } @else if (isAwaitingTripBlocks()) {
             <!-- 本物の表と同じ並び: ページ送り 48px・スクロールの箱（残りの高さ全部）。ダイヤの帯は 2026-10-22 に外した -->
             <article
                 class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col tw-overflow-clip tw-rounded-card tw-bg-white"

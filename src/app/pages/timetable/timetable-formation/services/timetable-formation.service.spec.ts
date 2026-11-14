@@ -197,6 +197,15 @@ describe('Service: TimetableFormation', () => {
         expect(operationService.findOneWithTrips).toHaveBeenCalledTimes(1);
     });
 
+    it('API が運用に null を返しても（無い運用）、loadError にしない', async () => {
+        sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
+            of({ expectedSighting: { operation: { operationId: 'op-x' } } }),
+        );
+        operationService.findOneWithTrips.mockReturnValue(of(null));
+        await run('2026-11-12', 'tomorrow');
+        expect(store.loadError()).toBe(false);
+    });
+
     it('明日の運用が休車の 100 なら明日は選べない', async () => {
         sightingService.findOneTimeCrossSectionByFormationNumber.mockImplementation(
             ({ searchTime }: { searchTime?: string }) =>

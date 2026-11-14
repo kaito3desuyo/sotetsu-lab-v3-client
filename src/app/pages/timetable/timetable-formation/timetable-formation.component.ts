@@ -16,6 +16,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { addDays, format, isValid, parseISO } from 'date-fns';
 import { filter, lastValueFrom } from 'rxjs';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -28,6 +29,11 @@ import { TodaysFormationListState } from 'src/app/global-states/todays-formation
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import {
+    parseDateKey,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 import { TimetableFormationControlsComponent } from './components/timetable-formation-controls/timetable-formation-controls.component';
@@ -70,6 +76,7 @@ function shiftDate(date: string, days: number): string | null {
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        NotFoundContentComponent,
         TimetableFormationControlsComponent,
         TimetableFormationHeaderComponent,
         TimetableFormationStationListComponent,
@@ -92,6 +99,13 @@ export class TimetableFormationComponent {
         .todaysFormationsSorted;
     readonly #routeStations = inject(RouteStationListState).routeStations;
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /**
+     * date が読めない形のとき、または編成がその日に無いと api が返したとき true
+     * （本体の代わりに見つからない表示を出す）
+     */
+    readonly notFound = signal(false);
 
     /** 現在時刻。ブラウザだけ 60 秒ごとに進める（サーバーは固定） */
     readonly now = signal(new Date());
@@ -269,7 +283,6 @@ export class TimetableFormationComponent {
         if (!this.formationNumber()) return 'noNumber';
         if (!this.ready() || !store.loaded()) return 'loading';
         if (store.loadError()) return 'error';
-        if (!store.formation()) return 'notFound';
         if (!store.calendar()) return 'noCalendar';
         if (this.rows().length === 0 && this.dateKind() !== 'tomorrow') {
             return 'noSighting';
@@ -292,11 +305,23 @@ export class TimetableFormationComponent {
             .subscribe((paramMap) => {
                 const formationNumber =
                     paramMap.get('formation_number')?.trim() || null;
-                const raw = paramMap.get('date');
-                const date =
-                    raw && DATE_PATTERN.test(raw) && isValid(parseISO(raw))
-                        ? raw
-                        : null;
+                const dateParam = readUrlParam(
+                    paramMap.get('date'),
+                    parseDateKey,
+                );
+                // 値があるのに読めない日付は、見つからない表示にして取得しない
+                if (dateParam.kind === 'invalid') {
+                    this.formationNumber.set(formationNumber);
+                    this.date.set(null);
+                    this.notFound.set(true);
+                    this.#pageNotFound.mark();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+                const date = dateParam.kind === 'ok' ? dateParam.value : null;
                 this.formationNumber.set(formationNumber);
                 // サーバーは今日を知らないので、補わず取得もしない
                 if (this.#isServer) {
@@ -362,6 +387,17 @@ export class TimetableFormationComponent {
                     ...(forceReload ? { forceReload: true } : {}),
                 }),
             );
+            // 取れて（失敗でなく）、その日にその編成が無いと分かったときだけ、見つからない表示にする。
+            // 古い取得の結果（URL が先へ進んでいる）では決めない
+            if (
+                this.ready() &&
+                this.#store.loaded() &&
+                !this.#store.loadError() &&
+                !this.#store.formation()
+            ) {
+                this.notFound.set(true);
+                this.#pageNotFound.mark();
+            }
         } catch (error) {
             console.error(error);
             this.#store.setLoadError(true);

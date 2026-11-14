@@ -1,4 +1,4 @@
-@if (isLoading()) {
+@if (isLoading() && !notFound()) {
     <div
         class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
     >
@@ -31,7 +31,9 @@
         ></app-operation-table-filter>
     </app-control-band>
 
-    @if (!hasFetchedOperationTrips()) {
+    @if (notFound()) {
+        <app-not-found-content></app-not-found-content>
+    } @else if (!hasFetchedOperationTrips()) {
         <!-- 取る前は画面からヘッダーを引いた高さで、縦カードの骨組みを出す。以前は一覧の場所が空で、
              下の検索カードが操作帯のすぐ下に見え、届いた一覧に押し出されていた（CLS 0.57・2026-10-22）。
              取得中にカードを出さない理由（ダイヤを替えたとき前のダイヤのカードが混ざる）は前と同じ -->

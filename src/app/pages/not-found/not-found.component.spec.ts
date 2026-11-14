@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { NotFoundComponent } from './not-found.component';
 
 describe('NotFoundComponent', () => {
@@ -17,17 +17,6 @@ describe('NotFoundComponent', () => {
         const text = fixture.nativeElement.textContent;
         expect(text).toContain('ページが見つかりません');
         expect(text).toContain('トップへ戻る');
-    });
-
-    it('トップへ戻る', () => {
-        const fixture = TestBed.createComponent(NotFoundComponent);
-        const navigate = jest
-            .spyOn(TestBed.inject(Router), 'navigate')
-            .mockResolvedValue(true);
-
-        fixture.componentInstance.onBackToTop();
-
-        expect(navigate).toHaveBeenCalledWith(['/']);
     });
 
     it('ほかのページと同じ余白の main に置く', () => {

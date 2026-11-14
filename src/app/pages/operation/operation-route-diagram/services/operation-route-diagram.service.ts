@@ -14,14 +14,18 @@ export class OperationRouteDiagramService {
     readonly #serviceListState = inject(ServiceListState);
     readonly #store = inject(OperationRouteDiagramStore);
 
-    fetchOperationTrips(): Observable<void> {
+    /**
+     * 運用の行路を取ってストアへ入れる。api は無い ID に 404 でなく 200 と空の本文（null）を返すので、
+     * 取れたか（無いと分かったら false）を返す。失敗（5xx・通信の失敗）はエラーのまま流す。
+     */
+    fetchOperationTrips(): Observable<boolean> {
         const operationId = this.#store.operationId();
 
         return this.#operationService.findOneWithTrips({ operationId }).pipe(
             tap((operationTrips) => {
                 this.#store.setOperationTrips(operationTrips);
             }),
-            map(() => undefined),
+            map((operationTrips) => !!operationTrips),
         );
     }
 

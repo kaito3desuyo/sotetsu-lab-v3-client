@@ -7,11 +7,22 @@ import {
     provideRouter,
     Router,
 } from '@angular/router';
-import { Observable, Subject, of, switchMap, throwError, timer } from 'rxjs';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    of,
+    switchMap,
+    throwError,
+    timer,
+} from 'rxjs';
 
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
@@ -69,42 +80,178 @@ describe('TimetableStationComponent', () => {
     });
 });
 
-describe('TimetableStationComponent の URL の向き', () => {
-    it('向きが読めない URL は、無いときと同じく上りに置き換える', async () => {
-        const params = {
-            calendar_id: '00000000-0000-4000-8000-000000000001',
-            station_id: 'st-1',
-            trip_direction: 'abc',
-        };
+describe('TimetableStationComponent の URL の値', () => {
+    const CALENDAR = '00000000-0000-4000-8000-000000000001';
+    const STATION = '00000000-0000-4000-8000-0000000000a1';
+    const UNKNOWN_STATION = '00000000-0000-4000-8000-0000000000ff';
+    const TODAY = '00000000-0000-4000-8000-0000000000dd';
+
+    const mark = jest.fn();
+    const clear = jest.fn();
+    const setTitle = jest.fn();
+    const fetchCalendar = jest.fn((): Observable<boolean> => of(true));
+    const fetchTrips = jest.fn(() => of(undefined));
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let navigate: jest.SpyInstance;
+
+    async function create(
+        params: Record<string, string>,
+        options: { stations?: { stationId: string }[] } = {},
+    ): Promise<ComponentFixture<TimetableStationComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
+        const ok = () => of(undefined);
         await TestBed.configureTestingModule({
             imports: [TimetableStationComponent],
             providers: [
                 provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: params$ } },
+                { provide: PageNotFound, useValue: { mark, clear } },
+                { provide: PageMeta, useValue: { setTitle } },
                 {
-                    provide: ActivatedRoute,
-                    useValue: { paramMap: of(convertToParamMap(params)) },
+                    provide: RouteStationListState,
+                    useValue: {
+                        stations: () =>
+                            options.stations ?? [
+                                { stationId: STATION, stationName: '横浜' },
+                            ],
+                        routeStations: () => [],
+                        operatingSystemEndsByRouteId: () => ({}),
+                    },
                 },
-                { provide: TimetableStationService, useValue: {} },
+                {
+                    provide: TodaysCalendarListState,
+                    useValue: {
+                        todaysCalendarId: () => TODAY,
+                        todaysCalendarIds: () => [TODAY],
+                    },
+                },
+                {
+                    provide: TimetableStationService,
+                    useValue: {
+                        fetchCalendar,
+                        fetchTrips,
+                        fetchTripClasses: ok,
+                        fetchStations: ok,
+                        fetchOperations: ok,
+                        fetchOperationSightingTimeCrossSections: ok,
+                    },
+                },
                 { provide: NotificationService, useValue: { open: () => {} } },
             ],
         })
             .overrideComponent(TimetableStationComponent, {
-                set: { template: '', imports: [] },
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
             })
             .compileComponents();
-        const navigate = jest
+        navigate = jest
             .spyOn(TestBed.inject(Router), 'navigate')
             .mockResolvedValue(true);
+        const fixture = TestBed.createComponent(TimetableStationComponent);
+        fixture.detectChanges();
+        await flush();
+        fixture.detectChanges();
+        return fixture;
+    }
 
-        TestBed.createComponent(TimetableStationComponent);
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasStationTable = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-timetable-station-table') !== null;
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-control-band') !== null;
 
+    afterEach(() => {
+        jest.clearAllMocks();
+        fetchCalendar.mockImplementation(() => of(true));
+    });
+
+    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
+    it.each([
+        { calendar_id: 'undefined', station_id: STATION, trip_direction: '0' },
+        { calendar_id: CALENDAR, station_id: 'undefined', trip_direction: '0' },
+        { calendar_id: CALENDAR, station_id: STATION, trip_direction: 'abc' },
+        { calendar_id: CALENDAR, station_id: STATION, trip_direction: '2' },
+        { calendar_id: CALENDAR, station_id: STATION, trip_direction: '' },
+        {
+            calendar_id: CALENDAR,
+            station_id: UNKNOWN_STATION,
+            trip_direction: '0',
+        },
+    ])('%j は見つからない表示にして、補いも取得もしない', async (params) => {
+        const fixture = await create(params);
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(fetchCalendar).not.toHaveBeenCalled();
+        expect(fetchTrips).not.toHaveBeenCalled();
+        expect(navigate).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(true); // 操作帯は残す
+        expect(hasStationTable(fixture)).toBe(false);
+    });
+
+    it('不正な URL から正しい URL へ戻ったら、見つからない題名を捨ててから、詳しい題名を入れ直す', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            station_id: STATION,
+            trip_direction: '0',
+        });
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(clear).not.toHaveBeenCalled();
+        setTitle.mockClear();
+
+        params$.next(
+            convertToParamMap({
+                calendar_id: CALENDAR,
+                station_id: STATION,
+                trip_direction: '0',
+            }),
+        );
+        await flush();
+        fixture.detectChanges();
+
+        expect(clear).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(false);
+        // effect の setTitle は clear より後（clear が詳しい題名を消さない）
+        expect(setTitle).toHaveBeenCalled();
+        expect(clear.mock.invocationCallOrder[0]).toBeLessThan(
+            setTitle.mock.invocationCallOrder[0],
+        );
+    });
+
+    it('駅の一覧が空のときは、駅の存在で決めない（読み込みの失敗と区別できない）', async () => {
+        const fixture = await create(
+            {
+                calendar_id: CALENDAR,
+                station_id: UNKNOWN_STATION,
+                trip_direction: '0',
+            },
+            { stations: [] },
+        );
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(fetchCalendar).toHaveBeenCalled();
+    });
+
+    it('向きが無い URL は、今までどおり上りに置き換える', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
         expect(navigate).toHaveBeenCalledWith(
             [
                 'timetable',
                 'station',
                 {
-                    calendar_id: '00000000-0000-4000-8000-000000000001',
-                    station_id: 'st-1',
+                    calendar_id: CALENDAR,
+                    station_id: STATION,
                     trip_direction: '0',
                 },
             ],
@@ -112,58 +259,174 @@ describe('TimetableStationComponent の URL の向き', () => {
         );
     });
 
-    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
-    it('ダイヤが UUID でない URL は、無いときと同じく今日のダイヤに置き換える', async () => {
-        const today = '00000000-0000-4000-8000-0000000000dd';
-        await TestBed.configureTestingModule({
-            imports: [TimetableStationComponent],
-            providers: [
-                provideRouter([]),
-                {
-                    provide: ActivatedRoute,
-                    useValue: {
-                        paramMap: of(
-                            convertToParamMap({
-                                calendar_id: 'undefined',
-                                station_id: 'st-1',
-                                trip_direction: '1',
-                            }),
-                        ),
-                    },
-                },
-                {
-                    provide: TodaysCalendarListState,
-                    useValue: {
-                        todaysCalendarId: () => today,
-                        todaysCalendarIds: () => [today],
-                    },
-                },
-                { provide: TimetableStationService, useValue: {} },
-                { provide: NotificationService, useValue: { open: () => {} } },
-            ],
-        })
-            .overrideComponent(TimetableStationComponent, {
-                set: { template: '', imports: [] },
-            })
-            .compileComponents();
-        const navigate = jest
-            .spyOn(TestBed.inject(Router), 'navigate')
-            .mockResolvedValue(true);
+    it('ダイヤが無い URL は、今までどおり今日のダイヤに置き換える', async () => {
+        await create({ station_id: STATION, trip_direction: '1' });
 
-        TestBed.createComponent(TimetableStationComponent);
-
+        expect(mark).not.toHaveBeenCalled();
         expect(navigate).toHaveBeenCalledWith(
             [
                 'timetable',
                 'station',
                 {
-                    calendar_id: today,
-                    station_id: 'st-1',
+                    calendar_id: TODAY,
+                    station_id: STATION,
                     trip_direction: '1',
                 },
             ],
             { replaceUrl: true },
         );
+    });
+
+    it('値が全部正しければ、見つからない表示にせず取得する', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+            trip_direction: '1',
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('存在しないダイヤ（api が null を返す）は、取得のあとで見つからない表示にする', async () => {
+        fetchCalendar.mockImplementation(() => of(false));
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+            trip_direction: '0',
+        });
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(true); // 操作帯は残す
+        expect(hasStationTable(fixture)).toBe(false);
+    });
+
+    it('ダイヤの取得の失敗（5xx・通信の失敗）は見つからない表示にせず、今までどおり失敗として扱う', async () => {
+        fetchCalendar.mockImplementation(() =>
+            throwError(() => new Error('500')),
+        );
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。本物の失敗だけ受け流す
+        const original = TimetableStationComponent.prototype.fetchData;
+        const spy = jest
+            .spyOn(TimetableStationComponent.prototype, 'fetchData')
+            .mockImplementation(function (this: TimetableStationComponent) {
+                return original.call(this).catch(() => undefined);
+            });
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+            trip_direction: '0',
+        });
+
+        spy.mockRestore();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockImplementationOnce(() => first$);
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: STATION,
+            trip_direction: '0',
+        });
+
+        params$.next(
+            convertToParamMap({
+                calendar_id: CALENDAR,
+                station_id: STATION,
+                trip_direction: '1',
+            }),
+        );
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示の操作帯でダイヤを選ぶと Router で遷移し、読み込みの帯は出さない', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: 'undefined',
+            trip_direction: '0',
+        });
+        navigate.mockClear();
+
+        fixture.componentInstance.onCalendarChange(
+            '99999999-2222-3333-4444-555555555555',
+        );
+
+        expect(navigate).toHaveBeenCalledTimes(1);
+        expect(JSON.stringify(navigate.mock.calls[0][0])).not.toContain(
+            'undefined',
+        );
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: 'undefined',
+            trip_direction: '0',
+        });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(
+            convertToParamMap({
+                calendar_id: CALENDAR,
+                station_id: STATION,
+                trip_direction: '0',
+            }),
+        );
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('時刻表'),
+        );
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({
+            calendar_id: CALENDAR,
+            station_id: 'undefined',
+            trip_direction: '0',
+        });
+        TestBed.inject(TimetableStationStore).setTripDirection(1);
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            station_id: 'undefined',
+            trip_direction: '0',
+        });
+        TestBed.inject(TimetableStationStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 });
 
@@ -199,7 +462,8 @@ describe('TimetableStationComponent の読み込み中', () => {
                             convertToParamMap({
                                 calendar_id:
                                     '00000000-0000-4000-8000-000000000001',
-                                station_id: 'st-1',
+                                station_id:
+                                    '00000000-0000-4000-8000-0000000000a1',
                                 trip_direction: '0',
                             }),
                         ),
@@ -345,7 +609,8 @@ describe('TimetableStationComponent の帯の操作', () => {
                             convertToParamMap({
                                 calendar_id:
                                     '00000000-0000-4000-8000-000000000001',
-                                station_id: 'st-1',
+                                station_id:
+                                    '00000000-0000-4000-8000-0000000000a1',
                                 trip_direction: '1',
                             }),
                         ),
@@ -392,13 +657,16 @@ describe('TimetableStationComponent の帯の操作', () => {
     });
 
     it('前後の駅へ送ると、ダイヤ・方向を引き継いで駅だけ替える', () => {
-        component.onStep({ id: 'st-2', label: '希望ヶ丘' });
+        component.onStep({
+            id: '00000000-0000-4000-8000-0000000000a2',
+            label: '希望ヶ丘',
+        });
         expect(navigate).toHaveBeenCalledWith([
             'timetable',
             'station',
             {
                 calendar_id: '00000000-0000-4000-8000-000000000001',
-                station_id: 'st-2',
+                station_id: '00000000-0000-4000-8000-0000000000a2',
                 trip_direction: 1,
             },
         ]);
@@ -465,7 +733,7 @@ describe('TimetableStationComponent のサーバー', () => {
         await setup(
             {
                 calendar_id: '00000000-0000-4000-8000-000000000001',
-                station_id: 'st-1',
+                station_id: '00000000-0000-4000-8000-0000000000a1',
                 trip_direction: '0',
             },
             [
@@ -488,7 +756,7 @@ describe('TimetableStationComponent のサーバー', () => {
         await setup(
             {
                 calendar_id: '00000000-0000-4000-8000-000000000001',
-                station_id: 'st-1',
+                station_id: '00000000-0000-4000-8000-0000000000a1',
                 trip_direction: '0',
             },
             [
@@ -524,11 +792,13 @@ describe('TimetableStationComponent の圏外の保存', () => {
     const trips = [{ tripId: 'trip-1' }] as never;
     const tripBlocks = [{ tripBlockId: 'block-1' }] as never;
     const tripClasses = [{ tripClassId: 'class-1' }] as never;
-    const stations = [{ stationId: 'st-1' }] as never;
+    const stations = [
+        { stationId: '00000000-0000-4000-8000-0000000000a1' },
+    ] as never;
     const operations = [{ operationId: 'op-1' }] as never;
     const conditions = {
         calendarId: '00000000-0000-4000-8000-000000000001',
-        stationId: 'st-1',
+        stationId: '00000000-0000-4000-8000-0000000000a1',
         tripDirection: 0,
     };
 
@@ -561,7 +831,8 @@ describe('TimetableStationComponent の圏外の保存', () => {
                             convertToParamMap({
                                 calendar_id:
                                     '00000000-0000-4000-8000-000000000001',
-                                station_id: 'st-1',
+                                station_id:
+                                    '00000000-0000-4000-8000-0000000000a1',
                                 trip_direction: '0',
                             }),
                         ),
@@ -765,7 +1036,8 @@ describe('TimetableStationComponent の投稿後の取り直し', () => {
                         paramMap: of(
                             convertToParamMap({
                                 calendar_id: calendarId,
-                                station_id: 'st-1',
+                                station_id:
+                                    '00000000-0000-4000-8000-0000000000a1',
                                 trip_direction: '0',
                             }),
                         ),

@@ -6,6 +6,7 @@ import {
     effect,
     inject,
     PLATFORM_ID,
+    signal,
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -18,12 +19,15 @@ import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { OperationTableCardComponent } from './components/operation-table-card/operation-table-card.component';
 import { OperationTableFilterComponent } from './components/operation-table-filter/operation-table-filter.component';
@@ -48,6 +52,7 @@ const NO_GROUP_NAMES: string[] = [];
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        NotFoundContentComponent,
         OperationTableFilterComponent,
         OperationTableCardComponent,
         SkeletonBarComponent,
@@ -65,6 +70,10 @@ export class OperationTableComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しないダイヤのとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
 
     readonly isLoading = this.#store.isLoading;
     readonly calendarId = this.#store.calendarId;
@@ -128,21 +137,45 @@ export class OperationTableComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
+                const calendarIdParam = readUrlParam(
+                    paramMap.get('calendar_id'),
+                    parseUuid,
+                );
+
+                // 値があるのに不正（"undefined"・"abc" など）なら、見つからない表示にして取得しない
+                if (calendarIdParam.kind === 'invalid') {
+                    this.#markNotFound();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+
+                const urlCalendarId =
+                    calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
+                        : null;
+
                 // サーバーでは今日のダイヤで補わない。今日を取っていないので、取りにも行かず骨組みのまま返す
-                if (this.#isServer && !paramMap.get('calendar_id')) return;
+                if (this.#isServer && !urlCalendarId) return;
 
                 const calendarId =
-                    paramMap.get('calendar_id') ??
+                    urlCalendarId ??
                     this.#todaysCalendarListState.todaysCalendarId();
 
                 // モック 03: 無パラメータ時は今日の calendar_id へフォールバックし、
                 // 初回からカードを表示する（train-diagram と同一の replaceUrl 方式）
-                if (!paramMap.get('calendar_id') && calendarId) {
+                if (!urlCalendarId && calendarId) {
                     this.#handleNavigationResult(
                         this.#router.navigate(
                             ['/operation/table', { calendar_id: calendarId }],
@@ -161,6 +194,13 @@ export class OperationTableComponent {
 
                 this.fetchData();
             });
+    }
+
+    #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
     }
 
     async fetchData(): Promise<void> {
@@ -186,6 +226,11 @@ export class OperationTableComponent {
             hasFetchedItineraryLinks = false;
         });
 
+        // api は無いダイヤに 404 でなく 200 と空の本文（null）を返す。取れて「無い」と分かったときだけ
+        // 見つからない表示にする（失敗は下で今までどおり扱う）。取得を始めたときのダイヤで決める
+        const calendarMissing =
+            results[0].status === 'fulfilled' && results[0].value === false;
+
         const failure = results.find(
             (result): result is PromiseRejectedResult =>
                 result.status === 'rejected',
@@ -206,7 +251,11 @@ export class OperationTableComponent {
                     // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                 }
             }
-        } else if (hasFetchedItineraryLinks && this.#store.isLatestFetch(seq)) {
+        } else if (
+            !calendarMissing &&
+            hasFetchedItineraryLinks &&
+            this.#store.isLatestFetch(seq)
+        ) {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             void this.#store.saveOfflineSnapshot('main', conditions);
         }
@@ -214,6 +263,7 @@ export class OperationTableComponent {
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
         if (this.#store.isLatestFetch(seq)) {
             this.#store.setHasFetchedOperationTrips(true);
+            if (calendarMissing) this.#markNotFound();
         }
 
         if (failure) {

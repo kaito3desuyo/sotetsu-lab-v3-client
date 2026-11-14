@@ -1,4 +1,4 @@
-@if (isLoading()) {
+@if (isLoading() && !notFound()) {
     <div
         class="tw-fixed tw-left-0 tw-top-[48px] tw-z-[60] tw-w-full md:tw-top-[64px]"
     >
@@ -122,7 +122,14 @@
          このページ上で操作できること自体が見えなかった（audit C6）。
          2026-10-22 に検索カードを無くし、選択欄は上の帯に寄せた。 -->
     <div class="tw-flex tw-min-h-0 tw-flex-1 tw-flex-col">
-        @if (isAwaitingOperationTrips()) {
+        @if (notFound()) {
+            <!-- URL の運用が不正、または存在しない。帯は残し、図の場所だけ見つからない表示にする -->
+            <div
+                class="tw-flex tw-min-h-0 tw-flex-1 tw-items-center tw-justify-center tw-rounded-card tw-bg-white"
+            >
+                <app-not-found-content></app-not-found-content>
+            </div>
+        } @else if (isAwaitingOperationTrips()) {
             <!-- 取る前は図と同じ白地に、ダイヤの帯（48px）と図の場所を残りの高さいっぱいに取る。
                以前は路線の絞り込みの行が後から出て図を押し下げていた（CLS 0.89・2026-10-22） -->
             <div

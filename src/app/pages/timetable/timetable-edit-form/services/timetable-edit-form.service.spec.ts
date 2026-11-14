@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { lastValueFrom, of } from 'rxjs';
 
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
@@ -84,6 +84,70 @@ describe('TimetableEditFormService', () => {
         });
     });
 
+    describe('api が「無い」と返す（200 と空の本文）とき', () => {
+        it('fetchCalendar は、ダイヤが null なら false を返してストアを触らない', async () => {
+            const calendarService = TestBed.inject(
+                CalendarService,
+            ) as unknown as {
+                findOne: jest.Mock;
+            };
+            calendarService.findOne = jest.fn(() => of(null));
+
+            await expect(lastValueFrom(service.fetchCalendar())).resolves.toBe(
+                false,
+            );
+            expect(store.calendar()).toBeNull();
+        });
+
+        it('fetchCalendar は、ダイヤがあれば true を返す', async () => {
+            const calendarService = TestBed.inject(
+                CalendarService,
+            ) as unknown as {
+                findOne: jest.Mock;
+            };
+            calendarService.findOne = jest.fn(() => of({ calendarId: 'c' }));
+
+            await expect(lastValueFrom(service.fetchCalendar())).resolves.toBe(
+                true,
+            );
+            expect(store.calendar()).toEqual({ calendarId: 'c' });
+        });
+
+        it('fetchCalendar は、ダイヤの指定が無いなら取らずに true を返す', async () => {
+            store.setCalendarId(null);
+
+            await expect(lastValueFrom(service.fetchCalendar())).resolves.toBe(
+                true,
+            );
+        });
+
+        it('fetchTargetTripBlock は、列車が null なら false を返してストアを触らない', async () => {
+            store.setTripBlockId('block-1');
+            tripBlockService.findOneById.mockReturnValue(of(null));
+
+            await expect(
+                lastValueFrom(service.fetchTargetTripBlock()),
+            ).resolves.toBe(false);
+            expect(store.targetTripBlock()).toBeNull();
+        });
+
+        it('fetchTargetTripBlock は、列車があれば true を返してストアへ入れる', async () => {
+            store.setTripBlockId('block-1');
+
+            await expect(
+                lastValueFrom(service.fetchTargetTripBlock()),
+            ).resolves.toBe(true);
+            expect(store.targetTripBlock()).not.toBeNull();
+        });
+
+        it('fetchTargetTripBlock は、ID が無いなら今までどおり空にして true を返す', async () => {
+            await expect(
+                lastValueFrom(service.fetchTargetTripBlock()),
+            ).resolves.toBe(true);
+            expect(tripBlockService.findOneById).not.toHaveBeenCalled();
+        });
+    });
+
     describe('読み込んだ列車の通る路線を絞り込みに足す', () => {
         const station = (stationId: string, routeIds: string[]) => ({
             stationId,
@@ -115,9 +179,11 @@ describe('TimetableEditFormService', () => {
 
         it('コピー元を選んだら、選択中の路線は外さずに足す', (done) => {
             service.selectCopySource('block-1').subscribe(() => {
-                expect(
-                    [...store.selectedRouteIds()].sort(),
-                ).toEqual(['izumino', 'main', 'shinyoko']);
+                expect([...store.selectedRouteIds()].sort()).toEqual([
+                    'izumino',
+                    'main',
+                    'shinyoko',
+                ]);
                 done();
             });
         });
@@ -125,13 +191,14 @@ describe('TimetableEditFormService', () => {
         it('更新する列車を読み込んだときも足す', (done) => {
             store.setTripBlockId('block-1');
             service.fetchTargetTripBlock().subscribe(() => {
-                expect(
-                    [...store.selectedRouteIds()].sort(),
-                ).toEqual(['izumino', 'main', 'shinyoko']);
+                expect([...store.selectedRouteIds()].sort()).toEqual([
+                    'izumino',
+                    'main',
+                    'shinyoko',
+                ]);
                 done();
             });
         });
-
     });
 
     it('候補は一覧に使う項目だけなので、ID で読んだコピー元を候補で上書きしない', (done) => {

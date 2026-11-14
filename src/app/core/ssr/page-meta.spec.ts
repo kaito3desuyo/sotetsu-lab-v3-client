@@ -95,4 +95,18 @@ describe('PageMeta', () => {
         expect(TestBed.inject(DOCUMENT).title).toBe('運用表 - Sotetsu Lab. v3');
         expect(meta('property="og:title"')).toBe('運用表 - Sotetsu Lab. v3');
     });
+
+    it('clearDetailedTitle は詳しい題名を捨て、ルート定義の題名に戻す', () => {
+        pageMeta.set({ title: '運用表' });
+        pageMeta.setTitle('見つかりません');
+        pageMeta.clearDetailedTitle();
+
+        expect(TestBed.inject(DOCUMENT).title).toBe('運用表 - Sotetsu Lab. v3');
+        expect(meta('property="og:title"')).toBe('運用表 - Sotetsu Lab. v3');
+
+        // 同じページの set でも、捨てた題名は戻らない
+        pageMeta.set({ title: '運用表' });
+
+        expect(TestBed.inject(DOCUMENT).title).toBe('運用表 - Sotetsu Lab. v3');
+    });
 });

@@ -18,19 +18,23 @@ export class OperationTableService {
     readonly #stationService = inject(StationService);
     readonly #tripClassService = inject(TripClassService);
 
-    fetchCalendar(): Observable<void> {
+    /**
+     * ダイヤを取ってストアへ入れる。api は無い ID に 404 でなく 200 と空の本文（null）を返すので、
+     * 取れたか（無いと分かったら false）を返す。失敗（5xx・通信の失敗）はエラーのまま流す。
+     */
+    fetchCalendar(): Observable<boolean> {
         const calendarId = this.#store.calendarId();
 
         // calendar 未選択（初期状態など）では /v3/calendars/null を叩かない。
         if (!calendarId) {
-            return of(undefined);
+            return of(true);
         }
 
         return this.#calendarService.findOne({ calendarId }).pipe(
-            tap((calendar: CalendarDetailsDto) => {
+            tap((calendar: CalendarDetailsDto | null) => {
                 this.#store.setCalendar(calendar);
             }),
-            map(() => undefined),
+            map((calendar) => calendar !== null && calendar !== undefined),
         );
     }
 

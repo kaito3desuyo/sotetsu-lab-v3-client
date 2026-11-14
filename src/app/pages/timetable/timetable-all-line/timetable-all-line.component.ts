@@ -6,6 +6,7 @@ import {
     effect,
     inject,
     PLATFORM_ID,
+    signal,
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -39,7 +40,13 @@ import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
-import { parseUuidParam } from 'src/app/shared/uuid-param.util';
+import {
+    omitNullishParams,
+    parseUuid,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationGroups } from 'src/app/shared/station-groups.util';
 import { formatTimetableAllLineSummaryLead } from './utils/timetable-all-line-summary.util';
@@ -61,6 +68,7 @@ import { TimetableAllLineStore } from './stores/timetable-all-line.store';
         MatSelectModule,
         DateFnsPipe,
         LazyOptionsDirective,
+        NotFoundContentComponent,
         SkeletonBarComponent,
         StickyDirectionToggleComponent,
         TimetableAllLineRouteFilterComponent,
@@ -85,6 +93,10 @@ export class TimetableAllLineComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しない列車の運行のとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
 
     /** 編集・コピー・削除・グループの操作は、時刻表を書ける役割だけに出す。
      * サーバーと、それを引き継ぐ最初の描画では出さない（spec 5.3） */
@@ -139,7 +151,11 @@ export class TimetableAllLineComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の表が一瞬出ないようにする
         this.#store.setHasFetchedTripBlocks(false);
@@ -147,14 +163,48 @@ export class TimetableAllLineComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                // UUID でない（"undefined" など）ダイヤは、無いときと同じく取りに行かない
-                const calendarId = parseUuidParam(paramMap.get('calendar_id'));
-                const tripDirection = parseTripDirectionParam(
-                    paramMap.get('trip_direction'),
+                const calendarIdParam = readUrlParam(
+                    paramMap.get('calendar_id'),
+                    parseUuid,
                 );
-                const tripBlockId = paramMap.get('trip_block_id');
+                const tripDirectionParam = readUrlParam(
+                    paramMap.get('trip_direction'),
+                    parseTripDirectionParam,
+                );
+                const tripBlockIdParam = readUrlParam(
+                    paramMap.get('trip_block_id'),
+                    parseUuid,
+                );
 
-                // 向きが無い・読めない URL は上りに置き換える（駅別時刻表と同じ）。
+                // 値があるのに不正（"undefined"・"abc" など）なら、見つからない表示にして取得しない
+                if (
+                    calendarIdParam.kind === 'invalid' ||
+                    tripDirectionParam.kind === 'invalid' ||
+                    tripBlockIdParam.kind === 'invalid'
+                ) {
+                    this.#markNotFound();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+
+                // 値が無いものは今までどおり扱う
+                const calendarId =
+                    calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
+                        : null;
+                const tripDirection =
+                    tripDirectionParam.kind === 'ok'
+                        ? tripDirectionParam.value
+                        : null;
+                const tripBlockId =
+                    tripBlockIdParam.kind === 'ok'
+                        ? tripBlockIdParam.value
+                        : null;
+
+                // 向きが無い URL は上りに置き換える（駅別時刻表と同じ）。
                 // 以前は +null で黙って上り、+'abc' で NaN を API に送っていた
                 if (calendarId && tripDirection === null) {
                     // サーバーでは補わない。骨組みのまま返し、ブラウザで補う（駅別時刻表と同じ）
@@ -181,14 +231,25 @@ export class TimetableAllLineComponent {
                 }
                 this.#store.setCalendarId(calendarId);
                 this.#store.setTripDirection(tripDirection);
-                this.#store.setTripBlockId(tripBlockId ?? null);
+                this.#store.setTripBlockId(tripBlockId);
 
                 this.fetchData();
             });
     }
 
+    #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
+    }
+
     async fetchData(): Promise<void> {
-        if (!this.#store.calendarId()) return;
+        if (!this.#store.calendarId()) {
+            // 取得中の前の URL の結果が、値の無いこのページを見つからない表示にしないようにする
+            this.#store.nextFetchSeq();
+            return;
+        }
 
         const seq = this.#store.nextFetchSeq();
         this.#store.enableLoading();
@@ -197,6 +258,8 @@ export class TimetableAllLineComponent {
             calendarId: this.#store.calendarId(),
             tripDirection: this.#store.tripDirection(),
         };
+        // 取得を始めたときの値で決める（待っている間に URL が替わっても、新しい URL を巻き込まない）
+        const requestedTripBlockId = this.#store.tripBlockId();
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -231,6 +294,16 @@ export class TimetableAllLineComponent {
                 }
                 throw failure.reason;
             }
+            // 列車の運行（trip_block_id）を指して「無い」と返ったときだけ、見つからない表示にする
+            // （失敗は上で今までどおり扱っている）
+            if (
+                this.#store.isLatestFetch(seq) &&
+                requestedTripBlockId &&
+                this.#store.tripBlocks().length === 0
+            ) {
+                this.#markNotFound();
+                return;
+            }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (this.#store.isLatestFetch(seq)) {
                 void this.#store.saveOfflineSnapshot('main', conditions);
@@ -262,11 +335,13 @@ export class TimetableAllLineComponent {
             this.#router.navigate([
                 'timetable',
                 'station',
-                {
-                    calendar_id: this.calendarId(),
-                    station_id: stationId,
-                    trip_direction: this.tripDirection(),
-                },
+                omitNullishParams([
+                    {
+                        calendar_id: this.calendarId(),
+                        station_id: stationId,
+                        trip_direction: this.tripDirection(),
+                    },
+                ])[0],
             ]),
             this.#notification,
         );
@@ -293,6 +368,19 @@ export class TimetableAllLineComponent {
     #paramsWithoutTripBlock(): Params {
         const params: Params = { ...this.#route.snapshot.params };
         delete params['trip_block_id'];
+        if (this.notFound()) {
+            // 見つからない表示から操作帯で戻れるよう、不正な値は持ち越さない
+            if (!parseUuid(String(params['calendar_id'] ?? ''))) {
+                delete params['calendar_id'];
+            }
+            if (
+                parseTripDirectionParam(
+                    String(params['trip_direction'] ?? ''),
+                ) === null
+            ) {
+                delete params['trip_direction'];
+            }
+        }
         return params;
     }
 

@@ -16,6 +16,7 @@ const CALENDAR = 'de94e6b3-6d6c-445e-9c35-c8f39bacf3fb'; // 平日ダイヤ 2026
 const STATION = 'fb799a2e-c96c-4629-8a7d-e8b57f8e6930'; // 二俣川
 const OPERATION = '8553e26c-38c0-4895-9ff5-b4f02572df99'; // 01K
 const ROUTE = '2e22124f-04eb-475f-929a-7dba25561638'; // 本線
+const MISSING = '00000000-0000-4000-8000-000000000000'; // どこにも無い id
 
 const LONG =
     'public, max-age=0, s-maxage=604800, stale-while-revalidate=86400, stale-if-error=604800';
@@ -117,6 +118,79 @@ const PATHS = [
         title: 'ページが見つかりません',
     },
     { path: '/operation', kind: 'not-found', cache: SHORT },
+    // URL の値が不正・存在しないときも見つからないページ（404・短いキャッシュ）
+    {
+        path: '/operation/past-time;days=45',
+        kind: 'not-found',
+        cache: SHORT,
+        title: 'ページが見つかりません',
+    },
+    {
+        path: '/operation/past-time;days=07',
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: '/operation/past-time;reference_date=2026-02-30',
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: '/operation/table;calendar_id=abc',
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/operation/table;calendar_id=${MISSING}`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/operation/route-diagram;operation_id=${MISSING}`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/timetable/station;calendar_id=abc;station_id=${STATION};trip_direction=0`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/timetable/station;calendar_id=${CALENDAR};station_id=${MISSING};trip_direction=0`,
+        kind: 'not-found',
+        cache: SHORT,
+        title: 'ページが見つかりません',
+    },
+    {
+        path: `/timetable/all-line;calendar_id=${CALENDAR};trip_direction=0;trip_block_id=${MISSING}`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: '/timetable/formation;formation_number=10701;date=abc',
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/train-diagram;calendar_id=${CALENDAR};route_ids=${ROUTE};direction=foo`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/train-diagram;calendar_id=${MISSING};route_ids=${ROUTE};time=0600`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/train-location;route_id=${MISSING}`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
+    {
+        path: `/train-location;route_id=${ROUTE};time=9999`,
+        kind: 'not-found',
+        cache: SHORT,
+    },
 ];
 
 const server = spawn(
@@ -174,6 +248,15 @@ function judge(entry, res, html) {
     if (entry.kind === 'not-found' && !(res.status === 404 && rendered)) {
         problems.push(
             `expected 404 rendered, got ${res.status} rendered=${rendered}`,
+        );
+    }
+    // undefined・null の値が href に混ざると、そのリンク先は不正な URL として 404 になる
+    const badHrefs = [
+        ...html.matchAll(/href="([^"]*=(?:undefined|null)(?:[;&][^"]*)?)"/g),
+    ].map((m) => m[1]);
+    if (badHrefs.length > 0) {
+        problems.push(
+            `href with =undefined/=null: ${[...new Set(badHrefs)].slice(0, 5).join(' ')}`,
         );
     }
     const cache = res.headers.get('cache-control');

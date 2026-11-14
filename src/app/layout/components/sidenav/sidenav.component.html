@@ -111,10 +111,7 @@
         </a>
         <a
             mat-list-item
-            [routerLink]="[
-                '/operation/table',
-                { calendar_id: todaysCalendarId() },
-            ]"
+            [routerLink]="operationTableLink()"
             routerLinkActive="is-active"
         >
             <span matListItemTitle>運用表</span>

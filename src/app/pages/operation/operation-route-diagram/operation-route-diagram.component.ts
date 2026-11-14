@@ -6,6 +6,7 @@ import {
     effect,
     inject,
     linkedSignal,
+    signal,
 } from '@angular/core';
 import {
     takeUntilDestroyed,
@@ -23,6 +24,7 @@ import { afterFirstRender } from 'src/app/core/ssr/first-render';
 import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { formatPageTitle } from 'src/app/core/utils/format-page-title.util';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { formatCalendarSummaryLabel } from 'src/app/core/utils/format-calendar-summary-label.util';
@@ -33,6 +35,8 @@ import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operati
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { joinSummaryParts } from 'src/app/shared/control-band/control-band-summary.util';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
 import {
     findNeighborOperations,
     toOperationSelectOptions,
@@ -63,6 +67,7 @@ import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.d
         MatSelectModule,
         DateFnsPipe,
         EmptyStateComponent,
+        NotFoundContentComponent,
         OperationRouteDiagramRouteFilterComponent,
         OperationRouteDiagramDrawingComponent,
         SkeletonBarComponent,
@@ -83,6 +88,10 @@ export class OperationRouteDiagramComponent {
     readonly #store = inject(OperationRouteDiagramStore);
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しない運用のとき true（図の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
     readonly calendars = inject(CalendarListState).calendars;
     /** 今日のダイヤ。サーバーは今日を取らないので、最初の描画は無い形（spec 5.2） */
     readonly #todaysCalendarId = afterFirstRender(
@@ -312,16 +321,40 @@ export class OperationRouteDiagramComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const operationId = paramMap.get('operation_id');
+                const operationIdParam = readUrlParam(
+                    paramMap.get('operation_id'),
+                    parseUuid,
+                );
+
+                // 値があるのに不正（"undefined"・"abc" など）なら、見つからない表示にして取得しない
+                if (operationIdParam.kind === 'invalid') {
+                    this.#markNotFound();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+
+                const operationId =
+                    operationIdParam.kind === 'ok'
+                        ? operationIdParam.value
+                        : null;
 
                 this.#store.setOperationId(operationId);
                 // 運用番号を外したとき（ダイヤを替えて同じ番号が無かった）、前の運用の図を残さない（2026-10-22）
                 if (!operationId) this.#store.setOperationTrips(null);
+                // 値が無いときは取得しないが、前の運用の取得の結果（無い・保存）を捨てる
+                if (!operationId) this.#store.nextFetchSeq();
                 this.fetchData();
             });
     }
@@ -341,6 +374,13 @@ export class OperationRouteDiagramComponent {
     /** G12: 空状態（運用番号未設定）の次アクション。運用表へ誘導する。 */
     onEmptyStateActionClick(): void {
         this.#router.navigate(['/operation/table']);
+    }
+
+    #markNotFound(): void {
+        // 前の URL の取得が遅れて終わっても、保存や見つからない表示の決定に使わない
+        this.#store.nextFetchSeq();
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
     }
 
     async fetchData(): Promise<void> {
@@ -372,6 +412,11 @@ export class OperationRouteDiagramComponent {
             this.#store.setItineraryLinks([]);
         }
 
+        // api は無い運用に 404 でなく 200 と空の本文（null）を返す。取れて「無い」と分かったときだけ
+        // 見つからない表示にする（失敗は下で今までどおり扱う）
+        const operationMissing =
+            results[0].status === 'fulfilled' && results[0].value === false;
+
         const failure = results.find(
             (result): result is PromiseRejectedResult =>
                 result.status === 'rejected',
@@ -390,7 +435,11 @@ export class OperationRouteDiagramComponent {
                     // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                 }
             }
-        } else if (hasFetchedItineraryLinks && this.#store.isLatestFetch(seq)) {
+        } else if (
+            !operationMissing &&
+            hasFetchedItineraryLinks &&
+            this.#store.isLatestFetch(seq)
+        ) {
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             void this.#store.saveOfflineSnapshot('main', conditions);
         }
@@ -407,6 +456,8 @@ export class OperationRouteDiagramComponent {
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
         if (this.#store.isLatestFetch(seq)) {
             this.#store.setHasFetchedOperationTrips(true);
+            // 取得を始めたときの運用の結果。URL が替わった後の古い取得では決めない
+            if (operationMissing) this.#markNotFound();
         }
 
         if (failure) {

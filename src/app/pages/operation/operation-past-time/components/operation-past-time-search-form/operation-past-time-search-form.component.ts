@@ -23,6 +23,10 @@ import { omitBy } from 'es-toolkit';
 import { AppButtonComponent } from 'src/app/shared/app-button/app-button.component';
 import { OperationPastTimeStore } from '../../stores/operation-past-time.store';
 import { OperationPastTimeSearchForm } from '../../types/operation-past-time.type';
+import {
+    PAST_TIME_DAYS_MAX,
+    PAST_TIME_DAYS_MIN,
+} from '../../utils/past-time-days.util';
 
 @Injectable()
 class CustomDateFnsAdapter extends DateFnsAdapter {
@@ -58,14 +62,16 @@ export class OperationPastTimeSearchFormComponent {
     readonly #fb = inject(FormBuilder);
 
     readonly maxDate = parseISO(railwayDateKey());
+    readonly pastTimeDaysMin = PAST_TIME_DAYS_MIN;
+    readonly pastTimeDaysMax = PAST_TIME_DAYS_MAX;
     readonly form: OperationPastTimeSearchForm = this.#fb.group({
         referenceDate: this.#fb.control<Date | null>(null, [
             Validators.required,
         ]),
         days: this.#fb.control<number | null>(null, [
             Validators.required,
-            Validators.min(0),
-            Validators.max(30),
+            Validators.min(PAST_TIME_DAYS_MIN),
+            Validators.max(PAST_TIME_DAYS_MAX),
         ]),
         includeInvalidated: this.#fb.control<boolean>(false),
     });

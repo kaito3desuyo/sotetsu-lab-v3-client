@@ -6,6 +6,7 @@ import {
     effect,
     inject,
     PLATFORM_ID,
+    signal,
 } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,7 +34,13 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
 import { tripDirectionLabel } from 'src/app/libs/trip/usecase/constants/trip.constant';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { parseTripDirectionParam } from 'src/app/shared/trip-direction-param.util';
-import { parseUuidParam } from 'src/app/shared/uuid-param.util';
+import {
+    omitNullishParams,
+    parseUuid,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
@@ -68,6 +75,7 @@ export const ALL_LINE_OPTION = '__all-line__';
         ControlBandComponent,
         EmptyStateComponent,
         LazyOptionsDirective,
+        NotFoundContentComponent,
         SkeletonBarComponent,
         StepNavComponent,
         StickyDirectionToggleComponent,
@@ -90,6 +98,10 @@ export class TimetableStationComponent {
     readonly #isServer = isPlatformServer(inject(PLATFORM_ID));
     readonly #ssrResponse = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しない ID のとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
 
     readonly calendars = this.#calendarListState.calendars;
     readonly stationOptions = this.#routeStationListState.stations;
@@ -213,7 +225,11 @@ export class TimetableStationComponent {
 
     constructor() {
         // 取ったデータで題名を詳しくする（spec 5.1。題名のためだけに API を叩かない）
-        effect(() => this.#pageMeta.setTitle(this.pageTitle()));
+        // 見つからない間は動かさない（PageNotFound.mark() の題名を上書きしない）
+        effect(() => {
+            if (this.notFound()) return;
+            this.#pageMeta.setTitle(this.pageTitle());
+        });
 
         // 自分が運用目撃情報を投稿したとき、この画面の充当編成を取り直す
         this.#operationPostCardService.submitEvent$
@@ -223,15 +239,53 @@ export class TimetableStationComponent {
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                // UUID でない（"undefined" など）ダイヤは、無いときと同じく今日のダイヤで補う
-                const rawCalendarId = parseUuidParam(
+                const calendarIdParam = readUrlParam(
                     paramMap.get('calendar_id'),
+                    parseUuid,
                 );
-                const rawStationId = paramMap.get('station_id');
-                // 読めない向き（"abc" など）は、無いときと同じ扱いにする
-                const tripDirection = parseTripDirectionParam(
+                const stationIdParam = readUrlParam(
+                    paramMap.get('station_id'),
+                    parseUuid,
+                );
+                const tripDirectionParam = readUrlParam(
                     paramMap.get('trip_direction'),
+                    parseTripDirectionParam,
                 );
+
+                // 値があるのに不正（"undefined"・"abc" など）、または駅の一覧に無い駅なら、
+                // 見つからない表示にして取得しない。駅の一覧は pageResolver が初期化を待つので追加の取得は要らない
+                // （一覧が空のときは、読み込みの失敗と区別できないので判定しない）
+                const stations = this.stationOptions();
+                if (
+                    calendarIdParam.kind === 'invalid' ||
+                    stationIdParam.kind === 'invalid' ||
+                    tripDirectionParam.kind === 'invalid' ||
+                    (stationIdParam.kind === 'ok' &&
+                        stations.length > 0 &&
+                        !stations.some(
+                            (station) =>
+                                station.stationId === stationIdParam.value,
+                        ))
+                ) {
+                    this.#markNotFound();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+
+                // 値が無いものは今までどおり補う
+                const rawCalendarId =
+                    calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
+                        : null;
+                const rawStationId =
+                    stationIdParam.kind === 'ok' ? stationIdParam.value : null;
+                const tripDirection =
+                    tripDirectionParam.kind === 'ok'
+                        ? tripDirectionParam.value
+                        : null;
 
                 // 既定表示（mockup-01）: パラメータ不足時は 横浜 / 今日のダイヤ / 上り へ補完
                 if (!rawCalendarId || !rawStationId || tripDirection === null) {
@@ -285,6 +339,13 @@ export class TimetableStationComponent {
             });
     }
 
+    #markNotFound(): void {
+        // 取得中の古い結果が、見つからない表示のあとで何かを書かないようにする
+        this.#store.nextFetchSeq();
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
+    }
+
     async fetchData(): Promise<void> {
         const seq = this.#store.nextFetchSeq();
         this.#store.enableLoading();
@@ -322,6 +383,16 @@ export class TimetableStationComponent {
                     }
                 }
                 throw failure.reason;
+            }
+            // ダイヤの取得が成功して「無い」（null）と返ったときだけ、見つからない表示にする
+            // （失敗は上で今までどおり扱っている）
+            if (
+                this.#store.isLatestFetch(seq) &&
+                results[0].status === 'fulfilled' &&
+                results[0].value === false
+            ) {
+                this.#markNotFound();
+                return;
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (this.#store.isLatestFetch(seq)) {
@@ -423,25 +494,29 @@ export class TimetableStationComponent {
         if (stationId === ALL_LINE_OPTION) {
             this.#handleNavigationResult(
                 this.#router.navigate([
-                    'timetable',
-                    'all-line',
-                    {
-                        calendar_id: this.calendarId(),
-                        trip_direction: this.tripDirection(),
-                    },
+                    ...omitNullishParams([
+                        'timetable',
+                        'all-line',
+                        {
+                            calendar_id: this.calendarId(),
+                            trip_direction: this.tripDirection(),
+                        },
+                    ]),
                 ]),
             );
             return;
         }
         if (stationId === this.stationId()) return;
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: this.calendarId(),
-                station_id: stationId,
-                trip_direction: this.tripDirection(),
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: this.calendarId(),
+                    station_id: stationId,
+                    trip_direction: this.tripDirection(),
+                },
+            ]),
         ]);
         this.#handleNavigationResult(navigation);
     }
@@ -449,13 +524,15 @@ export class TimetableStationComponent {
     onCalendarChange(calendarId: string): void {
         if (calendarId === this.calendarId()) return;
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: calendarId,
-                station_id: this.stationId(),
-                trip_direction: this.tripDirection(),
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: calendarId,
+                    station_id: this.stationId(),
+                    trip_direction: this.tripDirection(),
+                },
+            ]),
         ]);
         this.#handleNavigationResult(navigation);
     }
@@ -469,13 +546,15 @@ export class TimetableStationComponent {
         if (tripDirection === this.tripDirection()) return;
 
         const navigation = this.#router.navigate([
-            'timetable',
-            'station',
-            {
-                calendar_id: this.calendarId(),
-                station_id: this.stationId(),
-                trip_direction: tripDirection,
-            },
+            ...omitNullishParams([
+                'timetable',
+                'station',
+                {
+                    calendar_id: this.calendarId(),
+                    station_id: this.stationId(),
+                    trip_direction: tripDirection,
+                },
+            ]),
         ]);
 
         this.#handleNavigationResult(navigation);

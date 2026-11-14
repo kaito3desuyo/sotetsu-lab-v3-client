@@ -12,6 +12,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
 import {
     formatJst,
     railwayClock,
@@ -26,6 +27,11 @@ import { NotificationService } from 'src/app/core/services/notification.service'
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
+import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
+import {
+    parseUuid,
+    readUrlParam,
+} from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import {
@@ -65,6 +71,10 @@ import { formatTrainLocationSummary } from './utils/train-location-summary.util'
 
 const CURRENT_TIME_REFRESH_MS = 10_000;
 
+function parseTimeValue(raw: string): string | null {
+    return parseTimeParam(raw) ? raw : null;
+}
+
 @Component({
     selector: 'app-train-location',
     templateUrl: './train-location.component.html',
@@ -76,6 +86,7 @@ const CURRENT_TIME_REFRESH_MS = 10_000;
         MatProgressBarModule,
         ControlBandComponent,
         EmptyStateComponent,
+        NotFoundContentComponent,
         SkeletonBarComponent,
         TrainLocationControllerComponent,
         TrainLocationLineComponent,
@@ -95,6 +106,10 @@ export class TrainLocationComponent {
     readonly #routeStationListState = inject(RouteStationListState);
     readonly #agencyListState = inject(AgencyListState);
     readonly #calendarListState = inject(CalendarListState);
+    readonly #pageNotFound = inject(PageNotFound);
+
+    /** URL に値があるのに不正、または存在しないとき true（本体の代わりに見つからない表示を出す） */
+    readonly notFound = signal(false);
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedTrainLocation = this.#store.hasFetchedTrainLocation;
@@ -365,43 +380,102 @@ export class TrainLocationComponent {
             this.#now.set(new Date()),
         );
 
-        // 枠だけのページ。中身は刻々と変わるので、サーバーでは URL を補わず取りもしない（spec 4 章）
-        if (isPlatformServer(inject(PLATFORM_ID))) return;
+        const isServer = isPlatformServer(inject(PLATFORM_ID));
 
-        toObservable(this.#activeOperationNumbers)
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe((operationNumbers) => {
-                if (!this.isTodaySelected() || !operationNumbers.length) {
-                    return;
-                }
-                void this.fetchOperationSightings(operationNumbers);
-            });
+        // 枠だけのページ。中身は刻々と変わるので、サーバーでは URL を補わず取りもしない（spec 4 章）。
+        // 見つからないかどうかだけは、ブラウザと同じ結果になるようサーバーでも決める
+        if (!isServer) {
+            toObservable(this.#activeOperationNumbers)
+                .pipe(takeUntilDestroyed(this.#destroyRef))
+                .subscribe((operationNumbers) => {
+                    if (!this.isTodaySelected() || !operationNumbers.length) {
+                        return;
+                    }
+                    void this.fetchOperationSightings(operationNumbers);
+                });
 
-        // 自分が運用目撃情報を投稿したとき、この画面の充当編成を取り直す
-        this.#operationPostCardService.submitEvent$
-            .pipe(takeUntilDestroyed(this.#destroyRef))
-            .subscribe(() => void this.#refetchSightingsAfterPost());
+            // 自分が運用目撃情報を投稿したとき、この画面の充当編成を取り直す
+            this.#operationPostCardService.submitEvent$
+                .pipe(takeUntilDestroyed(this.#destroyRef))
+                .subscribe(() => void this.#refetchSightingsAfterPost());
+        }
 
         this.#route.paramMap
             .pipe(takeUntilDestroyed(this.#destroyRef))
             .subscribe((paramMap) => {
-                const routeIdParam = paramMap.get('route_id');
-                const routeId = routeIdParam ?? this.#defaultRouteId();
-                const stationIdParam = paramMap.get('station_id');
+                const routeIdParam = readUrlParam(
+                    paramMap.get('route_id'),
+                    parseUuid,
+                    { emptyAsMissing: true },
+                );
+                const stationIdParam = readUrlParam(
+                    paramMap.get('station_id'),
+                    parseUuid,
+                    { emptyAsMissing: true },
+                );
+                const timeParam = readUrlParam(
+                    paramMap.get('time'),
+                    parseTimeValue,
+                    { emptyAsMissing: true },
+                );
+                const calendarIdParam = readUrlParam(
+                    paramMap.get('calendar_id'),
+                    parseUuid,
+                    { emptyAsMissing: true },
+                );
+                const routeId =
+                    routeIdParam.kind === 'ok'
+                        ? routeIdParam.value
+                        : this.#defaultRouteId();
+
+                // 値があるのに不正、または路線・駅が一覧に無いなら、見つからない表示にして取得しない
+                if (
+                    [
+                        routeIdParam,
+                        stationIdParam,
+                        timeParam,
+                        calendarIdParam,
+                    ].some((param) => param.kind === 'invalid') ||
+                    (routeIdParam.kind === 'ok' &&
+                        !this.#isKnownRoute(routeIdParam.value)) ||
+                    (stationIdParam.kind === 'ok' &&
+                        !this.#isStationOnRoute(routeId, stationIdParam.value))
+                ) {
+                    this.#markNotFound();
+                    return;
+                }
+                if (this.notFound()) {
+                    this.notFound.set(false);
+                    this.#pageNotFound.clear();
+                }
+
+                if (isServer) return;
+
                 const rememberedStationId =
-                    routeId && !stationIdParam
+                    routeId && stationIdParam.kind === 'missing'
                         ? readRememberedStationId(routeId)
                         : null;
+                // 覚えた駅がこの路線に無いときは、補わないだけ（URL に書かれた値ではないので 404 にはしない）
+                const fillStationId =
+                    rememberedStationId &&
+                    this.#isStationOnRoute(routeId, rememberedStationId)
+                        ? rememberedStationId
+                        : null;
 
-                if (routeId && (!routeIdParam || rememberedStationId)) {
+                if (
+                    routeId &&
+                    (routeIdParam.kind === 'missing' || fillStationId)
+                ) {
+                    // 取得を始めない遷移でも世代を進め、前の URL の遅れた取得の結果を捨てる
+                    this.#store.nextFetchSeq();
                     this.#router.navigate(
                         [
                             '/train-location',
                             {
                                 ...this.#route.snapshot.params,
                                 route_id: routeId,
-                                ...(rememberedStationId
-                                    ? { station_id: rememberedStationId }
+                                ...(fillStationId
+                                    ? { station_id: fillStationId }
                                     : {}),
                             },
                         ],
@@ -410,13 +484,17 @@ export class TrainLocationComponent {
                     return;
                 }
 
-                const timeParam = paramMap.get('time');
-                const mode: TrainLocationMode = timeParam ? 'specified' : 'now';
+                const stationId =
+                    stationIdParam.kind === 'ok' ? stationIdParam.value : null;
+                const mode: TrainLocationMode =
+                    timeParam.kind === 'ok' ? 'specified' : 'now';
                 const todaysCalendarId =
                     this.#todaysCalendarListState.todaysCalendarId();
+                const calendarFromUrl =
+                    mode === 'specified' && calendarIdParam.kind === 'ok';
                 const calendarId =
-                    mode === 'specified'
-                        ? (paramMap.get('calendar_id') ?? todaysCalendarId)
+                    mode === 'specified' && calendarIdParam.kind === 'ok'
+                        ? calendarIdParam.value
                         : todaysCalendarId;
 
                 const routeChanged =
@@ -425,21 +503,55 @@ export class TrainLocationComponent {
                     this.#store.calendarId() !== (calendarId ?? null);
 
                 this.#store.setSelectedRouteId(routeId ?? null);
-                this.#store.setSelectedStationId(stationIdParam);
+                this.#store.setSelectedStationId(stationId);
                 this.#store.setCalendarId(calendarId ?? null);
                 this.#store.setMode(mode);
                 this.#store.setSpecifiedTime(
-                    mode === 'specified' ? (timeParam ?? null) : null,
+                    timeParam.kind === 'ok' ? timeParam.value : null,
                 );
 
+                // 取り終えていない（前の取得を捨てた・見つからない表示を挟んだ）ときは、同じ条件でも取り直す
+                const notFetched = !this.#store.hasFetchedTrainLocation();
                 const refetchTripBlocks =
-                    calendarChanged || !this.#firstLoadDone();
+                    calendarChanged || !this.#firstLoadDone() || notFetched;
                 const refetchStationAxis =
-                    routeChanged || !this.#firstLoadDone();
+                    routeChanged || !this.#firstLoadDone() || notFetched;
                 if (refetchTripBlocks || refetchStationAxis) {
-                    this.fetchData({ refetchTripBlocks, refetchStationAxis });
+                    this.fetchData({
+                        refetchTripBlocks,
+                        refetchStationAxis,
+                        verifyCalendar: calendarFromUrl && refetchTripBlocks,
+                    });
                 }
             });
+    }
+
+    #markNotFound(): void {
+        // 取得を始めない遷移でも世代を進め、前の URL の遅れた取得の結果を捨てる
+        this.#store.nextFetchSeq();
+        // 同じ条件の URL へ戻ったとき、取り直す
+        this.#store.setHasFetchedTrainLocation(false);
+        this.notFound.set(true);
+        this.#pageNotFound.mark();
+    }
+
+    /** 路線の一覧がまだ空のときは確かめられないので、あるものとする */
+    #isKnownRoute(routeId: string): boolean {
+        const routes = this.#routeStations();
+        return (
+            routes.length === 0 ||
+            routes.some((route) => route.routeId === routeId)
+        );
+    }
+
+    /** その路線の駅の一覧がまだ空のときは確かめられないので、あるものとする */
+    #isStationOnRoute(routeId: string | undefined, stationId: string): boolean {
+        const route = this.#routeStations().find((r) => r.routeId === routeId);
+        const lists = route?.routeStationLists ?? [];
+        return (
+            lists.length === 0 ||
+            lists.some((rsl) => rsl.station?.stationId === stationId)
+        );
     }
 
     #defaultRouteId(): string | undefined {
@@ -449,6 +561,8 @@ export class TrainLocationComponent {
     async fetchData(flags: {
         refetchTripBlocks: boolean;
         refetchStationAxis: boolean;
+        /** URL の calendar_id が実在するかも確かめる（api は無い ID に 200 と空の本文を返す） */
+        verifyCalendar?: boolean;
     }): Promise<void> {
         const seq = this.#store.nextFetchSeq();
         const conditions = {
@@ -457,6 +571,8 @@ export class TrainLocationComponent {
         };
         this.#store.enableLoading();
         this.#store.setHasFetchedTrainLocation(false);
+        // 取れて「無い」と分かったときだけ true（確認の失敗は図の失敗にしない）
+        let calendarMissing = false;
 
         // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
         // （finally が無いと isLoading が true のまま回復不能になる）
@@ -478,11 +594,22 @@ export class TrainLocationComponent {
                         lastValueFrom(
                             this.#trainLocationService.fetchItineraryLinks(),
                         ),
+                        flags.verifyCalendar
+                            ? lastValueFrom(
+                                  this.#trainLocationService.fetchCalendar(),
+                              )
+                            : Promise.resolve(true),
                     ]);
-                    const rejected = results.find(
-                        (result): result is PromiseRejectedResult =>
-                            result.status === 'rejected',
-                    );
+                    const calendarResult = results[2];
+                    calendarMissing =
+                        calendarResult.status === 'fulfilled' &&
+                        calendarResult.value === false;
+                    const rejected = results
+                        .slice(0, 2)
+                        .find(
+                            (result): result is PromiseRejectedResult =>
+                                result.status === 'rejected',
+                        );
                     if (rejected) {
                         throw rejected.reason;
                     }
@@ -539,6 +666,7 @@ export class TrainLocationComponent {
             }
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (
+                !calendarMissing &&
                 !this.#isLinksDegraded &&
                 this.#storeInSync &&
                 this.#store.isLatestFetch(seq)
@@ -546,6 +674,10 @@ export class TrainLocationComponent {
                 void this.#store.saveOfflineSnapshot('main', conditions);
             }
             this.#firstLoadDone.set(true);
+            // 取得を始めたときのダイヤで決める。古い取得の結果では見つからない表示にしない
+            if (calendarMissing && this.#store.isLatestFetch(seq)) {
+                this.#markNotFound();
+            }
         } finally {
             this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）

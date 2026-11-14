@@ -19,6 +19,8 @@ import {
 } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -169,14 +171,14 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
     });
 
     it('運用番号があって取り終わるまでは、図の骨組みを出し、空表示を出さない', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
 
         expect(query('[data-testid="route-diagram-skeleton"]')).not.toBeNull();
         expect(query('app-empty-state')).toBeNull();
     });
 
     it('取り終えたら骨組みを消す（成功）', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
 
         trips$.next(undefined);
         trips$.complete();
@@ -197,7 +199,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
             ) {
                 return original.call(this).catch(() => undefined);
             });
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
 
         trips$.error(new Error('offline'));
         await flush();
@@ -208,7 +210,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
     });
 
     it('main は全線時刻表と同じ高さ固定（ページ全体はスクロールしない）', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
 
         const main = query('main');
         expect(main).toHaveClass(
@@ -246,7 +248,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
     });
 
     it('取り直しが重なったとき、先に終わった古い取得は骨組みを消さない', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
         const firstTrips$ = trips$;
         const secondTrips$ = new Subject<undefined>();
         trips$ = secondTrips$;
@@ -266,7 +268,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
     });
 
     it('別の運用へ移って取り直すときは骨組みに戻す', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
         trips$.next(undefined);
         trips$.complete();
         await flush();
@@ -280,7 +282,7 @@ describe('OperationRouteDiagramComponent の読み込み中', () => {
     });
 
     it('ページを離れてすぐ戻ったとき、前のインスタンスの取得が後から終わっても、新しい取得が終わるまで骨組みは消えない', async () => {
-        await setup({ operation_id: 'op-1' });
+        await setup({ operation_id: '00000000-0000-4000-8000-000000000101' });
         const previousTrips$ = trips$;
         fixture.destroy();
         trips$ = new Subject<undefined>();
@@ -305,19 +307,31 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     let component: OperationRouteDiagramComponent;
     let navigate: jest.SpyInstance;
     const paramMap$ = new BehaviorSubject(
-        convertToParamMap({ operation_id: 'b1' }),
+        convertToParamMap({
+            operation_id: '00000000-0000-4000-8000-000000000102',
+        }),
     );
     const op = (operationId: string, operationNumber: string) =>
         ({ operationId, operationNumber }) as OperationDetailsDto;
     const byCalendar: Record<string, OperationDetailsDto[]> = {
-        'cal-1': [op('a1', '42G'), op('b1', '43G')],
-        'cal-2': [op('b2', '43G'), op('c2', '44G')],
+        'cal-1': [
+            op('00000000-0000-4000-8000-000000000111', '42G'),
+            op('00000000-0000-4000-8000-000000000102', '43G'),
+        ],
+        'cal-2': [
+            op('00000000-0000-4000-8000-000000000112', '43G'),
+            op('00000000-0000-4000-8000-000000000113', '44G'),
+        ],
         'cal-3': [op('d3', '11')],
     };
 
     beforeEach(async () => {
         // 前のテストで URL を変えていても、毎回 運用 b1 の URL から始める
-        paramMap$.next(convertToParamMap({ operation_id: 'b1' }));
+        paramMap$.next(
+            convertToParamMap({
+                operation_id: '00000000-0000-4000-8000-000000000102',
+            }),
+        );
         await TestBed.configureTestingModule({
             imports: [OperationRouteDiagramComponent],
             providers: [
@@ -359,29 +373,29 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('運用番号を選ぶと、その運用の行路図へ移る', () => {
-        component.onOperationChange('a1');
+        component.onOperationChange('00000000-0000-4000-8000-000000000111');
         expect(navigate).toHaveBeenCalledWith([
             '/operation/route-diagram',
-            { operation_id: 'a1' },
+            { operation_id: '00000000-0000-4000-8000-000000000111' },
         ]);
     });
 
     it('ダイヤを替えたとき、同じ運用番号があればその運用へ移る', async () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
-            operation: op('b1', '43G'),
+            operation: op('00000000-0000-4000-8000-000000000102', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
         await component.onCalendarChange('cal-2');
         expect(navigate).toHaveBeenCalledWith([
             '/operation/route-diagram',
-            { operation_id: 'b2' },
+            { operation_id: '00000000-0000-4000-8000-000000000112' },
         ]);
         expect(component.selectedCalendarId()).toBe('cal-2');
     });
 
     it('同じ運用番号が無ければ運用番号を外し、選んだダイヤを残す', async () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
-            operation: op('b1', '43G'),
+            operation: op('00000000-0000-4000-8000-000000000102', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
         await component.onCalendarChange('cal-3');
@@ -390,16 +404,19 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
     });
 
     it('前後の運用へ送ると、その運用へ移る', () => {
-        component.onStep({ id: 'a1', label: '42G' });
+        component.onStep({
+            id: '00000000-0000-4000-8000-000000000111',
+            label: '42G',
+        });
         expect(navigate).toHaveBeenCalledWith([
             '/operation/route-diagram',
-            { operation_id: 'a1' },
+            { operation_id: '00000000-0000-4000-8000-000000000111' },
         ]);
     });
 
     it('運用番号の無い URL に移ったら、前の運用の図を消す', () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips({
-            operation: op('b1', '43G'),
+            operation: op('00000000-0000-4000-8000-000000000102', '43G'),
             trips: [],
         } as unknown as OperationTripsDto);
         paramMap$.next(convertToParamMap({}));
@@ -426,17 +443,27 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
 
     it('同じ番号が無いダイヤに替えた後、「戻る」で元の運用に戻ると、ダイヤの選択欄も元に戻る', async () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
-            withCalendar(op('b1', '43G'), 'cal-1'),
+            withCalendar(
+                op('00000000-0000-4000-8000-000000000102', '43G'),
+                'cal-1',
+            ),
         );
         expect(component.selectedCalendarId()).toBe('cal-1');
         await component.onCalendarChange('cal-3');
         paramMap$.next(convertToParamMap({}));
         expect(component.selectedCalendarId()).toBe('cal-3');
 
-        paramMap$.next(convertToParamMap({ operation_id: 'b1' }));
+        paramMap$.next(
+            convertToParamMap({
+                operation_id: '00000000-0000-4000-8000-000000000102',
+            }),
+        );
         expect(component.selectedCalendarId()).toBe('cal-3');
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
-            withCalendar(op('b1', '43G'), 'cal-1'),
+            withCalendar(
+                op('00000000-0000-4000-8000-000000000102', '43G'),
+                'cal-1',
+            ),
         );
         expect(component.selectedCalendarId()).toBe('cal-1');
     });
@@ -448,7 +475,10 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
         ).componentInstance;
         expect(fresh.selectedCalendarId()).toBeNull();
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
-            withCalendar(op('b1', '43G'), 'cal-1'),
+            withCalendar(
+                op('00000000-0000-4000-8000-000000000102', '43G'),
+                'cal-1',
+            ),
         );
         expect(fresh.selectedCalendarId()).toBe('cal-1');
     });
@@ -463,7 +493,10 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
 
     it('ダイヤを続けて替えたとき、先に選んだダイヤの結果が後から届いても移らない', async () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
-            withCalendar(op('b1', '43G'), 'cal-1'),
+            withCalendar(
+                op('00000000-0000-4000-8000-000000000102', '43G'),
+                'cal-1',
+            ),
         );
         const slow = new Subject<OperationDetailsDto[]>();
         jest.spyOn(
@@ -486,7 +519,10 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
 
     it('一覧の取得に失敗したら移らず、知らせて選択を戻す', async () => {
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
-            withCalendar(op('b1', '43G'), 'cal-1'),
+            withCalendar(
+                op('00000000-0000-4000-8000-000000000102', '43G'),
+                'cal-1',
+            ),
         );
         jest.spyOn(
             TestBed.inject(OperationService),
@@ -534,13 +570,27 @@ describe('OperationRouteDiagramComponent の帯の配線（本物のテンプレ
                     provide: OperationService,
                     useValue: {
                         findManyByCalendarId: () =>
-                            of([op('a1', '42G'), op('b1', '43G')]),
+                            of([
+                                op(
+                                    '00000000-0000-4000-8000-000000000111',
+                                    '42G',
+                                ),
+                                op(
+                                    '00000000-0000-4000-8000-000000000102',
+                                    '43G',
+                                ),
+                            ]),
                     },
                 },
                 {
                     provide: ActivatedRoute,
                     useValue: {
-                        paramMap: of(convertToParamMap({ operation_id: 'b1' })),
+                        paramMap: of(
+                            convertToParamMap({
+                                operation_id:
+                                    '00000000-0000-4000-8000-000000000102',
+                            }),
+                        ),
                     },
                 },
             ],
@@ -571,7 +621,10 @@ describe('OperationRouteDiagramComponent の帯の配線（本物のテンプレ
         (
             root.querySelector('app-step-nav button') as HTMLButtonElement
         ).click();
-        expect(onStep).toHaveBeenCalledWith({ id: 'a1', label: '42G' });
+        expect(onStep).toHaveBeenCalledWith({
+            id: '00000000-0000-4000-8000-000000000111',
+            label: '42G',
+        });
     });
 });
 
@@ -586,7 +639,10 @@ describe('OperationRouteDiagramComponent のサーバー', () => {
                     provide: ActivatedRoute,
                     useValue: {
                         paramMap: of(
-                            convertToParamMap({ operation_id: 'op-1' }),
+                            convertToParamMap({
+                                operation_id:
+                                    '00000000-0000-4000-8000-000000000101',
+                            }),
                         ),
                     },
                 },
@@ -650,7 +706,7 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
     const itineraryLinks = [{ tripOperationListId: 'link-1' }] as never;
     const stations = [{ stationId: 'st-1' }] as never;
     const stationAliases = { 'st-2': 'st-1' };
-    const conditions = { operationId: 'op-1' };
+    const conditions = { operationId: '00000000-0000-4000-8000-000000000101' };
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
     // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
@@ -677,7 +733,10 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
                     provide: ActivatedRoute,
                     useValue: {
                         paramMap: of(
-                            convertToParamMap({ operation_id: 'op-1' }),
+                            convertToParamMap({
+                                operation_id:
+                                    '00000000-0000-4000-8000-000000000101',
+                            }),
                         ),
                     },
                 },
@@ -872,5 +931,261 @@ describe('OperationRouteDiagramComponent の圏外の保存', () => {
 
         expect(restore).toHaveBeenCalled();
         expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+});
+
+describe('OperationRouteDiagramComponent の URL の値', () => {
+    const OPERATION = '00000000-0000-4000-8000-0000000000a1';
+    const OTHER_OPERATION = '00000000-0000-4000-8000-0000000000a2';
+    const mark = jest.fn();
+    const clear = jest.fn();
+    const setTitle = jest.fn();
+    const fetchOperationTrips = jest.fn();
+    const fetchStations = jest.fn();
+    const fetchItineraryLinks = jest.fn();
+    const save = jest.fn(() => Promise.resolve());
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    async function create(
+        params: Record<string, string>,
+    ): Promise<ComponentFixture<OperationRouteDiagramComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
+        await TestBed.configureTestingModule({
+            imports: [OperationRouteDiagramComponent],
+            providers: [
+                provideRouter([]),
+                { provide: ActivatedRoute, useValue: { paramMap: params$ } },
+                { provide: PageNotFound, useValue: { mark, clear } },
+                { provide: PageMeta, useValue: { setTitle } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save, restore: jest.fn() },
+                },
+                {
+                    provide: OperationRouteDiagramService,
+                    useValue: {
+                        fetchOperationTrips,
+                        fetchStations,
+                        fetchItineraryLinks,
+                    },
+                },
+            ],
+        })
+            .overrideComponent(OperationRouteDiagramComponent, {
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
+            })
+            .compileComponents();
+        const fixture = TestBed.createComponent(OperationRouteDiagramComponent);
+        fixture.detectChanges();
+        await flush();
+        fixture.detectChanges();
+        return fixture;
+    }
+
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasBand = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector(
+            'app-operation-route-diagram-route-filter',
+        ) !== null;
+    /** 取り終えたあと、図が無いときの本体（運用番号の案内） */
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-empty-state[icon="route"]') !== null;
+
+    beforeEach(() => {
+        fetchOperationTrips.mockReturnValue(of(true));
+        fetchStations.mockReturnValue(of(undefined));
+        fetchItineraryLinks.mockReturnValue(of(undefined));
+    });
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
+    it.each(['undefined', 'abc', 'op-1'])(
+        'operation_id=%s は見つからない表示にして、取得しない',
+        async (operationId) => {
+            const fixture = await create({ operation_id: operationId });
+
+            expect(mark).toHaveBeenCalledTimes(1);
+            expect(fetchOperationTrips).not.toHaveBeenCalled();
+            expect(fetchStations).not.toHaveBeenCalled();
+            expect(fetchItineraryLinks).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(true);
+            expect(hasBody(fixture)).toBe(false);
+            expect(hasBand(fixture)).toBe(true);
+        },
+    );
+
+    it('取得の途中で不正な URL へ移ると、前の取得が終わっても保存せず、見つからない表示は 1 回だけ', async () => {
+        const first$ = new Subject<boolean>();
+        fetchOperationTrips.mockReturnValueOnce(first$);
+        const fixture = await create({ operation_id: OPERATION });
+
+        params$.next(convertToParamMap({ operation_id: 'abc' }));
+        await flush();
+        expect(mark).toHaveBeenCalledTimes(1);
+        first$.next(true);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(save).not.toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+    });
+
+    it('正しい operation_id なら取得し、見つからない表示にしない', async () => {
+        const fixture = await create({ operation_id: OPERATION });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchOperationTrips).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('operation_id が無い URL は今までどおり（取得せず、空の案内を出す）', async () => {
+        const fixture = await create({});
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchOperationTrips).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('存在しない運用（api が null を返す）は、取得のあとで見つからない表示にする', async () => {
+        fetchOperationTrips.mockReturnValue(of(false));
+        const fixture = await create({ operation_id: OPERATION });
+
+        expect(fetchOperationTrips).toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+        expect(hasBand(fixture)).toBe(true);
+        expect(
+            fixture.nativeElement.querySelector(
+                '[data-testid="route-diagram-skeleton"]',
+            ),
+        ).toBeNull();
+        expect(TestBed.inject(OperationRouteDiagramStore).isLoading()).toBe(
+            false,
+        );
+    });
+
+    it('取得の失敗（5xx・通信の失敗）は見つからない表示にせず、今までどおり失敗として扱う', async () => {
+        fetchOperationTrips.mockReturnValue(throwError(() => new Error('500')));
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。本物の失敗だけ受け流す
+        const original = OperationRouteDiagramComponent.prototype.fetchData;
+        jest.spyOn(
+            OperationRouteDiagramComponent.prototype,
+            'fetchData',
+        ).mockImplementation(function (this: OperationRouteDiagramComponent) {
+            return original.call(this).catch(() => undefined);
+        });
+        const fixture = await create({ operation_id: OPERATION });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(TestBed.inject(OperationRouteDiagramStore).isLoading()).toBe(
+            false,
+        );
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchOperationTrips
+            .mockReturnValueOnce(first$)
+            .mockReturnValue(of(true));
+        const fixture = await create({ operation_id: OPERATION });
+
+        params$.next(convertToParamMap({ operation_id: OTHER_OPERATION }));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('運用番号を外した URL へ移ったあと、前の運用の「無い」が遅れて届いても見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchOperationTrips.mockReturnValueOnce(first$);
+        const fixture = await create({ operation_id: OPERATION });
+
+        params$.next(convertToParamMap({}));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
+        const fixture = await create({ operation_id: 'undefined' });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(convertToParamMap({ operation_id: OPERATION }));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchOperationTrips).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('運用行路図'),
+        );
+    });
+
+    it('存在しない運用から正しい運用へ移ると、本体に戻る', async () => {
+        fetchOperationTrips.mockReturnValueOnce(of(false));
+        const fixture = await create({ operation_id: OPERATION });
+        expect(hasNotFound(fixture)).toBe(true);
+
+        params$.next(convertToParamMap({ operation_id: OTHER_OPERATION }));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({ operation_id: 'undefined' });
+        setTitle.mockClear();
+        const operationTrips: OperationTripsDto = {
+            operation: { operationId: OPERATION, operationNumber: '11' },
+            trips: [],
+        };
+        TestBed.inject(OperationRouteDiagramStore).setOperationTrips(
+            operationTrips,
+        );
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({ operation_id: 'undefined' });
+        TestBed.inject(OperationRouteDiagramStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 });

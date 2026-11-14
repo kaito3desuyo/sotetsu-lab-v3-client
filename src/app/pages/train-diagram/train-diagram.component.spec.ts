@@ -11,6 +11,8 @@ import {
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
@@ -19,6 +21,13 @@ import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-cal
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
 import { TrainDiagramStore } from './stores/train-diagram.store';
+
+const CAL_1 = '11111111-1111-4111-8111-111111111111';
+const CAL_2 = '22222222-2222-4222-8222-222222222222';
+const CAL_TODAY = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const CAL_OTHER = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const ROUTE_1 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const ROUTE_2 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 /**
  * 渡した駅の並びをそれぞれ 1 本の路線として置き、全部選ぶ。縮尺・線のつながりを見るテストは
@@ -63,6 +72,7 @@ describe('TrainDiagramComponent', () => {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        fetchCalendar: () => of(true),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: () =>
                             of(undefined),
@@ -993,8 +1003,8 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     beforeEach(async () => {
         paramMap$ = new BehaviorSubject(
             convertToParamMap({
-                calendar_id: 'cal-1',
-                route_ids: 'route-1',
+                calendar_id: CAL_1,
+                route_ids: ROUTE_1,
                 time: '0700',
             }),
         );
@@ -1029,6 +1039,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        fetchCalendar: () => of(true),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: () =>
                             of(undefined),
@@ -1038,7 +1049,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
-                            { routeId: 'route-1', routeName: '本線' },
+                            { routeId: ROUTE_1, routeName: '本線' },
                         ]),
                     },
                 },
@@ -1048,7 +1059,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
-        setTodaysCalendars(['cal-today']);
+        setTodaysCalendars([CAL_TODAY]);
 
         store = TestBed.inject(TrainDiagramStore);
         fixture = TestBed.createComponent(TrainDiagramComponent);
@@ -1060,8 +1071,8 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
 
         paramMap$.next(
             convertToParamMap({
-                calendar_id: 'cal-1',
-                route_ids: 'route-1',
+                calendar_id: CAL_1,
+                route_ids: ROUTE_1,
                 time: '0800',
             }),
         );
@@ -1072,8 +1083,8 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     it('window 付きの古い URL は time に置き換えて replaceUrl する', () => {
         paramMap$.next(
             convertToParamMap({
-                calendar_id: 'cal-1',
-                route_ids: 'route-1',
+                calendar_id: CAL_1,
+                route_ids: ROUTE_1,
                 window: '1800-1900',
             }),
         );
@@ -1081,7 +1092,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         expect(router.navigate).toHaveBeenCalledWith(
             [
                 '/train-diagram',
-                { calendar_id: 'cal-1', route_ids: 'route-1', time: '1800' },
+                { calendar_id: CAL_1, route_ids: ROUTE_1, time: '1800' },
             ],
             { replaceUrl: true },
         );
@@ -1090,8 +1101,8 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     it('I2: window 付きの古い URL は direction を保ったまま time に置き換える', () => {
         paramMap$.next(
             convertToParamMap({
-                calendar_id: 'cal-1',
-                route_ids: 'route-1',
+                calendar_id: CAL_1,
+                route_ids: ROUTE_1,
                 direction: 'up',
                 window: '1800-1900',
             }),
@@ -1101,8 +1112,8 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
             [
                 '/train-diagram',
                 {
-                    calendar_id: 'cal-1',
-                    route_ids: 'route-1',
+                    calendar_id: CAL_1,
+                    route_ids: ROUTE_1,
                     direction: 'up',
                     time: '1800',
                 },
@@ -1111,27 +1122,17 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         );
     });
 
-    it('M2: 不正な time（例: 9999）も正規化の対象になる（`?? 0` に落ちずに defaultStartMinute を使う）', () => {
+    it('M2: 不正な time（例: 9999）は補わず、見つからない表示にする', () => {
         paramMap$.next(
             convertToParamMap({
-                calendar_id: 'cal-1',
-                route_ids: 'route-1',
+                calendar_id: CAL_1,
+                route_ids: ROUTE_1,
                 time: '9999',
             }),
         );
 
-        expect(router.navigate).toHaveBeenCalledTimes(1);
-        const [commands, options] = router.navigate.mock.calls[0];
-        expect(commands[0]).toBe('/train-diagram');
-        expect(commands[1]).toMatchObject({
-            calendar_id: 'cal-1',
-            route_ids: 'route-1',
-        });
-        // parseTimeParam('9999') は undefined なので defaultStartMinute(new Date()) に
-        // フォールバックする（`?? 0` で 4:00 に固定されない）。
-        expect(commands[1].time).toMatch(/^\d{4}$/);
-        expect(commands[1].time).not.toBe('9999');
-        expect(options).toEqual({ replaceUrl: true });
+        expect(router.navigate).not.toHaveBeenCalled();
+        expect(component.notFound()).toBe(true);
     });
 
     it('I1: onLeftMinuteChange は Location.replaceState のみで Router.navigate を呼ばず、後続の #navigate は最新の time を載せる', () => {
@@ -1146,11 +1147,11 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         const url = location.replaceState.mock.calls[0][0];
         expect(url).toContain('time=0730');
 
-        component.onCalendarIdChange('cal-2');
+        component.onCalendarIdChange(CAL_2);
 
         expect(router.navigate).toHaveBeenCalledWith([
             '/train-diagram',
-            expect.objectContaining({ time: '0730', calendar_id: 'cal-2' }),
+            expect.objectContaining({ time: '0730', calendar_id: CAL_2 }),
         ]);
     });
 
@@ -1160,24 +1161,24 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         store.setSelectedTripId('t1');
 
         component.onDirectionFilterChange('up');
-        component.onRouteIdsChange(['route-1', 'route-2']);
+        component.onRouteIdsChange([ROUTE_1, ROUTE_2]);
 
         expect(router.navigate).not.toHaveBeenCalled();
         expect(store.directionFilter()).toBe('up');
-        expect(store.selectedRouteIds()).toEqual(['route-1', 'route-2']);
+        expect(store.selectedRouteIds()).toEqual([ROUTE_1, ROUTE_2]);
         expect(store.selectedTripId()).toBeNull();
         const url = location.replaceState.mock.calls[1][0];
         expect(url).toContain('direction=up');
-        expect(url).toContain('route_ids=route-1,route-2');
+        expect(url).toContain(`route_ids=${ROUTE_1},${ROUTE_2}`);
 
-        component.onCalendarIdChange('cal-2');
+        component.onCalendarIdChange(CAL_2);
 
         expect(router.navigate).toHaveBeenCalledWith([
             '/train-diagram',
             expect.objectContaining({
-                calendar_id: 'cal-2',
+                calendar_id: CAL_2,
                 direction: 'up',
-                route_ids: 'route-1,route-2',
+                route_ids: `${ROUTE_1},${ROUTE_2}`,
             }),
         ]);
     });
@@ -1246,6 +1247,452 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     });
 });
 
+describe('TrainDiagramComponent の URL の値が不正なとき', () => {
+    const mark = jest.fn();
+    const clear = jest.fn();
+    const setTitle = jest.fn();
+    const addCacheTags = jest.fn();
+    const fetchTripClasses = jest.fn();
+    const fetchTripBlocks = jest.fn();
+    const fetchItineraryLinks = jest.fn();
+    const fetchNetworkStations = jest.fn();
+    const fetchCalendar = jest.fn();
+    const save = jest.fn(() => Promise.resolve());
+    const routeStations = signal<{ routeId: string; routeName: string }[]>([]);
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let navigate: jest.SpyInstance;
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+    const calls = () => [
+        fetchTripClasses,
+        fetchTripBlocks,
+        fetchItineraryLinks,
+        fetchNetworkStations,
+        fetchCalendar,
+    ];
+    const valid = { calendar_id: CAL_1, route_ids: ROUTE_1, time: '0700' };
+
+    async function create(
+        params: Record<string, string>,
+    ): Promise<ComponentFixture<TrainDiagramComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
+        await TestBed.configureTestingModule({
+            imports: [TrainDiagramComponent],
+            providers: [
+                provideRouter([]),
+                { provide: Location, useValue: { replaceState: jest.fn() } },
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: params$, snapshot: { params } },
+                },
+                { provide: PageNotFound, useValue: { mark, clear } },
+                { provide: PageMeta, useValue: { setTitle } },
+                { provide: SsrResponse, useValue: { addCacheTags } },
+                {
+                    provide: TrainDiagramService,
+                    useValue: {
+                        fetchTripClasses,
+                        fetchTripBlocks,
+                        fetchItineraryLinks,
+                        fetchNetworkStations,
+                        fetchCalendar,
+                        fetchOperationSightingTimeCrossSection: () =>
+                            of(undefined),
+                    },
+                },
+                { provide: RouteStationListState, useValue: { routeStations } },
+                { provide: NotificationService, useValue: { open: jest.fn() } },
+                {
+                    provide: OfflineSnapshots,
+                    useValue: { save, restore: jest.fn() },
+                },
+            ],
+        })
+            .overrideComponent(TrainDiagramComponent, {
+                set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
+            })
+            .compileComponents();
+        setTodaysCalendars([CAL_TODAY]);
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        const fixture = TestBed.createComponent(TrainDiagramComponent);
+        fixture.detectChanges();
+        await flush();
+        fixture.detectChanges();
+        return fixture;
+    }
+
+    const has = (f: ComponentFixture<unknown>, selector: string) =>
+        f.nativeElement.querySelector(selector) !== null;
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        has(f, 'app-not-found-content');
+    const hasBand = (f: ComponentFixture<unknown>) =>
+        has(f, 'app-control-band');
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        has(f, 'app-train-diagram-legend');
+
+    beforeEach(() => {
+        routeStations.set([
+            { routeId: ROUTE_1, routeName: '本線' },
+            { routeId: ROUTE_2, routeName: 'いずみ野線' },
+        ]);
+        fetchTripClasses.mockReturnValue(of(undefined));
+        fetchTripBlocks.mockReturnValue(of(undefined));
+        fetchItineraryLinks.mockReturnValue(of({ failed: false }));
+        fetchNetworkStations.mockReturnValue(of(undefined));
+        fetchCalendar.mockReturnValue(of(true));
+    });
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it.each([
+        ['calendar_id', 'undefined'],
+        ['calendar_id', 'cal-1'],
+        ['route_ids', 'abc'],
+        ['route_ids', `${ROUTE_1},abc`],
+        ['route_ids', `${ROUTE_1},,${ROUTE_2}`],
+        ['direction', 'sideways'],
+        ['direction', 'UP'],
+        ['time', 'abc'],
+        ['time', '9999'],
+        ['time', '0760'],
+        ['window', 'abc'],
+        ['window', '2600-2700'],
+        ['window', '1830-1930'],
+    ])(
+        '%s=%s は見つからない表示にして、補いも取得もしない',
+        async (key, value) => {
+            const fixture = await create({ ...valid, [key]: value });
+
+            expect(mark).toHaveBeenCalledTimes(1);
+            for (const call of calls()) expect(call).not.toHaveBeenCalled();
+            expect(navigate).not.toHaveBeenCalled();
+            expect(addCacheTags).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(true);
+            expect(hasBody(fixture)).toBe(false);
+            expect(hasBand(fixture)).toBe(true);
+        },
+    );
+
+    it('路線の一覧に無い route_ids は見つからない表示にして、取得しない', async () => {
+        const fixture = await create({
+            ...valid,
+            route_ids: `${ROUTE_1},eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee`,
+        });
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        for (const call of calls()) expect(call).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(true);
+    });
+
+    it('路線の一覧がまだ空のときは、route_ids の存在を確かめず取得する', async () => {
+        routeStations.set([]);
+        const fixture = await create({
+            ...valid,
+            route_ids: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('見つからない URL でも、ストアの選択（路線・方向）は消さない', async () => {
+        await create({ ...valid, direction: 'sideways' });
+        const store = TestBed.inject(TrainDiagramStore);
+        store.setSelectedRouteIds([ROUTE_2]);
+        store.setDirectionFilter('up');
+
+        params$.next(convertToParamMap({ ...valid, time: '9999' }));
+        await flush();
+
+        expect(store.selectedRouteIds()).toEqual([ROUTE_2]);
+        expect(store.directionFilter()).toBe('up');
+    });
+
+    it.each(['up', 'down', 'both'])(
+        'direction=%s は受け付けて取得する',
+        async (direction) => {
+            const fixture = await create({ ...valid, direction });
+
+            expect(mark).not.toHaveBeenCalled();
+            expect(fetchTripBlocks).toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+            expect(TestBed.inject(TrainDiagramStore).directionFilter()).toBe(
+                direction,
+            );
+        },
+    );
+
+    it('正しい URL は取得し、見つからない表示にしない', async () => {
+        const fixture = await create(valid);
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchCalendar).toHaveBeenCalledTimes(1);
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it.each([
+        ['calendar_id', {}],
+        ['route_ids', {}],
+        ['time', {}],
+        ['route_ids が空', { route_ids: '' }],
+        ['time が空', { time: '' }],
+        ['direction が空', { direction: '' }],
+    ])(
+        '値が無い（%s）URL は今までどおり補い、見つからない表示にしない',
+        async (name, extra) => {
+            const base: Record<string, string> = { ...valid };
+            if (name === 'calendar_id') delete base['calendar_id'];
+            if (name === 'route_ids') delete base['route_ids'];
+            if (name === 'time') delete base['time'];
+            const fixture = await create({ ...base, ...extra });
+
+            expect(mark).not.toHaveBeenCalled();
+            expect(hasNotFound(fixture)).toBe(false);
+            if (name === 'direction が空') {
+                expect(fetchTripBlocks).toHaveBeenCalled();
+            } else {
+                expect(navigate).toHaveBeenCalledTimes(1);
+                expect(navigate.mock.calls[0][1]).toEqual({ replaceUrl: true });
+            }
+        },
+    );
+
+    it('正しい形の古い window は今までどおり time に置き換える', async () => {
+        const fixture = await create({
+            calendar_id: CAL_1,
+            route_ids: ROUTE_1,
+            window: '1800-1900',
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(navigate).toHaveBeenCalledWith(
+            [
+                '/train-diagram',
+                { calendar_id: CAL_1, route_ids: ROUTE_1, time: '1800' },
+            ],
+            { replaceUrl: true },
+        );
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('存在しないダイヤ（api が null を返す）は、取得のあとで見つからない表示にする', async () => {
+        fetchCalendar.mockReturnValue(of(false));
+        const fixture = await create(valid);
+
+        expect(fetchCalendar).toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+        expect(hasBand(fixture)).toBe(true);
+        expect(TestBed.inject(TrainDiagramStore).isLoading()).toBe(false);
+    });
+
+    it('ダイヤの取得の失敗（5xx・通信の失敗）は見つからない表示にしない', async () => {
+        fetchCalendar.mockReturnValue(throwError(() => new Error('500')));
+        const fixture = await create(valid);
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('列車の取得の失敗は見つからない表示にせず、今までの失敗のまま', async () => {
+        fetchTripBlocks.mockReturnValue(throwError(() => new Error('500')));
+        const original = TrainDiagramComponent.prototype.fetchData;
+        jest.spyOn(
+            TrainDiagramComponent.prototype,
+            'fetchData',
+        ).mockImplementation(function (this: TrainDiagramComponent, flags) {
+            return original.call(this, flags).catch(() => undefined);
+        });
+        const fixture = await create(valid);
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(TestBed.inject(TrainDiagramStore).isLoading()).toBe(false);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockReturnValueOnce(first$).mockReturnValue(of(true));
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({ ...valid, calendar_id: CAL_2 }));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、値の無い URL（取得を始めない）を見つからない表示にしない', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockReturnValueOnce(first$).mockReturnValue(of(true));
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({}));
+        await flush();
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、不正な URL（取得を始めない）の見つからない表示は 1 回だけ', async () => {
+        const first$ = new Subject<boolean>();
+        fetchCalendar.mockReturnValueOnce(first$);
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({ ...valid, time: '9999' }));
+        await flush();
+        expect(mark).toHaveBeenCalledTimes(1);
+        first$.next(false);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
+        const fixture = await create({ ...valid, calendar_id: 'undefined' });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(convertToParamMap(valid));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('ダイヤグラム'),
+        );
+    });
+
+    it('取得の途中で見つからない URL へ移り、同じ URL へ戻ると、取り直す', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks.mockReturnValueOnce(first$);
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({ ...valid, time: '9999' }));
+        await flush();
+        params$.next(convertToParamMap(valid));
+        await flush();
+        fixture.detectChanges();
+
+        expect(fetchTripBlocks).toHaveBeenCalledTimes(2);
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(TestBed.inject(TrainDiagramStore).hasFetchedTrainDiagram()).toBe(
+            true,
+        );
+    });
+
+    it('取得の途中で値の無い URL へ移り、補いが同じダイヤへ戻るとき、取り直す（骨組みのままにならない）', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks.mockReturnValueOnce(first$);
+        const fixture = await create(valid);
+
+        params$.next(convertToParamMap({ calendar_id: CAL_1 }));
+        await flush();
+        params$.next(convertToParamMap(valid));
+        await flush();
+        fixture.detectChanges();
+
+        expect(fetchTripBlocks).toHaveBeenCalledTimes(2);
+        expect(TestBed.inject(TrainDiagramStore).hasFetchedTrainDiagram()).toBe(
+            true,
+        );
+    });
+
+    it('取り終えたあとの同じ URL では、取り直さない', async () => {
+        await create(valid);
+
+        params$.next(convertToParamMap({ ...valid }));
+        await flush();
+
+        expect(fetchTripBlocks).toHaveBeenCalledTimes(1);
+    });
+
+    it('見つからない表示のまま操作帯で方向を替えると、Router を通して URL を確かめ直す', async () => {
+        const fixture = await create({ ...valid, direction: 'sideways' });
+        expect(hasNotFound(fixture)).toBe(true);
+        navigate.mockImplementation(
+            async (commands: [string, Record<string, string>]) => {
+                params$.next(convertToParamMap(commands[1]));
+                return true;
+            },
+        );
+
+        fixture.componentInstance.onDirectionFilterChange('up');
+        await flush();
+        fixture.detectChanges();
+
+        expect(navigate).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(TestBed.inject(TrainDiagramStore).directionFilter()).toBe('up');
+    });
+
+    it('ダイヤが無いと分かったときは、圏外用の保存をしない', async () => {
+        fetchCalendar.mockReturnValue(of(false));
+        await create(valid);
+
+        expect(save).not.toHaveBeenCalled();
+    });
+
+    it('存在しないダイヤから正しいダイヤへ移ると、本体に戻る', async () => {
+        fetchCalendar.mockReturnValueOnce(of(false));
+        const fixture = await create(valid);
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(convertToParamMap({ ...valid, calendar_id: CAL_2 }));
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('ダイヤグラム'),
+        );
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({ ...valid, calendar_id: 'undefined' });
+        setTitle.mockClear();
+        TestBed.inject(TrainDiagramStore).setCalendarId(CAL_2);
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({ ...valid, calendar_id: 'undefined' });
+        TestBed.inject(TrainDiagramStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(has(fixture, 'mat-progress-bar')).toBe(false);
+    });
+});
+
 describe('TrainDiagramComponent のサーバー', () => {
     const fetchTripClasses = jest.fn(() => of(undefined));
     const addCacheTags = jest.fn();
@@ -1274,6 +1721,7 @@ describe('TrainDiagramComponent のサーバー', () => {
                         fetchTripClasses,
                         fetchTripBlocks: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        fetchCalendar: () => of(true),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: () =>
                             of(undefined),
@@ -1283,7 +1731,7 @@ describe('TrainDiagramComponent のサーバー', () => {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
-                            { routeId: 'route-1', routeName: '本線' },
+                            { routeId: ROUTE_1, routeName: '本線' },
                         ]),
                     },
                 },
@@ -1294,7 +1742,7 @@ describe('TrainDiagramComponent のサーバー', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
-        setTodaysCalendars(['cal-today']);
+        setTodaysCalendars([CAL_TODAY]);
         return router;
     };
 
@@ -1312,24 +1760,21 @@ describe('TrainDiagramComponent のサーバー', () => {
     });
 
     it('サーバーではダイヤのタグを付ける', async () => {
-        await setup(
-            { calendar_id: 'cal-1', route_ids: 'route-1', time: '0700' },
-            [
-                {
-                    provide: SsrResponse,
-                    useValue: { addCacheTags, setCachePolicy: jest.fn() },
-                },
-            ],
-        );
+        await setup({ calendar_id: CAL_1, route_ids: ROUTE_1, time: '0700' }, [
+            {
+                provide: SsrResponse,
+                useValue: { addCacheTags, setCachePolicy: jest.fn() },
+            },
+        ]);
 
         TestBed.createComponent(TrainDiagramComponent);
 
-        expect(addCacheTags).toHaveBeenCalledWith(['calendar:cal-1']);
+        expect(addCacheTags).toHaveBeenCalledWith([`calendar:${CAL_1}`]);
     });
 
     it('サーバーでは今日のダイヤでも「今」の表示を出さない（ブラウザの最初の描画と形をそろえる）', async () => {
         await setup(
-            { calendar_id: 'cal-today', route_ids: 'route-1', time: '0700' },
+            { calendar_id: CAL_TODAY, route_ids: ROUTE_1, time: '0700' },
             [
                 {
                     provide: SsrResponse,
@@ -1399,6 +1844,7 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                         fetchTripClasses,
                         fetchTripBlocks: () => tripBlocks$,
                         fetchItineraryLinks: () => itineraryLinks$,
+                        fetchCalendar: () => of(true),
                         fetchNetworkStations,
                         fetchOperationSightingTimeCrossSection: () => sighting$,
                     },
@@ -1766,7 +2212,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
                         paramMap: of(
                             convertToParamMap({
                                 calendar_id: calendarId,
-                                route_ids: 'route-1',
+                                route_ids: ROUTE_1,
                                 time: '0700',
                             }),
                         ),
@@ -1779,6 +2225,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
                         fetchTripClasses: () => of(undefined),
                         fetchTripBlocks,
                         fetchItineraryLinks: () => of(undefined),
+                        fetchCalendar: () => of(true),
                         fetchNetworkStations: () => of(undefined),
                         fetchOperationSightingTimeCrossSection: fetchSighting,
                     },
@@ -1787,7 +2234,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
                     provide: RouteStationListState,
                     useValue: {
                         routeStations: signal([
-                            { routeId: 'route-1', routeName: '本線' },
+                            { routeId: ROUTE_1, routeName: '本線' },
                         ]),
                     },
                 },
@@ -1802,7 +2249,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
                 set: { imports: [], schemas: [NO_ERRORS_SCHEMA] },
             })
             .compileComponents();
-        setTodaysCalendars(['cal-today']);
+        setTodaysCalendars([CAL_TODAY]);
         const fixture = TestBed.createComponent(TrainDiagramComponent);
         await flush();
         // すでに見ている運用の充当編成
@@ -1825,7 +2272,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
     });
 
     it('投稿されたら、すでに取っている運用の充当編成だけを取り直し、列車は取り直さない', async () => {
-        const fixture = await setup('cal-today');
+        const fixture = await setup(CAL_TODAY);
 
         TestBed.inject(OperationPostCardService).emitSubmitEvent();
         await flush();
@@ -1839,7 +2286,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
     });
 
     it('今日のダイヤでなければ何も取らない', async () => {
-        const fixture = await setup('cal-other');
+        const fixture = await setup(CAL_OTHER);
 
         TestBed.inject(OperationPostCardService).emitSubmitEvent();
         await flush();
@@ -1850,7 +2297,7 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
     });
 
     it('取得に失敗したら通知を出し、投げない', async () => {
-        const fixture = await setup('cal-today');
+        const fixture = await setup(CAL_TODAY);
         const consoleError = jest
             .spyOn(console, 'error')
             .mockImplementation(() => {});

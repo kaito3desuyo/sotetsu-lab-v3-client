@@ -210,4 +210,17 @@ describe('OperationQuery', () => {
         expect(again.request.cache).toBe('reload');
         again.flush([]);
     });
+
+    it('運用の行路: api が無い ID に空の本文（null）を返したら null にする', () => {
+        const { query, controller } = setup();
+        let result: unknown = 'unset';
+
+        query
+            .findOneWithTrips({ operationId: 'op-x' })
+            .subscribe((value) => (result = value));
+        controller.expectOne(`${url}/op-x/trips`).flush(null);
+
+        expect(result).toBeNull();
+        controller.verify();
+    });
 });

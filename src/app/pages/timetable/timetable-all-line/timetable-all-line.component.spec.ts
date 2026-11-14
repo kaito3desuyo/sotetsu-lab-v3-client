@@ -8,6 +8,7 @@ import {
     Router,
 } from '@angular/router';
 import {
+    BehaviorSubject,
     EMPTY,
     firstValueFrom,
     Observable,
@@ -22,6 +23,8 @@ import {
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { NotificationService } from 'src/app/core/services/notification.service';
+import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
+import { PageMeta } from 'src/app/core/ssr/page-meta';
 import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
@@ -30,6 +33,7 @@ import { UserState } from 'src/app/global-states/user.state';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
 import { CalendarSelectDialogService } from 'src/app/shared/calendar-select-dialog/services/calendar-select-dialog.service';
 import { ConfirmDialogService } from 'src/app/shared/confirm-dialog/services/confirm-dialog.service';
+import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
 import { TimetableAllLineService } from './services/timetable-all-line.service';
 import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 import { TimetableAllLineComponent } from './timetable-all-line.component';
@@ -200,13 +204,9 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         };
     };
 
-    it.each([
-        ['無い', {}],
-        ['読めない', { trip_direction: 'abc' }],
-    ])('向きが%sときは上りに置き換え、取得はしない', async (_, extra) => {
+    it('向きが無いときは上りに置き換え、取得はしない', async () => {
         const { navigate, service } = await setUp({
             calendar_id: '00000000-0000-4000-8000-000000000001',
-            ...extra,
         });
 
         expect(navigate).toHaveBeenCalledWith(
@@ -223,12 +223,8 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         expect(service.fetchTripBlocks).not.toHaveBeenCalled();
     });
 
-    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
-    it('ダイヤが UUID でないときは、無いときと同じく取りに行かない', async () => {
-        const { navigate, service } = await setUp({
-            calendar_id: 'undefined',
-            trip_direction: '0',
-        });
+    it('ダイヤが無いときは、今までどおり取りに行かない', async () => {
+        const { navigate, service } = await setUp({ trip_direction: '0' });
 
         expect(navigate).not.toHaveBeenCalled();
         expect(service.fetchTripBlocks).not.toHaveBeenCalled();
@@ -275,6 +271,305 @@ describe('TimetableAllLineComponent の URL の向き', () => {
         expect(addCacheTags).toHaveBeenCalledWith([
             'calendar:00000000-0000-4000-8000-000000000001',
         ]);
+    });
+});
+
+describe('TimetableAllLineComponent の URL の値', () => {
+    const CALENDAR = '00000000-0000-4000-8000-000000000001';
+    const BLOCK = '00000000-0000-4000-8000-0000000000b1';
+    const mark = jest.fn();
+    const clear = jest.fn();
+    const setTitle = jest.fn();
+    const fetchStations = jest.fn(() => of(undefined));
+    let fetchTripBlocks: jest.Mock;
+    let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+    let navigate: jest.SpyInstance;
+
+    const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+    async function create(
+        params: Record<string, string>,
+    ): Promise<ComponentFixture<TimetableAllLineComponent>> {
+        params$ = new BehaviorSubject(convertToParamMap(params));
+        await TestBed.configureTestingModule({
+            imports: [TimetableAllLineComponent],
+            providers: [
+                provideRouter([]),
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: params$, snapshot: { params } },
+                },
+                { provide: PageNotFound, useValue: { mark, clear } },
+                { provide: PageMeta, useValue: { setTitle } },
+                {
+                    provide: TimetableAllLineService,
+                    useValue: { fetchStations, fetchTripBlocks },
+                },
+                {
+                    provide: CalendarListState,
+                    useValue: {
+                        entityMap: signal({}),
+                        calendars: signal([]),
+                    },
+                },
+                {
+                    provide: ErrorHandlerService,
+                    useValue: { handleError: () => {} },
+                },
+                { provide: NotificationService, useValue: { open: () => {} } },
+                {
+                    provide: LoadingService,
+                    useValue: { open: () => {}, close: () => {} },
+                },
+                { provide: ConfirmDialogService, useValue: {} },
+                { provide: CalendarSelectDialogService, useValue: {} },
+            ],
+        })
+            .overrideComponent(TimetableAllLineComponent, {
+                set: {
+                    imports: [LazyOptionsDirective],
+                    schemas: [NO_ERRORS_SCHEMA],
+                },
+            })
+            .compileComponents();
+        navigate = jest
+            .spyOn(TestBed.inject(Router), 'navigate')
+            .mockResolvedValue(true);
+        const fixture = TestBed.createComponent(TimetableAllLineComponent);
+        fixture.detectChanges();
+        await flush();
+        fixture.detectChanges();
+        return fixture;
+    }
+
+    const hasNotFound = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-not-found-content') !== null;
+    const hasBody = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-timetable-all-line-table') !== null;
+    const hasBand = (f: ComponentFixture<unknown>) =>
+        f.nativeElement.querySelector('app-timetable-all-line-route-filter') !==
+        null;
+
+    beforeEach(() => {
+        fetchTripBlocks = jest.fn(() => of(undefined));
+    });
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    // Angular は matrix の値の undefined を "undefined" と書く（2026-11-07 の本番で 422）
+    it.each([
+        { calendar_id: 'undefined', trip_direction: '0' },
+        { calendar_id: CALENDAR, trip_direction: 'abc' },
+        { calendar_id: CALENDAR, trip_direction: '2' },
+        { calendar_id: CALENDAR, trip_direction: '0', trip_block_id: 'abc' },
+        { trip_direction: 'abc' },
+    ])('%j は見つからない表示にして、補いも取得もしない', async (params) => {
+        const fixture = await create(params);
+
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(fetchStations).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        expect(navigate).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+    });
+
+    it('値が全部正しければ取得し、見つからない表示にしない', async () => {
+        fetchTripBlocks = jest.fn(() => {
+            const found: TripBlockDetailsDto = {
+                tripBlockId: BLOCK,
+                trips: [],
+            };
+            TestBed.inject(TimetableAllLineStore).setTripBlocks([found]);
+            return of(undefined);
+        });
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '1',
+            trip_block_id: BLOCK,
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('値が無い URL は今までどおり（向きは上りに補い、ダイヤが無ければ取らない）', async () => {
+        const fixture = await create({});
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(fetchTripBlocks).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('存在しない列車の運行（api が null を返し、空の配列になる）は、取得のあとで見つからない表示にする', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(mark).toHaveBeenCalledTimes(1);
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+    });
+
+    it('trip_block_id が無いとき、運行が 0 件でも見つからない表示にしない', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+        });
+
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('取得の失敗（5xx・通信の失敗）は見つからない表示にせず、今までどおり失敗として扱う', async () => {
+        fetchTripBlocks = jest.fn(() => throwError(() => new Error('500')));
+        // fetchData() は失敗を投げ直す（既存の振る舞い）。本物の失敗だけ受け流す
+        const original = TimetableAllLineComponent.prototype.fetchData;
+        jest.spyOn(
+            TimetableAllLineComponent.prototype,
+            'fetchData',
+        ).mockImplementation(function (this: TimetableAllLineComponent) {
+            return original.call(this).catch(() => undefined);
+        });
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('前の URL の「無い」が遅れて届いても、今の正しい URL を見つからない表示にしない', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks = jest
+            .fn()
+            .mockReturnValueOnce(first$)
+            .mockReturnValue(of(undefined));
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        params$.next(
+            convertToParamMap({ calendar_id: CALENDAR, trip_direction: '1' }),
+        );
+        await flush();
+        first$.next(undefined);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+    });
+
+    it('見つからない表示から正しい URL へ移ると、本体に戻って取得し題名も付け直す', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            trip_direction: '0',
+        });
+        expect(hasNotFound(fixture)).toBe(true);
+        setTitle.mockClear();
+
+        params$.next(
+            convertToParamMap({ calendar_id: CALENDAR, trip_direction: '0' }),
+        );
+        await flush();
+        fixture.detectChanges();
+
+        expect(hasNotFound(fixture)).toBe(false);
+        expect(hasBody(fixture)).toBe(true);
+        expect(fetchTripBlocks).toHaveBeenCalled();
+        expect(setTitle).toHaveBeenCalledWith(
+            expect.stringContaining('全線時刻表'),
+        );
+    });
+
+    it('見つからない表示でも操作帯は出し、本体の表だけを置き換える', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            trip_direction: '0',
+        });
+
+        expect(hasNotFound(fixture)).toBe(true);
+        expect(hasBand(fixture)).toBe(true);
+        expect(hasBody(fixture)).toBe(false);
+    });
+
+    it('見つからない表示の操作帯でダイヤを選ぶと、不正な値を持ち越さず Router で遷移する', async () => {
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: 'abc',
+        });
+        navigate.mockClear();
+
+        fixture.componentInstance.onCalendarChange(
+            '99999999-2222-3333-4444-555555555555',
+        );
+
+        expect(navigate).toHaveBeenCalledWith([
+            'timetable',
+            'all-line',
+            { calendar_id: '99999999-2222-3333-4444-555555555555' },
+        ]);
+    });
+
+    it('存在しない運行の取得が遅れて届く間に、値の無い URL へ移っても、見つからない表示にしない', async () => {
+        const first$ = new Subject<undefined>();
+        fetchTripBlocks = jest
+            .fn()
+            .mockReturnValueOnce(first$)
+            .mockReturnValue(of(undefined));
+        const fixture = await create({
+            calendar_id: CALENDAR,
+            trip_direction: '0',
+            trip_block_id: BLOCK,
+        });
+
+        params$.next(convertToParamMap({}));
+        await flush();
+        first$.next(undefined);
+        first$.complete();
+        await flush();
+        fixture.detectChanges();
+
+        expect(mark).not.toHaveBeenCalled();
+        expect(hasNotFound(fixture)).toBe(false);
+    });
+
+    it('見つからない表示のとき、題名を上書きしない', async () => {
+        await create({ calendar_id: 'undefined', trip_direction: '0' });
+        TestBed.inject(TimetableAllLineStore).setTripDirection(1);
+        TestBed.tick();
+
+        expect(setTitle).not.toHaveBeenCalled();
+    });
+
+    it('見つからない表示のとき、読み込みの帯は出さない', async () => {
+        const fixture = await create({
+            calendar_id: 'undefined',
+            trip_direction: '0',
+        });
+        TestBed.inject(TimetableAllLineStore).enableLoading();
+        fixture.detectChanges();
+
+        expect(
+            fixture.nativeElement.querySelector('mat-progress-bar'),
+        ).toBeNull();
     });
 });
 

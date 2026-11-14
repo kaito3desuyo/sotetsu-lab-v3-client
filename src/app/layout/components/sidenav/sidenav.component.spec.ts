@@ -2,7 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { unprotected } from '@ngrx/signals/testing';
+import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { UserState } from 'src/app/global-states/user.state';
+import { CalendarDetailsDto } from 'src/app/libs/calendar/usecase/dtos/calendar-details.dto';
+import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
+import { of } from 'rxjs';
 
 import { SidenavComponent } from './sidenav.component';
 
@@ -118,6 +122,44 @@ describe('SidenavComponent', () => {
                     ?.textContent?.trim(),
             ).toBe('マイページ');
             expect(element).not.toHaveTextContent('投稿管理');
+        });
+    });
+
+    describe('今日のダイヤに依存するリンク', () => {
+        const CALENDAR_ID = '11111111-2222-3333-4444-555555555555';
+
+        function hrefs(): string[] {
+            fixture.detectChanges();
+            return Array.from(
+                (fixture.nativeElement as HTMLElement).querySelectorAll('a'),
+                (a) => a.getAttribute('href') ?? '',
+            );
+        }
+
+        it('ダイヤが無いときは calendar_id を href に出さない', () => {
+            const all = hrefs();
+            expect(all.some((h) => h.startsWith('/operation/table'))).toBe(
+                true,
+            );
+            expect(all.some((h) => h.startsWith('/timetable/all-line'))).toBe(
+                true,
+            );
+            expect(all.filter((h) => h.includes('calendar_id'))).toEqual([]);
+            expect(all.filter((h) => h.includes('undefined'))).toEqual([]);
+        });
+
+        it('ダイヤがあるときは運用表・全線時刻表の href に calendar_id を出す', () => {
+            TestBed.inject(CalendarService).findOneBySpecificDate = jest
+                .fn()
+                .mockReturnValue(
+                    of({ calendarId: CALENDAR_ID } as CalendarDetailsDto),
+                );
+            TestBed.inject(TodaysCalendarListState).fetch().subscribe();
+            const all = hrefs();
+            expect(
+                all.filter((h) => h.includes(`calendar_id=${CALENDAR_ID}`))
+                    .length,
+            ).toBeGreaterThanOrEqual(3);
         });
     });
 
