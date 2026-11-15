@@ -69,6 +69,15 @@ describe('OperationRealTimeFormationCardComponent', () => {
         expect(link?.textContent?.trim()).toBe('10701');
     });
 
+    it('編成番号のリンクは押せる範囲を 24px の高さに広げる（WCAG 2.5.8）', () => {
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=10701"]',
+        );
+        expect(link?.classList).toContain('app-hit-area');
+    });
+
     it('運用番号は共通のチップで出し、本日中の目撃なら太字・「?」なし・行路図へのリンク', () => {
         fixture.componentRef.setInput('timeCrossSection', {
             latestSighting: {

@@ -70,6 +70,18 @@ describe('OperationRealTimeOperationCardComponent', () => {
         expect(link?.textContent?.trim()).toBe('8713');
     });
 
+    it('編成番号のリンクは押せる範囲を 24px の高さに広げる（WCAG 2.5.8）', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            expectedSighting: { formation: { formationNumber: '8713' } },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href="/timetable/formation;formation_number=8713"]',
+        );
+        expect(link?.classList).toContain('app-hit-area');
+    });
+
     it('昨日の目撃の下線は編成番号のリンクで消さない', () => {
         fixture.componentRef.setInput('timeCrossSection', {
             latestSighting: {

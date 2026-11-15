@@ -20,7 +20,7 @@ import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
     template: `
         @if (link(); as link) {
             <a
-                class="tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
+                class="app-hit-area tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
                 [routerLink]="link"
                 >{{ formationNumber() }}</a
             >
