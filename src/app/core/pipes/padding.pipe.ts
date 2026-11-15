@@ -11,7 +11,7 @@ const padding = (str: string, num: number, pad: string) => {
     name: 'padding',
 })
 export class PaddingPipe implements PipeTransform {
-    transform(value: any, args: { num: number; pad?: string }): any {
+    transform(value: string, args: { num: number; pad?: string }): string {
         return padding(value, args.num, args.pad);
     }
 }
