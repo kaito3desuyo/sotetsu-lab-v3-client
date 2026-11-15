@@ -37,6 +37,43 @@ describe('SidenavComponent', () => {
         expect(component.timetableLinkPrefix()).toBe('駅別時刻表');
     });
 
+    describe('見出しと navigation', () => {
+        function render(): HTMLElement {
+            fixture.detectChanges();
+            return fixture.nativeElement as HTMLElement;
+        }
+
+        it('小見出しは h2 で、h3 は残っていない', () => {
+            const element = render();
+            const headings = Array.from(
+                element.querySelectorAll(
+                    'h2[matSubheader], h2.mat-mdc-subheader',
+                ),
+                (h) => h.textContent?.trim(),
+            );
+            expect(headings).toEqual(
+                expect.arrayContaining([
+                    '時刻表',
+                    '列車',
+                    '運用情報',
+                    'ライブラリ',
+                    'このサイトについて',
+                ]),
+            );
+            expect(element.querySelector('h3')).toBeNull();
+        });
+
+        it('navigation は 1 つだけで、名前は「メインナビゲーション」', () => {
+            const element = render();
+            const navs = element.querySelectorAll('nav, [role="navigation"]');
+            expect(navs).toHaveLength(1);
+            expect(navs[0]).toHaveAttribute(
+                'aria-label',
+                'メインナビゲーション',
+            );
+        });
+    });
+
     describe('投稿管理のリンク', () => {
         function linkTexts(): string {
             fixture.detectChanges();
@@ -98,7 +135,7 @@ describe('SidenavComponent', () => {
         it('editor には「アカウント」の下に「マイページ」を出し、「管理」より上にある', () => {
             setRole('editor');
             const element = render();
-            const headings = Array.from(element.querySelectorAll('h3'), (h) =>
+            const headings = Array.from(element.querySelectorAll('h2'), (h) =>
                 h.textContent?.trim(),
             );
             expect(headings).toContain('アカウント');

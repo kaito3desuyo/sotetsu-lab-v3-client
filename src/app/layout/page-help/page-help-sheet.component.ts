@@ -6,7 +6,7 @@ import {
 } from '@angular/material/bottom-sheet';
 import { RouterLink } from '@angular/router';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
-import { findPageHelp, SITE_INTRO, toHelpPage } from './page-help';
+import { findPageHelp, helpHeading, SITE_INTRO, toHelpPage } from './page-help';
 
 export interface PageHelpSheetData {
     /** ヘッダーに出ているページ名。無ければ空文字 */
@@ -28,9 +28,7 @@ export class PageHelpSheetComponent {
     readonly #sheetRef = inject(MatBottomSheetRef);
     readonly #ga = inject(GoogleAnalyticsService);
 
-    readonly heading = this.#data.pageTitle
-        ? `${this.#data.pageTitle}の見方`
-        : 'Sotetsu Lab. の見方';
+    readonly heading = helpHeading(this.#data.pageTitle);
     readonly lines: string[] = findPageHelp(this.#data.path)?.lines ?? [
         SITE_INTRO,
     ];

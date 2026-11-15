@@ -49,6 +49,16 @@ describe('FilterChipsComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('ariaLabel を mat-chip-listbox の aria-label に出す', () => {
+        fixture.componentRef.setInput('ariaLabel', '会社で絞り込み');
+        fixture.detectChanges();
+        const listbox = fixture.debugElement.query(By.css('mat-chip-listbox'));
+        expect(listbox.nativeElement).toHaveAttribute(
+            'aria-label',
+            '会社で絞り込み',
+        );
+    });
+
     describe('multiple モード', () => {
         beforeEach(() => {
             fixture.componentRef.setInput('mode', 'multiple');

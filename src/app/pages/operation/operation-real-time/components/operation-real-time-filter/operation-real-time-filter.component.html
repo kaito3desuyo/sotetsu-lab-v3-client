@@ -8,6 +8,7 @@
          後から伸びると下の一覧がずれて CLS になる（2026-10-21） -->
     @if (hasFetchedFormations()) {
         <app-filter-chips
+            ariaLabel="会社で絞り込み"
             class="tw-min-h-[42px]"
             mode="multiple"
             [scrollMode]="true"
@@ -22,6 +23,7 @@
     }
     @if (hasFetchedOperations()) {
         <app-filter-chips
+            ariaLabel="運用群で絞り込み"
             class="tw-min-h-[42px]"
             mode="multiple"
             [scrollMode]="true"

@@ -93,7 +93,10 @@
              「帯は全幅・カードは余白あり」を両立させる。この要素は md 未満でしか
              作らないので、打ち消す値は tw-p-4 の 16px 固定でよい。 -->
         <div class="tw-mx-[-16px]">
-            <mat-tab-group (selectedIndexChange)="onMobileTabChange($event)">
+            <mat-tab-group
+                [aria-label]="'並び順'"
+                (selectedIndexChange)="onMobileTabChange($event)"
+            >
                 <mat-tab label="運用順">
                     <div class="tw-px-4 tw-pt-3">
                         <app-operation-real-time-operation-table

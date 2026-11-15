@@ -17,6 +17,7 @@ import { SegmentToggleComponent } from '../segment-toggle/segment-toggle.compone
     selector: 'app-sticky-direction-toggle',
     template: `
         <app-segment-toggle
+            ariaLabel="方向"
             [options]="options"
             [value]="value()"
             (valueChange)="onChange($event)"

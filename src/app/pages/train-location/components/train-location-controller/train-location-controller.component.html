@@ -4,6 +4,7 @@
      時刻指定のときは、時計の場所が時刻の入力欄に、ダイヤの字が選択欄に変わる -->
 <div class="tw-px-3 tw-pt-2">
     <app-filter-chips
+        ariaLabel="路線で絞り込み"
         mode="single"
         [scrollMode]="true"
         [options]="routeOptions()"
@@ -98,6 +99,7 @@
 
         <app-segment-toggle
             class="tw-w-48"
+            ariaLabel="表示する時刻"
             [options]="modeOptions"
             [value]="mode()"
             (valueChange)="onModeChange($event)"

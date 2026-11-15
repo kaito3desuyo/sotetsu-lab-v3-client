@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+    afterNextRender,
+    ChangeDetectionStrategy,
+    Component,
+    ElementRef,
+    inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -33,6 +39,7 @@ export interface OperationPostDialogData {
                     mat-icon-button
                     type="button"
                     aria-label="投稿ダイアログを閉じる"
+                    data-dialog-close
                     (click)="close()"
                 >
                     <mat-icon>clear</mat-icon>
@@ -62,6 +69,15 @@ export class OperationPostDialogComponent {
     readonly titleId = OPERATION_POST_DIALOG_TITLE_ID;
 
     constructor() {
+        // 開いた直後は最初の欄に入れる。欄が無い表示（ゲストの案内・viewer）では閉じるボタン
+        const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+        afterNextRender(() =>
+            (
+                host.querySelector<HTMLElement>(
+                    'app-operation-post-form form [formcontrolname]',
+                ) ?? host.querySelector<HTMLElement>('[data-dialog-close]')
+            )?.focus(),
+        );
         // CDK の closeOnNavigation は popstate にしか効かない。ゲストが案内の「ログイン」「新規登録」
         // （routerLink の pushState）を押したときにも閉じる
         this.#router.events

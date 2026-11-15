@@ -10,6 +10,11 @@ export interface PageHelp {
 export const SITE_INTRO =
     '相鉄線の「どの編成が、どの列車に入っているか」を、みんなの目撃で記録する非公式のサイトです。';
 
+/** ヘルプのシートの見出し（シートの名前としても使う） */
+export function helpHeading(pageTitle: string): string {
+    return pageTitle ? `${pageTitle}の見方` : 'Sotetsu Lab. の見方';
+}
+
 const TIMETABLE_EDIT: PageHelp = {
     lines: [
         '列車の種別・列車番号・各駅の時刻・運用番号を入れて保存するページです。',

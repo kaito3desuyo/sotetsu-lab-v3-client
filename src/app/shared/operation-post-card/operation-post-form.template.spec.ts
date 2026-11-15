@@ -7,11 +7,13 @@ import { provideRouter } from '@angular/router';
 import { patchState } from '@ngrx/signals';
 import { setAllEntities } from '@ngrx/signals/entities';
 import { unprotected } from '@ngrx/signals/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { FetchError } from 'src/app/core/classes/custom-error';
 import { ErrorHandlerService } from 'src/app/core/services/error-handler.service';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -176,22 +178,140 @@ describe('OperationPostFormComponent（テンプレート）', () => {
         expect(form).toHaveTextContent('列車から選ぶ');
     });
 
-    it('一覧を引き直している間は、送るボタンが無効に見える', () => {
-        component.sightingForm.patchValue({
-            agencyId: 'sotetsu',
-            formationOrVehicleNumber: '10701',
-            operationNumber: '1',
-        });
-        fixture.detectChanges();
-        const submitButton = () =>
+    describe('押せないときの知らせ', () => {
+        const submitButton = (): HTMLButtonElement =>
             fixture.nativeElement.querySelector(
                 'app-button[type="submit"] button, button[type="submit"]',
             );
-        expect(submitButton()).toBeEnabled();
+        const post = (): jest.Mock =>
+            TestBed.inject(OperationPostCardService)
+                .postOperationSighting as unknown as jest.Mock;
+        const fillValid = (): void => {
+            patchState(
+                unprotected(TestBed.inject(TodaysOperationListState)),
+                setAllEntities(
+                    [
+                        { operationId: 'op1', operationNumber: '1' },
+                    ] as unknown as OperationDetailsDto[],
+                    { selectId: (o: OperationDetailsDto) => o.operationId },
+                ),
+            );
+            component.sightingForm.patchValue({
+                agencyId: 'sotetsu',
+                formationOrVehicleNumber: '10701',
+                operationNumber: '1',
+            });
+            fixture.detectChanges();
+        };
 
-        component.refreshingLists.set(true);
-        fixture.detectChanges();
+        it('送るボタンは disabled 属性を持たず、押せないときだけ aria-disabled が付く', () => {
+            // 入力が足りない
+            expect(submitButton()).toBeEnabled();
+            expect(submitButton()).toHaveAttribute('aria-disabled', 'true');
 
-        expect(submitButton()).toBeDisabled();
+            fillValid();
+            expect(submitButton()).toBeEnabled();
+            expect(submitButton()).not.toHaveAttribute('aria-disabled');
+        });
+
+        it('一覧を引き直している間は、送るボタンが押せない印になり、押しても何も始めない', async () => {
+            fillValid();
+            const refresh = jest.spyOn(
+                TestBed.inject(TodaysListsRefresher),
+                'refreshIfStale',
+            );
+
+            component.refreshingLists.set(true);
+            fixture.detectChanges();
+            expect(submitButton()).toBeEnabled();
+            expect(submitButton()).toHaveAttribute('aria-disabled', 'true');
+
+            submitButton().click();
+            await fixture.whenStable();
+
+            expect(refresh).not.toHaveBeenCalled();
+            expect(post()).not.toHaveBeenCalled();
+        });
+
+        it('送っている間は、押しても Enter（form の submit）でも何も始めない', async () => {
+            fillValid();
+            const refresh = jest.spyOn(
+                TestBed.inject(TodaysListsRefresher),
+                'refreshIfStale',
+            );
+            component.submitting.set(true);
+            fixture.detectChanges();
+
+            submitButton().click();
+            fixture.nativeElement
+                .querySelector('form')
+                .dispatchEvent(new Event('submit'));
+            await fixture.whenStable();
+
+            expect(refresh).not.toHaveBeenCalled();
+            expect(post()).not.toHaveBeenCalled();
+        });
+
+        it('入力が足りないまま押すと、全部の欄が触れた扱いになり、最初の足りない欄にフォーカスが移る', async () => {
+            submitButton().click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+
+            const form: HTMLElement = fixture.nativeElement;
+            expect(post()).not.toHaveBeenCalled();
+            expect(
+                form.querySelector('mat-select[formcontrolname="agencyId"]'),
+            ).toHaveFocus();
+            expect(form.querySelectorAll('mat-error').length).toBe(3);
+        });
+
+        it('所属だけ入っていれば、次の足りない欄（編成番号）にフォーカスが移る', async () => {
+            component.sightingForm.patchValue({ agencyId: 'sotetsu' });
+            fixture.detectChanges();
+
+            submitButton().click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+
+            expect(
+                fixture.nativeElement.querySelector(
+                    'input[formcontrolname="formationOrVehicleNumber"]',
+                ),
+            ).toHaveFocus();
+        });
+
+        it('失敗したとき、snackbar と同じ文が role="alert" の見えない領域に入り、次に送るときに空になる', async () => {
+            fillValid();
+            const errorHandler = TestBed.inject(
+                ErrorHandlerService,
+            ) as unknown as { handleError: jest.Mock };
+            errorHandler.handleError = jest.fn();
+            post().mockReturnValueOnce(
+                throwError(() => new FetchError(500, '編成が見つかりません')),
+            );
+            const region = (): HTMLElement =>
+                fixture.nativeElement.querySelector('[role="alert"]');
+            expect(region()).toHaveTextContent('');
+            expect(region()).toHaveClass('tw-sr-only');
+
+            const directive = { resetForm: jest.fn() } as unknown as Parameters<
+                typeof component.submit
+            >[0];
+            await component.submit(directive);
+            fixture.detectChanges();
+
+            expect(region()).toHaveTextContent('編成が見つかりません');
+            expect(TestBed.inject(MatSnackBar).open).toHaveBeenCalledWith(
+                '編成が見つかりません',
+                'OK',
+                { duration: 3000 },
+            );
+
+            post().mockReturnValueOnce(new Promise(() => undefined));
+            void component.submit(directive);
+            await new Promise((r) => setTimeout(r));
+            fixture.detectChanges();
+            expect(region()).toHaveTextContent('');
+        });
     });
 });

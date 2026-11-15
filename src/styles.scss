@@ -292,6 +292,12 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
 // 構造クラスに対して色・枠線を直接指定して確実に上書きする。字の太さも Material の指定（500）に負けないよう、
 // 構造クラスと重ねて詳細度を上げる。
 .app-button.mat-mdc-button-base {
+    // 押せない印だけのボタン（disabledInteractive）にも、disabled と同じく hover の状態層を出さない
+    &.mat-mdc-button-disabled-interactive:hover
+        > .mat-mdc-button-persistent-ripple::before {
+        opacity: 0;
+    }
+
     font-size: 0.875rem;
     font-weight: 700;
     cursor: pointer;
@@ -331,5 +337,27 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
         color: var(--color-structure) !important;
         border-color: var(--color-structure) !important;
         opacity: 0.5;
+    }
+}
+
+// 動きを抑える設定のとき、読み込みのバー（mat-progress-bar）の不定の動きを止める。
+// 動かない帯として残し、読み込み中であることは分かるようにする（左右に流れるのをやめるだけ）
+@media (prefers-reduced-motion: reduce) {
+    .mat-mdc-progress-bar.mdc-linear-progress--indeterminate {
+        .mdc-linear-progress__primary-bar,
+        .mdc-linear-progress__secondary-bar,
+        .mdc-linear-progress__bar-inner {
+            animation: none !important;
+        }
+
+        .mdc-linear-progress__primary-bar {
+            left: 0;
+            // 部品が style 属性に transform（scaleX）を書くので、!important で打ち消す
+            transform: none !important;
+        }
+
+        .mdc-linear-progress__secondary-bar {
+            display: none;
+        }
     }
 }
