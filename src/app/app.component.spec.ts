@@ -214,12 +214,13 @@ describe('AppComponent', () => {
         });
 
         it('読み込み直してもまた読めなければ、回し続けずに失敗を知らせる', async () => {
+            // 前のページで同じ URL を読み込み直した印が残っている（読み込み直した後の新しいページ）
+            sessionStorage.setItem('stale-chunk-reload-url', '/stale-chunk');
             TestBed.createComponent(AppComponent);
 
             await navigate();
-            await navigate();
 
-            expect(assign).toHaveBeenCalledTimes(1);
+            expect(assign).not.toHaveBeenCalled();
             expect(notify).toHaveBeenCalledWith(
                 'ページの読み込みに失敗しました',
                 'OK',
