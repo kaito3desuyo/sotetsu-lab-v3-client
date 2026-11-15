@@ -47,6 +47,7 @@
             </mat-form-field>
 
             <app-segment-toggle
+                ariaLabel="方向"
                 [options]="tripDirectionOptions"
                 [value]="tripDirection()"
                 (valueChange)="onTripDirectionChange($event)"

@@ -1,6 +1,7 @@
 <mat-button-toggle-group
     class="segment-toggle-group tw-w-full"
     hideSingleSelectionIndicator
+    [attr.aria-label]="ariaLabel() ?? null"
     [value]="value()"
     [disabled]="disabled()"
     (change)="onChange($event)"

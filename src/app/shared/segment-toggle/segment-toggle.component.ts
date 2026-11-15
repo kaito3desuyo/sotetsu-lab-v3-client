@@ -36,6 +36,8 @@ export class SegmentToggleComponent {
     readonly options = input.required<readonly SegmentToggleOption[]>();
     readonly value = input<FilterChipValue | undefined>(undefined);
     readonly disabled = input<boolean>(false);
+    /** 読み上げ用の群の名前（画面には出ない）。何を選ぶ群かを書く */
+    readonly ariaLabel = input<string | undefined>(undefined);
 
     readonly valueChange = output<FilterChipValue>();
 

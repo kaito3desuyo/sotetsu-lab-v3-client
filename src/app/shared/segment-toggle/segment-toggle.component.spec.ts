@@ -31,6 +31,15 @@ describe('SegmentToggleComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    it('ariaLabel を mat-button-toggle-group の aria-label に出す', () => {
+        fixture.componentRef.setInput('ariaLabel', '方向');
+        fixture.detectChanges();
+        const group = fixture.nativeElement.querySelector(
+            'mat-button-toggle-group',
+        );
+        expect(group).toHaveAttribute('aria-label', '方向');
+    });
+
     it('2セグメント分のボタンを描画する', () => {
         fixture.detectChanges();
         expect(buttons().length).toBe(2);

@@ -48,6 +48,8 @@ export class FilterChipsComponent {
     readonly scrollMode = input<boolean>(false);
     /** 選択中チップの塗り色。既定 'accent'（オレンジ）で全ページ統一 */
     readonly selectedColor = input<'primary' | 'accent'>('accent');
+    /** 読み上げ用の群の名前（画面には出ない）。近くの見出しの文言か「{対象}で絞り込み」 */
+    readonly ariaLabel = input<string | undefined>(undefined);
 
     readonly selectedChange = output<FilterChipValue[]>();
 

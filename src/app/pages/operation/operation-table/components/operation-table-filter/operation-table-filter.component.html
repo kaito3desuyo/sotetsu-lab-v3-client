@@ -62,6 +62,7 @@
         <!-- 運用群は運用から作るので、取る前は「休」だけが出ていた。チップの形の骨組みにする（2026-10-22） -->
         @if (hasFetchedOperationTrips()) {
             <app-filter-chips
+                ariaLabel="運用群で絞り込み"
                 class="tw-min-h-[42px]"
                 mode="multiple"
                 [scrollMode]="true"

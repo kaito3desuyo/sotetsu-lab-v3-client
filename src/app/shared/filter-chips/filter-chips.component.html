@@ -6,6 +6,7 @@
     >
         <mat-chip-listbox
             class="tw-list-none"
+            [attr.aria-label]="ariaLabel() ?? null"
             [class.filter-chips-scroll]="scrollMode()"
             [multiple]="mode() === 'multiple'"
             [value]="listboxValue()"

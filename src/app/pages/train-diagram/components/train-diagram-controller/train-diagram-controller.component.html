@@ -3,6 +3,7 @@
      2 行目: ダイヤ・時刻へ跳ぶ・今・方向・横の縮尺 -->
 <div class="tw-px-3 tw-pt-2">
     <app-filter-chips
+        ariaLabel="路線で絞り込み"
         mode="multiple"
         [scrollMode]="true"
         [options]="routeOptions()"
@@ -67,7 +68,7 @@
              全幅の部品なので、この行では幅を決めて並べる -->
         <app-segment-toggle
             class="!tw-w-52"
-            aria-label="方向"
+            ariaLabel="方向"
             [options]="directionOptions"
             [value]="directionFilter()"
             (valueChange)="onDirectionChange($event)"
