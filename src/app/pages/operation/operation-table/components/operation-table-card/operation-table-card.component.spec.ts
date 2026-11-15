@@ -91,6 +91,16 @@ describe('OperationTableCardComponent', () => {
     const tripRows = () =>
         component.rows().filter((row): row is TripRow => row.kind === 'trip');
 
+    it('見出しの運用番号のリンクは「運用 {番号}」の名前を持つ', () => {
+        fixture.detectChanges();
+
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'header a',
+        );
+        expect(link?.textContent?.trim()).toBe('11');
+        expect(link).toHaveAttribute('aria-label', '運用 11');
+    });
+
     it('折返し表は行ごとに li の一覧で読める（黒丸・余白は出さない）', () => {
         fixture.detectChanges();
 

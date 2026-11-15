@@ -292,6 +292,13 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
             expect(h2?.classList).toContain('tw-sr-only');
             expect(h2?.textContent?.trim()).toMatch(/^\d+ 時$/);
         }
+        // 見える時の数字は、h2 と二重に読まれないよう読み上げから外す
+        for (const section of Array.from(sections)) {
+            const visibleHour = section.querySelector(
+                ':scope > div > span.tw-sticky',
+            );
+            expect(visibleHour).toHaveAttribute('aria-hidden', 'true');
+        }
         const cells = root.querySelectorAll(
             'article > section ul > li[app-timetable-station-trip-cell]',
         );

@@ -12,6 +12,7 @@
                     '/operation/route-diagram',
                     { operation_id: operationTrip().operation.operationId },
                 ]"
+                [attr.aria-label]="operationName()"
             >
                 {{ operationTrip().operation.operationNumber }}
             </a>
