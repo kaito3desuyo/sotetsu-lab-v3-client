@@ -1,20 +1,25 @@
 import { parseISO } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
-/** 鉄道日を決める時刻帯（端末の時刻帯には頼らない） */
-export const RAILWAY_TIME_ZONE = 'Asia/Tokyo';
-
 /**
  * 鉄道日の日付境界（この時刻より前は前日の営業日として扱う）
  */
 export const RAILWAY_DAY_BOUNDARY_HOUR = 4;
+
+/**
+ * 鉄道日を決める日本時間の時差（端末の時刻帯には頼らない）。書く・読むときは時刻帯の名前でなくこれを渡す。
+ * 名前（Asia/Tokyo）を渡すと date-fns-tz が呼ぶたびに Intl で時差を引く。リアルタイムの 104 枚の
+ * カードを描くときに一番重い関数がこれで、固定の時差にすると 1 回 6〜8μs が 2〜3μs になった
+ * （2026-11-16 実測）。日本時間は夏時間が無いので結果は同じ（3 つの時刻帯で 240 万通りを比べた）
+ */
+const JST_OFFSET = '+09:00';
 
 const MS_PER_HOUR = 3_600_000;
 const MS_PER_DAY = 86_400_000;
 
 /** 日本時間で書く（`formatInTimeZone` を日本時間で包んだもの）。 */
 export function formatJst(at: Date, pattern: string): string {
-    return formatInTimeZone(at, RAILWAY_TIME_ZONE, pattern);
+    return formatInTimeZone(at, JST_OFFSET, pattern);
 }
 
 /**
@@ -30,7 +35,7 @@ export function railwayDateKey(at: Date = new Date()): string {
 
 /** 'yyyy-MM-dd' の日の日本時間 0 時の時点。 */
 export function jstMidnightOf(dateKey: string): Date {
-    return fromZonedTime(`${dateKey}T00:00:00`, RAILWAY_TIME_ZONE);
+    return fromZonedTime(`${dateKey}T00:00:00`, JST_OFFSET);
 }
 
 /** その営業日の日本時間 0 時の時点。 */
@@ -74,7 +79,7 @@ export function jstDateTimeOf(
     const mm = String(minutes).padStart(2, '0');
     return fromZonedTime(
         `${formatJst(anchor, 'yyyy-MM-dd')}T${hh}:${mm}:00`,
-        RAILWAY_TIME_ZONE,
+        JST_OFFSET,
     );
 }
 

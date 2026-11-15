@@ -22,10 +22,7 @@
         <div
             class="-tw-mb-px -tw-mr-px tw-grid tw-grid-cols-1 2xl:tw-grid-cols-2"
         >
-            @for (
-                operation of filteredOperations();
-                track operation.operationId
-            ) {
+            @for (operation of shownOperations(); track operation.operationId) {
                 <app-operation-real-time-operation-card
                     class="tw-border-0 tw-border-b tw-border-r tw-border-solid tw-border-rule"
                     [operation]="operation"

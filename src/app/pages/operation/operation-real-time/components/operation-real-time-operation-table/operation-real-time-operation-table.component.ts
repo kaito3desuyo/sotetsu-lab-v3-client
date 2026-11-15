@@ -5,6 +5,7 @@ import {
     inject,
     input,
 } from '@angular/core';
+import { renderInSteps } from 'src/app/core/utils/render-in-steps';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeOperationCardComponent } from '../operation-real-time-operation-card/operation-real-time-operation-card.component';
@@ -65,6 +66,9 @@ export class OperationRealTimeOperationTableComponent {
             ? filtered
             : filtered.filter((o) => only.has(o.operationNumber));
     });
+
+    /** 描く分（長い一覧は 24 枚ずつ画面の更新ごとに足す。絞り込みを外したときに止まらないように） */
+    readonly shownOperations = renderInSteps(this.filteredOperations);
 
     readonly queryTimeCrossSectionByOperationNumber = (
         operationNumber: string,
