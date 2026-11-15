@@ -13,6 +13,7 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
             <article class="tw-overflow-clip tw-rounded-card tw-bg-white">
                 <app-empty-state
                     icon="cloud_off"
+                    headingLevel="h2"
                     message="読み込めませんでした"
                     subtitle="時間をおいてお試しください。"
                     actionLabel="もう一度読み込む"
