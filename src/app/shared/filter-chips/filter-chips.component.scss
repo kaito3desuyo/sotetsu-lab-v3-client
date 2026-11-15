@@ -7,6 +7,13 @@
     flex-wrap: nowrap;
 }
 
+// scrollMode: チップの 1 行は中のスクロール枠（.tw-overflow-x-auto）が受ける。
+// 枠の外へはみ出した分がページの横スクロールにならないよう、ホストの横も切る
+// （clip は縦を切らないので、縦の余白（margin-block）やフォーカスリングは変わらない）。
+:host(.filter-chips-host-scroll) {
+    overflow-x: clip;
+}
+
 // G0-2: 絞り込みチップの角型化・状態別配色。
 // MatChip の M2 テーマは背景色・角丸を CSS カスタムプロパティのカスケードで
 // 決めており、そのカスケード順序に依存すると環境差で選択状態が灰のまま

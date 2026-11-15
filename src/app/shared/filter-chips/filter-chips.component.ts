@@ -36,7 +36,8 @@ import { FilterChipOption, FilterChipValue } from './filter-chip-option.type';
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [MatChipsModule],
     host: {
-        class: 'tw-block',
+        class: 'tw-block tw-min-w-0 tw-max-w-full',
+        '[class.filter-chips-host-scroll]': 'scrollMode()',
         '(window:resize)': 'updateScrollIndicators()',
     },
 })

@@ -223,6 +223,27 @@ describe('FilterChipsComponent', () => {
             expect(listbox.classList).toContain('filter-chips-scroll');
         });
 
+        it('横スクロール 1 行でも、チップの幅が親（画面）を超えて広げない（320px の横スクロール）', () => {
+            const host: HTMLElement = fixture.nativeElement;
+            expect(host.classList).toContain('tw-min-w-0');
+            expect(host.classList).toContain('tw-max-w-full');
+            // はみ出す分はホストで切り、スクロールは中のスクロール枠だけが受ける
+            expect(host.classList).toContain('filter-chips-host-scroll');
+            const scroller: HTMLElement = host.querySelector(
+                '.tw-overflow-x-auto',
+            )!;
+            expect(scroller.classList).toContain('tw-max-w-full');
+        });
+
+        it('折返し表示ではホストで切らない', () => {
+            fixture.componentRef.setInput('scrollMode', false);
+            fixture.detectChanges();
+
+            expect(fixture.nativeElement.classList).not.toContain(
+                'filter-chips-host-scroll',
+            );
+        });
+
         it('既定（scrollMode 未指定）では filter-chips-scroll クラスを付与しない（折返し表示を維持）', () => {
             fixture.componentRef.setInput('scrollMode', false);
             fixture.detectChanges();
