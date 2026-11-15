@@ -15,19 +15,20 @@ export class StaleChunkReload {
     readonly #document = inject(DOCUMENT);
     readonly #storage = this.#document.defaultView?.sessionStorage ?? null;
     /**
-     * このページで読み込み直しを始めたか。同じ失敗が画面の移動（NavigationError）と ErrorHandler の
-     * 両方に届くので、後から来た方が別の URL で上書きしないようにする
+     * このページで一度決めた答え（読み込み直したか・諦めたか）。同じ失敗が画面の移動（NavigationError）と
+     * ErrorHandler の両方に届くので、後から来た方が別の URL で読み込み直さないよう、最初の答えを返し続ける
      */
-    #reloading = false;
+    #decided: boolean | null = null;
 
     /** 読み込み直したら true。もう試した URL・読み込み直せない所（サーバー）では false */
     reload(url: string): boolean {
-        if (this.#reloading) return true;
+        if (this.#decided !== null) return this.#decided;
         if (!this.#storage || this.#storage.getItem(STORAGE_KEY) === url) {
+            this.#decided = false;
             return false;
         }
         this.#storage.setItem(STORAGE_KEY, url);
-        this.#reloading = true;
+        this.#decided = true;
         this.#location.assign(url);
         return true;
     }
@@ -44,7 +45,10 @@ export class StaleChunkReload {
         );
     }
 
-    /** 画面を移れたら印を消す（次のデプロイの後にも 1 回読み込み直せるように） */
+    /**
+     * 画面を移れたら印を消す（次のデプロイの後にも 1 回読み込み直せるように）。
+     * 読み込み直した直後の最初の移動では呼ばない（その後に @defer の部品がまた読めないと、印が無いので読み込み直し続ける）
+     */
     clear(): void {
         this.#storage?.removeItem(STORAGE_KEY);
     }

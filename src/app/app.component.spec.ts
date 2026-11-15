@@ -20,6 +20,7 @@ import {
     QueryInvalidationTag,
     QueryInvalidator,
 } from './core/query-cache/query-invalidator';
+import { StaleChunkReload } from './core/services/stale-chunk-reload';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
@@ -66,6 +67,7 @@ describe('AppComponent', () => {
                         ],
                         children: [],
                     },
+                    { path: 'ok', children: [] },
                     {
                         path: 'stale-chunk',
                         loadComponent: () =>
@@ -225,6 +227,29 @@ describe('AppComponent', () => {
                 'ページの読み込みに失敗しました',
                 'OK',
             );
+        });
+
+        it('読み込み直した後のページで、画面の移動の外の失敗が続いても読み込み直し続けない', async () => {
+            // 前のページで /ok を読み込み直した。最初の移動は成功し、その後に @defer の部品が読めない
+            sessionStorage.setItem('stale-chunk-reload-url', '/ok');
+            window.history.replaceState(null, '', '/ok');
+            TestBed.createComponent(AppComponent);
+
+            await TestBed.inject(Router).navigateByUrl('/ok');
+            TestBed.inject(StaleChunkReload).reloadCurrent();
+
+            expect(assign).not.toHaveBeenCalled();
+        });
+
+        it('移動の失敗で諦めた後、同じ失敗が ErrorHandler に届いても今の画面を読み込み直さない', async () => {
+            sessionStorage.setItem('stale-chunk-reload-url', '/stale-chunk');
+            TestBed.createComponent(AppComponent);
+
+            await navigate();
+            TestBed.inject(StaleChunkReload).reloadCurrent();
+
+            expect(assign).not.toHaveBeenCalled();
+            expect(notify).toHaveBeenCalled();
         });
 
         it('ほかの失敗では読み込み直さない', async () => {

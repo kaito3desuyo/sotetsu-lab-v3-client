@@ -38,6 +38,13 @@ describe('StaleChunkReload', () => {
         expect(assign).not.toHaveBeenCalled();
     });
 
+    it('一度諦めたら、後から別の URL で呼ばれても読み込み直さない', () => {
+        sessionStorage.setItem('stale-chunk-reload-url', '/guide');
+        reloader.reload('/guide');
+        expect(reloader.reload('/')).toBe(false);
+        expect(assign).not.toHaveBeenCalled();
+    });
+
     it('reloadCurrent は今の URL（path・search・hash）を読み込み直す', () => {
         window.history.replaceState(null, '', '/operation/real-time?x=1#a');
         expect(reloader.reloadCurrent()).toBe(true);
