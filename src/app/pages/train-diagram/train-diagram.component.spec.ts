@@ -8,7 +8,14 @@ import {
     provideRouter,
     withRouterConfig,
 } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
+import {
+    BehaviorSubject,
+    EMPTY,
+    Observable,
+    Subject,
+    of,
+    throwError,
+} from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { PageNotFound } from 'src/app/core/page-not-found/page-not-found';
@@ -995,6 +1002,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
     let router: {
         navigate: jest.Mock;
+        events: Observable<never>;
         createUrlTree: jest.Mock;
         serializeUrl: jest.Mock;
     };
@@ -1010,6 +1018,7 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         );
         router = {
             navigate: jest.fn(),
+            events: EMPTY,
             // createUrlTree/serializeUrl は本物の Router と同じ役割
             // （matrix params → URL 文字列）を、テストで検証しやすい形で模する。
             createUrlTree: jest.fn(
@@ -1701,7 +1710,7 @@ describe('TrainDiagramComponent のサーバー', () => {
         params: Record<string, string>,
         extraProviders: Provider[] = [],
     ) => {
-        const router = { navigate: jest.fn() };
+        const router = { navigate: jest.fn(), events: EMPTY };
         await TestBed.configureTestingModule({
             imports: [TrainDiagramComponent],
             providers: [
@@ -1829,7 +1838,10 @@ describe('TrainDiagramComponent の圏外の保存', () => {
             imports: [TrainDiagramComponent],
             providers: [
                 // 実際の Router だとコンストラクタの補正の navigate が後から失敗して他のテストへ漏れる
-                { provide: Router, useValue: { navigate: jest.fn() } },
+                {
+                    provide: Router,
+                    useValue: { navigate: jest.fn(), events: EMPTY },
+                },
                 { provide: Location, useValue: { replaceState: jest.fn() } },
                 {
                     provide: ActivatedRoute,
@@ -2204,7 +2216,10 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
         await TestBed.configureTestingModule({
             imports: [TrainDiagramComponent],
             providers: [
-                { provide: Router, useValue: { navigate: jest.fn() } },
+                {
+                    provide: Router,
+                    useValue: { navigate: jest.fn(), events: EMPTY },
+                },
                 { provide: Location, useValue: { replaceState: jest.fn() } },
                 {
                     provide: ActivatedRoute,

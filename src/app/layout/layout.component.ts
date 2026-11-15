@@ -4,6 +4,7 @@ import {
     afterNextRender,
     Component,
     ElementRef,
+    computed,
     inject,
     Injector,
     PLATFORM_ID,
@@ -25,6 +26,7 @@ import {
     focusMainContent,
     routePathKey,
 } from '../core/a11y/focus-main-content';
+import { PageNotFound } from '../core/page-not-found/page-not-found';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
@@ -65,6 +67,7 @@ export class LayoutComponent {
         'sidenav',
         { read: ElementRef },
     );
+    readonly #pageNotFound = inject(PageNotFound);
 
     readonly isOpen = signal<boolean>(false);
     readonly isVisibled = signal<boolean>(false);
@@ -87,12 +90,17 @@ export class LayoutComponent {
      * withEnabledBlockingInitialNavigation により初回ナビゲーションは
      * 本コンポーネント生成前に完了しているため、初期値も snapshot から引く。
      */
-    readonly pageTitle = toSignal(
+    readonly #routeTitle = toSignal(
         this.#router.events.pipe(
             filter((ev) => ev instanceof NavigationEnd),
             map(() => this.#currentRouteTitle()),
         ),
         { initialValue: this.#currentRouteTitle() },
+    );
+
+    /** 見つからない表示のときは、ルートの題名でなく PageNotFound.title を出す */
+    readonly pageTitle = computed(() =>
+        this.#pageNotFound.active() ? PageNotFound.title : this.#routeTitle(),
     );
 
     constructor() {

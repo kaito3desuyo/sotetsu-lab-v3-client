@@ -1,4 +1,7 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router } from '@angular/router';
+import { filter } from 'rxjs';
 import { PageMeta } from '../ssr/page-meta';
 import { SsrResponse } from '../ssr/ssr-response';
 
@@ -14,6 +17,21 @@ export class PageNotFound {
 
     readonly #response = inject(SsrResponse);
     readonly #pageMeta = inject(PageMeta);
+    readonly #active = signal(false);
+
+    /** 見つからない表示の間 true。layout のヘッダーの見出しがこれを読む */
+    readonly active = this.#active.asReadonly();
+
+    constructor() {
+        // ページを移ったら見つからない状態を捨てる（ヘッダーの見出しを残さない）。
+        // 移った先で見つからないと決めるなら、その resolver・コンポーネントが改めて mark() を呼ぶ。
+        inject(Router)
+            .events.pipe(
+                filter((ev) => ev instanceof NavigationStart),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => this.#active.set(false));
+    }
 
     /**
      * route の pageResolver が PageMeta.set した後に呼ぶこと。
@@ -21,6 +39,7 @@ export class PageNotFound {
      * 見つかる状態へ戻ったら clear() を呼ぶこと（呼ばないと、同じルートの resolver が見つからない題名を戻してしまう）。
      */
     mark(): void {
+        this.#active.set(true);
         this.#response.setStatus(404);
         this.#response.setCachePolicy('short');
         this.#pageMeta.setTitle(PageNotFound.title);
@@ -28,6 +47,7 @@ export class PageNotFound {
 
     /** 見つからない状態から戻ったとき。見つからない題名を捨て、ルート定義の題名に戻す */
     clear(): void {
+        this.#active.set(false);
         this.#pageMeta.clearDetailedTitle();
     }
 }

@@ -1,5 +1,6 @@
 import { RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { CACHE_CONTROL } from '../ssr/cache-control';
 import { PageMeta } from '../ssr/page-meta';
@@ -47,5 +48,39 @@ describe('PageNotFound', () => {
         expect(TestBed.inject(Title).getTitle()).toBe(
             '運用表 - Sotetsu Lab. v3',
         );
+    });
+
+    describe('active', () => {
+        beforeEach(() => {
+            TestBed.configureTestingModule({
+                providers: [
+                    { provide: RESPONSE_INIT, useValue: null },
+                    provideRouter([
+                        { path: '', children: [] },
+                        { path: 'other', children: [] },
+                    ]),
+                ],
+            });
+        });
+
+        it('mark で true、clear で false になる', () => {
+            const notFound = TestBed.inject(PageNotFound);
+            expect(notFound.active()).toBe(false);
+
+            notFound.mark();
+            expect(notFound.active()).toBe(true);
+
+            notFound.clear();
+            expect(notFound.active()).toBe(false);
+        });
+
+        it('別のページへ移る（NavigationStart）と false に戻る', async () => {
+            const notFound = TestBed.inject(PageNotFound);
+            notFound.mark();
+
+            await TestBed.inject(Router).navigateByUrl('/other');
+
+            expect(notFound.active()).toBe(false);
+        });
     });
 });
