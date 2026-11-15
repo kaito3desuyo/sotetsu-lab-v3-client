@@ -1,11 +1,9 @@
 <!-- N3 Side-rail（docs/design.md）。手組みの <a> 羅列をやめ mat-nav-list に寄せる。
      素の <a> は preflight 無効下でブラウザ既定の青下線のまま出ており、
      現在地の表示も無かった（audit C5）。 -->
-<nav
-    class="tw-h-full tw-w-full tw-overflow-y-auto tw-bg-white"
-    aria-label="メインナビゲーション"
->
-    <mat-nav-list>
+<div class="tw-h-full tw-w-full tw-overflow-y-auto tw-bg-white">
+    <!-- mat-nav-list が role="navigation" を持つので、外側は nav にしない（入れ子の navigation になる） -->
+    <mat-nav-list aria-label="メインナビゲーション">
         <a
             mat-list-item
             routerLink="/"
@@ -15,7 +13,7 @@
             <span matListItemTitle>TOP</span>
         </a>
 
-        <h3 matSubheader>時刻表</h3>
+        <h2 matSubheader>時刻表</h2>
         <!-- 駅名セレクトは上り/下りリンクの遷移先を決める機能を持つため残す。
              リンクと同列に並べず、時刻表グループに属するフォーム領域として囲う。 -->
         <div class="station-filter">
@@ -78,7 +76,7 @@
             <span matListItemTitle>編成別時刻表</span>
         </a>
 
-        <h3 matSubheader>列車</h3>
+        <h2 matSubheader>列車</h2>
         <a
             mat-list-item
             [routerLink]="['/train-diagram']"
@@ -94,7 +92,7 @@
             <span matListItemTitle>列車位置情報</span>
         </a>
 
-        <h3 matSubheader>運用情報</h3>
+        <h2 matSubheader>運用情報</h2>
         <a
             mat-list-item
             routerLink="/operation/real-time"
@@ -117,7 +115,7 @@
             <span matListItemTitle>運用表</span>
         </a>
 
-        <h3 matSubheader>ライブラリ</h3>
+        <h2 matSubheader>ライブラリ</h2>
         <a
             mat-list-item
             routerLink="/library/vehicle"
@@ -127,14 +125,14 @@
         </a>
 
         @if (canShowMyPage()) {
-            <h3 matSubheader>アカウント</h3>
+            <h2 matSubheader>アカウント</h2>
             <a mat-list-item routerLink="/my-page" routerLinkActive="is-active">
                 <span matListItemTitle>マイページ</span>
             </a>
         }
 
         @if (canModerate()) {
-            <h3 matSubheader>管理</h3>
+            <h2 matSubheader>管理</h2>
             <a
                 mat-list-item
                 routerLink="/moderation"
@@ -144,7 +142,7 @@
             </a>
         }
 
-        <h3 matSubheader>このサイトについて</h3>
+        <h2 matSubheader>このサイトについて</h2>
         <a mat-list-item routerLink="/guide" routerLinkActive="is-active">
             <span matListItemTitle>使い方</span>
         </a>
@@ -162,4 +160,4 @@
             <span matListItemTitle>免責事項</span>
         </a>
     </mat-nav-list>
-</nav>
+</div>

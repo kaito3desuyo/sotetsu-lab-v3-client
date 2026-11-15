@@ -137,4 +137,13 @@ describe('見出しの階段（docs/design.md Typography）', () => {
 
         expect(colored).toEqual([]);
     });
+
+    it('動きを抑える設定のとき、読み込みのバーの不定の動きを止めて静かな帯にする', () => {
+        const scss = readFileSync(join(APP_DIR, '..', 'styles.scss'), 'utf8');
+        const block = scss.slice(
+            scss.indexOf('@media (prefers-reduced-motion: reduce)'),
+        );
+        expect(block).toMatch(/\.mdc-linear-progress__primary-bar/);
+        expect(block).toMatch(/animation:\s*none/);
+    });
 });
