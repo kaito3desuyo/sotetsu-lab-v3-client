@@ -5,6 +5,7 @@ import {
     input,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { toAccessibleNumber } from '../accessible-number.util';
 import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
 
 /**
@@ -22,6 +23,7 @@ import { toRailwayDateKey } from 'src/app/core/utils/railway-day';
             <a
                 class="tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
                 [routerLink]="link"
+                [attr.aria-label]="accessibleName()"
                 >{{ formationNumber() }}</a
             >
         } @else if (formationNumber()) {
@@ -37,6 +39,17 @@ export class FormationNumberLinkComponent {
     readonly date = input<string | null | undefined>();
     /** 目撃時刻（ISO）。date の代わりに渡すと、日本時間の運行日（4 時前は前日）で開く */
     readonly at = input<string | null | undefined>();
+
+    /** 推測の編成。「?」は呼び出し側がリンクの外に出すので、リンクの名前にだけ「（推測）」を入れる */
+    readonly inferred = input<boolean>(false);
+
+    protected readonly accessibleName = computed(() =>
+        toAccessibleNumber(
+            '編成',
+            this.formationNumber() ?? '',
+            this.inferred(),
+        ),
+    );
 
     protected readonly link = computed(() => {
         const number = this.formationNumber();

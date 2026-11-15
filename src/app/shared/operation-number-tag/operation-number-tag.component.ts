@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
+import { toAccessibleNumber } from '../accessible-number.util';
 import { OperationNumberTagContextMenu } from './operation-number-tag-context-menu.type';
 
 /**
@@ -70,6 +71,11 @@ export class OperationNumberTagComponent {
         () =>
             (this.isRetired() ? '休' : this.operationNumber()) +
             (this.inferred() ? '?' : ''),
+    );
+
+    /** リンクの読み上げ名。見える文字（番号）を含む（WCAG 2.5.3） */
+    readonly accessibleName = computed(() =>
+        toAccessibleNumber('運用', this.operationNumber(), this.inferred()),
     );
 
     /** メニューを開く位置（ビューポート座標）。トリガーをここへ置く。 */

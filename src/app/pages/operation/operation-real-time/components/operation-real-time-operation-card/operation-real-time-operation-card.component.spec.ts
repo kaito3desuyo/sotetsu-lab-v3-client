@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -68,6 +69,38 @@ describe('OperationRealTimeOperationCardComponent', () => {
             'a[href="/timetable/formation;formation_number=8713"]',
         );
         expect(link?.textContent?.trim()).toBe('8713');
+    });
+
+    it('編成番号のリンクは「編成 {番号}」の名前を持つ', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: {
+                sightingTime: new Date().toISOString(),
+            },
+            expectedSighting: { formation: { formationNumber: '8713' } },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const el = fixture.nativeElement as HTMLElement;
+        expect(
+            el.querySelector('a[href*="formation_number=8713"]'),
+        ).toHaveAttribute('aria-label', '編成 8713');
+        expect(el.querySelector('span[aria-hidden="true"]')).toBeNull();
+    });
+
+    it('推測の編成は、リンクの名前に「（推測）」を入れ、リンクの外の「?」は読み上げない', () => {
+        fixture.componentRef.setInput('timeCrossSection', {
+            latestSighting: sighting('s1'),
+            expectedSighting: { formation: { formationNumber: '8713' } },
+            sightedAsOperation: { operationId: 'op-11', operationNumber: '11' },
+        } as OperationSightingTimeCrossSectionDto);
+        fixture.detectChanges();
+
+        const el = fixture.nativeElement as HTMLElement;
+        const link = el.querySelector('a[href*="formation_number=8713"]');
+        expect(link).toHaveAttribute('aria-label', '編成 8713（推測）');
+        const mark = link?.nextElementSibling;
+        expect(mark?.textContent).toBe('?');
+        expect(mark).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('昨日の目撃の下線は編成番号のリンクで消さない', () => {

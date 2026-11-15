@@ -47,6 +47,8 @@
             <div
                 class="tw-flex tw-flex-row tw-flex-wrap tw-items-baseline tw-gap-x-2"
             >
+                @let isFormationInferred =
+                    (dayCount !== undefined && dayCount !== 0) || isInferred();
                 <span
                     class="tw-text-base tw-leading-tight"
                     [class.tw-font-bold]="dayCount === 0"
@@ -58,13 +60,18 @@
                             '/timetable/formation',
                             { formation_number: formationVm.formationNumber },
                         ]"
+                        [attr.aria-label]="
+                            isFormationInferred
+                                ? '編成 ' +
+                                  formationVm.formationNumber +
+                                  '（推測）'
+                                : '編成 ' + formationVm.formationNumber
+                        "
                         >{{ formationVm.formationNumber }}</a
-                    >{{
-                        (dayCount !== undefined && dayCount !== 0) ||
-                        isInferred()
-                            ? '?'
-                            : ''
-                    }}
+                    >
+                    @if (isFormationInferred) {
+                        <span aria-hidden="true">?</span>
+                    }
                 </span>
                 @if (formationAnnotation()) {
                     <span class="tw-whitespace-nowrap tw-text-xs tw-text-muted">

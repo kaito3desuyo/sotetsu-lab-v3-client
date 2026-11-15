@@ -12,6 +12,7 @@
             borderEnabled() ? 'inset 0 0 0 1px ' + borderColor() : null
         "
         [routerLink]="link()"
+        [attr.aria-label]="accessibleName()"
         (contextmenu)="onContextMenu($event, menuTrigger)"
         (touchstart)="onTouchStart($event, menuTrigger)"
         (touchend)="onTouchEnd($event)"
