@@ -6,18 +6,23 @@ import {
     animate,
 } from '@angular/animations';
 
+/**
+ * ドロワーは transform で動かす。left で動かすと、移った先のページを描いている間に閉じる動きが
+ * layout shift に数えられていた（ドロワーから列車位置情報へ移ると 0.204・2026-11-16 実測）。
+ * transform の動きは layout shift に数えない
+ */
 export const layoutAnimations = [
     trigger('openClose', [
         state(
             'open',
             style({
-                left: '0px',
+                transform: 'translateX(0)',
             }),
         ),
         state(
             'close',
             style({
-                left: '-256px',
+                transform: 'translateX(-256px)',
             }),
         ),
         state(
