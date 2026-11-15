@@ -50,4 +50,20 @@ describe('TripLabelComponent', () => {
         expect(number?.textContent?.trim()).toBe('6000');
         expect(number?.classList).not.toContain('tw-underline');
     });
+
+    it('リンクは「列車 {番号}」の名前を持ち、span には付けない', () => {
+        const linked = render(['/timetable/all-line', { trip_direction: 0 }]);
+        expect(linked.querySelector('a')).toHaveAttribute(
+            'aria-label',
+            '列車 6000',
+        );
+
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({ providers: [provideRouter([])] });
+        const plain = render();
+        expect(plain.querySelector('a')).toBeNull();
+        expect(plain.querySelector('[data-trip-number]')).not.toHaveAttribute(
+            'aria-label',
+        );
+    });
 });

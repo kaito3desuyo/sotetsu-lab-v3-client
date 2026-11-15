@@ -59,4 +59,30 @@ describe('FormationNumberLinkComponent', () => {
         const el = create({ formationNumber: null });
         expect(el.querySelector('a')).toBeNull();
     });
+
+    it('リンクは「編成 {番号}」の名前を持つ', () => {
+        const el = create({ formationNumber: '8709' });
+
+        expect(el.querySelector('a')).toHaveAttribute(
+            'aria-label',
+            '編成 8709',
+        );
+    });
+
+    it('推測のときは「（推測）」を付ける（見える「?」はリンクの外に置く）', () => {
+        const el = create({ formationNumber: '10706', inferred: true });
+
+        expect(el.querySelector('a')).toHaveAttribute(
+            'aria-label',
+            '編成 10706（推測）',
+        );
+        expect(el.querySelector('a')).toHaveTextContent(/^10706$/);
+    });
+
+    it('リンクでない span には aria-label を付けない', () => {
+        const el = create({ formationNumber: '不明' });
+
+        expect(el.querySelector('a')).toBeNull();
+        expect(el.querySelector('span')).not.toHaveAttribute('aria-label');
+    });
 });

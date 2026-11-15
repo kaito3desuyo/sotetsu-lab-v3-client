@@ -197,6 +197,39 @@ describe('OperationNumberTagComponent', () => {
         });
     });
 
+    describe('リンクの名前（読み上げ）', () => {
+        it('リンクは「運用 {番号}」の名前を持つ', () => {
+            fixture.componentRef.setInput('operationNumber', '54');
+            fixture.componentRef.setInput('link', [
+                '/operation',
+                'route-diagram',
+            ]);
+            fixture.detectChanges();
+
+            expect(getTagEl()).toHaveAttribute('aria-label', '運用 54');
+        });
+
+        it('推測のときは「?」を外して「（推測）」を付ける', () => {
+            fixture.componentRef.setInput('operationNumber', '11');
+            fixture.componentRef.setInput('inferred', true);
+            fixture.componentRef.setInput('link', [
+                '/operation',
+                'route-diagram',
+            ]);
+            fixture.detectChanges();
+
+            expect(getTagEl()).toHaveAttribute('aria-label', '運用 11（推測）');
+        });
+
+        it('リンクでない span には aria-label を付けない', () => {
+            fixture.componentRef.setInput('operationNumber', '54');
+            fixture.detectChanges();
+
+            expect(getTagEl().tagName).toBe('SPAN');
+            expect(getTagEl()).not.toHaveAttribute('aria-label');
+        });
+    });
+
     describe('contextMenus（B9: 右クリック/長押しコンテキストメニュー）', () => {
         let mockTrigger: { openMenu: jest.Mock };
 

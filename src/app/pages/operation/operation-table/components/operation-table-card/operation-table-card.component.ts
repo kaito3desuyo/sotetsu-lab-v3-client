@@ -13,6 +13,7 @@ import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
+import { toAccessibleNumber } from 'src/app/shared/accessible-number.util';
 import { TripLabelComponent } from 'src/app/shared/trip-label/trip-label.component';
 import { FitWidthDirective } from '../../directives/fit-width.directive';
 import {
@@ -296,4 +297,12 @@ export class OperationTableCardComponent {
     });
 
     readonly tripCount = computed(() => this.operationTrip().trips.length);
+
+    /** 見出しの運用番号リンクの読み上げ名 */
+    readonly operationName = computed(() =>
+        toAccessibleNumber(
+            '運用',
+            this.operationTrip().operation.operationNumber,
+        ),
+    );
 }
