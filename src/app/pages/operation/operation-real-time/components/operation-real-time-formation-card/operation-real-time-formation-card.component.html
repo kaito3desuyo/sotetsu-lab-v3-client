@@ -38,7 +38,7 @@
                     '/timetable/formation',
                     { formation_number: formation().formationNumber },
                 ]"
-                [attr.aria-label]="'編成 ' + formation().formationNumber"
+                [attr.aria-label]="formationName()"
                 >{{ formation().formationNumber }}</a
             >
         </span>

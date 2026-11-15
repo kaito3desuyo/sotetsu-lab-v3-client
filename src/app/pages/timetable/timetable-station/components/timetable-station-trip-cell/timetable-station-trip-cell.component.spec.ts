@@ -224,6 +224,48 @@ describe('TimetableStationTripCellComponent', () => {
         expect(text).toContain('10708?');
     });
 
+    it('推測の編成は、リンクの名前に「（推測）」を入れ、リンクの外の「?」は読み上げない', async () => {
+        const fixture = await createFixture({
+            showCurrentFormation: true,
+            operationSightingTimeCrossSections: {
+                '51': {
+                    latestSighting: null,
+                    expectedSighting: {
+                        formation: { formationNumber: '10708' },
+                    },
+                },
+            },
+        });
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href*="/timetable/formation"]',
+        );
+
+        expect(link?.getAttribute('aria-label')).toBe('編成 10708（推測）');
+        const mark = link?.parentElement?.nextElementSibling;
+        expect(mark?.textContent).toBe('?');
+        expect(mark?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('今日の目撃の編成は名前に「（推測）」を入れず、「?」の span も出さない', async () => {
+        const fixture = await createFixture({
+            showCurrentFormation: true,
+            operationSightingTimeCrossSections: {
+                '51': {
+                    latestSighting: { sightingTime: new Date().toISOString() },
+                    expectedSighting: {
+                        formation: { formationNumber: '10708' },
+                    },
+                },
+            },
+        });
+        const link = (fixture.nativeElement as HTMLElement).querySelector(
+            'a[href*="/timetable/formation"]',
+        );
+
+        expect(link?.getAttribute('aria-label')).toBe('編成 10708');
+        expect(link?.parentElement?.nextElementSibling).toBeNull();
+    });
+
     // 全線時刻表へは列車番号から飛ぶ。分はリンクにしない（ユーザー指示 2026-10-05）
     it('全線時刻表へのリンクは列車番号（本体と脚注）だけで、分はリンクにしない', async () => {
         const fixture = await createFixture();

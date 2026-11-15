@@ -52,6 +52,16 @@ describe('OperationRealTimeFormationCardComponent', () => {
         } as FormationDetailsDto);
     });
 
+    it('編成番号のリンクは「編成 {番号}」の名前を持つ', () => {
+        fixture.detectChanges();
+
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'a[href*="formation_number=10701"]',
+            ),
+        ).toHaveAttribute('aria-label', '編成 10701');
+    });
+
     const crossSection = (latestId: string, operationNumber?: string) =>
         ({
             latestSighting: sighting(latestId),

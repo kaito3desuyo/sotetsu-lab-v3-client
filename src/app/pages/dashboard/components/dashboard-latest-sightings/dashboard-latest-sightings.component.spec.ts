@@ -67,6 +67,7 @@ describe('DashboardLatestSightingsComponent', () => {
         fixture.detectChanges();
 
         const ul = (fixture.nativeElement as HTMLElement).querySelector('ul');
+        expect(ul).toHaveAttribute('role', 'list');
         expect(ul?.classList).toContain('tw-list-none');
         expect(ul?.classList).toContain('tw-m-0');
         expect(ul?.classList).toContain('tw-p-0');

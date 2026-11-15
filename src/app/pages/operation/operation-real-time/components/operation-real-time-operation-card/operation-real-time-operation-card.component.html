@@ -61,11 +61,10 @@
                             { formation_number: formationVm.formationNumber },
                         ]"
                         [attr.aria-label]="
-                            isFormationInferred
-                                ? '編成 ' +
-                                  formationVm.formationNumber +
-                                  '（推測）'
-                                : '編成 ' + formationVm.formationNumber
+                            formationName(
+                                formationVm.formationNumber,
+                                isFormationInferred
+                            )
                         "
                         >{{ formationVm.formationNumber }}</a
                     >

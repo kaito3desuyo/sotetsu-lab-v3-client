@@ -22,6 +22,7 @@ import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-det
 import { TripClassDetailsDto } from 'src/app/libs/trip-class/usecase/dtos/trip-class-details.dto';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationNumberTagComponent } from 'src/app/shared/operation-number-tag/operation-number-tag.component';
+import { toAccessibleNumber } from 'src/app/shared/accessible-number.util';
 import { formatFormationAnnotation } from 'src/app/shared/formation-annotation.util';
 import { TripPositionComponent } from 'src/app/shared/trip-position/trip-position.component';
 import { OperationRealTimeDayCountPipe } from '../../pipes/operation-real-time-day-count.pipe';
@@ -103,6 +104,11 @@ export class OperationRealTimeFormationCardComponent {
                 !expectedOperation || latestId !== history.operationSightingId,
         );
     });
+
+    /** 編成番号のリンクの読み上げ名 */
+    readonly formationName = computed(() =>
+        toAccessibleNumber('編成', this.formation().formationNumber),
+    );
 
     /**
      * 編成の「形式・所属会社」付記（例: 10000・相鉄）。編成順カードでは

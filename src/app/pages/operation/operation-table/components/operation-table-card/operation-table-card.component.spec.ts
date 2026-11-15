@@ -101,19 +101,30 @@ describe('OperationTableCardComponent', () => {
         expect(link).toHaveAttribute('aria-label', '運用 11');
     });
 
-    it('折返し表は行ごとに li の一覧で読める（黒丸・余白は出さない）', () => {
+    it('折返し表は li の一覧で読める。つなぎ行（線だけ）は読み上げから外す', () => {
+        fixture.componentRef.setInput('operationTrip', {
+            ...operationTrip,
+            trips: [operationTrip.trips[0], operationTrip.trips[0]],
+        });
         fixture.detectChanges();
 
         const ul = (fixture.nativeElement as HTMLElement).querySelector('ul');
+        expect(ul).toHaveAttribute('role', 'list');
         expect(ul?.classList).toContain('tw-list-none');
         expect(ul?.classList).toContain('tw-m-0');
-        expect(ul?.children.length).toBe(component.rows().length);
-        expect(
-            Array.from(ul?.children ?? []).every((el) => el.tagName === 'LI'),
-        ).toBe(true);
-        expect(ul?.querySelectorAll('.op-row').length).toBe(
-            component.rows().length,
-        );
+        const items = Array.from(ul?.children ?? []);
+        expect(items.length).toBe(component.rows().length);
+        expect(items.every((el) => el.tagName === 'LI')).toBe(true);
+        const connectors = component
+            .rows()
+            .filter((row) => row.kind !== 'trip').length;
+        expect(connectors).toBeGreaterThan(0);
+        const read = items.filter((el) => !el.hasAttribute('aria-hidden'));
+        expect(read.length).toBe(tripRows().length);
+        for (const el of read) {
+            expect(el.querySelector('.op-row')).not.toBeNull();
+            expect(el.textContent?.trim()).not.toBe('');
+        }
     });
 
     it('上りは左に始点・右に終点、下りは左に終点・右に始点を置く（本番の折返し表）', () => {

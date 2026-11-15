@@ -44,10 +44,12 @@
     }
     <!-- 折返し表: 西側を左・横浜を右に置き、上りは左→右、下りは右→左（本番の構造） -->
     <ul
+        role="list"
         class="tw-m-0 tw-list-none tw-px-2 tw-py-3 tw-text-[13px] tw-leading-tight"
     >
         @for (row of rows(); track row.key) {
-            <li>
+            <!-- つなぎ行（線と矢じりだけ）は項目として数えない -->
+            <li [attr.aria-hidden]="row.kind === 'trip' ? null : 'true'">
                 @if (row.kind === 'trip') {
                     @if (linkLabels().midTrip[row.tripId]?.from; as midFrom) {
                         <p
