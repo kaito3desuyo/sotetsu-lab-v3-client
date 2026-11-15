@@ -20,7 +20,11 @@ import { safeReturnTo } from 'src/app/core/utils/return-to';
 import { TokenState } from 'src/app/global-states/token.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { AuthService } from 'src/app/libs/auth/usecase/auth.service';
-import { toHelpPage, toHelpPath } from 'src/app/layout/page-help/page-help';
+import {
+    helpHeading,
+    toHelpPage,
+    toHelpPath,
+} from 'src/app/layout/page-help/page-help';
 import {
     PageHelpSheetComponent,
     PageHelpSheetData,
@@ -85,7 +89,10 @@ export class HeaderComponent {
     onClickHelp(): void {
         const path = toHelpPath(this.#router.url);
         const data: PageHelpSheetData = { pageTitle: this.pageTitle(), path };
-        this.#bottomSheet.open(PageHelpSheetComponent, { data });
+        this.#bottomSheet.open(PageHelpSheetComponent, {
+            data,
+            ariaLabel: helpHeading(data.pageTitle),
+        });
         this.#ga.sendEvent('help_open', { page: toHelpPage(path) });
     }
 

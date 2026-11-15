@@ -37,4 +37,12 @@ describe('OperationPostDialogService', () => {
             }),
         );
     });
+
+    it('最初のフォーカスは CDK に任せず、ダイアログ自身が最初の欄に入れる', () => {
+        service.open('realtime_fab');
+        expect(open).toHaveBeenCalledWith(
+            OperationPostDialogComponent,
+            expect.objectContaining({ autoFocus: 'dialog' }),
+        );
+    });
 });

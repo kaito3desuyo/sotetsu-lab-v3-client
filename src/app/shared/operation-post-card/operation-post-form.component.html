@@ -180,12 +180,14 @@
         <footer class="tw-flex tw-flex-col">
             <app-button
                 type="submit"
-                [disabled]="
+                [ariaDisabled]="
                     sightingForm.invalid || submitting() || refreshingLists()
                 "
             >
                 投稿する
             </app-button>
+            <!-- 失敗の文を読み上げる（画面には出さない。snackbar と同じ文） -->
+            <div class="tw-sr-only" role="alert">{{ errorAnnouncement() }}</div>
         </footer>
     </form>
 } @else {

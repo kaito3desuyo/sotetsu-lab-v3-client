@@ -3,6 +3,7 @@
         mat-flat-button
         [type]="type()"
         [disabled]="disabled()"
+        [aria-disabled]="ariaDisabled() || disabled()"
         class="app-button app-button-primary"
         [class.tw-w-full]="fullWidth()"
         (click)="buttonClick.emit()"
@@ -14,6 +15,7 @@
         mat-stroked-button
         [type]="type()"
         [disabled]="disabled()"
+        [aria-disabled]="ariaDisabled() || disabled()"
         class="app-button app-button-secondary"
         [class.tw-w-full]="fullWidth()"
         (click)="buttonClick.emit()"

@@ -22,7 +22,8 @@ export class OperationPostDialogService {
             maxHeight: 'calc(100dvh - 32px)',
             ariaLabelledBy: OPERATION_POST_DIALOG_TITLE_ID,
             data: { source, initialValue },
-            autoFocus: 'first-tabbable',
+            // 最初のフォーカスは、ダイアログ自身が最初の欄に入れる（閉じるボタンが先頭にあるため）
+            autoFocus: 'dialog',
         });
     }
 }

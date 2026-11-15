@@ -67,10 +67,26 @@ describe('HeaderComponent', () => {
 
         expect(open).toHaveBeenCalledWith(PageHelpSheetComponent, {
             data: { pageTitle: '運用表', path: '/operation/table' },
+            ariaLabel: '運用表の見方',
         });
         expect(sendEvent).toHaveBeenCalledWith('help_open', {
             page: '/operation/table',
         });
+    });
+
+    it('pageTitle が無いとき、シートの名前はサイトの見方', () => {
+        fixture.detectChanges();
+
+        (
+            fixture.nativeElement.querySelector(
+                'header button[aria-label="このページの見方"]',
+            ) as HTMLButtonElement
+        ).click();
+
+        expect(open).toHaveBeenCalledWith(
+            PageHelpSheetComponent,
+            expect.objectContaining({ ariaLabel: 'Sotetsu Lab. の見方' }),
+        );
     });
 
     it('投稿者ページでは help_open に投稿者の id を送らない', () => {

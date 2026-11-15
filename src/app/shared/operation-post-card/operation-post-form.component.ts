@@ -114,6 +114,7 @@ export class OperationPostFormComponent {
     readonly #ga = inject(GoogleAnalyticsService);
     readonly #operationPostCardService = inject(OperationPostCardService);
     readonly #injector = inject(Injector);
+    readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
     readonly #listsRefresher = inject(TodaysListsRefresher);
     readonly #todaysOperations = inject(TodaysOperationListState)
         .todaysOperations;
@@ -151,6 +152,8 @@ export class OperationPostFormComponent {
     /** 送っている間（2 回送らない・ダイアログを閉じさせないため。2026-10-23） */
     readonly submitting = signal(false);
     readonly submittingChange = output<boolean>();
+    /** 投稿の失敗を読み上げる文（snackbar と同じ。次に送るときに空にする） */
+    readonly errorAnnouncement = signal('');
 
     readonly sightingForm: Form = this.#fb.group({
         agencyId: this.#fb.control('', [Validators.required]),
@@ -332,6 +335,16 @@ export class OperationPostFormComponent {
     async submit(formGroupDirective: FormGroupDirective): Promise<void> {
         // 応答待ちのあいだに Enter で 2 回送らない
         if (this.submitting() || this.refreshingLists()) return;
+        // 送るボタンは押せない印（aria-disabled）だけなので、足りないまま押されることがある。
+        // 押せない理由を欄のエラーで見せ、最初の足りない欄に移る
+        if (this.sightingForm.invalid) {
+            this.sightingForm.markAllAsTouched();
+            this.#host.nativeElement
+                .querySelector<HTMLElement>('form .ng-invalid[formcontrolname]')
+                ?.focus();
+            return;
+        }
+        this.errorAnnouncement.set('');
         // 4 時をまたいで開いたままなら、前の営業日の一覧で止めないよう引き直す。
         // 引き直せなければ運用番号の確かめは飛ばして api に任せる
         this.refreshingLists.set(true);
@@ -393,13 +406,12 @@ export class OperationPostFormComponent {
                 error_message: result.error.message.slice(0, 100),
             });
             this.#error.handleError(result.error);
-            this.#snackBar.open(
+            const message =
                 result.error.statusCode === 403
                     ? '投稿する権限がありません'
-                    : result.error.message,
-                'OK',
-                { duration: 3000 },
-            );
+                    : result.error.message;
+            this.errorAnnouncement.set(message);
+            this.#snackBar.open(message, 'OK', { duration: 3000 });
             return;
         }
 

@@ -293,7 +293,8 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     // 「運用 / 表」「行路 / 図」と 2 行に折れていた（2026-09-23）
     white-space: nowrap;
 
-    &.mat-mdc-button-disabled {
+    &.mat-mdc-button-disabled,
+    &[aria-disabled='true'] {
         cursor: not-allowed;
     }
 }
@@ -306,7 +307,8 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     color: var(--color-accent-ink) !important;
     border: 0;
 
-    &.mat-mdc-button-disabled {
+    &.mat-mdc-button-disabled,
+    &[aria-disabled='true'] {
         background-color: var(--color-accent) !important;
         color: var(--color-accent-ink) !important;
         opacity: 0.5;
@@ -320,7 +322,8 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     border-color: var(--color-structure) !important;
     border-width: 2px !important;
 
-    &.mat-mdc-button-disabled {
+    &.mat-mdc-button-disabled,
+    &[aria-disabled='true'] {
         background-color: var(--color-control) !important;
         color: var(--color-structure) !important;
         border-color: var(--color-structure) !important;

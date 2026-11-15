@@ -7,6 +7,11 @@ export interface PageHelp {
 }
 
 /** 表に無いページ（ログイン・メンテナンス・404 など）で出す一言 */
+/** ヘルプのシートの見出し（シートの名前としても使う） */
+export function helpHeading(pageTitle: string): string {
+    return pageTitle ? `${pageTitle}の見方` : 'Sotetsu Lab. の見方';
+}
+
 export const SITE_INTRO =
     '相鉄線の「どの編成が、どの列車に入っているか」を、みんなの目撃で記録する非公式のサイトです。';
 
