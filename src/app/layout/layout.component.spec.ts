@@ -9,6 +9,7 @@ import { Router, RouterModule, provideRouter } from '@angular/router';
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 
 import { HeaderComponent } from './components/header/header.component';
+import { PageNotFound } from '../core/page-not-found/page-not-found';
 import { LayoutComponent } from './layout.component';
 
 @Component({ changeDetection: ChangeDetectionStrategy.OnPush, template: '' })
@@ -366,5 +367,25 @@ describe('LayoutComponent', () => {
             expect(main()).toHaveFocus();
             expect(announce).toHaveBeenCalledTimes(1);
         });
+    });
+
+    it('pageTitle: 見つからない表示のときは PageNotFound.title になり、戻ると元の題名に戻る', async () => {
+        await router.navigate(['/train-diagram']);
+        const notFound = TestBed.inject(PageNotFound);
+
+        notFound.mark();
+        expect(component.pageTitle()).toBe(PageNotFound.title);
+
+        notFound.clear();
+        expect(component.pageTitle()).toBe('ダイヤグラム');
+    });
+
+    it('pageTitle: 見つからない表示から別のページへ移ると、見出しが残らない', async () => {
+        await router.navigate(['/train-diagram']);
+        TestBed.inject(PageNotFound).mark();
+
+        await router.navigate(['/']);
+
+        expect(component.pageTitle()).toBe('');
     });
 });

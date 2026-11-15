@@ -1,7 +1,7 @@
 import { NO_ERRORS_SCHEMA, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { Observable, Subject, of, throwError } from 'rxjs';
+import { EMPTY, Observable, Subject, of, throwError } from 'rxjs';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { railwayDateKey } from 'src/app/core/utils/railway-day';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
@@ -51,7 +51,10 @@ describe('TrainLocationComponent の圏外の保存', () => {
             imports: [TrainLocationComponent],
             providers: [
                 // 実際の Router だと、コンストラクタの補正の遷移が後から失敗して他のテストへ漏れる
-                { provide: Router, useValue: { navigate: jest.fn() } },
+                {
+                    provide: Router,
+                    useValue: { navigate: jest.fn(), events: EMPTY },
+                },
                 {
                     provide: ActivatedRoute,
                     useValue: {
