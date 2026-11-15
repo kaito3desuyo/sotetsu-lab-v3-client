@@ -156,7 +156,16 @@ export class OperationRouteDiagramComponent {
                 calendarId
                     ? this.#operationService
                           .findManyByCalendarId({ calendarId })
-                          .pipe(catchError(() => of([])))
+                          .pipe(
+                              // 選択肢が空のわけを知らせる（前後の運用への移動も出なくなる）
+                              catchError(() => {
+                                  this.#notification.open(
+                                      '運用の一覧を取得できませんでした',
+                                      'OK',
+                                  );
+                                  return of([]);
+                              }),
+                          )
                     : of([]),
             ),
             map(toOperationSelectOptions),
