@@ -37,15 +37,15 @@
 
 **Files:** `src/app/core/page-not-found/page-not-found.ts`（＋ spec）・`src/app/layout/layout.component.ts`（＋ spec）。
 
-- [ ] 落ちるテスト: `mark()` で `PageNotFound.active()` が true、`clear()` で false。Router の `NavigationStart` で false に戻る。layout の `pageTitle` は active のとき `PageNotFound.title`。
+- [ ] 落ちるテスト: `mark()` で `PageNotFound.active()` が true、`clear()` で false。`mark()` を呼んだときの primary の path と違う path への `NavigationEnd` で false に戻る（同じ path の matrix・query 違い、Cancel・Error では戻らない）。layout の `pageTitle` は active のとき `PageNotFound.title`。
 - [ ] 実装 → テストが通る → コミット `fix: :bug: 見つからない表示のとき、ヘッダーの見出しもページが見つかりませんにする`
 
 ### Task 3: 320px の横スクロール
 
-**Files:** `src/app/shared/filter-chips/`（＋ spec）。
+**Files:** `src/app/pages/operation/operation-real-time/components/operation-real-time-legend/`（＋ spec）。
 
-- [ ] 原因を確かめる: 320×640 のリアルタイムで chip が右 420px まで伸び、`scrollWidth` が 326 になる（レビューの実測）。どの要素の幅が viewport を超えるかをテンプレートとスタイルから特定し、報告に書く。
-- [ ] 落ちるテスト（クラスや構造で押さえられる範囲で）→ 実装（幅が親を超えないようにする。折り返す作りならそのまま折り返し、横スクロールの作りなら中だけでスクロールさせる）→ コミット `fix: :lipstick: 320px の幅で絞り込みの chip が画面からはみ出さないようにする`
+- [x] 原因: 実機の実測で、320px の `scrollWidth` 326 の元は filter-chips ではなく、リアルタイムの凡例の「10706? 順送り・同日引き継ぎで推測した編成・運用番号」の項目だった（`whitespace-nowrap` で右端が 326px）。chip は中のスクロール枠で切れており関係ない。当初 filter-chips に入れた変更（046b8241）は revert した。
+- [x] 落ちるテスト（構造）→ 実装（この項目だけ nowrap を外し、見本の `dt` は `nowrap`・`shrink-0`、`dd` は `min-w-0` にして、文だけを折り返す。1 行に収まる幅では見た目を変えない）→ コミット `fix: :lipstick: 320px の幅でリアルタイムの凡例が画面からはみ出さないようにする`
 
 ### 最後に
 
