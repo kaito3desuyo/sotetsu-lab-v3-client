@@ -28,7 +28,7 @@ export class AppButtonComponent {
     readonly type = input<'button' | 'submit'>('button');
     readonly disabled = input<boolean>(false);
     /**
-     * 押せない印だけを付ける（disabled 属性は付けない）。押すと送信などの処理は走るので、
+     * 押せない印だけを付ける（disabled 属性は付けず、Material の disabledInteractive で aria-disabled="true" にする）。押すと送信などの処理は走るので、
      * 押せない理由を呼び出し側が欄のエラーとして見せられる。見た目は disabled と同じ半透明
      */
     readonly ariaDisabled = input<boolean>(false);

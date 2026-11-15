@@ -13,6 +13,7 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 import { GoogleAnalyticsService } from 'src/app/core/services/google-analytics.service';
 import { SocketService } from 'src/app/core/services/socket.service';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
+import { TodaysListsRefresher } from 'src/app/global-states/todays-lists-refresher';
 import { TodaysOperationListState } from 'src/app/global-states/todays-operation-list.state';
 import { UserState } from 'src/app/global-states/user.state';
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
@@ -210,26 +211,44 @@ describe('OperationPostFormComponent（テンプレート）', () => {
 
             fillValid();
             expect(submitButton()).toBeEnabled();
-            expect(submitButton()).toHaveAttribute('aria-disabled', 'false');
+            expect(submitButton()).not.toHaveAttribute('aria-disabled');
         });
 
-        it('一覧を引き直している間は、送るボタンが押せない印になる', () => {
+        it('一覧を引き直している間は、送るボタンが押せない印になり、押しても何も始めない', async () => {
             fillValid();
+            const refresh = jest.spyOn(
+                TestBed.inject(TodaysListsRefresher),
+                'refreshIfStale',
+            );
 
             component.refreshingLists.set(true);
             fixture.detectChanges();
-
             expect(submitButton()).toBeEnabled();
             expect(submitButton()).toHaveAttribute('aria-disabled', 'true');
+
+            submitButton().click();
+            await fixture.whenStable();
+
+            expect(refresh).not.toHaveBeenCalled();
+            expect(post()).not.toHaveBeenCalled();
         });
 
-        it('送っている間に押しても、もう一度は送らない', () => {
+        it('送っている間は、押しても Enter（form の submit）でも何も始めない', async () => {
             fillValid();
+            const refresh = jest.spyOn(
+                TestBed.inject(TodaysListsRefresher),
+                'refreshIfStale',
+            );
             component.submitting.set(true);
             fixture.detectChanges();
 
             submitButton().click();
+            fixture.nativeElement
+                .querySelector('form')
+                .dispatchEvent(new Event('submit'));
+            await fixture.whenStable();
 
+            expect(refresh).not.toHaveBeenCalled();
             expect(post()).not.toHaveBeenCalled();
         });
 

@@ -58,6 +58,10 @@ const SEGMENTS: [string, string[]][] = [
         ['目撃時刻の指定'],
     ],
     ['shared/train-picker/train-picker.component.html', ['方向']],
+    [
+        'shared/sticky-direction-toggle/sticky-direction-toggle.component.ts',
+        ['方向'],
+    ],
     ['shared/timetable-post-card/timetable-post-card.component.html', ['方向']],
     [
         'shared/timetable-search-card/timetable-search-card.component.html',
@@ -103,7 +107,7 @@ describe('群の名前（読み上げ）', () => {
             ),
             'mat-tab-group',
         );
-        expect(tag).toContain('aria-label="並び順"');
+        expect(tag).toContain('[aria-label]="\'並び順\'"');
     });
 
     it('ダイヤグラムのスクロール領域が tabindex 0・region・名前を持つ', () => {

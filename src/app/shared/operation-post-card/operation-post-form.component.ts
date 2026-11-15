@@ -338,6 +338,7 @@ export class OperationPostFormComponent {
         // 送るボタンは押せない印（aria-disabled）だけなので、足りないまま押されることがある。
         // 押せない理由を欄のエラーで見せ、最初の足りない欄に移る
         if (this.sightingForm.invalid) {
+            this.errorAnnouncement.set('');
             this.sightingForm.markAllAsTouched();
             this.#host.nativeElement
                 .querySelector<HTMLElement>('form .ng-invalid[formcontrolname]')
@@ -417,6 +418,7 @@ export class OperationPostFormComponent {
 
         if (result.isSuccess()) {
             this.#ga.sendEvent('sighting_submit_success', this.#gaParams());
+            this.errorAnnouncement.set('');
             this.#snackBar.open('目撃情報を投稿しました', 'OK', {
                 duration: 3000,
             });

@@ -93,7 +93,7 @@
              作らないので、打ち消す値は tw-p-4 の 16px 固定でよい。 -->
         <div class="tw-mx-[-16px]">
             <mat-tab-group
-                aria-label="並び順"
+                [aria-label]="'並び順'"
                 (selectedIndexChange)="onMobileTabChange($event)"
             >
                 <mat-tab label="運用順">

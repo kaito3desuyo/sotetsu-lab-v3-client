@@ -286,6 +286,12 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
 // 構造クラスに対して色・枠線を直接指定して確実に上書きする。字の太さも Material の指定（500）に負けないよう、
 // 構造クラスと重ねて詳細度を上げる。
 .app-button.mat-mdc-button-base {
+    // 押せない印だけのボタン（disabledInteractive）にも、disabled と同じく hover の状態層を出さない
+    &.mat-mdc-button-disabled-interactive:hover
+        > .mat-mdc-button-persistent-ripple::before {
+        opacity: 0;
+    }
+
     font-size: 0.875rem;
     font-weight: 700;
     cursor: pointer;
@@ -293,8 +299,7 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     // 「運用 / 表」「行路 / 図」と 2 行に折れていた（2026-09-23）
     white-space: nowrap;
 
-    &.mat-mdc-button-disabled,
-    &[aria-disabled='true'] {
+    &.mat-mdc-button-disabled {
         cursor: not-allowed;
     }
 }
@@ -307,8 +312,7 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     color: var(--color-accent-ink) !important;
     border: 0;
 
-    &.mat-mdc-button-disabled,
-    &[aria-disabled='true'] {
+    &.mat-mdc-button-disabled {
         background-color: var(--color-accent) !important;
         color: var(--color-accent-ink) !important;
         opacity: 0.5;
@@ -322,8 +326,7 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
     border-color: var(--color-structure) !important;
     border-width: 2px !important;
 
-    &.mat-mdc-button-disabled,
-    &[aria-disabled='true'] {
+    &.mat-mdc-button-disabled {
         background-color: var(--color-control) !important;
         color: var(--color-structure) !important;
         border-color: var(--color-structure) !important;
@@ -343,7 +346,7 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
 
         .mdc-linear-progress__primary-bar {
             left: 0;
-            // 部品が style 属性に scaleX(value) を書くので、!important で打ち消す
+            // 部品が style 属性に transform（scaleX）を書くので、!important で打ち消す
             transform: none !important;
         }
 
