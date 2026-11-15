@@ -1003,6 +1003,9 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
     let router: {
         navigate: jest.Mock;
         events: Observable<never>;
+        url: string;
+        currentNavigation: jest.Mock;
+        parseUrl: jest.Mock;
         createUrlTree: jest.Mock;
         serializeUrl: jest.Mock;
     };
@@ -1019,6 +1022,10 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
         router = {
             navigate: jest.fn(),
             events: EMPTY,
+            // PageNotFound.mark が現在の path を読む
+            url: '/train-diagram',
+            currentNavigation: jest.fn(() => null),
+            parseUrl: jest.fn(() => ({ root: { children: {} } })),
             // createUrlTree/serializeUrl は本物の Router と同じ役割
             // （matrix params → URL 文字列）を、テストで検証しやすい形で模する。
             createUrlTree: jest.fn(
