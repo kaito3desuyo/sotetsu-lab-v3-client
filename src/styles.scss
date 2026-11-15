@@ -361,3 +361,19 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
         }
     }
 }
+
+// 小さいリンクの押せる範囲を、見た目と寸法を変えずに 24px の高さへ広げる（WCAG 2.5.8）。
+// 横は文字の幅のまま。隣のリンクとの間に重なりを作らない。
+.app-hit-area {
+    position: relative;
+}
+
+.app-hit-area::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 24px;
+    transform: translateY(-50%);
+}

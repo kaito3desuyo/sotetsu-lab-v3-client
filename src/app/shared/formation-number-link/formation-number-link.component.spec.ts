@@ -30,6 +30,12 @@ describe('FormationNumberLinkComponent', () => {
         expect(a?.classList).toContain('[color:inherit]');
     });
 
+    it('押せる範囲を 24px の高さに広げるクラスが付く（WCAG 2.5.8）', () => {
+        const el = create({ formationNumber: '10701' });
+
+        expect(el.querySelector('a')?.classList).toContain('app-hit-area');
+    });
+
     it('日付があればその日で開く', () => {
         const el = create({ formationNumber: '10701', date: '2026-11-07' });
 

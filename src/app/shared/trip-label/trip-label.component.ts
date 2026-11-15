@@ -29,7 +29,7 @@ import { TripClassChipComponent } from '../trip-class-chip/trip-class-chip.compo
         @if (safeLink(); as link) {
             <a
                 data-trip-number
-                class="tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
+                class="app-hit-area tw-tabular-nums tw-underline tw-underline-offset-2 [color:inherit]"
                 [routerLink]="link"
                 [attr.aria-label]="accessibleName()"
                 (click)="linkClicked.emit()"

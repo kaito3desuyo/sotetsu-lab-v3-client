@@ -17,6 +17,14 @@ describe('TripLabelComponent', () => {
         return fixture.nativeElement as HTMLElement;
     };
 
+    it('列車番号のリンクは押せる範囲を 24px の高さに広げるクラスが付く（WCAG 2.5.8）', () => {
+        const el = render(['/timetable/all-line', { calendar_id: 'c-1' }]);
+
+        expect(el.querySelector('a[data-trip-number]')?.classList).toContain(
+            'app-hit-area',
+        );
+    });
+
     it('列車番号だけを下線付きのリンクにする（種別チップはリンクの外）', () => {
         const el = render([
             '/timetable/all-line',
