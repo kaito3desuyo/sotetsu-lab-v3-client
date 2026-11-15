@@ -3,7 +3,12 @@ import {
     maintenanceGuard,
     noMaintenanceGuard,
 } from './core/guards/maintenance.guard';
+import {
+    LOAD_ERROR_PATH,
+    loadErrorTitleResolver,
+} from './core/errors/initial-load-error';
 import { initialDataResolver } from './core/resolvers/initial-data.resolver';
+import { LoadErrorComponent } from './pages/load-error/load-error.component';
 
 export const APP_ROUTES: Routes = [
     {
@@ -160,6 +165,18 @@ export const APP_ROUTES: Routes = [
                 (mod) => mod.MAINTENANCE_ROUTES,
             ),
         canActivate: [noMaintenanceGuard],
+    },
+    {
+        // 最初の読み込みに失敗したときの画面（core/errors/initial-load-error.ts）。アドレス欄には出ない。
+        // 遅延読み込みにしない。サービスワーカーが部品を持つ前の初回の訪問で部品が取れないと、
+        // 部品の失敗の扱い（app.component）がこの画面の URL へ読み込み直してしまう。
+        // 守りも共通のデータの取得も付けない（失敗したのがそれらで、pageResolver は初期化の完了を待ち続けてしまう）
+        path: LOAD_ERROR_PATH,
+        component: LoadErrorComponent,
+        resolve: {
+            // 開こうとしたページの題をヘッダーに出す
+            title: loadErrorTitleResolver,
+        },
     },
     {
         // どのページにも当たらない URL。以前はナビゲーションのエラーの通知だけが出ていた

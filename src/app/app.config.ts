@@ -24,6 +24,7 @@ import {
     provideRouter,
     withEnabledBlockingInitialNavigation,
     withInMemoryScrolling,
+    withNavigationErrorHandler,
     withRouterConfig,
 } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -32,6 +33,7 @@ import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { environment } from 'src/environments/environment';
 import { APP_ROUTES } from './app.route';
 import { CustomPaginator } from './core/classes/custom-paginator';
+import { initialLoadErrorHandler } from './core/errors/initial-load-error';
 import { AuthInterceptor } from './core/interceptors/auth-interceptor';
 import { FetchErrorInterceptor } from './core/interceptors/fetch-error.interceptor';
 import { NgswBypassInterceptor } from './core/interceptors/ngsw-bypass.interceptor';
@@ -48,6 +50,8 @@ export const appConfig: ApplicationConfig = {
             withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
             // v22 で既定が 'always' に変わった。親ルートの params を子へ流さない従来の挙動を保つ
             withRouterConfig({ paramsInheritanceStrategy: 'emptyOnly' }),
+            // 最初の読み込みの失敗で白い画面にせず、読み込めなかった画面を出す
+            withNavigationErrorHandler(initialLoadErrorHandler),
         ),
         // 運用表のカードの @defer に hydrate の条件を付け、サーバーでは中身まで描き、
         // ブラウザは画面に入ったものから引き継ぐ（hydration 前の操作は再生される）。
