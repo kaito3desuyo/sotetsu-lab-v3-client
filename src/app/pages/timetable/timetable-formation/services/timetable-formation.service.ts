@@ -58,8 +58,6 @@ export class TimetableFormationService {
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #store = inject(TimetableFormationStore);
-    /** 列車ごとの各駅の時刻。運用の列車の api は時刻を返さないので trip-block から補う */
-    #timesByTripId = new Map<string, TimeDetailsDto[]>();
 
     /**
      * 編成の 1 日分（目撃・最初の運用・乗り移り・運用の列車）を取ってストアへ入れる。
@@ -180,7 +178,6 @@ export class TimetableFormationService {
                 }).pipe(
                     switchMap(({ first, links, times }) => {
                         if (!latest()) return of(undefined);
-                        this.#timesByTripId = times;
                         this.#store.setFirstOperationId(first.operationId);
                         this.#store.setFirstBasis(
                             hasOwnSighting
@@ -195,6 +192,7 @@ export class TimetableFormationService {
                         return this.#fetchMissingTrips(
                             latest,
                             new Set<string>(),
+                            times,
                             forceReload,
                             () => {
                                 failed = true;
@@ -222,32 +220,40 @@ export class TimetableFormationService {
         }
         const seq = this.#store.currentFetchSeq();
         const latest = (): boolean => this.#store.isLatestFetch(seq);
+        const calendarId = this.#store.calendar()?.calendarId;
 
-        return this.#operationSightingService
-            .findManyBySpecificPeriod({
+        return forkJoin({
+            sightings: this.#operationSightingService.findManyBySpecificPeriod({
                 from: date,
                 to: date,
                 includeCarriedOver: true,
                 forceReload: true,
-            })
-            .pipe(
-                switchMap((sightings) => {
-                    if (!latest()) return of(undefined);
-                    this.#store.setSightings(sightings);
-                    // 最初の自分の目撃が届いたら、最初の運用の決め手は目撃になる
-                    if (hasOwnValidSighting(sightings, formation.formationId)) {
-                        this.#store.setFirstBasis('sighting');
-                    }
-                    return this.#fetchMissingTrips(
-                        latest,
-                        new Set(Object.keys(this.#store.tripsByOperationId())),
-                        true,
-                    );
-                }),
-                map(() => undefined),
-                // 取り直しの失敗は表示中の中身を残す
-                catchError(() => of(undefined)),
-            );
+            }),
+            // 時刻はダイヤの書き換えでしか変わらないので、fetchDay で取ったキャッシュを使う
+            times: calendarId
+                ? this.#fetchTimesByTripId(calendarId, undefined).pipe(
+                      catchError(() => of(new Map<string, TimeDetailsDto[]>())),
+                  )
+                : of(new Map<string, TimeDetailsDto[]>()),
+        }).pipe(
+            switchMap(({ sightings, times }) => {
+                if (!latest()) return of(undefined);
+                this.#store.setSightings(sightings);
+                // 最初の自分の目撃が届いたら、最初の運用の決め手は目撃になる
+                if (hasOwnValidSighting(sightings, formation.formationId)) {
+                    this.#store.setFirstBasis('sighting');
+                }
+                return this.#fetchMissingTrips(
+                    latest,
+                    new Set(Object.keys(this.#store.tripsByOperationId())),
+                    times,
+                    true,
+                );
+            }),
+            map(() => undefined),
+            // 取り直しの失敗は表示中の中身を残す
+            catchError(() => of(undefined)),
+        );
     }
 
     /** いまの位置（今日だけ）。どの運用か（走っている列車の運用）は呼び出し側が決めて渡す */
@@ -303,15 +309,16 @@ export class TimetableFormationService {
             );
     }
 
-    /** 運用の各列車に、trip-block から取った時刻を付ける */
-    #attachTimes(dto: OperationTripsDto): OperationTripsDto {
+    /** 運用の各列車に、trip-block から取った時刻を付ける（運用の列車の api は時刻を返さない） */
+    #attachTimes(
+        dto: OperationTripsDto,
+        timesByTripId: ReadonlyMap<string, TimeDetailsDto[]>,
+    ): OperationTripsDto {
         return {
             ...dto,
             trips: dto.trips.map((tol) => {
                 const tripId = tol.tripId ?? tol.trip?.tripId;
-                const times = tripId
-                    ? this.#timesByTripId.get(tripId)
-                    : undefined;
+                const times = tripId ? timesByTripId.get(tripId) : undefined;
                 if (!times || !tripId) return tol;
                 return { ...tol, trip: { ...tol.trip, tripId, times } };
             }),
@@ -349,6 +356,7 @@ export class TimetableFormationService {
     #fetchMissingTrips(
         latest: () => boolean,
         requested: Set<string>,
+        timesByTripId: ReadonlyMap<string, TimeDetailsDto[]>,
         forceReload: boolean | undefined,
         onError?: () => void,
     ): Observable<void> {
@@ -377,12 +385,17 @@ export class TimetableFormationService {
                 if (!latest()) return of(undefined);
                 const got: Record<string, OperationTripsDto> = {};
                 for (const { operationId, dto } of results) {
-                    if (dto) got[operationId] = this.#attachTimes(dto);
+                    if (dto)
+                        got[operationId] = this.#attachTimes(
+                            dto,
+                            timesByTripId,
+                        );
                 }
                 this.#store.addTrips(got);
                 return this.#fetchMissingTrips(
                     latest,
                     requested,
+                    timesByTripId,
                     forceReload,
                     onError,
                 );
