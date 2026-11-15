@@ -279,6 +279,28 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         expect(text).not.toContain('不明');
     });
 
+    it('時ごとに section を作り、sr-only の h2「{時} 時」とセルの ul > li で読める', async () => {
+        const fixture = await setup();
+        await sleep(300);
+        fixture.detectChanges();
+
+        const root = fixture.nativeElement as HTMLElement;
+        const sections = root.querySelectorAll('article > section');
+        expect(sections.length).toBeGreaterThan(0);
+        for (const section of Array.from(sections)) {
+            const h2 = section.querySelector(':scope > h2');
+            expect(h2?.classList).toContain('tw-sr-only');
+            expect(h2?.textContent?.trim()).toMatch(/^\d+ 時$/);
+        }
+        const cells = root.querySelectorAll(
+            'article > section ul > li[app-timetable-station-trip-cell]',
+        );
+        expect(cells.length).toBeGreaterThan(0);
+        expect(
+            root.querySelectorAll('app-timetable-station-trip-cell').length,
+        ).toBe(0);
+    });
+
     it('下部に「時刻表を検索する」カードは出ない（帯に寄せた）', async () => {
         const fixture = await setup();
         await sleep(300);

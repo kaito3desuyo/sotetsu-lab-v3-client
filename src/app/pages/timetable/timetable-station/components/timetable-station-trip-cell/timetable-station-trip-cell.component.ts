@@ -35,7 +35,9 @@ import { FormationNumberLinkComponent } from 'src/app/shared/formation-number-li
  *         （種別変更・直通。種別・列番・発駅 → 着駅。前の区間は出さない）
  */
 @Component({
-    selector: 'app-timetable-station-trip-cell',
+    // 一覧の li にするため、要素の名前でなく li の属性で受ける（li を 1 つ足さずに済む）
+    // eslint-disable-next-line @angular-eslint/component-selector
+    selector: 'li[app-timetable-station-trip-cell]',
     templateUrl: './timetable-station-trip-cell.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [

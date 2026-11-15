@@ -53,6 +53,27 @@ describe('DashboardLatestSightingsComponent', () => {
         store.disableLoading();
     });
 
+    it('目撃は 1 件ごとに li の一覧で読める（黒丸・余白は出さない）', () => {
+        store.setLatestSightings([
+            {
+                operationSightingId: 's1',
+                sightingTime: '2026-11-13T01:00:00.000Z',
+            },
+            {
+                operationSightingId: 's2',
+                sightingTime: '2026-11-13T02:00:00.000Z',
+            },
+        ]);
+        fixture.detectChanges();
+
+        const ul = (fixture.nativeElement as HTMLElement).querySelector('ul');
+        expect(ul?.classList).toContain('tw-list-none');
+        expect(ul?.classList).toContain('tw-m-0');
+        expect(ul?.classList).toContain('tw-p-0');
+        expect(ul?.querySelectorAll(':scope > li').length).toBe(2);
+        expect(ul?.children.length).toBe(2);
+    });
+
     it('編成番号は編成別時刻表へのリンク（今日の目撃なので日付は付けない）', () => {
         patchState(
             unprotected(TestBed.inject(TodaysFormationListState)),

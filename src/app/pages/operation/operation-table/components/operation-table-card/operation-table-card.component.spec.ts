@@ -91,6 +91,21 @@ describe('OperationTableCardComponent', () => {
     const tripRows = () =>
         component.rows().filter((row): row is TripRow => row.kind === 'trip');
 
+    it('折返し表は行ごとに li の一覧で読める（黒丸・余白は出さない）', () => {
+        fixture.detectChanges();
+
+        const ul = (fixture.nativeElement as HTMLElement).querySelector('ul');
+        expect(ul?.classList).toContain('tw-list-none');
+        expect(ul?.classList).toContain('tw-m-0');
+        expect(ul?.children.length).toBe(component.rows().length);
+        expect(
+            Array.from(ul?.children ?? []).every((el) => el.tagName === 'LI'),
+        ).toBe(true);
+        expect(ul?.querySelectorAll('.op-row').length).toBe(
+            component.rows().length,
+        );
+    });
+
     it('上りは左に始点・右に終点、下りは左に終点・右に始点を置く（本番の折返し表）', () => {
         const [inbound, outbound] = tripRows();
 

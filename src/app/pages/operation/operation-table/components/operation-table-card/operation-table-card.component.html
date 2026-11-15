@@ -42,145 +42,163 @@
         </p>
     }
     <!-- 折返し表: 西側を左・横浜を右に置き、上りは左→右、下りは右→左（本番の構造） -->
-    <div class="tw-px-2 tw-py-3 tw-text-[13px] tw-leading-tight">
+    <ul
+        class="tw-m-0 tw-list-none tw-px-2 tw-py-3 tw-text-[13px] tw-leading-tight"
+    >
         @for (row of rows(); track row.key) {
-            @if (row.kind === 'trip') {
-                @if (linkLabels().midTrip[row.tripId]?.from; as midFrom) {
-                    <p
-                        class="link-mid-trip-from tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
+            <li>
+                @if (row.kind === 'trip') {
+                    @if (linkLabels().midTrip[row.tripId]?.from; as midFrom) {
+                        <p
+                            class="link-mid-trip-from tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
+                        >
+                            {{ midFrom }}
+                        </p>
+                    }
+                    <div
+                        class="op-row tw-grid tw-min-h-8 tw-items-center tw-gap-x-[3px]"
+                        [class.tw-text-muted]="row.isDeadhead"
+                        [attr.data-direction]="row.tripDirection"
                     >
-                        {{ midFrom }}
-                    </p>
-                }
-                <div
-                    class="op-row tw-grid tw-min-h-8 tw-items-center tw-gap-x-[3px]"
-                    [class.tw-text-muted]="row.isDeadhead"
-                    [attr.data-direction]="row.tripDirection"
-                >
-                    <ng-container
-                        *ngTemplateOutlet="
-                            edge;
-                            context: { $implicit: row.leftEdge, side: 'left' }
-                        "
-                    ></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            station;
-                            context: { $implicit: row.left }
-                        "
-                    ></ng-container>
-                    <span class="monoscape tw-tabular-nums">{{
-                        row.left.time
-                            ? (row.left.time
-                              | dateFns
-                                  : { format: 'HHmm', parseFormat: 'HH:mm:ss' })
-                            : '????'
-                    }}</span>
-
-                    <!-- 発時刻から着時刻へ伸びる 1 本の矢印に種別・列番を載せる。
-                         余った幅は矢印線が吸う。線は種別色（回送は灰） -->
-                    <span
-                        class="tw-flex tw-min-w-0 tw-items-center tw-gap-0.5"
-                        [style.color]="
-                            row.isDeadhead
-                                ? 'var(--color-grey-400, #bdbdbd)'
-                                : row.tripClassColor
-                        "
-                    >
-                        <ng-container
-                            *ngTemplateOutlet="
-                                arrow;
-                                context: {
-                                    $implicit: row.tripDirection === 1,
-                                    tail: false,
-                                }
-                            "
-                        ></ng-container>
-                        <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05）。
-                             横に入らない行だけ横に縮める（時刻に重ねない。ユーザー判断 2026-10-13）。24 = 両側の矢じり 10px と隙間 2px -->
-                        <app-trip-label
-                            appFitWidth
-                            [appFitWidthReserve]="24"
-                            class="tw-shrink-0 tw-font-bold [&>*]:tw-shrink-0"
-                            [class.tw-text-ink]="!row.isDeadhead"
-                            [class.tw-text-muted]="row.isDeadhead"
-                            [tripClassName]="row.tripClassName"
-                            [tripClassColor]="
-                                row.isDeadhead ? null : row.tripClassColor
-                            "
-                            [tripNumber]="row.tripNumber"
-                            [link]="[
-                                '/timetable',
-                                'all-line',
-                                {
-                                    calendar_id: calendarId(),
-                                    trip_direction: row.tripDirection,
-                                    trip_block_id: row.tripBlockId,
-                                },
-                            ]"
-                        ></app-trip-label>
-                        <ng-container
-                            *ngTemplateOutlet="
-                                arrow;
-                                context: {
-                                    $implicit: row.tripDirection === 0,
-                                    tail: true,
-                                }
-                            "
-                        ></ng-container>
-                    </span>
-
-                    <span class="monoscape tw-text-right tw-tabular-nums">{{
-                        row.right.time
-                            ? (row.right.time
-                              | dateFns
-                                  : { format: 'HHmm', parseFormat: 'HH:mm:ss' })
-                            : '????'
-                    }}</span>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            station;
-                            context: { $implicit: row.right }
-                        "
-                    ></ng-container>
-                    <ng-container
-                        *ngTemplateOutlet="
-                            edge;
-                            context: { $implicit: row.rightEdge, side: 'right' }
-                        "
-                    ></ng-container>
-                </div>
-                @if (linkLabels().midTrip[row.tripId]?.to; as midTo) {
-                    <p
-                        class="link-mid-trip-to tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
-                    >
-                        {{ midTo }}
-                    </p>
-                }
-            } @else {
-                <!-- 同じ向きへ続けて走る: 終点側の線を次の列車の始点側へ渡す -->
-                <div class="op-row tw-relative tw-grid tw-h-2 tw-gap-x-[3px]">
-                    <ng-container
-                        *ngTemplateOutlet="
-                            edge;
-                            context: { $implicit: row.leftEdge }
-                        "
-                    ></ng-container>
-                    <span
-                        class="tw-absolute tw-inset-x-2 tw-top-1/2 tw-h-0.5 tw--translate-y-1/2 tw-bg-grey-400"
-                    ></span>
-                    <span class="tw-col-start-7 tw-flex tw-self-stretch">
                         <ng-container
                             *ngTemplateOutlet="
                                 edge;
-                                context: { $implicit: row.rightEdge }
+                                context: {
+                                    $implicit: row.leftEdge,
+                                    side: 'left',
+                                }
                             "
                         ></ng-container>
-                    </span>
-                </div>
-            }
+                        <ng-container
+                            *ngTemplateOutlet="
+                                station;
+                                context: { $implicit: row.left }
+                            "
+                        ></ng-container>
+                        <span class="monoscape tw-tabular-nums">{{
+                            row.left.time
+                                ? (row.left.time
+                                  | dateFns
+                                      : {
+                                            format: 'HHmm',
+                                            parseFormat: 'HH:mm:ss',
+                                        })
+                                : '????'
+                        }}</span>
+
+                        <!-- 発時刻から着時刻へ伸びる 1 本の矢印に種別・列番を載せる。
+                         余った幅は矢印線が吸う。線は種別色（回送は灰） -->
+                        <span
+                            class="tw-flex tw-min-w-0 tw-items-center tw-gap-0.5"
+                            [style.color]="
+                                row.isDeadhead
+                                    ? 'var(--color-grey-400, #bdbdbd)'
+                                    : row.tripClassColor
+                            "
+                        >
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    arrow;
+                                    context: {
+                                        $implicit: row.tripDirection === 1,
+                                        tail: false,
+                                    }
+                                "
+                            ></ng-container>
+                            <!-- 種別 列車番号（共通部品）。列車番号だけが全線時刻表へのリンク（ユーザー指示 2026-10-05）。
+                             横に入らない行だけ横に縮める（時刻に重ねない。ユーザー判断 2026-10-13）。24 = 両側の矢じり 10px と隙間 2px -->
+                            <app-trip-label
+                                appFitWidth
+                                [appFitWidthReserve]="24"
+                                class="tw-shrink-0 tw-font-bold [&>*]:tw-shrink-0"
+                                [class.tw-text-ink]="!row.isDeadhead"
+                                [class.tw-text-muted]="row.isDeadhead"
+                                [tripClassName]="row.tripClassName"
+                                [tripClassColor]="
+                                    row.isDeadhead ? null : row.tripClassColor
+                                "
+                                [tripNumber]="row.tripNumber"
+                                [link]="[
+                                    '/timetable',
+                                    'all-line',
+                                    {
+                                        calendar_id: calendarId(),
+                                        trip_direction: row.tripDirection,
+                                        trip_block_id: row.tripBlockId,
+                                    },
+                                ]"
+                            ></app-trip-label>
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    arrow;
+                                    context: {
+                                        $implicit: row.tripDirection === 0,
+                                        tail: true,
+                                    }
+                                "
+                            ></ng-container>
+                        </span>
+
+                        <span class="monoscape tw-text-right tw-tabular-nums">{{
+                            row.right.time
+                                ? (row.right.time
+                                  | dateFns
+                                      : {
+                                            format: 'HHmm',
+                                            parseFormat: 'HH:mm:ss',
+                                        })
+                                : '????'
+                        }}</span>
+                        <ng-container
+                            *ngTemplateOutlet="
+                                station;
+                                context: { $implicit: row.right }
+                            "
+                        ></ng-container>
+                        <ng-container
+                            *ngTemplateOutlet="
+                                edge;
+                                context: {
+                                    $implicit: row.rightEdge,
+                                    side: 'right',
+                                }
+                            "
+                        ></ng-container>
+                    </div>
+                    @if (linkLabels().midTrip[row.tripId]?.to; as midTo) {
+                        <p
+                            class="link-mid-trip-to tw-m-0 tw-px-2 tw-pb-1 tw-text-center tw-text-xs tw-text-muted"
+                        >
+                            {{ midTo }}
+                        </p>
+                    }
+                } @else {
+                    <!-- 同じ向きへ続けて走る: 終点側の線を次の列車の始点側へ渡す -->
+                    <div
+                        class="op-row tw-relative tw-grid tw-h-2 tw-gap-x-[3px]"
+                    >
+                        <ng-container
+                            *ngTemplateOutlet="
+                                edge;
+                                context: { $implicit: row.leftEdge }
+                            "
+                        ></ng-container>
+                        <span
+                            class="tw-absolute tw-inset-x-2 tw-top-1/2 tw-h-0.5 tw--translate-y-1/2 tw-bg-grey-400"
+                        ></span>
+                        <span class="tw-col-start-7 tw-flex tw-self-stretch">
+                            <ng-container
+                                *ngTemplateOutlet="
+                                    edge;
+                                    context: { $implicit: row.rightEdge }
+                                "
+                            ></ng-container>
+                        </span>
+                    </div>
+                }
+            </li>
         }
-    </div>
+    </ul>
     @if (linkLabels().to; as to) {
         <p
             class="link-to tw-m-0 tw-px-4 tw-pb-2 tw-text-center tw-text-xs tw-text-muted"

@@ -23,12 +23,12 @@
             本日の目撃情報はまだありません
         </p>
     } @else {
-        <div class="tw-flex tw-flex-col">
+        <ul class="tw-m-0 tw-flex tw-list-none tw-flex-col tw-p-0">
             @for (item of items(); track item.sighting.operationSightingId) {
                 <!-- operation/real-time のカードと同じ 2 段構成。
                      行を <a> にしないのは、運用チップと種別・列番がそれぞれ
                      リンクを持ち、入れ子のリンクになるため。 -->
-                <div
+                <li
                     class="tw-grid tw-grid-cols-[auto_1fr_auto] tw-items-center tw-gap-x-3 tw-gap-y-1 tw-border-0 tw-border-t tw-border-solid tw-border-rule tw-py-2 tw-text-ink first:tw-border-t-0"
                 >
                     @if (item.operationNumber) {
@@ -94,8 +94,8 @@
                             ></app-trip-position>
                         </div>
                     }
-                </div>
+                </li>
             }
-        </div>
+        </ul>
     }
 </section>
