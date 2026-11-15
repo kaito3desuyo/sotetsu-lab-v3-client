@@ -28,6 +28,14 @@ describe('LoadErrorComponent', () => {
         expect(text).toContain('もう一度読み込む');
     });
 
+    it('読み込めなかったことを h2 の見出しで出す（h1 はヘッダーのページ名）', () => {
+        const fixture = TestBed.createComponent(LoadErrorComponent);
+        fixture.detectChanges();
+
+        const h2: HTMLElement = fixture.nativeElement.querySelector('h2');
+        expect(h2?.textContent).toContain('読み込めませんでした');
+    });
+
     it('もう一度読み込むと、ページを丸ごと読み込み直す', () => {
         const fixture = TestBed.createComponent(LoadErrorComponent);
         fixture.detectChanges();
