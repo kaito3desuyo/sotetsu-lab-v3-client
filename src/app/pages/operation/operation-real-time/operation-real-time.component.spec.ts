@@ -697,6 +697,81 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         expect(save).not.toHaveBeenCalled();
     });
 
+    describe('取得の順番（依存の 3 波）', () => {
+        const WAVE1 = [
+            'fetchRoutes',
+            'fetchStations',
+            'fetchTripClasses',
+            'fetchCalendar',
+            'fetchFormations',
+        ];
+        const WAVE2 = ['fetchOperations', 'fetchItineraryLinks'];
+        const WAVE3 = [
+            'fetchCurrentPositions',
+            'fetchOperationSightingTimeCrossSections',
+            'fetchFormationSightingTimeCrossSections',
+            'fetchSightingHistories',
+        ];
+        let pending: Record<string, Subject<unknown>>;
+
+        const hold = (names: string[]) => {
+            for (const name of names) {
+                pending[name] = new Subject<unknown>();
+                service[name].mockImplementation(() => pending[name]);
+            }
+        };
+        const finish = async (name: string, value: unknown = undefined) => {
+            pending[name].next(value);
+            pending[name].complete();
+            await jest.advanceTimersByTimeAsync(0);
+        };
+        const called = (names: string[]) =>
+            names.filter((name) => service[name].mock.calls.length > 0);
+
+        beforeEach(() => {
+            pending = {};
+            hold([...WAVE1, ...WAVE2, ...WAVE3]);
+        });
+
+        it('互いに依存しない 5 本を同時に投げ、ダイヤの後に運用を、運用と編成の後に断面と現在位置を投げる', async () => {
+            await create();
+            expect(called(WAVE1)).toEqual(WAVE1);
+            expect(called([...WAVE2, ...WAVE3])).toEqual([]);
+
+            for (const name of WAVE1) await finish(name);
+            expect(called(WAVE2)).toEqual(WAVE2);
+            expect(called(WAVE3)).toEqual([]);
+
+            await finish('fetchOperations');
+            await finish('fetchItineraryLinks', { failed: false });
+            expect(called(WAVE3)).toEqual(WAVE3);
+
+            for (const name of WAVE3) await finish(name);
+            expect(save).toHaveBeenCalledTimes(1);
+            expect(isLoading()).toBe(false);
+        });
+
+        it('同じ波の 1 本が失敗しても、残りが終わるまで保存した中身に戻さず、次の波は投げない', async () => {
+            restore.mockImplementation(restoreSaved);
+            await create();
+
+            pending['fetchCalendar'].error(new Error('offline'));
+            await jest.advanceTimersByTimeAsync(0);
+            for (const name of [
+                'fetchRoutes',
+                'fetchStations',
+                'fetchTripClasses',
+            ])
+                await finish(name);
+            expect(restore).not.toHaveBeenCalled();
+
+            await finish('fetchFormations');
+            expect(restore).toHaveBeenCalledTimes(1);
+            expect(called([...WAVE2, ...WAVE3])).toEqual([]);
+            expect(isLoading()).toBe(false);
+        });
+    });
+
     it('取得済みの中身があるときは、失敗しても保存した中身に戻さず、今の失敗の文言を出す', async () => {
         // 前の訪問や自動更新で、今の中身の方が新しい
         const freshRoutes = [{ routeId: 'fresh-route' }] as never;
