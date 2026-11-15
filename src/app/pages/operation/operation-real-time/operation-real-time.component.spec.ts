@@ -288,6 +288,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             'OK',
         );
         expect(finalUpdateTime()).toBe(0);
+        expect(notification.open).toHaveBeenCalledTimes(1);
     });
 
     it('他人の投稿後の取り直しが成功したら、更新できたと知らせ、最終更新時刻を進める', async () => {
@@ -300,6 +301,8 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
             'OK',
         );
         expect(finalUpdateTime()).toBeGreaterThan(0);
+        expect(notification.open).toHaveBeenCalledTimes(1);
+        expect(notification.open).not.toHaveBeenCalledWith('更新中...', 'OK');
     });
 
     it('timetable の合図でも目撃を取り直す', async () => {

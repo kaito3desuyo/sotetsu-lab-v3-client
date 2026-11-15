@@ -307,7 +307,6 @@ export class OperationRealTimeComponent {
             .subscribe(async () => {
                 if (!this.#store.isEnableAutoReload()) return;
 
-                this.#notification.open('更新中...', 'OK');
                 this.#store.enableLoading();
                 try {
                     await this.#reloadSightings();

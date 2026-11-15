@@ -13,9 +13,15 @@
                 {{ icon() }}
             </mat-icon>
         }
-        <p class="tw-m-0 tw-text-base tw-font-bold tw-text-ink">
-            {{ message() }}
-        </p>
+        @if (headingLevel() === 'h2') {
+            <h2 class="tw-m-0 tw-text-base tw-font-bold tw-text-ink">
+                {{ message() }}
+            </h2>
+        } @else {
+            <p class="tw-m-0 tw-text-base tw-font-bold tw-text-ink">
+                {{ message() }}
+            </p>
+        }
     </div>
     @if (subtitle()) {
         <p class="tw-m-0 tw-text-sm tw-text-muted">

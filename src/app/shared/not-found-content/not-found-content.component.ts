@@ -10,6 +10,7 @@ import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.comp
     template: `
         <app-empty-state
             icon="search_off"
+            headingLevel="h2"
             message="ページが見つかりません"
             subtitle="URL が変わったか、ページが無くなった可能性があります。"
             actionLabel="トップへ戻る"

@@ -15,8 +15,10 @@ const READING_PAGES = [
     'pages/disclaimer/disclaimer.component.html',
     'pages/privacy-policy/privacy-policy.component.html',
 ];
-// 見出しの段でないもの: 色の帯の中の白い字（ダイヤの帯）と、タブの形の列見出し（リアルタイム運用情報）
+// 見出しの段でないもの: 色の帯の中の白い字（ダイヤの帯）、タブの形の列見出し（リアルタイム運用情報）、
+// 空状態のメッセージ（読み上げのために h2 にするが、見た目は今までの 16px・700 のまま）
 const NOT_A_STEP = [
+    'shared/empty-state/empty-state.component.html',
     'shared/calendar-band/calendar-band.component.ts',
     'pages/operation/operation-real-time/operation-real-time.component.html',
 ];

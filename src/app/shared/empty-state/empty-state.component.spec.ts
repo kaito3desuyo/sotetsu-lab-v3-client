@@ -96,4 +96,33 @@ describe('EmptyStateComponent', () => {
         expect(host.classList).toContain('tw-rounded-card');
         expect(host.classList).toContain('tw-bg-white');
     });
+
+    describe('headingLevel', () => {
+        const messageElement = (): HTMLElement =>
+            fixture.nativeElement.querySelector('.tw-text-base');
+
+        it('既定は p', () => {
+            fixture.componentRef.setInput('message', 'メッセージ');
+            fixture.detectChanges();
+
+            expect(messageElement().tagName).toBe('P');
+            expect(fixture.nativeElement.querySelector('h2')).toBeNull();
+        });
+
+        it("'h2' なら同じ中身とクラスの h2 で出す", () => {
+            fixture.componentRef.setInput('message', 'メッセージ');
+            fixture.componentRef.setInput('headingLevel', 'h2');
+            fixture.detectChanges();
+
+            const h2: HTMLElement = fixture.nativeElement.querySelector('h2');
+            expect(h2).not.toBeNull();
+            expect(h2.textContent?.trim()).toBe('メッセージ');
+            expect(h2.className).toBe(
+                'tw-m-0 tw-text-base tw-font-bold tw-text-ink',
+            );
+            expect(
+                fixture.nativeElement.querySelector('p.tw-text-base'),
+            ).toBeNull();
+        });
+    });
 });

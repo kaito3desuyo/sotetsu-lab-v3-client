@@ -32,6 +32,8 @@ export class EmptyStateComponent {
     /** 説明2行目（補足文）。mockup-07 の「ダイヤまたは方向を変えて…」に対応。省略時は非表示。 */
     readonly subtitle = input<string>(undefined);
     readonly actionLabel = input<string>(undefined);
+    /** メッセージを見出し（h2）にするか。null なら p のまま（見た目は同じ） */
+    readonly headingLevel = input<'h2' | null>(null);
 
     readonly actionClick = output<void>();
 }

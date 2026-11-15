@@ -1,9 +1,17 @@
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { isPlatformBrowser } from '@angular/common';
 import {
+    afterNextRender,
     Component,
+    ElementRef,
     inject,
+    Injector,
+    PLATFORM_ID,
     signal,
+    viewChild,
     ChangeDetectionStrategy,
 } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
     ActivatedRouteSnapshot,
@@ -13,6 +21,10 @@ import {
     RouterModule,
 } from '@angular/router';
 import { filter, map, tap } from 'rxjs/operators';
+import {
+    focusMainContent,
+    routePathKey,
+} from '../core/a11y/focus-main-content';
 import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
@@ -24,9 +36,35 @@ import { SidenavComponent } from './components/sidenav/sidenav.component';
     animations: layoutAnimations,
     changeDetection: ChangeDetectionStrategy.OnPush,
     imports: [RouterModule, HeaderComponent, SidenavComponent],
+    host: {
+        '(document:keydown.escape)': 'onEscape($event)',
+    },
 })
 export class LayoutComponent {
     readonly #router = inject(Router);
+    readonly #injector = inject(Injector);
+    readonly #title = inject(Title);
+    readonly #liveAnnouncer = inject(LiveAnnouncer);
+    readonly #isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+    /**
+     * 直前に処理したページの path（matrix・query を除く）。null は「まだ最初の移動を見ていない」。
+     * 初回ナビゲーションは本コンポーネントの生成前に済むことが多いので、済んでいれば今の URL を入れておく。
+     */
+    #lastPathKey: string | null = this.#router.navigated
+        ? routePathKey(this.#router.parseUrl(this.#router.url))
+        : null;
+
+    private readonly contentRef = viewChild<unknown, ElementRef<HTMLElement>>(
+        'content',
+        { read: ElementRef },
+    );
+
+    private readonly headerRef = viewChild(HeaderComponent);
+    private readonly sidenavRef = viewChild<unknown, ElementRef<HTMLElement>>(
+        'sidenav',
+        { read: ElementRef },
+    );
 
     readonly isOpen = signal<boolean>(false);
     readonly isVisibled = signal<boolean>(false);
@@ -67,11 +105,26 @@ export class LayoutComponent {
                             ev instanceof NavigationCancel),
                 ),
                 tap(() => {
-                    this.toggle();
+                    void this.close('navigation');
                 }),
                 takeUntilDestroyed(),
             )
             .subscribe();
+
+        this.#router.events
+            .pipe(
+                filter((ev) => ev instanceof NavigationEnd),
+                takeUntilDestroyed(),
+            )
+            .subscribe((ev) => {
+                this.#onPageChanged(ev.urlAfterRedirects);
+            });
+    }
+
+    /** 「本文へ移動」: URL は変えず、本文の main にフォーカスする */
+    onSkipToMain(event: Event): void {
+        event.preventDefault();
+        this.#focusMain();
     }
 
     async toggle(): Promise<void> {
@@ -81,11 +134,104 @@ export class LayoutComponent {
             this.isVisibled.set(next);
             await wait(0);
             this.isOpen.set(next);
+            // inert が外れる描画のあとで、サイドナビの先頭へフォーカスを移す
+            afterNextRender(() => this.#focusFirstInSidenav(), {
+                injector: this.#injector,
+            });
         } else {
-            this.isOpen.set(next);
-            await wait(250);
-            this.isVisibled.set(next);
+            await this.#hide();
         }
+    }
+
+    /**
+     * サイドナビを閉じる。Esc・背景のクリックで閉じたときは開いたボタンへフォーカスを戻す。
+     * ページ移動（navigation）で閉じたときは戻さない（移動後のフォーカスは本文が受ける）。
+     */
+    async close(reason: 'escape' | 'backdrop' | 'navigation'): Promise<void> {
+        if (!this.isVisibled()) {
+            return;
+        }
+
+        if (reason !== 'navigation') {
+            this.headerRef()?.focusMenuButton();
+        }
+
+        if (reason === 'navigation' && this.#isBrowser) {
+            // 閉じる（inert になる）とサイドナビの中のフォーカスは行き場を失うので、描画のあとで本文へ移す
+            afterNextRender(() => this.#rescueFocus(), {
+                injector: this.#injector,
+            });
+        }
+
+        await this.#hide();
+    }
+
+    /** 開いているときだけ Esc で閉じる（閉じているときはダイアログなどの Esc を邪魔しない） */
+    onEscape(event: Event): void {
+        // セレクト・ダイアログ・シートが Esc を処理済み（preventDefault）なら、サイドナビは閉じない
+        if (event.defaultPrevented) {
+            return;
+        }
+        if (this.isOpen()) {
+            void this.close('escape');
+        }
+    }
+
+    async #hide(): Promise<void> {
+        this.isOpen.set(false);
+        await wait(250);
+        this.isVisibled.set(false);
+    }
+
+    /** フォーカスがサイドナビの中か body にあれば、本文の main へ（無ければハンバーガーへ）移す */
+    #rescueFocus(): void {
+        const active = document.activeElement;
+        const inSidenav =
+            !!active && !!this.sidenavRef()?.nativeElement.contains(active);
+        if (active && active !== document.body && !inSidenav) {
+            return;
+        }
+        if (!this.#focusMain()) {
+            this.headerRef()?.focusMenuButton();
+        }
+    }
+
+    #focusMain(): boolean {
+        const content = this.contentRef()?.nativeElement;
+        return !!content && focusMainContent(content);
+    }
+
+    /**
+     * ページを移った（path が変わった）ときだけ、本文へフォーカスして題を読み上げる。
+     * 操作帯の選び直し（matrix・query だけの変化）では動かさない。
+     */
+    #onPageChanged(url: string): void {
+        const key = routePathKey(this.#router.parseUrl(url));
+        const previous = this.#lastPathKey;
+        this.#lastPathKey = key;
+
+        if (previous === null || previous === key || !this.#isBrowser) {
+            return;
+        }
+
+        afterNextRender(
+            () => {
+                this.#focusMain();
+                void this.#liveAnnouncer.announce(
+                    this.#title.getTitle(),
+                    'polite',
+                );
+            },
+            { injector: this.#injector },
+        );
+    }
+
+    #focusFirstInSidenav(): void {
+        const target =
+            this.sidenavRef()?.nativeElement.querySelector<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            );
+        target?.focus({ preventScroll: true });
     }
 
     /** ルートツリーを末端まで辿り、最も深い Route data.title を返す。 */
