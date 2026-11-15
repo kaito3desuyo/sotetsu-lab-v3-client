@@ -150,6 +150,12 @@ body {
     font-size: 16px;
     line-height: 1.75;
 
+    // 本文に URL をそのまま書いたリンクが、320px で 78px はみ出していた（プライバシーポリシー）。
+    // 区切れる所の無い長い語だけを折り返す
+    a {
+        overflow-wrap: anywhere;
+    }
+
     h2 {
         margin: 0;
         font-size: 18px;
