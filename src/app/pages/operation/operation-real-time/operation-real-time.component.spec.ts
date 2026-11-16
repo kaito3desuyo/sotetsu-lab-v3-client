@@ -713,6 +713,33 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         expect(isLoading()).toBe(false);
     });
 
+    it('前後の運用の取得だけ失敗したら、凡例の下に「一部取れませんでした」を出す', async () => {
+        service['fetchItineraryLinks'].mockImplementation(() =>
+            of({ failed: true }),
+        );
+
+        await create();
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(true);
+        const note = (fixture.nativeElement as HTMLElement).querySelector(
+            'p[role="status"]',
+        );
+        expect(note?.textContent).toContain('一部の情報を取れませんでした');
+    });
+
+    it('全部取れたら「一部取れませんでした」を出さない', async () => {
+        await create();
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(false);
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'p[role="status"]',
+            ),
+        ).toBeNull();
+    });
+
     it('失敗したら保存した中身を戻し、最終更新に保存した時刻を出し、失敗の通知は出さない', async () => {
         service['fetchCalendar'].mockImplementation(failLater);
         restore.mockImplementation(restoreSaved);

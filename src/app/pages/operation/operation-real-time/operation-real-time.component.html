@@ -37,6 +37,23 @@
         class="tw-sticky tw-top-[calc(48px_+_var(--control-band-offset,0px))] tw-z-30 -tw-mx-4 -tw-mt-4 tw-border-0 tw-border-b tw-border-solid tw-border-rule tw-bg-white tw-px-4 tw-py-2 md:tw-top-[calc(64px_+_var(--control-band-offset,0px))] md:-tw-mx-6 md:tw-px-6 lg:-tw-mx-8 lg:tw-px-8 xl:-tw-mx-16 xl:tw-px-16"
     ></app-operation-real-time-legend>
 
+    <!-- 一部の取得に失敗したときの知らせ。凡例の下・薄い橙の帯（ユーザー判断 2026-11-16・docs/design.md「一部取れなかったとき」） -->
+    @if (partialFailure()) {
+        <p
+            role="status"
+            class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-rounded tw-bg-[color-mix(in_oklch,var(--color-accent)_14%,white)] tw-px-3 tw-py-1.5 tw-text-[0.8125rem] tw-leading-normal tw-text-ink"
+        >
+            <mat-icon
+                class="!tw-h-[18px] !tw-w-[18px] tw-shrink-0 tw-text-[18px]"
+                aria-hidden="true"
+                >info</mat-icon
+            >
+            <span
+                >一部の情報を取れませんでした。表示が欠けている場合があります。</span
+            >
+        </p>
+    }
+
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。
          横並びでもどちらの列が何順なのかを示す見出し行を置く
          （ユーザー指示 2026-08-22）。モバイルの mat-tab 帯と同じ視覚言語
