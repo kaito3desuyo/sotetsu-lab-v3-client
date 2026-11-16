@@ -256,6 +256,18 @@ describe('Service: TimetableFormation', () => {
         expect(calendarService.findOneBySpecificDate).not.toHaveBeenCalled();
     });
 
+    it('refetchSightings は列車の時刻を表示中のダイヤのキャッシュから取る（取り直さない）', async () => {
+        await run('2026-11-11', 'today');
+        tripBlockService.findManyByCalendarId.mockClear();
+        await lastValueFrom(service.refetchSightings());
+        expect(tripBlockService.findManyByCalendarId).toHaveBeenCalledWith(
+            expect.objectContaining({
+                calendarId: 'c1',
+                forceReload: undefined,
+            }),
+        );
+    });
+
     it('refetchSightings で最初の自分の目撃が届いたら firstBasis を sighting にする', async () => {
         sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
             of({ expectedSighting: { operation: { operationId: 'op-a' } } }),
