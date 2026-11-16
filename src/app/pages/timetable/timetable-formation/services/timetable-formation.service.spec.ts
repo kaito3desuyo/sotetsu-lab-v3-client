@@ -320,6 +320,14 @@ describe('Service: TimetableFormation', () => {
         expect(store.loadError()).toBe(true);
     });
 
+    it('駅の取得に失敗したら loadError（駅名が空のまま描かない）', async () => {
+        stationService.findMany.mockReturnValue(
+            throwError(() => new Error('x')),
+        );
+        await run('2026-11-11', 'today');
+        expect(store.loadError()).toBe(true);
+    });
+
     it('明日の運用の取得に失敗したら loadError', async () => {
         sightingService.findOneTimeCrossSectionByFormationNumber.mockReturnValue(
             throwError(() => new Error('x')),

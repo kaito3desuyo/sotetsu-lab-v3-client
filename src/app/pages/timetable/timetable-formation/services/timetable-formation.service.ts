@@ -122,9 +122,10 @@ export class TimetableFormationService {
                     : of(NO_CROSS_SECTION),
             stations: this.#store.stations().length
                 ? of(null)
-                : this.#stationService
+                : // 駅名が空のまま描かないよう、失敗は loadError にする
+                  this.#stationService
                       .findMany({})
-                      .pipe(catchError(() => of(null))),
+                      .pipe(catchError(() => fail(null))),
         }).pipe(
             switchMap((r) => {
                 if (!latest()) return of(undefined);

@@ -349,7 +349,9 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
                     provide: OperationService,
                     useValue: {
                         findManyByCalendarId: ({ calendarId }) =>
-                            of(byCalendar[calendarId] ?? []),
+                            calendarId === 'cal-broken'
+                                ? throwError(() => new Error('offline'))
+                                : of(byCalendar[calendarId] ?? []),
                     },
                 },
                 { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
@@ -370,6 +372,17 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
         ).componentInstance;
         component.selectedCalendarId.set('cal-1');
         navigate.mockClear();
+    });
+
+    it('運用の選択肢が取れなかったら、空のわけを知らせる', () => {
+        const notification = TestBed.inject(NotificationService);
+        component.selectedCalendarId.set('cal-broken');
+        TestBed.tick();
+        expect(component.operationOptions()).toEqual([]);
+        expect(notification.open).toHaveBeenCalledWith(
+            '運用の一覧を取得できませんでした',
+            'OK',
+        );
     });
 
     it('運用番号を選ぶと、その運用の行路図へ移る', () => {
