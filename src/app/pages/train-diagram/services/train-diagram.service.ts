@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { lastValueFrom, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
@@ -11,6 +11,17 @@ import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { attachTripClasses } from 'src/app/shared/attach-trip-classes.util';
 import { TrainDiagramStore } from '../stores/train-diagram.store';
+
+export interface TrainDiagramFetchFlags {
+    /** 列車を取り直すか（ダイヤが変わった・初回・骨組みのまま） */
+    refetchTripBlocks: boolean;
+    /** この訪問での初回の取得か（種別と路線網の駅を取る） */
+    firstLoad: boolean;
+    /** 取得がすべて成功したあと（骨組みを消す前）に呼ぶ */
+    onLoaded: () => void;
+    /** 取得を始めたダイヤが無いと分かったとき（古い取得の結果では呼ばない） */
+    onCalendarMissing: () => void;
+}
 
 @Injectable()
 export class TrainDiagramService {
@@ -138,5 +149,115 @@ export class TrainDiagramService {
                 }),
                 map(() => undefined),
             );
+    }
+
+    /**
+     * 列車・ダイヤ・路線網の駅を順に取り、ストアへ入れる。失敗したら圏外用に保存した中身を戻す。
+     * 初回かどうか（firstLoad）と、取れたあと・ダイヤが無いと分かったときの後始末は、
+     * 訪問ごとの状態を持つ component が渡す。
+     */
+    async fetchData(flags: TrainDiagramFetchFlags): Promise<void> {
+        // 路線・方向だけの取得は世代を進めず、骨組みにも触らない（図を出したまま）
+        const seq = flags.refetchTripBlocks
+            ? this.#store.nextFetchSeq()
+            : this.#store.currentFetchSeq();
+        const conditions = {
+            calendarId: this.#store.calendarId(),
+            routeIds: [...this.#store.selectedRouteIds()].sort().join(','),
+        };
+        this.#store.enableLoading();
+        if (flags.refetchTripBlocks) {
+            this.#store.setHasFetchedTrainDiagram(false);
+        }
+
+        // フェッチ失敗（reject）時にも loadingQueue を必ず戻す
+        // （finally が無いと isLoading が true のまま回復不能になる）
+        try {
+            // 運行は種別を貼り付けるので種別の後。路線網の駅はどちらにも依存しないので並行に取る
+            const firstLoad = flags.firstLoad;
+            let hasFetchedItineraryLinks = true;
+            // api は無いダイヤに 404 でなく 200 と空の本文（null）を返す。取れて「無い」と分かったときだけ true
+            let calendarMissing = false;
+            const fetchTripBlocks = async (): Promise<void> => {
+                if (firstLoad) {
+                    await lastValueFrom(this.fetchTripClasses());
+                }
+                if (flags.refetchTripBlocks) {
+                    // 失敗を決める前に両方の終わりを待つ（遅れて届いた成功が、戻した中身を上書きしないように）
+                    const results = await Promise.allSettled([
+                        lastValueFrom(this.fetchTripBlocks()),
+                        // □ の判定用。取れなくても空として扱うので図は止めない
+                        lastValueFrom(this.fetchItineraryLinks()),
+                        // ダイヤの存在の確認。失敗は図の失敗にせず、無いと分かったときだけ使う
+                        lastValueFrom(this.fetchCalendar()),
+                    ]);
+                    const calendarResult = results[2];
+                    calendarMissing =
+                        calendarResult.status === 'fulfilled' &&
+                        calendarResult.value === false;
+                    const rejected = results
+                        .slice(0, 2)
+                        .find(
+                            (result): result is PromiseRejectedResult =>
+                                result.status === 'rejected',
+                        );
+                    if (rejected) {
+                        throw rejected.reason;
+                    }
+                    // 前後の運用が取れなかった中身は、圏外用に保存しない（良い保存を空のつながりで上書きしない）
+                    const linksResult = results[1];
+                    hasFetchedItineraryLinks = !(
+                        linksResult.status === 'fulfilled' &&
+                        linksResult.value?.failed
+                    );
+                }
+            };
+            const results = await Promise.allSettled([
+                fetchTripBlocks(),
+                firstLoad
+                    ? lastValueFrom(this.fetchNetworkStations())
+                    : undefined,
+            ]);
+            const failure = results.find(
+                (result): result is PromiseRejectedResult =>
+                    result.status === 'rejected',
+            );
+            if (failure) {
+                // 通信できないときは、同じ条件で保存した中身を出す。列車を取り直す取得だけが対象で、
+                // 古い取得の失敗では戻さない。戻す処理が壊れていても、取得の失敗をそのまま投げる
+                // （読み込み中は finally で解く）。戻したときは初回扱いのまま（次に通信できたら取り直す）
+                if (flags.refetchTripBlocks && this.#store.isLatestFetch(seq)) {
+                    try {
+                        await this.#store.restoreOfflineSnapshot(
+                            'main',
+                            conditions,
+                        );
+                    } catch {
+                        // 保存した中身が壊れていても、取得の失敗を優先する
+                    }
+                }
+                throw failure.reason;
+            }
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            if (
+                flags.refetchTripBlocks &&
+                !calendarMissing &&
+                hasFetchedItineraryLinks &&
+                this.#store.isLatestFetch(seq)
+            ) {
+                void this.#store.saveOfflineSnapshot('main', conditions);
+            }
+            flags.onLoaded();
+            // 取得を始めたときのダイヤで決める。古い取得の結果では見つからない表示にしない
+            if (calendarMissing && this.#store.isLatestFetch(seq)) {
+                flags.onCalendarMissing();
+            }
+        } finally {
+            this.#store.disableLoading();
+            // 列車を取り直した取得のうち、いちばん新しいものだけが骨組みを消す
+            if (flags.refetchTripBlocks && this.#store.isLatestFetch(seq)) {
+                this.#store.setHasFetchedTrainDiagram(true);
+            }
+        }
     }
 }
