@@ -367,7 +367,6 @@ export class TimetableStationComponent {
                 lastValueFrom(this.#timetableStationService.fetchCalendar()),
                 lastValueFrom(this.#timetableStationService.fetchTrips()),
                 lastValueFrom(this.#timetableStationService.fetchTripClasses()),
-                lastValueFrom(this.#timetableStationService.fetchStations()),
                 lastValueFrom(this.#timetableStationService.fetchOperations()),
             ]);
             const failure = results.find(

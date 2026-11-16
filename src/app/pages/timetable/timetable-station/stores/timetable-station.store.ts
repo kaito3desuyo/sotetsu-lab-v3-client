@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import {
     patchState,
     signalStore,
@@ -10,6 +10,7 @@ import {
 } from '@ngrx/signals';
 import { format, parse } from 'date-fns';
 import { minBy } from 'es-toolkit/compat';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { toServiceSeconds } from 'src/app/core/utils/railway-day';
@@ -30,7 +31,6 @@ type StoreProps = {
     trips: TripWithTimesDto[];
     tripBlocks: TripBlockWithTripsDto[];
     tripClasses: TripClassDetailsDto[];
-    stations: StationDetailsDto[];
     operations: OperationDetailsDto[];
     /**
      * G1（充当編成「不明」バグ修正）: operation-real-time と同じキー付け方に統一する。
@@ -54,12 +54,7 @@ type StoreProps = {
  */
 export type TimetableStationSnapshot = Pick<
     StoreProps,
-    | 'calendar'
-    | 'trips'
-    | 'tripBlocks'
-    | 'tripClasses'
-    | 'stations'
-    | 'operations'
+    'calendar' | 'trips' | 'tripBlocks' | 'tripClasses' | 'operations'
 >;
 
 /** 圏外のために端末に保存する充当編成（時刻表とは別に、日付つきで保存する） */
@@ -74,7 +69,6 @@ const initialState: StoreProps = {
     trips: [],
     tripBlocks: [],
     tripClasses: [],
-    stations: [],
     operations: [],
     operationSightingTimeCrossSections: {},
     hasFetchedTimetable: false,
@@ -204,6 +198,8 @@ export const TimetableStationStore = signalStore(
     { providedIn: 'root' },
     withState<StoreProps>(initialState),
     withComputed(({ trips, tripBlocks, stationId, loadingQueue }) => ({
+        /** 全駅（マスターデータ。RouteStationListState から読む） */
+        stations: inject(RouteStationListState).stations,
         isLoading: computed(() => loadingQueue().length > 0),
         operationIds: computed(() => extractOperationIds(trips())),
         timetableData: computed(() =>
@@ -254,9 +250,6 @@ export const TimetableStationStore = signalStore(
             setTripClasses(tripClasses: TripClassDetailsDto[]): void {
                 patchState(store, { tripClasses });
             },
-            setStations(stations: StationDetailsDto[]): void {
-                patchState(store, { stations });
-            },
             setOperations(operations: OperationDetailsDto[]): void {
                 patchState(store, { operations });
             },
@@ -298,7 +291,6 @@ export const TimetableStationStore = signalStore(
                     trips: store.trips(),
                     tripBlocks: store.tripBlocks(),
                     tripClasses: store.tripClasses(),
-                    stations: store.stations(),
                     operations: store.operations(),
                 };
             },
@@ -309,7 +301,6 @@ export const TimetableStationStore = signalStore(
                     trips: data.trips,
                     tripBlocks: data.tripBlocks,
                     tripClasses: data.tripClasses,
-                    stations: data.stations,
                     operations: data.operations,
                 });
             },

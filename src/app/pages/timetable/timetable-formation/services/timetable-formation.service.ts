@@ -7,7 +7,6 @@ import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/use
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
 import { TRIP_BLOCK_TIMELINE_FIELDS } from 'src/app/libs/trip-block/usecase/trip-block-fields';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
@@ -53,7 +52,6 @@ function hasOwnValidSighting(
 export class TimetableFormationService {
     readonly #calendarService = inject(CalendarService);
     readonly #formationService = inject(FormationService);
-    readonly #stationService = inject(StationService);
     readonly #operationService = inject(OperationService);
     readonly #operationSightingService = inject(OperationSightingService);
     readonly #tripBlockService = inject(TripBlockService);
@@ -118,16 +116,9 @@ export class TimetableFormationService {
                           catchError(() => of(NO_CROSS_SECTION)),
                       )
                     : of(NO_CROSS_SECTION),
-            stations: this.#store.stations().length
-                ? of(null)
-                : // 駅名が空のまま描かないよう、失敗は loadError にする
-                  this.#stationService
-                      .findMany({})
-                      .pipe(catchError(() => fail(null))),
         }).pipe(
             switchMap((r) => {
                 if (!latest()) return of(undefined);
-                if (r.stations) this.#store.setStations(r.stations);
                 const formation = selectFormationOnDate(
                     r.formations,
                     formationNumber,

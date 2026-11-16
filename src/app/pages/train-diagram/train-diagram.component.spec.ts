@@ -1,4 +1,10 @@
-import { NO_ERRORS_SCHEMA, PLATFORM_ID, Provider, signal } from '@angular/core';
+import {
+    NO_ERRORS_SCHEMA,
+    PLATFORM_ID,
+    Provider,
+    signal,
+    WritableSignal,
+} from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import {
@@ -24,6 +30,7 @@ import { SsrResponse } from 'src/app/core/ssr/ssr-response';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
+import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
@@ -42,7 +49,11 @@ const ROUTE_2 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
  */
 function selectRoutesThrough(...routes: string[][]): void {
     const store = TestBed.inject(TrainDiagramStore);
-    store.setRouteStations(
+    // この spec の RouteStationListState は routeStations だけを持つ差し替え（signal）
+    const state = TestBed.inject(RouteStationListState) as unknown as {
+        routeStations: WritableSignal<RouteDetailsDto[]>;
+    };
+    state.routeStations.set(
         routes.map(
             (stationIds, index) =>
                 ({
@@ -52,7 +63,7 @@ function selectRoutesThrough(...routes: string[][]): void {
                         stationId,
                         station: { stationId, stationName: stationId },
                     })),
-                }) as any,
+                }) as unknown as RouteDetailsDto,
         ),
     );
     store.setSelectedRouteIds(
@@ -1908,7 +1919,6 @@ describe('TrainDiagramComponent の圏外の保存', () => {
             conditions,
             data: {
                 networkStations,
-                routeStations,
                 tripClasses,
                 tripBlocksByDirection,
                 itineraryLinks,

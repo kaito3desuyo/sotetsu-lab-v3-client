@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
+import { setRouteStations } from 'src/app/global-states/testing/set-route-stations';
 import { ServiceListState } from 'src/app/global-states/service-list.state';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
@@ -187,7 +188,7 @@ describe('Service: TrainDiagram', () => {
         });
         // 本来は train-diagram.component.ts が RouteStationListState.routeStations から
         // 別途設定する（選択路線フィルタと buildStationAxis の接続駅複製判定に必要）。
-        store.setRouteStations([
+        setRouteStations([
             {
                 routeId: 'r1',
                 routeStationLists: [

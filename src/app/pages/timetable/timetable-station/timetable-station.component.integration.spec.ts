@@ -28,7 +28,6 @@ import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-cal
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
@@ -195,15 +194,6 @@ async function setup(overrides?: {
                                 tripClassColor: '#808080',
                             },
                         ]).pipe(delay(1)),
-                },
-            },
-            {
-                provide: StationService,
-                useValue: {
-                    findMany: () =>
-                        of([{ stationId: YOKOHAMA, stationName: '横浜' }]).pipe(
-                            delay(1),
-                        ),
                 },
             },
             {

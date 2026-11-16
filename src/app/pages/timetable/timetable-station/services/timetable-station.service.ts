@@ -16,7 +16,6 @@ import { OperationSightingService } from 'src/app/libs/operation-sighting/usecas
 import { OperationDetailsDto } from 'src/app/libs/operation/usecase/dtos/operation-details.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import {
     TRIP_BLOCK_TIMELINE_FIELDS,
     TripBlockFields,
@@ -57,7 +56,6 @@ const STATION_PAYLOAD_KEY = makeStateKey<StationPayload>(
 @Injectable()
 export class TimetableStationService {
     readonly #calendarService = inject(CalendarService);
-    readonly #stationService = inject(StationService);
     readonly #tripBlockService = inject(TripBlockService);
     readonly #tripClassService = inject(TripClassService);
     readonly #operationService = inject(OperationService);
@@ -196,15 +194,6 @@ export class TimetableStationService {
         return this.#tripClassService.findMany({}).pipe(
             tap((data: TripClassDetailsDto[]) => {
                 this.#store.setTripClasses(data);
-            }),
-            map(() => undefined),
-        );
-    }
-
-    fetchStations(): Observable<void> {
-        return this.#stationService.findMany({}).pipe(
-            tap((data: StationDetailsDto[]) => {
-                this.#store.setStations(data);
             }),
             map(() => undefined),
         );

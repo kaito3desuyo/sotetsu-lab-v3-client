@@ -63,7 +63,6 @@ describe('OperationTableComponent', () => {
                     useValue: {
                         fetchCalendar: () => of(undefined),
                         fetchOperationTrips: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
                         usedTransferredTrips: () => false,
@@ -462,7 +461,6 @@ describe('OperationTableComponent の読み込み中', () => {
                     useValue: {
                         fetchCalendar: () => of(undefined),
                         fetchOperationTrips: () => trips$,
-                        fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
                         usedTransferredTrips: () => false,
@@ -692,7 +690,6 @@ describe('OperationTableComponent のサーバー', () => {
                     useValue: {
                         fetchCalendar,
                         fetchOperationTrips: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
                         usedTransferredTrips: () => false,
@@ -752,7 +749,6 @@ describe('OperationTableComponent の圏外の保存', () => {
     let originalFetchData: OperationTableComponent['fetchData'];
     let calendar$: Observable<undefined>;
     let trips$: Observable<undefined>;
-    let stations$: Observable<undefined>;
     let tripClasses$: Observable<undefined>;
     let links$: Observable<undefined>;
     const save = jest.fn(() => Promise.resolve());
@@ -766,7 +762,6 @@ describe('OperationTableComponent の圏外の保存', () => {
         },
     ] as never;
     const itineraryLinks = [{ tripOperationListId: 'link-1' }] as never;
-    const stations = [{ stationId: 'st-1' }] as never;
     const tripClasses = [{ tripClassId: 'class-1' }] as never;
     const conditions = { calendarId: '00000000-0000-4000-8000-000000000001' };
 
@@ -815,7 +810,6 @@ describe('OperationTableComponent の圏外の保存', () => {
                     useValue: {
                         fetchCalendar: () => calendar$,
                         fetchOperationTrips: () => trips$,
-                        fetchStations: () => stations$,
                         fetchTripClasses: () => tripClasses$,
                         fetchItineraryLinks: () => links$,
                         usedTransferredTrips: () => false,
@@ -839,7 +833,6 @@ describe('OperationTableComponent の圏外の保存', () => {
     const succeedAll = () => {
         calendar$ = of(undefined);
         trips$ = of(undefined);
-        stations$ = of(undefined);
         tripClasses$ = of(undefined);
         links$ = of(undefined);
     };
@@ -849,7 +842,6 @@ describe('OperationTableComponent の圏外の保存', () => {
         TestBed.inject(OperationTableStore).setCalendar(calendar);
         TestBed.inject(OperationTableStore).setOperationTrips(operationTrips);
         TestBed.inject(OperationTableStore).setItineraryLinks(itineraryLinks);
-        TestBed.inject(OperationTableStore).setStations(stations);
         TestBed.inject(OperationTableStore).setTripClasses(tripClasses);
     };
 
@@ -875,7 +867,6 @@ describe('OperationTableComponent の圏外の保存', () => {
                 calendar,
                 operationTrips,
                 itineraryLinks,
-                stations,
                 tripClasses,
             },
         });
@@ -909,7 +900,6 @@ describe('OperationTableComponent の圏外の保存', () => {
                         calendar,
                         operationTrips,
                         itineraryLinks,
-                        stations,
                         tripClasses,
                     },
                     0,
@@ -932,17 +922,16 @@ describe('OperationTableComponent の圏外の保存', () => {
         expect(store.calendar()).toEqual(calendar);
         expect(store.operationTrips()).toEqual(operationTrips);
         expect(store.itineraryLinks()).toEqual(itineraryLinks);
-        expect(store.stations()).toEqual(stations);
         expect(store.tripClasses()).toEqual(tripClasses);
         expect(fixture.componentInstance.isLoading()).toBe(false);
     });
 
     it('片方が先に失敗しても、残りの取得（前後の運用を含む）が終わってから戻す', async () => {
-        const stationsLate = new Subject<undefined>();
+        const tripClassesLate = new Subject<undefined>();
         const linksLate = new Subject<undefined>();
         succeedAll();
         trips$ = failLater('offline');
-        stations$ = stationsLate;
+        tripClasses$ = tripClassesLate;
         links$ = linksLate;
         await setup();
 
@@ -950,8 +939,8 @@ describe('OperationTableComponent の圏外の保存', () => {
         await flush();
         expect(restore).not.toHaveBeenCalled();
 
-        stationsLate.next(undefined);
-        stationsLate.complete();
+        tripClassesLate.next(undefined);
+        tripClassesLate.complete();
         await flush();
         expect(restore).not.toHaveBeenCalled();
 
@@ -1005,7 +994,6 @@ describe('OperationTableComponent の URL の値', () => {
     const addCacheTags = jest.fn();
     const fetchCalendar = jest.fn();
     const fetchOperationTrips = jest.fn();
-    const fetchStations = jest.fn();
     const fetchTripClasses = jest.fn();
     const fetchItineraryLinks = jest.fn();
     let params$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
@@ -1015,7 +1003,6 @@ describe('OperationTableComponent の URL の値', () => {
     const calls = () => [
         fetchCalendar,
         fetchOperationTrips,
-        fetchStations,
         fetchTripClasses,
         fetchItineraryLinks,
     ];
@@ -1041,7 +1028,6 @@ describe('OperationTableComponent の URL の値', () => {
                     useValue: {
                         fetchCalendar,
                         fetchOperationTrips,
-                        fetchStations,
                         fetchTripClasses,
                         fetchItineraryLinks,
                         usedTransferredTrips: () => false,
@@ -1081,7 +1067,6 @@ describe('OperationTableComponent の URL の値', () => {
     beforeEach(() => {
         fetchCalendar.mockReturnValue(of(true));
         fetchOperationTrips.mockReturnValue(of(undefined));
-        fetchStations.mockReturnValue(of(undefined));
         fetchTripClasses.mockReturnValue(of(undefined));
         fetchItineraryLinks.mockReturnValue(of(undefined));
     });

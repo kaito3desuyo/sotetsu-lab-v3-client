@@ -1,4 +1,4 @@
-import { computed } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import {
     patchState,
     signalStore,
@@ -8,6 +8,7 @@ import {
     withMethods,
     withState,
 } from '@ngrx/signals';
+import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { withAppDevtools } from 'src/app/core/store-features/with-app-devtools';
 import { withOfflineSnapshots } from 'src/app/core/store-features/with-offline-snapshots';
 import { OperationSightingTimeCrossSectionDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-time-cross-section.dto';
@@ -52,11 +53,6 @@ type StoreProps = {
     directionFilter: DiagramDirectionFilter;
     /** ServiceService.findOneWithStations 由来の網羅駅（全線時刻表と同一の並び順）。 */
     networkStations: StationDetailsDto[];
-    /**
-     * 全路線（routeStations() 由来）。駅軸上で隣接しない
-     * 接続駅（分岐駅）を複製挿入する判定（buildStationAxis の routesOrderedStationIds）に使う。
-     */
-    routeStations: RouteDetailsDto[];
     tripClasses: TripClassDetailsDto[];
     tripBlocksByDirection: Record<number, TripBlockDetailsDto[]>;
     selectedTripId: string | null;
@@ -78,7 +74,6 @@ type StoreProps = {
 export type TrainDiagramSnapshot = Pick<
     StoreProps,
     | 'networkStations'
-    | 'routeStations'
     | 'tripClasses'
     | 'tripBlocksByDirection'
     | 'itineraryLinks'
@@ -95,7 +90,6 @@ const initialState: StoreProps = {
     axisPxPerMinute: null,
     directionFilter: 'both',
     networkStations: [],
-    routeStations: [],
     tripClasses: [],
     tripBlocksByDirection: {},
     selectedTripId: null,
@@ -192,6 +186,13 @@ function toStationAxis(
 export const TrainDiagramStore = signalStore(
     { providedIn: 'root' },
     withState<StoreProps>(initialState),
+    withComputed(() => ({
+        /**
+         * 全路線（RouteStationListState から読む）。駅軸上で隣接しない
+         * 接続駅（分岐駅）を複製挿入する判定（buildStationAxis の routesOrderedStationIds）に使う。
+         */
+        routeStations: inject(RouteStationListState).routeStations,
+    })),
     withComputed(
         ({
             networkStations,
@@ -278,9 +279,6 @@ export const TrainDiagramStore = signalStore(
             setNetworkStations(stations: StationDetailsDto[]): void {
                 patchState(store, { networkStations: stations });
             },
-            setRouteStations(routeStations: RouteDetailsDto[]): void {
-                patchState(store, { routeStations });
-            },
             setTripClasses(tripClasses: TripClassDetailsDto[]): void {
                 patchState(store, { tripClasses });
             },
@@ -329,7 +327,6 @@ export const TrainDiagramStore = signalStore(
             snapshot(): TrainDiagramSnapshot {
                 return {
                     networkStations: store.networkStations(),
-                    routeStations: store.routeStations(),
                     tripClasses: store.tripClasses(),
                     tripBlocksByDirection: store.tripBlocksByDirection(),
                     itineraryLinks: store.itineraryLinks(),
@@ -339,7 +336,6 @@ export const TrainDiagramStore = signalStore(
             restoreSnapshot(data: TrainDiagramSnapshot): void {
                 patchState(store, {
                     networkStations: data.networkStations,
-                    routeStations: data.routeStations,
                     tripClasses: data.tripClasses,
                     tripBlocksByDirection: data.tripBlocksByDirection,
                     itineraryLinks: data.itineraryLinks,

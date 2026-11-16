@@ -52,7 +52,6 @@ describe('TimetableStationComponent', () => {
                         fetchTrips: () => of(undefined),
                         usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
                         fetchOperationSightingTimeCrossSections: () =>
                             of(undefined),
@@ -133,7 +132,6 @@ describe('TimetableStationComponent の URL の値', () => {
                         fetchTrips,
                         usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
-                        fetchStations: ok,
                         fetchOperations: ok,
                         fetchOperationSightingTimeCrossSections: ok,
                     },
@@ -478,7 +476,6 @@ describe('TimetableStationComponent の読み込み中', () => {
                         fetchTrips: ok,
                         usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
-                        fetchStations: ok,
                         fetchOperations: ok,
                         fetchOperationSightingTimeCrossSections: ok,
                     },
@@ -626,7 +623,6 @@ describe('TimetableStationComponent の帯の操作', () => {
                         fetchTrips: () => of(undefined),
                         usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
                         fetchOperationSightingTimeCrossSections: () =>
                             of(undefined),
@@ -701,7 +697,6 @@ describe('TimetableStationComponent のサーバー', () => {
                         fetchTrips: () => of(undefined),
                         usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
-                        fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
                         fetchOperationSightingTimeCrossSections: () =>
                             of(undefined),
@@ -850,7 +845,6 @@ describe('TimetableStationComponent の圏外の保存', () => {
                         fetchTrips: () => trips$,
                         usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
-                        fetchStations: ok,
                         fetchOperations: () => operations$,
                         fetchOperationSightingTimeCrossSections: ok,
                     },
@@ -871,7 +865,6 @@ describe('TimetableStationComponent の圏外の保存', () => {
         store.setTrips(trips);
         store.setTripBlocks(tripBlocks);
         store.setTripClasses(tripClasses);
-        store.setStations(stations);
         store.setOperations(operations);
     };
 
@@ -881,7 +874,6 @@ describe('TimetableStationComponent の圏外の保存', () => {
         store.setTrips([]);
         store.setTripBlocks([]);
         store.setTripClasses([]);
-        store.setStations([]);
         store.setOperations([]);
     };
 
@@ -912,7 +904,6 @@ describe('TimetableStationComponent の圏外の保存', () => {
                 trips,
                 tripBlocks,
                 tripClasses,
-                stations,
                 operations,
             },
         });
@@ -956,7 +947,6 @@ describe('TimetableStationComponent の圏外の保存', () => {
             trips,
             tripBlocks,
             tripClasses,
-            stations,
             operations,
         });
         expect(fixture.componentInstance.isLoading()).toBe(false);
@@ -1056,7 +1046,6 @@ describe('TimetableStationComponent の投稿後の取り直し', () => {
                         fetchTrips,
                         usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
-                        fetchStations: ok,
                         fetchOperations: ok,
                         fetchOperationSightingTimeCrossSections: fetchSightings,
                     },

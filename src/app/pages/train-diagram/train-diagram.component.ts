@@ -43,10 +43,7 @@ import { OperationPostCardService } from 'src/app/shared/operation-post-card/ope
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
-import {
-    parseUuid,
-    readUrlParam,
-} from 'src/app/shared/url-params/url-param';
+import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import { findContinuations } from 'src/app/shared/train-position.util';
@@ -890,16 +887,6 @@ export class TrainDiagramComponent {
 
         // ストアは訪問をまたいで残る。前の訪問の「取り終えた」で前の図が一瞬出ないようにする
         this.#store.setHasFetchedTrainDiagram(false);
-
-        // 今の値をその場で入れ、取り直されたとき（effect）に入れ直す
-        this.#store.setRouteStations(
-            this.#routeStationListState.routeStations(),
-        );
-        effect(() => {
-            this.#store.setRouteStations(
-                this.#routeStationListState.routeStations(),
-            );
-        });
 
         // I3: chart が隠れていた（列車を取る前の骨組み、または表示条件に合う列車が
         // 無い isEmpty）状態から見える状態に戻ったら、chart は再生成されて jumpRequest を

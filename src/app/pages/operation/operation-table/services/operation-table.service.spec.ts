@@ -8,7 +8,6 @@ import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { CalendarService } from 'src/app/libs/calendar/usecase/calendar.service';
 import { OperationTripsDto } from 'src/app/libs/operation/usecase/dtos/operation-trips.dto';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TripClassService } from 'src/app/libs/trip-class/usecase/trip-class.service';
 import { OperationTableStore } from '../stores/operation-table.store';
 import { OperationTableService } from './operation-table.service';
@@ -36,7 +35,6 @@ describe('Service: OperationTable', () => {
                 },
                 { provide: CalendarService, useValue: calendarService },
                 { provide: OperationService, useValue: operationService },
-                { provide: StationService, useValue: {} },
                 { provide: TripClassService, useValue: {} },
             ],
         });
@@ -170,7 +168,6 @@ describe('Service: OperationTable のサーバーからの受け渡し', () => {
                 },
                 { provide: CalendarService, useValue: {} },
                 { provide: OperationService, useValue: { findManyWithTrips } },
-                { provide: StationService, useValue: {} },
                 { provide: TripClassService, useValue: {} },
                 {
                     provide: QueryInvalidator,

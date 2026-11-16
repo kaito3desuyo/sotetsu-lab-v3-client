@@ -5,7 +5,6 @@ import { FormationService } from 'src/app/libs/formation/usecase/formation.servi
 import { OperationSightingService } from 'src/app/libs/operation-sighting/usecase/operation-sighting.service';
 import { OperationService } from 'src/app/libs/operation/usecase/operation.service';
 import { TripBlockService } from 'src/app/libs/trip-block/usecase/trip-block.service';
-import { StationService } from 'src/app/libs/station/usecase/station.service';
 import { TimetableFormationStore } from '../stores/timetable-formation.store';
 import { TimetableFormationService } from './timetable-formation.service';
 
@@ -31,7 +30,6 @@ describe('Service: TimetableFormation', () => {
     let store: InstanceType<typeof TimetableFormationStore>;
     const calendarService = { findOneBySpecificDate: jest.fn() };
     const formationService = { findManyBySpecificDate: jest.fn() };
-    const stationService = { findMany: jest.fn() };
     const operationService = {
         findOneWithTrips: jest.fn(),
         findManyItineraryLinks: jest.fn(),
@@ -51,7 +49,6 @@ describe('Service: TimetableFormation', () => {
         formationService.findManyBySpecificDate.mockReturnValue(
             of([formation]),
         );
-        stationService.findMany.mockReturnValue(of([]));
         operationService.findManyItineraryLinks.mockReturnValue(of([]));
         operationService.findOneWithTrips.mockImplementation(
             ({ operationId }: { operationId: string }) =>
@@ -67,7 +64,6 @@ describe('Service: TimetableFormation', () => {
                 TimetableFormationService,
                 { provide: CalendarService, useValue: calendarService },
                 { provide: FormationService, useValue: formationService },
-                { provide: StationService, useValue: stationService },
                 { provide: OperationService, useValue: operationService },
                 { provide: TripBlockService, useValue: tripBlockService },
                 {
@@ -327,14 +323,6 @@ describe('Service: TimetableFormation', () => {
                 searchTime
                     ? of({ expectedSighting: null })
                     : throwError(() => new Error('x')),
-        );
-        await run('2026-11-11', 'today');
-        expect(store.loadError()).toBe(true);
-    });
-
-    it('駅の取得に失敗したら loadError（駅名が空のまま描かない）', async () => {
-        stationService.findMany.mockReturnValue(
-            throwError(() => new Error('x')),
         );
         await run('2026-11-11', 'today');
         expect(store.loadError()).toBe(true);

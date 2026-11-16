@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { OfflineSnapshots } from 'src/app/core/offline/offline-snapshots';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.dto';
+import { setRouteStations } from 'src/app/global-states/testing/set-route-stations';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
 import { StationAxis, stationToY } from 'src/app/shared/diagram-scale';
 import { TrainDiagramStore } from './train-diagram.store';
@@ -160,7 +161,7 @@ describe('TrainDiagramStore', () => {
         it('路線を何も選んでいないときは networkStations をそのまま返す（絞り込みは「空＝全部」）', () => {
             const store = TestBed.inject(TrainDiagramStore);
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setSelectedRouteIds([]);
 
             expect(store.stationAxisStations()).toEqual(networkStations);
@@ -169,7 +170,7 @@ describe('TrainDiagramStore', () => {
         it('単一路線選択時は networkStations の相対順を維持しつつ選択路線の駅のみに絞り込み、非選択路線の駅（st-izumino）を除外する', () => {
             const store = TestBed.inject(TrainDiagramStore);
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setSelectedRouteIds(['honsen']);
 
             expect(store.stationAxisStations().map((s) => s.stationId)).toEqual(
@@ -180,7 +181,7 @@ describe('TrainDiagramStore', () => {
         it('複数路線選択時は networkStations の順序のまま選択路線いずれかに属する駅のみを残す', () => {
             const store = TestBed.inject(TrainDiagramStore);
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setSelectedRouteIds(['honsen', 'izumino']);
 
             expect(store.stationAxisStations().map((s) => s.stationId)).toEqual(
@@ -202,7 +203,7 @@ describe('TrainDiagramStore', () => {
         it('本線・いずみ野線を跨ぐ直通列車の全停車駅が単一の駅軸に載る', () => {
             const store = TestBed.inject(TrainDiagramStore);
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setSelectedRouteIds(['honsen', 'izumino']);
 
             const throughTrip = tripFixture({
@@ -247,7 +248,7 @@ describe('TrainDiagramStore', () => {
         it('いずみ野線を選択から外すと直通列車の後半区間の駅が軸から消える（端点ラベル対象になる）', () => {
             const store = TestBed.inject(TrainDiagramStore);
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setSelectedRouteIds(['honsen']);
 
             const axis = store.stationAxis();
@@ -304,7 +305,7 @@ describe('TrainDiagramStore', () => {
             const tripBlocksByDirection = { 0: [{ tripBlockId: 'b1' }] } as any;
             const itineraryLinks = [{ operationId: 'op' }] as any;
             store.setNetworkStations(networkStations);
-            store.setRouteStations(routeStations);
+            setRouteStations(routeStations);
             store.setTripClasses(tripClasses);
             store.setTripBlocksByDirection(tripBlocksByDirection);
             store.setItineraryLinks(itineraryLinks);
@@ -318,7 +319,6 @@ describe('TrainDiagramStore', () => {
                 conditions,
                 data: {
                     networkStations,
-                    routeStations,
                     tripClasses,
                     tripBlocksByDirection,
                     itineraryLinks,

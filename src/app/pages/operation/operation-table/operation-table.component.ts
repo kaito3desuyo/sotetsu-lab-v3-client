@@ -220,7 +220,6 @@ export class OperationTableComponent {
         const results = await Promise.allSettled([
             lastValueFrom(this.#operationTableService.fetchCalendar()),
             lastValueFrom(this.#operationTableService.fetchOperationTrips()),
-            lastValueFrom(this.#operationTableService.fetchStations()),
             lastValueFrom(this.#operationTableService.fetchTripClasses()),
         ]);
         // 前後の運用が取れなくても運用表は出す（つながりを出さないだけ）。
