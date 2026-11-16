@@ -11,6 +11,14 @@ function meta(selector: string): string | null {
     );
 }
 
+function canonical(): string | null {
+    return (
+        TestBed.inject(DOCUMENT)
+            .head.querySelector('link[rel="canonical"]')
+            ?.getAttribute('href') ?? null
+    );
+}
+
 describe('PageMeta', () => {
     let pageMeta: PageMeta;
 
@@ -48,11 +56,30 @@ describe('PageMeta', () => {
         expect(meta('name="description"')).toBe(DEFAULT_DESCRIPTION);
     });
 
-    it('URL を渡さなければ og:url を外す', () => {
+    it('URL を渡さなければ og:url と canonical を外す', () => {
         pageMeta.set({ url: '/a' });
         pageMeta.set({ title: 'x' });
 
         expect(meta('property="og:url"')).toBeNull();
+        expect(canonical()).toBeNull();
+    });
+
+    it('canonical と og:url に、並びと重なりをそろえた自分の URL を入れる', () => {
+        pageMeta.set({
+            url: '/timetable/station;trip_direction=0;station_id=s1',
+        });
+        pageMeta.set({
+            url: '/timetable/station;station_id=s2;trip_direction=0',
+        });
+
+        const expected = `${environment.siteUrl}/timetable/station;station_id=s2;trip_direction=0`;
+        expect(canonical()).toBe(expected);
+        expect(meta('property="og:url"')).toBe(expected);
+        expect(
+            TestBed.inject(DOCUMENT).head.querySelectorAll(
+                'link[rel="canonical"]',
+            ),
+        ).toHaveLength(1);
     });
 
     it('setTitle は題名と og:title だけ替える', () => {
