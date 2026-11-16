@@ -25,13 +25,11 @@ import { RouteStationListState } from 'src/app/global-states/route-station-list.
 import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-list.state';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
+import { PartialFailureNoticeComponent } from 'src/app/shared/partial-failure-notice/partial-failure-notice.component';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
-import {
-    parseUuid,
-    readUrlParam,
-} from 'src/app/shared/url-params/url-param';
+import { parseUuid, readUrlParam } from 'src/app/shared/url-params/url-param';
 import { SkeletonBarComponent } from 'src/app/shared/skeleton/skeleton-bar.component';
 import { buildStationNameById } from 'src/app/shared/station-name-by-id.util';
 import {
@@ -87,6 +85,7 @@ function parseTimeValue(raw: string): string | null {
         ControlBandComponent,
         EmptyStateComponent,
         NotFoundContentComponent,
+        PartialFailureNoticeComponent,
         SkeletonBarComponent,
         TrainLocationControllerComponent,
         TrainLocationLineComponent,
@@ -113,6 +112,7 @@ export class TrainLocationComponent {
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedTrainLocation = this.#store.hasFetchedTrainLocation;
+    readonly partialFailure = this.#store.partialFailure;
     /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
     readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
     readonly calendarId = this.#store.calendarId;
@@ -625,6 +625,8 @@ export class TrainLocationComponent {
                     } else if (this.#store.isLatestFetch(seq)) {
                         this.#isLinksDegraded = false;
                     }
+                    // 知らせの帯も同じ決まりに合わせる（古い取得の成功で、新しい取得の失敗を消さない）
+                    this.#store.setPartialFailure(this.#isLinksDegraded);
                 }
             };
             const results = await Promise.allSettled([

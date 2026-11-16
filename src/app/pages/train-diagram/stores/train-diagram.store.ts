@@ -63,6 +63,8 @@ type StoreProps = {
     loadingQueue: boolean[];
     /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す。保存しない */
     hasFetchedTrainDiagram: boolean;
+    /** 画面は出せたが、一部の取得（運用のつながり）に失敗したか。知らせの帯を出す。保存には入れない */
+    partialFailure: boolean;
     /** 車両の前後の運用（運番が変わるつながり）。入出庫の端が乗り移りなら □ で描く。取れなければ空 */
     itineraryLinks: OperationItineraryLinkDto[];
 };
@@ -97,6 +99,7 @@ const initialState: StoreProps = {
     itineraryLinks: [],
     loadingQueue: [],
     hasFetchedTrainDiagram: false,
+    partialFailure: false,
 };
 
 /**
@@ -318,6 +321,10 @@ export const TrainDiagramStore = signalStore(
             },
             resetLoading(): void {
                 patchState(store, { loadingQueue: [] });
+            },
+            /** 一部の取得に失敗したか。取れたら false に戻す */
+            setPartialFailure(partialFailure: boolean): void {
+                patchState(store, { partialFailure });
             },
             /** いまのダイヤの列車を取り終えたか（失敗しても true）。取る前は図の代わりに骨組みを出す */
             setHasFetchedTrainDiagram(value: boolean): void {

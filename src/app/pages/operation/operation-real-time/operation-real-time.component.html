@@ -39,19 +39,7 @@
 
     <!-- 一部の取得に失敗したときの知らせ。凡例の下・薄い橙の帯（ユーザー判断 2026-11-16・docs/design.md「一部取れなかったとき」） -->
     @if (partialFailure()) {
-        <p
-            role="status"
-            class="tw-m-0 tw-flex tw-items-center tw-gap-2 tw-rounded tw-bg-[color-mix(in_oklch,var(--color-accent)_14%,white)] tw-px-3 tw-py-1.5 tw-text-[0.8125rem] tw-leading-normal tw-text-ink"
-        >
-            <mat-icon
-                class="!tw-h-[18px] !tw-w-[18px] tw-shrink-0 tw-text-[18px]"
-                aria-hidden="true"
-                >info</mat-icon
-            >
-            <span
-                >一部の情報を取れませんでした。表示が欠けている場合があります。</span
-            >
-        </p>
+        <app-partial-failure-notice></app-partial-failure-notice>
     }
 
     <!-- デスクトップ: 運用順・編成順テーブルを横並び表示。

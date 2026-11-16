@@ -25,6 +25,7 @@ import { UserState } from 'src/app/global-states/user.state';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPostDialogService } from 'src/app/shared/operation-post-dialog/operation-post-dialog.service';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
+import { PartialFailureNoticeComponent } from 'src/app/shared/partial-failure-notice/partial-failure-notice.component';
 import { OperationRealTimeControllerComponent } from './components/operation-real-time-controller/operation-real-time-controller.component';
 import { OperationRealTimeFilterComponent } from './components/operation-real-time-filter/operation-real-time-filter.component';
 import { OperationRealTimeFormationTableComponent } from './components/operation-real-time-formation-table/operation-real-time-formation-table.component';
@@ -59,6 +60,7 @@ const DESKTOP_QUERY = '(min-width: 768px)';
         OperationRealTimeFormationTableComponent,
         OperationRealTimeLegendComponent,
         OperationRealTimeSightingCallComponent,
+        PartialFailureNoticeComponent,
     ],
 })
 export class OperationRealTimeComponent {

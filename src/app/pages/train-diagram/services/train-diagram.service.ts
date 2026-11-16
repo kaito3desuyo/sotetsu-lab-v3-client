@@ -210,6 +210,12 @@ export class TrainDiagramService {
                         linksResult.status === 'fulfilled' &&
                         linksResult.value?.failed
                     );
+                    // 古い取得の結果で、新しい取得の知らせを消したり出したりしない
+                    if (this.#store.isLatestFetch(seq)) {
+                        this.#store.setPartialFailure(
+                            !hasFetchedItineraryLinks,
+                        );
+                    }
                 }
             };
             const results = await Promise.allSettled([

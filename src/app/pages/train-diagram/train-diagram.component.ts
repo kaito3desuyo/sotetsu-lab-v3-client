@@ -30,6 +30,7 @@ import { TodaysCalendarListState } from 'src/app/global-states/todays-calendar-l
 import { formatRouteFilterSummary } from 'src/app/shared/control-band/control-band-summary.util';
 import { ControlBandComponent } from 'src/app/shared/control-band/control-band.component';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
+import { PartialFailureNoticeComponent } from 'src/app/shared/partial-failure-notice/partial-failure-notice.component';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { FilterChipOption } from 'src/app/shared/filter-chips/filter-chip-option.type';
 import { NotFoundContentComponent } from 'src/app/shared/not-found-content/not-found-content.component';
@@ -82,6 +83,7 @@ const EMPTY_TRIP_ID_SET: ReadonlySet<string> = new Set();
         ControlBandComponent,
         EmptyStateComponent,
         NotFoundContentComponent,
+        PartialFailureNoticeComponent,
         SkeletonBarComponent,
         TrainDiagramControllerComponent,
         TrainDiagramLegendComponent,
@@ -112,6 +114,7 @@ export class TrainDiagramComponent {
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedTrainDiagram = this.#store.hasFetchedTrainDiagram;
+    readonly partialFailure = this.#store.partialFailure;
     /** 骨組みの駅の行の数（画面 1 枚分を埋める数。あふれた分はカードが隠す） */
     readonly skeletonStationRows = Array.from({ length: 16 }, (_, i) => i);
     readonly calendarId = this.#store.calendarId;

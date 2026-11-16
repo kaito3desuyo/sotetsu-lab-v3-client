@@ -35,6 +35,8 @@ type StoreProps = {
     >;
     loadingQueue: boolean[];
     hasFetchedTrainLocation: boolean;
+    /** 画面は出せたが、一部の取得（運用のつながり）に失敗したか。知らせの帯を出す。保存には入れない */
+    partialFailure: boolean;
 };
 
 /**
@@ -66,6 +68,7 @@ const initialState: StoreProps = {
     operationSightingTimeCrossSections: {},
     loadingQueue: [],
     hasFetchedTrainLocation: false,
+    partialFailure: false,
 };
 
 export const TrainLocationStore = signalStore(
@@ -141,6 +144,10 @@ export const TrainLocationStore = signalStore(
             },
             resetLoading(): void {
                 patchState(store, { loadingQueue: [] });
+            },
+            /** 一部の取得に失敗したか。取れたら false に戻す */
+            setPartialFailure(partialFailure: boolean): void {
+                patchState(store, { partialFailure });
             },
             /** いまの路線・ダイヤの取得が終わったか（失敗しても true）。取る前は本文の代わりに骨組みを出す */
             setHasFetchedTrainLocation(value: boolean): void {

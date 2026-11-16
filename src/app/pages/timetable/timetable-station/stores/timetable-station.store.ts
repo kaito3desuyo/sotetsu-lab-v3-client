@@ -45,6 +45,8 @@ type StoreProps = {
         OperationSightingTimeCrossSectionDto
     >;
     hasFetchedTimetable: boolean;
+    /** 画面は出せたが、一部の取得（目撃の時刻断面）に失敗したか。知らせの帯を出す。保存には入れない */
+    partialFailure: boolean;
     loadingQueue: boolean[];
 };
 
@@ -72,6 +74,7 @@ const initialState: StoreProps = {
     operations: [],
     operationSightingTimeCrossSections: {},
     hasFetchedTimetable: false,
+    partialFailure: false,
     loadingQueue: [],
 };
 
@@ -266,6 +269,10 @@ export const TimetableStationStore = signalStore(
             },
             resetOperationSightingTimeCrossSections(): void {
                 patchState(store, { operationSightingTimeCrossSections: {} });
+            },
+            /** 一部の取得に失敗したか。取れたら false に戻す */
+            setPartialFailure(partialFailure: boolean): void {
+                patchState(store, { partialFailure });
             },
             /** いまの駅・ダイヤ・方向の取得が終わったか（失敗しても true）。取る前は時刻表の代わりに骨組みを出す */
             setHasFetchedTimetable(value: boolean): void {

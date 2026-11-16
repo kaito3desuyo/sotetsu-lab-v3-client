@@ -1920,6 +1920,39 @@ describe('TrainDiagramComponent の圏外の保存', () => {
         expect(store.hasFetchedTrainDiagram()).toBe(true);
     });
 
+    it('前後の運用の取得だけ失敗したら知らせの帯を出し、次に取れたら消す', async () => {
+        const notice = () =>
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-partial-failure-notice',
+            );
+        itineraryLinks$ = of({ failed: true });
+
+        await component.fetchData({ refetchTripBlocks: true });
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(true);
+        expect(notice()).not.toBeNull();
+
+        itineraryLinks$ = of({ failed: false });
+        await component.fetchData({ refetchTripBlocks: true });
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(false);
+        expect(notice()).toBeNull();
+    });
+
+    it('全部取れたら知らせの帯を出さない', async () => {
+        await component.fetchData({ refetchTripBlocks: true });
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(false);
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-partial-failure-notice',
+            ),
+        ).toBeNull();
+    });
+
     it('失敗したら保存した中身を、読み込み中を解く前に戻し、失敗は今までどおり投げる', async () => {
         const failing$ = new Subject<undefined>();
         tripBlocks$ = failing$;

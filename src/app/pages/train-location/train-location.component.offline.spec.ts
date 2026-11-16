@@ -194,6 +194,39 @@ describe('TrainLocationComponent の圏外の保存', () => {
         expect(store.hasFetchedTrainLocation()).toBe(true);
     });
 
+    it('前後の運用の取得だけ失敗したら知らせの帯を出し、次に取れたら消す', async () => {
+        const notice = () =>
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-partial-failure-notice',
+            );
+        itineraryLinks$ = of({ failed: true });
+
+        await component.fetchData(both);
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(true);
+        expect(notice()).not.toBeNull();
+
+        itineraryLinks$ = of({ failed: false });
+        await component.fetchData(both);
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(false);
+        expect(notice()).toBeNull();
+    });
+
+    it('全部取れたら知らせの帯を出さない', async () => {
+        await component.fetchData(both);
+        fixture.detectChanges();
+
+        expect(store.partialFailure()).toBe(false);
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-partial-failure-notice',
+            ),
+        ).toBeNull();
+    });
+
     it('前の取得が失敗していたら、路線だけの取り直しが成功しても保存しない（ダイヤと路線の組がずれるため）', async () => {
         tripBlocks$ = throwError(() => new Error('offline'));
         await expect(component.fetchData(both)).rejects.toThrow('offline');

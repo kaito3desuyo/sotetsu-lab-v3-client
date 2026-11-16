@@ -46,6 +46,13 @@
             [loading]="!hasFetchedTrainDiagram()"
         ></app-train-diagram-legend>
 
+        <!-- 一部の取得に失敗したときの知らせ（docs/design.md「一部取れなかったとき」）。凡例の真下・左右は図のカードと同じ 12px -->
+        @if (partialFailure()) {
+            <app-partial-failure-notice
+                class="tw-block tw-shrink-0 tw-px-3 tw-pb-1 tw-pt-4"
+            ></app-partial-failure-notice>
+        }
+
         <!-- 図のカード: 高さは画面の残り。縦横スクロールはカードの中 -->
         <div class="tw-flex tw-min-h-[320px] tw-flex-1 tw-flex-col tw-p-3">
             @if (!hasFetchedTrainDiagram()) {

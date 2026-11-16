@@ -28,6 +28,13 @@
         ></app-train-location-controller>
     </app-control-band>
 
+    <!-- 一部の取得に失敗したときの知らせ（docs/design.md「一部取れなかったとき」）。操作帯の真下・左右は本文と同じ 12px -->
+    @if (partialFailure()) {
+        <app-partial-failure-notice
+            class="tw-block tw-shrink-0 tw-px-3 tw-pb-1 tw-pt-4"
+        ></app-partial-failure-notice>
+    }
+
     <div class="tw-flex-1 tw-overflow-y-auto tw-px-3 tw-py-3">
         @if (notFound()) {
             <app-not-found-content></app-not-found-content>

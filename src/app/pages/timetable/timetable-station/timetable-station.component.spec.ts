@@ -1072,6 +1072,7 @@ describe('TimetableStationComponent の投稿後の取り直し', () => {
     afterEach(() => {
         jest.clearAllMocks();
         fetchSightings.mockImplementation(() => of(true));
+        TestBed.inject(TimetableStationStore).setPartialFailure(false);
         TestBed.inject(TimetableStationStore).resetLoading();
     });
 
@@ -1124,6 +1125,22 @@ describe('TimetableStationComponent の投稿後の取り直し', () => {
         await flush();
 
         expect(open).toHaveBeenCalledWith('データの取得に失敗しました', 'OK');
+        fixture.destroy();
+    });
+
+    it('取り直しが取れなかったら知らせの帯の印を立て、次に取れたら消す', async () => {
+        const fixture = await setup([calendarId]);
+        const store = TestBed.inject(TimetableStationStore);
+        fetchSightings.mockImplementation(() => of(false));
+
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+        expect(store.partialFailure()).toBe(true);
+
+        fetchSightings.mockImplementation(() => of(true));
+        TestBed.inject(OperationPostCardService).emitSubmitEvent();
+        await flush();
+        expect(store.partialFailure()).toBe(false);
         fixture.destroy();
     });
 });

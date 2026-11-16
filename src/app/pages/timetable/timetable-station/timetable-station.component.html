@@ -145,6 +145,12 @@
         }
     </app-control-band>
 
+    <!-- 一部の取得に失敗したときの知らせ（docs/design.md「一部取れなかったとき」）。操作帯の真下・上り/下りの上。
+         左右は main の p-4 のまま（上り/下りの切り替えと同じ 16px） -->
+    @if (partialFailure()) {
+        <app-partial-failure-notice></app-partial-failure-notice>
+    }
+
     <!-- G0-3/G1: 上り/下りは全幅2セグメントトグル（shared/sticky-direction-toggle）。
          長い時刻表を読みながら切り替えられるよう、これだけトップバーの直下に貼り付ける
          （ユーザー判断 2026-09-23） -->
