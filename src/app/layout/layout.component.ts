@@ -1,4 +1,5 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { isPlatformBrowser } from '@angular/common';
 import {
     afterNextRender,
@@ -13,7 +14,11 @@ import {
     ChangeDetectionStrategy,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import {
+    takeUntilDestroyed,
+    toObservable,
+    toSignal,
+} from '@angular/core/rxjs-interop';
 import {
     ActivatedRouteSnapshot,
     NavigationCancel,
@@ -31,6 +36,9 @@ import { wait } from '../core/utils/wait';
 import { layoutAnimations } from './animations/layout.animation';
 import { HeaderComponent } from './components/header/header.component';
 import { SidenavComponent } from './components/sidenav/sidenav.component';
+
+/** ナビを常設のレールにする幅（Tailwind の lg と同じ） */
+const RAIL_QUERY = '(min-width: 1024px)';
 
 @Component({
     selector: 'app-layout',
@@ -73,6 +81,26 @@ export class LayoutComponent {
     readonly isVisibled = signal<boolean>(false);
 
     /**
+     * lg（1024px）以上か。lg 以上ではナビを常設のレールにする（docs/design.md「Navigation」）。
+     * レールを出す・畳むは CSS（data-rail と lg: の規則）が決めるので、サーバーの HTML でも
+     * 最初から出ている。この値は inert・aria-expanded・ハンバーガーの動きを切り替えるのに使う
+     */
+    readonly isRail = toSignal(
+        inject(BreakpointObserver)
+            .observe(RAIL_QUERY)
+            .pipe(map((state) => state.matches)),
+        { initialValue: false },
+    );
+
+    /** lg 以上でレールを畳んでいるか。保存しない（畳んだ状態をサーバーの HTML に出せず、開いた後で動くため） */
+    readonly railCollapsed = signal<boolean>(false);
+
+    /** ナビが見えていて操作できるか。lg 以上はレール、未満は重ねて開くドロワー */
+    readonly navShown = computed(() =>
+        this.isRail() ? !this.railCollapsed() : this.isOpen(),
+    );
+
+    /**
      * R-6: prefers-reduced-motion 環境ではサイドナビ開閉のトランジション
      * （@openClose, layout.animation.ts）を無効化する。[@.disabled] にバインドして
      * Angular Animations 側で即時反映に切り替える（グローバルの動きは他に無いため対象はこれのみ）。
@@ -104,6 +132,17 @@ export class LayoutComponent {
     );
 
     constructor() {
+        // ドロワーを開いたまま lg 以上に広げたら、重ねたドロワーと背景を片付ける
+        toObservable(this.isRail)
+            .pipe(
+                filter((isRail) => isRail && this.isVisibled()),
+                takeUntilDestroyed(),
+            )
+            .subscribe(() => {
+                this.isOpen.set(false);
+                this.isVisibled.set(false);
+            });
+
         this.#router.events
             .pipe(
                 filter(
@@ -136,6 +175,10 @@ export class LayoutComponent {
     }
 
     async toggle(): Promise<void> {
+        if (this.isRail()) {
+            this.railCollapsed.update((collapsed) => !collapsed);
+            return;
+        }
         const next = !this.isVisibled();
 
         if (!!next) {
