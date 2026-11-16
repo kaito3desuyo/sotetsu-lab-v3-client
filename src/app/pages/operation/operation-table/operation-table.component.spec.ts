@@ -652,6 +652,14 @@ describe('OperationTableComponent の圏外の保存', () => {
     const conditions = { calendarId: '00000000-0000-4000-8000-000000000001' };
 
     const flush = () => new Promise((resolve) => setTimeout(resolve, 10));
+    // 取得が全部終わった後を確かめる。flush の固定の 10ms だけだと、jest を全部流して重いときに
+    // fetchData の終わりより先に確かめてしまう。失敗を起こす timer(0) を進めてから fetchData の Promise を待つ
+    const settle = async () => {
+        await flush();
+        await Promise.all(
+            fetchDataSpy.mock.results.map((result) => result.value),
+        );
+    };
     // 次のタスクで失敗する取得。すぐ失敗させると、Zone の Promise と async/await の順序の都合で
     // 「処理されない拒否」と見なされ、ComponentFixture が投げ直してしまう
     const failLater = (message: string) =>
@@ -761,7 +769,7 @@ describe('OperationTableComponent の圏外の保存', () => {
         fillStore();
 
         fixture = TestBed.createComponent(OperationTableComponent);
-        await flush();
+        await settle();
 
         expect(save).not.toHaveBeenCalled();
         expect(restore).not.toHaveBeenCalled();
