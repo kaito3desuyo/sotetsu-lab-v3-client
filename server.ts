@@ -10,6 +10,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import zlib from 'node:zlib';
 import { CACHE_CONTROL } from './src/app/core/ssr/cache-control';
+import { movePreloadsToHead } from './src/app/core/ssr/move-preloads-to-head';
+import {
+    parseRoutePreloadTable,
+    routePreloadFor,
+} from './src/app/core/ssr/route-preloads';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -25,6 +30,27 @@ try {
     );
 } catch {
     shellHtml = undefined;
+}
+
+// ルート → ページ本体の chunk の表（scripts/build-route-preloads.mjs が server/ に書く）。
+// 読めなければ警告を 1 行出し、末尾の modulepreload を head へ移すだけにする
+let routePreloadTable: Record<string, string> | null = null;
+try {
+    routePreloadTable = parseRoutePreloadTable(
+        JSON.parse(
+            readFileSync(
+                join(import.meta.dirname, 'route-preloads.json'),
+                'utf-8',
+            ),
+        ),
+    );
+} catch {
+    routePreloadTable = null;
+}
+if (routePreloadTable === null) {
+    console.warn(
+        'route-preloads.json を読めないので、ページの chunk の先読みは足しません',
+    );
 }
 
 const app = express();
@@ -89,6 +115,41 @@ async function replaceWithShellIfTooLarge(
 }
 
 /**
+ * HTML の modulepreload を head へ移し、ページ本体の chunk を 1 本足す。
+ * 本文が大きいと </body> の直前の先読みは本文を受け切るまで始まらない。
+ * 失敗しても描画は壊さず、描いた HTML をそのまま返す。
+ */
+async function preloadInHead(
+    req: express.Request,
+    response: Response,
+): Promise<Response> {
+    if (
+        response.body === null ||
+        !(response.headers.get('Content-Type') ?? '').includes('text/html')
+    ) {
+        return response;
+    }
+    const html = await response.text();
+    let transformed = html;
+    try {
+        const href =
+            routePreloadTable === null
+                ? null
+                : routePreloadFor(req.originalUrl, routePreloadTable);
+        transformed = movePreloadsToHead(html, href === null ? [] : [href]);
+    } catch {
+        transformed = html;
+    }
+    const headers = new Headers(response.headers);
+    headers.delete('Content-Length');
+    return new Response(transformed, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+    });
+}
+
+/**
  * 描画を 1 本ずつにする列の最後尾。
  * ストアは DI でリクエストごとに別のインスタンスになったので（ADR-0016）、描画が重なっても混ざらない。
  * 列は 2c で同時描画を決めるまで残す、保守的な守り（R14）。列を外して同時に描く確かめ
@@ -108,9 +169,9 @@ app.use((req, res, next) => {
                     next();
                     return;
                 }
-                const response = await replaceWithShellIfTooLarge(
+                const response = await preloadInHead(
                     req,
-                    rendered,
+                    await replaceWithShellIfTooLarge(req, rendered),
                 );
                 // リダイレクトの行き先は時刻や今日で変わりうるので、長く置かない。
                 // ただし失敗の途中で出たもの（すでに no-store）は short に戻さない

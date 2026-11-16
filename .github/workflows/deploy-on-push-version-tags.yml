@@ -49,7 +49,9 @@ jobs:
         run: npm ci --force
 
       - name: Build application
-        run: npm run build:prod -- --output-path=./dist/build-by-ci
+        run: |
+          npm run build:prod -- --output-path=./dist/build-by-ci
+          npm run build:route-preloads -- ./dist/build-by-ci
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

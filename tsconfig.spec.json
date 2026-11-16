@@ -4,5 +4,10 @@
     "outDir": "./out-tsc/spec",
     "types": ["jest", "@testing-library/jest-dom", "gtag.js"]
   },
-  "include": ["src/**/*.spec.ts", "src/**/*.d.ts"]
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts",
+    "scripts/**/*.spec.ts",
+    "scripts/**/*.d.mts"
+  ]
 }

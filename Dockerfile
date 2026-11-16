@@ -34,7 +34,8 @@ COPY --chown=node:node . .
 
 FROM development-base as production-build
 
-RUN npm run build:prod -- --output-path=./dist/build-by-docker
+RUN npm run build:prod -- --output-path=./dist/build-by-docker \
+    && npm run build:route-preloads -- ./dist/build-by-docker
 
 ################################################################################
 
