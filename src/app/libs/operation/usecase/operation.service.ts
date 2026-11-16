@@ -1,3 +1,4 @@
+import { HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { OperationQuery } from '../infrastructure/queries/operation.query';
@@ -44,6 +45,7 @@ export class OperationService {
     findManyWithTrips(params: {
         calendarId: string;
         forceReload?: boolean;
+        context?: HttpContext;
     }): Observable<OperationTripsDto[]> {
         return this.#operationQuery.findManyWithTrips(params);
     }

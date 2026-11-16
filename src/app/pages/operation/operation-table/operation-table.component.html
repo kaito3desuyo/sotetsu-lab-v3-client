@@ -101,7 +101,11 @@
                          場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする。
                          サーバーでは最初の SERVER_RENDERED_CARDS 枚だけ中身まで描き、ブラウザは画面に入ったものから引き継ぐ（hydrate on viewport） -->
                     @if ($index < SERVER_RENDERED_CARDS) {
-                        @defer (on viewport; prefetch on idle; hydrate on viewport) {
+                        @defer (
+                            on viewport;
+                            prefetch on idle;
+                            hydrate on viewport
+                        ) {
                             <!-- 画面の外のカードは描画を省く（content-visibility）。サーバーが描いたカードを
                                  ブラウザが一度に描かないため。省いている間の高さは、場所取りと同じ高さ -->
                             <app-operation-table-card
@@ -125,7 +129,9 @@
                         } @placeholder {
                             <div
                                 class="tw-rounded-card tw-bg-white"
-                                [style.height.px]="placeholderHeight(operationTrip)"
+                                [style.height.px]="
+                                    placeholderHeight(operationTrip)
+                                "
                             ></div>
                         }
                     } @else {
@@ -133,28 +139,41 @@
                              104 枚を全部サーバーで描くと HTML が 10MB になり、スマホがそれを読んで並べる間
                              操作が効かなくなる（TBT 2.3 秒・2026-10-28 の Lighthouse） -->
                         @defer (on viewport; prefetch on idle) {
-                            <app-operation-table-card
-                                class="[content-visibility:auto]"
-                                [style.contain-intrinsic-size]="
-                                    'auto ' +
-                                    placeholderHeight(operationTrip) +
-                                    'px'
-                                "
-                                [operationTrip]="operationTrip"
-                                [stations]="stations()"
-                                [links]="itineraryLinks()"
-                                [tripClasses]="tripClasses()"
-                                [calendarId]="calendarId()"
-                                [groupName]="
-                                    groupNameFor(
-                                        operationTrip.operation.operationNumber
-                                    )
-                                "
-                            ></app-operation-table-card>
+                            @if (isPartial()) {
+                                <!-- この運用の列車は、全量が届くまで場所取りの分しかない。届くまで場所取りのまま -->
+                                <div
+                                    class="tw-rounded-card tw-bg-white"
+                                    [style.height.px]="
+                                        placeholderHeight(operationTrip)
+                                    "
+                                ></div>
+                            } @else {
+                                <app-operation-table-card
+                                    class="[content-visibility:auto]"
+                                    [style.contain-intrinsic-size]="
+                                        'auto ' +
+                                        placeholderHeight(operationTrip) +
+                                        'px'
+                                    "
+                                    [operationTrip]="operationTrip"
+                                    [stations]="stations()"
+                                    [links]="itineraryLinks()"
+                                    [tripClasses]="tripClasses()"
+                                    [calendarId]="calendarId()"
+                                    [groupName]="
+                                        groupNameFor(
+                                            operationTrip.operation
+                                                .operationNumber
+                                        )
+                                    "
+                                ></app-operation-table-card>
+                            }
                         } @placeholder {
                             <div
                                 class="tw-rounded-card tw-bg-white"
-                                [style.height.px]="placeholderHeight(operationTrip)"
+                                [style.height.px]="
+                                    placeholderHeight(operationTrip)
+                                "
                             ></div>
                         }
                     }

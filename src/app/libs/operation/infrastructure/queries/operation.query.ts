@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { omitBy } from 'es-toolkit';
@@ -190,8 +190,10 @@ export class OperationQuery {
     findManyWithTrips(params: {
         calendarId: string;
         forceReload?: boolean;
+        /** HTTP 要求に渡す文脈。キャッシュの鍵には入れない（応答の中身は変わらない） */
+        context?: HttpContext;
     }): Observable<OperationTripsDto[]> {
-        const { calendarId, forceReload } = params;
+        const { calendarId, forceReload, context } = params;
 
         return this.#cache
             .get({
@@ -209,6 +211,7 @@ export class OperationQuery {
                             }),
                             observe: 'response',
                             cache: this.#invalidator.requestCache('timetable'),
+                            context,
                         },
                     ),
                 forceReload,

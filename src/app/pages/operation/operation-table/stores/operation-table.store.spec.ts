@@ -116,6 +116,21 @@ describe('OperationTableStore', () => {
         ).toEqual(['21', '11', '31']);
     });
 
+    it('isPartial: 削った配列を入れると true、全量を入れる・保存から戻すと false', () => {
+        const store = TestBed.inject(OperationTableStore);
+        expect(store.isPartial()).toBe(false);
+
+        store.setPartialOperationTrips(['11'].map(operationTrip));
+        expect(store.isPartial()).toBe(true);
+
+        store.setOperationTrips(['11', '12'].map(operationTrip));
+        expect(store.isPartial()).toBe(false);
+
+        store.setPartialOperationTrips(['11'].map(operationTrip));
+        store.restoreSnapshot({ ...store.snapshot(), calendar: null });
+        expect(store.isPartial()).toBe(false);
+    });
+
     it('normalizedSelectedGroupNames は旧い群名を今の名前にそろえる', () => {
         const store = TestBed.inject(OperationTableStore);
         store.setSelectedGroupNames(['3G群', '1群']);

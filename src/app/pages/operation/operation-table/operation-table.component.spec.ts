@@ -33,6 +33,10 @@ import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-cal
 import { OperationTableComponent } from './operation-table.component';
 import { OperationTableService } from './services/operation-table.service';
 import { OperationTableStore } from './stores/operation-table.store';
+import {
+    SERVER_RENDERED_CARDS,
+    pruneOperationTrips,
+} from './utils/prune-operation-trips.util';
 
 const deviceStorageStub = {
     provide: DeviceStorage,
@@ -62,6 +66,7 @@ describe('OperationTableComponent', () => {
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        usedTransferredTrips: () => false,
                     },
                 },
                 {
@@ -219,6 +224,83 @@ describe('OperationTableComponent', () => {
         expect(component.placeholderHeight(operationTrip)).toBe(
             63 + 5 * 32 + 2 * 8,
         );
+    });
+
+    it('placeholderHeight: 5 枚目からの列車を削っても、削る前と同じ高さになる', () => {
+        createComponent();
+        const tripOperationList = (
+            operationNumber: string,
+            i: number,
+            tripDirection: number,
+            depotIn = false,
+            depotOut = false,
+        ) => ({
+            tripOperationListId: `tol-${operationNumber}-${i}`,
+            startTime: { timeId: 'a' },
+            trip: {
+                tripId: `t-${operationNumber}-${i}`,
+                tripNumber: `${i}K`,
+                tripDirection,
+                depotIn,
+                depotOut,
+                times: [{ timeId: 'x' }],
+            },
+        });
+        const sorted = ['11', '12', '13', '14', '21', '22', '31'].map(
+            (n, k) =>
+                ({
+                    operation: { operationId: `op-${n}`, operationNumber: n },
+                    trips: [
+                        tripOperationList(n, 0, 0, false, true),
+                        tripOperationList(n, 1, 0),
+                        tripOperationList(n, 2, 1),
+                        tripOperationList(n, 3, 1, true),
+                        ...(k % 2 ? [tripOperationList(n, 4, 1)] : []),
+                    ],
+                }) as unknown as OperationTripsDto,
+        );
+
+        const pruned = pruneOperationTrips(sorted, SERVER_RENDERED_CARDS);
+
+        expect(pruned[5]).not.toEqual(sorted[5]);
+        for (const [i, operationTrip] of sorted.entries()) {
+            expect(component.placeholderHeight(pruned[i])).toBe(
+                component.placeholderHeight(operationTrip),
+            );
+        }
+    });
+
+    describe('fetchData: サーバーの削った列車で描いた回', () => {
+        it('圏外用の保存は全量を取り直したあとにする（削った列車は保存しない）', async () => {
+            createComponent();
+            const store = TestBed.inject(OperationTableStore);
+            const service = TestBed.inject(OperationTableService);
+            const saveSpy = jest
+                .spyOn(store, 'saveOfflineSnapshot')
+                .mockResolvedValue(undefined);
+            store.setCalendarId('cal-1');
+            store.setPartialOperationTrips([]);
+            jest.spyOn(service, 'usedTransferredTrips').mockReturnValue(true);
+            const refetch = jest
+                .spyOn(service, 'fetchOperationTrips')
+                .mockReturnValueOnce(of(undefined))
+                .mockImplementationOnce(() => {
+                    store.setOperationTrips([]);
+                    return of(undefined);
+                });
+
+            await component.fetchData();
+            expect(saveSpy).not.toHaveBeenCalled();
+            expect(store.isPartial()).toBe(true);
+
+            // 次の描画のあとに全量を取り直し、届いてから保存する
+            fixture.detectChanges();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(refetch).toHaveBeenCalledTimes(2);
+            expect(store.isPartial()).toBe(false);
+            expect(saveSpy).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('fetchData: つながりの取得', () => {
@@ -383,6 +465,7 @@ describe('OperationTableComponent の読み込み中', () => {
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        usedTransferredTrips: () => false,
                     },
                 },
                 {
@@ -473,6 +556,41 @@ describe('OperationTableComponent の読み込み中', () => {
         expect(card.style.getPropertyValue('contain-intrinsic-size')).toBe(
             `auto ${fixture.componentInstance.placeholderHeight(operationTrip)}px`,
         );
+    });
+
+    it('5 枚目からのカードは、isPartial の間は場所取りのまま描かず、全量が届くと描く', async () => {
+        const operationTrips = ['11', '12', '13', '14', '21'].map(
+            (n) =>
+                ({
+                    operation: { operationNumber: n, operationId: `op-${n}` },
+                    trips: [
+                        {
+                            tripOperationListId: `tol-${n}`,
+                            trip: {
+                                tripId: `t-${n}`,
+                                tripDirection: 0,
+                                depotIn: false,
+                                depotOut: false,
+                            },
+                        },
+                    ],
+                }) as unknown as OperationTripsDto,
+        );
+        const store = TestBed.inject(OperationTableStore);
+        store.setPartialOperationTrips(operationTrips);
+        fixture = TestBed.createComponent(OperationTableComponent);
+        fixture.detectChanges();
+        await finishFetch();
+
+        // 5 枚目（$index 4）の defer を描く
+        const blocks = await fixture.getDeferBlocks();
+        await blocks[4].render(DeferBlockState.Complete);
+        fixture.detectChanges();
+        expect(query('app-operation-table-card')).toBeNull();
+
+        store.setOperationTrips(operationTrips);
+        fixture.detectChanges();
+        expect(query('app-operation-table-card')).not.toBeNull();
     });
 
     it('取得に失敗しても骨組みを消す（保存していたカードを出すため）', async () => {
@@ -577,6 +695,7 @@ describe('OperationTableComponent のサーバー', () => {
                         fetchStations: () => of(undefined),
                         fetchTripClasses: () => of(undefined),
                         fetchItineraryLinks: () => of(undefined),
+                        usedTransferredTrips: () => false,
                     },
                 },
                 {
@@ -691,6 +810,7 @@ describe('OperationTableComponent の圏外の保存', () => {
                         fetchStations: () => stations$,
                         fetchTripClasses: () => tripClasses$,
                         fetchItineraryLinks: () => links$,
+                        usedTransferredTrips: () => false,
                     },
                 },
                 {
@@ -916,6 +1036,7 @@ describe('OperationTableComponent の URL の値', () => {
                         fetchStations,
                         fetchTripClasses,
                         fetchItineraryLinks,
+                        usedTransferredTrips: () => false,
                     },
                 },
                 {
