@@ -316,6 +316,45 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         ).toHaveBeenCalledTimes(1);
     });
 
+    it('合図が続けて来たら、前の取り直しが終わってから次を取る（古い応答が新しい断面を上書きしない）', async () => {
+        const first = new Subject<void>();
+        const crossSections =
+            service['fetchOperationSightingTimeCrossSections'];
+        crossSections.mockClear();
+        crossSections
+            .mockImplementationOnce(() => first)
+            .mockImplementation(() => of(undefined));
+
+        signal('{"type":"sighting"}');
+        signal('{"type":"sighting"}');
+        await jest.advanceTimersByTimeAsync(0);
+        expect(crossSections).toHaveBeenCalledTimes(1);
+
+        first.next();
+        first.complete();
+        await jest.advanceTimersByTimeAsync(0);
+        expect(crossSections).toHaveBeenCalledTimes(2);
+        expect(isLoading()).toBe(false);
+    });
+
+    it('前の取り直しが失敗しても、次の合図では取り直す', async () => {
+        const crossSections =
+            service['fetchOperationSightingTimeCrossSections'];
+        crossSections.mockClear();
+        crossSections.mockImplementationOnce(fail);
+
+        signal('{"type":"sighting"}');
+        await jest.advanceTimersByTimeAsync(0);
+        signal('{"type":"sighting"}');
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(crossSections).toHaveBeenCalledTimes(2);
+        expect(notification.open).toHaveBeenLastCalledWith(
+            'データが更新されました',
+            'OK',
+        );
+    });
+
     it('古い sendSighting の転送（{action}）では取り直さない', async () => {
         service['fetchOperationSightingTimeCrossSections'].mockClear();
 

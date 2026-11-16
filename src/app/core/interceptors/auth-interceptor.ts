@@ -26,9 +26,9 @@ export class AuthInterceptor implements HttpInterceptor {
     #refreshing$: Observable<void> | null = null;
 
     intercept(
-        request: HttpRequest<any>,
+        request: HttpRequest<unknown>,
         next: HttpHandler,
-    ): Observable<HttpEvent<any>> {
+    ): Observable<HttpEvent<unknown>> {
         if (this.#tokenState.isExpired()) {
             return of(undefined).pipe(
                 mergeMap(() => this.#tokenState.fetch()),

@@ -313,8 +313,21 @@ export class OperationRealTimeComponent {
             });
     }
 
-    /** 目撃の断面と履歴を、キャッシュを使わず取り直す */
-    async #reloadSightings(): Promise<void> {
+    /** 前の取り直し。次の取り直しはこれが終わってから始める */
+    #reloadQueue: Promise<void> = Promise.resolve();
+
+    /**
+     * 目撃の断面と履歴を、キャッシュを使わず取り直す。
+     * 合図・投稿が続いても 1 回ずつ順に取る（重なると、遅れて届いた古い応答が新しい断面を上書きするため）
+     */
+    #reloadSightings(): Promise<void> {
+        const run = this.#reloadQueue.then(() => this.#fetchSightingsFresh());
+        // 失敗しても次の取り直しは始められるよう、待ち行列には失敗を残さない
+        this.#reloadQueue = run.catch(() => undefined);
+        return run;
+    }
+
+    async #fetchSightingsFresh(): Promise<void> {
         await lastValueFrom(
             this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(
                 {
