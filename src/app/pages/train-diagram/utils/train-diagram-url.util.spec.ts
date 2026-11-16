@@ -12,7 +12,8 @@ const ROUTE_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const ROUTE_UNKNOWN = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 /** 12:00 の今。defaultStartMinute は 11:30 の位置（04:00 起点で 450 分） */
-const NOW = new Date(2026, 10, 16, 12, 0, 0);
+// 時刻は日本時間で読むので、CI（UTC）でも同じ瞬間になるよう時差を付けて作る
+const NOW = new Date('2026-11-16T12:00:00+09:00');
 const NOW_START_MINUTE = 450;
 
 function defaults(
