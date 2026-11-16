@@ -9,17 +9,21 @@
 <app-header
     class="tw-sticky tw-top-0 tw-z-30 tw-block tw-shadow-md"
     [pageTitle]="pageTitle()"
-    [menuOpen]="isOpen()"
+    [menuOpen]="navShown()"
     (clickButton)="toggle()"
 ></app-header>
 
 <!-- 高さはトップバーの余白込みで画面に収める（border-box）。content-box だと余白の分だけ下にはみ出し、
-     最後の項目までスクロールできなかった。dvh はスマホのアドレスバーを除いた高さ -->
+     最後の項目までスクロールできなかった。dvh はスマホのアドレスバーを除いた高さ。
+     lg 以上は常設のレール（docs/design.md「Navigation」）。出す・畳むは data-rail と lg: の規則で決め、
+     サーバーの HTML から出しておく（hydration の後に出すと本文が横に動く）。
+     ドロワーの開閉は @openClose が transform を直に書くので、レールでは ! で打ち消す -->
 <app-sidenav
     #sidenav
     id="app-sidenav"
-    [attr.inert]="isOpen() ? null : ''"
-    class="tw-fixed tw-left-0 tw-top-0 tw-z-20 tw-box-border tw-block tw-h-dvh tw-w-64 tw-pt-12 tw-shadow-md md:tw-pt-16"
+    [attr.inert]="navShown() ? null : ''"
+    [attr.data-rail]="railCollapsed() ? 'collapsed' : 'open'"
+    class="tw-fixed tw-left-0 tw-top-0 tw-z-20 tw-box-border tw-block tw-h-dvh tw-w-64 tw-pt-12 tw-shadow-md md:tw-pt-16 lg:tw-border-0 lg:tw-border-r lg:tw-border-solid lg:tw-border-rule lg:!tw-shadow-none lg:data-[rail=open]:![transform:none] lg:motion-safe:tw-transition-transform lg:motion-safe:tw-duration-300"
     [@.disabled]="prefersReducedMotion"
     [@openClose]="isOpen() ? 'open' : 'close'"
 >
@@ -34,6 +38,10 @@
     ></div>
 }
 
-<div #content class="tw-relative tw-z-0 tw-h-full tw-w-full">
+<div
+    #content
+    [attr.data-rail]="railCollapsed() ? 'collapsed' : 'open'"
+    class="tw-relative tw-z-0 tw-box-border tw-h-full tw-w-full lg:data-[rail=open]:tw-pl-64 lg:motion-safe:tw-transition-[padding] lg:motion-safe:tw-duration-300"
+>
     <router-outlet></router-outlet>
 </div>

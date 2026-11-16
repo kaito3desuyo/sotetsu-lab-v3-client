@@ -2,6 +2,8 @@ import '@testing-library/jest-dom';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
+import { BehaviorSubject } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -37,13 +39,22 @@ describe('LayoutComponent', () => {
     let fixture: ComponentFixture<LayoutComponent>;
     let router: Router;
     let announce: jest.Mock;
+    let breakpoint$: BehaviorSubject<BreakpointState>;
 
     beforeEach(async () => {
         announce = jest.fn();
+        breakpoint$ = new BehaviorSubject<BreakpointState>({
+            matches: false,
+            breakpoints: {},
+        });
         await TestBed.configureTestingModule({
             imports: [LayoutComponent],
             providers: [
                 { provide: LiveAnnouncer, useValue: { announce } },
+                {
+                    provide: BreakpointObserver,
+                    useValue: { observe: () => breakpoint$ },
+                },
                 provideHttpClient(withXhr()),
                 provideAnimations(),
                 {
@@ -210,6 +221,70 @@ describe('LayoutComponent', () => {
 
             expect(component.isOpen()).toBe(false);
             expect(menuButton()).not.toHaveFocus();
+        });
+    });
+
+    describe('lg 以上の常設レール', () => {
+        const content = (): HTMLElement =>
+            fixture.nativeElement.querySelector('[data-rail]:not(app-sidenav)');
+        const toRail = (): void => {
+            breakpoint$.next({ matches: true, breakpoints: {} });
+            fixture.detectChanges();
+        };
+
+        it('最初はレールを出す印（data-rail=open）がナビと本文の両方に付く', () => {
+            fixture.detectChanges();
+            expect(sidenav()).toHaveAttribute('data-rail', 'open');
+            expect(content()).toHaveAttribute('data-rail', 'open');
+        });
+
+        it('lg 以上ではナビが操作でき（inert なし）、ハンバーガーは開いている扱い', () => {
+            toRail();
+            expect(sidenav()).not.toHaveAttribute('inert');
+            expect(menuButton()).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        it('lg 以上でハンバーガーを押すと畳み、もう一度押すと出す。背景は敷かない', async () => {
+            toRail();
+            menuButton().click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+            expect(sidenav()).toHaveAttribute('data-rail', 'collapsed');
+            expect(content()).toHaveAttribute('data-rail', 'collapsed');
+            expect(sidenav()).toHaveAttribute('inert');
+            expect(menuButton()).toHaveAttribute('aria-expanded', 'false');
+            expect(component.isVisibled()).toBe(false);
+
+            menuButton().click();
+            await fixture.whenStable();
+            fixture.detectChanges();
+            expect(sidenav()).toHaveAttribute('data-rail', 'open');
+            expect(sidenav()).not.toHaveAttribute('inert');
+        });
+
+        it('ドロワーを開いたまま lg 以上に広げると、重ねたドロワーを片付ける', async () => {
+            fixture.detectChanges();
+            await component.toggle();
+            fixture.detectChanges();
+            expect(component.isVisibled()).toBe(true);
+
+            toRail();
+            expect(component.isOpen()).toBe(false);
+            expect(component.isVisibled()).toBe(false);
+            expect(sidenav()).not.toHaveAttribute('inert');
+        });
+
+        it('lg 未満では畳んだ印があってもドロワーとして動く', async () => {
+            toRail();
+            await component.toggle();
+            breakpoint$.next({ matches: false, breakpoints: {} });
+            fixture.detectChanges();
+            expect(sidenav()).toHaveAttribute('inert');
+
+            await component.toggle();
+            fixture.detectChanges();
+            expect(component.isOpen()).toBe(true);
+            expect(sidenav()).not.toHaveAttribute('inert');
         });
     });
 
