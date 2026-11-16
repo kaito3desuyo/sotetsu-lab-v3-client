@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { inject } from '@angular/core';
 import {
     patchState,
@@ -25,6 +26,11 @@ function canEditTimetable(role: string | null): boolean {
     return role === 'editor' || role === 'manager';
 }
 
+/** backend がログイン中（匿名でない）セッションにだけ立てる、JS から読める Cookie */
+function hasLoggedInCookie(cookie: string): boolean {
+    return cookie.split(';').some((c) => c.trim() === 'loggedIn=true');
+}
+
 export const UserState = signalStore(
     { providedIn: 'root' },
     withState<State>(initialState),
@@ -41,12 +47,24 @@ export const UserState = signalStore(
     })),
     withMethods((store) => {
         const userService = inject(UserService);
+        const document = inject(DOCUMENT);
         const reset = (): void => {
             patchState(store, initialState);
         };
 
         return {
+            /**
+             * 画面を移るたびの確認（maxAgeMs あり）では、loggedIn の Cookie が無ければゲストとして取らない
+             * （ゲストの profile は 401 になる）。ログイン・ログアウト（maxAgeMs なし）は必ず取る。
+             */
             fetch(options?: { maxAgeMs?: number }): Observable<void> {
+                if (
+                    options?.maxAgeMs !== undefined &&
+                    !hasLoggedInCookie(document.cookie)
+                ) {
+                    reset();
+                    return of(undefined);
+                }
                 return userService.getProfile(options).pipe(
                     tap((user) => {
                         if (user) {
