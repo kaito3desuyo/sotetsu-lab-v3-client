@@ -241,4 +241,79 @@ describe('Service: TrainDiagram', () => {
         ).resolves.toEqual({ failed: true });
         expect(store.itineraryLinks()).toEqual([]);
     });
+
+    describe('fetchData', () => {
+        const hooks = (): {
+            firstLoad: boolean;
+            onLoaded: jest.Mock;
+            onCalendarMissing: jest.Mock;
+        } => ({
+            firstLoad: true,
+            onLoaded: jest.fn(),
+            onCalendarMissing: jest.fn(),
+        });
+
+        it('列車を取り直す取得が成功したら、onLoaded を呼び、骨組みを消し、読み込み中を戻す', async () => {
+            store.setCalendarId('cal-1');
+            calendarServiceMock.findOne.mockReturnValue(
+                of({ calendarId: 'cal-1' }),
+            );
+            const flags = hooks();
+
+            await service.fetchData({ refetchTripBlocks: true, ...flags });
+
+            expect(flags.onLoaded).toHaveBeenCalledTimes(1);
+            expect(flags.onCalendarMissing).not.toHaveBeenCalled();
+            expect(store.hasFetchedTrainDiagram()).toBe(true);
+            expect(store.isLoading()).toBe(false);
+            expect(serviceServiceMock.findOneWithStations).toHaveBeenCalled();
+        });
+
+        it('初回でなければ、路線網の駅は取り直さない', async () => {
+            store.setCalendarId('cal-1');
+            calendarServiceMock.findOne.mockReturnValue(
+                of({ calendarId: 'cal-1' }),
+            );
+
+            await service.fetchData({
+                refetchTripBlocks: true,
+                ...hooks(),
+                firstLoad: false,
+            });
+
+            expect(
+                serviceServiceMock.findOneWithStations,
+            ).not.toHaveBeenCalled();
+        });
+
+        it('ダイヤが無いと分かったら、onCalendarMissing を呼ぶ', async () => {
+            store.setCalendarId('cal-1');
+            calendarServiceMock.findOne.mockReturnValue(of(null));
+            const flags = hooks();
+
+            await service.fetchData({ refetchTripBlocks: true, ...flags });
+
+            expect(flags.onCalendarMissing).toHaveBeenCalledTimes(1);
+            expect(flags.onLoaded).toHaveBeenCalledTimes(1);
+        });
+
+        it('列車の取得が失敗したら投げ、onLoaded は呼ばず、読み込み中は戻す', async () => {
+            store.setCalendarId('cal-1');
+            calendarServiceMock.findOne.mockReturnValue(
+                of({ calendarId: 'cal-1' }),
+            );
+            tripBlockServiceMock.findManyByCalendarId.mockReturnValue(
+                throwError(() => new Error('500')),
+            );
+            const flags = hooks();
+
+            await expect(
+                service.fetchData({ refetchTripBlocks: true, ...flags }),
+            ).rejects.toThrow('500');
+
+            expect(flags.onLoaded).not.toHaveBeenCalled();
+            expect(store.isLoading()).toBe(false);
+            expect(store.hasFetchedTrainDiagram()).toBe(true);
+        });
+    });
 });

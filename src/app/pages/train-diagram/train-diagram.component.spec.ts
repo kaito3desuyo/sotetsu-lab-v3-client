@@ -34,6 +34,7 @@ import { RouteDetailsDto } from 'src/app/libs/route/usecase/dtos/route-details.d
 import { setTodaysCalendars } from 'src/app/global-states/testing/set-todays-calendars';
 import { TrainDiagramComponent } from './train-diagram.component';
 import { TrainDiagramService } from './services/train-diagram.service';
+import { provideTrainDiagramServiceStub } from './testing/train-diagram-service-stub';
 import { TrainDiagramStore } from './stores/train-diagram.store';
 
 const CAL_1 = '11111111-1111-4111-8111-111111111111';
@@ -84,18 +85,14 @@ describe('TrainDiagramComponent', () => {
                     [],
                     withRouterConfig({ resolveNavigationPromiseOnError: true }),
                 ),
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses: () => of(undefined),
-                        fetchTripBlocks: () => of(undefined),
-                        fetchItineraryLinks: () => of(undefined),
-                        fetchCalendar: () => of(true),
-                        fetchNetworkStations: () => of(undefined),
-                        fetchOperationSightingTimeCrossSection: () =>
-                            of(undefined),
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses: () => of(undefined),
+                    fetchTripBlocks: () => of(undefined),
+                    fetchItineraryLinks: () => of(undefined),
+                    fetchCalendar: () => of(true),
+                    fetchNetworkStations: () => of(undefined),
+                    fetchOperationSightingTimeCrossSection: () => of(undefined),
+                }),
                 {
                     provide: RouteStationListState,
                     useValue: {
@@ -1060,18 +1057,14 @@ describe('TrainDiagramComponent: URL の解釈（time / window）', () => {
                     provide: ActivatedRoute,
                     useValue: { paramMap: paramMap$, snapshot: { params: {} } },
                 },
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses: () => of(undefined),
-                        fetchTripBlocks: () => of(undefined),
-                        fetchItineraryLinks: () => of(undefined),
-                        fetchCalendar: () => of(true),
-                        fetchNetworkStations: () => of(undefined),
-                        fetchOperationSightingTimeCrossSection: () =>
-                            of(undefined),
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses: () => of(undefined),
+                    fetchTripBlocks: () => of(undefined),
+                    fetchItineraryLinks: () => of(undefined),
+                    fetchCalendar: () => of(true),
+                    fetchNetworkStations: () => of(undefined),
+                    fetchOperationSightingTimeCrossSection: () => of(undefined),
+                }),
                 {
                     provide: RouteStationListState,
                     useValue: {
@@ -1315,18 +1308,14 @@ describe('TrainDiagramComponent の URL の値が不正なとき', () => {
                 { provide: PageNotFound, useValue: { mark, clear } },
                 { provide: PageMeta, useValue: { setTitle } },
                 { provide: SsrResponse, useValue: { addCacheTags } },
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses,
-                        fetchTripBlocks,
-                        fetchItineraryLinks,
-                        fetchNetworkStations,
-                        fetchCalendar,
-                        fetchOperationSightingTimeCrossSection: () =>
-                            of(undefined),
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses,
+                    fetchTripBlocks,
+                    fetchItineraryLinks,
+                    fetchNetworkStations,
+                    fetchCalendar,
+                    fetchOperationSightingTimeCrossSection: () => of(undefined),
+                }),
                 { provide: RouteStationListState, useValue: { routeStations } },
                 { provide: NotificationService, useValue: { open: jest.fn() } },
                 {
@@ -1742,18 +1731,14 @@ describe('TrainDiagramComponent のサーバー', () => {
                         snapshot: { params },
                     },
                 },
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses,
-                        fetchTripBlocks: () => of(undefined),
-                        fetchItineraryLinks: () => of(undefined),
-                        fetchCalendar: () => of(true),
-                        fetchNetworkStations: () => of(undefined),
-                        fetchOperationSightingTimeCrossSection: () =>
-                            of(undefined),
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses,
+                    fetchTripBlocks: () => of(undefined),
+                    fetchItineraryLinks: () => of(undefined),
+                    fetchCalendar: () => of(true),
+                    fetchNetworkStations: () => of(undefined),
+                    fetchOperationSightingTimeCrossSection: () => of(undefined),
+                }),
                 {
                     provide: RouteStationListState,
                     useValue: {
@@ -1868,17 +1853,14 @@ describe('TrainDiagramComponent の圏外の保存', () => {
                         snapshot: { params: {} },
                     },
                 },
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses,
-                        fetchTripBlocks: () => tripBlocks$,
-                        fetchItineraryLinks: () => itineraryLinks$,
-                        fetchCalendar: () => of(true),
-                        fetchNetworkStations,
-                        fetchOperationSightingTimeCrossSection: () => sighting$,
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses,
+                    fetchTripBlocks: () => tripBlocks$,
+                    fetchItineraryLinks: () => itineraryLinks$,
+                    fetchCalendar: () => of(true),
+                    fetchNetworkStations,
+                    fetchOperationSightingTimeCrossSection: () => sighting$,
+                }),
                 {
                     provide: RouteStationListState,
                     useValue: { routeStations: signal(routeStations) },
@@ -2251,17 +2233,14 @@ describe('TrainDiagramComponent の投稿後の取り直し', () => {
                         snapshot: { params: {} },
                     },
                 },
-                {
-                    provide: TrainDiagramService,
-                    useValue: {
-                        fetchTripClasses: () => of(undefined),
-                        fetchTripBlocks,
-                        fetchItineraryLinks: () => of(undefined),
-                        fetchCalendar: () => of(true),
-                        fetchNetworkStations: () => of(undefined),
-                        fetchOperationSightingTimeCrossSection: fetchSighting,
-                    },
-                },
+                ...provideTrainDiagramServiceStub({
+                    fetchTripClasses: () => of(undefined),
+                    fetchTripBlocks,
+                    fetchItineraryLinks: () => of(undefined),
+                    fetchCalendar: () => of(true),
+                    fetchNetworkStations: () => of(undefined),
+                    fetchOperationSightingTimeCrossSection: fetchSighting,
+                }),
                 {
                     provide: RouteStationListState,
                     useValue: {

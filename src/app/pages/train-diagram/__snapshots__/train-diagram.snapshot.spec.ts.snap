@@ -1,0 +1,752 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`TrainDiagramComponent 図の組み立ての照合 両方向・列車を 1 本選んだ状態の出力を固定する 1`] = `
+{
+  "bodyHeight": 116,
+  "diagramLines": [
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "in",
+          "minute": 290,
+          "y": 12,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 290,
+      "minMinute": 270,
+      "segments": [
+        [
+          {
+            "minute": 270,
+            "y": 53.656004306941185,
+          },
+          {
+            "minute": 278,
+            "y": 33.792845166062904,
+          },
+          {
+            "minute": 290,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 270,
+          "side": "below",
+          "text": "30",
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 278,
+          "side": "below",
+          "text": "38",
+          "y": 33.792845166062904,
+        },
+        {
+          "minute": 290,
+          "side": "below",
+          "text": "50",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#cc3333",
+      "tripId": "U1",
+      "tripNumber": "802K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "out",
+          "minute": 1250,
+          "transfer": true,
+          "y": 92,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 1300,
+      "minMinute": 1250,
+      "segments": [
+        [
+          {
+            "minute": 1250,
+            "y": 92,
+          },
+          {
+            "minute": 1260,
+            "y": 72.82800215347059,
+          },
+          {
+            "minute": 1270,
+            "y": 53.656004306941185,
+          },
+          {
+            "minute": 1300,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 1250,
+          "side": "below",
+          "text": "50",
+          "y": 92,
+        },
+        {
+          "minute": 1260,
+          "side": "below",
+          "text": "00",
+          "y": 72.82800215347059,
+        },
+        {
+          "minute": 1270,
+          "side": "below",
+          "text": "10",
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 1300,
+          "side": "below",
+          "text": "40",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "U2",
+      "tripNumber": "2302K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 575,
+      "minMinute": 535,
+      "segments": [
+        [
+          {
+            "minute": 535,
+            "y": 92,
+          },
+          {
+            "minute": 545,
+            "y": 72.82800215347059,
+          },
+          {
+            "minute": 555,
+            "y": 53.656004306941185,
+          },
+          {
+            "minute": 565,
+            "y": 33.792845166062904,
+          },
+          {
+            "minute": 575,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 535,
+          "side": "below",
+          "text": "55",
+          "y": 92,
+        },
+        {
+          "minute": 545,
+          "side": "below",
+          "text": "05",
+          "y": 72.82800215347059,
+        },
+        {
+          "minute": 555,
+          "side": "below",
+          "text": "15",
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 565,
+          "side": "below",
+          "text": "25",
+          "y": 33.792845166062904,
+        },
+        {
+          "minute": 575,
+          "side": "below",
+          "text": "35",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "U4",
+      "tripNumber": "1202K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "out",
+          "minute": 240,
+          "y": 12,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 260,
+      "minMinute": 240,
+      "segments": [
+        [
+          {
+            "minute": 240,
+            "y": 12,
+          },
+          {
+            "minute": 250,
+            "y": 33.792845166062904,
+          },
+          {
+            "minute": 260,
+            "y": 53.656004306941185,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 240,
+          "side": "above",
+          "text": "00",
+          "y": 12,
+        },
+        {
+          "minute": 250,
+          "side": "above",
+          "text": "10",
+          "y": 33.792845166062904,
+        },
+        {
+          "minute": 260,
+          "side": "above",
+          "text": "20",
+          "y": 53.656004306941185,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "D1",
+      "tripNumber": "801K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "in",
+          "minute": 1240,
+          "transfer": true,
+          "y": 92,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 1240,
+      "minMinute": 1180,
+      "segments": [
+        [
+          {
+            "minute": 1180,
+            "y": 12,
+          },
+          {
+            "minute": 1210,
+            "y": 53.656004306941185,
+          },
+          {
+            "minute": 1240,
+            "y": 92,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 1180,
+          "side": "above",
+          "text": "40",
+          "y": 12,
+        },
+        {
+          "minute": 1210,
+          "side": "above",
+          "text": "10",
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 1240,
+          "side": "above",
+          "text": "40",
+          "y": 92,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#cc3333",
+      "tripId": "D2",
+      "tripNumber": "2301K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 520,
+      "minMinute": 480,
+      "segments": [
+        [
+          {
+            "minute": 480,
+            "y": 12,
+          },
+          {
+            "minute": 490,
+            "y": 33.792845166062904,
+          },
+          {
+            "minute": 500,
+            "y": 53.656004306941185,
+          },
+          {
+            "minute": 510,
+            "y": 72.82800215347059,
+          },
+          {
+            "minute": 520,
+            "y": 92,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 480,
+          "side": "above",
+          "text": "00",
+          "y": 12,
+        },
+        {
+          "minute": 490,
+          "side": "above",
+          "text": "10",
+          "y": 33.792845166062904,
+        },
+        {
+          "minute": 500,
+          "side": "above",
+          "text": "20",
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 510,
+          "side": "above",
+          "text": "30",
+          "y": 72.82800215347059,
+        },
+        {
+          "minute": 520,
+          "side": "above",
+          "text": "40",
+          "y": 92,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "D3",
+      "tripNumber": "1201K",
+    },
+  ],
+  "hasDeadhead": false,
+  "hasDepotIn": true,
+  "hasDepotOut": true,
+  "hasTransfer": true,
+  "selectedTripInfo": {
+    "destinationName": "S3駅",
+    "detailLink": [
+      "/timetable",
+      "all-line",
+      {
+        "calendar_id": "",
+        "trip_block_id": "block-D1",
+        "trip_direction": "1",
+      },
+    ],
+    "operationId": "op-10A",
+    "operationNumber": "10A",
+    "tripClassColor": "#336699",
+    "tripClassName": "各停",
+    "tripId": "D1",
+    "tripNumber": "801K",
+  },
+  "stationRows": [
+    {
+      "stationId": "s1",
+      "stationName": "S1駅",
+      "y": 12,
+    },
+    {
+      "stationId": "s2",
+      "stationName": "S2駅",
+      "y": 33.792845166062904,
+    },
+    {
+      "stationId": "s3",
+      "stationName": "S3駅",
+      "y": 53.656004306941185,
+    },
+    {
+      "stationId": "s4",
+      "stationName": "S4駅",
+      "y": 72.82800215347059,
+    },
+    {
+      "stationId": "s5",
+      "stationName": "S5駅",
+      "y": 92,
+    },
+  ],
+  "tripIdsByChainOf": {
+    "D1": [
+      "D1",
+    ],
+    "D2": [
+      "D2",
+    ],
+    "D3": [
+      "D3",
+    ],
+    "U1": [
+      "U1",
+    ],
+    "U2": [
+      "U2",
+    ],
+    "U4": [
+      "U4",
+    ],
+  },
+  "turnbackLinks": [
+    {
+      "arrivingTripId": "D1",
+      "color": "#cc3333",
+      "connectors": [],
+      "departingTripId": "U1",
+      "maxMinute": 270,
+      "minMinute": 260,
+      "points": [
+        {
+          "minute": 260,
+          "y": 53.656004306941185,
+        },
+        {
+          "minute": 260,
+          "y": 57.656004306941185,
+        },
+        {
+          "minute": 270,
+          "y": 57.656004306941185,
+        },
+        {
+          "minute": 270,
+          "y": 53.656004306941185,
+        },
+      ],
+    },
+    {
+      "arrivingTripId": "D3",
+      "color": "#336699",
+      "connectors": [],
+      "departingTripId": "U4",
+      "maxMinute": 535,
+      "minMinute": 520,
+      "points": [
+        {
+          "minute": 520,
+          "y": 92,
+        },
+        {
+          "minute": 520,
+          "y": 96,
+        },
+        {
+          "minute": 535,
+          "y": 96,
+        },
+        {
+          "minute": 535,
+          "y": 92,
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`TrainDiagramComponent 図の組み立ての照合 方向の絞り込みを上りだけにした出力を固定する 1`] = `
+{
+  "bodyHeight": 116,
+  "diagramLines": [
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "in",
+          "minute": 290,
+          "y": 12,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 290,
+      "minMinute": 270,
+      "segments": [
+        [
+          {
+            "minute": 270,
+            "y": 55.99067162072728,
+          },
+          {
+            "minute": 278,
+            "y": 36.04820875447367,
+          },
+          {
+            "minute": 290,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 270,
+          "side": "below",
+          "text": "30",
+          "y": 55.99067162072728,
+        },
+        {
+          "minute": 278,
+          "side": "below",
+          "text": "38",
+          "y": 36.04820875447367,
+        },
+        {
+          "minute": 290,
+          "side": "below",
+          "text": "50",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#cc3333",
+      "tripId": "U1",
+      "tripNumber": "802K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [
+        {
+          "kind": "out",
+          "minute": 1250,
+          "transfer": true,
+          "y": 92,
+        },
+      ],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 1300,
+      "minMinute": 1250,
+      "segments": [
+        [
+          {
+            "minute": 1250,
+            "y": 92,
+          },
+          {
+            "minute": 1260,
+            "y": 73.99533581036364,
+          },
+          {
+            "minute": 1270,
+            "y": 55.99067162072728,
+          },
+          {
+            "minute": 1300,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 1250,
+          "side": "below",
+          "text": "50",
+          "y": 92,
+        },
+        {
+          "minute": 1260,
+          "side": "below",
+          "text": "00",
+          "y": 73.99533581036364,
+        },
+        {
+          "minute": 1270,
+          "side": "below",
+          "text": "10",
+          "y": 55.99067162072728,
+        },
+        {
+          "minute": 1300,
+          "side": "below",
+          "text": "40",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "U2",
+      "tripNumber": "2302K",
+    },
+    {
+      "connectors": [],
+      "depotMarks": [],
+      "isChainHead": true,
+      "isDeadhead": false,
+      "maxMinute": 575,
+      "minMinute": 535,
+      "segments": [
+        [
+          {
+            "minute": 535,
+            "y": 92,
+          },
+          {
+            "minute": 545,
+            "y": 73.99533581036364,
+          },
+          {
+            "minute": 555,
+            "y": 55.99067162072728,
+          },
+          {
+            "minute": 565,
+            "y": 36.04820875447367,
+          },
+          {
+            "minute": 575,
+            "y": 12,
+          },
+        ],
+      ],
+      "stopLabels": [
+        {
+          "minute": 535,
+          "side": "below",
+          "text": "55",
+          "y": 92,
+        },
+        {
+          "minute": 545,
+          "side": "below",
+          "text": "05",
+          "y": 73.99533581036364,
+        },
+        {
+          "minute": 555,
+          "side": "below",
+          "text": "15",
+          "y": 55.99067162072728,
+        },
+        {
+          "minute": 565,
+          "side": "below",
+          "text": "25",
+          "y": 36.04820875447367,
+        },
+        {
+          "minute": 575,
+          "side": "below",
+          "text": "35",
+          "y": 12,
+        },
+      ],
+      "throughLabels": [],
+      "tripClassColor": "#336699",
+      "tripId": "U4",
+      "tripNumber": "1202K",
+    },
+  ],
+  "hasDeadhead": false,
+  "hasDepotIn": true,
+  "hasDepotOut": false,
+  "hasTransfer": true,
+  "selectedTripInfo": {
+    "destinationName": "S1駅",
+    "detailLink": [
+      "/timetable",
+      "all-line",
+      {
+        "calendar_id": "",
+        "trip_block_id": "block-U1",
+        "trip_direction": "0",
+      },
+    ],
+    "operationId": "op-10A",
+    "operationNumber": "10A",
+    "tripClassColor": "#cc3333",
+    "tripClassName": "急行",
+    "tripId": "U1",
+    "tripNumber": "802K",
+  },
+  "stationRows": [
+    {
+      "stationId": "s1",
+      "stationName": "S1駅",
+      "y": 12,
+    },
+    {
+      "stationId": "s2",
+      "stationName": "S2駅",
+      "y": 36.04820875447367,
+    },
+    {
+      "stationId": "s3",
+      "stationName": "S3駅",
+      "y": 55.99067162072728,
+    },
+    {
+      "stationId": "s4",
+      "stationName": "S4駅",
+      "y": 73.99533581036364,
+    },
+    {
+      "stationId": "s5",
+      "stationName": "S5駅",
+      "y": 92,
+    },
+  ],
+  "tripIdsByChainOf": {
+    "U1": [
+      "U1",
+    ],
+    "U2": [
+      "U2",
+    ],
+    "U4": [
+      "U4",
+    ],
+  },
+  "turnbackLinks": [],
+}
+`;
