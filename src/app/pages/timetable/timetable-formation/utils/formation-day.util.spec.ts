@@ -13,6 +13,7 @@ import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/tr
 import {
     basisAt,
     buildFormationDay,
+    dropCarriedCopies,
     FormationDayInput,
     FormationDayRow,
     missingOperationIds,
@@ -547,7 +548,7 @@ describe('buildFormationDay', () => {
     });
 
     describe('同日引き継ぎの写し', () => {
-        /** api が返す写し: id は `元の id#運番`、operationId と sightedAsOperation だけが違う */
+        /** api が返す写し: id は `元の id#運番`、元の id が carriedFromSightingId に付き、operationId と sightedAsOperation だけが違う */
         const copyOf = (
             original: OperationSightingDetailsDto,
             operationId: string,
@@ -556,9 +557,30 @@ describe('buildFormationDay', () => {
         ): OperationSightingDetailsDto => ({
             ...original,
             operationSightingId: `${original.operationSightingId}#${operationNumber}`,
+            carriedFromSightingId: original.operationSightingId,
             operationId,
             operation: { operationId, operationNumber } as OperationDetailsDto,
             sightedAsOperation: from,
+        });
+
+        it('写しは id の形でなく carriedFromSightingId で見分ける', () => {
+            const original = sighting('s1', 'f1', 'op16', '09:00');
+            const copy = {
+                ...copyOf(original, 'op15', '15K', {
+                    operationId: 'op16',
+                    operationNumber: '16K',
+                }),
+                operationSightingId: 'copy-without-hash',
+            };
+            const orphanCopy = {
+                ...copy,
+                operationSightingId: 'orphan-copy',
+                carriedFromSightingId: 's-missing',
+            };
+            const hashedDirect = sighting('s2#x', 'f1', 'op16', '10:00');
+            expect(
+                dropCarriedCopies([original, copy, orphanCopy, hashedDirect]),
+            ).toEqual([original, orphanCopy, hashedDirect]);
         });
 
         it('前向き: 16K の目撃と 15K の写しがあっても、16K → 15K に乗り移るだけで swap は出ない', () => {
