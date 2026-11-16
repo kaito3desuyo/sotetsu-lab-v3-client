@@ -6,7 +6,7 @@ export interface PageHelp {
     lines: string[];
 }
 
-/** 表に無いページ（ログイン・メンテナンス・404 など）で出す一言 */
+/** サイトの一言説明。表に無いページ（ログイン・メンテナンス・404 など）で出し、トップの説明の 1 行目にも置く */
 export const SITE_INTRO =
     '相鉄線の「どの編成が、どの列車に入っているか」を、みんなの目撃で記録する非公式のサイトです。';
 
@@ -35,6 +35,7 @@ const MODERATION_USER: PageHelp = {
 export const PAGE_HELP_TABLE: Readonly<Record<string, PageHelp>> = {
     '/': {
         lines: [
+            SITE_INTRO,
             '今日のダイヤと、最新の目撃情報をまとめたページです。',
             '「最新の目撃情報」はいま見られた編成と、その編成が入っている運用番号です。',
             '下のカードから、時刻表や運用情報を探せます。',

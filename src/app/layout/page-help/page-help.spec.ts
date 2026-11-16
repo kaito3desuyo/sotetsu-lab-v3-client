@@ -88,4 +88,8 @@ describe('findPageHelp', () => {
     it('サイトの一言説明がある', () => {
         expect(SITE_INTRO.length).toBeGreaterThan(0);
     });
+
+    it('トップの説明は、サイトの一言説明から始まる', () => {
+        expect(findPageHelp('/')?.lines[0]).toBe(SITE_INTRO);
+    });
 });
