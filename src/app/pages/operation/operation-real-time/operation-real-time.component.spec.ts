@@ -722,10 +722,12 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         fixture.detectChanges();
 
         expect(store.partialFailure()).toBe(true);
-        const note = (fixture.nativeElement as HTMLElement).querySelector(
-            'p[role="status"]',
-        );
-        expect(note?.textContent).toContain('一部の情報を取れませんでした');
+        // 帯の中身は共通部品の spec で確かめる（ここは部品が置かれているかだけ）
+        expect(
+            (fixture.nativeElement as HTMLElement).querySelector(
+                'app-partial-failure-notice',
+            ),
+        ).not.toBeNull();
     });
 
     it('全部取れたら「一部取れませんでした」を出さない', async () => {
@@ -735,7 +737,7 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
         expect(store.partialFailure()).toBe(false);
         expect(
             (fixture.nativeElement as HTMLElement).querySelector(
-                'p[role="status"]',
+                'app-partial-failure-notice',
             ),
         ).toBeNull();
     });

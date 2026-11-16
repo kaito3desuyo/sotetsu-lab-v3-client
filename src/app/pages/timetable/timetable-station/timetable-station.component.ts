@@ -20,6 +20,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import { DateFnsPipe } from 'src/app/core/pipes/dateFns.pipe';
 import { OperationPostCardService } from 'src/app/shared/operation-post-card/operation-post-card.service';
+import { PartialFailureNoticeComponent } from 'src/app/shared/partial-failure-notice/partial-failure-notice.component';
 import { OfflineConditions } from 'src/app/core/offline/offline-snapshots';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { calendarCacheTag } from 'src/app/core/ssr/cache-control';
@@ -79,6 +80,7 @@ export const ALL_LINE_OPTION = '__all-line__';
         LazyOptionsDirective,
         NotFoundContentComponent,
         SkeletonBarComponent,
+        PartialFailureNoticeComponent,
         StepNavComponent,
         StickyDirectionToggleComponent,
         TimetableStationTableComponent,
@@ -142,6 +144,7 @@ export class TimetableStationComponent {
 
     readonly isLoading = this.#store.isLoading;
     readonly hasFetchedTimetable = this.#store.hasFetchedTimetable;
+    readonly partialFailure = this.#store.partialFailure;
     /** 骨組みの時の行の数と、1 行の列車のセルの数 */
     readonly skeletonHours = Array.from({ length: 4 }, (_, i) => i);
     readonly skeletonCells = Array.from({ length: 6 }, (_, i) => i);
@@ -419,6 +422,8 @@ export class TimetableStationComponent {
                 );
                 // 目撃は Service Worker に残らないので、時刻表とは別に、日付つきで保存する
                 if (this.#store.isLatestFetch(seq)) {
+                    // 前に保存した分に戻したときも、取れなかったことは知らせる
+                    this.#store.setPartialFailure(!sightingsFetched);
                     await this.#saveOrRestoreSightings({
                         conditions: {
                             ...conditions,
@@ -429,6 +434,7 @@ export class TimetableStationComponent {
                 }
             } else {
                 this.#store.resetOperationSightingTimeCrossSections();
+                this.#store.setPartialFailure(false);
             }
         } finally {
             // 途中の reject でローディングバーと骨組みが永久残留しないことを保証する
@@ -508,6 +514,9 @@ export class TimetableStationComponent {
                 );
             } else if (this.#store.isLatestFetch(seq)) {
                 void this.#store.saveOfflineSnapshot('sightings', conditions);
+            }
+            if (this.#store.isLatestFetch(seq)) {
+                this.#store.setPartialFailure(!fetched);
             }
         } catch (error) {
             console.error(error);

@@ -113,6 +113,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
             TimetableStationStore,
         ).resetOperationSightingTimeCrossSections();
         TestBed.inject(TimetableStationStore).setHasFetchedTimetable(false);
+        TestBed.inject(TimetableStationStore).setPartialFailure(false);
         TestBed.inject(TimetableStationStore).resetLoading();
     });
 
@@ -163,6 +164,35 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
         );
         expect(sightingsSaves()).toHaveLength(0);
         expect(fixture.componentInstance.isLoading()).toBe(false);
+    });
+
+    it('充当編成が取れなかったら、前に保存した分に戻しても知らせの帯の印を立てる', async () => {
+        sightingsFetched = of(false);
+        getItem.mockImplementation((key: string) =>
+            Promise.resolve(
+                key === SIGHTINGS_KEY ? savedSightings(today()) : null,
+            ),
+        );
+        await setup();
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(TestBed.inject(TimetableStationStore).partialFailure()).toBe(
+            true,
+        );
+    });
+
+    it('充当編成が取れたら、知らせの帯の印を立てない', async () => {
+        sightingsFetched = of(true);
+        await setup();
+
+        fixture = TestBed.createComponent(TimetableStationComponent);
+        await flush();
+
+        expect(TestBed.inject(TimetableStationStore).partialFailure()).toBe(
+            false,
+        );
     });
 
     it('日付が違う保存は戻さない', async () => {
