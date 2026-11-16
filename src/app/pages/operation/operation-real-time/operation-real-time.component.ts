@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { filter, lastValueFrom, map } from 'rxjs';
+import { filter, lastValueFrom, map, Observable } from 'rxjs';
 import { NotificationService } from 'src/app/core/services/notification.service';
 import { readSocketSignal } from 'src/app/core/services/socket-signal';
 import { SocketService } from 'src/app/core/services/socket.service';
@@ -194,37 +194,29 @@ export class OperationRealTimeComponent {
         // メモリの方が保存より新しいので、失敗しても保存した中身には戻さない
         const hasFetchedBefore = this.#store.hasFetchedOperations();
         this.#store.enableLoading();
+        const service = this.#operationRealTimeService;
         try {
-            await lastValueFrom(this.#operationRealTimeService.fetchRoutes());
-            await lastValueFrom(this.#operationRealTimeService.fetchStations());
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchTripClasses(),
-            );
-            await lastValueFrom(this.#operationRealTimeService.fetchCalendar());
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchOperations(),
-            );
-            // 前後の運用が取れなくても画面は出す。ただし、その中身は圏外用に保存しない
-            const itineraryLinks = await lastValueFrom(
-                this.#operationRealTimeService.fetchItineraryLinks(),
-            );
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchFormations(),
-            );
-            // 現在位置は operations にのみ依存するため、
-            // 目撃断面の大量リクエストより先に取得する（98 §G2 A4: 現在位置行の復旧）
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchCurrentPositions(),
-            );
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchOperationSightingTimeCrossSections(),
-            );
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchFormationSightingTimeCrossSections(),
-            );
-            await lastValueFrom(
-                this.#operationRealTimeService.fetchSightingHistories(),
-            );
+            // 依存の順に 3 波で取る。同じ波の中は互いに依存しないので同時に投げる。
+            // 1 波目: 何にも依存しない（運用・前後の運用はダイヤ、断面と現在位置は運用と編成を使う）
+            await settleAll([
+                service.fetchRoutes(),
+                service.fetchStations(),
+                service.fetchTripClasses(),
+                service.fetchCalendar(),
+                service.fetchFormations(),
+            ]);
+            // 2 波目: ダイヤに依存する。前後の運用が取れなくても画面は出す。ただし、その中身は圏外用に保存しない
+            const [, itineraryLinks] = await settleAll([
+                service.fetchOperations(),
+                service.fetchItineraryLinks(),
+            ]);
+            // 3 波目: 運用と編成に依存する
+            await settleAll([
+                service.fetchCurrentPositions(),
+                service.fetchOperationSightingTimeCrossSections(),
+                service.fetchFormationSightingTimeCrossSections(),
+                service.fetchSightingHistories(),
+            ]);
 
             // 取得がすべて成功した中身を、次に圏外のときのために保存する
             if (!itineraryLinks?.failed) {
@@ -343,4 +335,24 @@ export class OperationRealTimeComponent {
             }),
         );
     }
+}
+
+/**
+ * 同じ波の取得を同時に投げ、全部が終わるのを待つ。1 本でも失敗したら、残りが終わってから最初の失敗を投げる
+ * （途中で投げると、保存した中身に戻したあとで残りの取得がストアを書き換えるため）
+ */
+async function settleAll<T extends readonly Observable<unknown>[]>(
+    sources: [...T],
+): Promise<{ [K in keyof T]: T[K] extends Observable<infer V> ? V : never }> {
+    const results = await Promise.allSettled(
+        sources.map((source) => lastValueFrom(source)),
+    );
+    const rejected = results.find(
+        (result): result is PromiseRejectedResult =>
+            result.status === 'rejected',
+    );
+    if (rejected) throw rejected.reason;
+    return results.map(
+        (result) => (result as PromiseFulfilledResult<unknown>).value,
+    ) as { [K in keyof T]: T[K] extends Observable<infer V> ? V : never };
 }
