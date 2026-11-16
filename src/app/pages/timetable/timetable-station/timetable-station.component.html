@@ -94,29 +94,37 @@
                     [value]="stationId()"
                     (valueChange)="onStationChange($event)"
                     appLazyOptions
+                    [appLazyOptionsSteps]="stationGroups().length"
                     #lazyStation="appLazyOptions"
                 >
                     <mat-option [value]="allLineOption"
                         >全線（駅を選ばない）</mat-option
                     >
                     <mat-divider></mat-divider>
-                    @if (lazyStation.ready()) {
-                        @for (group of stationGroups(); track group.routeId) {
-                            <mat-optgroup [label]="group.label">
-                                @for (
-                                    station of group.stations;
-                                    track station.stationId
-                                ) {
-                                    <mat-option [value]="station.stationId">
-                                        {{ station.stationName }}
-                                    </mat-option>
-                                }
-                            </mat-optgroup>
+                    <!-- 押す前は、空き時間に作り終えた群だけを出す（P9）。選んでいる駅は全部そろうまで末尾にも置く -->
+                    @for (
+                        group of lazyStation.ready()
+                            ? stationGroups()
+                            : stationGroups().slice(0, lazyStation.built());
+                        track group.routeId
+                    ) {
+                        <mat-optgroup [label]="group.label">
+                            @for (
+                                station of group.stations;
+                                track station.stationId
+                            ) {
+                                <mat-option [value]="station.stationId">
+                                    {{ station.stationName }}
+                                </mat-option>
+                            }
+                        </mat-optgroup>
+                    }
+                    @if (!lazyStation.ready()) {
+                        @if (selectedStation(); as station) {
+                            <mat-option [value]="station.stationId">
+                                {{ station.stationName }}
+                            </mat-option>
                         }
-                    } @else if (selectedStation(); as station) {
-                        <mat-option [value]="station.stationId">
-                            {{ station.stationName }}
-                        </mat-option>
                     }
                 </mat-select>
             </mat-form-field>
