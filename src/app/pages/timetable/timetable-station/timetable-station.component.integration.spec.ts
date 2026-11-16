@@ -116,6 +116,30 @@ class StubSearchCardComponent {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * 取得はどれも実時間の delay で返るので、描画が条件を満たすまで待つ。
+ * 決まった時間だけ待つと、CI の遅いマシンで間に合わずに落ちた（2026-11-16、#325 の CI）
+ */
+async function waitForRender(
+    fixture: ComponentFixture<TimetableStationComponent>,
+    done: (root: HTMLElement) => boolean,
+    timeoutMs = 5000,
+): Promise<void> {
+    const root = fixture.nativeElement as HTMLElement;
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+        fixture.detectChanges();
+        if (done(root) || Date.now() > deadline) {
+            return;
+        }
+        await sleep(20);
+    }
+}
+
+/** 2 本の列車の行（6001・6003）が描かれたら、初回の取得が済んだとみなす */
+const tripsRendered = (root: HTMLElement): boolean =>
+    ['6001', '6003'].every((n) => root.textContent?.includes(n));
+
 async function setup(overrides?: {
     operationSighting?: unknown;
     tripBlock?: unknown;
@@ -270,8 +294,9 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
 
         // fetchData の全 await（calendar・運行・種別・駅・運用を並行 → crossSections）が
         // 実時間で解決するのを待つ
-        await sleep(300);
-        fixture.detectChanges();
+        await waitForRender(fixture, (root) =>
+            ['10708', '21101'].every((n) => root.textContent?.includes(n)),
+        );
 
         const text = (fixture.nativeElement as HTMLElement).textContent;
         expect(text).toContain('10708');
@@ -281,8 +306,7 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
 
     it('時ごとに section を作り、sr-only の h2「{時} 時」とセルの ul > li で読める', async () => {
         const fixture = await setup();
-        await sleep(300);
-        fixture.detectChanges();
+        await waitForRender(fixture, tripsRendered);
 
         const root = fixture.nativeElement as HTMLElement;
         const sections = root.querySelectorAll('article > section');
@@ -315,8 +339,7 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
 
     it('下部に「時刻表を検索する」カードは出ない（帯に寄せた）', async () => {
         const fixture = await setup();
-        await sleep(300);
-        fixture.detectChanges();
+        await waitForRender(fixture, tripsRendered);
 
         expect(
             (fixture.nativeElement as HTMLElement).querySelector(
@@ -335,8 +358,9 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
             },
         });
 
-        await sleep(300);
-        fixture.detectChanges();
+        await waitForRender(fixture, (root) =>
+            ['21101', '不明'].every((s) => root.textContent?.includes(s)),
+        );
 
         const text = (fixture.nativeElement as HTMLElement).textContent;
         // 結果に無い運用（51）のみ「不明」、ある運用（52）は編成表示
@@ -353,8 +377,7 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
         );
         const fixture = await setup({ tripBlock: { findManyByFilter } });
 
-        await sleep(300);
-        fixture.detectChanges();
+        await waitForRender(fixture, tripsRendered);
 
         const text = (fixture.nativeElement as HTMLElement).textContent;
         expect(findManyByFilter).toHaveBeenCalledTimes(1);
