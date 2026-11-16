@@ -1,6 +1,8 @@
+import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
+import { canonicalPath } from './canonical-url';
 
 const SITE_NAME = 'Sotetsu Lab. v3';
 
@@ -14,11 +16,13 @@ const OG_IMAGE_PATH = '/assets/icons/android-chrome-512x512.png';
 /**
  * ページの題名・説明・OGP を入れる係（spec 5.1）。サーバーで描いた HTML に入り、検索と SNS のプレビューに使われる。
  * ページを開いたときに pageResolver が set を呼び、取ったデータで詳しくするページが setTitle を呼ぶ。
+ * URL があれば、canonical と og:url にそのページの URL（並びと重なりをそろえた形）を入れる。
  */
 @Injectable({ providedIn: 'root' })
 export class PageMeta {
     readonly #title = inject(Title);
     readonly #meta = inject(Meta);
+    readonly #document = inject(DOCUMENT);
     /** 最後に set に渡された、ルート定義の題名 */
     #baseTitle = '';
     /** #baseTitle のあとに setTitle で入れられた、取ったデータで詳しくした題名 */
@@ -53,12 +57,20 @@ export class PageMeta {
         this.#meta.updateTag({ name: 'twitter:card', content: 'summary' });
         if (params.url === undefined) {
             this.#meta.removeTag('property="og:url"');
+            this.#canonicalLink()?.remove();
         } else {
-            this.#meta.updateTag({
-                property: 'og:url',
-                content: environment.siteUrl + params.url,
-            });
+            const url = environment.siteUrl + canonicalPath(params.url);
+            this.#meta.updateTag({ property: 'og:url', content: url });
+            const link =
+                this.#canonicalLink() ?? this.#document.createElement('link');
+            link.setAttribute('rel', 'canonical');
+            link.setAttribute('href', url);
+            if (!link.isConnected) this.#document.head.appendChild(link);
         }
+    }
+
+    #canonicalLink(): HTMLLinkElement | null {
+        return this.#document.head.querySelector('link[rel="canonical"]');
     }
 
     /** 取ったデータで題名を詳しくするとき。題名と og:title だけ替える */
