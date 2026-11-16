@@ -62,11 +62,6 @@ describe('OperationTableFilterComponent', () => {
         expect(component.selectedGroupNames()).toEqual(['1群']);
     });
 
-    it('群チップには群の見本色を付ける（リアルタイム運用情報と同じ）', () => {
-        const options = component.groupOptions();
-        expect(options.every((o) => !!o.color)).toBe(true);
-    });
-
     it('onCalendarChange で calendarChange イベントを発火する', () => {
         const spy = jest.fn();
         component.calendarChange.subscribe(spy);

@@ -166,7 +166,6 @@ export class TimetableEditFormTripsComponent {
         this.routes().map((route) => ({
             value: route.routeId,
             label: route.routeName ?? route.routeNickName ?? route.routeId,
-            color: route.routeColor ?? undefined,
         })),
     );
 
