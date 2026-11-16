@@ -65,12 +65,46 @@ describe('UserState.fetch', () => {
         expect(store.role()).toBeNull();
     });
 
-    it('maxAgeMs をそのまま渡す', () => {
-        getProfile.mockReturnValue(of(null));
+    describe('loggedIn の Cookie', () => {
+        const setLoggedInCookie = (on: boolean): void => {
+            document.cookie = on
+                ? 'loggedIn=true; path=/'
+                : 'loggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        };
 
-        store.fetch({ maxAgeMs: 5000 }).subscribe();
+        afterEach(() => setLoggedInCookie(false));
 
-        expect(getProfile).toHaveBeenCalledWith({ maxAgeMs: 5000 });
+        it('Cookie があれば、maxAgeMs をそのまま渡して取る', () => {
+            setLoggedInCookie(true);
+            getProfile.mockReturnValue(of(null));
+
+            store.fetch({ maxAgeMs: 5000 }).subscribe();
+
+            expect(getProfile).toHaveBeenCalledWith({ maxAgeMs: 5000 });
+        });
+
+        it('画面を移るたびの確認（maxAgeMs あり）で Cookie が無ければ、取らずにゲストにする', () => {
+            setLoggedInCookie(true);
+            getProfile.mockReturnValue(of(user));
+            store.fetch({ maxAgeMs: 5000 }).subscribe();
+            getProfile.mockClear();
+            setLoggedInCookie(false);
+
+            store.fetch({ maxAgeMs: 5000 }).subscribe();
+
+            expect(getProfile).not.toHaveBeenCalled();
+            expect(store.userId()).toBeNull();
+        });
+
+        it('ログイン・ログアウト（maxAgeMs なし）は Cookie が無くても必ず取る', () => {
+            setLoggedInCookie(false);
+            getProfile.mockReturnValue(of(user));
+
+            store.fetch().subscribe();
+
+            expect(getProfile).toHaveBeenCalledWith(undefined);
+            expect(store.userId()).toBe('u1');
+        });
     });
 });
 
