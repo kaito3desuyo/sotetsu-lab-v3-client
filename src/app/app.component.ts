@@ -62,6 +62,15 @@ export class AppComponent implements OnInit, OnDestroy {
             )
             .subscribe((type) => this.#queryInvalidator.invalidateLocal(type));
 
+        // socket が切れていた間・長く隠れていた間の合図は届かない。画面内キャッシュを捨てて取り直させる
+        this.#socketService
+            .resync()
+            .pipe(takeUntilDestroyed())
+            .subscribe(() => {
+                this.#queryInvalidator.invalidateLocal('sighting');
+                this.#queryInvalidator.invalidateLocal('timetable');
+            });
+
         this.#router.events
             .pipe(
                 filter<NavigationStart>((ev) => ev instanceof NavigationStart),

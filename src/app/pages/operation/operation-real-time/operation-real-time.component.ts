@@ -315,6 +315,26 @@ export class OperationRealTimeComponent {
                     this.#store.disableLoading();
                 }
             });
+
+        // socket が切れていた間・長く隠れていた間に取り逃した変更を取り直す
+        // （変わったかどうか分からないので、「データが更新されました」は出さない）
+        this.#socketService
+            .resync()
+            .pipe(takeUntilDestroyed(this.#destroyRef))
+            .subscribe(async () => {
+                if (!this.#store.isEnableAutoReload()) return;
+
+                this.#store.enableLoading();
+                try {
+                    await this.#reloadSightings();
+                    this.#store.setFinalUpdateTime();
+                } catch (error) {
+                    console.error(error);
+                    this.#notification.open('データの取得に失敗しました', 'OK');
+                } finally {
+                    this.#store.disableLoading();
+                }
+            });
     }
 
     /** 前の取り直し。次の取り直しはこれが終わってから始める */

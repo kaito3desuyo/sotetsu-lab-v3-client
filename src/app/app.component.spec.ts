@@ -25,6 +25,7 @@ import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
     let socketMessages: Subject<unknown>;
+    let resync$: Subject<void>;
     let setUserProperties: jest.Mock;
     let sendEvent: jest.Mock;
     let tokenFetch: jest.Mock;
@@ -37,6 +38,7 @@ describe('AppComponent', () => {
         notify = jest.fn();
         tokenFetch = jest.fn(() => of(undefined));
         socketMessages = new Subject<unknown>();
+        resync$ = new Subject<void>();
         setUserProperties = jest.fn();
         sendEvent = jest.fn();
         await TestBed.configureTestingModule({
@@ -102,6 +104,7 @@ describe('AppComponent', () => {
                         connect: () => {},
                         disconnect: () => {},
                         on: () => socketMessages.asObservable(),
+                        resync: () => resync$.asObservable(),
                     },
                 },
             ],
@@ -153,6 +156,14 @@ describe('AppComponent', () => {
             signal('{"action":"sendSighting"}');
 
             expect(tags).toEqual([]);
+        });
+
+        it('resync で sighting と timetable の両方を流す', () => {
+            const tags = collectTags();
+
+            resync$.next();
+
+            expect(tags).toEqual(['sighting', 'timetable']);
         });
     });
 

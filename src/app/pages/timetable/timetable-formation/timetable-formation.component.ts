@@ -355,6 +355,17 @@ export class TimetableFormationComponent {
                 () => void lastValueFrom(this.#service.refetchSightings()),
             );
 
+        // socket が切れていた間・長く隠れていた間に取り逃した変更も、同じ条件で取り直す
+        this.#socket
+            .resync()
+            .pipe(
+                filter(() => this.ready() && this.dateKind() === 'today'),
+                takeUntilDestroyed(this.#destroyRef),
+            )
+            .subscribe(
+                () => void lastValueFrom(this.#service.refetchSightings()),
+            );
+
         // いまの位置は、走っている列車の運用で問い合わせる（今日だけ。時計が進むたびに取り直す）
         effect(() => {
             this.now();

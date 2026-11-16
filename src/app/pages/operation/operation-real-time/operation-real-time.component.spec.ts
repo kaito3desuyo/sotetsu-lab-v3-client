@@ -51,7 +51,7 @@ describe('OperationRealTimeComponent', () => {
                 OperationRealTimeService,
                 {
                     provide: SocketService,
-                    useValue: { on: () => EMPTY },
+                    useValue: { on: () => EMPTY, resync: () => EMPTY },
                 },
                 {
                     provide: NotificationService,
@@ -113,7 +113,10 @@ describe('OperationRealTimeComponent の配置', () => {
                 provideRouter([]),
                 deviceStorageStub,
                 OperationRealTimeService,
-                { provide: SocketService, useValue: { on: () => EMPTY } },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => EMPTY, resync: () => EMPTY },
+                },
                 { provide: NotificationService, useValue: { open: () => {} } },
                 {
                     provide: OperationPostCardService,
@@ -177,6 +180,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
     let service: Record<string, jest.Mock>;
     let notification: { open: jest.Mock };
     let socket$: Subject<unknown>;
+    let resync$: Subject<void>;
     let submit$: Subject<void>;
 
     let store: InstanceType<typeof OperationRealTimeStore>;
@@ -205,6 +209,7 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         };
         notification = { open: jest.fn() };
         socket$ = new Subject<unknown>();
+        resync$ = new Subject<void>();
         submit$ = new Subject<void>();
 
         await TestBed.configureTestingModule({
@@ -213,7 +218,10 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
                 provideRouter([]),
                 deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
-                { provide: SocketService, useValue: { on: () => socket$ } },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => socket$, resync: () => resync$ },
+                },
                 { provide: NotificationService, useValue: notification },
                 {
                     provide: OperationPostCardService,
@@ -303,6 +311,46 @@ describe('OperationRealTimeComponent の取得の失敗', () => {
         expect(finalUpdateTime()).toBeGreaterThan(0);
         expect(notification.open).toHaveBeenCalledTimes(1);
         expect(notification.open).not.toHaveBeenCalledWith('更新中...', 'OK');
+    });
+
+    it('resync でも目撃を取り直すが、更新できたとは知らせない', async () => {
+        service['fetchOperationSightingTimeCrossSections'].mockClear();
+
+        resync$.next();
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(
+            service['fetchOperationSightingTimeCrossSections'],
+        ).toHaveBeenCalledTimes(1);
+        expect(isLoading()).toBe(false);
+        expect(finalUpdateTime()).toBeGreaterThan(0);
+        expect(notification.open).not.toHaveBeenCalled();
+    });
+
+    it('自動更新が無効なら、resync で取り直さない', async () => {
+        store.setIsEnableAutoReload(false);
+        service['fetchOperationSightingTimeCrossSections'].mockClear();
+
+        resync$.next();
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(
+            service['fetchOperationSightingTimeCrossSections'],
+        ).not.toHaveBeenCalled();
+    });
+
+    it('resync の取り直しが失敗したら、失敗を知らせる', async () => {
+        service['fetchSightingHistories'].mockImplementation(fail);
+
+        resync$.next();
+        await jest.advanceTimersByTimeAsync(0);
+
+        expect(isLoading()).toBe(false);
+        expect(notification.open).toHaveBeenCalledWith(
+            'データの取得に失敗しました',
+            'OK',
+        );
+        expect(finalUpdateTime()).toBe(0);
     });
 
     it('timetable の合図でも目撃を取り直す', async () => {
@@ -398,7 +446,10 @@ describe('OperationRealTimeComponent の目撃募集の札', () => {
                 provideRouter([]),
                 deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
-                { provide: SocketService, useValue: { on: () => EMPTY } },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => EMPTY, resync: () => EMPTY },
+                },
                 { provide: NotificationService, useValue: { open: () => {} } },
                 { provide: UserState, useValue: { isViewer } },
                 {
@@ -636,7 +687,10 @@ describe('OperationRealTimeComponent の圏外の保存', () => {
                 provideRouter([]),
                 deviceStorageStub,
                 { provide: OperationRealTimeService, useValue: service },
-                { provide: SocketService, useValue: { on: () => EMPTY } },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => EMPTY, resync: () => EMPTY },
+                },
                 { provide: NotificationService, useValue: notification },
                 {
                     provide: OperationPostCardService,
@@ -950,7 +1004,10 @@ describe('OperationRealTimeComponent の操作帯の要約（ストアの並べ�
                         fetchCurrentPositionThatShouldUpdate: ok(),
                     },
                 },
-                { provide: SocketService, useValue: { on: () => EMPTY } },
+                {
+                    provide: SocketService,
+                    useValue: { on: () => EMPTY, resync: () => EMPTY },
+                },
                 { provide: NotificationService, useValue: { open: () => {} } },
                 {
                     provide: OperationPostCardService,
@@ -1018,7 +1075,10 @@ describe('OperationRealTimeComponent をサーバーで描くとき', () => {
                 },
                 {
                     provide: SocketService,
-                    useValue: { on: () => new Subject() },
+                    useValue: {
+                        on: () => new Subject(),
+                        resync: () => EMPTY,
+                    },
                 },
                 { provide: NotificationService, useValue: { open: jest.fn() } },
                 {
