@@ -163,6 +163,8 @@ describe('TimetableAllLineComponent の URL の向き', () => {
                     useValue: {
                         fetchStations: jest.fn(() => of(undefined)),
                         fetchTripBlocks: jest.fn(() => of(undefined)),
+                        usedTransferredTrips: () => false,
+                        publishFirstPage: jest.fn(),
                     },
                 },
                 {
@@ -303,7 +305,12 @@ describe('TimetableAllLineComponent の URL の値', () => {
                 { provide: PageMeta, useValue: { setTitle } },
                 {
                     provide: TimetableAllLineService,
-                    useValue: { fetchStations, fetchTripBlocks },
+                    useValue: {
+                        fetchStations,
+                        fetchTripBlocks,
+                        usedTransferredTrips: () => false,
+                        publishFirstPage: jest.fn(),
+                    },
                 },
                 {
                     provide: CalendarListState,
@@ -617,6 +624,8 @@ describe('TimetableAllLineComponent の読み込み中', () => {
                             return tripBlocks$;
                         },
                         deleteTripFromTripBlock: () => of(undefined),
+                        usedTransferredTrips: () => false,
+                        publishFirstPage: jest.fn(),
                     },
                 },
                 {
@@ -950,6 +959,8 @@ describe('TimetableAllLineComponent の帯の操作', () => {
                     useValue: {
                         fetchStations: jest.fn(() => of(undefined)),
                         fetchTripBlocks: jest.fn(() => of(undefined)),
+                        usedTransferredTrips: () => false,
+                        publishFirstPage: jest.fn(),
                     },
                 },
                 {
@@ -1068,6 +1079,8 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
     let originalFetchData: TimetableAllLineComponent['fetchData'];
     let stations$: Observable<undefined>;
     let tripBlocks$: Observable<undefined>;
+    let usedTransferred = false;
+    const fetchTripBlocks = jest.fn(() => tripBlocks$);
     const save = jest.fn(() => Promise.resolve());
     const restore = jest.fn();
 
@@ -1115,7 +1128,9 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
                     provide: TimetableAllLineService,
                     useValue: {
                         fetchStations: () => stations$,
-                        fetchTripBlocks: () => tripBlocks$,
+                        fetchTripBlocks,
+                        usedTransferredTrips: () => usedTransferred,
+                        publishFirstPage: jest.fn(),
                     },
                 },
                 {
@@ -1166,6 +1181,8 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
         fixture?.destroy();
         jest.clearAllMocks();
         restore.mockReset();
+        usedTransferred = false;
+        fetchTripBlocks.mockClear();
     });
 
     it('成功したら条件と中身を保存する', async () => {
@@ -1184,6 +1201,50 @@ describe('TimetableAllLineComponent の圏外の保存', () => {
             data: { stations, agencies, routeOrder, tripBlocks },
         });
         expect(restore).not.toHaveBeenCalled();
+    });
+
+    it('サーバーの削った運行で描いた回は、保存せず、全量を取り直したあとに保存する', async () => {
+        stations$ = of(undefined);
+        tripBlocks$ = of(undefined);
+        usedTransferred = true;
+        await setup();
+        const store = TestBed.inject(TimetableAllLineStore);
+        store.setStations(stations);
+        store.setPartialTripBlocks({
+            tripBlocks: tripBlocks,
+            pageSize: 10,
+            listedCount: 1,
+        });
+        // 取り直しは、全量を入れて「削った運行で埋めた」印を戻す
+        const order: string[] = [];
+        save.mockImplementationOnce(() => {
+            order.push('save');
+            return Promise.resolve();
+        });
+        fetchTripBlocks.mockImplementationOnce(() => {
+            order.push('fetch-partial');
+            return of(undefined);
+        });
+        fetchTripBlocks.mockImplementationOnce(() => {
+            order.push('fetch-full');
+            usedTransferred = false;
+            store.setTripBlocks(tripBlocks);
+            return of(undefined);
+        });
+
+        fixture = TestBed.createComponent(TimetableAllLineComponent);
+        fixture.detectChanges();
+        await fixture.whenStable();
+        await flush();
+
+        expect(order).toEqual(['fetch-partial', 'fetch-full', 'save']);
+        expect(store.isPartial()).toBe(false);
+        expect(save).toHaveBeenCalledTimes(1);
+        expect(save).toHaveBeenCalledWith({
+            key: 'TimetableAllLine',
+            conditions,
+            data: { stations, agencies, routeOrder, tripBlocks },
+        });
     });
 
     it('失敗したら保存した中身を、読み込み中を解く前に戻し、路線の選択を中身に合わせる', async () => {
@@ -1349,6 +1410,8 @@ describe('TimetableAllLineComponent がストアから読む名前', () => {
                     useValue: {
                         fetchStations: () => of(undefined),
                         fetchTripBlocks: () => of(undefined),
+                        usedTransferredTrips: () => false,
+                        publishFirstPage: jest.fn(),
                     },
                 },
                 {

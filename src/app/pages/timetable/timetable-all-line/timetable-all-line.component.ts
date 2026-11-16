@@ -1,7 +1,9 @@
 import {
+    afterNextRender,
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    Injector,
     computed,
     effect,
     inject,
@@ -78,6 +80,7 @@ import { TimetableAllLineStore } from './stores/timetable-all-line.store';
 })
 export class TimetableAllLineComponent {
     readonly #destroyRef = inject(DestroyRef);
+    readonly #injector = inject(Injector);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #loading = inject(LoadingService);
@@ -304,17 +307,67 @@ export class TimetableAllLineComponent {
                 this.#markNotFound();
                 return;
             }
-            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する。
+            // サーバーの削った運行で描いた回は全量でないので保存せず、全量を取り直したあとに保存する
             if (this.#store.isLatestFetch(seq)) {
-                void this.#store.saveOfflineSnapshot('main', conditions);
+                if (this.#timetableAllLineService.usedTransferredTrips()) {
+                    this.#scheduleFullTripsRefetch(seq, conditions);
+                } else {
+                    void this.#store.saveOfflineSnapshot('main', conditions);
+                }
             }
             this.#store.initializeSelectedRouteIds();
+            // 路線の絞り込みが決まってから、1 ページ目に描く分だけをブラウザへ渡す
+            if (this.#isServer) {
+                this.#timetableAllLineService.publishFirstPage();
+            }
         } finally {
             this.#store.disableLoading();
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
             if (this.#store.isLatestFetch(seq)) {
                 this.#store.setHasFetchedTripBlocks(true);
             }
+        }
+    }
+
+    /**
+     * サーバーの削った運行で描いた回だけ、hydration の直後（次の描画のあと）に全量を取り始める。
+     * 2 ページ目を早く押されても待ちを短くするため、idle は待たない。
+     */
+    #scheduleFullTripsRefetch(
+        seq: number,
+        conditions: { calendarId: string | null; tripDirection: number | null },
+    ): void {
+        afterNextRender(() => void this.#refetchFullTrips(seq, conditions), {
+            injector: this.#injector,
+        });
+    }
+
+    async #refetchFullTrips(
+        seq: number,
+        conditions: { calendarId: string | null; tripDirection: number | null },
+    ): Promise<void> {
+        // 取り直しの前に条件を替えたら（世代が進む）、新しい取得が全量を取るので何もしない
+        if (!this.#store.isLatestFetch(seq) || !this.#store.isPartial()) {
+            return;
+        }
+        try {
+            await lastValueFrom(
+                this.#timetableAllLineService.fetchTripBlocks(),
+            );
+        } catch (error) {
+            // 1 ページ目は削った運行で正しく描けている。2 ページ目以降は届くまで読み込み中のまま
+            this.#error.handleError(error);
+            this.#notification.open(
+                error instanceof Error
+                    ? error.message
+                    : '時刻表を取得できませんでした',
+                'OK',
+            );
+            return;
+        }
+        if (this.#store.isLatestFetch(seq) && !this.#store.isPartial()) {
+            void this.#store.saveOfflineSnapshot('main', conditions);
         }
     }
 

@@ -1,7 +1,9 @@
 import {
+    afterNextRender,
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    Injector,
     computed,
     effect,
     inject,
@@ -85,6 +87,7 @@ export const ALL_LINE_OPTION = '__all-line__';
 })
 export class TimetableStationComponent {
     readonly #destroyRef = inject(DestroyRef);
+    readonly #injector = inject(Injector);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -394,9 +397,14 @@ export class TimetableStationComponent {
                 this.#markNotFound();
                 return;
             }
-            // 取得がすべて成功した中身を、次に圏外のときのために保存する
+            // 取得がすべて成功した中身を、次に圏外のときのために保存する。
+            // サーバーの削った運行で描いた回は全量でないので保存せず、全量を取り直したあとに保存する
             if (this.#store.isLatestFetch(seq)) {
-                void this.#store.saveOfflineSnapshot('main', conditions);
+                if (this.#timetableStationService.usedTransferredTrips()) {
+                    this.#scheduleFullTripsRefetch(seq, conditions);
+                } else {
+                    void this.#store.saveOfflineSnapshot('main', conditions);
+                }
             }
             // 時刻表はここで描ける。充当編成はセルの中だけなので、待たずに出す
             // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
@@ -429,6 +437,48 @@ export class TimetableStationComponent {
                 this.#store.setHasFetchedTimetable(true);
             }
             this.#store.disableLoading();
+        }
+    }
+
+    /**
+     * サーバーの削った運行で描いた回だけ、描き終えたあとの idle に全量を取り直して入れ替える。
+     * 取り直しの前に駅などを替えたら（世代が進む、または鍵を使った印が外れる）何もしない。
+     */
+    #scheduleFullTripsRefetch(
+        seq: number,
+        conditions: OfflineConditions,
+    ): void {
+        afterNextRender(
+            () => {
+                const run = () => void this.#refetchFullTrips(seq, conditions);
+                if (typeof requestIdleCallback === 'function') {
+                    requestIdleCallback(run);
+                } else {
+                    setTimeout(run, 0);
+                }
+            },
+            { injector: this.#injector },
+        );
+    }
+
+    async #refetchFullTrips(
+        seq: number,
+        conditions: OfflineConditions,
+    ): Promise<void> {
+        if (
+            !this.#store.isLatestFetch(seq) ||
+            !this.#timetableStationService.usedTransferredTrips()
+        ) {
+            return;
+        }
+        try {
+            await lastValueFrom(this.#timetableStationService.fetchTrips());
+        } catch {
+            // 取れなくても、削った運行でこの駅の行は正しく描けている。そのままにする
+            return;
+        }
+        if (this.#store.isLatestFetch(seq)) {
+            void this.#store.saveOfflineSnapshot('main', conditions);
         }
     }
 

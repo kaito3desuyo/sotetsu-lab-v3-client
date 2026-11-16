@@ -1,5 +1,6 @@
 import { HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { skipTransferCacheContext } from './skip-transfer-cache';
 import { isTransferableRequest } from './transfer-cache-filter';
 
 describe('isTransferableRequest', () => {
@@ -45,4 +46,14 @@ describe('isTransferableRequest', () => {
             expect(isTransferableRequest(req)).toBe(false);
         },
     );
+
+    it('SKIP_TRANSFER_CACHE が true の要求は引き継がない', () => {
+        const req = new HttpRequest(
+            'GET',
+            `${environment.apiUrl}/v3/trip-blocks`,
+            { context: skipTransferCacheContext() },
+        );
+
+        expect(isTransferableRequest(req)).toBe(false);
+    });
 });

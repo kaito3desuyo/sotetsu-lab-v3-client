@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, forkJoin } from 'rxjs';
@@ -34,8 +34,11 @@ export class TripBlockQuery {
         tripDirection: number;
         fields?: TripBlockFields;
         forceReload?: boolean;
+        /** HTTP 要求に渡す文脈。キャッシュの鍵には入れない（応答の中身は変わらない） */
+        context?: HttpContext;
     }): Observable<TripBlockDetailsDto[]> {
-        const { calendarId, tripDirection, fields, forceReload } = params;
+        const { calendarId, tripDirection, fields, forceReload, context } =
+            params;
 
         return this.#cache
             .get({
@@ -60,6 +63,7 @@ export class TripBlockQuery {
                         params: httpParams,
                         observe: 'response',
                         cache: this.#invalidator.requestCache('timetable'),
+                        context,
                     });
                 },
                 forceReload,

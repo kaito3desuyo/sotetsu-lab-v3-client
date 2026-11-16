@@ -29,6 +29,11 @@ type StoreProps = {
     selectedGroupNames: string[];
     hasFetchedOperationTrips: boolean;
     loadingQueue: boolean[];
+    /**
+     * `operationTrips` が、サーバーが描いた分だけ（5 枚目からの運用の列車は削ってある）か。
+     * 全量が届く（setOperationTrips・restoreSnapshot）と false に戻る。
+     */
+    isPartial: boolean;
 };
 
 /**
@@ -53,6 +58,7 @@ const initialState: StoreProps = {
     selectedGroupNames: [],
     hasFetchedOperationTrips: false,
     loadingQueue: [],
+    isPartial: false,
 };
 
 export const OperationTableStore = signalStore(
@@ -99,8 +105,15 @@ export const OperationTableStore = signalStore(
             setCalendar(calendar: CalendarDetailsDto): void {
                 patchState(store, { calendar });
             },
+            /** 全量を入れる。削った配列で描いていた状態も終わる */
             setOperationTrips(operationTrips: OperationTripsDto[]): void {
-                patchState(store, { operationTrips });
+                patchState(store, { operationTrips, isPartial: false });
+            },
+            /** サーバーが描いた分だけ（5 枚目からの列車は削ってある）を入れる。全量が届くまで isPartial が true */
+            setPartialOperationTrips(
+                operationTrips: OperationTripsDto[],
+            ): void {
+                patchState(store, { operationTrips, isPartial: true });
             },
             setItineraryLinks(
                 itineraryLinks: OperationItineraryLinkDto[],
@@ -148,6 +161,7 @@ export const OperationTableStore = signalStore(
                 patchState(store, {
                     calendar: data.calendar,
                     operationTrips: data.operationTrips,
+                    isPartial: false,
                     // つながりを持たない古い保存でも空にして戻す
                     itineraryLinks: data.itineraryLinks ?? [],
                     stations: data.stations,

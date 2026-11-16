@@ -47,6 +47,16 @@ type StoreProps = {
     pageSettings: PageEvent;
     loadingQueue: boolean[];
     hasFetchedTripBlocks: boolean;
+    /**
+     * `tripBlocks` が、サーバーが 1 ページ目に描いた分だけ（全量でない）か。
+     * 全量が届く（setTripBlocks・restoreSnapshot）と false に戻る。
+     */
+    isPartial: boolean;
+    /** 削った配列を積んだときの 1 ページの本数と、ページ送りに出す全体の本数 */
+    partialPageSize: number;
+    partialListedCount: number;
+    /** isPartial の間に、路線の絞り込みを利用者が変えたか（削った配列では描けない） */
+    partialRoutesChanged: boolean;
 };
 
 /**
@@ -74,6 +84,10 @@ const initialState: StoreProps = {
     },
     loadingQueue: [],
     hasFetchedTripBlocks: false,
+    isPartial: false,
+    partialPageSize: 0,
+    partialListedCount: 0,
+    partialRoutesChanged: false,
 };
 
 /** 表示方向に並べ替えた駅リスト（上り = 逆順）。 */
@@ -102,14 +116,8 @@ const SORTED_ORDER_KEY = makeStateKey<SortedOrderTransfer>(
  * ダイヤ並び替え済みの全列車（ページング前）。列は路線絞り込みの影響を受けない
  * （並びは全駅で決め、絞り込みは行を隠すだけ）。並べ方は sort-trips.util.ts を参照。
  */
-function sortedAllTrips(
-    orderedStations: StationDetailsDto[],
-    tripBlocks: TripBlockDetailsDto[],
-    presorted?: TripBlockDetailsDto[],
-): TripDetailsDto[] {
-    return (
-        presorted ?? TimetableAllLineUtil.sortTrips(orderedStations, tripBlocks)
-    ).flatMap((tripBlock) => tripBlock.trips);
+function sortedAllTrips(sortedBlocks: TripBlockDetailsDto[]): TripDetailsDto[] {
+    return sortedBlocks.flatMap((tripBlock) => tripBlock.trips);
 }
 
 /** TransferState の並びで tripBlocks を並べる。条件・中身が合わなければ null。 */
@@ -217,6 +225,10 @@ export const TimetableAllLineStore = signalStore(
             loadingQueue,
             calendarId,
             hasFetchedTripBlocks,
+            isPartial,
+            partialPageSize,
+            partialListedCount,
+            partialRoutesChanged,
         }) => {
             const transferState = inject(TransferState);
             const isServer = isPlatformServer(inject(PLATFORM_ID));
@@ -230,10 +242,10 @@ export const TimetableAllLineStore = signalStore(
             // サーバーで並べた順を TransferState で渡し、ブラウザの最初の 1 回は並べ替えない。
             // computed の中で TransferState を書く・消すのは副作用だが、SSR から hydration への
             // 1 回きりの受け渡しなので許す（使い終わりはキーの remove で表し、旗は持たない）
-            const sortedTrips = computed(() => {
+            const sortedBlocks = computed(() => {
                 const blocks = tripBlocks();
                 if (blocks.length === 0) {
-                    return sortedAllTrips(orderedStations(), blocks);
+                    return blocks;
                 }
                 if (isServer) {
                     const sorted = TimetableAllLineUtil.sortTrips(
@@ -245,10 +257,17 @@ export const TimetableAllLineStore = signalStore(
                         tripDirection: tripDirection(),
                         order: sorted.map((tripBlock) => tripBlock.tripBlockId),
                     });
-                    return sortedAllTrips(orderedStations(), blocks, sorted);
+                    return sorted;
+                }
+                // 削った配列はサーバーで並べた順のまま届く。並びの鍵は全量が届くまで残す
+                if (isPartial()) {
+                    return blocks;
                 }
                 if (!transferState.hasKey(SORTED_ORDER_KEY)) {
-                    return sortedAllTrips(orderedStations(), blocks);
+                    return TimetableAllLineUtil.sortTrips(
+                        orderedStations(),
+                        blocks,
+                    );
                 }
                 const presorted = applyTransferredOrder(
                     transferState.get(SORTED_ORDER_KEY, null),
@@ -257,12 +276,12 @@ export const TimetableAllLineStore = signalStore(
                     blocks,
                 );
                 transferState.remove(SORTED_ORDER_KEY);
-                return sortedAllTrips(
-                    orderedStations(),
-                    blocks,
-                    presorted ?? undefined,
+                return (
+                    presorted ??
+                    TimetableAllLineUtil.sortTrips(orderedStations(), blocks)
                 );
             });
+            const sortedTrips = computed(() => sortedAllTrips(sortedBlocks()));
             /**
              * 列に出す列車。路線の絞り込み中は、表示駅に 1 つも停まらない（隠れた路線で完結する）列車を
              * 外す（ユーザー指示 2026-09-24）。並びは全駅で決めたものをそのまま使う。
@@ -277,7 +296,19 @@ export const TimetableAllLineStore = signalStore(
                 );
                 return trips.filter((trip) => hasVisibleStop(trip, visibleIds));
             });
+            /**
+             * 削った配列では描けない状態（2 ページ目以降・利用者が変えた路線の絞り込み）。
+             * 全量が届くまで列を出さず、読み込み中の表示にする
+             */
+            const isAwaitingFullTrips = computed(
+                () =>
+                    isPartial() &&
+                    (partialRoutesChanged() ||
+                        pageSettings().pageIndex !== 0 ||
+                        pageSettings().pageSize !== partialPageSize()),
+            );
             const pagedTrips = computed(() => {
+                if (isAwaitingFullTrips()) return [];
                 const settings = pageSettings();
                 return listedTrips().filter(
                     (_, i) =>
@@ -293,12 +324,21 @@ export const TimetableAllLineStore = signalStore(
                  */
                 pagination: computed(() => ({
                     ...pageSettings(),
-                    length: listedTrips().length,
+                    length: isPartial()
+                        ? partialListedCount()
+                        : listedTrips().length,
                 })),
+                /** ダイヤ並び替え済みの運行（ページング前）。サーバーが 1 ページ目の分を削って積むのに使う */
+                sortedBlocks,
+                /** 絞り込み後の列に出す列車（ページング前） */
+                listedTrips,
+
                 isLoading: computed(() => loadingQueue().length > 0),
                 /** ダイヤがあって、まだ取り終えていない（骨組みを出すとき） */
                 isAwaitingTripBlocks: computed(
-                    () => !!calendarId() && !hasFetchedTripBlocks(),
+                    () =>
+                        (!!calendarId() && !hasFetchedTripBlocks()) ||
+                        isAwaitingFullTrips(),
                 ),
 
                 /**
@@ -394,6 +434,13 @@ export const TimetableAllLineStore = signalStore(
                 pageSettings: { ...state.pageSettings, pageIndex: 0 },
             }));
         };
+        /** 利用者が絞り込みを変えた。削った配列の間は、全量が届くまで列を出さない */
+        const changeSelectedRouteIds = (routeIds: FilterChipValue[]): void => {
+            setSelectedRouteIds(routeIds);
+            if (store.isPartial()) {
+                patchState(store, { partialRoutesChanged: true });
+            }
+        };
 
         return {
             nextFetchSeq(): number {
@@ -427,13 +474,35 @@ export const TimetableAllLineStore = signalStore(
             setStations(stations: StationDetailsDto[]): void {
                 patchState(store, { stations });
             },
+            /** 全量を入れる。削った配列で描いていた状態も終わる */
             setTripBlocks(tripBlocks: TripBlockDetailsDto[]): void {
-                patchState(store, { tripBlocks });
+                patchState(store, {
+                    tripBlocks,
+                    isPartial: false,
+                    partialRoutesChanged: false,
+                });
+            },
+            /**
+             * サーバーが 1 ページ目に描いた分だけ（サーバーで並べた順）を入れる。全量が届くまで isPartial が true。
+             * `listedCount` は、ページ送りに出す絞り込み後の全体の本数。
+             */
+            setPartialTripBlocks(params: {
+                tripBlocks: TripBlockDetailsDto[];
+                pageSize: number;
+                listedCount: number;
+            }): void {
+                patchState(store, {
+                    tripBlocks: params.tripBlocks,
+                    isPartial: true,
+                    partialPageSize: params.pageSize,
+                    partialListedCount: params.listedCount,
+                    partialRoutesChanged: false,
+                });
             },
             setPageSettings(pageSettings: PageEvent): void {
                 patchState(store, { pageSettings });
             },
-            setSelectedRouteIds,
+            setSelectedRouteIds: changeSelectedRouteIds,
             setAgencies(agencies: AgencyDetailsDto[]): void {
                 patchState(store, { agencies });
             },
@@ -494,6 +563,8 @@ export const TimetableAllLineStore = signalStore(
                     agencies: data.agencies,
                     routeOrder: data.routeOrder,
                     tripBlocks: data.tripBlocks,
+                    isPartial: false,
+                    partialRoutesChanged: false,
                 });
             },
         };

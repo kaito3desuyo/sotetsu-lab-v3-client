@@ -1,7 +1,9 @@
 import {
+    afterNextRender,
     ChangeDetectionStrategy,
     Component,
     DestroyRef,
+    Injector,
     computed,
     effect,
     inject,
@@ -40,6 +42,7 @@ import {
 import { buildItineraryLinkLabels } from 'src/app/libs/operation/usecase/build-itinerary-link-labels.util';
 import { isTransferEnd } from 'src/app/libs/operation/usecase/transfer-marker.util';
 import { formatOperationTableSummary } from './utils/operation-table-summary.util';
+import { SERVER_RENDERED_CARDS } from './utils/prune-operation-trips.util';
 
 /** 絞り込み無し。fallback を毎回作らないよう 1 つに */
 const NO_GROUP_NAMES: string[] = [];
@@ -60,6 +63,7 @@ const NO_GROUP_NAMES: string[] = [];
 })
 export class OperationTableComponent {
     readonly #destroyRef = inject(DestroyRef);
+    readonly #injector = inject(Injector);
     readonly #route = inject(ActivatedRoute);
     readonly #router = inject(Router);
     readonly #notificationService = inject(NotificationService);
@@ -92,8 +96,10 @@ export class OperationTableComponent {
     readonly hasFetchedOperationTrips = this.#store.hasFetchedOperationTrips;
     /** 骨組みのカードの数。1440px で 4 面 × 2 段あれば画面 1 枚分を埋める */
     readonly skeletonCards = Array.from({ length: 8 }, (_, i) => i);
-    /** サーバーで中身まで描くカードの数。1440px で 1 段目の 4 面。カードは縦に長く 1 段で画面が埋まる（2026-10-28 実測） */
-    readonly SERVER_RENDERED_CARDS = 4;
+    /** サーバーで中身まで描くカードの数（値と理由は prune-operation-trips.util） */
+    readonly SERVER_RENDERED_CARDS = SERVER_RENDERED_CARDS;
+    /** 5 枚目からの運用の列車が削ってある間は true。届くまで、5 枚目からのカードは場所取りのまま描かない */
+    readonly isPartial = this.#store.isPartial;
     /** 骨組みのカード 1 枚の列車の行の数 */
     readonly skeletonRows = Array.from({ length: 12 }, (_, i) => i);
 
@@ -251,13 +257,20 @@ export class OperationTableComponent {
                     // 保存した中身が壊れていても、取得の失敗をそのまま投げる
                 }
             }
-        } else if (
-            !calendarMissing &&
-            hasFetchedItineraryLinks &&
-            this.#store.isLatestFetch(seq)
-        ) {
-            // 取得がすべて成功した中身を、次に圏外のときのために保存する
-            void this.#store.saveOfflineSnapshot('main', conditions);
+        }
+        // 取得がすべて成功した中身を、次に圏外のときのために保存する。
+        // サーバーの削った列車で描いた回は全量でないので保存せず、全量を取り直したあとに保存する
+        const canSave =
+            !failure && !calendarMissing && hasFetchedItineraryLinks;
+        if (this.#store.isLatestFetch(seq)) {
+            if (
+                this.#operationTableService.usedTransferredTrips() &&
+                this.#store.isPartial()
+            ) {
+                this.#scheduleFullTripsRefetch(seq, conditions, canSave);
+            } else if (canSave) {
+                void this.#store.saveOfflineSnapshot('main', conditions);
+            }
         }
         this.#store.disableLoading();
         // 古い取得が先に終わっても骨組みを消さない（いちばん新しい取得だけが true にする）
@@ -268,6 +281,54 @@ export class OperationTableComponent {
 
         if (failure) {
             throw failure.reason;
+        }
+    }
+
+    /**
+     * サーバーの削った列車で描いた回だけ、hydration の直後（次の描画のあと）に全量を取り始める。
+     * 5 枚目からのカードを早く出すため、idle は待たない。
+     */
+    #scheduleFullTripsRefetch(
+        seq: number,
+        conditions: { calendarId: string | null },
+        canSave: boolean,
+    ): void {
+        afterNextRender(
+            () => void this.#refetchFullTrips(seq, conditions, canSave),
+            { injector: this.#injector },
+        );
+    }
+
+    async #refetchFullTrips(
+        seq: number,
+        conditions: { calendarId: string | null },
+        canSave: boolean,
+    ): Promise<void> {
+        // 取り直しの前にダイヤを替えたら（世代が進む）、新しい取得が全量を取るので何もしない
+        if (!this.#store.isLatestFetch(seq) || !this.#store.isPartial()) {
+            return;
+        }
+        try {
+            await lastValueFrom(
+                this.#operationTableService.fetchOperationTrips(),
+            );
+        } catch (error) {
+            // 先頭のカードは削らない中身で描けている。5 枚目からは届くまで場所取りのまま
+            console.error('operation table full trips fetch failed', error);
+            this.#notificationService.open(
+                error instanceof Error
+                    ? error.message
+                    : '運用表を取得できませんでした',
+                'OK',
+            );
+            return;
+        }
+        if (
+            canSave &&
+            this.#store.isLatestFetch(seq) &&
+            !this.#store.isPartial()
+        ) {
+            void this.#store.saveOfflineSnapshot('main', conditions);
         }
     }
 
