@@ -116,6 +116,23 @@ class StubSearchCardComponent {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * 条件が満たされるまで、描き直しながら待つ（上限 timeoutMs）。CI は手元より遅く、
+ * 決め打ちの sleep(300) では断面の結果が描かれる前に読んでしまうことがあった
+ */
+async function waitUntil(
+    fixture: { detectChanges(): void },
+    done: () => boolean,
+    timeoutMs = 3000,
+): Promise<void> {
+    const start = Date.now();
+    for (;;) {
+        fixture.detectChanges();
+        if (done() || Date.now() - start > timeoutMs) return;
+        await sleep(20);
+    }
+}
+
 async function setup(overrides?: {
     operationSighting?: unknown;
     tripBlock?: unknown;
@@ -335,10 +352,15 @@ describe('TimetableStationComponent 統合（初回ロードの表示モデル�
             },
         });
 
-        await sleep(300);
-        fixture.detectChanges();
+        const root = fixture.nativeElement as HTMLElement;
+        await waitUntil(
+            fixture,
+            () =>
+                (root.textContent ?? '').includes('21101') &&
+                (root.textContent ?? '').includes('不明'),
+        );
 
-        const text = (fixture.nativeElement as HTMLElement).textContent;
+        const text = root.textContent;
         // 結果に無い運用（51）のみ「不明」、ある運用（52）は編成表示
         expect(text).toContain('21101');
         expect(text).toContain('不明');
