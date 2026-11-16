@@ -155,7 +155,7 @@ describe('OperationRouteDiagramDrawingComponent', () => {
                         tripClass: {
                             tripClassId: 'tc-3',
                             tripClassName: '回送',
-                            tripClassColor: '#9e9e9e',
+                            tripClassColor: '#8a8a8a',
                         },
                     },
                 }),
@@ -224,8 +224,8 @@ describe('OperationRouteDiagramDrawingComponent', () => {
             expect(express.color).toBe('#001556');
             expect(express.chipFill).toBe('#001556');
             expect(rapid.color).toBe('#1d88e2');
-            expect(nonRevenue.color).toBe('#9e9e9e');
-            expect(nonRevenue.chipFill).toBe('#9e9e9e');
+            expect(nonRevenue.color).toBe('#8a8a8a');
+            expect(nonRevenue.chipFill).toBe('#8a8a8a');
         });
 
         it('回送の列番は「回」を除いた素の数字、チップは「回送」', () => {
@@ -241,7 +241,7 @@ describe('OperationRouteDiagramDrawingComponent', () => {
                 (l) => l.getAttribute('stroke') === '#001556',
             );
             const nonRevenue = lines.find(
-                (l) => l.getAttribute('stroke') === '#9e9e9e',
+                (l) => l.getAttribute('stroke') === '#8a8a8a',
             );
             expect(express?.getAttribute('stroke-dasharray')).toBeNull();
             expect(nonRevenue?.getAttribute('stroke-dasharray')).toBe('5 3');

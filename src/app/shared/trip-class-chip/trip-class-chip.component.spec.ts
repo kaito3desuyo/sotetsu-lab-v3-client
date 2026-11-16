@@ -57,7 +57,7 @@ describe('TripClassChipComponent', () => {
     it('色が無いときはグレーで塗る', () => {
         fixture.componentInstance.color.set(null);
         fixture.detectChanges();
-        expect(chip().className).toContain('tw-bg-grey-500');
+        expect(chip().className).toContain('tw-bg-[#8a8a8a]');
         expect(chip()).toHaveStyle({ backgroundColor: '' });
     });
 

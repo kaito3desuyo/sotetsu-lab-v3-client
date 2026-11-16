@@ -249,7 +249,7 @@ export class OperationTableCardComponent {
                 tripId: trip.tripId,
                 tripNumber: trip.tripNumber,
                 tripClassName,
-                tripClassColor: tripClass?.tripClassColor ?? '#9e9e9e',
+                tripClassColor: tripClass?.tripClassColor ?? '#8a8a8a',
                 isDeadhead: tripClassName.includes('回送'),
                 depotOut: !!trip.depotOut,
                 depotIn: !!trip.depotIn,
