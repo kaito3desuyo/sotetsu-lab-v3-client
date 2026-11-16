@@ -16,6 +16,11 @@ import { timetableEditGuard } from './timetable-edit.guard';
 const URL = '/timetable/update;calendar_id=c1;trip_block_id=b1';
 
 describe('timetableEditGuard', () => {
+    afterEach(() => {
+        document.cookie =
+            'loggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    });
+
     let notificationOpen: jest.Mock;
     let tokenFetch: jest.Mock;
     let router: Router;
@@ -26,6 +31,10 @@ describe('timetableEditGuard', () => {
         profileError = false,
     ): Promise<boolean | UrlTree> {
         notificationOpen = jest.fn();
+        // backend は登録者のセッションにだけ loggedIn の Cookie を立てる（UserState はこれで profile を取るか決める）
+        document.cookie = role
+            ? 'loggedIn=true; path=/'
+            : 'loggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         tokenFetch = jest.fn(() => of(undefined));
         TestBed.configureTestingModule({
             providers: [
