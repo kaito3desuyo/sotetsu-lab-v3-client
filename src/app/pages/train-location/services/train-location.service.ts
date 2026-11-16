@@ -114,8 +114,8 @@ export class TrainLocationService {
         }
 
         return this.#routeService.findOneWithStations({ routeId }).pipe(
-            tap(({ stations }) => {
-                const ordered = [...stations].sort(
+            tap((data) => {
+                const ordered = [...(data?.stations ?? [])].sort(
                     (a, b) =>
                         (a.stationSequence ?? 0) - (b.stationSequence ?? 0),
                 );

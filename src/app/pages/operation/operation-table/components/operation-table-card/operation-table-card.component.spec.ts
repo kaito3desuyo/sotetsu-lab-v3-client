@@ -406,8 +406,8 @@ describe('OperationTableCardComponent', () => {
             const rows = el.querySelectorAll('.op-row');
             const from = el.querySelector('.link-mid-trip-from') as Node;
             const to = el.querySelector('.link-mid-trip-to') as Node;
-            expect(from.textContent.trim()).toBe('↓ 17K から');
-            expect(to.textContent.trim()).toBe('↓ 17K へ');
+            expect(from.textContent?.trim()).toBe('↓ 17K から');
+            expect(to.textContent?.trim()).toBe('↓ 17K へ');
             // へ は 1 本目の下、から は 2 本目の上
             expect(
                 rows[0].compareDocumentPosition(to) &

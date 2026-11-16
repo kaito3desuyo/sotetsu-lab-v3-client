@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formation-details.dto';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { TimetableFormationStore } from './timetable-formation.store';
 
 describe('Store: TimetableFormation', () => {
@@ -74,13 +76,16 @@ describe('Store: TimetableFormation', () => {
     });
 
     it('todaysSightings に同日引き継ぎの写しを元の目撃と重ねて出さない', () => {
-        store.setFormation({ formationId: 'f1', formationNumber: '8713' });
+        store.setFormation({
+            formationId: 'f1',
+            formationNumber: '8713',
+        } as FormationDetailsDto);
         const original = {
             operationSightingId: 's1',
             formationId: 'f1',
             operationId: 'op16',
             sightingTime: '2026-11-11T09:00:00+09:00',
-        };
+        } as OperationSightingDetailsDto;
         store.setSightings([
             original,
             {
@@ -91,7 +96,7 @@ describe('Store: TimetableFormation', () => {
                     operationId: 'op16',
                     operationNumber: '16K',
                 },
-            },
+            } as OperationSightingDetailsDto,
         ]);
         expect(
             store.todaysSightings().map((s) => s.operationSightingId),

@@ -39,7 +39,7 @@
                         </mat-option>
                     }
                 </mat-select>
-                @if (form.get('calendarId').hasError('required')) {
+                @if (form.controls.calendarId.hasError('required')) {
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 }
             </mat-form-field>
@@ -81,7 +81,7 @@
                         </mat-option>
                     }
                 </mat-select>
-                @if (form.get('stationId').hasError('required')) {
+                @if (form.controls.stationId.hasError('required')) {
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 }
             </mat-form-field>

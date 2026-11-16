@@ -76,8 +76,8 @@ export class LoginComponent {
 
         const result = await tryCatchAsync<void, FetchError>(
             this.#authService.login({
-                username,
-                password,
+                username: username ?? '',
+                password: password ?? '',
             }),
         );
 

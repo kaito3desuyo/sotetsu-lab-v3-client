@@ -69,7 +69,9 @@ export const RouteStationListState = signalStore(
         stations: () => {
             const stations = flatten(
                 entities().map((route) =>
-                    route.routeStationLists.map((rsl) => rsl.station),
+                    (route.routeStationLists ?? []).flatMap((rsl) =>
+                        rsl.station ? [rsl.station] : [],
+                    ),
                 ),
             );
             return uniqBy(stations, (o) => o.stationId);
@@ -92,7 +94,7 @@ export const RouteStationListState = signalStore(
                                           serviceId: services[0].serviceId,
                                       })
                                       .pipe(
-                                          map((result) => result.routes ?? []),
+                                          map((result) => result?.routes ?? []),
                                       )
                                 : of([] as ServiceRouteDto[]),
                         ),
@@ -103,7 +105,7 @@ export const RouteStationListState = signalStore(
                             .map((o) => ({
                                 ...o,
                                 routeStationLists: Array.from(
-                                    o.routeStationLists,
+                                    o.routeStationLists ?? [],
                                 ).sort((a, b) =>
                                     desc.some((rn) => o.routeName === rn)
                                         ? b.stationSequence - a.stationSequence

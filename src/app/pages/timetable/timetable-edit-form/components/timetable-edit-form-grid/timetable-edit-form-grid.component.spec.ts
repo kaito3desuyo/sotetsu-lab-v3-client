@@ -170,9 +170,9 @@ describe('TimetableEditFormGridComponent', () => {
         el.value = '1150';
         el.dispatchEvent(new Event('blur'));
 
-        expect(times().at(0).get('stopType').value).toBe(S.STOP);
-        expect(times().at(0).get('stopType').dirty).toBe(true);
-        expect(times().at(0).get('departureTime').value).toBe('11:50');
+        expect(times().at(0).get('stopType')?.value).toBe(S.STOP);
+        expect(times().at(0).get('stopType')?.dirty).toBe(true);
+        expect(times().at(0).get('departureTime')?.value).toBe('11:50');
     });
 
     it('終着の発はその駅の行にフォーカスがある間だけ打てる（上から順に打つと最後の駅が毎回終着になるため）', () => {
@@ -193,7 +193,7 @@ describe('TimetableEditFormGridComponent', () => {
         fixture.detectChanges();
         expect(input('3030 二俣川 発').disabled).toBe(true);
         // 値はフォームに残し（次の駅を打てば出てくる）、灰色のセルは空に見せる
-        expect(times().at(3).get('departureTime').value).toBe('12:12');
+        expect(times().at(3).get('departureTime')?.value).toBe('12:12');
         expect(input('3030 二俣川 発').value).toBe('');
     });
 
@@ -213,7 +213,7 @@ describe('TimetableEditFormGridComponent', () => {
         keydown(arrival, 'ArrowRight');
         fixture.detectChanges();
 
-        expect(times().at(3).get('stopType').value).toBe(S.STOP);
+        expect(times().at(3).get('stopType')?.value).toBe(S.STOP);
         expect(input('3030 二俣川 発')).toHaveFocus();
         expect(input('3030 二俣川 発').disabled).toBe(false);
     });
@@ -268,7 +268,7 @@ describe('TimetableEditFormGridComponent', () => {
         button.click();
         fixture.detectChanges();
 
-        expect(times().at(0).get('stopType').value).toBe(S.STOP);
+        expect(times().at(0).get('stopType')?.value).toBe(S.STOP);
         expect(component.messages()).toEqual(['3030: 停車駅が 2 つ以上必要']);
     });
 
@@ -283,12 +283,12 @@ describe('TimetableEditFormGridComponent', () => {
         };
 
         click();
-        expect(control.value).toBe(S.PASS);
-        expect(control.dirty).toBe(true);
+        expect(control?.value).toBe(S.PASS);
+        expect(control?.dirty).toBe(true);
         click();
-        expect(control.value).toBe(S.NOT_GOING_THROUGH);
+        expect(control?.value).toBe(S.NOT_GOING_THROUGH);
         click();
-        expect(control.value).toBe(S.STOP);
+        expect(control?.value).toBe(S.STOP);
     });
 
     it('フォーカスで数字 4 桁、外れると HH:mm にして control へ入れる', () => {
@@ -301,8 +301,8 @@ describe('TimetableEditFormGridComponent', () => {
         el.value = '1203';
         el.dispatchEvent(new Event('blur'));
 
-        expect(times().at(2).get('departureTime').value).toBe('12:03');
-        expect(times().at(2).get('departureTime').dirty).toBe(true);
+        expect(times().at(2).get('departureTime')?.value).toBe('12:03');
+        expect(times().at(2).get('departureTime')?.dirty).toBe(true);
         expect(el.value).toBe('12:03');
     });
 
@@ -314,7 +314,7 @@ describe('TimetableEditFormGridComponent', () => {
         el.value = '958';
         el.dispatchEvent(new Event('blur'));
 
-        expect(times().at(0).get('departureTime').value).toBe('09:58');
+        expect(times().at(0).get('departureTime')?.value).toBe('09:58');
     });
 
     it('読めない入力は元に戻し、空は時刻を消す', () => {
@@ -325,12 +325,12 @@ describe('TimetableEditFormGridComponent', () => {
         el.value = '99';
         el.dispatchEvent(new Event('blur'));
         expect(el.value).toBe('11:54');
-        expect(times().at(0).get('departureTime').value).toBe('11:54');
+        expect(times().at(0).get('departureTime')?.value).toBe('11:54');
 
         el.focus();
         el.value = '';
         el.dispatchEvent(new Event('blur'));
-        expect(times().at(0).get('departureTime').value).toBeNull();
+        expect(times().at(0).get('departureTime')?.value).toBeNull();
     });
 
     it('打鍵は数字 4 桁までに絞る', () => {
@@ -382,7 +382,7 @@ describe('TimetableEditFormGridComponent', () => {
                 tripClassColor: '#e60012',
             },
         ]);
-        tripsForm.at(0).get('tripClassId').setValue('tc-1');
+        tripsForm.at(0).get('tripClassId')?.setValue('tc-1');
         fixture.detectChanges();
 
         expect(component.columns()[0].destination).toBe('二俣川');

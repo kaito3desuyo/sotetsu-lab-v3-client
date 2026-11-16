@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
 import { AgencyDetailsDto } from '../../usecase/dtos/agency-details.dto';
 import { AgencyDtoBuilder } from '../builders/agency.dto.builder';
@@ -32,7 +33,9 @@ export class AgencyQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) => AgencyDtoBuilder.buildFromModel(o)),
+                    requireBody(res).map((o) =>
+                        AgencyDtoBuilder.buildFromModel(o),
+                    ),
                 ),
             );
     }

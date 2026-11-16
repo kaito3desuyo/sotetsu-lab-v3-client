@@ -5,11 +5,11 @@ import { StopModel } from './stop.model';
 export interface StationModel {
     id: string;
     stationName: string;
-    stationSubname: string;
+    stationSubname: string | null;
     stationType: number;
-    stationDescription: string;
-    stationLatlng: string;
-    stationUrl: string;
+    stationDescription: string | null;
+    stationLatlng: string | null;
+    stationUrl: string | null;
     wheelchairBoarding: boolean;
     createdAt: string;
     updatedAt: string;

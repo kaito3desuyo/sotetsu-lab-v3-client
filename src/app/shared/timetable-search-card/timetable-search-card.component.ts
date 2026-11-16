@@ -91,8 +91,8 @@ export class TimetableSearchCardComponent {
     });
 
     readonly selectedTripDirection = toSignal(
-        this.form.get('tripDirection').valueChanges,
-        { initialValue: this.form.get('tripDirection').value },
+        this.form.controls.tripDirection.valueChanges,
+        { initialValue: this.form.controls.tripDirection.value },
     );
 
     readonly calendars = inject(CalendarListState).calendars;
@@ -135,14 +135,13 @@ export class TimetableSearchCardComponent {
     }));
 
     constructor() {
-        this.form
-            .get('searchByStation')
-            .valueChanges.pipe(takeUntilDestroyed())
+        this.form.controls.searchByStation.valueChanges
+            .pipe(takeUntilDestroyed())
             .subscribe((bool) => {
                 if (bool) {
-                    this.form.get('stationId').enable();
+                    this.form.controls.stationId.enable();
                 } else {
-                    this.form.get('stationId').disable();
+                    this.form.controls.stationId.disable();
                 }
             });
 
@@ -154,7 +153,7 @@ export class TimetableSearchCardComponent {
     }
 
     onTripDirectionChange(value: number): void {
-        this.form.get('tripDirection').setValue(value);
+        this.form.controls.tripDirection.setValue(value);
     }
 
     submit(): void {

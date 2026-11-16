@@ -5,23 +5,23 @@ import { TripDetailsDto } from './trip-details.dto';
 export interface TripOperationListDetailsDto {
     tripOperationListId: string;
 
-    tripId?: string;
+    tripId: string;
 
-    operationId?: string;
+    operationId: string;
 
-    startTimeId?: string;
+    startTimeId: string | null;
 
-    endTimeId?: string;
+    endTimeId: string | null;
 
-    startStationId?: string;
+    startStationId: string | null;
 
-    endStationId?: string;
+    endStationId: string | null;
 
     nextTripOperationListId?: string | null;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     trip?: TripDetailsDto;
 
@@ -31,3 +31,10 @@ export interface TripOperationListDetailsDto {
 
     endTime?: TimeDetailsDto;
 }
+
+/** 運用の行程（include で trip・startTime・endTime を付けて取った区間）。API が必ず付ける */
+export type TripOperationListWithTimesDto = TripOperationListDetailsDto & {
+    trip: TripDetailsDto;
+    startTime: TimeDetailsDto;
+    endTime: TimeDetailsDto;
+};

@@ -44,7 +44,7 @@ describe('pruneAllLineTripBlocks', () => {
             block('x2'),
         ];
         const isListed = (trip: { tripBlockId?: string }) =>
-            trip.tripBlockId?.startsWith('x');
+            trip.tripBlockId?.startsWith('x') ?? false;
 
         expect(
             pruneAllLineTripBlocks(sorted, 2, isListed).map(

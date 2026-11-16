@@ -18,7 +18,9 @@ export class TripBlockCommand {
 
     readonly #v3ApiUrl = environment.apiUrl + '/v3/trip-blocks';
 
-    createMany(body: CreateTripBlockDto[]): Observable<TripBlockDetailsDto[]> {
+    createMany(
+        body: CreateTripBlockDto[],
+    ): Observable<TripBlockDetailsDto[] | null> {
         return this.#http
             .post<TripBlockModel[]>(
                 `${this.#v3ApiUrl}/bulk`,
@@ -39,7 +41,7 @@ export class TripBlockCommand {
     replaceOne(
         tripBlockId: string,
         body: ReplaceTripBlockDto,
-    ): Observable<TripBlockDetailsDto> {
+    ): Observable<TripBlockDetailsDto | null> {
         return this.#http
             .put<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}`,
@@ -58,7 +60,7 @@ export class TripBlockCommand {
     addTripToTripBlock(
         tripBlockId: string,
         body: AddTripToTripBlockDto,
-    ): Observable<TripBlockDetailsDto> {
+    ): Observable<TripBlockDetailsDto | null> {
         return this.#http
             .patch<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}/add-trip`,
@@ -77,7 +79,7 @@ export class TripBlockCommand {
     deleteTripFromTripBlock(
         tripBlockId: string,
         body: DeleteTripFromTripBlockDto,
-    ): Observable<TripBlockDetailsDto> {
+    ): Observable<TripBlockDetailsDto | null> {
         return this.#http
             .patch<TripBlockModel>(
                 `${this.#v3ApiUrl}/${tripBlockId}/delete-trip`,

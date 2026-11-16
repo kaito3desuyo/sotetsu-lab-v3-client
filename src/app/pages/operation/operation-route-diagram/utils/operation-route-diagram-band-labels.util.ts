@@ -17,13 +17,13 @@ const LABEL_CONNECTOR_GAP = 6;
 export const ROUTE_DIAGRAM_OUTSIDE_STUB_HALF = 8;
 
 /** `HH:mm:ss` を本番と同じ 4 桁（`HHmm`）にする */
-function formatTime(time: string | undefined): string {
+function formatTime(time: string | null | undefined): string {
     return time ? time.slice(0, 2) + time.slice(3, 5) : '';
 }
 
 /** 端の外側に書く字。隠した駅から付け替えた端は、時刻の前に本当の駅名を書く */
 function endLabel(
-    time: string | undefined,
+    time: string | null | undefined,
     hiddenStationName: string | undefined,
 ): string | undefined {
     if (!time) return undefined;

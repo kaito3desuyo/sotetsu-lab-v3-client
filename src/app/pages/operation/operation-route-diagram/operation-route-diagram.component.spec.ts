@@ -122,8 +122,8 @@ describe('OperationRouteDiagramComponent', () => {
 
         const labels = component.linkLabels();
 
-        expect(Object.keys(labels.midTrip)).toEqual(['t1', 't2']);
-        expect(labels.midTrip['t1']).toEqual(labels.midTrip['t2']);
+        expect(Object.keys(labels?.midTrip ?? {})).toEqual(['t1', 't2']);
+        expect(labels?.midTrip['t1']).toEqual(labels?.midTrip['t2']);
     });
 });
 
@@ -351,7 +351,7 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
                         findManyByCalendarId: ({ calendarId }) =>
                             calendarId === 'cal-broken'
                                 ? throwError(() => new Error('offline'))
-                                : of(byCalendar[calendarId] ?? []),
+                                : of(byCalendar[calendarId ?? ''] ?? []),
                     },
                 },
                 { provide: ActivatedRoute, useValue: { paramMap: paramMap$ } },
@@ -516,7 +516,9 @@ describe('OperationRouteDiagramComponent の帯の操作', () => {
             TestBed.inject(OperationService),
             'findManyByCalendarId',
         ).mockImplementation(({ calendarId }) =>
-            calendarId === 'cal-2' ? slow : of(byCalendar[calendarId] ?? []),
+            calendarId === 'cal-2'
+                ? slow
+                : of(byCalendar[calendarId ?? ''] ?? []),
         );
 
         const first = component.onCalendarChange('cal-2');
@@ -1181,7 +1183,10 @@ describe('OperationRouteDiagramComponent の URL の値', () => {
         await create({ operation_id: 'undefined' });
         setTitle.mockClear();
         const operationTrips: OperationTripsDto = {
-            operation: { operationId: OPERATION, operationNumber: '11' },
+            operation: {
+                operationId: OPERATION,
+                operationNumber: '11',
+            } as OperationDetailsDto,
             trips: [],
         };
         TestBed.inject(OperationRouteDiagramStore).setOperationTrips(

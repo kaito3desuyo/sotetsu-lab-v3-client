@@ -1,4 +1,4 @@
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from '../pipes/timetable-station-find-other-trips-in-same-trip-block.pipe';
 
 /** セルの上下の余白 */
@@ -31,7 +31,7 @@ const others = new TimetableStationFindOtherTripsInSameTripBlockPipe();
  *   （↪ の数はセルと同じ TimetableStationFindOtherTripsInSameTripBlockPipe で数える）
  */
 export function estimateStationRowHeight(
-    trips: readonly TripDetailsDto[],
+    trips: readonly TripWithTimesDto[],
     showCurrentFormation: boolean,
 ): number {
     const cells = trips.reduce(
@@ -42,7 +42,7 @@ export function estimateStationRowHeight(
 }
 
 function estimateCellHeight(
-    trip: TripDetailsDto,
+    trip: TripWithTimesDto,
     showCurrentFormation: boolean,
 ): number {
     const hasOperation = (trip.tripOperationLists?.length ?? 0) !== 0;

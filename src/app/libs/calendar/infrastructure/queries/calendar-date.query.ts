@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
 import { CalendarDateDetailsDto } from '../../usecase/dtos/calendar-date-details.dto';
 import { CalendarDateDtoBuilder } from '../builders/calendar-date.dto.builder';
@@ -44,7 +45,7 @@ export class CalendarDateQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) =>
+                    requireBody(res).map((o) =>
                         CalendarDateDtoBuilder.buildFromModel(o),
                     ),
                 ),

@@ -85,7 +85,9 @@ export class OperationRouteDiagramRouteFilterComponent {
                 const agencyId = agencyIdByRoute.get(String(option.value));
                 return {
                     ...option,
-                    group: agencyId ? agencyNameById.get(agencyId) : undefined,
+                    group: agencyId
+                        ? (agencyNameById.get(agencyId) ?? undefined)
+                        : undefined,
                 };
             });
     });

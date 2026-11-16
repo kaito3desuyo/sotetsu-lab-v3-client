@@ -88,7 +88,7 @@ describe('RouteStationListState', () => {
             store
                 .routeStations()
                 .find((r) => r.routeId === routeId)
-                .routeStationLists.map((rsl) => rsl.stationId);
+                ?.routeStationLists?.map((rsl) => rsl.stationId);
         expect(stationIdsOf('r-2')).toEqual(['h1', 'h2', 'h3']);
         expect(stationIdsOf('r-1')).toEqual(['t3', 't2', 't1']);
     });

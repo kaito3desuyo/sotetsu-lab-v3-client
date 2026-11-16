@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.enum';
 import { TimetableAllLineUtil } from '../utils/timetable-all-line.util';
 
@@ -21,12 +21,12 @@ export class TimetableAllLineGetTimePipe implements PipeTransform {
         tripDirection: 0 | 1;
         mode: 'arrival' | 'departure';
         station: StationDetailsDto;
-        trip: TripDetailsDto;
+        trip: TripWithTimesDto;
         stations: StationDetailsDto[];
-        previousTrip?: TripDetailsDto;
+        previousTrip?: TripWithTimesDto;
         viewModes: ReadonlyMap<string, ETimetableAllLineStationViewMode>;
         bordersAfter: ReadonlyMap<string, boolean>;
-    }): string {
+    }): string | undefined {
         return TimetableAllLineUtil.getTime({
             tripDirection,
             mode,

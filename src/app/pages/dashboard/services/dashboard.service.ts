@@ -151,6 +151,9 @@ export class DashboardService {
                           })
                           .pipe(
                               tap((position) => {
+                                  if (!position) {
+                                      return;
+                                  }
                                   this.#store.setLatestSightingPosition(
                                       sighting.operationSightingId,
                                       position,

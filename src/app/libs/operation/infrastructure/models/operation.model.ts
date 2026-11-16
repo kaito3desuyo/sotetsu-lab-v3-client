@@ -2,9 +2,9 @@ import { CalendarModel } from 'src/app/libs/calendar/infrastructure/models/calen
 
 export interface OperationModel {
     id: string;
-    calendarId?: string;
-    operationNumber?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    calendarId: string;
+    operationNumber: string;
+    createdAt: string;
+    updatedAt: string;
     calendar?: CalendarModel;
 }

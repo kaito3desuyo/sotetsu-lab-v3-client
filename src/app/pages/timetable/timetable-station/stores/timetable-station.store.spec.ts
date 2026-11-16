@@ -51,7 +51,7 @@ describe('TimetableStationStore', () => {
         // 付与された tripBlock を直接見る。↪ に出すかどうか（この先の列車だけ）は
         // TimetableStationFindOtherTripsInSameTripBlockPipe の責務で、その spec で確かめる
         const trip = data[0].trips[0];
-        const tripNumbers = trip.tripBlock.trips.map((o) => o.tripNumber);
+        const tripNumbers = trip.tripBlock?.trips.map((o) => o.tripNumber);
 
         expect(tripNumbers).toEqual(['9436', '6436']);
     });

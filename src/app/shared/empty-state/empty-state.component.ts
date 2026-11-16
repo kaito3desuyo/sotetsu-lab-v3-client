@@ -27,11 +27,11 @@ import { AppButtonComponent } from '../app-button/app-button.component';
     host: { class: 'tw-block tw-rounded-card tw-bg-white' },
 })
 export class EmptyStateComponent {
-    readonly icon = input<string>(undefined);
+    readonly icon = input<string | undefined>(undefined);
     readonly message = input.required<string>();
     /** 説明2行目（補足文）。mockup-07 の「ダイヤまたは方向を変えて…」に対応。省略時は非表示。 */
-    readonly subtitle = input<string>(undefined);
-    readonly actionLabel = input<string>(undefined);
+    readonly subtitle = input<string | undefined>(undefined);
+    readonly actionLabel = input<string | undefined>(undefined);
     /** メッセージを見出し（h2）にするか。null なら p のまま（見た目は同じ） */
     readonly headingLevel = input<'h2' | null>(null);
 

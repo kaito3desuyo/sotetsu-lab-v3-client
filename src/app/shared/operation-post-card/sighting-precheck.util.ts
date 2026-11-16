@@ -4,12 +4,16 @@ import { FormationDetailsDto } from 'src/app/libs/formation/usecase/dtos/formati
 /** 指定時刻を日本時間の営業日（4 時の境目）の時点にする。currentTime なら now をそのまま ISO に */
 export function toSightingTimeIso(params: {
     timeSetting: 'currentTime' | 'specifiedTime';
-    sightingTime: string;
+    /** 現在時刻のときは入力欄が無効で値が無い */
+    sightingTime: string | undefined;
     now: Date;
 }): string {
     const { timeSetting, sightingTime, now } = params;
     if (timeSetting !== 'specifiedTime') return now.toISOString();
 
+    if (sightingTime === undefined) {
+        throw new TypeError('sightingTime is required for specifiedTime.');
+    }
     const [hours, minutes] = sightingTime.split(':').map(Number);
     return railwayTimeToInstant(now, hours, minutes).toISOString();
 }

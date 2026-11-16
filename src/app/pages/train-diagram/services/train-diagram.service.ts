@@ -128,6 +128,9 @@ export class TrainDiagramService {
             .findOneTimeCrossSectionByOperationNumber({ operationNumber })
             .pipe(
                 tap((data) => {
+                    if (!data) {
+                        return;
+                    }
                     this.#store.setOperationSightingTimeCrossSection(
                         operationNumber,
                         data,

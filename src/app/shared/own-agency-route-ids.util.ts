@@ -12,7 +12,10 @@ const OWN_AGENCY_NAME = '相鉄';
  * agency 情報が未取得/自社路線が1つも解決できない場合は、全路線にフォールバックする。
  */
 export function ownAgencyRouteIds(
-    routes: readonly Pick<RouteDetailsDto, 'routeId' | 'agencyId'>[],
+    routes: readonly {
+        routeId: RouteDetailsDto['routeId'];
+        agencyId?: RouteDetailsDto['agencyId'];
+    }[],
     agencies: readonly AgencyDetailsDto[],
 ): string[] {
     const ownAgencyIds = new Set(

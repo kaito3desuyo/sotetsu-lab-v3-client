@@ -97,7 +97,7 @@ export function buildTripFormGroup({
                       null)
                     : null) as string | null,
             ],
-        });
+        }) as ITimetableEditFormTrip;
     }
 
     return fb.group({
@@ -122,7 +122,7 @@ export function buildTripFormGroup({
         operationId: [''],
         tripOperationLists: [[] as ITimetableEditFormOriginalSegment[]],
         nextTripOperationListId: [null as string | null],
-    });
+    }) as ITimetableEditFormTrip;
 }
 
 /** 1 駅ぶんの時刻のフォーム。乗降とも扱わない駅は通過、時刻は `HH:mm` にする */
@@ -162,18 +162,18 @@ function buildTripTimeFormGroup({
                       )
                     : null,
             ],
-        });
+        }) as ITimetableEditFormTripTime;
     }
 
     return fb.group({
-        timeId: [null],
-        tripId: [null],
+        timeId: [null as string | null],
+        tripId: [null as string | null],
         stationId: [station.stationId, [Validators.required]],
-        stopId: [null],
+        stopId: [null as string | null],
         stopType: [
             ETimetableEditFormStopType.NOT_GOING_THROUGH as ETimetableEditFormStopType,
         ],
-        arrivalTime: [null],
-        departureTime: [null],
-    });
+        arrivalTime: [null as string | null],
+        departureTime: [null as string | null],
+    }) as ITimetableEditFormTripTime;
 }

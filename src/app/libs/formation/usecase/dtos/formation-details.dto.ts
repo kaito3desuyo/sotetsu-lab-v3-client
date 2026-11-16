@@ -3,21 +3,21 @@ import { AgencyDetailsDto } from 'src/app/libs/agency/usecase/dtos/agency-detail
 export interface FormationDetailsDto {
     formationId: string;
 
-    agencyId?: string;
+    agencyId: string;
 
-    vehicleType?: string;
+    vehicleType: string;
 
-    formationNumber?: string;
+    formationNumber: string;
 
-    formationDescription?: string;
+    formationDescription: string | null;
 
-    startDate?: string;
+    startDate: string | null;
 
-    endDate?: string;
+    endDate: string | null;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     agency?: AgencyDetailsDto;
 }

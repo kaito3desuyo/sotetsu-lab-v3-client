@@ -43,7 +43,7 @@ export function filterRealTimeOperations<
             return false;
         }
         const expectedFormation =
-            timeCrossSections[operation.operationNumber]?.expectedSighting
+            timeCrossSections[operation.operationNumber ?? '']?.expectedSighting
                 ?.formation;
         const agencyId = expectedFormation
             ? formations.find(

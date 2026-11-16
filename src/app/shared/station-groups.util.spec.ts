@@ -64,7 +64,7 @@ describe('buildStationGroups', () => {
                 routeName: '埼京線',
                 routeStationLists: [],
             },
-        ] as RouteDetailsDto[];
+        ] as unknown as RouteDetailsDto[];
 
         expect(buildStationGroups(routes, agencies)[0].label).toBe('埼京線');
     });

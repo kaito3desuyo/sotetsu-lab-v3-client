@@ -1,6 +1,6 @@
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 /**
  * 運行（trip-block）の一覧から、その駅に停まる列車を API `/v3/trips/station/:stationId` と同じ条件・順で取り出す。
@@ -10,10 +10,10 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
  * 方向ごとの運行は取得結果がキャッシュされるので、駅を切り替えても取り直さずに済む。
  */
 export function stationTrips(
-    tripBlocks: readonly TripBlockDetailsDto[],
+    tripBlocks: readonly TripBlockWithTripsDto[],
     stationId: string,
     tripDirection: number,
-): TripDetailsDto[] {
+): TripWithTimesDto[] {
     return tripBlocks
         .flatMap((block) => block.trips ?? [])
         .filter((trip) => trip.tripDirection === tripDirection)
@@ -24,7 +24,9 @@ export function stationTrips(
             ),
         }))
         .filter(
-            (entry): entry is { trip: TripDetailsDto; time: TimeDetailsDto } =>
+            (
+                entry,
+            ): entry is { trip: TripWithTimesDto; time: TimeDetailsDto } =>
                 !!entry.time && stopsAt(entry.time),
         )
         .sort((a, b) => compareStationTime(a.time, b.time))

@@ -1,13 +1,13 @@
 export interface AgencyModel {
     id: string;
-    agencyNumber?: string;
-    parentAgencyNumber?: string;
-    agencyOfficialName?: string;
-    agencyName?: string;
-    agencyType?: number;
-    agencyUrl?: string;
-    agencyPhone?: string;
-    agencyFareUrl?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    agencyNumber: string;
+    parentAgencyNumber: string | null;
+    agencyOfficialName: string;
+    agencyName: string | null;
+    agencyType: number;
+    agencyUrl: string | null;
+    agencyPhone: string | null;
+    agencyFareUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
 }

@@ -97,6 +97,7 @@ export function findTimeOrderErrors(
 
         if (
             field &&
+            current &&
             prev &&
             toServiceMinutes(prev.time) > toServiceMinutes(current)
         ) {

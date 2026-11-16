@@ -82,7 +82,7 @@ export class OperationRealTimeFilterComponent {
             this.routes(),
         ).map((agency) => ({
             value: agency.agencyId,
-            label: agency.agencyName,
+            label: agency.agencyName ?? '',
         }));
     });
 

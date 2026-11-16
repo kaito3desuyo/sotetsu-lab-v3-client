@@ -5,8 +5,12 @@ import { Observable, forkJoin } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
-import { TripBlockDetailsDto } from '../../usecase/dtos/trip-block-details.dto';
+import {
+    TripBlockDetailsDto,
+    TripBlockWithTripsDto,
+} from '../../usecase/dtos/trip-block-details.dto';
 import { TripBlockFields } from '../../usecase/trip-block-fields';
 import { TripBlockDtoBuilder } from '../builders/trip-block.dto.builder';
 import { TripBlockModel } from '../models/trip-block.model';
@@ -36,7 +40,7 @@ export class TripBlockQuery {
         forceReload?: boolean;
         /** HTTP 要求に渡す文脈。キャッシュの鍵には入れない（応答の中身は変わらない） */
         context?: HttpContext;
-    }): Observable<TripBlockDetailsDto[]> {
+    }): Observable<TripBlockWithTripsDto[]> {
         const { calendarId, tripDirection, fields, forceReload, context } =
             params;
 
@@ -70,7 +74,12 @@ export class TripBlockQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) => TripBlockDtoBuilder.buildFromModel(o)),
+                    requireBody(res).map(
+                        (o) =>
+                            TripBlockDtoBuilder.buildFromModel(
+                                o,
+                            ) as TripBlockWithTripsDto,
+                    ),
                 ),
             );
     }
@@ -85,7 +94,7 @@ export class TripBlockQuery {
         calendarId: string;
         fields?: TripBlockFields;
         forceReload?: boolean;
-    }): Observable<Record<number, TripBlockDetailsDto[]>> {
+    }): Observable<Record<number, TripBlockWithTripsDto[]>> {
         const { calendarId, fields, forceReload } = params;
 
         return this.#cache.get({
@@ -113,7 +122,7 @@ export class TripBlockQuery {
     findOneById(params: {
         id: string;
         forceReload?: boolean;
-    }): Observable<TripBlockDetailsDto> {
+    }): Observable<TripBlockWithTripsDto | null> {
         const { id, forceReload } = params;
 
         return this.#cache
@@ -131,7 +140,9 @@ export class TripBlockQuery {
                 map(
                     (res) =>
                         res.body &&
-                        TripBlockDtoBuilder.buildFromModel(res.body),
+                        (TripBlockDtoBuilder.buildFromModel(
+                            res.body,
+                        ) as TripBlockWithTripsDto),
                 ),
             );
     }

@@ -1,10 +1,5 @@
 import { inject } from '@angular/core';
-import {
-    patchState,
-    signalStore,
-    withMethods,
-    withState,
-} from '@ngrx/signals';
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { addMinutes, getUnixTime } from 'date-fns';
 import { Observable, of } from 'rxjs';
 import { catchError, map, mergeMap, tap } from 'rxjs/operators';
@@ -12,7 +7,8 @@ import { withAppDevtools } from '../core/store-features/with-app-devtools';
 import { AuthService } from '../libs/auth/usecase/auth.service';
 import { TokenDetailsDto } from '../libs/auth/usecase/dtos/token-details.dto';
 
-type State = TokenDetailsDto;
+/** 未取得・ゲストは全部 null */
+type State = { [K in keyof TokenDetailsDto]: TokenDetailsDto[K] | null };
 
 const EMPTY_TOKEN: State = {
     accessToken: null,

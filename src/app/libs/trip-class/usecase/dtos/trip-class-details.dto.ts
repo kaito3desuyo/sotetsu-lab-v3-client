@@ -3,17 +3,17 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 export interface TripClassDetailsDto {
     tripClassId: string;
 
-    serviceId?: string;
+    serviceId: string;
 
-    tripClassName?: string;
+    tripClassName: string;
 
-    tripClassColor?: string;
+    tripClassColor: string;
 
-    sequence?: number;
+    sequence: number;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     trips?: TripDetailsDto[];
 

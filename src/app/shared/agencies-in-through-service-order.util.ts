@@ -35,11 +35,11 @@ export const THROUGH_SERVICE_AGENCY_ORDER = [
  */
 export function agenciesInThroughServiceOrder(
     agencies: readonly AgencyDetailsDto[],
-    routes: readonly Pick<RouteDetailsDto, 'agencyId'>[],
+    routes: readonly { agencyId?: RouteDetailsDto['agencyId'] }[],
 ): AgencyDetailsDto[] {
     const order: readonly string[] = THROUGH_SERVICE_AGENCY_ORDER;
     const rank = (agency: AgencyDetailsDto): [number, number] => {
-        const known = order.indexOf(agency.agencyName);
+        const known = order.indexOf(agency.agencyName ?? '');
         const routeIndex = routes.findIndex(
             (route) => route.agencyId === agency.agencyId,
         );

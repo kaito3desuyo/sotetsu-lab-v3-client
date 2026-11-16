@@ -1,4 +1,4 @@
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { TimetableStationFindOtherTripsInSameTripBlockPipe } from './timetable-station-find-other-trips-in-same-trip-block.pipe';
 
 /** 始発駅の発車だけを持つ最小の trip。 */
@@ -6,7 +6,7 @@ function trip(
     tripId: string,
     departureTime: string | null,
     departureDays = 1,
-): TripDetailsDto {
+): TripWithTimesDto {
     return {
         tripId,
         times: departureTime
@@ -19,19 +19,19 @@ function trip(
                   },
               ]
             : [],
-    } as TripDetailsDto;
+    } as TripWithTimesDto;
 }
 
-function withBlock(self: TripDetailsDto, trips: TripDetailsDto[]) {
+function withBlock(self: TripWithTimesDto, trips: TripWithTimesDto[]) {
     return {
         ...self,
         tripBlock: { tripBlockId: 'b', trips: [self, ...trips] },
-    } as TripDetailsDto;
+    } as TripWithTimesDto;
 }
 
 describe('TimetableStationFindOtherTripsInSameTripBlockPipe', () => {
     const pipe = new TimetableStationFindOtherTripsInSameTripBlockPipe();
-    const ids = (trips: TripDetailsDto[]) => trips.map((t) => t.tripId);
+    const ids = (trips: TripWithTimesDto[]) => trips.map((t) => t.tripId);
 
     it('この列車より後に出る列車だけを返す（前の区間は返さない）', () => {
         const self = trip('self', '06:20:00');
@@ -78,7 +78,7 @@ describe('TimetableStationFindOtherTripsInSameTripBlockPipe', () => {
                     arrivalDays: 1,
                 },
             ],
-        } as TripDetailsDto;
+        } as TripWithTimesDto;
 
         expect(ids(pipe.transform(withBlock(self, [arrivalOnly])))).toEqual([
             'arrival-only',

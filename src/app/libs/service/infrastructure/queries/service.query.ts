@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { StationDtoBuilder } from 'src/app/libs/station/infrastructure/builders/station.dto.builder';
 import { environment } from 'src/environments/environment';
@@ -51,7 +52,9 @@ export class ServiceQuery {
             })
             .pipe(
                 map((res) =>
-                    res.body.map((o) => ServiceDtoBuilder.buildFromModel(o)),
+                    requireBody(res).map((o) =>
+                        ServiceDtoBuilder.buildFromModel(o),
+                    ),
                 ),
             );
     }
@@ -82,24 +85,27 @@ export class ServiceQuery {
                 forceReload,
             })
             .pipe(
-                map((res) => ({
-                    service:
-                        (res.body.service &&
-                            ServiceDtoBuilder.buildFromModel(
-                                res.body.service,
-                            )) ??
-                        null,
-                    stations: res.body.stations.map((o) =>
-                        StationDtoBuilder.buildFromModel(o),
-                    ),
-                })),
+                map((res) => {
+                    const body = requireBody(res);
+                    return {
+                        service:
+                            (body.service &&
+                                ServiceDtoBuilder.buildFromModel(
+                                    body.service,
+                                )) ??
+                            null,
+                        stations: body.stations.map((o) =>
+                            StationDtoBuilder.buildFromModel(o),
+                        ),
+                    };
+                }),
             );
     }
 
     findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
-    }): Observable<ServiceAgenciesDto> {
+    }): Observable<ServiceAgenciesDto | null> {
         const { serviceId, forceReload } = params;
 
         return this.#cache
@@ -125,7 +131,7 @@ export class ServiceQuery {
     findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
-    }): Observable<ServiceRoutesDto> {
+    }): Observable<ServiceRoutesDto | null> {
         const { serviceId, forceReload } = params;
 
         return this.#cache

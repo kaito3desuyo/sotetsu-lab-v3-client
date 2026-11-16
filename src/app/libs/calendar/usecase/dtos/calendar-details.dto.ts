@@ -1,29 +1,29 @@
 export interface CalendarDetailsDto {
     calendarId: string;
 
-    serviceId?: string;
+    serviceId: string;
 
-    calendarName?: string;
+    calendarName: string;
 
-    sunday?: boolean;
+    sunday: boolean;
 
-    monday?: boolean;
+    monday: boolean;
 
-    tuesday?: boolean;
+    tuesday: boolean;
 
-    wednesday?: boolean;
+    wednesday: boolean;
 
-    thursday?: boolean;
+    thursday: boolean;
 
-    friday?: boolean;
+    friday: boolean;
 
-    saturday?: boolean;
+    saturday: boolean;
 
-    startDate?: string;
+    startDate: string;
 
     endDate?: string | null;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 }

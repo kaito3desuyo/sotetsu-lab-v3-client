@@ -105,7 +105,7 @@ describe('MyPageComponent', () => {
     it('要約の 4 つの内訳と注記を出す', async () => {
         await render();
 
-        const text = byId('my-page-summary').textContent;
+        const text = byId('my-page-summary')?.textContent;
         expect(text).toContain('14');
         expect(byId('summary-corroborated')).toHaveTextContent('裏付けあり');
         expect(byId('summary-corroborated')).toHaveTextContent('7');
@@ -140,7 +140,7 @@ describe('MyPageComponent', () => {
         });
 
         const label = (id: string) =>
-            byId(`corroboration-${id}`).textContent.trim();
+            byId(`corroboration-${id}`)?.textContent?.trim();
         expect(label('a')).toBe('裏付けあり');
         expect(label('b')).toBe('別の運用の目撃あり');
         expect(label('c')).toBe('他の目撃なし');
@@ -169,7 +169,7 @@ describe('MyPageComponent', () => {
         expect(row).toHaveTextContent('12K');
         expect(row).toHaveTextContent('9703');
         expect(
-            row.querySelector('a[href*="/timetable/formation"]'),
+            row?.querySelector('a[href*="/timetable/formation"]'),
         ).toHaveAttribute(
             'href',
             '/timetable/formation;formation_number=9703;date=2026-11-02',
@@ -212,9 +212,9 @@ describe('MyPageComponent', () => {
         sightingApi.findManyMine.mockReturnValue(of([sighting('older')]));
 
         const button = Array.from(el().querySelectorAll('button')).find((b) =>
-            b.textContent.includes('もっと見る'),
+            b.textContent?.includes('もっと見る'),
         );
-        button.click();
+        button?.click();
         await settle();
 
         expect(sightingApi.findManyMine).toHaveBeenLastCalledWith({
@@ -249,9 +249,9 @@ describe('MyPageComponent', () => {
 
         userApi.findMySummary.mockReturnValue(of(mySummary()));
         const button = Array.from(el().querySelectorAll('button')).find((b) =>
-            b.textContent.includes('再読み込み'),
+            b.textContent?.includes('再読み込み'),
         );
-        button.click();
+        button?.click();
         await settle();
 
         expect(byId('my-page-summary')).not.toBeNull();

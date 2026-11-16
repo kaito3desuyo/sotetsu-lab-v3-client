@@ -18,7 +18,7 @@
     class="tw-grid tw-min-w-0 tw-grid-cols-[2.75rem_minmax(0,1fr)] tw-gap-x-2 tw-p-1.5"
 >
     @let operationNumber =
-        trip().tripOperationLists[0]?.operationId
+        trip().tripOperationLists?.[0]?.operationId
             | findById
                 : {
                       array: operations(),
@@ -39,7 +39,7 @@
     @let hasPostButton =
         showCurrentFormation() &&
         !!operationNumber &&
-        trip().tripOperationLists.length !== 0;
+        (trip().tripOperationLists?.length ?? 0) !== 0;
     @let currentFormationNumber =
         timeCrossSection?.expectedSighting?.formation?.formationNumber;
     @let currentFormationDayCount =
@@ -74,7 +74,7 @@
             }
         </div>
 
-        @if (trip().tripOperationLists.length !== 0) {
+        @if ((trip().tripOperationLists?.length ?? 0) !== 0) {
             <app-operation-number-tag
                 [operationNumber]="operationNumber"
                 [link]="[

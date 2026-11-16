@@ -5,7 +5,7 @@ import { ETimetableAllLineStationViewMode } from '../enums/timetable-all-line.en
 export function getViewMode(
     station: StationDetailsDto,
     tripDirection: 0 | 1,
-): ETimetableAllLineStationViewMode {
+): ETimetableAllLineStationViewMode | null {
     if (tripDirection === 0) {
         const departureAndArrival = [
             { routeName: ['川越線', '埼京線'], stationName: '大宮' },
@@ -71,8 +71,8 @@ export function getViewMode(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),
@@ -95,8 +95,8 @@ export function getViewMode(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),
@@ -171,8 +171,8 @@ export function getViewMode(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),
@@ -197,8 +197,8 @@ export function getViewMode(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),

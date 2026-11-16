@@ -221,7 +221,7 @@ describe('buildTrainLocationCards', () => {
             tripId: 't1',
             tripDirection: ETripDirection.INBOUND,
             times: [],
-        } as TripDetailsDto;
+        } as unknown as TripDetailsDto;
 
         const cards = buildTrainLocationCards(
             [block([trip])],
@@ -347,7 +347,7 @@ describe('buildTrainLocationCards', () => {
     });
 
     it('tripId が未定義の trip は結果に含めない', () => {
-        const trip: TripDetailsDto = { times: [] } as TripDetailsDto;
+        const trip: TripDetailsDto = { times: [] } as unknown as TripDetailsDto;
 
         const cards = buildTrainLocationCards(
             [block([trip])],

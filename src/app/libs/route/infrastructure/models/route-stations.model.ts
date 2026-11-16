@@ -8,5 +8,5 @@ export interface RouteStationsModel {
 
 export interface RouteStationModel extends StationModel {
     stationSequence: number;
-    stationNumbering: string;
+    stationNumbering: string | null;
 }

@@ -1,3 +1,4 @@
+import { CalendarModel } from '../models/calendar.model';
 import { CalendarDtoBuilder } from './calendar.dto.builder';
 
 describe('CalendarDtoBuilder', () => {
@@ -6,7 +7,7 @@ describe('CalendarDtoBuilder', () => {
             id: 'c-1',
             calendarName: '平日ダイヤ',
             endDate: null,
-        });
+        } as CalendarModel);
 
         expect(dto).toEqual({
             calendarId: 'c-1',

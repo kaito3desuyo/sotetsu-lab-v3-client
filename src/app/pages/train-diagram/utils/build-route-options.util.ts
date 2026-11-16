@@ -25,6 +25,8 @@ export function buildRouteOptions(
     ).map((route) => ({
         value: route.routeId,
         label: route.routeName ?? '',
-        group: route.agencyId ? agencyNameById.get(route.agencyId) : undefined,
+        group: route.agencyId
+            ? (agencyNameById.get(route.agencyId) ?? undefined)
+            : undefined,
     }));
 }

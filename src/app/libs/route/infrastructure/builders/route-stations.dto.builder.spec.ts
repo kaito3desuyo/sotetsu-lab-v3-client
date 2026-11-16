@@ -1,9 +1,10 @@
+import { RouteModel } from '../models/route.model';
 import { RouteStationsDtoBuilder } from './route-stations.dto.builder';
 
 describe('RouteStationsDtoBuilder', () => {
     it('路線と駅の id を付け替え、駅の並び順と駅番号を残す', () => {
         const dto = RouteStationsDtoBuilder.buildFromModel({
-            route: { id: 'r-1', routeName: '本線' },
+            route: { id: 'r-1', routeName: '本線' } as RouteModel,
             stations: [
                 {
                     id: 'st-1',

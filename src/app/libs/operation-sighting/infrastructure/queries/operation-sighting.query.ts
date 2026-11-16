@@ -5,6 +5,7 @@ import { omitBy } from 'es-toolkit';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
 import { toFieldsParams } from 'src/app/core/utils/to-fields-params';
 import { environment } from 'src/environments/environment';
@@ -78,7 +79,9 @@ export class OperationSightingQuery {
             })
             .pipe(
                 map((res) =>
-                    OperationSightingDtoBuilder.buildFromModels(res.body),
+                    OperationSightingDtoBuilder.buildFromModels(
+                        requireBody(res),
+                    ),
                 ),
             );
     }
@@ -155,7 +158,7 @@ export class OperationSightingQuery {
     findOneTimeCrossSectionByOperationNumber(params: {
         operationNumber: string;
         forceReload?: boolean;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
+    }): Observable<OperationSightingTimeCrossSectionDto | null> {
         const { operationNumber, forceReload } = params;
 
         return this.#cache
@@ -187,7 +190,7 @@ export class OperationSightingQuery {
         formationNumber: string;
         searchTime?: string;
         forceReload?: boolean;
-    }): Observable<OperationSightingTimeCrossSectionDto> {
+    }): Observable<OperationSightingTimeCrossSectionDto | null> {
         const { formationNumber, searchTime, forceReload } = params;
 
         return this.#cache

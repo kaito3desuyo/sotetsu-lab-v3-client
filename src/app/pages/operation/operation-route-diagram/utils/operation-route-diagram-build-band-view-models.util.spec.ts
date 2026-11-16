@@ -1,5 +1,5 @@
 import { StationDetailsDto } from 'src/app/libs/station/usecase/dtos/station-details.dto';
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { buildBandViewModels } from './operation-route-diagram-build-band-view-models.util';
 
 function station(stationId: string, stationName: string): StationDetailsDto {
@@ -14,7 +14,7 @@ const stations = [
 
 function tripOperationList(
     overrides: Record<string, unknown> = {},
-): TripOperationListDetailsDto {
+): TripOperationListWithTimesDto {
     return {
         tripOperationListId: 'tol-1',
         startTime: {
@@ -39,7 +39,7 @@ function tripOperationList(
             },
         },
         ...overrides,
-    } as TripOperationListDetailsDto;
+    } as TripOperationListWithTimesDto;
 }
 
 describe('buildBandViewModels', () => {

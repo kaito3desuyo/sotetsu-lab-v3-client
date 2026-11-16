@@ -33,7 +33,7 @@ export class CalendarSelectDialogComponent {
 
     readonly calendars = inject(CalendarListState).calendars;
 
-    selected: CalendarDetailsDto['calendarId'] = undefined;
+    selected: CalendarDetailsDto['calendarId'] | undefined = undefined;
 
     close(calendarId?: CalendarDetailsDto['calendarId']): void {
         this.#dialogRef.close(calendarId);

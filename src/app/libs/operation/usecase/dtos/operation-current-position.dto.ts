@@ -1,18 +1,18 @@
-import { TripOperationListDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
+import { TripOperationListWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-operation-list-details.dto';
 import { OperationDetailsDto } from './operation-details.dto';
 
 export interface OperationCurrentPositionDto {
     operation: OperationDetailsDto;
 
-    prev?: TripOperationListDetailsDto | null;
+    prev?: TripOperationListWithTimesDto | null;
 
-    current?: TripOperationListDetailsDto | null;
+    current?: TripOperationListWithTimesDto | null;
 
-    next?: TripOperationListDetailsDto | null;
+    next?: TripOperationListWithTimesDto | null;
 
     position?: {
-        prev: TripOperationListDetailsDto;
-        current: TripOperationListDetailsDto;
-        next: TripOperationListDetailsDto;
+        prev: TripOperationListWithTimesDto;
+        current: TripOperationListWithTimesDto;
+        next: TripOperationListWithTimesDto;
     };
 }

@@ -1233,7 +1233,7 @@ describe('resolveArrival / resolveDeparture（toAbsoluteTime と同じ結果）'
             arrivalDays: days,
             departureTime: time,
             departureDays: days,
-        };
+        } as TimeDetailsDto;
         expect(resolveArrival(base, stop)?.getTime()).toBe(expected);
         expect(resolveDeparture(base, stop)?.getTime()).toBe(expected);
     });

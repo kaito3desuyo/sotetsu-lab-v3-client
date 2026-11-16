@@ -10,5 +10,5 @@ export interface RouteStationsDto {
 export interface RouteStationDto extends StationDetailsDto {
     stationSequence: number;
 
-    stationNumbering: string;
+    stationNumbering: string | null;
 }

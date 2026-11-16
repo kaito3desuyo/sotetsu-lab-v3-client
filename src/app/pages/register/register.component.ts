@@ -49,6 +49,9 @@ export class RegisterComponent {
     readonly #passwordsNotMatchValidator: ValidatorFn = (formGroup) => {
         const passwordControl = formGroup.get('password');
         const confirmPasswordControl = formGroup.get('confirmPassword');
+        if (!passwordControl || !confirmPasswordControl) {
+            return null;
+        }
 
         const password = formGroup.get('password')?.value;
         const confirmPassword = formGroup.get('confirmPassword')?.value;
@@ -133,8 +136,8 @@ export class RegisterComponent {
 
         const result = await tryCatchAsync<void, FetchError>(
             this.#userService.registerUser({
-                username,
-                password,
+                username: username ?? '',
+                password: password ?? '',
             }),
         );
 

@@ -6,7 +6,7 @@ export type OperationPastTimeSearchParam = {
 };
 
 export type OperationPastTimeSearchForm = FormGroup<{
-    referenceDate: FormControl<Date>;
-    days: FormControl<number>;
-    includeInvalidated: FormControl<boolean>;
+    referenceDate: FormControl<Date | null>;
+    days: FormControl<number | null>;
+    includeInvalidated: FormControl<boolean | null>;
 }>;

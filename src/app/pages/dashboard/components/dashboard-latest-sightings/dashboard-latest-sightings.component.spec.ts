@@ -5,6 +5,7 @@ import { setAllEntities } from '@ngrx/signals/entities';
 import { unprotected } from '@ngrx/signals/testing';
 import { DeviceStorage } from 'src/app/core/storage/device-storage';
 import { TodaysFormationListState } from 'src/app/global-states/todays-formation-list.state';
+import { OperationSightingDetailsDto } from 'src/app/libs/operation-sighting/usecase/dtos/operation-sighting-details.dto';
 import { DashboardStore } from '../../stores/dashboard.store';
 import { DashboardLatestSightingsComponent } from './dashboard-latest-sightings.component';
 
@@ -58,11 +59,11 @@ describe('DashboardLatestSightingsComponent', () => {
             {
                 operationSightingId: 's1',
                 sightingTime: '2026-11-13T01:00:00.000Z',
-            },
+            } as OperationSightingDetailsDto,
             {
                 operationSightingId: 's2',
                 sightingTime: '2026-11-13T02:00:00.000Z',
-            },
+            } as OperationSightingDetailsDto,
         ]);
         fixture.detectChanges();
 
@@ -88,7 +89,7 @@ describe('DashboardLatestSightingsComponent', () => {
                 operationSightingId: 's1',
                 formationId: 'f-1',
                 sightingTime: '2026-11-13T01:00:00.000Z',
-            },
+            } as OperationSightingDetailsDto,
         ]);
         fixture.detectChanges();
 

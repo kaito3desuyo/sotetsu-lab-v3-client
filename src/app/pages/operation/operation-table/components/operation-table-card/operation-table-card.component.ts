@@ -61,7 +61,7 @@ export type RowEnd = {
     stationName: string;
     /** 駅名を 3 文字幅に収める横の縮尺（4 文字以上の駅名だけ 1 未満）。 */
     stationScale: number;
-    time: string;
+    time: string | null;
 };
 
 export type TripRow = {
@@ -170,7 +170,7 @@ export class OperationTableCardComponent {
         const tripClassById = this.#tripClassById();
         const trips = this.operationTrip().trips;
 
-        const end = (stationId: string, time: string): RowEnd => {
+        const end = (stationId: string, time: string | null): RowEnd => {
             const stationName = this.#formatStationName.transform(
                 stationNameById.get(stationId),
             );

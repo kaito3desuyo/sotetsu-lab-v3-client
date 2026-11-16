@@ -3,10 +3,10 @@ import { RouteModel } from './route.model';
 
 export interface RouteStationListModel {
     id: string;
-    routeId?: string;
-    stationId?: string;
-    stationSequence?: number;
-    stationNumbering?: string;
+    routeId: string;
+    stationId: string;
+    stationSequence: number;
+    stationNumbering: string | null;
     route?: RouteModel;
     station?: StationModel;
 }

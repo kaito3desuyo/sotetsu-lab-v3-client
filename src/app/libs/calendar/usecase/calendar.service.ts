@@ -17,14 +17,14 @@ export class CalendarService {
     findOne(params: {
         calendarId: string;
         forceReload?: boolean;
-    }): Observable<CalendarDetailsDto> {
+    }): Observable<CalendarDetailsDto | null> {
         return this.#calendarQuery.findOne(params);
     }
 
     findOneBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
-    }): Observable<CalendarDetailsDto> {
+    }): Observable<CalendarDetailsDto | null> {
         return this.#calendarQuery.findOneBySpecificDate(params);
     }
 }

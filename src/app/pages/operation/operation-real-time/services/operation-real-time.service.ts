@@ -36,7 +36,7 @@ export class OperationRealTimeService {
             })
             .pipe(
                 tap((data) => {
-                    this.#store.setRoutes(data.routes);
+                    this.#store.setRoutes(data?.routes ?? []);
                     this.#store.setAgencyOrder(
                         agenciesInThroughServiceOrder(
                             this.#agencyListState.agencies(),
@@ -88,7 +88,7 @@ export class OperationRealTimeService {
     }
 
     fetchOperations(): Observable<void> {
-        const calendarId = this.#store.calendar().calendarId;
+        const calendarId = this.#store.calendar()?.calendarId;
 
         return this.#operationService
             .findManyByCalendarId({

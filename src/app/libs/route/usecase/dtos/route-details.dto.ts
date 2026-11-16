@@ -3,27 +3,27 @@ import { RouteStationListDetailsDto } from './route-station-list-details.dto';
 export interface RouteDetailsDto {
     routeId: string;
 
-    agencyId?: string;
+    agencyId: string;
 
-    routeNumber?: string;
+    routeNumber: string | null;
 
-    routeName?: string;
+    routeName: string;
 
-    routeNickName?: string;
+    routeNickName: string | null;
 
-    routeDescription?: string;
+    routeDescription: string | null;
 
-    routeType?: number;
+    routeType: number;
 
-    routeUrl?: string;
+    routeUrl: string | null;
 
-    routeColor?: string;
+    routeColor: string | null;
 
-    routeTextColor?: string;
+    routeTextColor: string | null;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     routeStationLists?: RouteStationListDetailsDto[];
 }

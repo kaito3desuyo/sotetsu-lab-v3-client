@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 
 /**
  * 同じ運行（tripBlock）のうち、この列車より**後に走る**列車（この先の種別変更・直通）を返す。
@@ -15,10 +15,8 @@ import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto'
 @Pipe({
     name: 'timetableStationFindOtherTripsInSameTripBlock',
 })
-export class TimetableStationFindOtherTripsInSameTripBlockPipe
-    implements PipeTransform
-{
-    transform(trip: TripDetailsDto): TripDetailsDto[] {
+export class TimetableStationFindOtherTripsInSameTripBlockPipe implements PipeTransform {
+    transform(trip: TripWithTimesDto): TripWithTimesDto[] {
         const start = startSeconds(trip);
         return (trip.tripBlock?.trips ?? [])
             .filter((o) => o.tripId !== trip.tripId)
@@ -34,7 +32,7 @@ export class TimetableStationFindOtherTripsInSameTripBlockPipe
 }
 
 /** 始発駅（stopSequence 最小）の発車（無ければ到着）を、起点日 0 時からの秒で返す。 */
-function startSeconds(trip: TripDetailsDto): number | undefined {
+function startSeconds(trip: TripWithTimesDto): number | undefined {
     const first = (trip.times ?? []).reduce<TimeDetailsDto | undefined>(
         (min, time) =>
             min === undefined || time.stopSequence < min.stopSequence

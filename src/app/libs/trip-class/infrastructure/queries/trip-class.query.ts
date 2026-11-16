@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
 import { TripClassDetailsDto } from '../../usecase/dtos/trip-class-details.dto';
 import { TripClassDtoBuilder } from '../builders/trip-class.dto.builder';
@@ -30,6 +31,10 @@ export class TripClassQuery {
                     }),
                 forceReload,
             })
-            .pipe(map((res) => TripClassDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    TripClassDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 }

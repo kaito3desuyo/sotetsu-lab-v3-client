@@ -19,7 +19,7 @@
                     [for]="picker"
                 ></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
-                @if (form.get('referenceDate').hasError('required')) {
+                @if (form.controls.referenceDate.hasError('required')) {
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 }
             </mat-form-field>
@@ -38,14 +38,14 @@
                 />
                 <!-- 空のときはラベル「日数」が欄の中に座り、320px では後置の「日間」と
                      重なっていた。値が入ってラベルが枠の上へ退いてから出す -->
-                @if (form.get('days').value) {
+                @if (form.controls.days.value) {
                     <span matTextSuffix class="tw-whitespace-nowrap">日間</span>
                 }
-                @if (form.get('days').hasError('required')) {
+                @if (form.controls.days.hasError('required')) {
                     <mat-error> <strong>必須項目</strong>です </mat-error>
                 } @else if (
-                    form.get('days').hasError('min') ||
-                    form.get('days').hasError('max')
+                    form.controls.days.hasError('min') ||
+                    form.controls.days.hasError('max')
                 ) {
                     <mat-error>
                         <strong>1～30日間の範囲内</strong>で設定してください

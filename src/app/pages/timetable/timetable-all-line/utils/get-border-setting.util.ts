@@ -25,8 +25,8 @@ export function getBorderSetting(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),
@@ -64,8 +64,8 @@ export function getBorderSetting(
                 (o) =>
                     station.stationName === o.stationName &&
                     areArrayValuesEqual(
-                        station.routeStationLists.map(
-                            (rsl) => rsl.route.routeName,
+                        (station.routeStationLists ?? []).map(
+                            (rsl) => rsl.route?.routeName,
                         ),
                         o.routeName,
                     ),

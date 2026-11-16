@@ -35,7 +35,7 @@ import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { CalendarListState } from 'src/app/global-states/calendar-list.state';
 import { RouteStationListState } from 'src/app/global-states/route-station-list.state';
 import { UserState } from 'src/app/global-states/user.state';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { ETripDirection } from 'src/app/libs/trip/usecase/enums/trip.enum';
 import { LazyOptionsDirective } from 'src/app/shared/lazy-options/lazy-options.directive';
 import { LoadingService } from 'src/app/shared/loading/loading.service';
@@ -122,9 +122,12 @@ export class TimetableAllLineComponent {
     readonly skeletonRows = Array.from({ length: 24 }, (_, i) => i);
     /** 骨組みの列車の列の数 */
     readonly skeletonColumns = Array.from({ length: 30 }, (_, i) => i);
-    readonly calendar = computed(
-        () => this.#calendarListState.entityMap()[this.calendarId()],
-    );
+    readonly calendar = computed(() => {
+        const calendarId = this.calendarId();
+        return calendarId
+            ? this.#calendarListState.entityMap()[calendarId]
+            : undefined;
+    });
 
     readonly calendars = this.#calendarListState.calendars;
     readonly #routeStations = this.#routeStationListState.routeStations;
@@ -451,7 +454,7 @@ export class TimetableAllLineComponent {
         ]);
     }
 
-    onClickedEditButton(trip: TripDetailsDto): void {
+    onClickedEditButton(trip: TripWithTimesDto): void {
         this.#router.navigate([
             'timetable',
             'update',
@@ -462,7 +465,7 @@ export class TimetableAllLineComponent {
         ]);
     }
 
-    onClickedCopyButton(trip: TripDetailsDto): void {
+    onClickedCopyButton(trip: TripWithTimesDto): void {
         const dialogRef = this.#calendarSelectDialogService.open();
 
         dialogRef.afterClosed().subscribe((calendarId) => {
@@ -475,7 +478,7 @@ export class TimetableAllLineComponent {
         });
     }
 
-    onClickedDeleteButton(trip: TripDetailsDto): void {
+    onClickedDeleteButton(trip: TripWithTimesDto): void {
         const dialogRef = this.#confirmDialogService.open({
             width: '480px',
             data: {
@@ -521,8 +524,8 @@ export class TimetableAllLineComponent {
         base,
         target,
     }: {
-        base: TripDetailsDto;
-        target: TripDetailsDto;
+        base: TripWithTimesDto;
+        target: TripWithTimesDto;
     }): void {
         const dialogRef = this.#confirmDialogService.open({
             width: '480px',
@@ -569,8 +572,8 @@ export class TimetableAllLineComponent {
         base,
         target,
     }: {
-        base: TripDetailsDto;
-        target: TripDetailsDto;
+        base: TripWithTimesDto;
+        target: TripWithTimesDto;
     }): void {
         const dialogRef = this.#confirmDialogService.open({
             width: '480px',

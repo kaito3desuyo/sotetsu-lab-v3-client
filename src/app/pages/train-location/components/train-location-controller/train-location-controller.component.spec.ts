@@ -138,8 +138,8 @@ describe('TrainLocationControllerComponent', () => {
 
             const row = (fixture.nativeElement as HTMLElement).querySelector(
                 'app-segment-toggle',
-            ).parentElement;
-            const kinds = Array.from(row.children).map((child) => {
+            )?.parentElement;
+            const kinds = Array.from(row?.children ?? []).map((child) => {
                 if (child.matches('[data-clock]')) return 'time';
                 if (child.querySelector('input[type="time"]')) return 'time';
                 if (child.matches('[data-calendar-label]')) return 'calendar';

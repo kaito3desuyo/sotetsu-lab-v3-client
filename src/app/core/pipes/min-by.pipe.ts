@@ -5,7 +5,10 @@ import { minBy } from 'es-toolkit/compat';
     name: 'minBy',
 })
 export class MinByPipe implements PipeTransform {
-    transform<T>(array: T[], options: { propertyName: keyof T }): T {
+    transform<T>(
+        array: T[],
+        options: { propertyName: keyof T },
+    ): T | undefined {
         return minBy(array, (o) => o[options.propertyName]);
     }
 }

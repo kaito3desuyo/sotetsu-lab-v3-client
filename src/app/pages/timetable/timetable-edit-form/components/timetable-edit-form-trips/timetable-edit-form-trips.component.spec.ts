@@ -61,7 +61,7 @@ describe('TimetableEditFormTripsComponent', () => {
 
     it('ADD モードでは1件分の空 trip フォームで初期化される（現行と同じ既定挙動）', () => {
         expect(component.tripsForm.controls.length).toBe(1);
-        expect(component.tripsForm.controls[0].get('times').value.length).toBe(
+        expect(component.tripsForm.controls[0].get('times')?.value.length).toBe(
             stations.length,
         );
     });
@@ -74,7 +74,7 @@ describe('TimetableEditFormTripsComponent', () => {
             '二俣川',
         ]);
         // フォーム自体は駅データを保持したまま（全駅ぶんの times コントロールは維持）
-        expect(component.tripsForm.controls[0].get('times').value.length).toBe(
+        expect(component.tripsForm.controls[0].get('times')?.value.length).toBe(
             stations.length,
         );
     });
@@ -95,8 +95,8 @@ describe('TimetableEditFormTripsComponent', () => {
 
         for (const tripForm of component.tripsForm.controls) {
             const times = tripForm.get('times') as FormArray;
-            expect(times.at(0).get('arrivalTime').value).toBe('10:15');
-            expect(times.at(0).get('departureTime').value).toBe('10:20');
+            expect(times.at(0).get('arrivalTime')?.value).toBe('10:15');
+            expect(times.at(0).get('departureTime')?.value).toBe('10:20');
         }
     });
 
@@ -114,7 +114,7 @@ describe('TimetableEditFormTripsComponent', () => {
         fixture.detectChanges();
 
         expect(component.tripsForm.controls.length).toBe(1);
-        expect(component.tripsForm.controls[0].get('tripNumber').value).toBe(
+        expect(component.tripsForm.controls[0].get('tripNumber')?.value).toBe(
             '999',
         );
         expect(restoredSpy).toHaveBeenCalled();
@@ -273,7 +273,7 @@ describe('TimetableEditFormTripsComponent', () => {
 
             expect(component.tripsForm.controls.length).toBe(2);
             expect(
-                component.tripsForm.controls[0].get('tripNumber').value,
+                component.tripsForm.controls[0].get('tripNumber')?.value,
             ).toBe('2303');
         });
 
@@ -359,9 +359,9 @@ describe('TimetableEditFormTripsComponent', () => {
                 component.tripsForm.controls[0].get('times') as FormArray
             ).at(0);
 
-            expect(time.get('stopType').value).toBe('not-going-through');
-            expect(time.get('arrivalTime').disabled).toBe(false);
-            expect(time.get('departureTime').disabled).toBe(false);
+            expect(time.get('stopType')?.value).toBe('not-going-through');
+            expect(time.get('arrivalTime')?.disabled).toBe(false);
+            expect(time.get('departureTime')?.disabled).toBe(false);
         });
 
         it('保存ボタンのラベルは ADD で「登録する」、UPDATE で「更新する」', () => {

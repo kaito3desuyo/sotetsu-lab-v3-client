@@ -6,23 +6,23 @@ export interface OperationSightingInvalidationDetailsDto {
 
     operationSightingId: string;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 }
 
 export interface OperationSightingDetailsDto {
     operationSightingId: string;
 
-    formationId?: string;
+    formationId: string;
 
-    operationId?: string;
+    operationId: string;
 
-    sightingTime?: string;
+    sightingTime: string;
 
-    createdAt?: string;
+    createdAt: string;
 
-    updatedAt?: string;
+    updatedAt: string;
 
     operation?: OperationDetailsDto;
 
@@ -30,5 +30,8 @@ export interface OperationSightingDetailsDto {
 
     invalidation?: OperationSightingInvalidationDetailsDto | null;
 
-    sightedAsOperation?: { operationId: string; operationNumber: string };
+    sightedAsOperation?: {
+        operationId: string;
+        operationNumber: string;
+    } | null;
 }

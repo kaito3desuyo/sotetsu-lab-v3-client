@@ -27,14 +27,14 @@ export class ServiceService {
     findOneWithAgencies(params: {
         serviceId: string;
         forceReload?: boolean;
-    }): Observable<ServiceAgenciesDto> {
+    }): Observable<ServiceAgenciesDto | null> {
         return this.#serviceQuery.findOneWithAgencies(params);
     }
 
     findOneWithRoutes(params: {
         serviceId: string;
         forceReload?: boolean;
-    }): Observable<ServiceRoutesDto> {
+    }): Observable<ServiceRoutesDto | null> {
         return this.#serviceQuery.findOneWithRoutes(params);
     }
 }

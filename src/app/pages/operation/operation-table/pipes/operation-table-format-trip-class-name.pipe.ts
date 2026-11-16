@@ -5,11 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class OperationTableFormatTripClassNamePipe implements PipeTransform {
     transform(tripClassName: string): string {
-        if (tripClassNameMap.has(tripClassName)) {
-            return tripClassNameMap.get(tripClassName);
-        }
-
-        return tripClassName;
+        return tripClassNameMap.get(tripClassName) ?? tripClassName;
     }
 }
 

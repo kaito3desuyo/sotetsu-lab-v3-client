@@ -1,6 +1,6 @@
 import { TimeDetailsDto } from 'src/app/libs/trip/usecase/dtos/time-details.dto';
-import { TripBlockDetailsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripBlockWithTripsDto } from 'src/app/libs/trip-block/usecase/dtos/trip-block-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { stationTrips } from './station-trips.util';
 
 /**
@@ -13,19 +13,19 @@ import { stationTrips } from './station-trips.util';
  * 削った結果は全量の代わりにならない。キャッシュには入れず、描くためだけに使う。
  */
 export function pruneStationTripBlocks(
-    tripBlocks: readonly TripBlockDetailsDto[],
+    tripBlocks: readonly TripBlockWithTripsDto[],
     stationId: string,
     tripDirection: number,
-): TripBlockDetailsDto[] {
-    const stopping = new Set<TripDetailsDto>(
+): TripBlockWithTripsDto[] {
+    const stopping = new Set<TripWithTimesDto>(
         stationTrips(tripBlocks, stationId, tripDirection),
     );
 
     return tripBlocks
-        .filter((block) => (block.trips ?? []).some((t) => stopping.has(t)))
+        .filter((block) => block.trips.some((t) => stopping.has(t)))
         .map((block) => ({
             ...block,
-            trips: (block.trips ?? []).map((trip) => ({
+            trips: block.trips.map((trip) => ({
                 ...trip,
                 times: pruneTimes(trip.times, stationId),
             })),
@@ -33,10 +33,10 @@ export function pruneStationTripBlocks(
 }
 
 function pruneTimes(
-    times: TimeDetailsDto[] | undefined,
+    times: TimeDetailsDto[],
     stationId: string,
-): TimeDetailsDto[] | undefined {
-    if (!times || times.length === 0) return times;
+): TimeDetailsDto[] {
+    if (times.length === 0) return times;
 
     let first = times[0];
     let last = times[0];

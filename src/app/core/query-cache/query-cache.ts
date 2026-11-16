@@ -4,7 +4,7 @@ import { shareReplay, tap } from 'rxjs/operators';
 
 type Entry = {
     name: string;
-    obs: Observable<unknown>;
+    obs?: Observable<unknown>;
     /** 値が届いた時刻（Date.now()）。maxAgeMs はここから数える */
     receivedAt?: number;
 };

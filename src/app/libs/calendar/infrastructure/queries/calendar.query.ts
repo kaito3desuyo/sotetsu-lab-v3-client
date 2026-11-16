@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { QueryCache } from 'src/app/core/query-cache/query-cache';
+import { requireBody } from 'src/app/core/utils/require-body';
 import { environment } from 'src/environments/environment';
 import { CalendarDetailsDto } from '../../usecase/dtos/calendar-details.dto';
 import { CalendarDtoBuilder } from '../builders/calendar.dto.builder';
@@ -36,13 +37,17 @@ export class CalendarQuery {
                 },
                 forceReload,
             })
-            .pipe(map((res) => CalendarDtoBuilder.buildFromModels(res.body)));
+            .pipe(
+                map((res) =>
+                    CalendarDtoBuilder.buildFromModels(requireBody(res)),
+                ),
+            );
     }
 
     findOne(params: {
         calendarId: string;
         forceReload?: boolean;
-    }): Observable<CalendarDetailsDto> {
+    }): Observable<CalendarDetailsDto | null> {
         const { calendarId, forceReload } = params;
 
         return this.#cache
@@ -67,7 +72,7 @@ export class CalendarQuery {
     findOneBySpecificDate(params: {
         date: string;
         forceReload?: boolean;
-    }): Observable<CalendarDetailsDto> {
+    }): Observable<CalendarDetailsDto | null> {
         const { date, forceReload } = params;
 
         return this.#cache

@@ -298,8 +298,8 @@ export class TimetableEditFormTripsComponent {
             ) as FormArray<ITimetableEditFormTripTime>;
 
             for (const timeForm of timesForm.controls) {
-                const arrivalTime = timeForm.get('arrivalTime').value;
-                const departureTime = timeForm.get('departureTime').value;
+                const arrivalTime = timeForm.controls.arrivalTime.value;
+                const departureTime = timeForm.controls.departureTime.value;
 
                 timeForm.patchValue({
                     arrivalTime: offsetTimeString(arrivalTime, minutes),

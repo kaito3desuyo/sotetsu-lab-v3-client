@@ -4,15 +4,15 @@ import { TripModel } from './trip.model';
 
 export interface TripOperationListModel {
     id: string;
-    tripId?: string;
-    operationId?: string;
-    startTimeId?: string;
-    endTimeId?: string;
-    startStationId?: string;
-    endStationId?: string;
+    tripId: string;
+    operationId: string;
+    startTimeId: string | null;
+    endTimeId: string | null;
+    startStationId: string | null;
+    endStationId: string | null;
     nextTripOperationListId?: string | null;
-    createdAt?: string;
-    updatedAt?: string;
+    createdAt: string;
+    updatedAt: string;
     trip?: TripModel;
     operation?: OperationModel;
     startTime?: TimeModel;

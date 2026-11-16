@@ -51,7 +51,7 @@ export class OperationSightingRestorationDialogComponent {
         const result = await tryCatchAsync(
             this.#operationSightingService.restore({
                 operationSightingId: this.#data.operationSightingId,
-                reason,
+                reason: reason ?? '',
             }),
             (e) => e as FetchError,
         );

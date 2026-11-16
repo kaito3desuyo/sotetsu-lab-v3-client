@@ -1214,7 +1214,7 @@ describe('OperationTableComponent の URL の値', () => {
             calendarId: CALENDAR,
             calendarName: '平日',
             startDate: '2026-03-14',
-        };
+        } as CalendarDetailsDto;
         TestBed.inject(OperationTableStore).setCalendar(calendar);
         TestBed.tick();
 

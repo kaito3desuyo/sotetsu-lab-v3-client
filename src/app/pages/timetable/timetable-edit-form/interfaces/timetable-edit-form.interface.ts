@@ -45,8 +45,8 @@ export type ITimetableEditFormTripTime = FormGroup<{
     stationId: FormControl<string>;
     stopId: FormControl<string | null>;
     stopType: FormControl<ETimetableEditFormStopType>;
-    arrivalTime: FormControl<string>;
-    departureTime: FormControl<string>;
+    arrivalTime: FormControl<string | null>;
+    departureTime: FormControl<string | null>;
 }>;
 
 export type TimetableEditFormTimeField = 'arrivalTime' | 'departureTime';

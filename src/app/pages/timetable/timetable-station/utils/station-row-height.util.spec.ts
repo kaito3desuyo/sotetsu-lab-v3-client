@@ -1,8 +1,8 @@
-import { TripDetailsDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
+import { TripWithTimesDto } from 'src/app/libs/trip/usecase/dtos/trip-details.dto';
 import { estimateStationRowHeight } from './station-row-height.util';
 
 /** 始発駅の発車だけを持つ最小の trip。 */
-function trip(tripId: string, departureTime: string): TripDetailsDto {
+function trip(tripId: string, departureTime: string): TripWithTimesDto {
     return {
         tripId,
         times: [
@@ -14,7 +14,7 @@ function trip(tripId: string, departureTime: string): TripDetailsDto {
             },
         ],
         tripOperationLists: [],
-    } as unknown as TripDetailsDto;
+    } as unknown as TripWithTimesDto;
 }
 
 /** 運用の有無と、この先の列車（↪）の数 k を指定した 1 本。 */
@@ -22,7 +22,7 @@ function cell(options: {
     operation: boolean;
     k: number;
     id?: string;
-}): TripDetailsDto {
+}): TripWithTimesDto {
     const self = trip(options.id ?? 'self', '06:00:00');
     const later = Array.from({ length: options.k }, (_, i) =>
         trip(`${options.id ?? 'self'}-later-${i}`, `07:${10 + i}:00`),
@@ -31,7 +31,7 @@ function cell(options: {
         ...self,
         tripOperationLists: options.operation ? [{ operationId: 'op' }] : [],
         tripBlock: { tripBlockId: 'b', trips: [self, ...later] },
-    } as unknown as TripDetailsDto;
+    } as unknown as TripWithTimesDto;
 }
 
 /** 1 本の行 = セルの高さ + 格子の上下 16。 */
@@ -112,7 +112,7 @@ describe('estimateStationRowHeight', () => {
             const noList = {
                 ...cell({ operation: false, k: 0 }),
                 tripOperationLists: undefined,
-            } as unknown as TripDetailsDto;
+            } as unknown as TripWithTimesDto;
             expect(estimateStationRowHeight([noList], true)).toBe(52);
         });
     });

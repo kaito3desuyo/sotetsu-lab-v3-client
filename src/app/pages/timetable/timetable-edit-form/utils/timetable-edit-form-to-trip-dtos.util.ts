@@ -20,7 +20,7 @@ export function toTripDtos(
     mode: ETimetableEditFormMode,
 ): CreateTripDto[] | ReplaceTripDto[] {
     return trips.map((trip) => {
-        const times = trip.times.filter(
+        const times = (trip.times ?? []).filter(
             (o) => o.stopType !== ETimetableEditFormStopType.NOT_GOING_THROUGH,
         );
         const timeDtos = times.map((time, index, arr) => {
@@ -84,23 +84,24 @@ export function toTripDtos(
         const tripOperationLists = buildTripOperationLists(trip, times);
 
         if (mode === ETimetableEditFormMode.UPDATE) {
-            const dto: ReplaceTripDto = {
+            // フォームの値は全項目が省略可能な型になる。必須の欄は検証で埋まっている
+            const dto = {
                 ...tripFields,
                 tripId: trip.tripId ?? undefined,
                 times: timeDtos,
                 tripOperationLists,
-            };
+            } as ReplaceTripDto;
             return dto;
         }
 
         // 登録・コピーは ID を持たせない（コピー元の ID がフォームに残っていても落とす）
-        const dto: CreateTripDto = {
+        const dto = {
             ...tripFields,
             times: timeDtos.map(({ timeId, ...rest }) => rest),
             tripOperationLists: tripOperationLists.map(
                 ({ id, ...rest }) => rest,
             ),
-        };
+        } as CreateTripDto;
         return dto;
     }) as CreateTripDto[] | ReplaceTripDto[];
 }

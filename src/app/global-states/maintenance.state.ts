@@ -13,8 +13,8 @@ import { withAppDevtools } from '../core/store-features/with-app-devtools';
 
 type State = {
     isMaintenance: boolean;
-    startAt?: number;
-    endAt?: number;
+    startAt: number | undefined;
+    endAt: number | undefined;
 };
 
 // 省略できる項目も、state の signal を作るために undefined で置いておく

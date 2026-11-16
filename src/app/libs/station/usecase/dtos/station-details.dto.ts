@@ -7,15 +7,15 @@ export interface StationDetailsDto {
 
     stationName: string;
 
-    stationSubname: string;
+    stationSubname: string | null;
 
     stationType: number;
 
-    stationDescription: string;
+    stationDescription: string | null;
 
-    stationLatlng: string;
+    stationLatlng: string | null;
 
-    stationUrl: string;
+    stationUrl: string | null;
 
     wheelchairBoarding: boolean;
 
