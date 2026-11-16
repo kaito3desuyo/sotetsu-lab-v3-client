@@ -23,7 +23,6 @@ describe('operationGroupOptions', () => {
         expect(options.every((option) => option.label === option.value)).toBe(
             true,
         );
-        expect(options.every((option) => !!option.color)).toBe(true);
     });
 });
 

@@ -1,7 +1,4 @@
-import { OperationNumberColorPipe } from 'src/app/core/pipes/operation-number-color.pipe';
 import { FilterChipOption } from './filter-chips/filter-chip-option.type';
-
-const operationNumberColor = new OperationNumberColorPipe();
 
 /**
  * 休車（運用番号 100）は API の /v3/operations/groups には含まれない
@@ -145,7 +142,7 @@ export function deriveGroupNames(operationNumbers: string[]): string[] {
 
 /**
  * 運用群チップの選択肢。群は実在する運用番号から導出し、休は常に末尾へ足す
- * （休は運用一覧に現れない場合があるため）。見本色は群の代表運用番号から引く。
+ * （休は運用一覧に現れない場合があるため）。
  * リアルタイム運用情報と運用表で同じチップを出す（ユーザー指示 2026-09-25）。
  */
 export function operationGroupOptions(
@@ -159,14 +156,6 @@ export function operationGroupOptions(
     return groupNames.map((groupName) => ({
         value: groupName,
         label: groupName,
-        color: operationNumberColor.transform(
-            groupName === RETIRED_GROUP_NAME
-                ? RETIRED_OPERATION_NUMBER
-                : (operationNumbers.find(
-                      (operationNumber) =>
-                          deriveGroupName(operationNumber) === groupName,
-                  ) ?? ''),
-        ),
     }));
 }
 

@@ -112,8 +112,6 @@ $sotetsu-lab-v3-client-theme: mat.m2-define-light-theme(
 @include mat.all-component-typographies($sotetsu-lab-v3-client-typography);
 
 // カスタムCSS
-// @import 'app/general/styles/margin.scss';
-// @import 'app/general/styles/padding.scss';
 
 // html,
 // body {
@@ -176,14 +174,11 @@ body {
     width: 250px;
 }
 
-.mat-sidenav-content {
+// Material の .mat-drawer-content { height: 100% } は後から読まれるので、1 段強いセレクタで上書きする
+.mat-sidenav-container .mat-sidenav-content {
     width: 100vw;
-    height: calc(100vh - 64px) !important;
+    height: calc(100vh - 64px);
     will-change: transform;
-}
-
-.mat-card {
-    border-radius: unset !important;
 }
 
 // 重なって出る物（ダイアログ・下から出るシート）の角丸はカードと同じ 8px（docs/design.md 面の掟）。
@@ -220,8 +215,8 @@ html {
 }
 
 @media (max-width: 599px) {
-    .mat-sidenav-content {
-        height: calc(100vh - 56px) !important;
+    .mat-sidenav-container .mat-sidenav-content {
+        height: calc(100vh - 56px);
     }
 }
 
@@ -296,11 +291,11 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
 }
 
 .weekday {
-    background: rgb(66, 139, 202) !important;
+    background: rgb(66, 139, 202);
 }
 
 .holiday {
-    background: rgb(217, 83, 79) !important;
+    background: rgb(217, 83, 79);
 }
 
 // ボタンの見た目（docs/design.md CTA voice）。主アクション=オレンジ塗り・副アクション=白地紺枠。
@@ -332,28 +327,36 @@ main > :empty:not(hr):not(img):not(input):not(textarea):not(canvas):not(svg) {
 // 文字色は白ではなく --color-accent-ink。白字はオレンジ地で 2.79:1 と AA 不合格、
 // 暗色字なら 6.38:1。accent の L=70.3% > 50% のため docs/design.md 色の掟 2 が暗色を定める。
 .app-button-primary.mat-mdc-unelevated-button {
-    background-color: var(--color-accent) !important;
-    color: var(--color-accent-ink) !important;
+    @include mat.button-overrides(
+        (
+            filled-container-color: var(--color-accent),
+            filled-label-text-color: var(--color-accent-ink),
+            filled-disabled-container-color: var(--color-accent),
+            filled-disabled-label-text-color: var(--color-accent-ink),
+        )
+    );
     border: 0;
 
     &.mat-mdc-button-disabled {
-        background-color: var(--color-accent) !important;
-        color: var(--color-accent-ink) !important;
         opacity: 0.5;
     }
 }
 
 // 副アクション: 白地紺枠（disabled でも同色を維持し不透明度のみ下げる）
 .app-button-secondary.mat-mdc-outlined-button {
-    background-color: var(--color-control) !important;
-    color: var(--color-structure) !important;
-    border-color: var(--color-structure) !important;
-    border-width: 2px !important;
+    @include mat.button-overrides(
+        (
+            outlined-label-text-color: var(--color-structure),
+            outlined-outline-color: var(--color-structure),
+            outlined-outline-width: 2px,
+            outlined-disabled-label-text-color: var(--color-structure),
+            outlined-disabled-outline-color: var(--color-structure),
+        )
+    );
+    // outlined には地の色のトークンが無いので、そのまま塗る
+    background-color: var(--color-control);
 
     &.mat-mdc-button-disabled {
-        background-color: var(--color-control) !important;
-        color: var(--color-structure) !important;
-        border-color: var(--color-structure) !important;
         opacity: 0.5;
     }
 }
