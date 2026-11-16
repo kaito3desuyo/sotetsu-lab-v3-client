@@ -50,7 +50,7 @@ export class TripClassChipComponent {
             this.size() === 'sm'
                 ? 'tw-px-1 tw-py-px tw-text-[10px]'
                 : 'tw-px-1.5 tw-py-0.5 tw-text-xs';
-        const fallback = this.color() ? '' : ' tw-bg-grey-500';
+        const fallback = this.color() ? '' : ' tw-bg-[#8a8a8a]';
         return `${BASE_CLASS} ${size}${fallback}`;
     });
 }

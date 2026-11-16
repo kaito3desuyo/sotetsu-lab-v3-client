@@ -131,7 +131,7 @@ describe('buildBandViewModels', () => {
                         tripClass: {
                             tripClassId: 'tc-3',
                             tripClassName: '回送',
-                            tripClassColor: '#9e9e9e',
+                            tripClassColor: '#8a8a8a',
                         },
                     },
                 }),
@@ -208,7 +208,7 @@ describe('buildBandViewModels', () => {
                         tripClass: {
                             tripClassId: 'tc-3',
                             tripClassName: '回送',
-                            tripClassColor: '#9e9e9e',
+                            tripClassColor: '#8a8a8a',
                         },
                     },
                 }),
@@ -228,7 +228,7 @@ describe('buildBandViewModels', () => {
                         tripClass: {
                             tripClassId: 'tc-3',
                             tripClassName: '回送',
-                            tripClassColor: '#9e9e9e',
+                            tripClassColor: '#8a8a8a',
                         },
                     },
                 }),

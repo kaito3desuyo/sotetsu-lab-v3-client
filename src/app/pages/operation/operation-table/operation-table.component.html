@@ -44,7 +44,7 @@
             data-testid="operation-table-skeleton"
         >
             <div
-                class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"
+                class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(min(18.5rem,100%),1fr))] tw-items-start tw-gap-4"
             >
                 @for (card of skeletonCards; track card) {
                     <div
@@ -90,7 +90,7 @@
              取得中は上の骨組みを出す: 運用・駅・種別がそろう前に描くと、届くたびに全カードを
              描き直すうえ、ダイヤを替えたときに前のダイヤのカードが混ざって見える。 -->
         <div
-            class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(18.5rem,1fr))] tw-items-start tw-gap-4"
+            class="tw-grid tw-grid-cols-[repeat(auto-fill,minmax(min(18.5rem,100%),1fr))] tw-items-start tw-gap-4"
         >
             @for (
                 operationTrip of operationTrips();
@@ -101,7 +101,11 @@
                          場所取りは実物と同じ高さにして、描いたときにスクロール位置が跳ねないようにする。
                          サーバーでは最初の SERVER_RENDERED_CARDS 枚だけ中身まで描き、ブラウザは画面に入ったものから引き継ぐ（hydrate on viewport） -->
                     @if ($index < SERVER_RENDERED_CARDS) {
-                        @defer (on viewport; prefetch on idle; hydrate on viewport) {
+                        @defer (
+                            on viewport;
+                            prefetch on idle;
+                            hydrate on viewport
+                        ) {
                             <!-- 画面の外のカードは描画を省く（content-visibility）。サーバーが描いたカードを
                                  ブラウザが一度に描かないため。省いている間の高さは、場所取りと同じ高さ -->
                             <app-operation-table-card
@@ -125,7 +129,9 @@
                         } @placeholder {
                             <div
                                 class="tw-rounded-card tw-bg-white"
-                                [style.height.px]="placeholderHeight(operationTrip)"
+                                [style.height.px]="
+                                    placeholderHeight(operationTrip)
+                                "
                             ></div>
                         }
                     } @else {
@@ -154,7 +160,9 @@
                         } @placeholder {
                             <div
                                 class="tw-rounded-card tw-bg-white"
-                                [style.height.px]="placeholderHeight(operationTrip)"
+                                [style.height.px]="
+                                    placeholderHeight(operationTrip)
+                                "
                             ></div>
                         }
                     }

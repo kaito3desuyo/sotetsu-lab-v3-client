@@ -21,8 +21,8 @@ export const ROUTE_DIAGRAM_CHIP_HEIGHT = 19;
 export const ROUTE_DIAGRAM_CHIP_RADIUS = 4;
 export const ROUTE_DIAGRAM_TRIP_NUMBER_FONT_SIZE = 14;
 const LABEL_GAP = 4;
-/** 回送のチップと線の色（grey-500） */
-export const ROUTE_DIAGRAM_NON_REVENUE_COLOR = '#9e9e9e';
+/** 回送のチップと線の色。DB の回送・試運転・不明の色と同じ（白字のコントラスト 3.45） */
+export const ROUTE_DIAGRAM_NON_REVENUE_COLOR = '#8a8a8a';
 
 export interface OperationRouteDiagramBandRow {
     tripOperationListId: string;
