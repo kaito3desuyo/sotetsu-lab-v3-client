@@ -78,7 +78,10 @@ export class AppComponent implements OnInit, OnDestroy {
             )
             .subscribe((ev) => {
                 this.#loadingService.close();
-                this.#staleChunkReload.clear();
+                // 最初の移動（読み込み直した直後のページ）では印を残す。消すと、その後の @defer の失敗で読み込み直し続ける
+                if (ev.id > 1) {
+                    this.#staleChunkReload.clear();
+                }
                 this.#gaService.sendPageView(
                     this.#title.getTitle(),
                     ev.urlAfterRedirects,
