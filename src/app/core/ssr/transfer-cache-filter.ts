@@ -1,5 +1,6 @@
 import { HttpRequest } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { SKIP_TRANSFER_CACHE } from './skip-transfer-cache';
 
 /**
  * サーバーで取った応答をブラウザへ引き継ぐ（HttpTransferCache）対象かを返す。
@@ -13,9 +14,14 @@ import { environment } from 'src/environments/environment';
  * Angular はこの指定を見なくなるが、列車情報を書いた後の 1 時間は時刻表系の GET が `cache: 'reload'` で
  * 取り直しを求める（ADR-0002）ので、CDN の古い HTML に積まれた応答で答えると書いた直後の画面が古いままになる。
  *
+ * `SKIP_TRANSFER_CACHE` が true の要求は、描くのに要る分だけを別の鍵に積むため、全量の応答を引き継がない。
+ *
  * BFF（/api/ の認証・profile・maintenance）は利用者ごとの値を返すため、ここで外して積まない。
  */
 export function isTransferableRequest(req: HttpRequest<unknown>): boolean {
+    if (req.context.get(SKIP_TRANSFER_CACHE)) {
+        return false;
+    }
     if (
         req.cache === 'reload' ||
         req.cache === 'no-store' ||

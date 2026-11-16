@@ -80,6 +80,7 @@ describe('TimetableStationComponent の充当編成の圏外の保存', () => {
                     useValue: {
                         fetchCalendar: () => of(undefined),
                         fetchTrips: () => of(undefined),
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),

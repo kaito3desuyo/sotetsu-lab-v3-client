@@ -1,3 +1,4 @@
+import { HttpContext } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { QueryInvalidator } from 'src/app/core/query-cache/query-invalidator';
@@ -22,6 +23,7 @@ export class TripBlockService {
         tripDirection: number;
         fields?: TripBlockFields;
         forceReload?: boolean;
+        context?: HttpContext;
     }): Observable<TripBlockDetailsDto[]> {
         return this.#tripBlockQuery.findManyByFilter(params);
     }

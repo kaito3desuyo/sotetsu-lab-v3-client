@@ -50,6 +50,7 @@ describe('TimetableStationComponent', () => {
                     useValue: {
                         fetchCalendar: () => of(undefined),
                         fetchTrips: () => of(undefined),
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
@@ -130,6 +131,7 @@ describe('TimetableStationComponent の URL の値', () => {
                     useValue: {
                         fetchCalendar,
                         fetchTrips,
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
                         fetchStations: ok,
                         fetchOperations: ok,
@@ -474,6 +476,7 @@ describe('TimetableStationComponent の読み込み中', () => {
                     useValue: {
                         fetchCalendar: () => calendar$,
                         fetchTrips: ok,
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
                         fetchStations: ok,
                         fetchOperations: ok,
@@ -621,6 +624,7 @@ describe('TimetableStationComponent の帯の操作', () => {
                     useValue: {
                         fetchCalendar: () => of(undefined),
                         fetchTrips: () => of(undefined),
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
@@ -695,6 +699,7 @@ describe('TimetableStationComponent のサーバー', () => {
                     useValue: {
                         fetchCalendar,
                         fetchTrips: () => of(undefined),
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: () => of(undefined),
                         fetchStations: () => of(undefined),
                         fetchOperations: () => of(undefined),
@@ -843,6 +848,7 @@ describe('TimetableStationComponent の圏外の保存', () => {
                     useValue: {
                         fetchCalendar: ok,
                         fetchTrips: () => trips$,
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
                         fetchStations: ok,
                         fetchOperations: () => operations$,
@@ -1048,6 +1054,7 @@ describe('TimetableStationComponent の投稿後の取り直し', () => {
                     useValue: {
                         fetchCalendar: ok,
                         fetchTrips,
+                        usedTransferredTrips: () => false,
                         fetchTripClasses: ok,
                         fetchStations: ok,
                         fetchOperations: ok,
