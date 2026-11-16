@@ -4,6 +4,7 @@ import {
     computed,
     inject,
 } from '@angular/core';
+import { renderInSteps } from 'src/app/core/utils/render-in-steps';
 import { AgencyListState } from 'src/app/global-states/agency-list.state';
 import { EmptyStateComponent } from 'src/app/shared/empty-state/empty-state.component';
 import { OperationRealTimeFormationCardComponent } from '../operation-real-time-formation-card/operation-real-time-formation-card.component';
@@ -70,6 +71,9 @@ export class OperationRealTimeFormationTableComponent {
             );
         });
     });
+
+    /** 描く分（長い一覧は 24 枚ずつ画面の更新ごとに足す。絞り込みを外したときに止まらないように） */
+    readonly shownFormations = renderInSteps(this.filteredFormations);
 
     readonly queryTimeCrossSectionByFormationNumber = (
         formationNumber: string,
