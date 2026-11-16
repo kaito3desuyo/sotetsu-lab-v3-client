@@ -37,7 +37,7 @@ const IDLE_FALLBACK_MS = 50;
 })
 export class LazyOptionsDirective {
     /** 空き時間に作る塊の数。0（既定）なら空き時間には作らない */
-    readonly steps = input(0, { alias: 'appLazyOptionsSteps' });
+    readonly appLazyOptionsSteps = input(0);
 
     readonly #ready = signal(false);
     readonly #built = signal(0);
@@ -57,7 +57,7 @@ export class LazyOptionsDirective {
             if (this.#ready()) return;
             const next = this.#built() + 1;
             this.#built.set(next);
-            if (next >= this.steps()) {
+            if (next >= this.appLazyOptionsSteps()) {
                 this.#ready.set(true);
                 return;
             }
@@ -66,7 +66,8 @@ export class LazyOptionsDirective {
 
         // サーバーでは呼ばれない。hydration のあとに始める
         afterNextRender(() => {
-            if (this.steps() > 0 && !this.#ready()) cancel = whenIdle(step);
+            if (this.appLazyOptionsSteps() > 0 && !this.#ready())
+                cancel = whenIdle(step);
         });
     }
 
